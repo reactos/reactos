@@ -305,9 +305,6 @@ typedef void (__cdecl *__sighandler_t)(int);
 
 #define _MAX__TIME64_T    (((__time64_t)0x00000007 << 32) | 0x93406FFF)
 
-#define MSVCRT__ENABLE_PER_THREAD_LOCALE 1
-#define MSVCRT__DISABLE_PER_THREAD_LOCALE 2
-
 _locale_t CDECL get_current_locale_noalloc(_locale_t locale) DECLSPEC_HIDDEN;
 void CDECL free_locale_noalloc(_locale_t locale) DECLSPEC_HIDDEN;
 pthreadlocinfo CDECL get_locinfo(void) DECLSPEC_HIDDEN;
