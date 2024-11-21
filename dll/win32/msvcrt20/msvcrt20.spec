@@ -77,10 +77,10 @@
 @ stub ??1streambuf@@UAE@XZ #
 @ stub ??1strstream@@UAE@XZ #
 @ stub ??1strstreambuf@@UAE@XZ #
-@ cdecl -arch=win32 ??2@YAPAXI@Z(long) MSVCRT_operator_new
-@ cdecl -arch=win64 ??2@YAPEAX_K@Z(double) MSVCRT_operator_new
-@ cdecl -arch=win32 ??3@YAXPAX@Z(ptr) MSVCRT_operator_delete
-@ cdecl -arch=win64 ??3@YAXPEAX@Z(ptr) MSVCRT_operator_delete
+@ cdecl -arch=win32 ??2@YAPAXI@Z(long) operator_new
+@ cdecl -arch=win64 ??2@YAPEAX_K@Z(double) operator_new
+@ cdecl -arch=win32 ??3@YAXPAX@Z(ptr) operator_delete
+@ cdecl -arch=win64 ??3@YAXPEAX@Z(ptr) operator_delete
 @ stub ??4Iostream_init@@QAEAAV0@ABV0@@Z #
 @ stub ??4filebuf@@QAEAAV0@ABV0@@Z #
 @ stub ??4fstream@@QAEAAV0@AAV0@@Z #
@@ -226,10 +226,10 @@
 @ stub ??_Gstreambuf@@UAEPAXI@Z #
 @ stub ??_Gstrstream@@UAEPAXI@Z #
 @ stub ??_Gstrstreambuf@@UAEPAXI@Z #
-@ cdecl ?_query_new_handler@@YAP6AHI@ZXZ() MSVCRT__query_new_handler
-@ cdecl -i386 ?_query_new_mode@@YAHXZ() MSVCRT__query_new_mode
-@ cdecl ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z(ptr) MSVCRT__set_new_handler
-@ cdecl ?_set_new_mode@@YAHH@Z(long) MSVCRT__set_new_mode
+@ cdecl ?_query_new_handler@@YAP6AHI@ZXZ() _query_new_handler
+@ cdecl -i386 ?_query_new_mode@@YAHXZ() _query_new_mode
+@ cdecl ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z(ptr) _set_new_handler
+@ cdecl ?_set_new_mode@@YAHH@Z(long) _set_new_mode
 @ cdecl ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z(ptr) _set_se_translator
 @ stub ?adjustfield@ios@@2JB #
 @ stub ?allocate@streambuf@@IAEHXZ #

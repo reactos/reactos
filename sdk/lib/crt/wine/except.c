@@ -508,7 +508,7 @@ void CDECL MSVCRT___std_exception_destroy(struct __std_exception_data *data)
     TRACE("(%p)\n", data);
 
     if(data->dofree)
-        MSVCRT_free(data->what);
+        free(data->what);
     data->what   = NULL;
     data->dofree = 0;
 }

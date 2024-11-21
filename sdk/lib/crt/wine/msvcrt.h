@@ -217,10 +217,9 @@ extern unsigned int MSVCRT__commode;
 /* FIXME: This should be declared in new.h but it's not an extern "C" so
  * it would not be much use anyway. Even for Winelib applications.
  */
-int __cdecl MSVCRT__set_new_mode(int mode);
-
-void* __cdecl MSVCRT_operator_new(size_t);
-void __cdecl MSVCRT_operator_delete(void*);
+void* __cdecl operator_new(size_t);
+void __cdecl operator_delete(void*);
+int __cdecl _set_new_mode(int mode);
 
 typedef void* (__cdecl *malloc_func_t)(size_t);
 typedef void  (__cdecl *free_func_t)(void*);
@@ -760,11 +759,6 @@ typedef void (__cdecl *MSVCRT___sighandler_t)(int);
 #define MSVCRT__TWO_DIGIT_EXPONENT 0x1
 
 #define MSVCRT__NLSCMPERROR ((unsigned int)0x7fffffff)
-
-void  __cdecl    MSVCRT_free(void*);
-void* __cdecl    MSVCRT_malloc(size_t);
-void* __cdecl    MSVCRT_calloc(size_t,size_t);
-void* __cdecl    MSVCRT_realloc(void*,size_t);
 
 int __cdecl      MSVCRT_atoi(const char *str);
 int __cdecl      MSVCRT_isalpha(int c);

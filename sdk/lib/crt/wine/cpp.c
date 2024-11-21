@@ -125,7 +125,7 @@ static void EXCEPTION_ctor(exception *_this, const char** name)
   if (*name)
   {
     unsigned int name_len = strlen(*name) + 1;
-    _this->name = MSVCRT_malloc(name_len);
+    _this->name = malloc(name_len);
     memcpy(_this->name, *name, name_len);
     _this->do_free = TRUE;
   }
@@ -205,7 +205,7 @@ void __thiscall exception_dtor(exception * _this)
 {
   TRACE("(%p)\n", _this);
   _this->vtable = &exception_vtable;
-  if (_this->do_free) MSVCRT_free(_this->name);
+  if (_this->do_free) free(_this->name);
 }
 
 /******************************************************************
@@ -237,12 +237,12 @@ void * __thiscall exception_vector_dtor(exception * _this, unsigned int flags)
         INT_PTR i, *ptr = (INT_PTR *)_this - 1;
 
         for (i = *ptr - 1; i >= 0; i--) exception_dtor(_this + i);
-        MSVCRT_operator_delete(ptr);
+        operator_delete(ptr);
     }
     else
     {
         exception_dtor(_this);
-        if (flags & 1) MSVCRT_operator_delete(_this);
+        if (flags & 1) operator_delete(_this);
     }
     return _this;
 }
@@ -255,7 +255,7 @@ void * __thiscall exception_scalar_dtor(exception * _this, unsigned int flags)
 {
     TRACE("(%p %x)\n", _this, flags);
     exception_dtor(_this);
-    if (flags & 1) MSVCRT_operator_delete(_this);
+    if (flags & 1) operator_delete(_this);
     return _this;
 }
 
@@ -336,12 +336,12 @@ void * __thiscall bad_typeid_vector_dtor(bad_typeid * _this, unsigned int flags)
         INT_PTR i, *ptr = (INT_PTR *)_this - 1;
 
         for (i = *ptr - 1; i >= 0; i--) bad_typeid_dtor(_this + i);
-        MSVCRT_operator_delete(ptr);
+        operator_delete(ptr);
     }
     else
     {
         bad_typeid_dtor(_this);
-        if (flags & 1) MSVCRT_operator_delete(_this);
+        if (flags & 1) operator_delete(_this);
     }
     return _this;
 }
@@ -354,7 +354,7 @@ void * __thiscall bad_typeid_scalar_dtor(bad_typeid * _this, unsigned int flags)
 {
     TRACE("(%p %x)\n", _this, flags);
     bad_typeid_dtor(_this);
-    if (flags & 1) MSVCRT_operator_delete(_this);
+    if (flags & 1) operator_delete(_this);
     return _this;
 }
 
@@ -419,12 +419,12 @@ void * __thiscall __non_rtti_object_vector_dtor(__non_rtti_object * _this, unsig
         INT_PTR i, *ptr = (INT_PTR *)_this - 1;
 
         for (i = *ptr - 1; i >= 0; i--) __non_rtti_object_dtor(_this + i);
-        MSVCRT_operator_delete(ptr);
+        operator_delete(ptr);
     }
     else
     {
         __non_rtti_object_dtor(_this);
-        if (flags & 1) MSVCRT_operator_delete(_this);
+        if (flags & 1) operator_delete(_this);
     }
     return _this;
 }
@@ -437,7 +437,7 @@ void * __thiscall __non_rtti_object_scalar_dtor(__non_rtti_object * _this, unsig
 {
   TRACE("(%p %x)\n", _this, flags);
   __non_rtti_object_dtor(_this);
-  if (flags & 1) MSVCRT_operator_delete(_this);
+  if (flags & 1) operator_delete(_this);
   return _this;
 }
 
@@ -521,12 +521,12 @@ void * __thiscall bad_cast_vector_dtor(bad_cast * _this, unsigned int flags)
         INT_PTR i, *ptr = (INT_PTR *)_this - 1;
 
         for (i = *ptr - 1; i >= 0; i--) bad_cast_dtor(_this + i);
-        MSVCRT_operator_delete(ptr);
+        operator_delete(ptr);
     }
     else
     {
         bad_cast_dtor(_this);
-        if (flags & 1) MSVCRT_operator_delete(_this);
+        if (flags & 1) operator_delete(_this);
     }
     return _this;
 }
@@ -539,7 +539,7 @@ void * __thiscall bad_cast_scalar_dtor(bad_cast * _this, unsigned int flags)
 {
   TRACE("(%p %x)\n", _this, flags);
   bad_cast_dtor(_this);
-  if (flags & 1) MSVCRT_operator_delete(_this);
+  if (flags & 1) operator_delete(_this);
   return _this;
 }
 
@@ -583,7 +583,7 @@ DEFINE_THISCALL_WRAPPER(type_info_dtor,4)
 void __thiscall type_info_dtor(type_info * _this)
 {
   TRACE("(%p)\n", _this);
-  MSVCRT_free(_this->name);
+  free(_this->name);
 }
 
 /******************************************************************
@@ -600,7 +600,7 @@ const char * __thiscall type_info_name(type_info * _this)
      * Is this '.' really part of the mangled name, or has it some other meaning ?
      */
     char* name = __unDName(0, _this->mangled + 1, 0,
-                           MSVCRT_malloc, MSVCRT_free, UNDNAME_NO_ARGUMENTS | UNDNAME_32_BIT_DECODE);
+                           malloc, free, UNDNAME_NO_ARGUMENTS | UNDNAME_32_BIT_DECODE);
     if (name)
     {
       unsigned int len = strlen(name);
@@ -612,7 +612,7 @@ const char * __thiscall type_info_name(type_info * _this)
       if (InterlockedCompareExchangePointer((void**)&_this->name, name, NULL))
       {
         /* Another thread set this member since we checked above - use it */
-        MSVCRT_free(name);
+        free(name);
       }
     }
   }
@@ -641,12 +641,12 @@ void * __thiscall type_info_vector_dtor(type_info * _this, unsigned int flags)
         INT_PTR i, *ptr = (INT_PTR *)_this - 1;
 
         for (i = *ptr - 1; i >= 0; i--) type_info_dtor(_this + i);
-        MSVCRT_operator_delete(ptr);
+        operator_delete(ptr);
     }
     else
     {
         type_info_dtor(_this);
-        if (flags & 1) MSVCRT_operator_delete(_this);
+        if (flags & 1) operator_delete(_this);
     }
     return _this;
 }
@@ -2055,14 +2055,14 @@ typedef struct
 
 static void* CDECL type_info_entry_malloc(size_t size)
 {
-    type_info_entry *ret = MSVCRT_malloc(FIELD_OFFSET(type_info_entry, name) + size);
+    type_info_entry *ret = malloc(FIELD_OFFSET(type_info_entry, name) + size);
     return ret->name;
 }
 
 static void CDECL type_info_entry_free(void *ptr)
 {
     ptr = (char*)ptr - FIELD_OFFSET(type_info_entry, name);
-    MSVCRT_free(ptr);
+    free(ptr);
 }
 
 /******************************************************************
@@ -2121,7 +2121,7 @@ void CDECL __std_type_info_destroy_list(SLIST_HEADER *header)
     for(cur = InterlockedFlushSList(header); cur; cur = next)
     {
         next = cur->Next;
-        MSVCRT_free(cur);
+        free(cur);
     }
 }
 

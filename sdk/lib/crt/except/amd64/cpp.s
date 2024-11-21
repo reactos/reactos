@@ -34,17 +34,17 @@ EXTERN &orig:ABS
 ALIAS <&alias> = <&orig>
 ENDM
 
-DEFINE_ALIAS ??3@YAXPEAX@Z, MSVCRT_operator_delete
-DEFINE_ALIAS ??_U@YAPEAX_K@Z, MSVCRT_operator_new
-DEFINE_ALIAS ??_U@YAPEAX_KHPEBDH@Z, MSVCRT_operator_new_dbg
-DEFINE_ALIAS ??_V@YAXPEAX@Z, MSVCRT_operator_delete
-DEFINE_ALIAS ??2@YAPEAX_K@Z, MSVCRT_operator_new
-DEFINE_ALIAS ??2@YAPEAX_KHPEBDH@Z, MSVCRT_operator_new_dbg
-DEFINE_ALIAS ?_query_new_handler@@YAP6AHI@ZXZ, MSVCRT__query_new_handler
-DEFINE_ALIAS ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z, MSVCRT__set_new_handler
-DEFINE_ALIAS ?set_new_handler@@YAP6AXXZP6AXXZ@Z, MSVCRT_set_new_handler
-DEFINE_ALIAS ?_query_new_mode@@YAHXZ, MSVCRT__query_new_mode
-DEFINE_ALIAS ?_set_new_mode@@YAHH@Z, MSVCRT__set_new_mode
+DEFINE_ALIAS ??3@YAXPEAX@Z, operator_delete
+DEFINE_ALIAS ??_U@YAPEAX_K@Z, operator_new
+DEFINE_ALIAS ??_U@YAPEAX_KHPEBDH@Z, operator_new_dbg
+DEFINE_ALIAS ??_V@YAXPEAX@Z, operator_delete
+DEFINE_ALIAS ??2@YAPEAX_K@Z, operator_new
+DEFINE_ALIAS ??2@YAPEAX_KHPEBDH@Z, operator_new_dbg
+DEFINE_ALIAS ?_query_new_handler@@YAP6AHI@ZXZ, _query_new_handler
+DEFINE_ALIAS ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z, _set_new_handler
+DEFINE_ALIAS ?set_new_handler@@YAP6AXXZP6AXXZ@Z, set_new_handler
+DEFINE_ALIAS ?_query_new_mode@@YAHXZ, _query_new_mode
+DEFINE_ALIAS ?_set_new_mode@@YAHH@Z, _set_new_mode
 DEFINE_ALIAS ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z, _set_se_translator
 DEFINE_ALIAS ?set_terminate@@YAP6AXXZP6AXXZ@Z, set_terminate
 DEFINE_ALIAS ?set_unexpected@@YAP6AXXZP6AXXZ@Z, set_unexpected
@@ -77,8 +77,8 @@ DEFINE_ALIAS ??8type_info@@QEBAHAEBV0@@Z, type_info_opequals_equals
 DEFINE_ALIAS ??9type_info@@QEBAHAEBV0@@Z, type_info_opnot_equals
 DEFINE_ALIAS ??_Fbad_cast@@QEAAXXZ, bad_cast_default_ctor
 DEFINE_ALIAS ??_Fbad_typeid@@QEAAXXZ, bad_typeid_default_ctor
-DEFINE_ALIAS ?_query_new_handler@@YAP6AH_K@ZXZ, MSVCRT__query_new_handler
-DEFINE_ALIAS ?_set_new_handler@@YAP6AH_K@ZP6AH0@Z@Z, MSVCRT__set_new_handler
+DEFINE_ALIAS ?_query_new_handler@@YAP6AH_K@ZXZ, _query_new_handler
+DEFINE_ALIAS ?_set_new_handler@@YAP6AH_K@ZP6AH0@Z@Z, _set_new_handler
 DEFINE_ALIAS ?_set_se_translator@@YAP6AXIPEAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z, _set_se_translator
 DEFINE_ALIAS ?before@type_info@@QEBAHAEBV1@@Z, type_info_before
 DEFINE_ALIAS ?name@type_info@@QEBAPEBDXZ, type_info_name

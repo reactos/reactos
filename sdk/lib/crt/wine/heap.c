@@ -161,7 +161,7 @@ int CDECL _callnewh(size_t size)
 /*********************************************************************
  *		??2@YAPAXI@Z (MSVCRT.@)
  */
-void* CDECL DECLSPEC_HOTPATCH MSVCRT_operator_new(size_t size)
+void* CDECL DECLSPEC_HOTPATCH operator_new(size_t size)
 {
   void *retval;
 
@@ -186,16 +186,16 @@ void* CDECL DECLSPEC_HOTPATCH MSVCRT_operator_new(size_t size)
 /*********************************************************************
  *		??2@YAPAXIHPBDH@Z (MSVCRT.@)
  */
-void* CDECL MSVCRT_operator_new_dbg(size_t size, int type, const char *file, int line)
+void* CDECL operator_new_dbg(size_t size, int type, const char *file, int line)
 {
-    return MSVCRT_operator_new( size );
+    return operator_new( size );
 }
 
 
 /*********************************************************************
  *		??3@YAXPAX@Z (MSVCRT.@)
  */
-void CDECL DECLSPEC_HOTPATCH MSVCRT_operator_delete(void *mem)
+void CDECL DECLSPEC_HOTPATCH operator_delete(void *mem)
 {
   TRACE("(%p)\n", mem);
   msvcrt_heap_free(mem);
@@ -205,7 +205,7 @@ void CDECL DECLSPEC_HOTPATCH MSVCRT_operator_delete(void *mem)
 /*********************************************************************
  *		?_query_new_handler@@YAP6AHI@ZXZ (MSVCRT.@)
  */
-MSVCRT_new_handler_func CDECL MSVCRT__query_new_handler(void)
+MSVCRT_new_handler_func CDECL _query_new_handler(void)
 {
   return MSVCRT_new_handler;
 }
@@ -214,7 +214,7 @@ MSVCRT_new_handler_func CDECL MSVCRT__query_new_handler(void)
 /*********************************************************************
  *		?_query_new_mode@@YAHXZ (MSVCRT.@)
  */
-int CDECL MSVCRT__query_new_mode(void)
+int CDECL _query_new_mode(void)
 {
   return MSVCRT_new_mode;
 }
@@ -222,7 +222,7 @@ int CDECL MSVCRT__query_new_mode(void)
 /*********************************************************************
  *		?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z (MSVCRT.@)
  */
-MSVCRT_new_handler_func CDECL MSVCRT__set_new_handler(MSVCRT_new_handler_func func)
+MSVCRT_new_handler_func CDECL _set_new_handler(MSVCRT_new_handler_func func)
 {
   MSVCRT_new_handler_func old_handler;
   LOCK_HEAP;
@@ -235,17 +235,17 @@ MSVCRT_new_handler_func CDECL MSVCRT__set_new_handler(MSVCRT_new_handler_func fu
 /*********************************************************************
  *		?set_new_handler@@YAP6AXXZP6AXXZ@Z (MSVCRT.@)
  */
-MSVCRT_new_handler_func CDECL MSVCRT_set_new_handler(void *func)
+MSVCRT_new_handler_func CDECL set_new_handler(void *func)
 {
   TRACE("(%p)\n",func);
-  MSVCRT__set_new_handler(NULL);
+  _set_new_handler(NULL);
   return NULL;
 }
 
 /*********************************************************************
  *		?_set_new_mode@@YAHH@Z (MSVCRT.@)
  */
-int CDECL MSVCRT__set_new_mode(int mode)
+int CDECL _set_new_mode(int mode)
 {
   if(!MSVCRT_CHECK_PMT(mode == 0 || mode == 1)) return -1;
   return InterlockedExchange((long*)&MSVCRT_new_mode, mode);
@@ -404,7 +404,7 @@ size_t CDECL _aligned_msize(void *p, size_t alignment, size_t offset)
 /*********************************************************************
  *		calloc (MSVCRT.@)
  */
-void* CDECL DECLSPEC_HOTPATCH MSVCRT_calloc(size_t count, size_t size)
+void* CDECL DECLSPEC_HOTPATCH calloc(size_t count, size_t size)
 {
   size_t bytes = count*size;
 
@@ -423,14 +423,14 @@ void* CDECL DECLSPEC_HOTPATCH MSVCRT_calloc(size_t count, size_t size)
  */
 void* CDECL _calloc_base(size_t count, size_t size)
 {
-  return MSVCRT_calloc(count, size);
+  return calloc(count, size);
 }
 #endif
 
 /*********************************************************************
  *		free (MSVCRT.@)
  */
-void CDECL DECLSPEC_HOTPATCH MSVCRT_free(void* ptr)
+void CDECL DECLSPEC_HOTPATCH free(void* ptr)
 {
   msvcrt_heap_free(ptr);
 }
@@ -448,7 +448,7 @@ void CDECL _free_base(void* ptr)
 /*********************************************************************
  *                  malloc (MSVCRT.@)
  */
-void* CDECL MSVCRT_malloc(size_t size)
+void* CDECL malloc(size_t size)
 {
     void *ret;
 
@@ -470,18 +470,18 @@ void* CDECL MSVCRT_malloc(size_t size)
  */
 void* CDECL _malloc_base(size_t size)
 {
-  return MSVCRT_malloc(size);
+  return malloc(size);
 }
 #endif
 
 /*********************************************************************
  *		realloc (MSVCRT.@)
  */
-void* CDECL DECLSPEC_HOTPATCH MSVCRT_realloc(void* ptr, size_t size)
+void* CDECL DECLSPEC_HOTPATCH realloc(void* ptr, size_t size)
 {
-  if (!ptr) return MSVCRT_malloc(size);
+  if (!ptr) return malloc(size);
   if (size) return msvcrt_heap_realloc(0, ptr, size);
-  MSVCRT_free(ptr);
+  free(ptr);
   return NULL;
 }
 
@@ -491,7 +491,7 @@ void* CDECL DECLSPEC_HOTPATCH MSVCRT_realloc(void* ptr, size_t size)
  */
 void* CDECL _realloc_base(void* ptr, size_t size)
 {
-  return MSVCRT_realloc(ptr, size);
+  return realloc(ptr, size);
 }
 #endif
 
@@ -505,12 +505,12 @@ void* CDECL _recalloc(void *mem, size_t num, size_t size)
     void *ret;
 
     if(!mem)
-        return MSVCRT_calloc(num, size);
+        return calloc(num, size);
 
     size = num*size;
     old_size = _msize(mem);
 
-    ret = MSVCRT_realloc(mem, size);
+    ret = realloc(mem, size);
     if(!ret) {
         *_errno() = ENOMEM;
         return NULL;
@@ -571,7 +571,7 @@ void CDECL _aligned_free(void *memblock)
     if (memblock)
     {
         void **saved = SAVED_PTR(memblock);
-        MSVCRT_free(*saved);
+        free(*saved);
     }
 }
 
@@ -602,7 +602,7 @@ void * CDECL _aligned_offset_malloc(size_t size, size_t alignment, size_t offset
         alignment = sizeof(void *);
 
     /* allocate enough space for void pointer and alignment */
-    temp = MSVCRT_malloc(size + alignment + sizeof(void *));
+    temp = malloc(size + alignment + sizeof(void *));
 
     if (!temp)
         return NULL;
@@ -690,7 +690,7 @@ void * CDECL _aligned_offset_realloc(void *memblock, size_t size,
     }
     old_size -= old_padding;
 
-    temp = MSVCRT_realloc(*saved, size + alignment + sizeof(void *));
+    temp = realloc(*saved, size + alignment + sizeof(void *));
 
     if (!temp)
         return NULL;
@@ -722,7 +722,7 @@ void * CDECL _aligned_offset_realloc(void *memblock, size_t size,
           temp                       saved memblock
 
    However, in the new block, actual data is still written as follows
-   (because it was copied by MSVCRT_realloc):
+   (because it was copied by realloc):
    +-------+---------------------+--------------------------------+-------+
    |  ...  | "old_padding" bytes |   ... "old_size" bytes ...     |  ...  |
    +-------+---------------------+--------------------------------+-------+
@@ -754,7 +754,7 @@ void * CDECL _aligned_realloc(void *memblock, size_t size, size_t alignment)
 /*********************************************************************
  *		memmove_s (MSVCRT.@)
  */
-int CDECL MSVCRT_memmove_s(void *dest, size_t numberOfElements, const void *src, size_t count)
+int CDECL memmove_s(void *dest, size_t numberOfElements, const void *src, size_t count)
 {
     TRACE("(%p %Iu %p %Iu)\n", dest, numberOfElements, src, count);
 
@@ -797,7 +797,7 @@ int CDECL wmemmove_s(wchar_t *dest, size_t numberOfElements,
 /*********************************************************************
  *		memcpy_s (MSVCRT.@)
  */
-int CDECL MSVCRT_memcpy_s(void *dest, size_t numberOfElements, const void *src, size_t count)
+int CDECL memcpy_s(void *dest, size_t numberOfElements, const void *src, size_t count)
 {
     TRACE("(%p %Iu %p %Iu)\n", dest, numberOfElements, src, count);
 
@@ -851,7 +851,7 @@ int CDECL wmemcpy_s(wchar_t *dest, size_t numberOfElements,
 /*********************************************************************
  *		strncpy_s (MSVCRT.@)
  */
-int CDECL MSVCRT_strncpy_s(char *dest, size_t numberOfElements,
+int CDECL strncpy_s(char *dest, size_t numberOfElements,
         const char *src, size_t count)
 {
     size_t i, end;

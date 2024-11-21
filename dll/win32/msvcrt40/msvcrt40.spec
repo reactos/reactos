@@ -93,10 +93,10 @@
 @ stub ??1strstream@@UAE@XZ
 @ stub ??1strstreambuf@@UAE@XZ
 @ cdecl -i386 ??1type_info@@UAE@XZ() type_info_dtor
-@ cdecl -arch=win32 ??2@YAPAXI@Z(long) MSVCRT_operator_new
-@ cdecl -arch=win64 ??2@YAPEAX_K@Z(double) MSVCRT_operator_new
-@ cdecl -arch=win32 ??3@YAXPAX@Z(ptr) MSVCRT_operator_delete
-@ cdecl -arch=win64 ??3@YAXPEAX@Z(ptr) MSVCRT_operator_delete
+@ cdecl -arch=win32 ??2@YAPAXI@Z(long) operator_new
+@ cdecl -arch=win64 ??2@YAPEAX_K@Z(double) operator_new
+@ cdecl -arch=win32 ??3@YAXPAX@Z(ptr) operator_delete
+@ cdecl -arch=win64 ??3@YAXPEAX@Z(ptr) operator_delete
 @ stub ??4Iostream_init@@QAEAAV0@ABV0@@Z
 @ cdecl -i386 ??4__non_rtti_object@@QAEAAV0@ABV0@@Z(ptr) __non_rtti_object_opequals
 @ cdecl -i386 ??4bad_cast@@QAEAAV0@ABV0@@Z(ptr) bad_cast_opequals
@@ -264,10 +264,10 @@
 @ stub ??_Gstreambuf@@UAEPAXI@Z
 @ stub ??_Gstrstream@@UAEPAXI@Z
 @ stub ??_Gstrstreambuf@@UAEPAXI@Z
-@ cdecl ?_query_new_handler@@YAP6AHI@ZXZ() MSVCRT__query_new_handler
-@ cdecl -i386 ?_query_new_mode@@YAHXZ() MSVCRT__query_new_mode
-@ cdecl ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z(ptr) MSVCRT__set_new_handler
-@ cdecl ?_set_new_mode@@YAHH@Z(long) MSVCRT__set_new_mode
+@ cdecl ?_query_new_handler@@YAP6AHI@ZXZ() _query_new_handler
+@ cdecl -i386 ?_query_new_mode@@YAHXZ() _query_new_mode
+@ cdecl ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z(ptr) _set_new_handler
+@ cdecl ?_set_new_mode@@YAHH@Z(long) _set_new_mode
 @ cdecl ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z(ptr) _set_se_translator
 @ stub ?adjustfield@ios@@2JB
 @ stub ?allocate@streambuf@@IAEHXZ
@@ -407,7 +407,7 @@
 @ stub ?seekp@ostream@@QAEAAV1@J@Z
 @ stub ?seekp@ostream@@QAEAAV1@JW4seek_dir@ios@@@Z
 @ stub ?seekpos@streambuf@@UAEJJH@Z
-@ cdecl -i386 ?set_new_handler@@YAP6AXXZP6AXXZ@Z(ptr) MSVCRT_set_new_handler
+@ cdecl -i386 ?set_new_handler@@YAP6AXXZP6AXXZ@Z(ptr) set_new_handler
 @ cdecl ?set_terminate@@YAP6AXXZP6AXXZ@Z(ptr) set_terminate
 @ cdecl ?set_unexpected@@YAP6AXXZP6AXXZ@Z(ptr) set_unexpected
 @ stub ?setb@streambuf@@IAEXPAD0H@Z

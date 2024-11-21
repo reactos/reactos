@@ -38,9 +38,9 @@ _Target SETS "|$Target|"
     DEFINE_ALIAS ??1bad_typeid@@UAA@XZ, bad_typeid_dtor // public: virtual __cdecl bad_typeid::~bad_typeid(void)
     DEFINE_ALIAS ??1exception@@UAA@XZ, exception_dtor // public: virtual __cdecl exception::~exception(void)
     DEFINE_ALIAS ??1type_info@@UAA@XZ, type_info_dtor // public: virtual __cdecl type_info::~type_info(void)
-    DEFINE_ALIAS ??2@YAPAXI@Z, MSVCRT_operator_new // void * __cdecl operator new(unsigned int)
-    DEFINE_ALIAS ??2@YAPAXIHPBDH@Z, MSVCRT_operator_new_dbg // void * __cdecl operator new(unsigned int,int,char const *,int)
-    DEFINE_ALIAS ??3@YAXPAX@Z, MSVCRT_operator_delete // void __cdecl operator delete(void *)
+    DEFINE_ALIAS ??2@YAPAXI@Z, operator_new // void * __cdecl operator new(unsigned int)
+    DEFINE_ALIAS ??2@YAPAXIHPBDH@Z, operator_new_dbg // void * __cdecl operator new(unsigned int,int,char const *,int)
+    DEFINE_ALIAS ??3@YAXPAX@Z, operator_delete // void __cdecl operator delete(void *)
     DEFINE_ALIAS ??4__non_rtti_object@@QAAAAV0@ABV0@@Z, __non_rtti_object_opequals // public: class __non_rtti_object & __cdecl __non_rtti_object::operator=(class __non_rtti_object const &)
     DEFINE_ALIAS ??4bad_cast@@QAAAAV0@ABV0@@Z, bad_cast_opequals // public: class bad_cast & __cdecl bad_cast::operator=(class bad_cast const &)
     DEFINE_ALIAS ??4bad_typeid@@QAAAAV0@ABV0@@Z, bad_typeid_opequals // public: class bad_typeid & __cdecl bad_typeid::operator=(class bad_typeid const &)
@@ -49,12 +49,12 @@ _Target SETS "|$Target|"
     DEFINE_ALIAS ??9type_info@@QBAHABV0@@Z, type_info_opnot_equals // public: int __cdecl type_info::operator!=(class type_info const &)const
     DEFINE_ALIAS ??_Fbad_cast@@QAAXXZ, bad_cast_default_ctor // public: void __cdecl bad_cast::`default constructor closure'(void)
     DEFINE_ALIAS ??_Fbad_typeid@@QAAXXZ, bad_typeid_default_ctor // public: void __cdecl bad_typeid::`default constructor closure'(void)
-    DEFINE_ALIAS ??_U@YAPAXI@Z, MSVCRT_operator_new // void * __cdecl operator new[](unsigned int)
-    DEFINE_ALIAS ??_U@YAPAXIHPBDH@Z, MSVCRT_operator_new_dbg // void * __cdecl operator new[](unsigned int,int,char const *,int)
-    DEFINE_ALIAS ??_V@YAXPAX@Z, MSVCRT_operator_delete // void __cdecl operator delete[](void *)
-    DEFINE_ALIAS ?_query_new_handler@@YAP6AHI@ZXZ, MSVCRT__query_new_handler // int (__cdecl*__cdecl _query_new_handler(void))(unsigned int)
-    DEFINE_ALIAS ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z, MSVCRT__set_new_handler // int (__cdecl*__cdecl _set_new_handler(int (__cdecl*)(unsigned int)))(unsigned int)
-    DEFINE_ALIAS ?_set_new_mode@@YAHH@Z, MSVCRT__set_new_mode // int __cdecl _set_new_mode(int)
+    DEFINE_ALIAS ??_U@YAPAXI@Z, operator_new // void * __cdecl operator new[](unsigned int)
+    DEFINE_ALIAS ??_U@YAPAXIHPBDH@Z, operator_new_dbg // void * __cdecl operator new[](unsigned int,int,char const *,int)
+    DEFINE_ALIAS ??_V@YAXPAX@Z, operator_delete // void __cdecl operator delete[](void *)
+    DEFINE_ALIAS ?_query_new_handler@@YAP6AHI@ZXZ, _query_new_handler // int (__cdecl*__cdecl _query_new_handler(void))(unsigned int)
+    DEFINE_ALIAS ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z, _set_new_handler // int (__cdecl*__cdecl _set_new_handler(int (__cdecl*)(unsigned int)))(unsigned int)
+    DEFINE_ALIAS ?_set_new_mode@@YAHH@Z, _set_new_mode // int __cdecl _set_new_mode(int)
     DEFINE_ALIAS ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z, _set_se_translator // void (__cdecl*__cdecl _set_se_translator(void (__cdecl*)(unsigned int,struct _EXCEPTION_POINTERS *)))(unsigned int,struct _EXCEPTION_POINTERS *)
     DEFINE_ALIAS ?before@type_info@@QBAHABV1@@Z, type_info_before // public: int __cdecl type_info::before(class type_info const &)const
     DEFINE_ALIAS ?name@type_info@@QBAPBDXZ, type_info_name // public: char const * __cdecl type_info::name(void)const
@@ -101,13 +101,13 @@ $CxxLabel
 
     GBLS FuncName
 
-    //EXTERN MSVCRT_operator_delete
+    //EXTERN operator_delete
     //__ExportName ??3@YAXPAX@Z
-    //b MSVCRT_operator_delete
+    //b operator_delete
 
-    //EXTERN MSVCRT_operator_new
+    //EXTERN operator_new
     //__ExportName ??_U@YAPAXI@Z
-    //b MSVCRT_operator_new
+    //b operator_new
 
     END
 /* EOF */

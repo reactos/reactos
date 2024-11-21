@@ -80,15 +80,15 @@ DEFINE_EXCEPTION_VTABLE bad_typeid, ??_7bad_typeid@@6B@
 DEFINE_EXCEPTION_VTABLE bad_cast, ??_7bad_cast@@6B@
 DEFINE_EXCEPTION_VTABLE __non_rtti_object, ??_7__non_rtti_object@@6B@
 
-EXTERN _MSVCRT_operator_delete:PROC
+EXTERN _operator_delete:PROC
 PUBLIC ??3@YAXPAX@Z
 ??3@YAXPAX@Z:
-    jmp _MSVCRT_operator_delete
+    jmp _operator_delete
 
-EXTERN _MSVCRT_operator_new:PROC
+EXTERN _operator_new:PROC
 PUBLIC ??_U@YAPAXI@Z
 ??_U@YAPAXI@Z:
-    jmp _MSVCRT_operator_new
+    jmp _operator_new
 
 
 MACRO(DEFINE_ALIAS, alias, orig, type)
@@ -96,13 +96,13 @@ EXTERN &orig:&type
 ALIAS <&alias> = <&orig>
 ENDM
 
-DEFINE_ALIAS ??_V@YAXPAX@Z, _MSVCRT_operator_delete, PROC
-DEFINE_ALIAS ??2@YAPAXI@Z, _MSVCRT_operator_new, PROC
-DEFINE_ALIAS ?_query_new_handler@@YAP6AHI@ZXZ, _MSVCRT__query_new_handler, PROC
-DEFINE_ALIAS ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z, _MSVCRT__set_new_handler, PROC
-DEFINE_ALIAS ?set_new_handler@@YAP6AXXZP6AXXZ@Z, _MSVCRT_set_new_handler, PROC
-DEFINE_ALIAS ?_query_new_mode@@YAHXZ, _MSVCRT__query_new_mode, PROC
-DEFINE_ALIAS ?_set_new_mode@@YAHH@Z, _MSVCRT__set_new_mode, PROC
+DEFINE_ALIAS ??_V@YAXPAX@Z, _operator_delete, PROC
+DEFINE_ALIAS ??2@YAPAXI@Z, _operator_new, PROC
+DEFINE_ALIAS ?_query_new_handler@@YAP6AHI@ZXZ, __query_new_handler, PROC
+DEFINE_ALIAS ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z, __set_new_handler, PROC
+DEFINE_ALIAS ?set_new_handler@@YAP6AXXZP6AXXZ@Z, _set_new_handler, PROC
+DEFINE_ALIAS ?_query_new_mode@@YAHXZ, __query_new_mode, PROC
+DEFINE_ALIAS ?_set_new_mode@@YAHH@Z, __set_new_mode, PROC
 DEFINE_ALIAS ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z, __set_se_translator, PROC
 DEFINE_ALIAS ?set_terminate@@YAP6AXXZP6AXXZ@Z, _set_terminate, PROC
 DEFINE_ALIAS ?set_unexpected@@YAP6AXXZP6AXXZ@Z, _set_unexpected, PROC
