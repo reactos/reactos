@@ -31,6 +31,7 @@
 #include "windef.h"
 #include "winbase.h"
 #undef strncpy
+#undef wcsncpy
 
 #ifdef __REACTOS__
 typedef long __msvcrt_long;
