@@ -885,7 +885,7 @@ static BOOL demangle_datatype(struct parsed_symbol* sym, struct datatype_t* ct,
                     goto done;
                 if (modifier)
                     modifier = str_printf(sym, "%s %s", modifier, ptr_modif);
-                else if(ptr_modif[0])
+                else if(ptr_modif)
                     modifier = str_printf(sym, " %s", ptr_modif);
                 if (!get_calling_convention(*sym->current++,
                             &call_conv, &exported,
