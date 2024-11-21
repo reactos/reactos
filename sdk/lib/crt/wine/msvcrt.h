@@ -243,7 +243,7 @@ extern void msvcrt_free_concurrency(void) DECLSPEC_HIDDEN;
 extern void msvcrt_free_scheduler_thread(void) DECLSPEC_HIDDEN;
 #endif
 
-extern unsigned msvcrt_create_io_inherit_block(WORD*, BYTE**) DECLSPEC_HIDDEN;
+extern BOOL msvcrt_create_io_inherit_block(WORD*, BYTE**) DECLSPEC_HIDDEN;
 
 /* run-time error codes */
 #define _RT_STACK       0
