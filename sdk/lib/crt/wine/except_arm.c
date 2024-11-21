@@ -21,6 +21,7 @@
 
 #ifdef __arm__
 
+#include <setjmp.h>
 #include <stdarg.h>
 #include <fpieee.h>
 
@@ -114,7 +115,7 @@ __ASM_GLOBAL_FUNC(MSVCRT__setjmp,
 /*******************************************************************
  *		longjmp (MSVCRT.@)
  */
-void __cdecl MSVCRT_longjmp(struct MSVCRT___JUMP_BUFFER *jmp, int retval)
+void __cdecl MSVCRT_longjmp(_JUMP_BUFFER *jmp, int retval)
 {
     EXCEPTION_RECORD rec;
 

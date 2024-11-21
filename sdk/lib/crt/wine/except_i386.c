@@ -27,6 +27,7 @@
 
 #ifdef __i386__
 
+#include <setjmp.h>
 #include <stdarg.h>
 #include <fpieee.h>
 
@@ -693,7 +694,7 @@ __ASM_GLOBAL_FUNC( __CxxFrameHandler,
  *
  * Callback meant to be used as UnwindFunc for setjmp/longjmp.
  */
-void __stdcall __CxxLongjmpUnwind( const struct MSVCRT___JUMP_BUFFER *buf )
+void __stdcall __CxxLongjmpUnwind( const _JUMP_BUFFER *buf )
 {
     cxx_exception_frame *frame = (cxx_exception_frame *)buf->Registration;
     const cxx_function_descr *descr = (const cxx_function_descr *)buf->UnwindData[0];
@@ -1029,7 +1030,7 @@ int CDECL _except_handler4_common( ULONG *cookie, void (*check_cookie)(void),
  */
 
 #define MSVCRT_JMP_MAGIC 0x56433230 /* ID value for new jump structure */
-typedef void (__stdcall *MSVCRT_unwind_function)(const struct MSVCRT___JUMP_BUFFER *);
+typedef void (__stdcall *MSVCRT_unwind_function)(const _JUMP_BUFFER *);
 
 /* define an entrypoint for setjmp/setjmp3 that stores the registers in the jmp buf */
 /* and then jumps to the C backend function */
@@ -1049,7 +1050,7 @@ typedef void (__stdcall *MSVCRT_unwind_function)(const struct MSVCRT___JUMP_BUFF
  *		_setjmp (MSVCRT.@)
  */
 DEFINE_SETJMP_ENTRYPOINT(MSVCRT__setjmp)
-int CDECL DECLSPEC_HIDDEN __regs_MSVCRT__setjmp(struct MSVCRT___JUMP_BUFFER *jmp)
+int CDECL DECLSPEC_HIDDEN __regs_MSVCRT__setjmp(_JUMP_BUFFER *jmp)
 {
     jmp->Registration = (unsigned long)NtCurrentTeb()->Tib.ExceptionList;
     if (jmp->Registration == ~0UL)
@@ -1066,7 +1067,7 @@ int CDECL DECLSPEC_HIDDEN __regs_MSVCRT__setjmp(struct MSVCRT___JUMP_BUFFER *jmp
  *		_setjmp3 (MSVCRT.@)
  */
 DEFINE_SETJMP_ENTRYPOINT( MSVCRT__setjmp3 )
-int WINAPIV DECLSPEC_HIDDEN __regs_MSVCRT__setjmp3(struct MSVCRT___JUMP_BUFFER *jmp, int nb_args, ...)
+int WINAPIV DECLSPEC_HIDDEN __regs_MSVCRT__setjmp3(_JUMP_BUFFER *jmp, int nb_args, ...)
 {
     jmp->Cookie = MSVCRT_JMP_MAGIC;
     jmp->UnwindFunc = 0;
@@ -1097,7 +1098,7 @@ int WINAPIV DECLSPEC_HIDDEN __regs_MSVCRT__setjmp3(struct MSVCRT___JUMP_BUFFER *
 /*********************************************************************
  *		longjmp (MSVCRT.@)
  */
-void CDECL MSVCRT_longjmp(struct MSVCRT___JUMP_BUFFER *jmp, int retval)
+void CDECL MSVCRT_longjmp(_JUMP_BUFFER *jmp, int retval)
 {
     unsigned long cur_frame = 0;
 
@@ -1135,7 +1136,7 @@ void CDECL MSVCRT_longjmp(struct MSVCRT___JUMP_BUFFER *jmp, int retval)
 /*********************************************************************
  *		_seh_longjmp_unwind (MSVCRT.@)
  */
-void __stdcall _seh_longjmp_unwind(struct MSVCRT___JUMP_BUFFER *jmp)
+void __stdcall _seh_longjmp_unwind(_JUMP_BUFFER *jmp)
 {
     msvcrt_local_unwind2( (MSVCRT_EXCEPTION_FRAME *)jmp->Registration, jmp->TryLevel, (void *)jmp->Ebp );
 }
@@ -1143,7 +1144,7 @@ void __stdcall _seh_longjmp_unwind(struct MSVCRT___JUMP_BUFFER *jmp)
 /*********************************************************************
  *		_seh_longjmp_unwind4 (MSVCRT.@)
  */
-void __stdcall _seh_longjmp_unwind4(struct MSVCRT___JUMP_BUFFER *jmp)
+void __stdcall _seh_longjmp_unwind4(_JUMP_BUFFER *jmp)
 {
     msvcrt_local_unwind4( (ULONG *)&jmp->Cookie, (MSVCRT_EXCEPTION_FRAME *)jmp->Registration,
                           jmp->TryLevel, (void *)jmp->Ebp );
