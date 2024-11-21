@@ -139,7 +139,7 @@ KdpSysReadBusData(IN ULONG BusDataType,
                   IN ULONG Length,
                   OUT PULONG ActualLength)
 {
-    UNIMPLEMENTED_DBGBREAK();
+    UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -153,7 +153,7 @@ KdpSysWriteBusData(IN ULONG BusDataType,
                    IN ULONG Length,
                    OUT PULONG ActualLength)
 {
-    UNIMPLEMENTED_DBGBREAK();
+    UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -284,7 +284,7 @@ KdpSysReadIoSpace(IN ULONG InterfaceType,
 
         default:
             /* Invalid data size */
-             *ActualDataSize = 0;
+            *ActualDataSize = 0;
             return STATUS_INVALID_PARAMETER;
     }
 
@@ -340,7 +340,7 @@ KdpSysWriteIoSpace(IN ULONG InterfaceType,
 
         default:
             /* Invalid data size */
-             *ActualDataSize = 0;
+            *ActualDataSize = 0;
             return STATUS_INVALID_PARAMETER;
     }
 
@@ -355,7 +355,7 @@ NTSTATUS
 NTAPI
 KdpSysCheckLowMemory(IN ULONG Flags)
 {
-    UNIMPLEMENTED_DBGBREAK();
+    UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -363,7 +363,7 @@ NTSTATUS
 NTAPI
 KdpAllowDisable(VOID)
 {
-    UNIMPLEMENTED_DBGBREAK();
+    UNIMPLEMENTED;
     return STATUS_ACCESS_DENIED;
 }
 
