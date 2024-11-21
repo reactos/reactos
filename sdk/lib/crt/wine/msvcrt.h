@@ -237,7 +237,6 @@ extern BOOL msvcrt_init_locale(void) DECLSPEC_HIDDEN;
 extern void msvcrt_init_math(void*) DECLSPEC_HIDDEN;
 extern void msvcrt_init_io(void) DECLSPEC_HIDDEN;
 extern void msvcrt_free_io(void) DECLSPEC_HIDDEN;
-extern void msvcrt_init_console(void) DECLSPEC_HIDDEN;
 extern void msvcrt_free_console(void) DECLSPEC_HIDDEN;
 extern void msvcrt_init_args(void) DECLSPEC_HIDDEN;
 extern void msvcrt_free_args(void) DECLSPEC_HIDDEN;
