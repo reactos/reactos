@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <stdint.h>
+#define _NO_CRT_STDIO_INLINE
 #include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
@@ -678,7 +679,6 @@ int __cdecl      _ungetch(int);
 int __cdecl      _cputs(const char*);
 int WINAPIV      _cprintf(const char*,...);
 int WINAPIV      _cwprintf(const wchar_t*,...);
-int WINAPIV      MSVCRT_sscanf(const char *, const char *, ...);
 char*** __cdecl  MSVCRT___p__environ(void);
 int*    __cdecl  __p___mb_cur_max(void);
 wchar_t* __cdecl MSVCRT__wcsdup(const wchar_t*);
