@@ -28,10 +28,10 @@ C_ASSERT((STATE_CHECKON & 1) && (STATE_RADIOON & 1) && STATE_RADIOON < STATE_GRO
 static HBITMAP CreatDibBitmap(HDC hDC, UINT cx, UINT cy, UINT bpp)
 {
     BITMAPINFO bi;
-    LPVOID pvBits;
+    PVOID pvBits;
 
     ZeroMemory(&bi, sizeof(bi));
-    bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
     bi.bmiHeader.biWidth = cx;
     bi.bmiHeader.biHeight = cy;
     bi.bmiHeader.biPlanes = 1;
@@ -44,7 +44,7 @@ static HIMAGELIST CreateStateImages(UINT ImageSize)
 {
     enum { bpp = 32 };
     UINT Failed = FALSE, State;
-    HIMAGELIST hIL = ImageList_Create(ImageSize, ImageSize, ILC_MASK | bpp, 4, 0);
+    HIMAGELIST hIL = ImageList_Create(ImageSize, ImageSize, ILC_MASK | bpp, 8, 0);
     if (!hIL)
         return hIL;
 
@@ -60,6 +60,8 @@ static HIMAGELIST CreateStateImages(UINT ImageSize)
 
     const HGDIOBJ hbmOld = SelectObject(hDC, hbmMask);
     Failed |= hbmOld == NULL;
+
+    // Create the check images
     SetRect(&Rect, 0, 0, ImageSize, ImageSize);
     FillRect(hDC, &Rect, HBRUSH(GetStockObject(WHITE_BRUSH)));
     InflateRect(&Rect, -BorderSize, -BorderSize);
@@ -67,15 +69,16 @@ static HIMAGELIST CreateStateImages(UINT ImageSize)
 
     SelectObject(hDC, hbmData);
     State = DFCS_BUTTONCHECK | DFCS_FLAT | DFCS_MONO;
-    DrawFrameControl(hDC, &Rect, DFC_BUTTON, State | 000000000000 | 0000000000000);
+    DrawFrameControl(hDC, &Rect, DFC_BUTTON, State);
     Failed |= ImageList_Add(hIL, hbmData, hbmMask) < 0;
-    DrawFrameControl(hDC, &Rect, DFC_BUTTON, State | DFCS_CHECKED | 0000000000000);
+    DrawFrameControl(hDC, &Rect, DFC_BUTTON, State | DFCS_CHECKED);
     Failed |= ImageList_Add(hIL, hbmData, hbmMask) < 0;
-    DrawFrameControl(hDC, &Rect, DFC_BUTTON, State | 000000000000 | DFCS_INACTIVE);
+    DrawFrameControl(hDC, &Rect, DFC_BUTTON, State | DFCS_INACTIVE);
     Failed |= ImageList_Add(hIL, hbmData, hbmMask) < 0;
     DrawFrameControl(hDC, &Rect, DFC_BUTTON, State | DFCS_CHECKED | DFCS_INACTIVE);
     Failed |= ImageList_Add(hIL, hbmData, hbmMask) < 0;
 
+    // Create the radio images
     SelectObject(hDC, hbmMask);
     SetRect(&Rect, 0, 0, ImageSize, ImageSize);
     FillRect(hDC, &Rect, HBRUSH(GetStockObject(WHITE_BRUSH)));
@@ -84,11 +87,11 @@ static HIMAGELIST CreateStateImages(UINT ImageSize)
 
     SelectObject(hDC, hbmData);
     State = DFCS_BUTTONRADIOIMAGE | DFCS_FLAT | DFCS_MONO;
-    DrawFrameControl(hDC, &Rect, DFC_BUTTON, State | 000000000000 | 0000000000000);
+    DrawFrameControl(hDC, &Rect, DFC_BUTTON, State);
     Failed |= ImageList_Add(hIL, hbmData, hbmMask) < 0;
-    DrawFrameControl(hDC, &Rect, DFC_BUTTON, State | DFCS_CHECKED | 0000000000000);
+    DrawFrameControl(hDC, &Rect, DFC_BUTTON, State | DFCS_CHECKED);
     Failed |= ImageList_Add(hIL, hbmData, hbmMask) < 0;
-    DrawFrameControl(hDC, &Rect, DFC_BUTTON, State | 000000000000 | DFCS_INACTIVE);
+    DrawFrameControl(hDC, &Rect, DFC_BUTTON, State | DFCS_INACTIVE);
     Failed |= ImageList_Add(hIL, hbmData, hbmMask) < 0;
     DrawFrameControl(hDC, &Rect, DFC_BUTTON, State | DFCS_CHECKED | DFCS_INACTIVE);
     Failed |= ImageList_Add(hIL, hbmData, hbmMask) < 0;
@@ -115,7 +118,7 @@ static inline DWORD NormalizeRegType(DWORD Type)
     }
 }
 
-static inline DWORD GetRegDWORD(HKEY hKey, LPCWSTR Name, DWORD *Data)
+static inline DWORD GetRegDWORD(HKEY hKey, LPCWSTR Name, PDWORD Data)
 {
     DWORD Size = sizeof(*Data);
     return SHRegGetValueW(hKey, NULL, Name, SRRF_RT_DWORD, NULL, Data, &Size);
@@ -203,7 +206,7 @@ static HRESULT GetSetState(HKEY hKey, DWORD &Type, LPBYTE Data, DWORD &Size, BOO
         return hr;
     DWORD Err, cb;
     if (Set)
-        Err = RegCreateKeyEx(hValueKey, SubKey, 0, NULL, 0, KEY_READ | KEY_SET_VALUE, NULL, &hValueKey, NULL);
+        Err = RegCreateKeyExW(hValueKey, SubKey, 0, NULL, 0, KEY_READ | KEY_SET_VALUE, NULL, &hValueKey, NULL);
     else
         Err = RegOpenKeyExW(hValueKey, SubKey, 0, KEY_READ, &hValueKey);
     if (Err)
@@ -212,7 +215,7 @@ static HRESULT GetSetState(HKEY hKey, DWORD &Type, LPBYTE Data, DWORD &Size, BOO
     if (Set && (HasMask || HasOffset))
     {
         Err = SHRegGetValueW(hValueKey, NULL, Name, SRRF_RT_ANY, NULL, NULL, &cb);
-        hr = HResultFromWin32(Err);
+        hr = HRESULT_FROM_WIN32(Err);
         if (Err == ERROR_FILE_NOT_FOUND)
         {
             DWORD DefaultData = 0;
@@ -221,7 +224,7 @@ static HRESULT GetSetState(HKEY hKey, DWORD &Type, LPBYTE Data, DWORD &Size, BOO
             if (SUCCEEDED(hr))
             {
                 Err = SHSetValueW(hValueKey, NULL, Name, Type, &DefaultData, cb);
-                hr = HResultFromWin32(Err);
+                hr = HRESULT_FROM_WIN32(Err);
             }
         }
 
@@ -229,17 +232,17 @@ static HRESULT GetSetState(HKEY hKey, DWORD &Type, LPBYTE Data, DWORD &Size, BOO
         {
             hr = HRESULT_FROM_WIN32(ERROR_OUTOFMEMORY);
             cb = max(cb, (Offset + 1) * sizeof(DWORD));
-            if (DWORD *pBigData = (DWORD*)LocalAlloc(LPTR, cb)) // LPTR to zero extended data
+            if (PDWORD pBigData = (PDWORD)LocalAlloc(LPTR, cb)) // LPTR to zero extended data
             {
                 Err = SHRegGetValueW(hValueKey, NULL, Name, SRRF_RT_ANY, &Type, pBigData, &cb);
-                hr = HResultFromWin32(Err);
+                hr = HRESULT_FROM_WIN32(Err);
                 Size = cb;
                 if (SUCCEEDED(hr))
                 {
                     pBigData[Offset] &= ~Mask;
-                    pBigData[Offset] |= *((DWORD*)Data);
+                    pBigData[Offset] |= *((PDWORD)Data);
                     Err = SHSetValueW(hValueKey, NULL, Name, Type, pBigData, cb);
-                    hr = HResultFromWin32(Err);
+                    hr = HRESULT_FROM_WIN32(Err);
                 }
                 LocalFree(pBigData);
             }
@@ -247,7 +250,8 @@ static HRESULT GetSetState(HKEY hKey, DWORD &Type, LPBYTE Data, DWORD &Size, BOO
     }
     else if (Set)
     {
-        hr = HResultFromWin32(SHSetValueW(hValueKey, NULL, Name, Type, Data, Size));
+        Err = SHSetValueW(hValueKey, NULL, Name, Type, Data, Size);
+        hr = HRESULT_FROM_WIN32(Err);
     }
     else
     {
@@ -258,25 +262,25 @@ static HRESULT GetSetState(HKEY hKey, DWORD &Type, LPBYTE Data, DWORD &Size, BOO
             if (Err == ERROR_SUCCESS)
             {
                 Err = ERROR_OUTOFMEMORY;
-                if (DWORD *pBigData = (DWORD*)LocalAlloc(LPTR, cb))
+                if (PDWORD pBigData = (PDWORD)LocalAlloc(LPTR, cb))
                 {
                     Err = SHRegGetValueW(hValueKey, NULL, Name, SRRF_RT_ANY, &Type, pBigData, &cb);
                     if (Offset < cb / sizeof(DWORD) && Err == ERROR_SUCCESS)
-                        *((DWORD*)Data) = pBigData[Offset];
+                        *((PDWORD)Data) = pBigData[Offset];
                     else
-                        *((DWORD*)Data) = 0; // Value not present or offset too large
+                        *((PDWORD)Data) = 0; // Value not present or offset too large
                     LocalFree(pBigData);
                 }
             }
-            hr = HResultFromWin32(Err);
         }
         else
         {
-            hr = HResultFromWin32(SHRegGetValueW(hValueKey, NULL, Name, SRRF_RT_ANY, &Type, Data, &Size));
+            Err = SHRegGetValueW(hValueKey, NULL, Name, SRRF_RT_ANY, &Type, Data, &Size);
         }
 
+        hr = HRESULT_FROM_WIN32(Err);
         if (HasMask && SUCCEEDED(hr))
-            *((DWORD*)Data) &= Mask;
+            *((PDWORD)Data) &= Mask;
     }
     RegCloseKey(hValueKey);
     return hr;
@@ -339,7 +343,7 @@ static HRESULT SaveCheckState(HKEY hKey, BOOL Checked)
 {
     BYTE Data[MAXVALUEDATA];
     DWORD Type = REG_DWORD, Size = sizeof(Data);
-    *((DWORD*)Data) = Checked;
+    *((PDWORD)Data) = Checked;
     LPCWSTR Name = Checked ? L"CheckedValue" : L"UncheckedValue";
     DWORD Err = SHRegGetValueW(hKey, NULL, Name, SRRF_RT_ANY, &Type, Data, &Size);
     if (Err == ERROR_FILE_NOT_FOUND)
@@ -559,7 +563,7 @@ HRESULT STDMETHODCALLTYPE CRegTreeOptions::ToggleItem(HTREEITEM hTI)
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE CRegTreeOptions::ShowHelp(HTREEITEM hTI, unsigned long param10)
+HRESULT STDMETHODCALLTYPE CRegTreeOptions::ShowHelp(HTREEITEM hTI, unsigned long Unknown)
 {
     return E_NOTIMPL;
 }

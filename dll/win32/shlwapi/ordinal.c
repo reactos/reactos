@@ -6376,7 +6376,7 @@ DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid)
 /**************************************************************************
  *  SHBoolSystemParametersInfo (SHLWAPI.537)
  *
- * Specialized SPI values from http://undoc.airesoft.co.uk/shlwapi.dll/SHBoolSystemParametersInfo.php
+ * Specialized SPI values from https://undoc.airesoft.co.uk/shlwapi.dll/SHBoolSystemParametersInfo.php
  */
 EXTERN_C BOOL WINAPI SHBoolSystemParametersInfo(UINT uiAction, PVOID pvParam)
 {

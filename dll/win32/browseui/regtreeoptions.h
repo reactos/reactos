@@ -45,10 +45,10 @@ public:
     void AddItemsFromRegistry(HKEY hKey, HTREEITEM hParent, HTREEITEM hInsertAfter);
 
     // *** IRegTreeOptions methods ***
-    STDMETHOD(InitTree)(HWND hTV, HKEY hKey, LPCSTR SubKey, char const *param18) override;
+    STDMETHOD(InitTree)(HWND hTV, HKEY hKey, LPCSTR SubKey, char const *pUnknown) override;
     STDMETHOD(WalkTree)(WALK_TREE_CMD Command) override;
     STDMETHOD(ToggleItem)(HTREEITEM hTI) override;
-    STDMETHOD(ShowHelp)(HTREEITEM hTI, unsigned long param10) override;
+    STDMETHOD(ShowHelp)(HTREEITEM hTI, unsigned long Unknown) override;
 
     DECLARE_REGISTRY_RESOURCEID(IDR_REGTREEOPTIONS)
     DECLARE_NOT_AGGREGATABLE(CRegTreeOptions)
