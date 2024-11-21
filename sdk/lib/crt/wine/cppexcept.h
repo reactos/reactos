@@ -165,9 +165,7 @@ static const cxx_type_info type ## _cxx_type_info = { \
     (cxx_copy_ctor)THISCALL(type ##_copy_ctor) \
 };
 
-#define DEFINE_CXX_DATA(type, base_no, cl1, cl2, dtor)  \
-DEFINE_CXX_TYPE_INFO(type) \
-\
+#define DEFINE_CXX_EXCEPTION(type, base_no, cl1, cl2, dtor)  \
 static const cxx_type_info_table type ## _cxx_type_table = { \
     base_no+1, \
     { \
@@ -201,10 +199,7 @@ static void init_ ## type ## _cxx_type_info(char *base) \
     type ## _cxx_type_info.copy_ctor  = (char *)type ## _copy_ctor - base; \
 }
 
-#define DEFINE_CXX_DATA(type, base_no, cl1, cl2, dtor)  \
-\
-DEFINE_CXX_TYPE_INFO(type) \
-\
+#define DEFINE_CXX_EXCEPTION(type, base_no, cl1, cl2, dtor)  \
 static cxx_type_info_table type ## _cxx_type_table = { \
     base_no+1, \
     { \
@@ -230,7 +225,15 @@ static void init_ ## type ## _cxx(char *base) \
     type ## _exception_type.destructor      = (char *)dtor - base; \
     type ## _exception_type.type_info_table = (char *)&type ## _cxx_type_table - base; \
 }
+
 #endif
+
+#define DEFINE_CXX_DATA(type, base_no, cl1, cl2, dtor) \
+DEFINE_CXX_TYPE_INFO(type) \
+DEFINE_CXX_EXCEPTION(type, base_no, cl1, cl2, dtor)
+
+#define DEFINE_CXX_EXCEPTION0(name, dtor) \
+    DEFINE_CXX_EXCEPTION(name, 0, NULL, NULL, dtor)
 
 #define DEFINE_CXX_DATA0(name, dtor) \
     DEFINE_CXX_DATA(name, 0, NULL, NULL, dtor)
@@ -238,5 +241,93 @@ static void init_ ## type ## _cxx(char *base) \
     DEFINE_CXX_DATA(name, 1, cl1, NULL, dtor)
 #define DEFINE_CXX_DATA2(name, cl1, cl2, dtor) \
     DEFINE_CXX_DATA(name, 2, cl1, cl2, dtor)
+
+#if _MSVCR_VER >= 80
+#define EXCEPTION_MANGLED_NAME ".?AVexception@std@@"
+#else
+#define EXCEPTION_MANGLED_NAME ".?AVexception@@"
+#endif
+
+#define CREATE_EXCEPTION_OBJECT(exception_name) \
+static exception* __exception_ctor(exception *this, const char *str, const vtable_ptr *vtbl) \
+{ \
+    if (str) \
+    { \
+        unsigned int len = strlen(str) + 1; \
+        this->name = malloc(len); \
+        memcpy(this->name, str, len); \
+        this->do_free = TRUE; \
+    } \
+    else \
+    { \
+        this->name = NULL; \
+        this->do_free = FALSE; \
+    } \
+    this->vtable = vtbl; \
+    return this; \
+} \
+\
+static exception* __exception_copy_ctor(exception *this, const exception *rhs, const vtable_ptr *vtbl) \
+{ \
+    if (rhs->do_free) \
+    { \
+        __exception_ctor(this, rhs->name, vtbl); \
+    } \
+    else \
+    { \
+        *this = *rhs; \
+        this->vtable = vtbl; \
+    } \
+    return this; \
+} \
+extern const vtable_ptr exception_name ## _vtable; \
+exception* __thiscall exception_name ## _copy_ctor(exception *this, const exception *rhs); \
+DEFINE_THISCALL_WRAPPER(exception_name ## _copy_ctor,8) \
+exception* __thiscall exception_name ## _copy_ctor(exception *this, const exception *rhs) \
+{ \
+    return __exception_copy_ctor(this, rhs, & exception_name ## _vtable); \
+} \
+\
+void __thiscall exception_name ## _dtor(exception *this); \
+DEFINE_THISCALL_WRAPPER(exception_name ## _dtor,4) \
+void __thiscall exception_name ## _dtor(exception *this) \
+{ \
+    if (this->do_free) free(this->name); \
+} \
+\
+void* __thiscall exception_name ## _vector_dtor(exception *this, unsigned int flags); \
+DEFINE_THISCALL_WRAPPER(exception_name ## _vector_dtor,8) \
+void* __thiscall exception_name ## _vector_dtor(exception *this, unsigned int flags) \
+{ \
+    if (flags & 2) \
+    { \
+        INT_PTR i, *ptr = (INT_PTR *)this - 1; \
+\
+        for (i = *ptr - 1; i >= 0; i--) exception_name ## _dtor(this + i); \
+        operator_delete(ptr); \
+    } \
+    else \
+    { \
+        exception_name ## _dtor(this); \
+        if (flags & 1) operator_delete(this); \
+    } \
+    return this; \
+} \
+\
+const char* __thiscall exception_name ## _what(exception *this); \
+DEFINE_THISCALL_WRAPPER(exception_name ## _what,4) \
+const char* __thiscall exception_name ## _what(exception *this) \
+{ \
+    return this->name ? this->name : "Unknown exception"; \
+} \
+\
+__ASM_BLOCK_BEGIN(exception_name ## _vtables) \
+__ASM_VTABLE(exception_name, \
+        VTABLE_ADD_FUNC(exception_name ## _vector_dtor) \
+        VTABLE_ADD_FUNC(exception_name ## _what)); \
+__ASM_BLOCK_END \
+\
+DEFINE_RTTI_DATA0(exception_name, 0, EXCEPTION_MANGLED_NAME) \
+DEFINE_CXX_TYPE_INFO(exception_name)
 
 #endif /* __MSVCRT_CPPEXCEPT_H */
