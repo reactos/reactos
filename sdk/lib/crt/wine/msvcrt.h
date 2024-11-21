@@ -631,18 +631,6 @@ struct MSVCRT__stat64 {
 #define MSVCRT__O_U16TEXT       0x20000
 #define MSVCRT__O_U8TEXT        0x40000
 
-/* fpclass constants */
-#define MSVCRT__FPCLASS_SNAN 0x0001  /* Signaling "Not a Number" */
-#define MSVCRT__FPCLASS_QNAN 0x0002  /* Quiet "Not a Number" */
-#define MSVCRT__FPCLASS_NINF 0x0004  /* Negative Infinity */
-#define MSVCRT__FPCLASS_NN   0x0008  /* Negative Normal */
-#define MSVCRT__FPCLASS_ND   0x0010  /* Negative Denormal */
-#define MSVCRT__FPCLASS_NZ   0x0020  /* Negative Zero */
-#define MSVCRT__FPCLASS_PZ   0x0040  /* Positive Zero */
-#define MSVCRT__FPCLASS_PD   0x0080  /* Positive Denormal */
-#define MSVCRT__FPCLASS_PN   0x0100  /* Positive Normal */
-#define MSVCRT__FPCLASS_PINF 0x0200  /* Positive Infinity */
-
 /* fpclassify constants */
 #define MSVCRT_FP_INFINITE   1
 #define MSVCRT_FP_NAN        2
