@@ -192,10 +192,7 @@ extern WORD *MSVCRT__pwctype;
 
 void msvcrt_set_errno(int) DECLSPEC_HIDDEN;
 #if _MSVCR_VER >= 80
-typedef enum {
-    EXCEPTION_BAD_ALLOC,
-} exception_type;
-void throw_exception(exception_type, HRESULT, const char*) DECLSPEC_HIDDEN;
+void throw_bad_alloc(void) DECLSPEC_HIDDEN;
 #endif
 
 void __cdecl _purecall(void);

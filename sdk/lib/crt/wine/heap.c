@@ -177,7 +177,7 @@ void* CDECL DECLSPEC_HOTPATCH operator_new(size_t size)
 
   TRACE("(%Iu) out of memory\n", size);
 #if _MSVCR_VER >= 80
-  throw_exception(EXCEPTION_BAD_ALLOC, 0, "bad allocation");
+  throw_bad_alloc();
 #endif
   return NULL;
 }

@@ -620,15 +620,11 @@ void msvcrt_init_exception(void *base)
 }
 
 #if _MSVCR_VER >= 80
-void throw_exception(exception_type et, HRESULT hr, const char *str)
+void throw_bad_alloc(void)
 {
-    switch(et) {
-    case EXCEPTION_BAD_ALLOC: {
-        bad_alloc e;
-        __exception_ctor(&e, str, &bad_alloc_vtable);
-        _CxxThrowException(&e, &bad_alloc_exception_type);
-    }
-    }
+    bad_alloc e;
+    __exception_ctor(&e, "bad allocation", &bad_alloc_vtable);
+    _CxxThrowException(&e, &bad_alloc_exception_type);
 }
 #endif
 
