@@ -1270,7 +1270,7 @@ void CDECL terminate(void)
 {
     thread_data_t *data = msvcrt_get_thread_data();
     if (data->terminate_handler) data->terminate_handler();
-    MSVCRT_abort();
+    abort();
 }
 
 /******************************************************************

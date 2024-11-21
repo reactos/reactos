@@ -629,8 +629,6 @@ wint_t __cdecl MSVCRT__ungetwc_nolock(wint_t, FILE*);
 int __cdecl      MSVCRT__fseeki64_nolock(FILE*,__int64,int);
 __int64 __cdecl  MSVCRT__ftelli64(FILE* file);
 __int64 __cdecl  MSVCRT__ftelli64_nolock(FILE*);
-void __cdecl     MSVCRT__exit(int);
-void __cdecl     MSVCRT_abort(void);
 size_t __cdecl MSVCRT__fread_nolock(void*,size_t,size_t,FILE*);
 size_t __cdecl MSVCRT__fread_nolock_s(void*,size_t,size_t,size_t,FILE*);
 size_t __cdecl MSVCRT__fwrite_nolock(const void*,size_t,size_t,FILE*);

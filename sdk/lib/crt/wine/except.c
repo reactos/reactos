@@ -235,7 +235,7 @@ int CDECL raise(int sig)
     case SIGILL:
     case SIGSEGV:
         handler = sighandlers[sig];
-        if (handler == SIG_DFL) MSVCRT__exit(3);
+        if (handler == SIG_DFL) _exit(3);
         if (handler != SIG_IGN)
         {
             EXCEPTION_POINTERS **ep = (EXCEPTION_POINTERS**)__pxcptinfoptrs(), *old_ep;
@@ -256,7 +256,7 @@ int CDECL raise(int sig)
     case SIGTERM:
     case SIGBREAK:
         handler = sighandlers[sig];
-        if (handler == SIG_DFL) MSVCRT__exit(3);
+        if (handler == SIG_DFL) _exit(3);
         if (handler != SIG_IGN)
         {
             sighandlers[sig] = SIG_DFL;
@@ -325,7 +325,7 @@ void CDECL __security_error_handler(int code, void *data)
     else
         FIXME("(%d, %p) stub\n", code, data);
 
-    MSVCRT__exit(3);
+    _exit(3);
 }
 
 #endif /* _MSVCR_VER>=70 && _MSVCR_VER<=71 */
