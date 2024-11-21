@@ -579,15 +579,6 @@ struct MSVCRT__stat64 {
 #define MSVCRT__P_NOWAITO 3
 #define MSVCRT__P_DETACH  4
 
-#define MSVCRT_LC_ALL          0
-#define MSVCRT_LC_COLLATE      1
-#define MSVCRT_LC_CTYPE        2
-#define MSVCRT_LC_MONETARY     3
-#define MSVCRT_LC_NUMERIC      4
-#define MSVCRT_LC_TIME         5
-#define MSVCRT_LC_MIN          MSVCRT_LC_ALL
-#define MSVCRT_LC_MAX          MSVCRT_LC_TIME
-
 #define MSVCRT__HEAPEMPTY      -1
 #define MSVCRT__HEAPOK         -2
 #define MSVCRT__HEAPBADBEGIN   -3
