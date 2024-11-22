@@ -115,7 +115,7 @@ IsExplorerSystemShell()
         if (RegQueryValueExW(hKeyWinlogon, L"Shell", 0, &dwType,
             (LPBYTE)szShell, &dwBufferSize) == ERROR_SUCCESS)
         {
-            if (StrStrI(szShell, szExplorer))
+            if ((dwType == REG_SZ || dwType == REG_EXPAND_SZ) && StrStrI(szShell, szExplorer))
                 bIsSystemShell = TRUE;
             else
                 bIsSystemShell = FALSE;
