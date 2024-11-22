@@ -1975,7 +1975,7 @@ DriveDlgProc(
                         // TODO: In the future: first test needs to be augmented with:
                         // (... && PartEntry->Volume->IsSimpleVolume)
                         if ((PartEntry->IsPartitioned && PartEntry->Volume) ||
-                            (!PartEntry->IsPartitioned && (PartitionCreationChecks(PartEntry) == NOT_AN_ERROR)))
+                            (!PartEntry->IsPartitioned && (PartitionCreateChecks(PartEntry, 0ULL, 0) == NOT_AN_ERROR)))
                         {
                             // ASSERT(PartEntry != PartEntry->DiskEntry->ExtendedPartition);
                             ASSERT(!IsContainerPartition(PartEntry->PartitionType));
@@ -2090,7 +2090,7 @@ DisableWizNext:
                     {
                         ULONG Error;
 
-                        Error = PartitionCreationChecks(PartEntry);
+                        Error = PartitionCreateChecks(PartEntry, 0ULL, 0);
                         if (Error != NOT_AN_ERROR)
                         {
                             // MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
