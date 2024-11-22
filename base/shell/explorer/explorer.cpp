@@ -95,7 +95,7 @@ IsExplorerSystemShell()
     LPWSTR szExplorer;
     BOOL bIsSystemShell = TRUE; // Assume we are the system shell by default.
 
-    if (!GetModuleFileName(NULL, szPath, MAX_PATH))
+    if (!GetModuleFileNameW(NULL, szPath, _countof(szPath)))
         return FALSE;
 
     szExplorer = PathFindFileNameW(szPath);
