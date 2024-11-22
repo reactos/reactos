@@ -96,7 +96,7 @@ IsExplorerSystemShell()
     LPWSTR szExplorer = NULL;
     DWORD dwType;
     DWORD dwBufferSize = sizeof(szShell);
-    BOOL bIsSystemShell = TRUE;
+    BOOL bIsSystemShell = TRUE; // Assume we are the system shell by default.
 
     if (!GetModuleFileName(NULL, szPath, MAX_PATH))
         return FALSE;
