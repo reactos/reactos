@@ -110,6 +110,8 @@ KdpGetDebugMode(
     return p2;
 }
 
+extern void KdDbgPortPrintf(PCSTR Format, ...);
+
 NTSTATUS
 NTAPI
 KdDebuggerInitialize0(
@@ -118,6 +120,8 @@ KdDebuggerInitialize0(
     PCHAR CommandLine, Port = NULL;
     ULONG i;
     BOOLEAN Success = FALSE;
+
+KdDbgPortPrintf("%s(0x%p)\n", __FUNCTION__, LoaderBlock);
 
     if (LoaderBlock)
     {
@@ -333,6 +337,8 @@ KdDebuggerInitialize1(
     PKDP_INIT_ROUTINE KdpInitRoutine;
     BOOLEAN Success = FALSE;
     BOOLEAN ReinitForPhase2 = FALSE;
+
+KdDbgPortPrintf("%s(0x%p)\n", __FUNCTION__, LoaderBlock);
 
     /* Make space for the displayed providers' signons */
     HalDisplayString("\r\n");

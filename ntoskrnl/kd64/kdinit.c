@@ -23,6 +23,52 @@
 #define DbgPrint(fmt, ...) (KdpDprintf(fmt, ##__VA_ARGS__), 0)
 #define DbgPrintEx(cmpid, lvl, fmt, ...) (KdpDprintf(fmt, ##__VA_ARGS__), 0)
 
+CPPORT KdInitPort = {0};
+static const ULONG BaseArray[] = {0, 0x3F8, 0x2F8, 0x3E8, 0x2E8}; // This is for PC-AT only!
+#define DEFAULT_BAUD_RATE   115200
+
+void KdDbgPortPutsN(PCCH Buffer, size_t Length)
+{
+    while (Length-- > 0)
+    {
+        if (*Buffer == '\n')
+            CpPutByte(&KdInitPort, '\r');
+        CpPutByte(&KdInitPort, *Buffer++);
+    }
+}
+
+void KdDbgPortPuts(PCSTR String)
+{
+    KdDbgPortPutsN(String, strlen(String));
+}
+
+void KdDbgPortPrintf(PCSTR Format, ...)
+{
+    va_list ap;
+    size_t Length;
+    CHAR Buffer[512];
+
+    va_start(ap, Format);
+    Length = _vsnprintf(Buffer, sizeof(Buffer), Format, ap);
+    va_end(ap);
+
+    KdDbgPortPutsN(Buffer, Length);
+}
+
+ULONG DbgPrintEarly(PCSTR Format, ...)
+{
+    va_list ap;
+    size_t Length;
+    CHAR Buffer[512];
+
+    va_start(ap, Format);
+    Length = _vsnprintf(Buffer, sizeof(Buffer), Format, ap);
+    va_end(ap);
+
+    KdDbgPortPutsN(Buffer, Length);
+    return 0;
+}
+
 /* UTILITY FUNCTIONS *********************************************************/
 
 #include <mm/ARM3/miarm.h> // For MiIsMemoryTypeInvisible()
@@ -169,6 +215,15 @@ KdInitSystem(
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     ULONG i;
 
+    if (BootPhase == 0 && LoaderBlock)
+    {
+        NTSTATUS Status = CpInitialize(&KdInitPort, UlongToPtr(BaseArray[2]), DEFAULT_BAUD_RATE);
+        if (!NT_SUCCESS(Status))
+            KdDbgPortPrintf("CpInitialize() failed, Status 0x%08lx\n", Status);
+    }
+
+KdDbgPortPrintf("KdInitSystem(%d, 0x%p)\n", BootPhase, LoaderBlock);
+
     /* Check if this is Phase 1 */
     if (BootPhase)
     {
@@ -179,7 +234,10 @@ KdInitSystem(
 
     /* Check if we already initialized once */
     if (KdDebuggerEnabled)
+    {
+KdDbgPortPuts("    Debugger already enabled\n");
         return TRUE;
+    }
 
     /* Set the Debug Routine as the Stub for now */
     KiDebugRoutine = KdpStub;
@@ -190,6 +248,8 @@ KdInitSystem(
     /* Check if the Debugger Data Block was already initialized */
     if (!KdpDebuggerDataListHead.Flink)
     {
+KdDbgPortPuts("    Init debugger data block\n");
+
         /* It wasn't...Initialize the KD Data Listhead */
         InitializeListHead(&KdpDebuggerDataListHead);
 
@@ -350,6 +410,15 @@ KdInitSystem(
             KdPitchDebugger = TRUE;
             EnableKd = FALSE;
         }
+
+KdDbgPortPrintf("    Init with LoaderBlock 0x%p\n"
+                "    EnableKd: %s\n"
+                "    KdPitchDebugger: %s\n"
+                "    DisableKdAfterInit: %s\n",
+                LoaderBlock,
+                EnableKd ? "TRUE" : "FALSE",
+                KdPitchDebugger ? "TRUE" : "FALSE",
+                DisableKdAfterInit ? "TRUE" : "FALSE");
     }
     else
     {
@@ -358,6 +427,8 @@ KdInitSystem(
 
         /* Unconditionally enable KD */
         EnableKd = TRUE;
+
+KdDbgPortPuts("    Init without LoaderBlock, EnableKd: TRUE\n");
     }
 
     /* Set the Kernel Base in the Data Block */
@@ -403,6 +474,9 @@ KdInitSystem(
         /* Let user-mode know that it's enabled as well */
         SharedUserData->KdDebuggerEnabled = TRUE;
 
+KdDbgPortPuts("    KdPitchDebugger, KdDebuggerEnabled all TRUE\n");
+KdDbgPortPrintf("%s: Debugger getting enabled\n", __FUNCTION__);
+
         /* Display separator + ReactOS version at the start of the debug log */
         KdpPrintBanner();
 
@@ -410,6 +484,7 @@ KdInitSystem(
         if (DisableKdAfterInit)
         {
             /* Disable it */
+KdDbgPortPrintf("%s: Disable debugger by default...\n", __FUNCTION__);
             KdDisableDebuggerWithLock(FALSE);
 
             /*
@@ -467,8 +542,10 @@ KdInitSystem(
     else
     {
         /* Disable debugger */
+KdDbgPortPrintf("%s: debugger is DISABLED\n", __FUNCTION__);
         KdDebuggerNotPresent = TRUE;
     }
+KdDbgPortPrintf("%s: debugger init is DONE\n", __FUNCTION__);
 
     /* Return initialized */
     return TRUE;
