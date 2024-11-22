@@ -38,8 +38,15 @@ BOOLEAN IniFileInitialize(VOID)
     if (Status != ESUCCESS)
     {
         ERR("Error while opening freeldr.ini, Status: %d\n", Status);
-        UiMessageBoxCritical("Error opening freeldr.ini or file not found.\nYou need to re-install FreeLoader.");
-        return FALSE;
+
+        /* Try to open boot.ini */
+        Status = FsOpenFile("boot.ini", FrLdrBootPath, OpenReadOnly, &FileId);
+        if (Status != ESUCCESS)
+        {
+            ERR("Error while opening boot.ini, Status: %d\n", Status);
+            UiMessageBoxCritical("Error opening freeldr.ini/boot.ini or file not found.\nYou need to re-install FreeLoader.");
+            return FALSE;
+        }
     }
 
     /* Get the file size */

@@ -126,12 +126,35 @@ LoadSettings(
         return;
     }
 
-    /* Open the [FreeLoader] section and load the settings */
-    if ((BootMgrInfo.FrLdrSection == 0) &&
-        !IniOpenSection("FreeLoader", &BootMgrInfo.FrLdrSection))
+    BOOLEAN FoundLoaderSection = FALSE;
+    PCSTR LoaderSections[] = {
+        "FreeLoader",
+        "Boot Loader",
+        "FlexBoot",
+        "MultiBoot",
+    };
+
+    /* Search for the first section in LoaderSections and load the settings, 
+     * prioritizing the order in the file.
+     * If a section is already loaded, skip further checks. */
+    if (!BootMgrInfo.FrLdrSection)
     {
-        UiMessageBoxCritical("Section [FreeLoader] not found in freeldr.ini");
-        return;
+        for (ULONG i = 0; i < sizeof(LoaderSections) / sizeof(LoaderSections[0]); i++)
+        {
+            PCSTR Section = LoaderSections[i];
+
+            if (IniOpenSection(Section, &BootMgrInfo.FrLdrSection))
+            {
+                FoundLoaderSection = TRUE;
+                break;
+            }
+        }
+
+        if (!FoundLoaderSection)
+        {
+            UiMessageBoxCritical("Bootloader Section not found in freeldr.ini");
+            return;
+        }
     }
 
     /* Get the debug string. Always override it with the one from freeldr.ini */
