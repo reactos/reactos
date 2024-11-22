@@ -109,7 +109,7 @@ IsExplorerSystemShell()
     else
     {
         DWORD cbShell;
-        LSTATUS Status;
+        LSTATUS status;
 
         // Get length of the "Shell" key
         status = RegQueryValueExW(hKeyWinlogon, L"Shell", 0, NULL, NULL, &cbShell);
