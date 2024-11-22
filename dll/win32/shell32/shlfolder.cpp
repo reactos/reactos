@@ -303,8 +303,8 @@ HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST 
 }
 
 HRESULT SHELL_CompareAllFields(IShellFolder* psf,
-                                 LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2,
-                                 UINT Count, int Skip)
+                               LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2,
+                               UINT Count, int Skip)
 {
     for (UINT i = 0; i < Count; ++i)
     {
@@ -317,9 +317,18 @@ HRESULT SHELL_CompareAllFields(IShellFolder* psf,
     return MAKE_COMPARE_HRESULT(0);
 }
 
+/***********************************************************************
+ *    SHELL32_FolderImplCompareIDsTiebreaker
+ *
+ * Used to compare other columns if the intial column passed to
+ * IShellFolder::CompareIDs compared equal.
+ * NT5 compares the name column first in this case.
+ * Next, all columns are compared if the caller requested ALLFIELDS.
+ * Finally, compare the children (if any).
+ */
 HRESULT SHELL32_FolderImplCompareIDsTiebreaker(IShellFolder2* psf, LPARAM lParam,
-                                             LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2,
-                                             UINT Count, int Canonical)
+                                               LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2,
+                                               UINT Count, int Canonical)
 {
     if ((lParam & SHCIDS_COLUMNMASK) != Canonical && Canonical >= 0 && LOBYTE(GetVersion()) < 6)
     {

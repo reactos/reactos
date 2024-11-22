@@ -1222,7 +1222,7 @@ void CDefView::ColumnListChanged()
 
 HRESULT CDefView::CompareIDsWithFallback(LPARAM Rule, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
-    UINT Flags = m_pSF2Parent ? (Rule & SHCIDS_BITMASK) : 0;
+    const UINT Flags = m_pSF2Parent ? (Rule & SHCIDS_BITMASK) : 0;
     HRESULT hr = m_pSFParent->CompareIDs(Rule, pidl1, pidl2);
     if (hr != 0)
         return hr;
@@ -1267,6 +1267,7 @@ INT CALLBACK CDefView::ListViewCompareItems(LPARAM lParam1, LPARAM lParam2, LPAR
     HRESULT hres = pThis->CompareIDsWithFallback(pThis->m_sortInfo.ListColumn, pidl1, pidl2);
     if (FAILED_UNEXPECTEDLY(hres))
         return 0;
+
     SHORT nDiff = HRESULT_CODE(hres);
     return nDiff * pThis->m_sortInfo.Direction;
 }
@@ -1601,7 +1602,7 @@ HRESULT CDefView::FillList(BOOL IsRefreshCommand)
         if (SUCCEEDED(hr))
             hr = MapFolderColumnToListColumn(hr);
         if (SUCCEEDED(hr))
-            sortCol = (int) hr;
+            sortCol = (int)hr;
     }
     _Sort(sortCol);
 
@@ -3373,7 +3374,7 @@ HRESULT CDefView::SaveViewState(IStream *pStream)
     cols.Signature = PERSISTCOLUMNS::SIG;
     cols.Count = 0;
     LVCOLUMN lvc;
-    lvc.mask = LVCF_WIDTH | LVCF_SUBITEM;
+    lvc.mask = LVCF_WIDTH;
     for (UINT i = 0, j = 0; i < PERSISTCOLUMNS::MAXCOUNT && ListView_GetColumn(m_ListView, j, &lvc); ++j)
     {
         HRESULT hr = MapListColumnToFolderColumn(j);
