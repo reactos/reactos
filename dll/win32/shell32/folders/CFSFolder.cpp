@@ -1166,7 +1166,7 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
         case SHFSF_COL_FATTS:
             result = SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
             if (result == 0)
-                result = pData1->u.file.uFileAttribs - pData1->u.file.uFileAttribs; // Attributes without a "UI letter"
+                result = pData1->u.file.uFileAttribs - pData1->u.file.uFileAttribs; // Attributes without a "UI letter" (R/A/S/H)
             break;
         case SHFSF_COL_COMMENT:
             result = SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
