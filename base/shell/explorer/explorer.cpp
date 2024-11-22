@@ -101,7 +101,7 @@ IsExplorerSystemShell()
     if (!GetModuleFileName(NULL, szPath, MAX_PATH))
         return FALSE;
 
-    szExplorer = PathFindFileName((LPWSTR)szPath);
+    szExplorer = PathFindFileNameW(szPath);
 
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
         0, KEY_READ, &hKeyWinlogon) != ERROR_SUCCESS)
