@@ -119,7 +119,7 @@ IsExplorerSystemShell()
             LPWSTR szShell;
             DWORD dwType;
 
-            szShell = (LPWSTR)malloc(cbShell);
+            szShell = new WCHAR[cbShell / sizeof(WCHAR)];
 
             status = RegQueryValueExW(hKeyWinlogon, L"Shell", 0, &dwType, (LPBYTE)szShell, &cbShell);
 
@@ -131,7 +131,7 @@ IsExplorerSystemShell()
                     bIsSystemShell = FALSE;
             }
 
-            free(szShell);
+            delete[] szShell;
         }
 
         RegCloseKey(hKeyWinlogon);
