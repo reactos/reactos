@@ -91,11 +91,8 @@ static BOOL
 IsExplorerSystemShell()
 {
     HKEY hKeyWinlogon;
-    WCHAR szShell[256];
     WCHAR szPath[MAX_PATH];
-    LPWSTR szExplorer = NULL;
-    DWORD dwType;
-    DWORD dwBufferSize = sizeof(szShell);
+    LPWSTR szExplorer;
     BOOL bIsSystemShell = TRUE; // Assume we are the system shell by default.
 
     if (!GetModuleFileName(NULL, szPath, MAX_PATH))
@@ -111,6 +108,10 @@ IsExplorerSystemShell()
     }
     else
     {
+        WCHAR szShell[256];
+        DWORD dwType;
+        DWORD dwBufferSize = sizeof(szShell);
+
         if (RegQueryValueEx(hKeyWinlogon, L"Shell", 0, &dwType,
             (LPBYTE)szShell, &dwBufferSize) == ERROR_SUCCESS)
         {
