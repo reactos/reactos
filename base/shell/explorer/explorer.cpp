@@ -108,17 +108,30 @@ IsExplorerSystemShell()
     }
     else
     {
-        WCHAR szShell[256];
-        DWORD dwType;
-        DWORD dwBufferSize = sizeof(szShell);
+        DWORD cbShell;
+        LSTATUS status;
 
-        if (RegQueryValueExW(hKeyWinlogon, L"Shell", 0, &dwType,
-            (LPBYTE)szShell, &dwBufferSize) == ERROR_SUCCESS)
+        // Get length of the "Shell" key
+        status = RegQueryValueExW(hKeyWinlogon, L"Shell", 0, NULL, NULL, &cbShell);
+
+        if (status == ERROR_SUCCESS)
         {
-            if ((dwType == REG_SZ || dwType == REG_EXPAND_SZ) && StrStrI(szShell, szExplorer))
-                bIsSystemShell = TRUE;
-            else
-                bIsSystemShell = FALSE;
+            LPWSTR szShell;
+            DWORD dwType;
+
+            szShell = (LPWSTR)malloc(cbShell);
+
+            status = RegQueryValueExW(hKeyWinlogon, L"Shell", 0, &dwType, (LPBYTE)szShell, &cbShell);
+
+            if (status == ERROR_SUCCESS)
+            {
+                if ((dwType == REG_SZ || dwType == REG_EXPAND_SZ) && StrStrI(szShell, szExplorer))
+                    bIsSystemShell = TRUE;
+                else
+                    bIsSystemShell = FALSE;
+            }
+
+            free(szShell);
         }
 
         RegCloseKey(hKeyWinlogon);
