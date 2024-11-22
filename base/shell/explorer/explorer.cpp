@@ -91,11 +91,11 @@ static BOOL
 IsExplorerSystemShell()
 {
     HKEY hKeyWinlogon;
-	WCHAR szShell[256];
-	WCHAR szPath[MAX_PATH];
+    WCHAR szShell[256];
+    WCHAR szPath[MAX_PATH];
     LPWSTR szExplorer = NULL;
-	DWORD dwType;
-	DWORD dwBufferSize = sizeof(szShell);
+    DWORD dwType;
+    DWORD dwBufferSize = sizeof(szShell);
     BOOL bIsSystemShell = TRUE;
 
     if (!GetModuleFileName(NULL, szPath, MAX_PATH))
@@ -103,8 +103,8 @@ IsExplorerSystemShell()
 
     szExplorer = PathFindFileName((LPWSTR)szPath);
 
-	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
-		0, KEY_READ, &hKeyWinlogon) != ERROR_SUCCESS)
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+        0, KEY_READ, &hKeyWinlogon) != ERROR_SUCCESS)
     {
         // No registry access.
         bIsSystemShell = TRUE;
@@ -123,7 +123,7 @@ IsExplorerSystemShell()
         RegCloseKey(hKeyWinlogon);
     }
 
-	return bIsSystemShell;
+    return bIsSystemShell;
 }
 
 #if !WIN7_COMPAT_MODE
