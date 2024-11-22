@@ -363,8 +363,21 @@ NTSTATUS
 NTAPI
 KdpAllowDisable(VOID)
 {
-    UNIMPLEMENTED;
-    return STATUS_ACCESS_DENIED;
+    ULONG i;
+
+    /* Loop every processor */
+    for (i = 0; i < KeNumberProcessors; i++)
+    {
+        PKPROCESSOR_STATE ProcessorState = &KiProcessorBlock[i]->ProcessorState;
+
+        /* If any processor breakpoints are active,
+         * we can't allow running without a debugger */
+        if (ProcessorState->SpecialRegisters.KernelDr7 & 0xFF)
+            return STATUS_ACCESS_DENIED;
+    }
+
+    /* No processor breakpoints, allow disabling the debugger */
+    return STATUS_SUCCESS;
 }
 
 /* EOF */
