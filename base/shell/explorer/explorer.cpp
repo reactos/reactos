@@ -109,21 +109,21 @@ IsExplorerSystemShell()
     else
     {
         DWORD cbShell;
-        LSTATUS status;
+        LSTATUS Status;
 
         // Get length of the "Shell" key
-        status = RegQueryValueExW(hKeyWinlogon, L"Shell", 0, NULL, NULL, &cbShell);
+        Status = RegQueryValueExW(hKeyWinlogon, L"Shell", 0, NULL, NULL, &cbShell);
 
-        if (status == ERROR_SUCCESS)
+        if (Status == ERROR_SUCCESS)
         {
             LPWSTR szShell;
             DWORD dwType;
 
             szShell = new WCHAR[cbShell / sizeof(WCHAR)];
 
-            status = RegQueryValueExW(hKeyWinlogon, L"Shell", 0, &dwType, (LPBYTE)szShell, &cbShell);
+            Status = RegQueryValueExW(hKeyWinlogon, L"Shell", 0, &dwType, (LPBYTE)szShell, &cbShell);
 
-            if (status == ERROR_SUCCESS)
+            if (Status == ERROR_SUCCESS)
             {
                 if ((dwType == REG_SZ || dwType == REG_EXPAND_SZ) && StrStrI(szShell, szExplorer))
                     bIsSystemShell = TRUE;
