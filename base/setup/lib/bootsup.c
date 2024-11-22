@@ -19,7 +19,7 @@
 #include "bootcode.h"
 #include "fsutil.h"
 
-#include "setuplib.h" // HAXX for IsUnattendedSetup!!
+#include "setuplib.h" // HACK for IsUnattendedSetup
 
 #include "bootsup.h"
 
@@ -1658,6 +1658,7 @@ GetDeviceInfo(
  * @return  An NTSTATUS code indicating success or failure.
  **/
 NTSTATUS
+NTAPI
 InstallBootManagerAndBootEntries(
     _In_ ARCHITECTURE_TYPE ArchType,
     _In_ PCUNICODE_STRING SystemRootPath,
@@ -1813,6 +1814,7 @@ Quit:
 }
 
 NTSTATUS
+NTAPI
 InstallBootcodeToRemovable(
     _In_ ARCHITECTURE_TYPE ArchType,
     _In_ PCUNICODE_STRING RemovableRootPath,

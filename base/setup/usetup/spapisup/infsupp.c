@@ -228,16 +228,19 @@ SetupOpenInfFileExW(
 
 /* GLOBALS *******************************************************************/
 
-pSpInfCloseInfFile  SpInfCloseInfFile  = SetupCloseInfFile;
-pSpInfFindFirstLine SpInfFindFirstLine = SetupFindFirstLineW;
-pSpInfFindNextLine  SpInfFindNextLine  = SetupFindNextLine;
-pSpInfGetFieldCount SpInfGetFieldCount = SetupGetFieldCount;
-pSpInfGetBinaryField  SpInfGetBinaryField  = SetupGetBinaryField;
-pSpInfGetIntField     SpInfGetIntField     = SetupGetIntField;
-pSpInfGetMultiSzField SpInfGetMultiSzField = SetupGetMultiSzFieldW;
-pSpInfGetStringField  SpInfGetStringField  = SetupGetStringFieldW;
-pSpInfGetField    SpInfGetField    = pSetupGetField;
-pSpInfOpenInfFile SpInfOpenInfFile = SetupOpenInfFileExW;
+SPINF_EXPORTS SpInfExports =
+{
+    SetupCloseInfFile,
+    SetupFindFirstLineW,
+    SetupFindNextLine,
+    SetupGetFieldCount,
+    SetupGetBinaryField,
+    SetupGetIntField,
+    SetupGetMultiSzFieldW,
+    SetupGetStringFieldW,
+    pSetupGetField,
+    SetupOpenInfFileExW
+};
 
 
 /* HELPER FUNCTIONS **********************************************************/

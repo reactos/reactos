@@ -283,9 +283,11 @@ IsPartitionActive(
     IN PPARTENTRY PartEntry);
 
 PPARTLIST
+NTAPI
 CreatePartitionList(VOID);
 
 VOID
+NTAPI
 DestroyPartitionList(
     IN PPARTLIST List);
 
@@ -323,27 +325,32 @@ SelectPartition(
     _In_ ULONG PartitionNumber);
 
 PPARTENTRY
+NTAPI
 GetNextPartition(
     IN PPARTLIST List,
     IN PPARTENTRY CurrentPart OPTIONAL);
 
 PPARTENTRY
+NTAPI
 GetPrevPartition(
     IN PPARTLIST List,
     IN PPARTENTRY CurrentPart OPTIONAL);
 
 PPARTENTRY
+NTAPI
 GetAdjUnpartitionedEntry(
     _In_ PPARTENTRY PartEntry,
     _In_ BOOLEAN Direction);
 
 ERROR_NUMBER
+NTAPI
 PartitionCreateChecks(
     _In_ PPARTENTRY PartEntry,
     _In_opt_ ULONGLONG SizeBytes,
     _In_opt_ ULONG_PTR PartitionInfo);
 
 BOOLEAN
+NTAPI
 CreatePartition(
     _In_ PPARTLIST List,
     _Inout_ PPARTENTRY PartEntry,
@@ -351,6 +358,7 @@ CreatePartition(
     _In_opt_ ULONG_PTR PartitionInfo);
 
 BOOLEAN
+NTAPI
 DeletePartition(
     _In_ PPARTLIST List,
     _In_ PPARTENTRY PartEntry,

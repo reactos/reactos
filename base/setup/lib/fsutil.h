@@ -12,6 +12,7 @@
 
 /** QueryAvailableFileSystemFormat() **/
 BOOLEAN
+NTAPI
 GetRegisteredFileSystems(
     IN ULONG Index,
     OUT PCWSTR* FileSystemName);
@@ -19,6 +20,7 @@ GetRegisteredFileSystems(
 
 /** ChkdskEx() **/
 NTSTATUS
+NTAPI
 ChkdskFileSystem_UStr(
     _In_ PUNICODE_STRING DriveRoot,
     _In_ PCWSTR FileSystemName,
@@ -29,6 +31,7 @@ ChkdskFileSystem_UStr(
     _In_opt_ PFMIFSCALLBACK Callback);
 
 NTSTATUS
+NTAPI
 ChkdskFileSystem(
     _In_ PCWSTR DriveRoot,
     _In_ PCWSTR FileSystemName,
@@ -41,6 +44,7 @@ ChkdskFileSystem(
 
 /** FormatEx() **/
 NTSTATUS
+NTAPI
 FormatFileSystem_UStr(
     _In_ PUNICODE_STRING DriveRoot,
     _In_ PCWSTR FileSystemName,
@@ -51,6 +55,7 @@ FormatFileSystem_UStr(
     _In_opt_ PFMIFSCALLBACK Callback);
 
 NTSTATUS
+NTAPI
 FormatFileSystem(
     _In_ PCWSTR DriveRoot,
     _In_ PCWSTR FileSystemName,
@@ -109,6 +114,7 @@ InstallNtfsBootCode(
 //
 
 NTSTATUS
+NTAPI
 ChkdskPartition(
     _In_ PPARTENTRY PartEntry,
     _In_ BOOLEAN FixErrors,
@@ -118,6 +124,7 @@ ChkdskPartition(
     _In_opt_ PFMIFSCALLBACK Callback);
 
 NTSTATUS
+NTAPI
 FormatPartition(
     _In_ PPARTENTRY PartEntry,
     _In_ PCWSTR FileSystemName,
@@ -200,6 +207,7 @@ typedef FSVOL_OP
     _In_ ULONG_PTR Param2);
 
 BOOLEAN
+NTAPI
 FsVolCommitOpsQueue(
     _In_ PPARTLIST PartitionList,
     _In_ PVOLENTRY SystemVolume,

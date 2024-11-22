@@ -20,15 +20,6 @@
  * These externs should be defined by the user of this library.
  * They are kept there for reference and ease of usage.
  */
-#if 0
-
-pSpFileQueueOpen   SpFileQueueOpen   = NULL;
-pSpFileQueueClose  SpFileQueueClose  = NULL;
-pSpFileQueueCopy   SpFileQueueCopy   = NULL;
-pSpFileQueueDelete SpFileQueueDelete = NULL;
-pSpFileQueueRename SpFileQueueRename = NULL;
-pSpFileQueueCommit SpFileQueueCommit = NULL;
-
-#endif
+SPFILE_EXPORTS SpFileExports = {NULL};
 
 /* EOF */

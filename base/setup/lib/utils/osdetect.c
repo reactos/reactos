@@ -209,12 +209,16 @@ EnumerateInstallations(
     return STATUS_SUCCESS;
 }
 
-/*
- * FindSubStrI(PCWSTR str, PCWSTR strSearch) :
- *    Searches for a sub-string 'strSearch' inside 'str', similarly to what
- *    wcsstr(str, strSearch) does, but ignores the case during the comparisons.
- */
-PCWSTR FindSubStrI(PCWSTR str, PCWSTR strSearch)
+/**
+ * @brief
+ * Finds the first occurrence of a sub-string 'strSearch' inside 'str',
+ * using case-insensitive comparisons.
+ **/
+PCWSTR
+NTAPI
+FindSubStrI(
+    _In_ PCWSTR str,
+    _In_ PCWSTR strSearch)
 {
     PCWSTR cp = str;
     PCWSTR s1, s2;
@@ -760,6 +764,7 @@ FindNTOSInstallations(
  **/
 // EnumerateNTOSInstallations
 PGENERIC_LIST
+NTAPI
 CreateNTOSInstallationsList(
     _In_ PPARTLIST PartList)
 {

@@ -38,7 +38,6 @@
 /* GLOBALS ******************************************************************/
 
 HANDLE ProcessHeap;
-BOOLEAN IsUnattendedSetup = FALSE;
 SETUPDATA SetupData;
 
 /* The partition where to perform the installation */
@@ -2826,11 +2825,9 @@ _tWinMain(HINSTANCE hInst,
     /* Initialize the NT to Win32 path prefix mapping list */
     InitNtToWin32PathMappingList(&SetupData.MappingList);
 
-    /* Initialize Setup, phase 0 */
-    InitializeSetup(&SetupData.USetupData, 0);
-
-    /* Initialize Setup, phase 1 */
-    Error = InitializeSetup(&SetupData.USetupData, 1);
+    /* Initialize Setup */
+    Error = InitializeSetup(&SetupData.USetupData, NULL,
+                            &SpFileExports, &SpInfExports);
     if (Error != ERROR_SUCCESS)
     {
         //

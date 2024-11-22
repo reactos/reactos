@@ -1984,6 +1984,7 @@ GetActiveDiskPartition(
 }
 
 PPARTLIST
+NTAPI
 CreatePartitionList(VOID)
 {
     PPARTLIST List;
@@ -2069,6 +2070,7 @@ CreatePartitionList(VOID)
 }
 
 VOID
+NTAPI
 DestroyPartitionList(
     IN PPARTLIST List)
 {
@@ -2288,6 +2290,7 @@ SelectPartition(
 }
 
 PPARTENTRY
+NTAPI
 GetNextPartition(
     IN PPARTLIST List,
     IN PPARTENTRY CurrentPart OPTIONAL)
@@ -2380,6 +2383,7 @@ GetNextPartition(
 }
 
 PPARTENTRY
+NTAPI
 GetPrevPartition(
     IN PPARTLIST List,
     IN PPARTENTRY CurrentPart OPTIONAL)
@@ -2783,6 +2787,7 @@ UpdateDiskLayout(
  * @return  The adjacent unpartitioned region, if it exists, or NULL.
  **/
 PPARTENTRY
+NTAPI
 GetAdjUnpartitionedEntry(
     _In_ PPARTENTRY PartEntry,
     _In_ BOOLEAN Direction)
@@ -2872,6 +2877,7 @@ MBRPartitionCreateChecks(
 }
 
 ERROR_NUMBER
+NTAPI
 PartitionCreateChecks(
     _In_ PPARTENTRY PartEntry,
     _In_opt_ ULONGLONG SizeBytes,
@@ -2900,6 +2906,7 @@ PartitionCreateChecks(
 // (see VDS::CREATE_PARTITION_PARAMETERS and PPARTITION_INFORMATION_MBR/GPT for example)
 // So far we only use it as the optional type of the partition to create.
 BOOLEAN
+NTAPI
 CreatePartition(
     _In_ PPARTLIST List,
     _Inout_ PPARTENTRY PartEntry,
@@ -2990,6 +2997,7 @@ DismountPartition(
 }
 
 BOOLEAN
+NTAPI
 DeletePartition(
     _In_ PPARTLIST List,
     _In_ PPARTENTRY PartEntry,

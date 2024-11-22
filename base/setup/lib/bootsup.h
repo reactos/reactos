@@ -8,6 +8,7 @@
 #pragma once
 
 NTSTATUS
+NTAPI
 InstallBootManagerAndBootEntries(
     _In_ ARCHITECTURE_TYPE ArchType,
     _In_ PCUNICODE_STRING SystemRootPath,
@@ -16,6 +17,7 @@ InstallBootManagerAndBootEntries(
     _In_ ULONG_PTR Options);
 
 NTSTATUS
+NTAPI
 InstallBootcodeToRemovable(
     _In_ ARCHITECTURE_TYPE ArchType,
     _In_ PCUNICODE_STRING RemovableRootPath,

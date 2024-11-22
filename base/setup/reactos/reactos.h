@@ -163,8 +163,6 @@ typedef struct _SETUPDATA
 } SETUPDATA, *PSETUPDATA;
 
 extern HANDLE ProcessHeap;
-extern BOOLEAN IsUnattendedSetup;
-
 extern SETUPDATA SetupData;
 
 extern PPARTENTRY InstallPartition;

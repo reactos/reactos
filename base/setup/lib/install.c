@@ -13,7 +13,7 @@
 #include "filesup.h"
 #include "infsupp.h"
 
-#include "setuplib.h" // HAXX for USETUP_DATA!!
+#include "setuplib.h" // HACK for USETUP_DATA
 
 #include "install.h"
 
@@ -681,6 +681,7 @@ PrepareCopyInfFile(
 // #define USE_CABINET_INF
 
 BOOLEAN // ERROR_NUMBER
+NTAPI
 PrepareFileCopy(
     IN OUT PUSETUP_DATA pSetupData,
     IN PFILE_COPY_STATUS_ROUTINE StatusRoutine OPTIONAL)
@@ -823,6 +824,7 @@ PrepareFileCopy(
 }
 
 BOOLEAN
+NTAPI
 DoFileCopy(
     IN OUT PUSETUP_DATA pSetupData,
     IN PSP_FILE_CALLBACK_W MsgHandler,

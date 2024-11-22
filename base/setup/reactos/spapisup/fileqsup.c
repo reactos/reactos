@@ -173,12 +173,15 @@ SpFileQueueRename_NtToWin32(
 
 /* GLOBALS *******************************************************************/
 
-pSpFileQueueOpen   SpFileQueueOpen   = SetupOpenFileQueue;
-pSpFileQueueClose  SpFileQueueClose  = SetupCloseFileQueue;
-pSpFileQueueCopy   SpFileQueueCopy   = SpFileQueueCopy_NtToWin32;
-pSpFileQueueDelete SpFileQueueDelete = SpFileQueueDelete_NtToWin32;
-pSpFileQueueRename SpFileQueueRename = SpFileQueueRename_NtToWin32;
-pSpFileQueueCommit SpFileQueueCommit = SetupCommitFileQueueW;
+SPFILE_EXPORTS SpFileExports =
+{
+    SetupOpenFileQueue,
+    SetupCloseFileQueue,
+    SpFileQueueCopy_NtToWin32,
+    SpFileQueueDelete_NtToWin32,
+    SpFileQueueRename_NtToWin32,
+    SetupCommitFileQueueW
+};
 
 #endif
 

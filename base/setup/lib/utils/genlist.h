@@ -24,37 +24,45 @@ typedef struct _GENERIC_LIST
 
 
 PGENERIC_LIST
+NTAPI
 CreateGenericList(VOID);
 
 VOID
+NTAPI
 DestroyGenericList(
     IN OUT PGENERIC_LIST List,
     IN BOOLEAN FreeData);
 
 BOOLEAN
+NTAPI
 AppendGenericListEntry(
     IN OUT PGENERIC_LIST List,
     IN PVOID Data,
     IN BOOLEAN Current);
 
 VOID
+NTAPI
 SetCurrentListEntry(
     IN PGENERIC_LIST List,
     IN PGENERIC_LIST_ENTRY Entry);
 
 PGENERIC_LIST_ENTRY
+NTAPI
 GetCurrentListEntry(
     IN PGENERIC_LIST List);
 
 PGENERIC_LIST_ENTRY
+NTAPI
 GetFirstListEntry(
     IN PGENERIC_LIST List);
 
 PGENERIC_LIST_ENTRY
+NTAPI
 GetNextListEntry(
     IN PGENERIC_LIST_ENTRY Entry);
 
 PVOID
+NTAPI
 GetListEntryData(
     IN PGENERIC_LIST_ENTRY Entry);
 
@@ -63,6 +71,7 @@ GetListEntryUiData(
     IN PGENERIC_LIST_ENTRY Entry);
 
 ULONG
+NTAPI
 GetNumberOfListEntries(
     IN PGENERIC_LIST List);
 

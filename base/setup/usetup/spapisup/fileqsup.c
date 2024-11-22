@@ -997,11 +997,14 @@ Quit:
 
 /* GLOBALS *******************************************************************/
 
-pSpFileQueueOpen   SpFileQueueOpen   = SetupOpenFileQueue;
-pSpFileQueueClose  SpFileQueueClose  = SetupCloseFileQueue;
-pSpFileQueueCopy   SpFileQueueCopy   = SetupQueueCopyWithCab;
-pSpFileQueueDelete SpFileQueueDelete = SetupQueueDeleteW;
-pSpFileQueueRename SpFileQueueRename = SetupQueueRenameW;
-pSpFileQueueCommit SpFileQueueCommit = SetupCommitFileQueueW;
+SPFILE_EXPORTS SpFileExports =
+{
+    SetupOpenFileQueue,
+    SetupCloseFileQueue,
+    SetupQueueCopyWithCab,
+    SetupQueueDeleteW,
+    SetupQueueRenameW,
+    SetupCommitFileQueueW
+};
 
 /* EOF */

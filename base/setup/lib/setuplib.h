@@ -7,6 +7,16 @@
 
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifndef _SETUPLIB_
+#define SPLIBAPI DECLSPEC_IMPORT
+#else
+#define SPLIBAPI
+#endif
+
 /* INCLUDES *****************************************************************/
 
 /* Needed PSDK headers when using this library */
@@ -20,9 +30,9 @@
 
 #endif
 
-/* NOTE: Please keep the header inclusion order! */
+extern SPLIBAPI BOOLEAN IsUnattendedSetup; // HACK
 
-extern HANDLE ProcessHeap;
+/* NOTE: Please keep the header inclusion order! */
 
 #include "errorcode.h"
 #include "spapisup/fileqsup.h"
@@ -153,19 +163,17 @@ typedef struct _USETUP_DATA
 #include "install.h"
 
 
-// HACK!!
-extern BOOLEAN IsUnattendedSetup;
-
-
 /* FUNCTIONS ****************************************************************/
 
 #include "substset.h"
 
 VOID
+NTAPI
 CheckUnattendedSetup(
     IN OUT PUSETUP_DATA pSetupData);
 
 VOID
+NTAPI
 InstallSetupInfFile(
     IN OUT PUSETUP_DATA pSetupData);
 
@@ -182,6 +190,7 @@ LoadSetupInf(
 #define ERROR_SYSTEM_PARTITION_NOT_FOUND    (ERROR_LAST_ERROR_CODE + 1)
 
 BOOLEAN
+NTAPI
 InitSystemPartition(
     /**/_In_ PPARTLIST PartitionList,       /* HACK HACK! */
     /**/_In_ PPARTENTRY InstallPartition,   /* HACK HACK! */
@@ -200,10 +209,12 @@ InitSystemPartition(
     (isalnum(c) || (c) == L'.' || (c) == L'\\' || (c) == L'-' || (c) == L'_')
 
 BOOLEAN
+NTAPI
 IsValidInstallDirectory(
     _In_ PCWSTR InstallDir);
 
 NTSTATUS
+NTAPI
 InitDestinationPaths(
     _Inout_ PUSETUP_DATA pSetupData,
     _In_ PCWSTR InstallationDir,
@@ -211,11 +222,15 @@ InitDestinationPaths(
 
 // NTSTATUS
 ERROR_NUMBER
+NTAPI
 InitializeSetup(
-    IN OUT PUSETUP_DATA pSetupData,
-    IN ULONG InitPhase);
+    _Inout_ PUSETUP_DATA pSetupData,
+    _In_opt_ PSETUP_ERROR_ROUTINE ErrorRoutine,
+    _In_ PSPFILE_EXPORTS pSpFileExports,
+    _In_ PSPINF_EXPORTS pSpInfExports);
 
 VOID
+NTAPI
 FinishSetup(
     IN OUT PUSETUP_DATA pSetupData);
 
@@ -236,6 +251,7 @@ typedef VOID
 (__cdecl *PREGISTRY_STATUS_ROUTINE)(IN REGISTRY_STATUS, ...);
 
 ERROR_NUMBER
+NTAPI
 UpdateRegistry(
     IN OUT PUSETUP_DATA pSetupData,
     /**/IN BOOLEAN RepairUpdateFlag,     /* HACK HACK! */
@@ -244,5 +260,9 @@ UpdateRegistry(
     /**/IN PCWSTR SelectedLanguageId,    /* HACK HACK! */
     IN PREGISTRY_STATUS_ROUTINE StatusRoutine OPTIONAL,
     IN PFONTSUBSTSETTINGS SubstSettings OPTIONAL);
+
+#ifdef __cplusplus
+}
+#endif
 
 /* EOF */

@@ -30,14 +30,14 @@ typedef struct _NTOS_INSTALLATION
 
 // EnumerateNTOSInstallations
 PGENERIC_LIST
+NTAPI
 CreateNTOSInstallationsList(
     _In_ PPARTLIST PartList);
 
-/*
- * FindSubStrI(PCWSTR str, PCWSTR strSearch) :
- *    Searches for a sub-string 'strSearch' inside 'str', similarly to what
- *    wcsstr(str, strSearch) does, but ignores the case during the comparisons.
- */
-PCWSTR FindSubStrI(PCWSTR str, PCWSTR strSearch);
+PCWSTR
+NTAPI
+FindSubStrI(
+    _In_ PCWSTR str,
+    _In_ PCWSTR strSearch);
 
 /* EOF */

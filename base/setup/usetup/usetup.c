@@ -40,7 +40,6 @@
 /* GLOBALS & LOCALS *********************************************************/
 
 HANDLE ProcessHeap;
-BOOLEAN IsUnattendedSetup = FALSE;
 
 static USETUP_DATA USetupData;
 
@@ -534,6 +533,28 @@ GetNTOSInstallationName(
 }
 
 
+// PSETUP_ERROR_ROUTINE
+static VOID
+__cdecl
+USetupErrorRoutine(
+    IN PUSETUP_DATA pSetupData,
+    ...)
+{
+    INPUT_RECORD Ir;
+    va_list arg_ptr;
+
+    va_start(arg_ptr, pSetupData);
+
+    if (pSetupData->LastErrorNumber >= ERROR_SUCCESS &&
+        pSetupData->LastErrorNumber <  ERROR_LAST_ERROR_CODE)
+    {
+        // Note: the "POPUP_WAIT_ENTER" actually depends on the LastErrorNumber...
+        MUIDisplayErrorV(pSetupData->LastErrorNumber, &Ir, POPUP_WAIT_ENTER, arg_ptr);
+    }
+
+    va_end(arg_ptr);
+}
+
 /*
  * Start page
  *
@@ -566,8 +587,9 @@ SetupStartPage(PINPUT_RECORD Ir)
 
     MUIDisplayPage(SETUP_INIT_PAGE);
 
-    /* Initialize Setup, phase 1 */
-    Error = InitializeSetup(&USetupData, 1);
+    /* Initialize Setup */
+    Error = InitializeSetup(&USetupData, USetupErrorRoutine,
+                            &SpFileExports, &SpInfExports);
     if (Error != ERROR_SUCCESS)
     {
         MUIDisplayError(Error, Ir, POPUP_WAIT_ENTER);
@@ -3037,28 +3059,6 @@ InitInstallDir:
 }
 
 
-// PSETUP_ERROR_ROUTINE
-static VOID
-__cdecl
-USetupErrorRoutine(
-    IN PUSETUP_DATA pSetupData,
-    ...)
-{
-    INPUT_RECORD Ir;
-    va_list arg_ptr;
-
-    va_start(arg_ptr, pSetupData);
-
-    if (pSetupData->LastErrorNumber >= ERROR_SUCCESS &&
-        pSetupData->LastErrorNumber <  ERROR_LAST_ERROR_CODE)
-    {
-        // Note: the "POPUP_WAIT_ENTER" actually depends on the LastErrorNumber...
-        MUIDisplayErrorV(pSetupData->LastErrorNumber, &Ir, POPUP_WAIT_ENTER, arg_ptr);
-    }
-
-    va_end(arg_ptr);
-}
-
 /*
  * Displays the PrepareCopyPage.
  *
@@ -4033,10 +4033,6 @@ RunUSetup(VOID)
         /* We failed to initialize the video, just quit the installer */
         return STATUS_APP_INIT_FAILURE;
     }
-
-    /* Initialize Setup, phase 0 */
-    InitializeSetup(&USetupData, 0);
-    USetupData.ErrorRoutine = USetupErrorRoutine;
 
     /* Hide the cursor and clear the screen and keyboard buffer */
     CONSOLE_SetCursorType(TRUE, FALSE);

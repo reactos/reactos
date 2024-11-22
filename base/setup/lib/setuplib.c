@@ -22,9 +22,13 @@
 
 /* GLOBALS ******************************************************************/
 
+HANDLE ProcessHeap;
+BOOLEAN IsUnattendedSetup = FALSE;
+
 /* FUNCTIONS ****************************************************************/
 
 VOID
+NTAPI
 CheckUnattendedSetup(
     IN OUT PUSETUP_DATA pSetupData)
 {
@@ -199,6 +203,7 @@ Quit:
 }
 
 VOID
+NTAPI
 InstallSetupInfFile(
     IN OUT PUSETUP_DATA pSetupData)
 {
@@ -669,6 +674,7 @@ LoadSetupInf(
  * @brief   Find or set the active system partition.
  **/
 BOOLEAN
+NTAPI
 InitSystemPartition(
     /**/_In_ PPARTLIST PartitionList,       /* HACK HACK! */
     /**/_In_ PPARTENTRY InstallPartition,   /* HACK HACK! */
@@ -768,6 +774,7 @@ InitSystemPartition(
  * Each path component must be a valid 8.3 name.
  **/
 BOOLEAN
+NTAPI
 IsValidInstallDirectory(
     _In_ PCWSTR InstallDir)
 {
@@ -852,6 +859,7 @@ IsValidInstallDirectory(
 
 
 NTSTATUS
+NTAPI
 InitDestinationPaths(
     _Inout_ PUSETUP_DATA pSetupData,
     _In_ PCWSTR InstallationDir,
@@ -1007,92 +1015,91 @@ InitDestinationPaths(
 
 // NTSTATUS
 ERROR_NUMBER
+NTAPI
 InitializeSetup(
-    IN OUT PUSETUP_DATA pSetupData,
-    IN ULONG InitPhase)
+    _Inout_ PUSETUP_DATA pSetupData,
+    _In_opt_ PSETUP_ERROR_ROUTINE ErrorRoutine,
+    _In_ PSPFILE_EXPORTS pSpFileExports,
+    _In_ PSPINF_EXPORTS pSpInfExports)
 {
-    if (InitPhase == 0)
+    ERROR_NUMBER Error;
+    NTSTATUS Status;
+
+    IsUnattendedSetup = FALSE;
+    RtlZeroMemory(pSetupData, sizeof(*pSetupData));
+
+    /* Initialize error handling */
+    pSetupData->LastErrorNumber = ERROR_SUCCESS;
+    pSetupData->ErrorRoutine = ErrorRoutine;
+
+    /* Initialize global unicode strings */
+    RtlInitUnicodeString(&pSetupData->SourcePath, NULL);
+    RtlInitUnicodeString(&pSetupData->SourceRootPath, NULL);
+    RtlInitUnicodeString(&pSetupData->SourceRootDir, NULL);
+    RtlInitUnicodeString(&pSetupData->DestinationArcPath, NULL);
+    RtlInitUnicodeString(&pSetupData->DestinationPath, NULL);
+    RtlInitUnicodeString(&pSetupData->DestinationRootPath, NULL);
+    RtlInitUnicodeString(&pSetupData->SystemRootPath, NULL);
+
+    // FIXME: This is only temporary!! Must be removed later!
+    /***/RtlInitUnicodeString(&pSetupData->InstallPath, NULL);/***/
+
+    /* Initialize SpFile and SpInf support */
+    RtlCopyMemory(&SpFileExports, pSpFileExports, sizeof(SpFileExports));
+    RtlCopyMemory(&SpInfExports, pSpInfExports, sizeof(SpInfExports));
+
+    //
+    // TODO: Load and start SetupDD, and ask it for the information
+    //
+
+    /* Get the source path and source root path */
+    Status = GetSourcePaths(&pSetupData->SourcePath,
+                            &pSetupData->SourceRootPath,
+                            &pSetupData->SourceRootDir);
+    if (!NT_SUCCESS(Status))
     {
-        RtlZeroMemory(pSetupData, sizeof(*pSetupData));
-
-        /* Initialize error handling */
-        pSetupData->LastErrorNumber = ERROR_SUCCESS;
-        pSetupData->ErrorRoutine = NULL;
-
-        /* Initialize global unicode strings */
-        RtlInitUnicodeString(&pSetupData->SourcePath, NULL);
-        RtlInitUnicodeString(&pSetupData->SourceRootPath, NULL);
-        RtlInitUnicodeString(&pSetupData->SourceRootDir, NULL);
-        RtlInitUnicodeString(&pSetupData->DestinationArcPath, NULL);
-        RtlInitUnicodeString(&pSetupData->DestinationPath, NULL);
-        RtlInitUnicodeString(&pSetupData->DestinationRootPath, NULL);
-        RtlInitUnicodeString(&pSetupData->SystemRootPath, NULL);
-
-        // FIXME: This is only temporary!! Must be removed later!
-        /***/RtlInitUnicodeString(&pSetupData->InstallPath, NULL);/***/
-
-        //
-        // TODO: Load and start SetupDD, and ask it for the information
-        //
-
-        return ERROR_SUCCESS;
+        DPRINT1("GetSourcePaths() failed (Status 0x%08lx)\n", Status);
+        return ERROR_NO_SOURCE_DRIVE;
     }
-    else
-    if (InitPhase == 1)
+    DPRINT1("SourcePath (1): '%wZ'\n", &pSetupData->SourcePath);
+    DPRINT1("SourceRootPath (1): '%wZ'\n", &pSetupData->SourceRootPath);
+    DPRINT1("SourceRootDir (1): '%wZ'\n", &pSetupData->SourceRootDir);
+
+    /* Set up default values */
+    pSetupData->DestinationDiskNumber = 0;
+    pSetupData->DestinationPartitionNumber = 1;
+    pSetupData->BootLoaderLocation = 2; // Default to "System partition"
+    pSetupData->FormatPartition = 0;
+    pSetupData->AutoPartition = 0;
+    pSetupData->FsType = 0;
+
+    /* Load 'txtsetup.sif' from the installation media */
+    Error = LoadSetupInf(pSetupData);
+    if (Error != ERROR_SUCCESS)
     {
-        ERROR_NUMBER Error;
-        NTSTATUS Status;
+        DPRINT1("LoadSetupInf() failed (Error 0x%lx)\n", Error);
+        return Error;
+    }
+    DPRINT1("SourcePath (2): '%wZ'\n", &pSetupData->SourcePath);
+    DPRINT1("SourceRootPath (2): '%wZ'\n", &pSetupData->SourceRootPath);
+    DPRINT1("SourceRootDir (2): '%wZ'\n", &pSetupData->SourceRootDir);
 
-        /* Get the source path and source root path */
-        Status = GetSourcePaths(&pSetupData->SourcePath,
-                                &pSetupData->SourceRootPath,
-                                &pSetupData->SourceRootDir);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("GetSourcePaths() failed (Status 0x%08lx)\n", Status);
-            return ERROR_NO_SOURCE_DRIVE;
-        }
-        DPRINT1("SourcePath (1): '%wZ'\n", &pSetupData->SourcePath);
-        DPRINT1("SourceRootPath (1): '%wZ'\n", &pSetupData->SourceRootPath);
-        DPRINT1("SourceRootDir (1): '%wZ'\n", &pSetupData->SourceRootDir);
-
-        /* Set up default values */
-        pSetupData->DestinationDiskNumber = 0;
-        pSetupData->DestinationPartitionNumber = 1;
-        pSetupData->BootLoaderLocation = 2; // Default to "System partition"
-        pSetupData->FormatPartition = 0;
-        pSetupData->AutoPartition = 0;
-        pSetupData->FsType = 0;
-
-        /* Load 'txtsetup.sif' from the installation media */
-        Error = LoadSetupInf(pSetupData);
-        if (Error != ERROR_SUCCESS)
-        {
-            DPRINT1("LoadSetupInf() failed (Error 0x%lx)\n", Error);
-            return Error;
-        }
-        DPRINT1("SourcePath (2): '%wZ'\n", &pSetupData->SourcePath);
-        DPRINT1("SourceRootPath (2): '%wZ'\n", &pSetupData->SourceRootPath);
-        DPRINT1("SourceRootDir (2): '%wZ'\n", &pSetupData->SourceRootDir);
-
-        /* Retrieve the target machine architecture type */
-        // FIXME: This should be determined at runtime!!
-        // FIXME: Allow for (pre-)installing on an architecture
-        //        different from the current one?
+    /* Retrieve the target machine architecture type */
+    // FIXME: This should be determined at runtime!!
+    // FIXME: Allow for (pre-)installing on an architecture
+    //        different from the current one?
 #if defined(SARCH_XBOX)
-        pSetupData->ArchType = ARCH_Xbox;
+    pSetupData->ArchType = ARCH_Xbox;
 // #elif defined(SARCH_PC98)
 #else // TODO: Arc, UEFI
-        pSetupData->ArchType = (IsNEC_98 ? ARCH_NEC98x86 : ARCH_PcAT);
+    pSetupData->ArchType = (IsNEC_98 ? ARCH_NEC98x86 : ARCH_PcAT);
 #endif
-
-        return ERROR_SUCCESS;
-    }
 
     return ERROR_SUCCESS;
 }
 
 VOID
+NTAPI
 FinishSetup(
     IN OUT PUSETUP_DATA pSetupData)
 {
@@ -1143,6 +1150,7 @@ FinishSetup(
  *  Calls SetMountedDeviceValues
  */
 ERROR_NUMBER
+NTAPI
 UpdateRegistry(
     IN OUT PUSETUP_DATA pSetupData,
     /**/IN BOOLEAN RepairUpdateFlag,     /* HACK HACK! */
@@ -1394,6 +1402,33 @@ Cleanup:
     }
 
     return ErrorNumber;
+}
+
+
+/* ENTRY-POINT ***************************************************************/
+
+/* Declared in ndk/umfuncs.h */
+NTSTATUS
+NTAPI
+LdrDisableThreadCalloutsForDll(
+    _In_ PVOID BaseAddress);
+
+BOOL
+NTAPI
+DllMain(
+    _In_ HINSTANCE hDll,
+    _In_ ULONG dwReason,
+    _In_opt_ PVOID pReserved)
+{
+    UNREFERENCED_PARAMETER(pReserved);
+
+    if (dwReason == DLL_PROCESS_ATTACH)
+    {
+        LdrDisableThreadCalloutsForDll(hDll);
+        ProcessHeap = RtlGetProcessHeap();
+    }
+
+    return TRUE;
 }
 
 /* EOF */
