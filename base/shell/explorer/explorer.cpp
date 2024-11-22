@@ -100,7 +100,7 @@ IsExplorerSystemShell()
 
     szExplorer = PathFindFileNameW(szPath);
 
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
         0, KEY_READ, &hKeyWinlogon) != ERROR_SUCCESS)
     {
         // No registry access.
@@ -112,7 +112,7 @@ IsExplorerSystemShell()
         DWORD dwType;
         DWORD dwBufferSize = sizeof(szShell);
 
-        if (RegQueryValueEx(hKeyWinlogon, L"Shell", 0, &dwType,
+        if (RegQueryValueExW(hKeyWinlogon, L"Shell", 0, &dwType,
             (LPBYTE)szShell, &dwBufferSize) == ERROR_SUCCESS)
         {
             if (StrStrI(szShell, szExplorer))
