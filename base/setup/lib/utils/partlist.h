@@ -338,10 +338,12 @@ GetAdjUnpartitionedEntry(
     _In_ BOOLEAN Direction);
 
 ERROR_NUMBER
-PartitionCreateChecks(
-    _In_ PPARTENTRY PartEntry,
-    _In_opt_ ULONGLONG SizeBytes,
-    _In_opt_ ULONG_PTR PartitionInfo);
+PartitionCreationChecks(
+    _In_ PPARTENTRY PartEntry);
+
+ERROR_NUMBER
+ExtendedPartitionCreationChecks(
+    _In_ PPARTENTRY PartEntry);
 
 BOOLEAN
 CreatePartition(

@@ -2818,48 +2818,41 @@ GetAdjUnpartitionedEntry(
     return NULL;
 }
 
-static ERROR_NUMBER
-MBRPartitionCreateChecks(
-    _In_ PPARTENTRY PartEntry,
-    _In_opt_ ULONGLONG SizeBytes,
-    _In_opt_ ULONG_PTR PartitionInfo)
+ERROR_NUMBER
+PartitionCreationChecks(
+    _In_ PPARTENTRY PartEntry)
 {
     PDISKENTRY DiskEntry = PartEntry->DiskEntry;
-    BOOLEAN isContainer = IsContainerPartition((UCHAR)PartitionInfo);
 
-    ASSERT(DiskEntry->DiskStyle == PARTITION_STYLE_MBR);
-    ASSERT(!PartEntry->IsPartitioned);
-
-    if (isContainer)
+    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
     {
-        /* Cannot create an extended partition within logical partition space */
-        if (PartEntry->LogicalPartition)
-            return ERROR_ONLY_ONE_EXTENDED;
-
-        /* Fail if there is another extended partition in the list */
-        if (DiskEntry->ExtendedPartition)
-            return ERROR_ONLY_ONE_EXTENDED;
+        DPRINT1("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+        return ERROR_WARN_PARTITION;
     }
 
+    /* Fail if the partition is already in use */
+    if (PartEntry->IsPartitioned)
+        return ERROR_NEW_PARTITION;
+
     /*
-     * Primary or Extended partitions
+     * For primary partitions
      */
-    if (!PartEntry->LogicalPartition || isContainer)
+    if (!PartEntry->LogicalPartition)
     {
         /* Only one primary partition is allowed on super-floppy */
         if (IsSuperFloppy(DiskEntry))
             return ERROR_PARTITION_TABLE_FULL;
 
-        /* Fail if there are too many primary partitions */
+        /* Fail if there are already 4 primary partitions in the list */
         if (GetPrimaryPartitionCount(DiskEntry) >= 4)
             return ERROR_PARTITION_TABLE_FULL;
     }
     /*
-     * Logical partitions
+     * For logical partitions
      */
     else
     {
-        // TODO: Check that we are inside an extended partition!
+        // TODO: Check that we are inside an extended partition!!
         // Then the following check will be useless.
 
         /* Only one (primary) partition is allowed on super-floppy */
@@ -2871,24 +2864,38 @@ MBRPartitionCreateChecks(
 }
 
 ERROR_NUMBER
-PartitionCreateChecks(
-    _In_ PPARTENTRY PartEntry,
-    _In_opt_ ULONGLONG SizeBytes,
-    _In_opt_ ULONG_PTR PartitionInfo)
+ExtendedPartitionCreationChecks(
+    _In_ PPARTENTRY PartEntry)
 {
     PDISKENTRY DiskEntry = PartEntry->DiskEntry;
+
+    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+    {
+        DPRINT1("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+        return ERROR_WARN_PARTITION;
+    }
 
     /* Fail if the partition is already in use */
     if (PartEntry->IsPartitioned)
         return ERROR_NEW_PARTITION;
 
-    if (DiskEntry->DiskStyle == PARTITION_STYLE_MBR)
-        return MBRPartitionCreateChecks(PartEntry, SizeBytes, PartitionInfo);
-    else // if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
-    {
-        DPRINT1("GPT-partitioned disk detected, not currently supported by SETUP!\n");
-        return ERROR_WARN_PARTITION;
-    }
+    /* Cannot create an extended partition within logical partition space */
+    if (PartEntry->LogicalPartition)
+        return ERROR_ONLY_ONE_EXTENDED;
+
+    /* Only one primary partition is allowed on super-floppy */
+    if (IsSuperFloppy(DiskEntry))
+        return ERROR_PARTITION_TABLE_FULL;
+
+    /* Fail if there are already 4 primary partitions in the list */
+    if (GetPrimaryPartitionCount(DiskEntry) >= 4)
+        return ERROR_PARTITION_TABLE_FULL;
+
+    /* Fail if there is another extended partition in the list */
+    if (DiskEntry->ExtendedPartition)
+        return ERROR_ONLY_ONE_EXTENDED;
+
+    return ERROR_SUCCESS;
 }
 
 // TODO: Improve upon the PartitionInfo parameter later
@@ -2919,10 +2926,13 @@ CreatePartition(
         return FALSE;
     }
 
-    Error = PartitionCreateChecks(PartEntry, SizeBytes, PartitionInfo);
+    if (isContainer)
+        Error = ExtendedPartitionCreationChecks(PartEntry);
+    else
+        Error = PartitionCreationChecks(PartEntry);
     if (Error != NOT_AN_ERROR)
     {
-        DPRINT1("PartitionCreateChecks(%s) failed with error %lu\n", mainType, Error);
+        DPRINT1("PartitionCreationChecks(%s) failed with error %lu\n", mainType, Error);
         return FALSE;
     }
 

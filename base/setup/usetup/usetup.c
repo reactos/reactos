@@ -1711,7 +1711,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         {
             ASSERT(CurrentPartition);
 
-            Error = PartitionCreateChecks(CurrentPartition, 0ULL, 0);
+            Error = PartitionCreationChecks(CurrentPartition);
             if (Error != NOT_AN_ERROR)
             {
                 MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
@@ -1729,7 +1729,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
             if (CurrentPartition->LogicalPartition)
                 continue;
 
-            Error = PartitionCreateChecks(CurrentPartition, 0ULL, PARTITION_EXTENDED);
+            Error = ExtendedPartitionCreationChecks(CurrentPartition);
             if (Error != NOT_AN_ERROR)
             {
                 MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
@@ -1789,7 +1789,7 @@ CreateInstallPartition:
     /* Create the partition if the selected region is empty */
     if (!CurrentPartition->IsPartitioned)
     {
-        Error = PartitionCreateChecks(CurrentPartition, 0ULL, 0);
+        Error = PartitionCreationChecks(CurrentPartition);
         if (Error != NOT_AN_ERROR)
         {
             MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
