@@ -116,11 +116,10 @@ IsExplorerSystemShell()
 
         if (Status == ERROR_SUCCESS)
         {
-            LPWSTR szShell;
+            WCHAR szShell[MAX_PATH];
             DWORD dwType;
 
-            szShell = new WCHAR[cbShell / sizeof(WCHAR)];
-
+            // TODO: Add support for paths longer than MAX_PATH
             Status = RegQueryValueExW(hKeyWinlogon, L"Shell", 0, &dwType, (LPBYTE)szShell, &cbShell);
 
             if (Status == ERROR_SUCCESS)
@@ -130,8 +129,6 @@ IsExplorerSystemShell()
                 else
                     bIsSystemShell = FALSE;
             }
-
-            delete[] szShell;
         }
 
         RegCloseKey(hKeyWinlogon);
