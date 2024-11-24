@@ -1502,16 +1502,16 @@ MmMapViewInSystemSpaceEx(
 
 BOOLEAN
 NTAPI
-MmArePagesResident(
-    _In_ PEPROCESS Process,
-    _In_ PVOID BaseAddress,
+MmIsDataSectionResident(
+    _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    _In_ LONGLONG Offset,
     _In_ ULONG Length);
 
 NTSTATUS
 NTAPI
-MmMakePagesDirty(
-    _In_ PEPROCESS Process,
-    _In_ PVOID Address,
+MmMakeSegmentDirty(
+    _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    _In_ LONGLONG Offset,
     _In_ ULONG Length);
 
 NTSTATUS

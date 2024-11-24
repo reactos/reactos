@@ -4775,10 +4775,13 @@ MmCreateSection (OUT PVOID  * Section,
     return Status;
 }
 
+/* This function is not used. It is left for future use, when per-process
+ * address space is considered. */
+#if 0
 BOOLEAN
 NTAPI
 MmArePagesResident(
-    _In_ PEPROCESS Process,
+    _In_opt_ PEPROCESS Process,
     _In_ PVOID Address,
     _In_ ULONG Length)
 {
@@ -4826,6 +4829,7 @@ MmArePagesResident(
     MmUnlockAddressSpace(AddressSpace);
     return Ret;
 }
+#endif
 
 /* Like CcPurgeCache but for the in-memory segment */
 BOOLEAN
@@ -4859,9 +4863,9 @@ MmPurgeSegment(
         /* We must calculate the length for ourselves */
         /* FIXME: All of this is suboptimal */
         ULONG ElemCount = RtlNumberGenericTableElements(&Segment->PageTable);
-        /* No page. Nothing to purge */
         if (!ElemCount)
         {
+            /* No page. Nothing to purge */
             MmUnlockSectionSegment(Segment);
             MmDereferenceSegment(Segment);
             return TRUE;
@@ -4870,6 +4874,9 @@ MmPurgeSegment(
         PCACHE_SECTION_PAGE_TABLE PageTable = RtlGetElementGenericTable(&Segment->PageTable, ElemCount - 1);
         PurgeEnd.QuadPart = PageTable->FileOffset.QuadPart + _countof(PageTable->PageEntries) * PAGE_SIZE;
     }
+
+    /* Find byte offset of the page to start */
+    PurgeStart.QuadPart = PAGE_ROUND_DOWN(PurgeStart.QuadPart);
 
     while (PurgeStart.QuadPart < PurgeEnd.QuadPart)
     {
@@ -4920,6 +4927,48 @@ MmPurgeSegment(
     return TRUE;
 }
 
+BOOLEAN
+NTAPI
+MmIsDataSectionResident(
+    _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    _In_ LONGLONG Offset,
+    _In_ ULONG Length)
+{
+    PMM_SECTION_SEGMENT Segment;
+    LARGE_INTEGER RangeStart, RangeEnd;
+    BOOLEAN Ret = TRUE;
+
+    RangeStart.QuadPart = Offset;
+    if (!NT_SUCCESS(RtlLongLongAdd(RangeStart.QuadPart, Length, &RangeEnd.QuadPart)))
+        return FALSE;
+
+    Segment = MiGrabDataSection(SectionObjectPointer);
+    if (!Segment)
+        return FALSE;
+
+    /* Find byte offset of the page to start */
+    RangeStart.QuadPart = PAGE_ROUND_DOWN(RangeStart.QuadPart);
+
+    MmLockSectionSegment(Segment);
+
+    while (RangeStart.QuadPart < RangeEnd.QuadPart)
+    {
+        ULONG_PTR Entry = MmGetPageEntrySectionSegment(Segment, &RangeStart);
+        if ((Entry == 0) || IS_SWAP_FROM_SSE(Entry))
+        {
+            Ret = FALSE;
+            break;
+        }
+
+        RangeStart.QuadPart += PAGE_SIZE;
+    }
+
+    MmUnlockSectionSegment(Segment);
+    MmDereferenceSegment(Segment);
+
+    return Ret;
+}
+
 NTSTATUS
 NTAPI
 MmMakeDataSectionResident(
@@ -4938,6 +4987,63 @@ MmMakeDataSectionResident(
     MmDereferenceSegment(Segment);
 
     return Status;
+}
+
+NTSTATUS
+NTAPI
+MmMakeSegmentDirty(
+    _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    _In_ LONGLONG Offset,
+    _In_ ULONG Length)
+{
+    PMM_SECTION_SEGMENT Segment;
+    LARGE_INTEGER RangeStart, RangeEnd;
+    NTSTATUS Status;
+
+    RangeStart.QuadPart = Offset;
+    Status = RtlLongLongAdd(RangeStart.QuadPart, Length, &RangeEnd.QuadPart);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Segment = MiGrabDataSection(SectionObjectPointer);
+    if (!Segment)
+        return STATUS_NOT_MAPPED_VIEW;
+
+    /* Find byte offset of the page to start */
+    RangeStart.QuadPart = PAGE_ROUND_DOWN(RangeStart.QuadPart);
+
+    MmLockSectionSegment(Segment);
+
+    while (RangeStart.QuadPart < RangeEnd.QuadPart)
+    {
+        ULONG_PTR Entry = MmGetPageEntrySectionSegment(Segment, &RangeStart);
+
+        /* Let any pending read proceed */
+        while (MM_IS_WAIT_PTE(Entry))
+        {
+            MmUnlockSectionSegment(Segment);
+            KeDelayExecutionThread(KernelMode, FALSE, &TinyTime);
+            MmLockSectionSegment(Segment);
+            Entry = MmGetPageEntrySectionSegment(Segment, &RangeStart);
+        }
+
+        /* We are called from Cc, this can't be backed by the page files */
+        ASSERT(!IS_SWAP_FROM_SSE(Entry));
+
+        /* If there is no page there, there is nothing to make dirty */
+        if (Entry != 0)
+        {
+            /* Dirtify the entry */
+            MmSetPageEntrySectionSegment(Segment, &RangeStart, DIRTY_SSE(Entry));
+        }
+
+        RangeStart.QuadPart += PAGE_SIZE;
+    }
+
+    MmUnlockSectionSegment(Segment);
+    MmDereferenceSegment(Segment);
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -4991,8 +5097,8 @@ MmFlushSegment(
         FlushEnd.QuadPart = PageTable->FileOffset.QuadPart + _countof(PageTable->PageEntries) * PAGE_SIZE;
     }
 
-    FlushStart.QuadPart >>= PAGE_SHIFT;
-    FlushStart.QuadPart <<= PAGE_SHIFT;
+    /* Find byte offset of the page to start */
+    FlushStart.QuadPart = PAGE_ROUND_DOWN(FlushStart.QuadPart);
 
     while (FlushStart.QuadPart < FlushEnd.QuadPart)
     {
@@ -5197,10 +5303,13 @@ MmCheckDirtySegment(
     return FALSE;
 }
 
+/* This function is not used. It is left for future use, when per-process
+ * address space is considered. */
+#if 0
 NTSTATUS
 NTAPI
 MmMakePagesDirty(
-    _In_ PEPROCESS Process,
+    _In_opt_ PEPROCESS Process,
     _In_ PVOID Address,
     _In_ ULONG Length)
 {
@@ -5267,6 +5376,7 @@ MmMakePagesDirty(
     MmUnlockAddressSpace(AddressSpace);
     return STATUS_SUCCESS;
 }
+#endif
 
 NTSTATUS
 NTAPI

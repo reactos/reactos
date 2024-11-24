@@ -551,17 +551,18 @@ CcSetDirtyPinnedData (
     IN PLARGE_INTEGER Lsn)
 {
     PINTERNAL_BCB iBcb = CONTAINING_RECORD(Bcb, INTERNAL_BCB, PFCB);
+    PROS_VACB Vacb = iBcb->Vacb;
 
     CCTRACE(CC_API_DEBUG, "Bcb=%p Lsn=%p\n", Bcb, Lsn);
 
     /* Tell Mm */
-    MmMakePagesDirty(NULL,
-                     Add2Ptr(iBcb->Vacb->BaseAddress, iBcb->PFCB.MappedFileOffset.QuadPart - iBcb->Vacb->FileOffset.QuadPart),
-                     iBcb->PFCB.MappedLength);
+    MmMakeSegmentDirty(Vacb->SharedCacheMap->FileObject->SectionObjectPointer,
+                       iBcb->PFCB.MappedFileOffset.QuadPart,
+                       iBcb->PFCB.MappedLength);
 
-    if (!iBcb->Vacb->Dirty)
+    if (!Vacb->Dirty)
     {
-        CcRosMarkDirtyVacb(iBcb->Vacb);
+        CcRosMarkDirtyVacb(Vacb);
     }
 }
 

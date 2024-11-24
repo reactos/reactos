@@ -653,7 +653,9 @@ CcCopyWrite (
             CurrentOffset += VacbLength;
 
             /* Tell Mm */
-            Status = MmMakePagesDirty(NULL, Add2Ptr(Vacb->BaseAddress, VacbOffset), VacbLength);
+            Status = MmMakeSegmentDirty(FileObject->SectionObjectPointer,
+                                        Vacb->FileOffset.QuadPart + VacbOffset,
+                                        VacbLength);
             if (!NT_SUCCESS(Status))
                 ExRaiseStatus(Status);
         }
@@ -913,7 +915,9 @@ CcZeroData (
             Length -= VacbLength;
 
             /* Tell Mm */
-            Status = MmMakePagesDirty(NULL, Add2Ptr(Vacb->BaseAddress, VacbOffset), VacbLength);
+            Status = MmMakeSegmentDirty(FileObject->SectionObjectPointer,
+                                        Vacb->FileOffset.QuadPart + VacbOffset,
+                                        VacbLength);
             if (!NT_SUCCESS(Status))
                 ExRaiseStatus(Status);
         }
