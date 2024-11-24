@@ -35,6 +35,8 @@
 
 #include <wine/list.h>
 
+#define GetPrimaryTaskbar() FindWindowW(L"Shell_TrayWnd", NULL)
+
 struct appbar_cmd
 {
     DWORD  dwMsg;
@@ -198,22 +200,33 @@ static UINT_PTR handle_appbarmessage(DWORD msg, _AppBarData *abd)
         }
         return TRUE;
     case ABM_GETSTATE:
-        FIXME("SHAppBarMessage(ABM_GETSTATE): stub\n");
-        return ABS_ALWAYSONTOP | ABS_AUTOHIDE;
+        TRACE("SHAppBarMessage(ABM_GETSTATE)\n");
+        return (g_TaskbarSettings.sr.AutoHide ? ABS_AUTOHIDE : 0) |
+               (g_TaskbarSettings.sr.AlwaysOnTop ? ABS_ALWAYSONTOP : 0);
+    case ABM_SETSTATE:
+        TRACE("SHAppBarMessage(ABM_SETSTATE lparam=%s)\n", wine_dbgstr_longlong(abd->lParam));
+        hwnd = GetPrimaryTaskbar();
+        if (hwnd)
+        {
+            TaskbarSettings settings = g_TaskbarSettings;
+            settings.sr.AutoHide = (abd->lParam & ABS_AUTOHIDE) != 0;
+            settings.sr.AlwaysOnTop = (abd->lParam & ABS_ALWAYSONTOP) != 0;
+            SendMessageW(hwnd, TWM_SETTINGSCHANGED, 0, (LPARAM)&settings);
+            return TRUE;
+        }
+        return FALSE;
     case ABM_GETTASKBARPOS:
-        FIXME("SHAppBarMessage(ABM_GETTASKBARPOS, hwnd=%p): stub\n", hwnd);
-        /* Report the taskbar is at the bottom of the screen. */
-        abd->rc.left = 0;
-        abd->rc.right = GetSystemMetrics(SM_CXSCREEN);
-        abd->rc.bottom = GetSystemMetrics(SM_CYSCREEN);
-        abd->rc.top = abd->rc.bottom-1;
-        abd->uEdge = ABE_BOTTOM;
-        return TRUE;
+        TRACE("SHAppBarMessage(ABM_GETTASKBARPOS, hwnd=%p)\n", hwnd);
+        abd->uEdge = g_TaskbarSettings.sr.Position;
+        abd->hWnd = GetPrimaryTaskbar();
+        return abd->hWnd && GetWindowRect(abd->hWnd, &abd->rc);
     case ABM_ACTIVATE:
         return TRUE;
     case ABM_GETAUTOHIDEBAR:
         FIXME("SHAppBarMessage(ABM_GETAUTOHIDEBAR, hwnd=%p, edge=%x): stub\n", hwnd, abd->uEdge);
-        return 0;
+        if (abd->uEdge == g_TaskbarSettings.sr.Position && g_TaskbarSettings.sr.AutoHide)
+            return (SIZE_T)GetPrimaryTaskbar();
+        return NULL;
     case ABM_SETAUTOHIDEBAR:
         FIXME("SHAppBarMessage(ABM_SETAUTOHIDEBAR, hwnd=%p, edge=%x, lparam=%s): stub\n",
                    hwnd, abd->uEdge, wine_dbgstr_longlong(abd->lParam));
