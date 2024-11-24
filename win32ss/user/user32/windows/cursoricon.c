@@ -2032,10 +2032,16 @@ HANDLE WINAPI CopyImage(
     TRACE("hImage=%p, uType=%u, cxDesired=%d, cyDesired=%d, fuFlags=%x\n",
         hImage, uType, cxDesired, cyDesired, fuFlags);
 
-    /* If hImage is NULL, then do fast return after setting LastError. */
+    if (fuFlags & ~COPYIMAGE_VALID_FLAGS)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
+    /* If hImage is NULL, then do fast return after setting LastError */
     if (!hImage)
     {
-        switch(uType)
+        switch (uType)
         {
             case IMAGE_BITMAP:
                 SetLastError(ERROR_INVALID_HANDLE);
@@ -2047,12 +2053,6 @@ HANDLE WINAPI CopyImage(
             default:
                 SetLastError(ERROR_INVALID_PARAMETER);
         }
-        return NULL;
-    }
-
-    if (fuFlags & ~COPYIMAGE_VALID_FLAGS)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
         return NULL;
     }
 
@@ -2079,8 +2079,8 @@ HANDLE WINAPI CopyImage(
 
                 if (!GetIconInfo((HICON)hImage, &iconinfo))
                     ERR("GetIconInfo Failed. hImage %p\n", hImage);
-                memset(&bmi, 0, sizeof(bmi));
-                bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+                ZeroMemory(&bmi, sizeof(bmi));
+                bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
 
                 hDC = GetDC(NULL);  // Screen hdc
                 GetDIBits(hDC, iconinfo.hbmMask, 0, 1, NULL, (BITMAPINFO *)&bmi, DIB_RGB_COLORS);
@@ -2090,11 +2090,12 @@ HANDLE WINAPI CopyImage(
 
                 /* If the images are the same size remove LF_COPYFROMRESOURCE and try again. */
                 if (cxDesired == bmi.bmiHeader.biWidth && cyDesired == bmi.bmiHeader.biHeight)
+                {
                     handle = CURSORICON_CopyImage(hImage, uType == IMAGE_ICON, cxDesired,
                                                   cyDesired, (fuFlags & ~LR_COPYFROMRESOURCE));
+                }
             }
-            if (handle)
-                return handle;
+            return handle;
         }
         default:
             SetLastError(ERROR_INVALID_PARAMETER);
