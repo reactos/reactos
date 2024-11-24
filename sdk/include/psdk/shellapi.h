@@ -74,6 +74,7 @@ extern "C" {
 #define ABN_POSCHANGED		1
 #define ABN_FULLSCREENAPP	2
 #define ABN_WINDOWARRANGE	3
+
 #if (_WIN32_IE >= 0x0500)
 #define NIN_SELECT          (WM_USER + 0)
 #define NINF_KEY            1
