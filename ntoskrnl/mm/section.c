@@ -4775,7 +4775,8 @@ MmCreateSection (OUT PVOID  * Section,
     return Status;
 }
 
-/* This function is not used. It is left for reference only */
+/* This function is not used. It is left for future use, when per-process
+ * address space is considered. */
 #if 0
 BOOLEAN
 NTAPI
@@ -5302,7 +5303,8 @@ MmCheckDirtySegment(
     return FALSE;
 }
 
-/* This function is not used. It is left for reference only */
+/* This function is not used. It is left for future use, when per-process
+ * address space is considered. */
 #if 0
 NTSTATUS
 NTAPI
