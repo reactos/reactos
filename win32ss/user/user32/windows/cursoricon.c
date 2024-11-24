@@ -2032,6 +2032,24 @@ HANDLE WINAPI CopyImage(
     TRACE("hImage=%p, uType=%u, cxDesired=%d, cyDesired=%d, fuFlags=%x\n",
         hImage, uType, cxDesired, cyDesired, fuFlags);
 
+    /* If hImage is NULL, then do fast return after setting LastError. */
+    if (!hImage)
+    {
+        switch(uType)
+        {
+            case IMAGE_BITMAP:
+                SetLastError(ERROR_INVALID_HANDLE);
+                break;
+            case IMAGE_CURSOR:
+            case IMAGE_ICON:
+                SetLastError(ERROR_INVALID_CURSOR_HANDLE);
+                break;
+            default:
+                SetLastError(ERROR_INVALID_PARAMETER);
+        }
+        return NULL;
+    }
+
     if (fuFlags & ~COPYIMAGE_VALID_FLAGS)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -2044,14 +2062,39 @@ HANDLE WINAPI CopyImage(
             return BITMAP_CopyImage(hImage, cxDesired, cyDesired, fuFlags);
         case IMAGE_CURSOR:
         case IMAGE_ICON:
-        /* HACK: Copying bitmaps with LR_COPYFROMRESOURCE flag fails. CORE-17902.
-         * This is a way to return the original bit map if we need
-         * the icons to show up. We need a simpler test. */
         {
             HANDLE handle = CURSORICON_CopyImage(hImage, uType == IMAGE_ICON, cxDesired, cyDesired, fuFlags);
-            if (!handle && (fuFlags & (LR_COPYFROMRESOURCE|LR_COPYRETURNORG)))
-                handle = CURSORICON_CopyImage(hImage, uType == IMAGE_ICON, cxDesired, cyDesired, (fuFlags & ~LR_COPYFROMRESOURCE));
-            return handle;
+            if (!handle && (fuFlags & LR_COPYFROMRESOURCE))
+            {
+                /* Test if the hImage is the same size as what we want by getting
+                 * its BITMAPINFO and comparing it to the desired size. */
+                HDC hDC;
+                ICONINFO iconinfo = { 0 };
+                /* struct is for BITMAPINFO plus a full-sized color table */
+                struct
+                {
+                    BITMAPINFOHEADER bmiHeader;
+                    RGBQUAD bmiColors[256];
+                } bmi;
+
+                if (!GetIconInfo((HICON)hImage, &iconinfo))
+                    ERR("GetIconInfo Failed. hImage %p\n", hImage);
+                memset(&bmi, 0, sizeof(bmi));
+                bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+
+                hDC = GetDC(NULL);  // Screen hdc
+                GetDIBits(hDC, iconinfo.hbmMask, 0, 1, NULL, (BITMAPINFO *)&bmi, DIB_RGB_COLORS);
+                DeleteObject(iconinfo.hbmMask);
+                DeleteObject(iconinfo.hbmColor);
+                ReleaseDC(NULL, hDC);
+
+                /* If the images are the same size remove LF_COPYFROMRESOURCE and try again. */
+                if (cxDesired == bmi.bmiHeader.biWidth && cyDesired == bmi.bmiHeader.biHeight)
+                    handle = CURSORICON_CopyImage(hImage, uType == IMAGE_ICON, cxDesired,
+                                                  cyDesired, (fuFlags & ~LR_COPYFROMRESOURCE));
+            }
+            if (handle)
+                return handle;
         }
         default:
             SetLastError(ERROR_INVALID_PARAMETER);
