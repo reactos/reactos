@@ -69,12 +69,11 @@ extern "C" {
 #define ABM_GETAUTOHIDEBAR	7
 #define ABM_SETAUTOHIDEBAR	8
 #define ABM_WINDOWPOSCHANGED	9
-#define ABM_SETSTATE         10
+#define ABM_SETSTATE            10
 #define ABN_STATECHANGE		0
 #define ABN_POSCHANGED		1
 #define ABN_FULLSCREENAPP	2
 #define ABN_WINDOWARRANGE	3
-
 #if (_WIN32_IE >= 0x0500)
 #define NIN_SELECT          (WM_USER + 0)
 #define NINF_KEY            1
