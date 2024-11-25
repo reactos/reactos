@@ -63,9 +63,9 @@ PeLdrScanImportDescriptorTable(
 
 BOOLEAN
 PeLdrCheckForLoadedDll(
-    IN OUT PLIST_ENTRY ModuleListHead,
-    IN PCH DllName,
-    OUT PLDR_DATA_TABLE_ENTRY *LoadedEntry);
+    _Inout_ PLIST_ENTRY ModuleListHead,
+    _In_ PCSTR DllName,
+    _Out_ PLDR_DATA_TABLE_ENTRY* LoadedEntry);
 
 PVOID
 PeLdrInitSecurityCookie(

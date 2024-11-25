@@ -74,11 +74,11 @@ PeLdrpFetchAddressOfSecurityCookie(PVOID BaseAddress, ULONG SizeOfImage)
     return Cookie;
 }
 
-/* DllName - physical, UnicodeString->Buffer - virtual */
+/* DllName: physical, UnicodeString->Buffer: virtual */
 static BOOLEAN
 PeLdrpCompareDllName(
-    IN PCH DllName,
-    IN PUNICODE_STRING UnicodeName)
+    _In_ PCSTR DllName,
+    _In_ PCUNICODE_STRING UnicodeName)
 {
     PWSTR Buffer;
     SIZE_T i, Length;
@@ -92,8 +92,8 @@ PeLdrpCompareDllName(
         UnicodeNamePA.Length = UnicodeName->Length;
         UnicodeNamePA.MaximumLength = UnicodeName->MaximumLength;
         UnicodeNamePA.Buffer = VaToPa(UnicodeName->Buffer);
-        TRACE("PeLdrpCompareDllName: %s and %wZ, Length = %d "
-              "UN->Length %d\n", DllName, &UnicodeNamePA, Length, UnicodeName->Length);
+        TRACE("PeLdrpCompareDllName: %s and %wZ, Length = %d, UN->Length %d\n",
+              DllName, &UnicodeNamePA, Length, UnicodeName->Length);
     }
 #endif
 
@@ -122,7 +122,7 @@ PeLdrpCompareDllName(
         return TRUE;
     }
 
-    /* Strings don't match, return FALSE */
+    /* Strings don't match */
     return FALSE;
 }
 
@@ -582,27 +582,28 @@ PeLdrInitSecurityCookie(PLDR_DATA_TABLE_ENTRY LdrEntry)
     return Cookie;
 }
 
-/* Returns TRUE if DLL has already been loaded - looks in LoadOrderList in LPB */
+/* Returns TRUE if the DLL has already been loaded in the module list */
 BOOLEAN
 PeLdrCheckForLoadedDll(
-    IN OUT PLIST_ENTRY ModuleListHead,
-    IN PCH DllName,
-    OUT PLDR_DATA_TABLE_ENTRY *LoadedEntry)
+    _Inout_ PLIST_ENTRY ModuleListHead,
+    _In_ PCSTR DllName,
+    _Out_ PLDR_DATA_TABLE_ENTRY* LoadedEntry)
 {
+    PLIST_ENTRY ModuleEntry;
     PLDR_DATA_TABLE_ENTRY DataTableEntry;
-    LIST_ENTRY *ModuleEntry;
 
     TRACE("PeLdrCheckForLoadedDll: DllName %s\n", DllName);
 
-    /* Just go through each entry in the LoadOrderList and compare loaded module's
-       name with a given name */
-    ModuleEntry = ModuleListHead->Flink;
-    while (ModuleEntry != ModuleListHead)
+    /* Go through each entry in the LoadOrderList and
+     * compare the module's name with the given name */
+    for (ModuleEntry = ModuleListHead->Flink;
+         ModuleEntry != ModuleListHead;
+         ModuleEntry = ModuleEntry->Flink)
     {
-        /* Get pointer to the current DTE */
+        /* Get a pointer to the current DTE */
         DataTableEntry = CONTAINING_RECORD(ModuleEntry,
-            LDR_DATA_TABLE_ENTRY,
-            InLoadOrderLinks);
+                                           LDR_DATA_TABLE_ENTRY,
+                                           InLoadOrderLinks);
 
         TRACE("PeLdrCheckForLoadedDll: DTE %p, EP %p, Base %p, Name '%.*S'\n",
               DataTableEntry, DataTableEntry->EntryPoint, DataTableEntry->DllBase,
@@ -612,16 +613,13 @@ PeLdrCheckForLoadedDll(
         /* Compare names */
         if (PeLdrpCompareDllName(DllName, &DataTableEntry->BaseDllName))
         {
-            /* Yes, found it, report pointer to the loaded module's DTE
-               to the caller and increase load count for it */
+            /* Found it, return a pointer to the loaded module's
+             * DTE to the caller and increase its load count */
             *LoadedEntry = DataTableEntry;
             DataTableEntry->LoadCount++;
             TRACE("PeLdrCheckForLoadedDll: LoadedEntry 0x%p\n", DataTableEntry);
             return TRUE;
         }
-
-        /* Go to the next entry */
-        ModuleEntry = ModuleEntry->Flink;
     }
 
     /* Nothing found */
