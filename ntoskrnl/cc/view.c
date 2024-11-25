@@ -1304,10 +1304,10 @@ CcRosInitializeFileCache (
     SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
     if (SharedCacheMap == NULL)
     {
-        Allocated = TRUE;
         SharedCacheMap = ExAllocateFromNPagedLookasideList(&SharedCacheMapLookasideList);
         if (SharedCacheMap == NULL)
         {
+            KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
         RtlZeroMemory(SharedCacheMap, sizeof(*SharedCacheMap));
@@ -1335,6 +1335,7 @@ CcRosInitializeFileCache (
                                    NULL,
                                    KernelMode);
 
+        Allocated = TRUE;
         FileObject->SectionObjectPointer->SharedCacheMap = SharedCacheMap;
 
         //CcRosTraceCacheMap(SharedCacheMap, TRUE);
