@@ -158,10 +158,10 @@ PeLdrpBindImportName(
     //TRACE("PeLdrpBindImportName(): DllBase 0x%p, ImageBase 0x%p, ThunkData 0x%p, ExportDirectory 0x%p, ExportSize %d, ProcessForwards 0x%X\n",
     //      DllBase, ImageBase, ThunkData, ExportDirectory, ExportSize, ProcessForwards);
 
-    /* Check passed DllBase param */
-    if (DllBase == NULL)
+    /* Check passed DllBase */
+    if (!DllBase)
     {
-        WARN("DllBase == NULL!\n");
+        WARN("DllBase == NULL\n");
         return FALSE;
     }
 
@@ -235,13 +235,8 @@ PeLdrpBindImportName(
                 /* Compare the names */
                 Result = strcmp(ExportName, (PCHAR)ImportData->Name);
 
-                // TRACE("Binary search: comparing Import '__', Export '%s'\n",
-                      // VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Name[0]),
-                      // (PCHAR)VaToPa(RVA(DllBase, NameTable[Middle])));
-
-                // TRACE("TE->u1.AOD %p, fulladdr %p\n",
-                      // ThunkData->u1.AddressOfData,
-                      // ((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Name );
+                // TRACE("Binary search: comparing Import '%s', Export '%s'\n",
+                      // (PCHAR)ImportData->Name, ExportName);
 
                 /* Depending on result of strcmp, perform different actions */
                 if (Result > 0)
@@ -270,7 +265,6 @@ PeLdrpBindImportName(
 
             /* Everything alright, get the ordinal */
             Ordinal = OrdinalTable[Middle];
-
             //TRACE("PeLdrpBindImportName() found Ordinal %d\n", Ordinal);
         }
     }
@@ -436,7 +430,8 @@ PeLdrpLoadAndScanReferencedDll(
     (*DataTableEntry)->Flags |= LDRP_DRIVER_DEPENDENT_DLL;
 
     /* Scan its dependencies too */
-    TRACE("PeLdrScanImportDescriptorTable() calling ourselves for %S\n",
+    TRACE("PeLdrScanImportDescriptorTable() calling ourselves for '%.*S'\n",
+          (*DataTableEntry)->BaseDllName.Length / sizeof(WCHAR),
           VaToPa((*DataTableEntry)->BaseDllName.Buffer));
     Success = PeLdrScanImportDescriptorTable(ModuleListHead, DirectoryPath, *DataTableEntry);
     if (!Success)
@@ -464,13 +459,14 @@ PeLdrpScanImportAddressTable(
     BOOLEAN Success;
     ULONG ExportSize;
 
-    TRACE("PeLdrpScanImportAddressTable(): DllBase 0x%p, "
-          "ImageBase 0x%p, ThunkData 0x%p\n", DllBase, ImageBase, ThunkData);
+    TRACE("PeLdrpScanImportAddressTable(): "
+          "DllBase 0x%p, ImageBase 0x%p, ThunkData 0x%p\n",
+          DllBase, ImageBase, ThunkData);
 
     /* Obtain the export table from the DLL's base */
-    if (DllBase == NULL)
+    if (!DllBase)
     {
-        ERR("Error, DllBase == NULL!\n");
+        ERR("DllBase == NULL\n");
         return FALSE;
     }
     else
@@ -481,13 +477,12 @@ PeLdrpScanImportAddressTable(
                 IMAGE_DIRECTORY_ENTRY_EXPORT,
                 &ExportSize);
     }
-
     TRACE("PeLdrpScanImportAddressTable(): ExportDirectory 0x%p\n", ExportDirectory);
 
-    /* If pointer to Export Directory is */
-    if (ExportDirectory == NULL)
+    /* Fail if no export directory */
+    if (!ExportDirectory)
     {
-        ERR("DllBase=%p(%p)\n", DllBase, VaToPa(DllBase));
+        ERR("No ExportDir, DllBase = %p (%p)\n", DllBase, VaToPa(DllBase));
         return FALSE;
     }
 
@@ -603,9 +598,10 @@ PeLdrCheckForLoadedDll(
             LDR_DATA_TABLE_ENTRY,
             InLoadOrderLinks);
 
-        TRACE("PeLdrCheckForLoadedDll: DTE %p, EP %p, base %p name '%.*ws'\n",
+        TRACE("PeLdrCheckForLoadedDll: DTE %p, EP %p, Base %p, Name '%.*S'\n",
               DataTableEntry, DataTableEntry->EntryPoint, DataTableEntry->DllBase,
-              DataTableEntry->BaseDllName.Length / 2, VaToPa(DataTableEntry->BaseDllName.Buffer));
+              DataTableEntry->BaseDllName.Length / sizeof(WCHAR),
+              VaToPa(DataTableEntry->BaseDllName.Buffer));
 
         /* Compare names */
         if (PeLdrpCompareDllName(DllName, &DataTableEntry->BaseDllName))
