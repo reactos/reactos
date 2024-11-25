@@ -139,6 +139,7 @@ PeLdrpBindImportName(
     _Inout_ PLIST_ENTRY ModuleListHead,
     _In_ PVOID DllBase,
     _In_ PVOID ImageBase,
+    _In_ PIMAGE_THUNK_DATA ThunkName,
     _Inout_ PIMAGE_THUNK_DATA ThunkData,
     _In_ PIMAGE_EXPORT_DIRECTORY ExportDirectory,
     _In_ ULONG ExportSize,
@@ -155,8 +156,9 @@ PeLdrpBindImportName(
     PCHAR ExportName, ForwarderName;
     BOOLEAN Success;
 
-    //TRACE("PeLdrpBindImportName(): DllBase 0x%p, ImageBase 0x%p, ThunkData 0x%p, ExportDirectory 0x%p, ExportSize %d, ProcessForwards 0x%X\n",
-    //      DllBase, ImageBase, ThunkData, ExportDirectory, ExportSize, ProcessForwards);
+    //TRACE("PeLdrpBindImportName(): "
+    //      "DllBase 0x%p, ImageBase 0x%p, ThunkName 0x%p, ThunkData 0x%p, ExportDirectory 0x%p, ExportSize %d, ProcessForwards 0x%X\n",
+    //      DllBase, ImageBase, ThunkName, ThunkData, ExportDirectory, ExportSize, ProcessForwards);
 
     /* Check passed DllBase */
     if (!DllBase)
@@ -166,13 +168,14 @@ PeLdrpBindImportName(
     }
 
     /* Convert all non-critical pointers to PA from VA */
+    ThunkName = VaToPa(ThunkName);
     ThunkData = VaToPa(ThunkData);
 
     /* Is the reference by ordinal? */
-    if (IMAGE_SNAP_BY_ORDINAL(ThunkData->u1.Ordinal) && !ProcessForwards)
+    if (IMAGE_SNAP_BY_ORDINAL(ThunkName->u1.Ordinal) && !ProcessForwards)
     {
         /* Yes, calculate the ordinal */
-        Ordinal = (ULONG)(IMAGE_ORDINAL(ThunkData->u1.Ordinal) - (UINT32)ExportDirectory->Base);
+        Ordinal = (ULONG)(IMAGE_ORDINAL(ThunkName->u1.Ordinal) - (UINT32)ExportDirectory->Base);
         //TRACE("PeLdrpBindImportName(): Ordinal %d\n", Ordinal);
     }
     else
@@ -181,14 +184,14 @@ PeLdrpBindImportName(
         if (!ProcessForwards)
         {
             /* AddressOfData in thunk entry will become a virtual address (from relative) */
-            //TRACE("PeLdrpBindImportName(): ThunkData->u1.AOD was %p\n", ThunkData->u1.AddressOfData);
-            ThunkData->u1.AddressOfData =
-                (ULONG_PTR)RVA(ImageBase, ThunkData->u1.AddressOfData);
-            //TRACE("PeLdrpBindImportName(): ThunkData->u1.AOD became %p\n", ThunkData->u1.AddressOfData);
+            //TRACE("PeLdrpBindImportName(): ThunkName->u1.AOD was %p\n", ThunkName->u1.AddressOfData);
+            ThunkName->u1.AddressOfData =
+                (ULONG_PTR)RVA(ImageBase, ThunkName->u1.AddressOfData);
+            //TRACE("PeLdrpBindImportName(): ThunkName->u1.AOD became %p\n", ThunkName->u1.AddressOfData);
         }
 
-        /* Get the import name */
-        ImportData = VaToPa((PVOID)ThunkData->u1.AddressOfData);
+        /* Get the import name, convert it to a physical pointer */
+        ImportData = VaToPa((PVOID)ThunkName->u1.AddressOfData);
 
         /* Get pointers to Name and Ordinal tables (RVA -> VA) */
         NameTable = VaToPa(RVA(DllBase, ExportDirectory->AddressOfNames));
@@ -197,8 +200,8 @@ PeLdrpBindImportName(
         //TRACE("NameTable 0x%X, OrdinalTable 0x%X, ED->AddressOfNames 0x%X, ED->AOFO 0x%X\n",
         //      NameTable, OrdinalTable, ExportDirectory->AddressOfNames, ExportDirectory->AddressOfNameOrdinals);
 
-        /* Get the hint, convert it to a physical pointer */
-        Hint = ((PIMAGE_IMPORT_BY_NAME)VaToPa((PVOID)ThunkData->u1.AddressOfData))->Hint;
+        /* Get the hint */
+        Hint = ImportData->Hint;
         //TRACE("HintIndex %d\n", Hint);
 
         /* Get the export name from the hint */
@@ -358,6 +361,7 @@ PeLdrpBindImportName(
                                            DataTableEntry->DllBase,
                                            ImageBase,
                                            &RefThunkData,
+                                           &RefThunkData,
                                            RefExportDirectory,
                                            RefExportSize,
                                            TRUE,
@@ -451,6 +455,7 @@ PeLdrpScanImportAddressTable(
     _Inout_ PLIST_ENTRY ModuleListHead,
     _In_ PVOID DllBase,
     _In_ PVOID ImageBase,
+    _In_ PIMAGE_THUNK_DATA ThunkName,
     _Inout_ PIMAGE_THUNK_DATA ThunkData,
     _In_ PCSTR DirectoryPath,
     _In_ PLIST_ENTRY Parent)
@@ -460,8 +465,8 @@ PeLdrpScanImportAddressTable(
     ULONG ExportSize;
 
     TRACE("PeLdrpScanImportAddressTable(): "
-          "DllBase 0x%p, ImageBase 0x%p, ThunkData 0x%p\n",
-          DllBase, ImageBase, ThunkData);
+          "DllBase 0x%p, ImageBase 0x%p, ThunkName 0x%p, ThunkData 0x%p\n",
+          DllBase, ImageBase, ThunkName, ThunkData);
 
     /* Obtain the export table from the DLL's base */
     if (!DllBase)
@@ -486,26 +491,27 @@ PeLdrpScanImportAddressTable(
         return FALSE;
     }
 
-    /* Go through each entry in the thunk table and bind it */
-    while (((PIMAGE_THUNK_DATA)VaToPa(ThunkData))->u1.AddressOfData != 0)
+    /* Go through each thunk in the table and bind it */
+    while (((PIMAGE_THUNK_DATA)VaToPa(ThunkName))->u1.AddressOfData != 0)
     {
         /* Bind it */
         Success = PeLdrpBindImportName(ModuleListHead,
                                        DllBase,
                                        ImageBase,
+                                       ThunkName,
                                        ThunkData,
                                        ExportDirectory,
                                        ExportSize,
                                        FALSE,
                                        DirectoryPath,
                                        Parent);
-
-        /* Move to the next entry */
-        ThunkData++;
-
-        /* Return error if binding was unsuccessful */
+        /* Fail if binding was unsuccessful */
         if (!Success)
             return Success;
+
+        /* Move to the next thunk */
+        ThunkName++;
+        ThunkData++;
     }
 
     /* Return success */
@@ -649,13 +655,16 @@ PeLdrScanImportDescriptorTable(
     }
 #endif
 
-    /* If image doesn't have any import directory - just return success */
-    if (ImportTable == NULL)
+    /* If the image doesn't have any import directory, just return success */
+    if (!ImportTable)
         return TRUE;
 
-    /* Loop through all entries */
-    for (;(ImportTable->Name != 0) && (ImportTable->FirstThunk != 0);ImportTable++)
+    /* Loop through all the entries */
+    for (;(ImportTable->Name != 0) && (ImportTable->OriginalFirstThunk != 0);ImportTable++)
     {
+        PIMAGE_THUNK_DATA ThunkName = RVA(ScanDTE->DllBase, ImportTable->OriginalFirstThunk);
+        PIMAGE_THUNK_DATA ThunkData = RVA(ScanDTE->DllBase, ImportTable->FirstThunk);
+
         /* Get pointer to the name */
         ImportName = (PCH)VaToPa(RVA(ScanDTE->DllBase, ImportTable->Name));
         TRACE("PeLdrScanImportDescriptorTable(): Looking at %s\n", ImportName);
@@ -683,7 +692,8 @@ PeLdrScanImportDescriptorTable(
         Success = PeLdrpScanImportAddressTable(ModuleListHead,
                                                DataTableEntry->DllBase,
                                                ScanDTE->DllBase,
-                                               (PIMAGE_THUNK_DATA)RVA(ScanDTE->DllBase, ImportTable->FirstThunk),
+                                               ThunkName,
+                                               ThunkData,
                                                DirectoryPath,
                                                &ScanDTE->InLoadOrderLinks);
 
