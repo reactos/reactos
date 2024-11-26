@@ -208,13 +208,21 @@ SwitchToRealCompSegment:
     and eax, HEX(7fffffff) //~0x80000000, upper bits cleared
     mov cr0, rax
 
+    /* Set sane segments */
+    mov eax, L_RMODE_DS
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+
 //    mov word ptr [HEX(0b800a)], HEX(0e00) + '5'
 
     /* Step 3 - jump to 16-bit segment to set the limit correctly */
     .byte HEX(0EA) // 32bit long jmp
 AddressOfRealModeEntryPoint:
     .long 0 // receives address of RealModeEntryPoint
-    .word HEX(20)//RMODE_CS
+    .word L_RMODE_CS
     nop
 
 CallRealMode_return:

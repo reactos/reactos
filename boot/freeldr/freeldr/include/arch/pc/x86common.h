@@ -75,7 +75,9 @@
 #define RMODE_DS    HEX(20)    /* RMode data selector, base 0 limit 64k */
 //#else
 /* Long mode selectors */
-#define LMODE_CS HEX(10)
-#define LMODE_DS HEX(18)
-#define CMODE_CS HEX(30)
+#define LMODE_CS    HEX(10)
+#define LMODE_DS    HEX(18)
+#define L_RMODE_CS  HEX(20)
+#define L_RMODE_DS  HEX(28)
+#define CMODE_CS    HEX(30)
 //#endif
