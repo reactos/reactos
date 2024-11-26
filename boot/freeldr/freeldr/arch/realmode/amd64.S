@@ -58,14 +58,7 @@ Msg_Unsupported:
 Msg_Starting:
     .ascii "Starting FreeLoader...", CR, LF, NUL
 
-Msg_LongModeSupported:
-    .ascii "Long mode support detected.", CR, LF, NUL
-
 .LongModeSupported:
-    /* Output status */
-    mov si, offset Msg_LongModeSupported
-    call writestr
-
     /* Load the GDT */
 #ifdef _USE_ML
     lgdt fword ptr [gdtptr]
@@ -98,14 +91,7 @@ Msg_LongModeSupported:
     xor ax, ax
     mov es, ax
 
-    /* Output status */
-    mov si, offset Msg_SwitchToLongMode
-    call writestr
-
     jmp ExitToLongMode
-
-Msg_SwitchToLongMode:
-    .ascii "Switching to long mode....", CR, LF, NUL
 
 .align 8
 gdt:
@@ -141,14 +127,9 @@ CheckFor64BitSupport:
     cmp eax, ebx
     jnz .CheckForPAE
 
-    mov si, offset .Msg_NoCpuidSupport
-    call writestr
     popad
     xor al, al
     ret
-
-.Msg_NoCpuidSupport:
-    .ascii "The system doesn't support CPUID.", CR, LF, NUL
 
 .CheckForPAE:
     /* CPUID support detected - getting the PAE/PGE */
@@ -158,14 +139,9 @@ CheckFor64BitSupport:
     cmp edx, HEX(00A0)
     je .CheckForLongMode
 
-    mov si, offset .Msg_NoPAE
-    call writestr
     popad
     xor al, al
     ret
-
-.Msg_NoPAE:
-    .ascii "PAE or PGE not set.", CR, LF, NUL
 
 .CheckForLongMode:
     /* Check whether extended functions are supported */
@@ -182,14 +158,9 @@ CheckFor64BitSupport:
     jnz .Success
 
 .NoLongMode:
-    mov si, offset .Msg_NoLongMode
-    call writestr
     popad
     xor al, al
     ret
-
-.Msg_NoLongMode:
-    .ascii "Long mode is not supported.", CR, LF, NUL
 
 .Success:
     popad
