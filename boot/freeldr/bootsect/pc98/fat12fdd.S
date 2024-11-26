@@ -256,7 +256,7 @@ FoundFreeLoader:
      * because they contain a jump instruction to skip
      * over the helper code in the FreeLoader image
      */
-    ljmp16 0, FREELDR_BASE + 3
+    ljmp16 FREELDR_BASE / 16, 3
 
 /*
  * Reads cluster number in AX into [ES:BX]

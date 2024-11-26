@@ -376,17 +376,17 @@ FreeLdrFound:
     call ConvertAddress
     pop cx
 
+    mov bx, FREELDR_BASE / 16
+    mov es, bx
     xor bx, bx
     mov ds, bx
-    mov es, bx
-    mov bx, FREELDR_BASE
     call ReadSectors
 
-    mov  dl, byte ptr [BootDrive]     // Load boot drive into DL
+    mov  dl, byte ptr fs:[BootDrive]     // Load boot drive into DL
     //mov  dh, 0    // Load boot partition into DH (not needed, FreeLbr detects it itself)
 
     /* Transfer execution to the bootloader */
-    ljmp16 0, FREELDR_BASE
+    ljmp16 FREELDR_BASE / 16, 0
 
 
 // Insert chunk into chunk map (located at DS:[CHUNK_MAP_OFFSET])

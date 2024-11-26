@@ -64,9 +64,19 @@ FatHelperEntryPoint:
     /* First save AX - the start cluster of freeldr.sys */
     push ax
 
+    /* Save ds */
+    push ds
+
+    /* Prepare ds for output message */
+    mov bx, cs
+    mov ds, bx
+
     /* Display "Loading FreeLoader..." message */
     mov si, offset msgLoading
     call word ptr [bp-PutCharsOffset]
+
+    /* Restore ds */
+    pop ds
 
     call ReadFatIntoMemory
 
