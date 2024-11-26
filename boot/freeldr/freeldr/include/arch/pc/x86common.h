@@ -12,11 +12,13 @@
 #define BIOSCALLBUFFER      HEX(4000) /* Buffer to store temporary data for any Int386() call */
 #define STACK16ADDR         HEX(6F00) /* The 16-bit stack top will be at 0000:6F00 */
 #define BSS_START           HEX(6F00)
-#define STACKLOW            HEX(7000)
+#define STACKLOW            HEX(8000)
 #define STACKADDR           HEX(F000) /* The 32/64-bit stack top will be at 0000:F000, or 0xF000 */
-#define FREELDR_BASE        HEX(F800)
-#define FREELDR_PE_BASE    HEX(10000)
-#define MEMORY_MARGIN      HEX(88000) /* We need this much memory */
+#define FREELDR_BASE        HEX(20000)
+#define FREELDR_PE_BASE     HEX(30000)
+#define TEMPCODE_BASE       HEX(200000)
+#define TEMPCODE16_BASE     HEX(7000)
+#define MEMORY_MARGIN       HEX(99000) /* We need this much memory */
 
 #define BIOSCALLBUFSEGMENT (BIOSCALLBUFFER/16) /* Buffer to store temporary data for any Int386() call */
 #define BIOSCALLBUFOFFSET   HEX(0000) /* Buffer to store temporary data for any Int386() call */
