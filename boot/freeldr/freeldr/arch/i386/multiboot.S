@@ -33,7 +33,7 @@
  * multiboot kernels above 1MB. So we let GRUB load us
  * there and then relocate ourself to FREELDR_BASE.
  */
-#define INITIAL_BASE HEX(200000)
+#define INITIAL_BASE TEMPCODE_BASE
 
 
 #ifdef _M_IX86
@@ -190,7 +190,7 @@ mb4:
     mov cr0, rax
 
     /* Jump to real entry point */
-    ljmp16 0, FREELDR_BASE
+    ljmp16 FREELDR_BASE / 16, 0
 
 
     /* Force 8-byte alignment */
