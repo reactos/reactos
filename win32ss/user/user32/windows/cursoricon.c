@@ -1,4 +1,4 @@
-/*
+﻿/*
  * PROJECT:         ReactOS user32.dll
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * FILE:            win32ss/user/user32/windows/cursoricon.c
@@ -2038,32 +2038,25 @@ HANDLE WINAPI CopyImage(
         return NULL;
     }
 
-    /* If hImage is NULL, then do fast return after setting LastError */
-    if (!hImage)
-    {
-        switch (uType)
-        {
-            case IMAGE_BITMAP:
-                SetLastError(ERROR_INVALID_HANDLE);
-                break;
-            case IMAGE_CURSOR:
-            case IMAGE_ICON:
-                SetLastError(ERROR_INVALID_CURSOR_HANDLE);
-                break;
-            default:
-                SetLastError(ERROR_INVALID_PARAMETER);
-        }
-        return NULL;
-    }
-
     switch(uType)
     {
         case IMAGE_BITMAP:
+            if (!hImage)
+            {
+                SetLastError(ERROR_INVALID_HANDLE);
+                break;
+            }
             return BITMAP_CopyImage(hImage, cxDesired, cyDesired, fuFlags);
         case IMAGE_CURSOR:
         case IMAGE_ICON:
         {
-            HANDLE handle = CURSORICON_CopyImage(hImage, uType == IMAGE_ICON, cxDesired, cyDesired, fuFlags);
+            HANDLE handle;
+            if (!hImage)
+            {
+                SetLastError(ERROR_INVALID_CURSOR_HANDLE);
+                break;
+            }
+            handle = CURSORICON_CopyImage(hImage, uType == IMAGE_ICON, cxDesired, cyDesired, fuFlags);
             if (!handle && (fuFlags & LR_COPYFROMRESOURCE))
             {
                 /* Test if the hImage is the same size as what we want by getting
