@@ -95,14 +95,14 @@ __INTRIN_INLINE void _ReadWriteBarrier(void)
 #define _ReadBarrier _ReadWriteBarrier
 #define _WriteBarrier _ReadWriteBarrier
 
-#if !HAS_BUILTIN(_mm_mfence)
+#if !HAS_BUILTIN(_mm_mfence) && !defined(__clang__)
 __INTRIN_INLINE void _mm_mfence(void)
 {
 	__asm__ __volatile__("mfence" : : : "memory");
 }
 #endif
 
-#if !HAS_BUILTIN(_mm_lfence)
+#if !HAS_BUILTIN(_mm_lfence)&& !defined(__clang__)
 __INTRIN_INLINE void _mm_lfence(void)
 {
 	_ReadBarrier();
@@ -1301,8 +1301,13 @@ __INTRIN_INLINE unsigned long __cdecl _lrotr(unsigned long value, int shift)
 }
 #endif
 
-#ifdef __x86_64__
-__INTRIN_INLINE unsigned long long __ll_lshift(unsigned long long Mask, int Bit)
+#if defined __x86_64__
+#if defined(__clang__) && defined(_MSC_VER) // stupid hack because clang is broken
+static inline __attribute__((__always_inline__))
+#else
+__INTRIN_INLINE
+#endif
+unsigned long long __ll_lshift(unsigned long long Mask, int Bit)
 {
     unsigned long long retval;
     unsigned char shift = Bit & 0x3F;
@@ -1348,7 +1353,12 @@ __INTRIN_INLINE unsigned long long __ull_rshift(unsigned long long Mask, int Bit
 	just confuses it. Also we declare Bit as an int and then truncate it to
 	match Visual C++ behavior
 */
-__INTRIN_INLINE unsigned long long __ll_lshift(unsigned long long Mask, int Bit)
+#if defined(__clang__) && defined(_MSC_VER) // stupid hack because clang is broken
+static inline __attribute__((__always_inline__))
+#else
+__INTRIN_INLINE
+#endif
+unsigned long long __ll_lshift(unsigned long long Mask, int Bit)
 {
 	unsigned long long retval = Mask;
 
@@ -1641,15 +1651,19 @@ __INTRIN_INLINE unsigned long __cdecl _outpd(unsigned short Port, unsigned long 
 
 /*** System information ***/
 
+#if !HAS_BUILTIN(__cpuid)
 __INTRIN_INLINE void __cpuid(int CPUInfo[4], int InfoType)
 {
 	__asm__ __volatile__("cpuid" : "=a" (CPUInfo[0]), "=b" (CPUInfo[1]), "=c" (CPUInfo[2]), "=d" (CPUInfo[3]) : "a" (InfoType));
 }
+#endif
 
+#if !HAS_BUILTIN(__cpuidex)
 __INTRIN_INLINE void __cpuidex(int CPUInfo[4], int InfoType, int ECXValue)
 {
 	__asm__ __volatile__("cpuid" : "=a" (CPUInfo[0]), "=b" (CPUInfo[1]), "=c" (CPUInfo[2]), "=d" (CPUInfo[3]) : "a" (InfoType), "c" (ECXValue));
 }
+#endif
 
 #if !HAS_BUILTIN(__rdtsc)
 __INTRIN_INLINE unsigned long long __rdtsc(void)
@@ -1972,8 +1986,12 @@ __INTRIN_INLINE void __invlpg(void *Address)
 
 
 /*** System operations ***/
-
-__INTRIN_INLINE unsigned long long __readmsr(unsigned long reg)
+#if defined(__clang__) && defined(_MSC_VER) // stupid hack because clang is broken
+static inline __attribute__((__always_inline__))
+#else
+__INTRIN_INLINE
+#endif
+unsigned long long __readmsr(unsigned long reg)
 {
 #ifdef __x86_64__
 	unsigned long low, high;
@@ -1986,7 +2004,12 @@ __INTRIN_INLINE unsigned long long __readmsr(unsigned long reg)
 #endif
 }
 
-__INTRIN_INLINE void __writemsr(unsigned long Register, unsigned long long Value)
+#if defined(__clang__) && defined(_MSC_VER) // stupid hack because clang is broken
+static inline __attribute__((__always_inline__))
+#else
+__INTRIN_INLINE
+#endif
+void __writemsr(unsigned long Register, unsigned long long Value)
 {
 #ifdef __x86_64__
 	__asm__ __volatile__("wrmsr" : : "a" (Value), "d" (Value >> 32), "c" (Register));
