@@ -198,12 +198,9 @@ HRESULT SHELL_RegisterShellFolders(void) DECLSPEC_HIDDEN;
 /* Detect Shell Links */
 BOOL SHELL_IsShortcut(LPCITEMIDLIST) DECLSPEC_HIDDEN;
 
-INT_PTR CALLBACK SH_FileGeneralDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-INT_PTR CALLBACK SH_FileVersionDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 HPROPSHEETPAGE SH_CreatePropertySheetPage(WORD wDialogId, DLGPROC pfnDlgProc, LPARAM lParam, LPCWSTR pwszTitle);
-BOOL SH_ShowDriveProperties(WCHAR *drive, IDataObject *pDataObj);
-BOOL SH_ShowRecycleBinProperties(WCHAR sDrive);
-BOOL SH_ShowPropertiesDialog(LPCWSTR pwszPath, IDataObject *pDataObj);
+HPROPSHEETPAGE SH_CreatePropertySheetPageEx(WORD wDialogId, DLGPROC pfnDlgProc, LPARAM lParam,
+                                            LPCWSTR pwszTitle, LPFNPSPCALLBACK Callback);
 LPWSTR SH_FormatFileSizeWithBytes(PULARGE_INTEGER lpQwSize, LPWSTR pszBuf, UINT cchBuf);
 
 HRESULT WINAPI DoRegisterServer(void);

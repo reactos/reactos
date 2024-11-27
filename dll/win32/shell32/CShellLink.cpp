@@ -2903,10 +2903,13 @@ BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
             ASSERT(FAILED(hr) || !(path[0] == ':' && path[1] == ':' && path[2] == '{'));
         }
     }
-    EnableWindow(GetDlgItem(hwndDlg, IDC_SHORTCUT_TARGET_TEXT), !disablecontrols);
+
+    HWND hWndTarget = GetDlgItem(hwndDlg, IDC_SHORTCUT_TARGET_TEXT);
+    EnableWindow(hWndTarget, !disablecontrols);
+    PostMessage(hWndTarget, EM_SETSEL, 0, -1); // Fix caret bug when first opening the tab
 
     /* auto-completion */
-    SHAutoComplete(GetDlgItem(hwndDlg, IDC_SHORTCUT_TARGET_TEXT), SHACF_DEFAULT);
+    SHAutoComplete(hWndTarget, SHACF_DEFAULT);
     SHAutoComplete(GetDlgItem(hwndDlg, IDC_SHORTCUT_START_IN_EDIT), SHACF_DEFAULT);
 
     m_bInInit = FALSE;
@@ -3095,17 +3098,15 @@ CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
 
 HRESULT STDMETHODCALLTYPE CShellLink::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
 {
-    HPROPSHEETPAGE hPage = SH_CreatePropertySheetPage(IDD_SHORTCUT_PROPERTIES, SH_ShellLinkDlgProc, (LPARAM)this, NULL);
-    if (hPage == NULL)
-    {
-        ERR("failed to create property sheet page\n");
-        return E_FAIL;
-    }
-
-    if (!pfnAddPage(hPage, lParam))
-        return E_FAIL;
-
-    return S_OK;
+    HPROPSHEETPAGE hPage = SH_CreatePropertySheetPageEx(IDD_SHORTCUT_PROPERTIES, SH_ShellLinkDlgProc,
+                                                        (LPARAM)this, NULL, &PropSheetPageLifetimeCallback<CShellLink>);
+    HRESULT hr = AddPropSheetPage(hPage, pfnAddPage, lParam);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    else
+        AddRef(); // For PropSheetPageLifetimeCallback
+    enum { CShellLink_PageIndex_Shortcut = 0 };
+    return 1 + CShellLink_PageIndex_Shortcut; // Make this page the default (one-based)
 }
 
 HRESULT STDMETHODCALLTYPE CShellLink::ReplacePage(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage, LPARAM lParam)

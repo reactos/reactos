@@ -31,7 +31,7 @@ list(APPEND SOURCE
     dialogs/filedefext.cpp
     dialogs/filetypes.cpp
     dialogs/folder_options.cpp
-    dialogs/fprop.cpp
+    dialogs/item_prop.cpp
     dialogs/general.cpp
     dialogs/recycler_prop.cpp
     dialogs/view.cpp
@@ -40,6 +40,7 @@ list(APPEND SOURCE
     CExtractIcon.cpp
     folders.cpp
     iconcache.cpp
+    propsheet.cpp
     shell32.cpp
     utils.cpp
     CShellItem.cpp

@@ -126,9 +126,9 @@ extern const GUID CLSID_UnixDosFolder;
 extern const GUID SHELL32_AdvtShortcutProduct;
 extern const GUID SHELL32_AdvtShortcutComponent;
 
-#define MAX_PROPERTY_SHEET_PAGE 32
-
 #define VERBKEY_CCHMAX 64 // Note: 63+\0 seems to be the limit on XP
+
+#define MAX_PROPERTY_SHEET_PAGE 32
 
 extern inline
 BOOL
@@ -146,8 +146,36 @@ AddPropSheetPageCallback(HPROPSHEETPAGE hPage, LPARAM lParam)
     return FALSE;
 }
 
+static inline HRESULT
+AddPropSheetPage(HPROPSHEETPAGE hPage, LPFNSVADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
+{
+    if (!hPage)
+        return E_FAIL;
+    if (pfnAddPage(hPage, lParam))
+        return S_OK;
+    DestroyPropertySheetPage(hPage);
+    return E_FAIL;
+}
+
+template<class T> static UINT CALLBACK
+PropSheetPageLifetimeCallback(HWND hWnd, UINT uMsg, PROPSHEETPAGEW *pPSP)
+{
+    if (uMsg == PSPCB_RELEASE)
+        ((T*)(pPSP->lParam))->Release();
+    return TRUE;
+}
+
+EXTERN_C HRESULT WINAPI
+SHMultiFileProperties(IDataObject *pDataObject, DWORD dwFlags);
 HRESULT
 SHELL32_ShowPropertiesDialog(IDataObject *pdtobj);
+HRESULT
+SHELL32_ShowFilesystemItemPropertiesDialogAsync(IDataObject *pDO);
+HRESULT
+SHELL32_ShowShellExtensionProperties(const CLSID *pClsid, IDataObject *pDO);
+HRESULT
+SHELL_ShowItemIDListProperties(LPCITEMIDLIST pidl);
+
 HRESULT
 SHELL32_DefaultContextMenuCallBack(IShellFolder *psf, IDataObject *pdo, UINT msg);
 UINT
@@ -167,12 +195,29 @@ static inline UINT SeeFlagsToCmicFlags(UINT flags)
 
 // CStubWindow32 --- The owner window of file property sheets.
 // This window hides taskbar button of property sheet.
+#define CSTUBWINDOW32_CLASSNAME _T("StubWindow32")
 class CStubWindow32 : public CWindowImpl<CStubWindow32>
 {
+    static HWND FindStubWindow(UINT Type, LPCWSTR Path);
 public:
-    DECLARE_WND_CLASS_EX(_T("StubWindow32"), 0, COLOR_WINDOWTEXT)
+    DECLARE_WND_CLASS_EX(CSTUBWINDOW32_CLASSNAME, 0, COLOR_WINDOWTEXT)
+    enum {
+        TYPE_FORMATDRIVE = 1,
+        TYPE_PROPERTYSHEET,
+    };
+    static LPCWSTR GetTypePropName() { return L"StubType"; }
+    HRESULT CreateStub(UINT Type, LPCWSTR Path, const POINT *pPt);
+
+    LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+    {
+        if (HICON hIco = (HICON)SendMessage(WM_SETICON, ICON_BIG, NULL))
+            DestroyIcon(hIco);
+        ::RemovePropW(m_hWnd, GetTypePropName());
+        return 0;
+    }
 
     BEGIN_MSG_MAP(CStubWindow32)
+        MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
     END_MSG_MAP()
 };
 

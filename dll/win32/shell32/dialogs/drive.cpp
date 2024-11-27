@@ -32,9 +32,6 @@ typedef struct
     BOOL bFormattingNow;
 } FORMAT_DRIVE_CONTEXT, *PFORMAT_DRIVE_CONTEXT;
 
-EXTERN_C HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface, IDataObject *pDataObj);
-HPROPSHEETPAGE SH_CreatePropertySheetPage(LPCSTR resname, DLGPROC dlgproc, LPARAM lParam, LPWSTR szTitle);
-
 /*
  * TODO: In Windows the Shell doesn't know by itself if a drive is
  * a system one or not but rather a packet message is being sent by
@@ -157,125 +154,6 @@ GetDefaultClusterSize(LPWSTR szFs, PDWORD pClusterSize, PULARGE_INTEGER TotalNum
 
     *pClusterSize = ClusterSize;
     return TRUE;
-}
-
-typedef struct _DRIVE_PROP_PAGE
-{
-    LPCSTR resname;
-    DLGPROC dlgproc;
-    UINT DriveType;
-} DRIVE_PROP_PAGE;
-
-struct DRIVE_PROP_DATA
-{
-    PWSTR pwszDrive;
-    IStream *pStream;
-};
-
-static DWORD WINAPI
-ShowDrivePropThreadProc(LPVOID pParam)
-{
-    CHeapPtr<DRIVE_PROP_DATA, CComAllocator> pPropData((DRIVE_PROP_DATA *)pParam);
-    CHeapPtr<WCHAR, CComAllocator> pwszDrive(pPropData->pwszDrive);
-
-    // Unmarshall IDataObject from IStream
-    CComPtr<IDataObject> pDataObj;
-    CoGetInterfaceAndReleaseStream(pPropData->pStream, IID_PPV_ARG(IDataObject, &pDataObj));
-
-    HPSXA hpsx = NULL;
-    HPROPSHEETPAGE hpsp[MAX_PROPERTY_SHEET_PAGE];
-    CComObject<CDrvDefExt> *pDrvDefExt = NULL;
-
-    CDataObjectHIDA cida(pDataObj);
-    if (FAILED_UNEXPECTEDLY(cida.hr()))
-        return FAILED(cida.hr());
-
-    RECT rcPosition = {CW_USEDEFAULT, CW_USEDEFAULT, 0, 0};
-    POINT pt;
-    if (SUCCEEDED(DataObject_GetOffset(pDataObj, &pt)))
-    {
-        rcPosition.left = pt.x;
-        rcPosition.top = pt.y;
-    }
-
-    DWORD style = WS_DISABLED | WS_CLIPSIBLINGS | WS_CAPTION;
-    DWORD exstyle = WS_EX_WINDOWEDGE | WS_EX_APPWINDOW;
-    CStubWindow32 stub;
-    if (!stub.Create(NULL, rcPosition, NULL, style, exstyle))
-    {
-        ERR("StubWindow32 creation failed\n");
-        return FALSE;
-    }
-
-    PROPSHEETHEADERW psh = {sizeof(PROPSHEETHEADERW)};
-    psh.dwFlags = PSH_PROPTITLE;
-    psh.pszCaption = pwszDrive;
-    psh.hwndParent = stub;
-    psh.nStartPage = 0;
-    psh.phpage = hpsp;
-
-    HRESULT hr = CComObject<CDrvDefExt>::CreateInstance(&pDrvDefExt);
-    if (SUCCEEDED(hr))
-    {
-        pDrvDefExt->AddRef(); // CreateInstance returns object with 0 ref count
-        hr = pDrvDefExt->Initialize(HIDA_GetPIDLFolder(cida), pDataObj, NULL);
-        if (SUCCEEDED(hr))
-        {
-            hr = pDrvDefExt->AddPages(AddPropSheetPageCallback, (LPARAM)&psh);
-            if (FAILED(hr))
-                ERR("AddPages failed\n");
-        }
-        else
-        {
-            ERR("Initialize failed\n");
-        }
-    }
-
-    hpsx = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, L"Drive", MAX_PROPERTY_SHEET_PAGE, pDataObj);
-    if (hpsx)
-        SHAddFromPropSheetExtArray(hpsx, (LPFNADDPROPSHEETPAGE)AddPropSheetPageCallback, (LPARAM)&psh);
-
-    INT_PTR ret = PropertySheetW(&psh);
-
-    if (hpsx)
-        SHDestroyPropSheetExtArray(hpsx);
-    if (pDrvDefExt)
-        pDrvDefExt->Release();
-
-    stub.DestroyWindow();
-
-    return ret != -1;
-}
-
-BOOL
-SH_ShowDriveProperties(WCHAR *pwszDrive, IDataObject *pDataObj)
-{
-    HRESULT hr = SHStrDupW(pwszDrive, &pwszDrive);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return FALSE;
-
-    // Prepare data for thread
-    DRIVE_PROP_DATA *pData = (DRIVE_PROP_DATA *)SHAlloc(sizeof(*pData));
-    if (!pData)
-    {
-        SHFree(pwszDrive);
-        return FALSE;
-    }
-    pData->pwszDrive = pwszDrive;
-
-    // Marshall IDataObject to IStream
-    hr = CoMarshalInterThreadInterfaceInStream(IID_IDataObject, pDataObj, &pData->pStream);
-    if (SUCCEEDED(hr))
-    {
-        // Run a property sheet in another thread
-        if (SHCreateThread(ShowDrivePropThreadProc, pData, CTF_COINIT, NULL))
-            return TRUE; // Success
-
-        pData->pStream->Release();
-    }
-    SHFree(pData);
-    SHFree(pwszDrive);
-    return FALSE; // Failed
 }
 
 static VOID
