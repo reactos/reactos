@@ -25,7 +25,7 @@
 #define _CRT_UNPARENTHESIZE_(...) __VA_ARGS__
 #define _CRT_UNPARENTHESIZE(...)  _CRT_UNPARENTHESIZE_ __VA_ARGS__
 
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(__pragma)
 #define __pragma(x) _Pragma(_CRT_STRINGIZE(x))
 #endif
 
