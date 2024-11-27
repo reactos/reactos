@@ -6,7 +6,7 @@
 // Defines _locking(), which locks and unlocks regions of a file.
 //
 #include <corecrt_internal_lowio.h>
-#include <sys\locking.h>
+#include <sys/locking.h>
 
 
 
@@ -106,7 +106,7 @@ extern "C" int __cdecl _locking(int const fh, int const locking_mode, long const
         {
             errno = EBADF;
             _doserrno = 0;
-            _ASSERTE(("Invalid file descriptor. File possibly closed by a different thread",0)); 
+            _ASSERTE(("Invalid file descriptor. File possibly closed by a different thread",0));
             __leave;
         }
 

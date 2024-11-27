@@ -7,7 +7,7 @@
 //
 #include <corecrt_internal.h>
 #include <io.h>
-#include <sys\stat.h>
+#include <sys/stat.h>
 
 
 

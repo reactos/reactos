@@ -7,7 +7,7 @@
 //
 #include <corecrt_internal.h>
 #include <io.h>
-#include <sys\stat.h>
+#include <sys/stat.h>
 #include <corecrt_internal_win32_buffer.h>
 
 // Changes the mode of a file.  The only supported mode bit is _S_IWRITE, which

@@ -7,8 +7,8 @@
 // process started execution.
 //
 #include <corecrt_internal_time.h>
-#include <sys\timeb.h>
-#include <sys\types.h>
+#include <sys/timeb.h>
+#include <sys/types.h>
 
 
 
@@ -51,7 +51,7 @@ extern "C" int __cdecl __acrt_initialize_clock()
         !QueryPerformanceCounter(&local_start_count) ||
         local_frequency.QuadPart == 0)
     {
-        source_frequency = -1; 
+        source_frequency = -1;
         start_count      = -1;
         return 0;
     }
