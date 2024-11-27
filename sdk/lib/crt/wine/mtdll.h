@@ -19,21 +19,8 @@
 #ifndef WINE_MTDLL_H
 #define WINE_MTDLL_H
 
-#if defined(_MT)
-
-#define _mlock(locknum)   _lock(locknum)
-#define _munlock(locknum) _unlock(locknum)
-
 void __cdecl _unlock( int locknum );
 void __cdecl _lock( int locknum );
-
-#else
-
-#define _mlock(locknum)   do {} while(0)
-#define _munlock(locknum) do {} while(0)
-
-#endif
-
 
 #define _SIGNAL_LOCK    1
 #define _IOB_SCAN_LOCK  2

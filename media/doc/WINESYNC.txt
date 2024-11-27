@@ -305,10 +305,7 @@ lpk -
 
 msvcrt -
   sdk/lib/crt/conio/cputs.c             # Synced to WineStaging-1.9.16
-  sdk/lib/crt/except/cpp.c              # Synced at 20080528
-  sdk/lib/crt/except/cppexcept.c        # Synced at 20071111
   sdk/lib/crt/process/_cwait.c          # Synced to WineStaging-1.7.37
-  sdk/lib/crt/signal/xcptinfo.c         # Synced to WineStaging-1.7.37
   sdk/lib/crt/string/scanf.c/h          # Synced to Wine-1.7.17
   sdk/lib/crt/string/strtoi64.c         # Synced to WineStaging-1.9.9
   sdk/lib/crt/string/strtok.c           # Synced to WineStaging-1.9.16
@@ -319,9 +316,18 @@ msvcrt -
   sdk/lib/crt/string/wctype.c           # Synced to WineStaging-1.9.16
   sdk/lib/crt/string/wtoi64.c           # Synced to Wine-1.9.16
   sdk/lib/crt/mbstring/ischira.c        # Synced to Wine-1.9.16
-  sdk/lib/crt/wine/heap.c               # Synced at 20080529
-  sdk/lib/crt/wine/undname.c            # Synced to WineStaging-1.9.16
   sdk/lib/crt/process/thread.c          # Synced to WineStaging-1.7.55
+  sdk/lib/crt/wine/cpp.c                # Synced to Wine-7.0
+  sdk/lib/crt/wine/cppexcept.h          # Synced to Wine-7.0
+  sdk/lib/crt/wine/except.c             # Synced to Wine-7.0
+  sdk/lib/crt/wine/except_arm.c         # Synced to Wine-7.0
+  sdk/lib/crt/wine/except_arm64.c       # Synced to Wine-7.0
+  sdk/lib/crt/wine/except_i386.c        # Synced to Wine-7.0
+  sdk/lib/crt/wine/except_x86_64.c      # Synced to Wine-7.0
+  sdk/lib/crt/wine/heap.c               # Synced to Wine-7.0
+  sdk/lib/crt/wine/msvcrt.h             # Synced to Wine-7.0
+  sdk/lib/crt/wine/mtdll.h              # Synced to Wine-7.0
+  sdk/lib/crt/wine/undname.c            # Synced to Wine-7.0
 
 regedit
   base/applications/regedit/regedit.c   # Synced to Wine-7.17

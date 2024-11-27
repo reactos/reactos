@@ -25,12 +25,11 @@
  * www.thecodeproject.com.
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #ifdef __i386__
 
+#include <setjmp.h>
 #include <stdarg.h>
+#include <fpieee.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -120,7 +119,7 @@ typedef struct _SCOPETABLE
   void * (*lpfnHandler)(void);
 } SCOPETABLE, *PSCOPETABLE;
 
-typedef struct _MSVCRT_EXCEPTION_FRAME
+typedef struct MSVCRT_EXCEPTION_FRAME
 {
   EXCEPTION_REGISTRATION_RECORD *prev;
   void (*handler)(PEXCEPTION_RECORD, EXCEPTION_REGISTRATION_RECORD*,
@@ -328,7 +327,7 @@ static void cxx_local_unwind( cxx_exception_frame* frame, const cxx_function_des
         if (trylevel < 0 || trylevel >= descr->unwind_count)
         {
             ERR( "invalid trylevel %d\n", trylevel );
-            MSVCRT_terminate();
+            terminate();
         }
         handler = descr->unwind_table[trylevel].handler;
         if (handler)
@@ -540,7 +539,7 @@ static LONG CALLBACK se_translation_filter( EXCEPTION_POINTERS *ep, void *c )
     if (rec->ExceptionCode != CXX_EXCEPTION)
     {
         TRACE( "non-c++ exception thrown in SEH handler: %x\n", rec->ExceptionCode );
-        MSVCRT_terminate();
+        terminate();
     }
 
     exc_type = (cxx_exception_type *)rec->ExceptionInformation[2];
@@ -549,6 +548,18 @@ static LONG CALLBACK se_translation_filter( EXCEPTION_POINTERS *ep, void *c )
 
     __DestructExceptionObject( rec );
     return ExceptionContinueSearch;
+}
+
+static void check_noexcept( PEXCEPTION_RECORD rec,
+        const cxx_function_descr *descr, BOOL nested )
+{
+    if (!nested && rec->ExceptionCode == CXX_EXCEPTION &&
+            descr->magic >= CXX_FRAME_MAGIC_VC8 &&
+            (descr->flags & FUNC_DESCR_NOEXCEPT))
+    {
+        ERR("noexcept function propagating exception\n");
+        terminate();
+    }
 }
 
 /*********************************************************************
@@ -578,7 +589,11 @@ DWORD CDECL cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame
         if (descr->unwind_count && !nested_frame) cxx_local_unwind( frame, descr, -1 );
         return ExceptionContinueSearch;
     }
-    if (!descr->tryblock_count) return ExceptionContinueSearch;
+    if (!descr->tryblock_count)
+    {
+        check_noexcept(rec, descr, nested_frame != NULL);
+        return ExceptionContinueSearch;
+    }
 
     if(rec->ExceptionCode == CXX_EXCEPTION &&
             rec->ExceptionInformation[1] == 0 && rec->ExceptionInformation[2] == 0)
@@ -643,6 +658,7 @@ DWORD CDECL cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame
 
     call_catch_block( rec, context, frame, descr,
             nested_frame, exc_type );
+    check_noexcept(rec, descr, nested_frame != NULL);
     return ExceptionContinueSearch;
 }
 
@@ -678,7 +694,7 @@ __ASM_GLOBAL_FUNC( __CxxFrameHandler,
  *
  * Callback meant to be used as UnwindFunc for setjmp/longjmp.
  */
-void __stdcall __CxxLongjmpUnwind( const struct MSVCRT___JUMP_BUFFER *buf )
+void __stdcall __CxxLongjmpUnwind( const _JUMP_BUFFER *buf )
 {
     cxx_exception_frame *frame = (cxx_exception_frame *)buf->Registration;
     const cxx_function_descr *descr = (const cxx_function_descr *)buf->UnwindData[0];
@@ -1014,7 +1030,7 @@ int CDECL _except_handler4_common( ULONG *cookie, void (*check_cookie)(void),
  */
 
 #define MSVCRT_JMP_MAGIC 0x56433230 /* ID value for new jump structure */
-typedef void (__stdcall *MSVCRT_unwind_function)(const struct MSVCRT___JUMP_BUFFER *);
+typedef void (__stdcall *MSVCRT_unwind_function)(const _JUMP_BUFFER *);
 
 /* define an entrypoint for setjmp/setjmp3 that stores the registers in the jmp buf */
 /* and then jumps to the C backend function */
@@ -1034,7 +1050,7 @@ typedef void (__stdcall *MSVCRT_unwind_function)(const struct MSVCRT___JUMP_BUFF
  *		_setjmp (MSVCRT.@)
  */
 DEFINE_SETJMP_ENTRYPOINT(MSVCRT__setjmp)
-int CDECL DECLSPEC_HIDDEN __regs_MSVCRT__setjmp(struct MSVCRT___JUMP_BUFFER *jmp)
+int CDECL DECLSPEC_HIDDEN __regs_MSVCRT__setjmp(_JUMP_BUFFER *jmp)
 {
     jmp->Registration = (unsigned long)NtCurrentTeb()->Tib.ExceptionList;
     if (jmp->Registration == ~0UL)
@@ -1051,7 +1067,7 @@ int CDECL DECLSPEC_HIDDEN __regs_MSVCRT__setjmp(struct MSVCRT___JUMP_BUFFER *jmp
  *		_setjmp3 (MSVCRT.@)
  */
 DEFINE_SETJMP_ENTRYPOINT( MSVCRT__setjmp3 )
-int WINAPIV DECLSPEC_HIDDEN __regs_MSVCRT__setjmp3(struct MSVCRT___JUMP_BUFFER *jmp, int nb_args, ...)
+int WINAPIV DECLSPEC_HIDDEN __regs_MSVCRT__setjmp3(_JUMP_BUFFER *jmp, int nb_args, ...)
 {
     jmp->Cookie = MSVCRT_JMP_MAGIC;
     jmp->UnwindFunc = 0;
@@ -1082,7 +1098,7 @@ int WINAPIV DECLSPEC_HIDDEN __regs_MSVCRT__setjmp3(struct MSVCRT___JUMP_BUFFER *
 /*********************************************************************
  *		longjmp (MSVCRT.@)
  */
-void CDECL MSVCRT_longjmp(struct MSVCRT___JUMP_BUFFER *jmp, int retval)
+void CDECL MSVCRT_longjmp(_JUMP_BUFFER *jmp, int retval)
 {
     unsigned long cur_frame = 0;
 
@@ -1120,7 +1136,7 @@ void CDECL MSVCRT_longjmp(struct MSVCRT___JUMP_BUFFER *jmp, int retval)
 /*********************************************************************
  *		_seh_longjmp_unwind (MSVCRT.@)
  */
-void __stdcall _seh_longjmp_unwind(struct MSVCRT___JUMP_BUFFER *jmp)
+void __stdcall _seh_longjmp_unwind(_JUMP_BUFFER *jmp)
 {
     msvcrt_local_unwind2( (MSVCRT_EXCEPTION_FRAME *)jmp->Registration, jmp->TryLevel, (void *)jmp->Ebp );
 }
@@ -1128,7 +1144,7 @@ void __stdcall _seh_longjmp_unwind(struct MSVCRT___JUMP_BUFFER *jmp)
 /*********************************************************************
  *		_seh_longjmp_unwind4 (MSVCRT.@)
  */
-void __stdcall _seh_longjmp_unwind4(struct MSVCRT___JUMP_BUFFER *jmp)
+void __stdcall _seh_longjmp_unwind4(_JUMP_BUFFER *jmp)
 {
     msvcrt_local_unwind4( (ULONG *)&jmp->Cookie, (MSVCRT_EXCEPTION_FRAME *)jmp->Registration,
                           jmp->TryLevel, (void *)jmp->Ebp );
@@ -1137,14 +1153,14 @@ void __stdcall _seh_longjmp_unwind4(struct MSVCRT___JUMP_BUFFER *jmp)
 /*********************************************************************
  *              _fpieee_flt (MSVCRT.@)
  */
-int __cdecl _fpieee_flt(ULONG exception_code, EXCEPTION_POINTERS *ep,
+int __cdecl _fpieee_flt(__msvcrt_ulong exception_code, EXCEPTION_POINTERS *ep,
         int (__cdecl *handler)(_FPIEEE_RECORD*))
 {
     FLOATING_SAVE_AREA *ctx = &ep->ContextRecord->FloatSave;
     _FPIEEE_RECORD rec;
     int ret;
 
-    TRACE("(%x %p %p)\n", exception_code, ep, handler);
+    TRACE("(%lx %p %p)\n", exception_code, ep, handler);
 
     switch(exception_code) {
     case STATUS_FLOAT_DIVIDE_BY_ZERO:

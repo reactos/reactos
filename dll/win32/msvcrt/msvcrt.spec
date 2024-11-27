@@ -3,154 +3,154 @@
 @ cdecl -arch=x86_64 -version=0x502 $I10_OUTPUT() I10_OUTPUT
 
 # **************** x86 C++ functions ****************
-@ cdecl -arch=i386 -norelay ??0__non_rtti_object@@QAE@ABV0@@Z(ptr) MSVCRT___non_rtti_object_copy_ctor # public: __thiscall __non_rtti_object::__non_rtti_object(class __non_rtti_object const &)
-@ cdecl -arch=i386 -norelay ??0__non_rtti_object@@QAE@PBD@Z(ptr) MSVCRT___non_rtti_object_ctor # public: __thiscall __non_rtti_object::__non_rtti_object(char const *)
-@ cdecl -arch=i386 -norelay ??0bad_cast@@AAE@PBQBD@Z(ptr) MSVCRT_bad_cast_ctor # private: __thiscall bad_cast::bad_cast(char const * const *)
-@ cdecl -arch=i386 -norelay ??0bad_cast@@QAE@ABQBD@Z(ptr) MSVCRT_bad_cast_ctor # public: __thiscall bad_cast::bad_cast(char const * const &)
-@ cdecl -arch=i386 -norelay ??0bad_cast@@QAE@ABV0@@Z(ptr) MSVCRT_bad_cast_copy_ctor # public: __thiscall bad_cast::bad_cast(class bad_cast const &)
-@ cdecl -arch=i386 -norelay ??0bad_cast@@QAE@PBD@Z(ptr) MSVCRT_bad_cast_ctor_charptr # public: __thiscall bad_cast::bad_cast(char const *)
-@ cdecl -arch=i386 -norelay ??0bad_typeid@@QAE@ABV0@@Z(ptr) MSVCRT_bad_typeid_copy_ctor # public: __thiscall bad_typeid::bad_typeid(class bad_typeid const &)
-@ cdecl -arch=i386 -norelay ??0bad_typeid@@QAE@PBD@Z(ptr) MSVCRT_bad_typeid_ctor # public: __thiscall bad_typeid::bad_typeid(char const *)
-@ cdecl -arch=i386 -norelay ??0exception@@QAE@ABQBD@Z(ptr) MSVCRT_exception_ctor # public: __thiscall exception::exception(char const * const &)
-@ cdecl -arch=i386 -norelay ??0exception@@QAE@ABQBDH@Z(ptr long) MSVCRT_exception_ctor_noalloc # public: __thiscall exception::exception(char const * const &,int)
-@ cdecl -arch=i386 -norelay ??0exception@@QAE@ABV0@@Z(ptr) MSVCRT_exception_copy_ctor # public: __thiscall exception::exception(class exception const &)
-@ cdecl -arch=i386 -norelay ??0exception@@QAE@XZ() MSVCRT_exception_default_ctor # public: __thiscall exception::exception(void)
-@ cdecl -arch=i386 -norelay ??1__non_rtti_object@@UAE@XZ() MSVCRT___non_rtti_object_dtor # public: virtual __thiscall __non_rtti_object::~__non_rtti_object(void)
-@ cdecl -arch=i386 -norelay ??1bad_cast@@UAE@XZ() MSVCRT_bad_cast_dtor # public: virtual __thiscall bad_cast::~bad_cast(void)
-@ cdecl -arch=i386 -norelay ??1bad_typeid@@UAE@XZ() MSVCRT_bad_typeid_dtor # public: virtual __thiscall bad_typeid::~bad_typeid(void)
-@ cdecl -arch=i386 -norelay ??1exception@@UAE@XZ() MSVCRT_exception_dtor # public: virtual __thiscall exception::~exception(void)
-@ cdecl -arch=i386 -norelay ??1type_info@@UAE@XZ() MSVCRT_type_info_dtor # public: virtual __thiscall type_info::~type_info(void)
-@ cdecl -arch=i386 ??2@YAPAXI@Z(long) MSVCRT_operator_new # void * __cdecl operator new(unsigned int)
-;@ cdecl -arch=i386 ??2@YAPAXIHPBDH@Z(long long str long) MSVCRT_operator_new_dbg # void * __cdecl operator new(unsigned int,int,char const *,int)
-@ cdecl -arch=i386 ??3@YAXPAX@Z(ptr) MSVCRT_operator_delete # void __cdecl operator delete(void *)
-@ cdecl -arch=i386 -norelay ??4__non_rtti_object@@QAEAAV0@ABV0@@Z(ptr) MSVCRT___non_rtti_object_opequals # public: class __non_rtti_object & __thiscall __non_rtti_object::operator=(class __non_rtti_object const &)
-@ cdecl -arch=i386 -norelay ??4bad_cast@@QAEAAV0@ABV0@@Z(ptr) MSVCRT_bad_cast_opequals # public: class bad_cast & __thiscall bad_cast::operator=(class bad_cast const &)
-@ cdecl -arch=i386 -norelay ??4bad_typeid@@QAEAAV0@ABV0@@Z(ptr) MSVCRT_bad_typeid_opequals # public: class bad_typeid & __thiscall bad_typeid::operator=(class bad_typeid const &)
-@ cdecl -arch=i386 -norelay ??4exception@@QAEAAV0@ABV0@@Z(ptr) MSVCRT_exception_opequals # public: class exception & __thiscall exception::operator=(class exception const &)
-@ cdecl -arch=i386 -norelay ??8type_info@@QBEHABV0@@Z(ptr) MSVCRT_type_info_opequals_equals # public: int __thiscall type_info::operator==(class type_info const &)const
-@ cdecl -arch=i386 -norelay ??9type_info@@QBEHABV0@@Z(ptr) MSVCRT_type_info_opnot_equals # public: int __thiscall type_info::operator!=(class type_info const &)const
-@ extern -arch=i386 ??_7__non_rtti_object@@6B@ MSVCRT___non_rtti_object_vtable # const __non_rtti_object::`vftable'
-@ extern -arch=i386 ??_7bad_cast@@6B@ MSVCRT_bad_cast_vtable # const bad_cast::`vftable'
-@ extern -arch=i386 ??_7bad_typeid@@6B@ MSVCRT_bad_typeid_vtable # const bad_typeid::`vftable'
-@ extern -arch=i386 ??_7exception@@6B@ MSVCRT_exception_vtable # const exception::`vftable'
-@ cdecl -arch=i386 -norelay ??_E__non_rtti_object@@UAEPAXI@Z(long) MSVCRT___non_rtti_object_vector_dtor # public: virtual void * __thiscall __non_rtti_object::`vector deleting destructor'(unsigned int)
-@ cdecl -arch=i386 -norelay ??_Ebad_cast@@UAEPAXI@Z(long) MSVCRT_bad_cast_vector_dtor # public: virtual void * __thiscall bad_cast::`vector deleting destructor'(unsigned int)
-@ cdecl -arch=i386 -norelay ??_Ebad_typeid@@UAEPAXI@Z(long) MSVCRT_bad_typeid_vector_dtor # public: virtual void * __thiscall bad_typeid::`vector deleting destructor'(unsigned int)
-@ cdecl -arch=i386 -norelay ??_Eexception@@UAEPAXI@Z(long) MSVCRT_exception_vector_dtor # public: virtual void * __thiscall exception::`vector deleting destructor'(unsigned int)
-@ cdecl -arch=i386 -norelay ??_Fbad_cast@@QAEXXZ() MSVCRT_bad_cast_default_ctor # public: void __thiscall bad_cast::`default constructor closure'(void)
-@ cdecl -arch=i386 -norelay ??_Fbad_typeid@@QAEXXZ() MSVCRT_bad_typeid_default_ctor # public: void __thiscall bad_typeid::`default constructor closure'(void)
-@ cdecl -arch=i386 -norelay ??_G__non_rtti_object@@UAEPAXI@Z(long) MSVCRT___non_rtti_object_scalar_dtor # public: virtual void * __thiscall __non_rtti_object::`scalar deleting destructor'(unsigned int)
-@ cdecl -arch=i386 -norelay ??_Gbad_cast@@UAEPAXI@Z(long) MSVCRT_bad_cast_scalar_dtor # public: virtual void * __thiscall bad_cast::`scalar deleting destructor'(unsigned int)
-@ cdecl -arch=i386 -norelay ??_Gbad_typeid@@UAEPAXI@Z(long) MSVCRT_bad_typeid_scalar_dtor # public: virtual void * __thiscall bad_typeid::`scalar deleting destructor'(unsigned int)
-@ cdecl -arch=i386 -norelay ??_Gexception@@UAEPAXI@Z(long) MSVCRT_exception_scalar_dtor # public: virtual void * __thiscall exception::`scalar deleting destructor'(unsigned int)
-@ cdecl -arch=i386 ??_U@YAPAXI@Z(long) MSVCRT_operator_new # void * __cdecl operator new[](unsigned int)
-;@ cdecl -arch=i386 ??_U@YAPAXIHPBDH@Z(long long str long) MSVCRT_operator_new_dbg # void * __cdecl operator new[](unsigned int,int,char const *,int)
-@ cdecl -arch=i386 ??_V@YAXPAX@Z(ptr) MSVCRT_operator_delete # void __cdecl operator delete[](void *)
-@ cdecl -arch=i386 -norelay __uncaught_exception(ptr) MSVCRT___uncaught_exception
-@ cdecl -arch=i386 -norelay ?_query_new_handler@@YAP6AHI@ZXZ() MSVCRT__query_new_handler # int (__cdecl*__cdecl _query_new_handler(void))(unsigned int)
-@ cdecl -arch=i386 ?_query_new_mode@@YAHXZ() MSVCRT__query_new_mode # int __cdecl _query_new_mode(void)
-@ cdecl -arch=i386 -norelay ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z(ptr) MSVCRT__set_new_handler # int (__cdecl*__cdecl _set_new_handler(int (__cdecl*)(unsigned int)))(unsigned int)
-@ cdecl -arch=i386 ?_set_new_mode@@YAHH@Z(long) MSVCRT__set_new_mode # int __cdecl _set_new_mode(int)
-@ cdecl -arch=i386 -norelay ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z(ptr) MSVCRT__set_se_translator # void (__cdecl*__cdecl _set_se_translator(void (__cdecl*)(unsigned int,struct _EXCEPTION_POINTERS *)))(unsigned int,struct _EXCEPTION_POINTERS *)
-@ cdecl -arch=i386 -norelay ?before@type_info@@QBEHABV1@@Z(ptr) MSVCRT_type_info_before # public: int __thiscall type_info::before(class type_info const &)const
-@ cdecl -arch=i386 -norelay ?name@type_info@@QBEPBDXZ() MSVCRT_type_info_name # public: char const * __thiscall type_info::name(void)const
-@ cdecl -arch=i386 -norelay ?raw_name@type_info@@QBEPBDXZ() MSVCRT_type_info_raw_name # public: char const * __thiscall type_info::raw_name(void)const
-@ cdecl -arch=i386 ?set_new_handler@@YAP6AXXZP6AXXZ@Z(ptr) MSVCRT_set_new_handler # void (__cdecl*__cdecl set_new_handler(void (__cdecl*)(void)))(void)
-@ cdecl -arch=i386 ?set_terminate@@YAP6AXXZP6AXXZ@Z(ptr) MSVCRT_set_terminate # void (__cdecl*__cdecl set_terminate(void (__cdecl*)(void)))(void)
-@ cdecl -arch=i386 ?set_unexpected@@YAP6AXXZP6AXXZ@Z(ptr) MSVCRT_set_unexpected # void (__cdecl*__cdecl set_unexpected(void (__cdecl*)(void)))(void)
-@ cdecl -arch=i386 ?terminate@@YAXXZ() MSVCRT_terminate # void __cdecl terminate(void)
-@ cdecl -arch=i386 ?unexpected@@YAXXZ() MSVCRT_unexpected # void __cdecl unexpected(void)
-@ cdecl -arch=i386 -norelay ?what@exception@@UBEPBDXZ() MSVCRT_what_exception # public: virtual char const * __thiscall exception::what(void)const
+@ cdecl -arch=i386 -norelay ??0__non_rtti_object@@QAE@ABV0@@Z(ptr) __non_rtti_object_copy_ctor # public: __thiscall __non_rtti_object::__non_rtti_object(class __non_rtti_object const &)
+@ cdecl -arch=i386 -norelay ??0__non_rtti_object@@QAE@PBD@Z(ptr) __non_rtti_object_ctor # public: __thiscall __non_rtti_object::__non_rtti_object(char const *)
+@ cdecl -arch=i386 -norelay ??0bad_cast@@AAE@PBQBD@Z(ptr) bad_cast_ctor # private: __thiscall bad_cast::bad_cast(char const * const *)
+@ cdecl -arch=i386 -norelay ??0bad_cast@@QAE@ABQBD@Z(ptr) bad_cast_ctor # public: __thiscall bad_cast::bad_cast(char const * const &)
+@ cdecl -arch=i386 -norelay ??0bad_cast@@QAE@ABV0@@Z(ptr) bad_cast_copy_ctor # public: __thiscall bad_cast::bad_cast(class bad_cast const &)
+@ cdecl -arch=i386 -norelay ??0bad_cast@@QAE@PBD@Z(ptr) bad_cast_ctor_charptr # public: __thiscall bad_cast::bad_cast(char const *)
+@ cdecl -arch=i386 -norelay ??0bad_typeid@@QAE@ABV0@@Z(ptr) bad_typeid_copy_ctor # public: __thiscall bad_typeid::bad_typeid(class bad_typeid const &)
+@ cdecl -arch=i386 -norelay ??0bad_typeid@@QAE@PBD@Z(ptr) bad_typeid_ctor # public: __thiscall bad_typeid::bad_typeid(char const *)
+@ cdecl -arch=i386 -norelay ??0exception@@QAE@ABQBD@Z(ptr) exception_ctor # public: __thiscall exception::exception(char const * const &)
+@ cdecl -arch=i386 -norelay ??0exception@@QAE@ABQBDH@Z(ptr long) exception_ctor_noalloc # public: __thiscall exception::exception(char const * const &,int)
+@ cdecl -arch=i386 -norelay ??0exception@@QAE@ABV0@@Z(ptr) exception_copy_ctor # public: __thiscall exception::exception(class exception const &)
+@ cdecl -arch=i386 -norelay ??0exception@@QAE@XZ() exception_default_ctor # public: __thiscall exception::exception(void)
+@ cdecl -arch=i386 -norelay ??1__non_rtti_object@@UAE@XZ() __non_rtti_object_dtor # public: virtual __thiscall __non_rtti_object::~__non_rtti_object(void)
+@ cdecl -arch=i386 -norelay ??1bad_cast@@UAE@XZ() bad_cast_dtor # public: virtual __thiscall bad_cast::~bad_cast(void)
+@ cdecl -arch=i386 -norelay ??1bad_typeid@@UAE@XZ() bad_typeid_dtor # public: virtual __thiscall bad_typeid::~bad_typeid(void)
+@ cdecl -arch=i386 -norelay ??1exception@@UAE@XZ() exception_dtor # public: virtual __thiscall exception::~exception(void)
+@ cdecl -arch=i386 -norelay ??1type_info@@UAE@XZ() type_info_dtor # public: virtual __thiscall type_info::~type_info(void)
+@ cdecl -arch=i386 ??2@YAPAXI@Z(long) operator_new # void * __cdecl operator new(unsigned int)
+;@ cdecl -arch=i386 ??2@YAPAXIHPBDH@Z(long long str long) operator_new_dbg # void * __cdecl operator new(unsigned int,int,char const *,int)
+@ cdecl -arch=i386 ??3@YAXPAX@Z(ptr) operator_delete # void __cdecl operator delete(void *)
+@ cdecl -arch=i386 -norelay ??4__non_rtti_object@@QAEAAV0@ABV0@@Z(ptr) __non_rtti_object_opequals # public: class __non_rtti_object & __thiscall __non_rtti_object::operator=(class __non_rtti_object const &)
+@ cdecl -arch=i386 -norelay ??4bad_cast@@QAEAAV0@ABV0@@Z(ptr) bad_cast_opequals # public: class bad_cast & __thiscall bad_cast::operator=(class bad_cast const &)
+@ cdecl -arch=i386 -norelay ??4bad_typeid@@QAEAAV0@ABV0@@Z(ptr) bad_typeid_opequals # public: class bad_typeid & __thiscall bad_typeid::operator=(class bad_typeid const &)
+@ cdecl -arch=i386 -norelay ??4exception@@QAEAAV0@ABV0@@Z(ptr) exception_opequals # public: class exception & __thiscall exception::operator=(class exception const &)
+@ cdecl -arch=i386 -norelay ??8type_info@@QBEHABV0@@Z(ptr) type_info_opequals_equals # public: int __thiscall type_info::operator==(class type_info const &)const
+@ cdecl -arch=i386 -norelay ??9type_info@@QBEHABV0@@Z(ptr) type_info_opnot_equals # public: int __thiscall type_info::operator!=(class type_info const &)const
+@ extern -arch=i386 ??_7__non_rtti_object@@6B@ __non_rtti_object_vtable # const __non_rtti_object::`vftable'
+@ extern -arch=i386 ??_7bad_cast@@6B@ bad_cast_vtable # const bad_cast::`vftable'
+@ extern -arch=i386 ??_7bad_typeid@@6B@ bad_typeid_vtable # const bad_typeid::`vftable'
+@ extern -arch=i386 ??_7exception@@6B@ exception_vtable # const exception::`vftable'
+@ cdecl -arch=i386 -norelay ??_E__non_rtti_object@@UAEPAXI@Z(long) __non_rtti_object_vector_dtor # public: virtual void * __thiscall __non_rtti_object::`vector deleting destructor'(unsigned int)
+@ cdecl -arch=i386 -norelay ??_Ebad_cast@@UAEPAXI@Z(long) bad_cast_vector_dtor # public: virtual void * __thiscall bad_cast::`vector deleting destructor'(unsigned int)
+@ cdecl -arch=i386 -norelay ??_Ebad_typeid@@UAEPAXI@Z(long) bad_typeid_vector_dtor # public: virtual void * __thiscall bad_typeid::`vector deleting destructor'(unsigned int)
+@ cdecl -arch=i386 -norelay ??_Eexception@@UAEPAXI@Z(long) exception_vector_dtor # public: virtual void * __thiscall exception::`vector deleting destructor'(unsigned int)
+@ cdecl -arch=i386 -norelay ??_Fbad_cast@@QAEXXZ() bad_cast_default_ctor # public: void __thiscall bad_cast::`default constructor closure'(void)
+@ cdecl -arch=i386 -norelay ??_Fbad_typeid@@QAEXXZ() bad_typeid_default_ctor # public: void __thiscall bad_typeid::`default constructor closure'(void)
+@ cdecl -arch=i386 -norelay ??_G__non_rtti_object@@UAEPAXI@Z(long) __non_rtti_object_scalar_dtor # public: virtual void * __thiscall __non_rtti_object::`scalar deleting destructor'(unsigned int)
+@ cdecl -arch=i386 -norelay ??_Gbad_cast@@UAEPAXI@Z(long) bad_cast_scalar_dtor # public: virtual void * __thiscall bad_cast::`scalar deleting destructor'(unsigned int)
+@ cdecl -arch=i386 -norelay ??_Gbad_typeid@@UAEPAXI@Z(long) bad_typeid_scalar_dtor # public: virtual void * __thiscall bad_typeid::`scalar deleting destructor'(unsigned int)
+@ cdecl -arch=i386 -norelay ??_Gexception@@UAEPAXI@Z(long) exception_scalar_dtor # public: virtual void * __thiscall exception::`scalar deleting destructor'(unsigned int)
+@ cdecl -arch=i386 ??_U@YAPAXI@Z(long) operator_new # void * __cdecl operator new[](unsigned int)
+;@ cdecl -arch=i386 ??_U@YAPAXIHPBDH@Z(long long str long) operator_new_dbg # void * __cdecl operator new[](unsigned int,int,char const *,int)
+@ cdecl -arch=i386 ??_V@YAXPAX@Z(ptr) operator_delete # void __cdecl operator delete[](void *)
+@ cdecl -arch=i386 -norelay __uncaught_exception(ptr) __uncaught_exception
+@ cdecl -arch=i386 -norelay ?_query_new_handler@@YAP6AHI@ZXZ() _query_new_handler # int (__cdecl*__cdecl _query_new_handler(void))(unsigned int)
+@ cdecl -arch=i386 ?_query_new_mode@@YAHXZ() _query_new_mode # int __cdecl _query_new_mode(void)
+@ cdecl -arch=i386 -norelay ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z(ptr) _set_new_handler # int (__cdecl*__cdecl _set_new_handler(int (__cdecl*)(unsigned int)))(unsigned int)
+@ cdecl -arch=i386 ?_set_new_mode@@YAHH@Z(long) _set_new_mode # int __cdecl _set_new_mode(int)
+@ cdecl -arch=i386 -norelay ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z(ptr) _set_se_translator # void (__cdecl*__cdecl _set_se_translator(void (__cdecl*)(unsigned int,struct _EXCEPTION_POINTERS *)))(unsigned int,struct _EXCEPTION_POINTERS *)
+@ cdecl -arch=i386 -norelay ?before@type_info@@QBEHABV1@@Z(ptr) type_info_before # public: int __thiscall type_info::before(class type_info const &)const
+@ cdecl -arch=i386 -norelay ?name@type_info@@QBEPBDXZ() type_info_name # public: char const * __thiscall type_info::name(void)const
+@ cdecl -arch=i386 -norelay ?raw_name@type_info@@QBEPBDXZ() type_info_raw_name # public: char const * __thiscall type_info::raw_name(void)const
+@ cdecl -arch=i386 ?set_new_handler@@YAP6AXXZP6AXXZ@Z(ptr) set_new_handler # void (__cdecl*__cdecl set_new_handler(void (__cdecl*)(void)))(void)
+@ cdecl -arch=i386 ?set_terminate@@YAP6AXXZP6AXXZ@Z(ptr) set_terminate # void (__cdecl*__cdecl set_terminate(void (__cdecl*)(void)))(void)
+@ cdecl -arch=i386 ?set_unexpected@@YAP6AXXZP6AXXZ@Z(ptr) set_unexpected # void (__cdecl*__cdecl set_unexpected(void (__cdecl*)(void)))(void)
+@ cdecl -arch=i386 ?terminate@@YAXXZ() terminate # void __cdecl terminate(void)
+@ cdecl -arch=i386 ?unexpected@@YAXXZ() unexpected # void __cdecl unexpected(void)
+@ cdecl -arch=i386 -norelay ?what@exception@@UBEPBDXZ() exception_what # public: virtual char const * __thiscall exception::what(void)const
 
 # **************** win64 C++ functions ****************
-@ cdecl -arch=win64 ??0__non_rtti_object@@QEAA@AEBV0@@Z(ptr) MSVCRT___non_rtti_object_copy_ctor # public: __cdecl __non_rtti_object::__non_rtti_object(class __non_rtti_object const & __ptr64) __ptr64
-@ cdecl -arch=win64 ??0__non_rtti_object@@QEAA@PEBD@Z(ptr) MSVCRT___non_rtti_object_ctor # public: __cdecl __non_rtti_object::__non_rtti_object(char const * __ptr64) __ptr64
-@ cdecl -arch=win64 ??0bad_cast@@AAE@PBQBD@Z(ptr) MSVCRT_bad_cast_ctor # private: __thiscall bad_cast::bad_cast(char const near * const near *)
-@ cdecl -arch=win64 ??0bad_cast@@AEAA@PEBQEBD@Z(ptr) MSVCRT_bad_cast_ctor # private: __cdecl bad_cast::bad_cast(char const * __ptr64 const * __ptr64) __ptr64
-@ cdecl -arch=win64 ??0bad_cast@@QAE@ABQBD@Z(ptr) MSVCRT_bad_cast_ctor # public: __thiscall bad_cast::bad_cast(char const near * const near &)
-@ cdecl -arch=win64 ??0bad_cast@@QEAA@AEBQEBD@Z(ptr) MSVCRT_bad_cast_ctor # public: __cdecl bad_cast::bad_cast(char const * __ptr64 const & __ptr64) __ptr64
-@ cdecl -arch=win64 ??0bad_cast@@QEAA@AEBV0@@Z(ptr) MSVCRT_bad_cast_copy_ctor # public: __cdecl bad_cast::bad_cast(class bad_cast const & __ptr64) __ptr64
-@ cdecl -arch=win64 ??0bad_cast@@QEAA@PEBD@Z(ptr) MSVCRT_bad_cast_ctor_charptr # public: __cdecl bad_cast::bad_cast(char const * __ptr64) __ptr64
-@ cdecl -arch=win64 ??0bad_typeid@@QEAA@AEBV0@@Z(ptr) MSVCRT_bad_typeid_copy_ctor # public: __cdecl bad_typeid::bad_typeid(class bad_typeid const & __ptr64) __ptr64
-@ cdecl -arch=win64 ??0bad_typeid@@QEAA@PEBD@Z(ptr) MSVCRT_bad_typeid_ctor # public: __cdecl bad_typeid::bad_typeid(char const * __ptr64) __ptr64
-@ cdecl -arch=win64 ??0exception@@QEAA@AEBQEBD@Z(ptr) MSVCRT_exception_ctor # public: __cdecl exception::exception(char const * __ptr64 const & __ptr64) __ptr64
-@ cdecl -arch=win64 ??0exception@@QEAA@AEBQEBDH@Z(ptr long) MSVCRT_exception_ctor_noalloc # public: __cdecl exception::exception(char const * __ptr64 const & __ptr64,int) __ptr64
-@ cdecl -arch=win64 ??0exception@@QEAA@AEBV0@@Z(ptr) MSVCRT_exception_copy_ctor # public: __cdecl exception::exception(class exception const & __ptr64) __ptr64
-@ cdecl -arch=win64 ??0exception@@QEAA@XZ() MSVCRT_exception_default_ctor # public: __cdecl exception::exception(void) __ptr64
-@ cdecl -arch=win64 ??1__non_rtti_object@@UEAA@XZ() MSVCRT___non_rtti_object_dtor # public: virtual __cdecl __non_rtti_object::~__non_rtti_object(void) __ptr64
-@ cdecl -arch=win64 ??1bad_cast@@UEAA@XZ() MSVCRT_bad_cast_dtor # public: virtual __cdecl bad_cast::~bad_cast(void) __ptr64
-@ cdecl -arch=win64 ??1bad_typeid@@UEAA@XZ() MSVCRT_bad_typeid_dtor # public: virtual __cdecl bad_typeid::~bad_typeid(void) __ptr64
-@ cdecl -arch=win64 ??1exception@@UEAA@XZ() MSVCRT_exception_dtor # public: virtual __cdecl exception::~exception(void) __ptr64
-@ cdecl -arch=win64 ??1type_info@@UEAA@XZ() MSVCRT_type_info_dtor # public: virtual __cdecl type_info::~type_info(void) __ptr64
-@ cdecl -arch=win64 ??2@YAPEAX_K@Z(double) MSVCRT_operator_new # void * __ptr64 __cdecl operator new(unsigned __int64)
-@ cdecl -arch=win64 ??2@YAPEAX_KHPEBDH@Z(int64 long str long) MSVCRT_operator_new_dbg # void * __ptr64 __cdecl operator new(unsigned __int64,int,char const * __ptr64,int)
-@ cdecl -arch=win64 ??3@YAXPEAX@Z(ptr) MSVCRT_operator_delete # void __cdecl operator delete(void * __ptr64)
-@ cdecl -arch=win64 ??4__non_rtti_object@@QEAAAEAV0@AEBV0@@Z(ptr) MSVCRT___non_rtti_object_opequals # public: class __non_rtti_object & __ptr64 __cdecl __non_rtti_object::operator=(class __non_rtti_object const & __ptr64) __ptr64
-@ cdecl -arch=win64 ??4bad_cast@@QEAAAEAV0@AEBV0@@Z(ptr) MSVCRT_bad_cast_opequals # public: class bad_cast & __ptr64 __cdecl bad_cast::operator=(class bad_cast const & __ptr64) __ptr64
-@ cdecl -arch=win64 ??4bad_typeid@@QEAAAEAV0@AEBV0@@Z(ptr) MSVCRT_bad_typeid_opequals # public: class bad_typeid & __ptr64 __cdecl bad_typeid::operator=(class bad_typeid const & __ptr64) __ptr64
-@ cdecl -arch=win64 ??4exception@@QEAAAEAV0@AEBV0@@Z(ptr) MSVCRT_exception_opequals # public: class exception & __ptr64 __cdecl exception::operator=(class exception const & __ptr64) __ptr64
-@ cdecl -arch=win64 ??8type_info@@QEBAHAEBV0@@Z(ptr) MSVCRT_type_info_opequals_equals # public: int __cdecl type_info::operator==(class type_info const & __ptr64)const __ptr64
-@ cdecl -arch=win64 ??9type_info@@QEBAHAEBV0@@Z(ptr) MSVCRT_type_info_opnot_equals # public: int __cdecl type_info::operator!=(class type_info const & __ptr64)const __ptr64
-@ extern -arch=win64 ??_7__non_rtti_object@@6B@ MSVCRT___non_rtti_object_vtable # const __non_rtti_object::`vftable'
-@ extern -arch=win64 ??_7bad_cast@@6B@ MSVCRT_bad_cast_vtable # const bad_cast::`vftable'
-@ extern -arch=win64 ??_7bad_typeid@@6B@ MSVCRT_bad_typeid_vtable # const bad_typeid::`vftable'
-@ extern -arch=win64 ??_7exception@@6B@ MSVCRT_exception_vtable # const exception::`vftable'
-@ cdecl -arch=win64 ??_Fbad_cast@@QEAAXXZ() MSVCRT_bad_cast_default_ctor # public: void __cdecl bad_cast::`default constructor closure'(void) __ptr64
-@ cdecl -arch=win64 ??_Fbad_typeid@@QEAAXXZ() MSVCRT_bad_typeid_default_ctor # public: void __cdecl bad_typeid::`default constructor closure'(void) __ptr64
-@ cdecl -arch=win64 ??_U@YAPEAX_K@Z(long) MSVCRT_operator_new # void * __ptr64 __cdecl operator new[](unsigned __int64)
-@ cdecl -arch=win64 ??_U@YAPEAX_KHPEBDH@Z(int64 long str long) MSVCRT_operator_new_dbg # void * __ptr64 __cdecl operator new[](unsigned __int64,int,char const * __ptr64,int)
-@ cdecl -arch=win64 ??_V@YAXPEAX@Z(ptr) MSVCRT_operator_delete # void __cdecl operator delete[](void * __ptr64)
-@ cdecl -arch=win64 __uncaught_exception(ptr) MSVCRT___uncaught_exception
-@ cdecl -arch=win64 ?_query_new_handler@@YAP6AH_K@ZXZ() MSVCRT__query_new_handler # int (__cdecl*__cdecl _query_new_handler(void))(unsigned __int64)
-@ cdecl -arch=win64 ?_query_new_mode@@YAHXZ() MSVCRT__query_new_mode # int __cdecl _query_new_mode(void)
-@ cdecl -arch=win64 ?_set_new_handler@@YAP6AH_K@ZP6AH0@Z@Z(ptr) MSVCRT__set_new_handler # int (__cdecl*__cdecl _set_new_handler(int (__cdecl*)(unsigned __int64)))(unsigned __int64)
-@ cdecl -arch=win64 ?_set_new_mode@@YAHH@Z(long) MSVCRT__set_new_mode # int __cdecl _set_new_mode(int)
-@ cdecl -arch=win64 ?_set_se_translator@@YAP6AXIPEAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z(ptr) MSVCRT__set_se_translator # void (__cdecl*__cdecl _set_se_translator(void (__cdecl*)(unsigned int,struct _EXCEPTION_POINTERS * __ptr64)))(unsigned int,struct _EXCEPTION_POINTERS * __ptr64)
-@ cdecl -arch=win64 ?before@type_info@@QEBAHAEBV1@@Z(ptr) MSVCRT_type_info_before # public: int __cdecl type_info::before(class type_info const & __ptr64)const __ptr64
-@ cdecl -arch=win64 ?name@type_info@@QEBAPEBDXZ() MSVCRT_type_info_name # public: char const * __ptr64 __cdecl type_info::name(void)const __ptr64
-@ cdecl -arch=win64 ?raw_name@type_info@@QEBAPEBDXZ() MSVCRT_type_info_raw_name # public: char const * __ptr64 __cdecl type_info::raw_name(void)const __ptr64
-@ cdecl -arch=win64 ?set_new_handler@@YAP6AXXZP6AXXZ@Z(ptr) MSVCRT_set_new_handler # void (__cdecl*__cdecl set_new_handler(void (__cdecl*)(void)))(void)
-@ cdecl -arch=win64 ?set_terminate@@YAP6AXXZP6AXXZ@Z(ptr) MSVCRT_set_terminate # void (__cdecl*__cdecl set_terminate(void (__cdecl*)(void)))(void)
-@ cdecl -arch=win64 ?set_unexpected@@YAP6AXXZP6AXXZ@Z(ptr) MSVCRT_set_unexpected # void (__cdecl*__cdecl set_unexpected(void (__cdecl*)(void)))(void)
-@ cdecl -arch=win64 ?terminate@@YAXXZ() MSVCRT_terminate # void __cdecl terminate(void)
-@ cdecl -arch=win64 ?unexpected@@YAXXZ() MSVCRT_unexpected # void __cdecl unexpected(void)
-@ cdecl -arch=win64 ?what@exception@@UEBAPEBDXZ() MSVCRT_what_exception # public: virtual char const * __ptr64 __cdecl exception::what(void)const __ptr64
+@ cdecl -arch=win64 ??0__non_rtti_object@@QEAA@AEBV0@@Z(ptr) __non_rtti_object_copy_ctor # public: __cdecl __non_rtti_object::__non_rtti_object(class __non_rtti_object const & __ptr64) __ptr64
+@ cdecl -arch=win64 ??0__non_rtti_object@@QEAA@PEBD@Z(ptr) __non_rtti_object_ctor # public: __cdecl __non_rtti_object::__non_rtti_object(char const * __ptr64) __ptr64
+@ cdecl -arch=win64 ??0bad_cast@@AAE@PBQBD@Z(ptr) bad_cast_ctor # private: __thiscall bad_cast::bad_cast(char const near * const near *)
+@ cdecl -arch=win64 ??0bad_cast@@AEAA@PEBQEBD@Z(ptr) bad_cast_ctor # private: __cdecl bad_cast::bad_cast(char const * __ptr64 const * __ptr64) __ptr64
+@ cdecl -arch=win64 ??0bad_cast@@QAE@ABQBD@Z(ptr) bad_cast_ctor # public: __thiscall bad_cast::bad_cast(char const near * const near &)
+@ cdecl -arch=win64 ??0bad_cast@@QEAA@AEBQEBD@Z(ptr) bad_cast_ctor # public: __cdecl bad_cast::bad_cast(char const * __ptr64 const & __ptr64) __ptr64
+@ cdecl -arch=win64 ??0bad_cast@@QEAA@AEBV0@@Z(ptr) bad_cast_copy_ctor # public: __cdecl bad_cast::bad_cast(class bad_cast const & __ptr64) __ptr64
+@ cdecl -arch=win64 ??0bad_cast@@QEAA@PEBD@Z(ptr) bad_cast_ctor_charptr # public: __cdecl bad_cast::bad_cast(char const * __ptr64) __ptr64
+@ cdecl -arch=win64 ??0bad_typeid@@QEAA@AEBV0@@Z(ptr) bad_typeid_copy_ctor # public: __cdecl bad_typeid::bad_typeid(class bad_typeid const & __ptr64) __ptr64
+@ cdecl -arch=win64 ??0bad_typeid@@QEAA@PEBD@Z(ptr) bad_typeid_ctor # public: __cdecl bad_typeid::bad_typeid(char const * __ptr64) __ptr64
+@ cdecl -arch=win64 ??0exception@@QEAA@AEBQEBD@Z(ptr) exception_ctor # public: __cdecl exception::exception(char const * __ptr64 const & __ptr64) __ptr64
+@ cdecl -arch=win64 ??0exception@@QEAA@AEBQEBDH@Z(ptr long) exception_ctor_noalloc # public: __cdecl exception::exception(char const * __ptr64 const & __ptr64,int) __ptr64
+@ cdecl -arch=win64 ??0exception@@QEAA@AEBV0@@Z(ptr) exception_copy_ctor # public: __cdecl exception::exception(class exception const & __ptr64) __ptr64
+@ cdecl -arch=win64 ??0exception@@QEAA@XZ() exception_default_ctor # public: __cdecl exception::exception(void) __ptr64
+@ cdecl -arch=win64 ??1__non_rtti_object@@UEAA@XZ() __non_rtti_object_dtor # public: virtual __cdecl __non_rtti_object::~__non_rtti_object(void) __ptr64
+@ cdecl -arch=win64 ??1bad_cast@@UEAA@XZ() bad_cast_dtor # public: virtual __cdecl bad_cast::~bad_cast(void) __ptr64
+@ cdecl -arch=win64 ??1bad_typeid@@UEAA@XZ() bad_typeid_dtor # public: virtual __cdecl bad_typeid::~bad_typeid(void) __ptr64
+@ cdecl -arch=win64 ??1exception@@UEAA@XZ() exception_dtor # public: virtual __cdecl exception::~exception(void) __ptr64
+@ cdecl -arch=win64 ??1type_info@@UEAA@XZ() type_info_dtor # public: virtual __cdecl type_info::~type_info(void) __ptr64
+@ cdecl -arch=win64 ??2@YAPEAX_K@Z(double) operator_new # void * __ptr64 __cdecl operator new(unsigned __int64)
+@ cdecl -arch=win64 ??2@YAPEAX_KHPEBDH@Z(int64 long str long) operator_new_dbg # void * __ptr64 __cdecl operator new(unsigned __int64,int,char const * __ptr64,int)
+@ cdecl -arch=win64 ??3@YAXPEAX@Z(ptr) operator_delete # void __cdecl operator delete(void * __ptr64)
+@ cdecl -arch=win64 ??4__non_rtti_object@@QEAAAEAV0@AEBV0@@Z(ptr) __non_rtti_object_opequals # public: class __non_rtti_object & __ptr64 __cdecl __non_rtti_object::operator=(class __non_rtti_object const & __ptr64) __ptr64
+@ cdecl -arch=win64 ??4bad_cast@@QEAAAEAV0@AEBV0@@Z(ptr) bad_cast_opequals # public: class bad_cast & __ptr64 __cdecl bad_cast::operator=(class bad_cast const & __ptr64) __ptr64
+@ cdecl -arch=win64 ??4bad_typeid@@QEAAAEAV0@AEBV0@@Z(ptr) bad_typeid_opequals # public: class bad_typeid & __ptr64 __cdecl bad_typeid::operator=(class bad_typeid const & __ptr64) __ptr64
+@ cdecl -arch=win64 ??4exception@@QEAAAEAV0@AEBV0@@Z(ptr) exception_opequals # public: class exception & __ptr64 __cdecl exception::operator=(class exception const & __ptr64) __ptr64
+@ cdecl -arch=win64 ??8type_info@@QEBAHAEBV0@@Z(ptr) type_info_opequals_equals # public: int __cdecl type_info::operator==(class type_info const & __ptr64)const __ptr64
+@ cdecl -arch=win64 ??9type_info@@QEBAHAEBV0@@Z(ptr) type_info_opnot_equals # public: int __cdecl type_info::operator!=(class type_info const & __ptr64)const __ptr64
+@ extern -arch=win64 ??_7__non_rtti_object@@6B@ __non_rtti_object_vtable # const __non_rtti_object::`vftable'
+@ extern -arch=win64 ??_7bad_cast@@6B@ bad_cast_vtable # const bad_cast::`vftable'
+@ extern -arch=win64 ??_7bad_typeid@@6B@ bad_typeid_vtable # const bad_typeid::`vftable'
+@ extern -arch=win64 ??_7exception@@6B@ exception_vtable # const exception::`vftable'
+@ cdecl -arch=win64 ??_Fbad_cast@@QEAAXXZ() bad_cast_default_ctor # public: void __cdecl bad_cast::`default constructor closure'(void) __ptr64
+@ cdecl -arch=win64 ??_Fbad_typeid@@QEAAXXZ() bad_typeid_default_ctor # public: void __cdecl bad_typeid::`default constructor closure'(void) __ptr64
+@ cdecl -arch=win64 ??_U@YAPEAX_K@Z(long) operator_new # void * __ptr64 __cdecl operator new[](unsigned __int64)
+@ cdecl -arch=win64 ??_U@YAPEAX_KHPEBDH@Z(int64 long str long) operator_new_dbg # void * __ptr64 __cdecl operator new[](unsigned __int64,int,char const * __ptr64,int)
+@ cdecl -arch=win64 ??_V@YAXPEAX@Z(ptr) operator_delete # void __cdecl operator delete[](void * __ptr64)
+@ cdecl -arch=win64 __uncaught_exception(ptr) __uncaught_exception
+@ cdecl -arch=win64 ?_query_new_handler@@YAP6AH_K@ZXZ() _query_new_handler # int (__cdecl*__cdecl _query_new_handler(void))(unsigned __int64)
+@ cdecl -arch=win64 ?_query_new_mode@@YAHXZ() _query_new_mode # int __cdecl _query_new_mode(void)
+@ cdecl -arch=win64 ?_set_new_handler@@YAP6AH_K@ZP6AH0@Z@Z(ptr) _set_new_handler # int (__cdecl*__cdecl _set_new_handler(int (__cdecl*)(unsigned __int64)))(unsigned __int64)
+@ cdecl -arch=win64 ?_set_new_mode@@YAHH@Z(long) _set_new_mode # int __cdecl _set_new_mode(int)
+@ cdecl -arch=win64 ?_set_se_translator@@YAP6AXIPEAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z(ptr) _set_se_translator # void (__cdecl*__cdecl _set_se_translator(void (__cdecl*)(unsigned int,struct _EXCEPTION_POINTERS * __ptr64)))(unsigned int,struct _EXCEPTION_POINTERS * __ptr64)
+@ cdecl -arch=win64 ?before@type_info@@QEBAHAEBV1@@Z(ptr) type_info_before # public: int __cdecl type_info::before(class type_info const & __ptr64)const __ptr64
+@ cdecl -arch=win64 ?name@type_info@@QEBAPEBDXZ() type_info_name # public: char const * __ptr64 __cdecl type_info::name(void)const __ptr64
+@ cdecl -arch=win64 ?raw_name@type_info@@QEBAPEBDXZ() type_info_raw_name # public: char const * __ptr64 __cdecl type_info::raw_name(void)const __ptr64
+@ cdecl -arch=win64 ?set_new_handler@@YAP6AXXZP6AXXZ@Z(ptr) set_new_handler # void (__cdecl*__cdecl set_new_handler(void (__cdecl*)(void)))(void)
+@ cdecl -arch=win64 ?set_terminate@@YAP6AXXZP6AXXZ@Z(ptr) set_terminate # void (__cdecl*__cdecl set_terminate(void (__cdecl*)(void)))(void)
+@ cdecl -arch=win64 ?set_unexpected@@YAP6AXXZP6AXXZ@Z(ptr) set_unexpected # void (__cdecl*__cdecl set_unexpected(void (__cdecl*)(void)))(void)
+@ cdecl -arch=win64 ?terminate@@YAXXZ() terminate # void __cdecl terminate(void)
+@ cdecl -arch=win64 ?unexpected@@YAXXZ() unexpected # void __cdecl unexpected(void)
+@ cdecl -arch=win64 ?what@exception@@UEBAPEBDXZ() exception_what # public: virtual char const * __ptr64 __cdecl exception::what(void)const __ptr64
 
 # **************** ARM C++ functions ****************
-@ cdecl -arch=arm ??0__non_rtti_object@@QAA@ABV0@@Z() MSVCRT___non_rtti_object_copy_ctor # public: __cdecl __non_rtti_object::__non_rtti_object(class __non_rtti_object const &)
-@ cdecl -arch=arm ??0__non_rtti_object@@QAA@PBD@Z() MSVCRT___non_rtti_object_ctor #public: __cdecl __non_rtti_object::__non_rtti_object(char const *)
-@ cdecl -arch=arm ??0bad_cast@@AAA@PBQBD@Z() MSVCRT_bad_cast_ctor # private: __cdecl bad_cast::bad_cast(char const * const *)
-@ cdecl -arch=arm ??0bad_cast@@QAA@ABV0@@Z() MSVCRT_bad_cast_copy_ctor # public: __cdecl bad_cast::bad_cast(class bad_cast const &)
-@ cdecl -arch=arm ??0bad_cast@@QAA@PBD@Z() MSVCRT_bad_cast_ctor # public: __cdecl bad_cast::bad_cast(char const *)
-@ cdecl -arch=arm ??0bad_typeid@@QAA@ABV0@@Z() MSVCRT_bad_typeid_copy_ctor # public: __cdecl bad_typeid::bad_typeid(class bad_typeid const &)
-@ cdecl -arch=arm ??0bad_typeid@@QAA@PBD@Z() MSVCRT_bad_typeid_ctor # public: __cdecl bad_typeid::bad_typeid(char const *)
-@ cdecl -arch=arm ??0exception@@QAA@ABQBD@Z() MSVCRT_exception_ctor # public: __cdecl exception::exception(char const * const &)
-@ cdecl -arch=arm ??0exception@@QAA@ABQBDH@Z() MSVCRT_exception_ctor_noalloc # public: __cdecl exception::exception(char const * const &,int)
-@ cdecl -arch=arm ??0exception@@QAA@ABV0@@Z() MSVCRT_exception_copy_ctor # public: __cdecl exception::exception(class exception const &)
-@ cdecl -arch=arm ??0exception@@QAA@XZ() MSVCRT_exception_default_ctor # public: __cdecl exception::exception(void)
-@ cdecl -arch=arm ??1__non_rtti_object@@UAA@XZ() MSVCRT___non_rtti_object_dtor # public: virtual __cdecl __non_rtti_object::~__non_rtti_object(void)
-@ cdecl -arch=arm ??1bad_cast@@UAA@XZ() MSVCRT_bad_cast_dtor # public: virtual __cdecl bad_cast::~bad_cast(void)
-@ cdecl -arch=arm ??1bad_typeid@@UAA@XZ() MSVCRT_bad_typeid_dtor # public: virtual __cdecl bad_typeid::~bad_typeid(void)
-@ cdecl -arch=arm ??1exception@@UAA@XZ() MSVCRT_exception_dtor # public: virtual __cdecl exception::~exception(void)
-@ cdecl -arch=arm ??1type_info@@UAA@XZ() MSVCRT_type_info_dtor # public: virtual __cdecl type_info::~type_info(void)
-@ cdecl -arch=arm ??2@YAPAXI@Z() MSVCRT_operator_new # void * __cdecl operator new(unsigned int)
-@ cdecl -arch=arm ??2@YAPAXIHPBDH@Z() MSVCRT_operator_new_dbg # void * __cdecl operator new(unsigned int,int,char const *,int)
-@ cdecl -arch=arm ??3@YAXPAX@Z() MSVCRT_operator_delete # void __cdecl operator delete(void *)
-@ cdecl -arch=arm ??4__non_rtti_object@@QAAAAV0@ABV0@@Z() MSVCRT___non_rtti_object_opequals # public: class __non_rtti_object & __cdecl __non_rtti_object::operator=(class __non_rtti_object const &)
-@ cdecl -arch=arm ??4bad_cast@@QAAAAV0@ABV0@@Z() MSVCRT_bad_cast_opequals # public: class bad_cast & __cdecl bad_cast::operator=(class bad_cast const &)
-@ cdecl -arch=arm ??4bad_typeid@@QAAAAV0@ABV0@@Z() MSVCRT_bad_typeid_opequals # public: class bad_typeid & __cdecl bad_typeid::operator=(class bad_typeid const &)
-@ cdecl -arch=arm ??4exception@@QAAAAV0@ABV0@@Z() MSVCRT_exception_opequals # public: class exception & __cdecl exception::operator=(class exception const &)
-@ cdecl -arch=arm ??8type_info@@QBAHABV0@@Z() MSVCRT_type_info_opequals_equals # public: int __cdecl type_info::operator==(class type_info const &)const
-@ cdecl -arch=arm ??9type_info@@QBAHABV0@@Z() MSVCRT_type_info_opnot_equals # public: int __cdecl type_info::operator!=(class type_info const &)const
-@ extern -arch=arm ??_7__non_rtti_object@@6B@ MSVCRT___non_rtti_object_vtable # const __non_rtti_object::`vftable'
-@ extern -arch=arm ??_7bad_cast@@6B@  MSVCRT_bad_cast_vtable # const bad_cast::`vftable'
-@ extern -arch=arm ??_7bad_typeid@@6B@ MSVCRT_bad_typeid_vtable # const bad_typeid::`vftable'
-@ extern -arch=arm ??_7exception@@6B@ MSVCRT_exception_vtable # const exception::`vftable'
-@ cdecl -arch=arm ??_Fbad_cast@@QAAXXZ() MSVCRT_bad_cast_default_ctor # public: void __cdecl bad_cast::`default constructor closure'(void)
-@ cdecl -arch=arm ??_Fbad_typeid@@QAAXXZ() MSVCRT_bad_typeid_default_ctor # public: void __cdecl bad_typeid::`default constructor closure'(void)
-@ cdecl -arch=arm ??_U@YAPAXI@Z() MSVCRT_operator_new # void * __cdecl operator new[](unsigned int)
-@ cdecl -arch=arm ??_U@YAPAXIHPBDH@Z() MSVCRT_operator_new_dbg # void * __cdecl operator new[](unsigned int,int,char const *,int)
-@ cdecl -arch=arm ??_V@YAXPAX@Z() MSVCRT_operator_delete # void __cdecl operator delete[](void *)
+@ cdecl -arch=arm ??0__non_rtti_object@@QAA@ABV0@@Z() __non_rtti_object_copy_ctor # public: __cdecl __non_rtti_object::__non_rtti_object(class __non_rtti_object const &)
+@ cdecl -arch=arm ??0__non_rtti_object@@QAA@PBD@Z() __non_rtti_object_ctor #public: __cdecl __non_rtti_object::__non_rtti_object(char const *)
+@ cdecl -arch=arm ??0bad_cast@@AAA@PBQBD@Z() bad_cast_ctor # private: __cdecl bad_cast::bad_cast(char const * const *)
+@ cdecl -arch=arm ??0bad_cast@@QAA@ABV0@@Z() bad_cast_copy_ctor # public: __cdecl bad_cast::bad_cast(class bad_cast const &)
+@ cdecl -arch=arm ??0bad_cast@@QAA@PBD@Z() bad_cast_ctor # public: __cdecl bad_cast::bad_cast(char const *)
+@ cdecl -arch=arm ??0bad_typeid@@QAA@ABV0@@Z() bad_typeid_copy_ctor # public: __cdecl bad_typeid::bad_typeid(class bad_typeid const &)
+@ cdecl -arch=arm ??0bad_typeid@@QAA@PBD@Z() bad_typeid_ctor # public: __cdecl bad_typeid::bad_typeid(char const *)
+@ cdecl -arch=arm ??0exception@@QAA@ABQBD@Z() exception_ctor # public: __cdecl exception::exception(char const * const &)
+@ cdecl -arch=arm ??0exception@@QAA@ABQBDH@Z() exception_ctor_noalloc # public: __cdecl exception::exception(char const * const &,int)
+@ cdecl -arch=arm ??0exception@@QAA@ABV0@@Z() exception_copy_ctor # public: __cdecl exception::exception(class exception const &)
+@ cdecl -arch=arm ??0exception@@QAA@XZ() exception_default_ctor # public: __cdecl exception::exception(void)
+@ cdecl -arch=arm ??1__non_rtti_object@@UAA@XZ() __non_rtti_object_dtor # public: virtual __cdecl __non_rtti_object::~__non_rtti_object(void)
+@ cdecl -arch=arm ??1bad_cast@@UAA@XZ() bad_cast_dtor # public: virtual __cdecl bad_cast::~bad_cast(void)
+@ cdecl -arch=arm ??1bad_typeid@@UAA@XZ() bad_typeid_dtor # public: virtual __cdecl bad_typeid::~bad_typeid(void)
+@ cdecl -arch=arm ??1exception@@UAA@XZ() exception_dtor # public: virtual __cdecl exception::~exception(void)
+@ cdecl -arch=arm ??1type_info@@UAA@XZ() type_info_dtor # public: virtual __cdecl type_info::~type_info(void)
+@ cdecl -arch=arm ??2@YAPAXI@Z() operator_new # void * __cdecl operator new(unsigned int)
+@ cdecl -arch=arm ??2@YAPAXIHPBDH@Z() operator_new_dbg # void * __cdecl operator new(unsigned int,int,char const *,int)
+@ cdecl -arch=arm ??3@YAXPAX@Z() operator_delete # void __cdecl operator delete(void *)
+@ cdecl -arch=arm ??4__non_rtti_object@@QAAAAV0@ABV0@@Z() __non_rtti_object_opequals # public: class __non_rtti_object & __cdecl __non_rtti_object::operator=(class __non_rtti_object const &)
+@ cdecl -arch=arm ??4bad_cast@@QAAAAV0@ABV0@@Z() bad_cast_opequals # public: class bad_cast & __cdecl bad_cast::operator=(class bad_cast const &)
+@ cdecl -arch=arm ??4bad_typeid@@QAAAAV0@ABV0@@Z() bad_typeid_opequals # public: class bad_typeid & __cdecl bad_typeid::operator=(class bad_typeid const &)
+@ cdecl -arch=arm ??4exception@@QAAAAV0@ABV0@@Z() exception_opequals # public: class exception & __cdecl exception::operator=(class exception const &)
+@ cdecl -arch=arm ??8type_info@@QBAHABV0@@Z() type_info_opequals_equals # public: int __cdecl type_info::operator==(class type_info const &)const
+@ cdecl -arch=arm ??9type_info@@QBAHABV0@@Z() type_info_opnot_equals # public: int __cdecl type_info::operator!=(class type_info const &)const
+@ extern -arch=arm ??_7__non_rtti_object@@6B@ __non_rtti_object_vtable # const __non_rtti_object::`vftable'
+@ extern -arch=arm ??_7bad_cast@@6B@ bad_cast_vtable # const bad_cast::`vftable'
+@ extern -arch=arm ??_7bad_typeid@@6B@ bad_typeid_vtable # const bad_typeid::`vftable'
+@ extern -arch=arm ??_7exception@@6B@ exception_vtable # const exception::`vftable'
+@ cdecl -arch=arm ??_Fbad_cast@@QAAXXZ() bad_cast_default_ctor # public: void __cdecl bad_cast::`default constructor closure'(void)
+@ cdecl -arch=arm ??_Fbad_typeid@@QAAXXZ() bad_typeid_default_ctor # public: void __cdecl bad_typeid::`default constructor closure'(void)
+@ cdecl -arch=arm ??_U@YAPAXI@Z() operator_new # void * __cdecl operator new[](unsigned int)
+@ cdecl -arch=arm ??_U@YAPAXIHPBDH@Z() operator_new_dbg # void * __cdecl operator new[](unsigned int,int,char const *,int)
+@ cdecl -arch=arm ??_V@YAXPAX@Z() operator_delete # void __cdecl operator delete[](void *)
 ;@ cdecl -arch=arm _CallMemberFunction0()
 ;@ cdecl -arch=arm _CallMemberFunction1()
 ;@ cdecl -arch=arm _CallMemberFunction2()
@@ -164,19 +164,19 @@
 ;@ cdecl -arch=arm __ExceptionPtrRethrow()
 ;@ cdecl -arch=arm __ExceptionPtrSwap()
 ;@ cdecl -arch=arm __ExceptionPtrToBool()
-@ cdecl -arch=arm __uncaught_exception(ptr) MSVCRT___uncaught_exception
-@ cdecl -arch=arm ?_query_new_handler@@YAP6AHI@ZXZ() MSVCRT__query_new_handler # int (__cdecl*__cdecl _query_new_handler(void))(unsigned int)
-@ cdecl -arch=arm ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z() MSVCRT__set_new_handler # int (__cdecl*__cdecl _set_new_handler(int (__cdecl*)(unsigned int)))(unsigned int)
-@ cdecl -arch=arm ?_set_new_mode@@YAHH@Z() MSVCRT__set_new_mode # int __cdecl _set_new_mode(int)
-@ cdecl -arch=arm ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z() MSVCRT__set_se_translator # void (__cdecl*__cdecl _set_se_translator(void (__cdecl*)(unsigned int,struct _EXCEPTION_POINTERS *)))(unsigned int,struct _EXCEPTION_POINTERS *)
-@ cdecl -arch=arm ?before@type_info@@QBAHABV1@@Z() MSVCRT_type_info_before # public: int __cdecl type_info::before(class type_info const &)const
-@ cdecl -arch=arm ?name@type_info@@QBAPBDXZ() MSVCRT_type_info_name # public: char const * __cdecl type_info::name(void)const
-@ cdecl -arch=arm ?raw_name@type_info@@QBAPBDXZ() MSVCRT_type_info_raw_name # public: char const * __cdecl type_info::raw_name(void)const
-@ cdecl -arch=arm ?set_terminate@@YAP6AXXZP6AXXZ@Z() MSVCRT_set_terminate # void (__cdecl*__cdecl set_terminate(void (__cdecl*)(void)))(void)
-@ cdecl -arch=arm ?set_unexpected@@YAP6AXXZP6AXXZ@Z() MSVCRT_set_unexpected # void (__cdecl*__cdecl set_unexpected(void (__cdecl*)(void)))(void)
-@ cdecl -arch=arm ?terminate@@YAXXZ() MSVCRT_terminate # void __cdecl terminate(void)
-@ cdecl -arch=arm ?unexpected@@YAXXZ() MSVCRT_unexpected # void __cdecl unexpected(void)
-@ cdecl -arch=arm ?what@exception@@UBAPBDXZ() MSVCRT_what_exception # public: virtual char const * __cdecl exception::what(void)const
+@ cdecl -arch=arm __uncaught_exception(ptr) __uncaught_exception
+@ cdecl -arch=arm ?_query_new_handler@@YAP6AHI@ZXZ() _query_new_handler # int (__cdecl*__cdecl _query_new_handler(void))(unsigned int)
+@ cdecl -arch=arm ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z() _set_new_handler # int (__cdecl*__cdecl _set_new_handler(int (__cdecl*)(unsigned int)))(unsigned int)
+@ cdecl -arch=arm ?_set_new_mode@@YAHH@Z() _set_new_mode # int __cdecl _set_new_mode(int)
+@ cdecl -arch=arm ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z() _set_se_translator # void (__cdecl*__cdecl _set_se_translator(void (__cdecl*)(unsigned int,struct _EXCEPTION_POINTERS *)))(unsigned int,struct _EXCEPTION_POINTERS *)
+@ cdecl -arch=arm ?before@type_info@@QBAHABV1@@Z() type_info_before # public: int __cdecl type_info::before(class type_info const &)const
+@ cdecl -arch=arm ?name@type_info@@QBAPBDXZ() type_info_name # public: char const * __cdecl type_info::name(void)const
+@ cdecl -arch=arm ?raw_name@type_info@@QBAPBDXZ() type_info_raw_name # public: char const * __cdecl type_info::raw_name(void)const
+@ cdecl -arch=arm ?set_terminate@@YAP6AXXZP6AXXZ@Z() set_terminate # void (__cdecl*__cdecl set_terminate(void (__cdecl*)(void)))(void)
+@ cdecl -arch=arm ?set_unexpected@@YAP6AXXZP6AXXZ@Z() set_unexpected # void (__cdecl*__cdecl set_unexpected(void (__cdecl*)(void)))(void)
+@ cdecl -arch=arm ?terminate@@YAXXZ() terminate # void __cdecl terminate(void)
+@ cdecl -arch=arm ?unexpected@@YAXXZ() unexpected # void __cdecl unexpected(void)
+@ cdecl -arch=arm ?what@exception@@UBAPBDXZ() exception_what # public: virtual char const * __cdecl exception::what(void)const
 
 
 # **************** Common functions ****************
@@ -248,9 +248,9 @@
 @ cdecl -arch=i386 __CxxRegisterExceptionObject()
 @ cdecl -arch=i386 __CxxUnregisterExceptionObject()
 @ cdecl __DestructExceptionObject(ptr)
-@ cdecl __RTCastToVoid(ptr) MSVCRT___RTCastToVoid
-@ cdecl __RTDynamicCast(ptr long ptr ptr long) MSVCRT___RTDynamicCast
-@ cdecl __RTtypeid(ptr) MSVCRT___RTtypeid
+@ cdecl __RTCastToVoid(ptr) __RTCastToVoid
+@ cdecl __RTDynamicCast(ptr long ptr ptr long) __RTDynamicCast
+@ cdecl __RTtypeid(ptr) __RTtypeid
 @ cdecl __STRINGTOLD(ptr ptr str long)
 @ cdecl ___lc_codepage_func()
 @ cdecl ___lc_collate_cp_func()
