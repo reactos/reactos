@@ -10,7 +10,7 @@
 *******************************************************************************/
 
 #include <corecrt_internal_lowio.h>
-#include <sys\stat.h>
+#include <sys/stat.h>
 
 extern "C" { int _umaskval = 0; }
 
