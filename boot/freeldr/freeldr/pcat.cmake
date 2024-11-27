@@ -159,13 +159,16 @@ add_library(freeldr_common
     ${PCATLDR_BOOTMGR_SOURCE}
     ${FREELDR_NTLDR_SOURCE})
 
-if(MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if(MSVC)
     # We need to reduce the binary size
     target_compile_options(freeldr_common PRIVATE "/Os")
 endif()
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Prevent using SSE (no support in freeldr)
     target_compile_options(freeldr_common PUBLIC -mno-sse)
+
+    # We need to reduce the binary size
+    target_compile_options(freeldr_common PUBLIC -Os)
 endif()
 
 set(PCH_SOURCE
