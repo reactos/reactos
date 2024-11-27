@@ -107,25 +107,19 @@ IsExplorerSystemShell()
     }
     else
     {
-        DWORD cbShell;
         LSTATUS Status;
+        DWORD dwType;
+        WCHAR szShell[MAX_PATH];
+        DWORD cbShell = sizeof(szShell);
 
-        // Get length of the "Shell" key
-        Status = RegQueryValueExW(hKeyWinlogon, L"Shell", 0, NULL, NULL, &cbShell);
+        // TODO: Add support for paths longer than MAX_PATH
+        Status = RegQueryValueExW(hKeyWinlogon, L"Shell", 0, &dwType, (LPBYTE)szShell, &cbShell);
         if (Status == ERROR_SUCCESS)
         {
-            DWORD dwType;
-            WCHAR szShell[MAX_PATH];
-
-            // TODO: Add support for paths longer than MAX_PATH
-            Status = RegQueryValueExW(hKeyWinlogon, L"Shell", 0, &dwType, (LPBYTE)szShell, &cbShell);
-            if (Status == ERROR_SUCCESS)
-            {
-                if ((dwType == REG_SZ || dwType == REG_EXPAND_SZ) && StrStrI(szShell, szExplorer))
-                    bIsSystemShell = TRUE;
-                else
-                    bIsSystemShell = FALSE;
-            }
+            if ((dwType == REG_SZ || dwType == REG_EXPAND_SZ) && StrStrI(szShell, szExplorer))
+                bIsSystemShell = TRUE;
+            else
+                bIsSystemShell = FALSE;
         }
 
         RegCloseKey(hKeyWinlogon);
