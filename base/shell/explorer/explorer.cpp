@@ -90,18 +90,17 @@ HideMinimizedWindows(IN BOOL bHide)
 static BOOL
 IsExplorerSystemShell()
 {
-    HKEY hKeyWinlogon;
-    WCHAR szPath[MAX_PATH];
-    LPWSTR szExplorer;
     BOOL bIsSystemShell = TRUE; // Assume we are the system shell by default.
+    WCHAR szPath[MAX_PATH];
 
     if (!GetModuleFileNameW(NULL, szPath, _countof(szPath)))
         return FALSE;
 
-    szExplorer = PathFindFileNameW(szPath);
+    LPWSTR szExplorer = PathFindFileNameW(szPath);
 
+    HKEY hKeyWinlogon;
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
-        0, KEY_READ, &hKeyWinlogon) != ERROR_SUCCESS)
+                      0, KEY_READ, &hKeyWinlogon) != ERROR_SUCCESS)
     {
         // No registry access.
         bIsSystemShell = TRUE;
@@ -113,15 +112,13 @@ IsExplorerSystemShell()
 
         // Get length of the "Shell" key
         Status = RegQueryValueExW(hKeyWinlogon, L"Shell", 0, NULL, NULL, &cbShell);
-
         if (Status == ERROR_SUCCESS)
         {
-            WCHAR szShell[MAX_PATH];
             DWORD dwType;
+            WCHAR szShell[MAX_PATH];
 
             // TODO: Add support for paths longer than MAX_PATH
             Status = RegQueryValueExW(hKeyWinlogon, L"Shell", 0, &dwType, (LPBYTE)szShell, &cbShell);
-
             if (Status == ERROR_SUCCESS)
             {
                 if ((dwType == REG_SZ || dwType == REG_EXPAND_SZ) && StrStrI(szShell, szExplorer))
