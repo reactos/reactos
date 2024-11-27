@@ -42,7 +42,7 @@ _CRT_BEGIN_C_HEADER
 
 
 
-#if defined _MSC_VER && !defined _CRT_USE_BUILTIN_OFFSETOF
+#if defined _MSC_VER && !defined __clang__ && !defined _CRT_USE_BUILTIN_OFFSETOF
     #ifdef __cplusplus
         #define offsetof(s,m) ((::size_t)&reinterpret_cast<char const volatile&>((((s*)0)->m)))
     #else
