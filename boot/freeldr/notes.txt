@@ -21,16 +21,16 @@ FreeLoader Boot Process
 FAT 12/16/32 Boot Sector
 
     The BIOS loads the boot sector at 0000:7C00. The FAT12/16 boot sector just
-searches for FREELDR.SYS and loads its first 512 bytes to 0000:F800. This extra
+searches for FREELDR.SYS and loads its first 512 bytes to 0002:0000. This extra
 helper code enables it to fully navigate the file allocation table. The boot
 sector then jumps to FREELDR.SYS entry point at 0000:F803 and the helper code
 takes the relay. It finishes loading the FREELDR.SYS image and finally jumps to
-its final entry point at 0000:FA00.
+its final entry point at 0002:0200.
     The FAT32 boot sector loads its extra sector at 0000:7E00 and looks for
-FREELDR.SYS on the file system. Once found it loads FREELDR.SYS to 0000:F800
+FREELDR.SYS on the file system. Once found it loads FREELDR.SYS to 0002:0000
 and jumps to its entry point at the same address. This allows it to jump over
 the FAT12/16 extra helper code situated at this address, and go to the final
-entry point at 0000:FA00.
+entry point at 0002:0200.
 
 
 ISO-9660 (CD-ROM) Boot Sector
@@ -38,8 +38,8 @@ ISO-9660 (CD-ROM) Boot Sector
     The BIOS loads the boot sector (2048 bytes) at 0000:7C00. First, the
 boot sector relocates itself to 0000:7000 (up to 0000:7800). Then it looks
 for the LOADER directory and makes it the current directory. Next it looks
-for FREELDR.SYS and loads it at 0000:F800. Finally it restores the boot drive
-number in the DL register and jumps to FreeLoader's entry point at 0000:F800.
+for FREELDR.SYS and loads it at 0002:0000. Finally it restores the boot drive
+number in the DL register and jumps to FreeLoader's entry point at 0002:0000.
 
 
 Multiboot
@@ -48,7 +48,7 @@ Multiboot
 multiboot-compliant loader (like GRUB). The multiboot header instructs the
 primary loader to load FREELDR.SYS at 0x200000 (needs to be above 1MB). Control
 is then transferred to the multiboot entry point. Since FREELDR.SYS expects to
-be loaded at a base address 0000:F800 it will start by relocating itself there
+be loaded at a base address 0002:0000 it will start by relocating itself there
 and then jumping to the relocated copy.
 
 

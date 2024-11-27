@@ -49,8 +49,8 @@
 
 PUBLIC start
 start:
-    // This code is loaded at 0000:F800 so we have to
-    // encode a jmp instruction to jump to 0000:FA00
+    // This code is loaded at FREELDR_BASE so we have to
+    // encode a jmp instruction to jump to FREELDR_BASE + 0x200
     .byte HEX(e9), HEX(fd), HEX(01)
 
 // Now starts the extra boot code that we will store
