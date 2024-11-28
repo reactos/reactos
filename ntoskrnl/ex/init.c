@@ -790,84 +790,79 @@ ExpIsLoaderValid(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return TRUE;
 }
 
-CODE_SEG("INIT")
+static CODE_SEG("INIT")
 VOID
-NTAPI
-ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+ExpLoadBootSymbols(
+    _In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    ULONG i = 0;
     PLIST_ENTRY NextEntry;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    NTSTATUS Status;
+    ULONG i;
     ULONG Count, Length;
     PWCHAR Name;
-    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    STRING ImageName;
     CHAR NameBuffer[256];
-    STRING SymbolString;
-    NTSTATUS Status;
 
-    /* Loop the driver list */
-    NextEntry = LoaderBlock->LoadOrderListHead.Flink;
-    while (NextEntry != &LoaderBlock->LoadOrderListHead)
+    /* Loop over the boot modules list */
+    for (NextEntry = LoaderBlock->LoadOrderListHead.Flink, i = 0;
+         NextEntry != &LoaderBlock->LoadOrderListHead;
+         NextEntry = NextEntry->Flink, ++i)
     {
-        /* Skip the first two images */
-        if (i >= 2)
+        /* Skip the first two images: HAL and kernel */
+        if (i < 2)
+            continue;
+
+        /* Get the entry */
+        LdrEntry = CONTAINING_RECORD(NextEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
+        if (LdrEntry->FullDllName.Buffer[0] == L'\\')
         {
-            /* Get the entry */
-            LdrEntry = CONTAINING_RECORD(NextEntry,
-                                         LDR_DATA_TABLE_ENTRY,
-                                         InLoadOrderLinks);
-            if (LdrEntry->FullDllName.Buffer[0] == L'\\')
+            /* We have a name, read its data */
+            Name = LdrEntry->FullDllName.Buffer;
+            Length = LdrEntry->FullDllName.Length / sizeof(WCHAR);
+
+            /* Check if our buffer can hold it */
+            if (sizeof(NameBuffer) < Length + sizeof(ANSI_NULL))
             {
-                /* We have a name, read its data */
-                Name = LdrEntry->FullDllName.Buffer;
-                Length = LdrEntry->FullDllName.Length / sizeof(WCHAR);
-
-                /* Check if our buffer can hold it */
-                if (sizeof(NameBuffer) < Length + sizeof(ANSI_NULL))
-                {
-                    /* It's too long */
-                    Status = STATUS_BUFFER_OVERFLOW;
-                }
-                else
-                {
-                    /* Copy the name */
-                    Count = 0;
-                    do
-                    {
-                        /* Copy the character */
-                        NameBuffer[Count++] = (CHAR)*Name++;
-                    } while (Count < Length);
-
-                    /* Null-terminate */
-                    NameBuffer[Count] = ANSI_NULL;
-                    Status = STATUS_SUCCESS;
-                }
+                /* It's too long */
+                Status = STATUS_BUFFER_OVERFLOW;
             }
             else
             {
-                /* Safely print the string into our buffer */
-                Status = RtlStringCbPrintfA(NameBuffer,
-                                            sizeof(NameBuffer),
-                                            "%S\\System32\\Drivers\\%wZ",
-                                            &SharedUserData->NtSystemRoot[2],
-                                            &LdrEntry->BaseDllName);
-            }
+                /* Copy the name */
+                Count = 0;
+                do
+                {
+                    /* Do cheap Unicode to ANSI conversion */
+                    NameBuffer[Count++] = (CHAR)*Name++;
+                } while (Count < Length);
 
-            /* Check if the buffer was ok */
-            if (NT_SUCCESS(Status))
-            {
-                /* Initialize the STRING for the debugger */
-                RtlInitString(&SymbolString, NameBuffer);
-
-                /* Load the symbols */
-                DbgLoadImageSymbols(&SymbolString,
-                                    LdrEntry->DllBase,
-                                    (ULONG_PTR)PsGetCurrentProcessId());
+                /* Null-terminate */
+                NameBuffer[Count] = ANSI_NULL;
+                Status = STATUS_SUCCESS;
             }
         }
+        else
+        {
+            /* Safely print the string into our buffer */
+            Status = RtlStringCbPrintfA(NameBuffer,
+                                        sizeof(NameBuffer),
+                                        "%S\\System32\\Drivers\\%wZ",
+                                        &SharedUserData->NtSystemRoot[2],
+                                        &LdrEntry->BaseDllName);
+        }
 
-        /* Go to the next entry */
-        i++;
-        NextEntry = NextEntry->Flink;
+        /* Check if the buffer is OK */
+        if (NT_SUCCESS(Status))
+        {
+            /* Load the symbols */
+            RtlInitString(&ImageName, NameBuffer);
+            DbgLoadImageSymbols(&ImageName,
+                                LdrEntry->DllBase,
+                                (ULONG_PTR)PsGetCurrentProcessId());
+        }
     }
 }
 
@@ -1108,7 +1103,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
     ExpLoadBootSymbols(LoaderBlock);
 
     /* Check if we should break after symbol load */
-    if (KdBreakAfterSymbolLoad) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+    if (KdBreakAfterSymbolLoad)
+        DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
 
     /* Check if this loader is compatible with NT 5.2 */
     if (LoaderBlock->Extension->Size >= sizeof(LOADER_PARAMETER_EXTENSION))
