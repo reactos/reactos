@@ -74,7 +74,7 @@ typedef enum _EXCEPTION_DISPOSITION
 
 #endif
 
-#if defined(_MSC_VER) || (defined(__clang__) && defined(__SEH__))
+#if (defined(_MSC_VER) || (defined(__clang__) && defined(__SEH__))) && !defined(_exception_code)
   unsigned long __cdecl _exception_code(void);
   void *__cdecl _exception_info(void);
   int __cdecl _abnormal_termination(void);

@@ -57,5 +57,4 @@ target_include_directories(pseh INTERFACE include)
 # Make it clear that we are using PSEH2
 if ((CMAKE_C_COMPILER_ID STREQUAL "GNU") OR
     ((CMAKE_C_COMPILER_ID STREQUAL "Clang") AND (NOT (ARCH STREQUAL "amd64"))))
-    target_compile_definitions(pseh INTERFACE __USE_PSEH2__)
 endif()

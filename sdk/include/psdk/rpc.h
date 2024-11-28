@@ -5,10 +5,6 @@
 #endif /* _INC_WINDOWS */
 #endif
 
-#if defined(__USE_PSEH2__) && !defined(RC_INVOKED)
-#include  <pseh/pseh2.h>
-#endif
-
 #ifndef __RPC_H__
 #define __RPC_H__
 
