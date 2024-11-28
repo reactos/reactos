@@ -11,8 +11,17 @@
 
 #include <ntoskrnl.h>
 #include <reactos/buildno.h>
+
 #define NDEBUG
 #include <debug.h>
+
+/*
+ * Override DbgPrint(), used by the debugger banner DPRINTs below,
+ * because KdInitSystem() can be called under the debugger lock by
+ * KdEnableDebugger(WithLock)().
+ */
+#define DbgPrint(fmt, ...) (KdpDprintf(fmt, ##__VA_ARGS__), 0)
+#define DbgPrintEx(cmpid, lvl, fmt, ...) (KdpDprintf(fmt, ##__VA_ARGS__), 0)
 
 /* UTILITY FUNCTIONS *********************************************************/
 
