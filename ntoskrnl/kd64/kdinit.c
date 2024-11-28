@@ -25,14 +25,15 @@
 
 /* UTILITY FUNCTIONS *********************************************************/
 
-/*
- * Get the total size of the memory before
- * Mm is initialized, by counting the number
- * of physical pages. Useful for debug logging.
+#include <mm/ARM3/miarm.h> // For MiIsMemoryTypeInvisible()
+
+/**
+ * @brief
+ * Retrieves the total size of the memory before Mm is initialized,
+ * by counting the number of physical pages. Useful for debug logging.
  *
- * Strongly inspired by:
- * mm\ARM3\mminit.c : MiScanMemoryDescriptors(...)
- */
+ * Adapted from mm/ARM3/mminit.c!MiScanMemoryDescriptors().
+ **/
 static
 SIZE_T
 KdpGetMemorySizeInMBs(
@@ -63,20 +64,14 @@ KdpGetMemorySizeInMBs(
                                        MEMORY_ALLOCATION_DESCRIPTOR,
                                        ListEntry);
 
-        /* Check if this is invisible memory */
-        if ((Descriptor->MemoryType == LoaderFirmwarePermanent) ||
-            (Descriptor->MemoryType == LoaderSpecialMemory) ||
-            (Descriptor->MemoryType == LoaderHALCachedMemory) ||
-            (Descriptor->MemoryType == LoaderBBTMemory))
-        {
-            /* Skip this descriptor */
+        /* If this is invisible memory, skip this descriptor */
+        if (MiIsMemoryTypeInvisible(Descriptor->MemoryType))
             continue;
-        }
 
-        /* Check if this is bad memory */
+        /* Check if this isn't bad memory */
         if (Descriptor->MemoryType != LoaderBad)
         {
-            /* Count this in the total of pages */
+            /* Count it in the physical pages */
             NumberOfPhysicalPages += Descriptor->PageCount;
         }
     }
@@ -86,10 +81,16 @@ ReturnSize:
     return ALIGN_UP_BY(NumberOfPhysicalPages * PAGE_SIZE, 1024 * 1024) / (1024 * 1024);
 }
 
+/**
+ * @brief
+ * Displays the kernel debugger initialization banner.
+ **/
 static
 VOID
-KdpPrintBanner(IN SIZE_T MemSizeMBs)
+KdpPrintBanner(VOID)
 {
+    SIZE_T MemSizeMBs = KdpGetMemorySizeInMBs(KeLoaderBlock);
+
     DPRINT1("-----------------------------------------------------\n");
     DPRINT1("ReactOS " KERNEL_VERSION_STR " (Build " KERNEL_VERSION_BUILD_STR ") (Commit " KERNEL_VERSION_COMMIT_HASH ")\n");
     DPRINT1("%u System Processor [%u MB Memory]\n", KeNumberProcessors, MemSizeMBs);
@@ -97,7 +98,9 @@ KdpPrintBanner(IN SIZE_T MemSizeMBs)
     if (KeLoaderBlock)
     {
         DPRINT1("Command Line: %s\n", KeLoaderBlock->LoadOptions);
-        DPRINT1("ARC Paths: %s %s %s %s\n", KeLoaderBlock->ArcBootDeviceName, KeLoaderBlock->NtHalPathName, KeLoaderBlock->ArcHalDeviceName, KeLoaderBlock->NtBootPathName);
+        DPRINT1("ARC Paths: %s %s %s %s\n",
+                KeLoaderBlock->ArcBootDeviceName, KeLoaderBlock->NtHalPathName,
+                KeLoaderBlock->ArcHalDeviceName, KeLoaderBlock->NtBootPathName);
     }
 }
 
@@ -165,7 +168,6 @@ KdInitSystem(
     BOOLEAN EnableKd, DisableKdAfterInit = FALSE, BlockEnable = FALSE;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     ULONG i;
-    SIZE_T MemSizeMBs;
 
     /* Check if this is Phase 1 */
     if (BootPhase)
@@ -401,9 +403,8 @@ KdInitSystem(
         /* Let user-mode know that it's enabled as well */
         SharedUserData->KdDebuggerEnabled = TRUE;
 
-        /* Display separator + ReactOS version at start of the debug log */
-        MemSizeMBs = KdpGetMemorySizeInMBs(KeLoaderBlock);
-        KdpPrintBanner(MemSizeMBs);
+        /* Display separator + ReactOS version at the start of the debug log */
+        KdpPrintBanner();
 
         /* Check if the debugger should be disabled initially */
         if (DisableKdAfterInit)
