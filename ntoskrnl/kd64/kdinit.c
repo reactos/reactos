@@ -162,21 +162,10 @@ KdInitSystem(
     _In_ ULONG BootPhase,
     _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    BOOLEAN EnableKd, DisableKdAfterInit = FALSE, BlockEnable;
-    PSTR CommandLine, DebugLine, DebugOptionStart, DebugOptionEnd;
-    STRING ImageName;
+    BOOLEAN EnableKd, DisableKdAfterInit = FALSE, BlockEnable = FALSE;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
-    PLIST_ENTRY NextEntry;
-    ULONG i, j, Length;
-    SIZE_T DebugOptionLength;
+    ULONG i;
     SIZE_T MemSizeMBs;
-    CHAR NameBuffer[256];
-    PWCHAR Name;
-
-#if defined(__GNUC__)
-    /* Make gcc happy */
-    BlockEnable = FALSE;
-#endif
 
     /* Check if this is Phase 1 */
     if (BootPhase)
@@ -187,7 +176,8 @@ KdInitSystem(
     }
 
     /* Check if we already initialized once */
-    if (KdDebuggerEnabled) return TRUE;
+    if (KdDebuggerEnabled)
+        return TRUE;
 
     /* Set the Debug Routine as the Stub for now */
     KiDebugRoutine = KdpStub;
@@ -233,6 +223,8 @@ KdInitSystem(
     /* Check if we have a loader block */
     if (LoaderBlock)
     {
+        PSTR CommandLine, DebugLine;
+
         /* Get the image entry */
         LdrEntry = CONTAINING_RECORD(LoaderBlock->LoadOrderListHead.Flink,
                                      LDR_DATA_TABLE_ENTRY,
@@ -263,7 +255,7 @@ KdInitSystem(
                 /* Don't enable KD and don't let it be enabled later */
                 KdPitchDebugger = TRUE;
             }
-            else if ((DebugLine = strstr(CommandLine, "DEBUG")) != NULL)
+            else if ((DebugLine = strstr(CommandLine, "DEBUG")))
             {
                 /* Enable KD */
                 EnableKd = TRUE;
@@ -272,11 +264,14 @@ KdInitSystem(
                 if (DebugLine[5] == '=')
                 {
                     /* Save pointers */
+                    PSTR DebugOptionStart, DebugOptionEnd;
                     DebugOptionStart = DebugOptionEnd = &DebugLine[6];
 
                     /* Scan the string for debug options */
                     for (;;)
                     {
+                        SIZE_T DebugOptionLength;
+
                         /* Loop until we reach the end of the string */
                         while (*DebugOptionEnd != ANSI_NULL)
                         {
@@ -287,7 +282,7 @@ KdInitSystem(
                             {
                                 /*
                                  * We reached the end of the option or
-                                 * the end of the string, break out
+                                 * the end of the string, break out.
                                  */
                                 break;
                             }
@@ -301,20 +296,19 @@ KdInitSystem(
                         /* Calculate the length of the current option */
                         DebugOptionLength = (DebugOptionEnd - DebugOptionStart);
 
-                       /*
-                        * Break out if we reached the last option
-                        * or if there were no options at all
-                        */
-                       if (!DebugOptionLength) break;
+                        /*
+                         * Break out if we reached the last option
+                         * or if there were no options at all.
+                         */
+                        if (!DebugOptionLength)
+                            break;
 
                         /* Now check which option this is */
                         if ((DebugOptionLength == 10) &&
                             !(strncmp(DebugOptionStart, "AUTOENABLE", 10)))
                         {
-                            /*
-                             * Disable the debugger, but
-                             * allow it to be reenabled
-                             */
+                            /* Disable the debugger, but
+                             * allow to re-enable it later */
                             DisableKdAfterInit = TRUE;
                             BlockEnable = FALSE;
                             KdAutoEnableOnEvent = TRUE;
@@ -335,14 +329,11 @@ KdInitSystem(
                         }
 
                         /*
-                         * If there are more options then
-                         * the next character should be a comma
+                         * If there are more options then the next character
+                         * should be a comma. Break out if it isn't.
                          */
                         if (*DebugOptionEnd != ',')
-                        {
-                            /* It isn't, break out  */
                             break;
-                        }
 
                         /* Move on to the next option */
                         DebugOptionEnd++;
@@ -431,10 +422,16 @@ KdInitSystem(
         /* Check if we have a loader block */
         if (LoaderBlock)
         {
-            /* Loop boot images */
-            NextEntry = LoaderBlock->LoadOrderListHead.Flink;
-            i = 0;
-            while ((NextEntry != &LoaderBlock->LoadOrderListHead) && (i < 2))
+            PLIST_ENTRY NextEntry;
+            ULONG j, Length;
+            PWCHAR Name;
+            STRING ImageName;
+            CHAR NameBuffer[256];
+
+            /* Loop over the first two boot images: HAL and kernel */
+            for (NextEntry = LoaderBlock->LoadOrderListHead.Flink, i = 0;
+                 NextEntry != &LoaderBlock->LoadOrderListHead && (i < 2);
+                 NextEntry = NextEntry->Flink, ++i)
             {
                 /* Get the image entry */
                 LdrEntry = CONTAINING_RECORD(NextEntry,
@@ -454,15 +451,11 @@ KdInitSystem(
                 /* Null-terminate */
                 NameBuffer[j] = ANSI_NULL;
 
-                /* Load symbols for image */
+                /* Load the symbols */
                 RtlInitString(&ImageName, NameBuffer);
                 DbgLoadImageSymbols(&ImageName,
                                     LdrEntry->DllBase,
                                     (ULONG_PTR)PsGetCurrentProcessId());
-
-                /* Go to the next entry */
-                NextEntry = NextEntry->Flink;
-                i++;
             }
 
             /* Check for incoming break-in and break on symbol load
