@@ -23,16 +23,26 @@
  *
  * Strongly inspired by:
  * mm\ARM3\mminit.c : MiScanMemoryDescriptors(...)
- *
- * See also: kd\kdio.c
  */
-static CODE_SEG("INIT")
+static
 SIZE_T
-KdpGetMemorySizeInMBs(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+KdpGetMemorySizeInMBs(
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLIST_ENTRY ListEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR Descriptor;
     SIZE_T NumberOfPhysicalPages = 0;
+
+    /*
+     * If no loader block is present (e.g. the debugger is initialized only
+     * much later after boot), just use the already-initialized Mm-computed
+     * number of physical pages. Otherwise do the evaluation ourselves.
+     */
+    if (!LoaderBlock)
+    {
+        NumberOfPhysicalPages = MmNumberOfPhysicalPages;
+        goto ReturnSize;
+    }
 
     /* Loop the memory descriptors */
     for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
@@ -62,12 +72,12 @@ KdpGetMemorySizeInMBs(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         }
     }
 
+ReturnSize:
     /* Round size up. Assumed to better match actual physical RAM size */
     return ALIGN_UP_BY(NumberOfPhysicalPages * PAGE_SIZE, 1024 * 1024) / (1024 * 1024);
 }
 
-/* See also: kd\kdio.c */
-static CODE_SEG("INIT")
+static
 VOID
 KdpPrintBanner(IN SIZE_T MemSizeMBs)
 {
