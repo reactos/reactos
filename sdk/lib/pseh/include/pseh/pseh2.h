@@ -23,6 +23,8 @@
 #ifndef KJK_PSEH2_H_
 #define KJK_PSEH2_H_
 
+#define __USE_PSEH2__
+
 #if defined(_USE_NATIVE_SEH) || (defined(_MSC_VER) && !(defined(__clang__) && defined(_M_AMD64)))
 
 #define _SEH2_TRY __try
@@ -85,6 +87,14 @@ _Pragma("GCC diagnostic pop")
 #define _SEH2_YIELD(STMT_) STMT_
 #define _SEH2_LEAVE goto __seh2_scope_end__;
 #define _SEH2_VOLATILE volatile
+
+#define __try _SEH2_TRY
+#define __except _SEH2_EXCEPT
+#define __finally _SEH2_FINALLY
+#define __endtry _SEH2_END
+#define __leave _SEH2_LEAVE
+#define _exception_code() 0
+#define _exception_info() ((void*)0)
 
 #elif defined(_USE_PSEH3)
 
