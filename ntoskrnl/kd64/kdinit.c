@@ -208,7 +208,7 @@ KdInitSystem(
         KdVersionBlock.Unused[0] = 0;
 
         /* Link us in the KPCR */
-        KeGetPcr()->KdVersionBlock =  &KdVersionBlock;
+        KeGetPcr()->KdVersionBlock = &KdVersionBlock;
     }
 
     /* Check if we have a loader block */
@@ -445,10 +445,11 @@ KdInitSystem(
                 NextEntry = NextEntry->Flink;
                 i++;
             }
-        }
 
-        /* Check for incoming breakin and break on symbol load if we have it */
-        KdBreakAfterSymbolLoad = KdPollBreakIn();
+            /* Check for incoming break-in and break on symbol load
+             * if requested, see ex/init.c!ExpLoadBootSymbols() */
+            KdBreakAfterSymbolLoad = KdPollBreakIn();
+        }
     }
     else
     {
