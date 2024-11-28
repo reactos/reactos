@@ -421,20 +421,14 @@ MiScanMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Count this descriptor */
         MiNumberDescriptors++;
 
-        /* Check if this is invisible memory */
-        if ((Descriptor->MemoryType == LoaderFirmwarePermanent) ||
-            (Descriptor->MemoryType == LoaderSpecialMemory) ||
-            (Descriptor->MemoryType == LoaderHALCachedMemory) ||
-            (Descriptor->MemoryType == LoaderBBTMemory))
-        {
-            /* Skip this descriptor */
+        /* If this is invisible memory, skip this descriptor */
+        if (MiIsMemoryTypeInvisible(Descriptor->MemoryType))
             continue;
-        }
 
-        /* Check if this is bad memory */
+        /* Check if this isn't bad memory */
         if (Descriptor->MemoryType != LoaderBad)
         {
-            /* Count this in the total of pages */
+            /* Count it in the physical pages */
             MmNumberOfPhysicalPages += (PFN_COUNT)Descriptor->PageCount;
         }
 
@@ -454,12 +448,9 @@ MiScanMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         }
 
         /* Check if this is free memory */
-        if ((Descriptor->MemoryType == LoaderFree) ||
-            (Descriptor->MemoryType == LoaderLoadedProgram) ||
-            (Descriptor->MemoryType == LoaderFirmwareTemporary) ||
-            (Descriptor->MemoryType == LoaderOsloaderStack))
+        if (MiIsMemoryTypeFree(Descriptor->MemoryType))
         {
-            /* Count it too free pages */
+            /* Count it in the free pages */
             MiNumberOfFreePages += Descriptor->PageCount;
 
             /* Check if this is the largest memory descriptor */
