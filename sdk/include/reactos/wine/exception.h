@@ -55,7 +55,6 @@ typedef struct _WINE_EXCEPTION_REGISTRATION_RECORD
 #define PEXCEPTION_REGISTRATION_RECORD PWINE_EXCEPTION_REGISTRATION_RECORD
 #endif
 
-#ifdef __USE_PSEH2__
 #define __TRY _SEH2_TRY
 #define __EXCEPT(func) _SEH2_EXCEPT(func(_SEH2_GetExceptionInformation()))
 #define __EXCEPT_CTX(func, ctx) _SEH2_EXCEPT((func)(GetExceptionInformation(), ctx))
@@ -75,16 +74,6 @@ typedef struct _WINE_EXCEPTION_REGISTRATION_RECORD
 
 #ifndef AbnormalTermination
 #define AbnormalTermination() _SEH2_AbnormalTermination()
-#endif
-#else
-#define __TRY __try
-#define __EXCEPT(func) __except(func(GetExceptionInformation()))
-#define __EXCEPT_CTX(func, ctx) __except((func)(GetExceptionInformation(), ctx))
-#define __EXCEPT_PAGE_FAULT __except(GetExceptionCode() == STATUS_ACCESS_VIOLATION)
-#define __EXCEPT_ALL __except(1)
-#define __ENDTRY
-#define __FINALLY(func) __finally { func(!AbnormalTermination()); }
-#define __FINALLY_CTX(func, ctx) __finally { func(!AbnormalTermination(), ctx); }
 #endif
 
 #if defined(__MINGW32__) || defined(__CYGWIN__)
