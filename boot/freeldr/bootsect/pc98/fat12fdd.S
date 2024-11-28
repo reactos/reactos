@@ -25,10 +25,10 @@ DataAreaStartLow     = 4
 BiosCHSDriveSizeHigh = 6
 BiosCHSDriveSizeLow  = 8
 BiosCHSDriveSize     = 8
-ReadSectorsOffset    = 10
-ReadClusterOffset    = 12
-PutCharsOffset       = 14
-BootSectorStackTop   = HEX(7C00) - 16
+ReadSectorsOffset    = 12
+ReadClusterOffset    = 16
+PutCharsOffset       = 20
+BootSectorStackTop   = HEX(7C00) - 22
 
 if 0
 .macro DEBUG_STOP
@@ -244,9 +244,14 @@ FoundFreeLoader:
      * Save the addresses of needed functions so
      * the helper code will know where to call them
      */
-    mov word ptr [bp - ReadSectorsOffset], offset ReadSectors   // Save the address of ReadSectors
-    mov word ptr [bp - ReadClusterOffset], offset ReadCluster   // Save the address of ReadCluster
-    mov word ptr [bp - PutCharsOffset], offset PrintString      // Save the address of PrintString
+    xor bx, bx
+    mov word ptr [bp-(ReadSectorsOffset-2)], bx                 // Save the segment of ReadSectors
+    mov word ptr [bp-(ReadClusterOffset-2)], bx                 // Save the segment of ReadCluster
+    mov word ptr [bp-(PutCharsOffset-2)], bx                    // Save the segment of PrintString
+    mov word ptr [bp-ReadSectorsOffset], offset ReadSectors     // Save the address of ReadSectors
+    mov word ptr [bp-ReadClusterOffset], offset ReadCluster     // Save the address of ReadCluster
+    mov word ptr [bp-PutCharsOffset],    offset PrintString     // Save the address of PrintString
+    mov byte ptr [PatchedRet], HEX(CB)                          // Patch 'ret' with 'retf'
 
     /*
      * Now AX has start cluster of FreeLoader and we
@@ -256,7 +261,7 @@ FoundFreeLoader:
      * because they contain a jump instruction to skip
      * over the helper code in the FreeLoader image
      */
-    ljmp16 0, FREELDR_BASE + 3
+    ljmp16 FREELDR_BASE / 16, 3
 
 /*
  * Reads cluster number in AX into [ES:BX]
@@ -347,7 +352,7 @@ ReadSectors:
         pop bx
     loop .ReadSectorsLoop                       // Increment read buffer for next sector, read next sector
 
-    ret
+    jmp PatchedRet
 
 /*
  * Prints a character
@@ -385,7 +390,7 @@ PrintString:
     lodsb                                       // Get a single char from a ptr
 
     or al, al
-    jz short .PrintEnd                          // Found NULL
+    jz short PatchedRet                         // Found NULL
 
     cmp al, HEX(0D)
     jz short .PrintStringHandleCR               // Found CR
@@ -403,7 +408,7 @@ PrintString:
         inc si                                  // Skip the next LF character
      jmp short PrintString
 
-.PrintEnd:
+PatchedRet:
     ret
 
 if 0
@@ -478,8 +483,11 @@ msgDiskError:
     .ascii "ERR", CR, LF, NUL
 msgNotFoundError:
     .ascii "NFE", CR, LF, NUL
+// Sorry, need the space...
+// msgAnyKey:
+//  .ascii "Press any key", NUL
 msgAnyKey:
-    .ascii "Press any key", NUL
+    .ascii "Press key", NUL
 filename:
     .ascii "FREELDR SYS"
 
