@@ -141,15 +141,21 @@ KdpPortInitialize(IN ULONG ComPortNumber,
     return STATUS_SUCCESS;
 }
 
-/******************************************************************************
- * \name KdDebuggerInitialize0
- * \brief Phase 0 initialization.
- * \param [opt] LoaderBlock Pointer to the Loader parameter block. Can be NULL.
- * \return Status
- */
+/**
+ * @brief
+ * Phase 0 initialization. Invoked by KdInitSystem() when the debugger
+ * is enabled: at boot initialization, at resuming from hibernation,
+ * during a BSOD, or when the debugger is re-enabled via KdEnableDebugger().
+ *
+ * @param[in]   LoaderBlock
+ * Optional pointer to the Loader Parameter Block (can be NULL).
+ *
+ * @return  STATUS_SUCCESS or an error status.
+ **/
 NTSTATUS
 NTAPI
-KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
+KdDebuggerInitialize0(
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PCHAR CommandLine, PortString, BaudString, IrqString;
     ULONG Value;
@@ -261,15 +267,20 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
     return KdpPortInitialize(ComPortNumber, ComPortBaudRate);
 }
 
-/******************************************************************************
- * \name KdDebuggerInitialize1
- * \brief Phase 1 initialization.
- * \param [opt] LoaderBlock Pointer to the Loader parameter block. Can be NULL.
- * \return Status
- */
+/**
+ * @brief
+ * Phase 1 initialization. Invoked at phase 1 boot time after the
+ * memory manager and executive resources have been initialized.
+ *
+ * @param[in]   LoaderBlock
+ * Optional pointer to the Loader Parameter Block (can be NULL).
+ *
+ * @return  STATUS_SUCCESS or an error status.
+ **/
 NTSTATUS
 NTAPI
-KdDebuggerInitialize1(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
+KdDebuggerInitialize1(
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     return STATUS_SUCCESS;
 }
