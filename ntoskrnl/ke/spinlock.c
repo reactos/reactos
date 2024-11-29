@@ -17,6 +17,8 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+extern void KdDbgPortPrintf(PCSTR Format, ...);
+
 #if 0
 //
 // FIXME: The queued spinlock routines are broken.
@@ -201,6 +203,7 @@ KeAcquireSpinLockAtDpcLevel(IN PKSPIN_LOCK SpinLock)
     if (KeGetCurrentIrql() < DISPATCH_LEVEL)
     {
         /* We aren't -- bugcheck */
+        KdDbgPortPrintf("%s(%p) IRQL_NOT_GREATER_OR_EQUAL\n", __FUNCTION__, SpinLock);
         KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
                      (ULONG_PTR)SpinLock,
                      KeGetCurrentIrql(),
@@ -224,6 +227,7 @@ KeReleaseSpinLockFromDpcLevel(IN PKSPIN_LOCK SpinLock)
     if (KeGetCurrentIrql() < DISPATCH_LEVEL)
     {
         /* We aren't -- bugcheck */
+        KdDbgPortPrintf("%s(%p) IRQL_NOT_GREATER_OR_EQUAL\n", __FUNCTION__, SpinLock);
         KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
                      (ULONG_PTR)SpinLock,
                      KeGetCurrentIrql(),
@@ -246,6 +250,7 @@ KefAcquireSpinLockAtDpcLevel(IN PKSPIN_LOCK SpinLock)
     if (KeGetCurrentIrql() < DISPATCH_LEVEL)
     {
         /* We aren't -- bugcheck */
+        KdDbgPortPrintf("%s(%p) IRQL_NOT_GREATER_OR_EQUAL\n", __FUNCTION__, SpinLock);
         KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
                      (ULONG_PTR)SpinLock,
                      KeGetCurrentIrql(),
@@ -268,6 +273,7 @@ KefReleaseSpinLockFromDpcLevel(IN PKSPIN_LOCK SpinLock)
     if (KeGetCurrentIrql() < DISPATCH_LEVEL)
     {
         /* We aren't -- bugcheck */
+        KdDbgPortPrintf("%s(%p) IRQL_NOT_GREATER_OR_EQUAL\n", __FUNCTION__, SpinLock);
         KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
                      (ULONG_PTR)SpinLock,
                      KeGetCurrentIrql(),
@@ -313,6 +319,7 @@ KeTryToAcquireSpinLockAtDpcLevel(IN OUT PKSPIN_LOCK SpinLock)
     if (KeGetCurrentIrql() < DISPATCH_LEVEL)
     {
         /* We aren't -- bugcheck */
+        KdDbgPortPrintf("%s(%p) IRQL_NOT_GREATER_OR_EQUAL\n", __FUNCTION__, SpinLock);
         KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
                      (ULONG_PTR)SpinLock,
                      KeGetCurrentIrql(),
@@ -324,6 +331,8 @@ KeTryToAcquireSpinLockAtDpcLevel(IN OUT PKSPIN_LOCK SpinLock)
     if (((KSPIN_LOCK)KeGetCurrentThread() | 1) == *SpinLock)
     {
         /* We do, bugcheck! */
+        KdDbgPortPrintf("%s(%p) already owned\n", __FUNCTION__, SpinLock);
+        __debugbreak();
         KeBugCheckEx(SPIN_LOCK_ALREADY_OWNED, (ULONG_PTR)SpinLock, 0, 0, 0);
     }
 #endif
@@ -374,6 +383,7 @@ KeAcquireInStackQueuedSpinLockAtDpcLevel(IN PKSPIN_LOCK SpinLock,
     if (KeGetCurrentIrql() < DISPATCH_LEVEL)
     {
         /* We aren't -- bugcheck */
+        KdDbgPortPrintf("%s(%p) IRQL_NOT_GREATER_OR_EQUAL\n", __FUNCTION__, SpinLock);
         KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
                      (ULONG_PTR)LockHandle->LockQueue.Lock,
                      KeGetCurrentIrql(),
