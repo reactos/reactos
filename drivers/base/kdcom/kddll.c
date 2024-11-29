@@ -10,8 +10,8 @@
 
 /* GLOBALS ********************************************************************/
 
-ULONG CurrentPacketId = INITIAL_PACKET_ID | SYNC_PACKET_ID;
-ULONG RemotePacketId  = INITIAL_PACKET_ID;
+ULONG CurrentPacketId;
+ULONG RemotePacketId;
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
