@@ -115,22 +115,22 @@ add_compile_options(-march=${OARCH} -mtune=${TUNE})
 # Warnings, errors
 if((NOT CMAKE_BUILD_TYPE STREQUAL "Release") AND (NOT CMAKE_C_COMPILER_ID STREQUAL Clang))
     add_compile_options(-Werror)
-else()
-    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-        add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Werror=unknown-warning-option>)
-    endif()
 endif()
 
 add_compile_options(-Wall -Wpointer-arith)
-add_compile_options(-Wno-char-subscripts -Wno-multichar -Wno-unused-value)
-add_compile_options(-Wno-unused-const-variable)
-add_compile_options(-Wno-unused-local-typedefs)
-add_compile_options(-Wno-deprecated)
-add_compile_options(-Wno-unused-result) # FIXME To be removed when CORE-17637 is resolved
 
-if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    add_compile_options(-Wno-maybe-uninitialized)
-endif()
+# Disable some overzealous warnings
+add_compile_options(
+    -Wno-unknown-warning-option
+    -Wno-char-subscripts
+    -Wno-multichar
+    -Wno-unused-value
+    -Wno-unused-const-variable
+    -Wno-unused-local-typedefs
+    -Wno-deprecated
+    -Wno-unused-result # FIXME To be removed when CORE-17637 is resolved
+    -Wno-maybe-uninitialized
+)
 
 if(ARCH STREQUAL "amd64")
     add_compile_options(-Wno-format)
