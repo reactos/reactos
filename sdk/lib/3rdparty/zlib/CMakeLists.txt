@@ -31,6 +31,9 @@ list(APPEND MINIZIP_SOURCE
     contrib/minizip/zip.c
     contrib/minizip/zip.h)
 
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_compile_options(-Wno-deprecated-non-prototype)
+endif()
 
 if(CMAKE_CROSSCOMPILING)
     add_library(zlib ${SOURCE} ${SOLO_SOURCE})
