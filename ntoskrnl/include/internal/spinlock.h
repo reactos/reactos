@@ -12,6 +12,12 @@ NTAPI
 Kii386SpinOnSpinLock(PKSPIN_LOCK SpinLock, ULONG Flags);
 #endif
 
+#ifndef _HAL_PCH_
+extern void KdDbgPortPrintf(PCSTR Format, ...);
+#else
+#define KdDbgPortPrintf DbgPrint
+#endif
+
 //
 // Spinlock Acquisition at IRQL >= DISPATCH_LEVEL
 //
@@ -31,6 +37,8 @@ KxAcquireSpinLock(
     if (((KSPIN_LOCK)KeGetCurrentThread() | 1) == *SpinLock)
     {
         /* We do, bugcheck! */
+        KdDbgPortPrintf("%s(%p) already owned\n", __FUNCTION__, SpinLock);
+        __debugbreak();
         KeBugCheckEx(SPIN_LOCK_ALREADY_OWNED, (ULONG_PTR)SpinLock, 0, 0, 0);
     }
 #endif
@@ -46,8 +54,8 @@ KxAcquireSpinLock(
         /* It's locked... spin until it's unlocked */
         while (*(volatile KSPIN_LOCK *)SpinLock & 1)
         {
-                /* Yield and keep looping */
-                YieldProcessor();
+            /* Yield and keep looping */
+            YieldProcessor();
         }
 #endif
     }
@@ -82,6 +90,7 @@ KxReleaseSpinLock(
     if (((KSPIN_LOCK)KeGetCurrentThread() | 1) != *SpinLock)
     {
         /* They don't, bugcheck */
+        KdDbgPortPrintf("%s(%p) NOT owned\n", __FUNCTION__, SpinLock);
         KeBugCheckEx(SPIN_LOCK_NOT_OWNED, (ULONG_PTR)SpinLock, 0, 0, 0);
     }
 #endif

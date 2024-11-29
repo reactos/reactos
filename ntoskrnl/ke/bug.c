@@ -243,17 +243,17 @@ KeRosDumpStackFrameArray(IN PULONG_PTR Frames,
                                         AnsiName,
                                         sizeof(AnsiName));
                 Addr -= (ULONG_PTR)LdrEntry->DllBase;
-                DbgPrint("<%s: %p>", AnsiName, (PVOID)Addr);
+                KdpDprintf("<%s: %p>", AnsiName, (PVOID)Addr);
             }
         }
         else
         {
             /* Print only the address */
-            DbgPrint("<%p>", (PVOID)Addr);
+            KdpDprintf("<%p>", (PVOID)Addr);
         }
 
         /* Go to the next frame */
-        DbgPrint("\n");
+        KdpDprintf("\n");
     }
 }
 
@@ -277,7 +277,7 @@ KeRosDumpStackFrames(IN PULONG_PTR Frame OPTIONAL,
     {
         /* Get the current frames (skip the two. One for the dumper, one for the caller) */
         RealFrameCount = RtlCaptureStackBackTrace(2, FrameCount, (PVOID*)Frames, NULL);
-        DPRINT1("RealFrameCount =%lu\n", RealFrameCount);
+        KdpDprintf("RealFrameCount =%lu\n", RealFrameCount);
 
         /* Dump them */
         KeRosDumpStackFrameArray(Frames, RealFrameCount);
