@@ -49,11 +49,16 @@ const ULONG BaseArray[] = {0, 0xF1012000};
 
 /* GLOBALS ********************************************************************/
 
-CPPORT KdComPort;
-ULONG  KdComPortIrq = 0; // Not used at the moment.
+static ULONG  ComPortNumber = DEFAULT_DEBUG_PORT;
+static ULONG  ComPortBaudRate = DEFAULT_DEBUG_BAUD_RATE;
+static ULONG  ComPortIrq = 0; // Not used at the moment.
+static CPPORT KdComPort;
 #ifdef KDDEBUG
-CPPORT KdDebugComPort;
+static CPPORT KdDebugComPort;
 #endif
+
+extern ULONG CurrentPacketId;
+extern ULONG RemotePacketId;
 
 /* DEBUGGING ******************************************************************/
 
@@ -137,14 +142,10 @@ KdpPortInitialize(IN ULONG ComPortNumber,
                           UlongToPtr(BaseArray[ComPortNumber]),
                           ComPortBaudRate);
     if (!NT_SUCCESS(Status))
-    {
         return STATUS_INVALID_PARAMETER;
-    }
-    else
-    {
-        KdComPortInUse = KdComPort.Address;
-        return STATUS_SUCCESS;
-    }
+
+    KdComPortInUse = KdComPort.Address;
+    return STATUS_SUCCESS;
 }
 
 /******************************************************************************
@@ -157,9 +158,7 @@ NTSTATUS
 NTAPI
 KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 {
-    ULONG ComPortNumber   = DEFAULT_DEBUG_PORT;
-    ULONG ComPortBaudRate = DEFAULT_DEBUG_BAUD_RATE;
-
+    NTSTATUS Status;
     PCHAR CommandLine, PortString, BaudString, IrqString;
     ULONG Value;
 
@@ -203,7 +202,7 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 
             /* Set the port to use */
             ComPortNumber = Value;
-       }
+        }
 
         /* Check if we got a baud rate */
         if (BaudString)
@@ -237,7 +236,7 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
             {
                 /* Read and set it */
                 Value = atol(IrqString + 1);
-                if (Value) KdComPortIrq = Value;
+                if (Value) ComPortIrq = Value;
             }
         }
     }
@@ -269,7 +268,14 @@ KdDebuggerInitialize0(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
     KDDBGPRINT("KdDebuggerInitialize0\n");
 
     /* Initialize the port */
-    return KdpPortInitialize(ComPortNumber, ComPortBaudRate);
+    Status = KdpPortInitialize(ComPortNumber, ComPortBaudRate);
+    if (NT_SUCCESS(Status))
+    {
+        /* Reset debugger state */
+        CurrentPacketId = INITIAL_PACKET_ID | SYNC_PACKET_ID;
+        RemotePacketId  = INITIAL_PACKET_ID;
+    }
+    return Status;
 }
 
 /******************************************************************************
