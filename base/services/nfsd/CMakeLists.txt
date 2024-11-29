@@ -55,6 +55,9 @@ else()
     # FIXME: Tons of warnings.
     target_compile_options(nfsd PRIVATE "-w")
 endif()
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(nfsd PRIVATE -Wno-incompatible-function-pointer-types)
+endif()
 
 target_link_libraries(nfsd oldnames)
 
