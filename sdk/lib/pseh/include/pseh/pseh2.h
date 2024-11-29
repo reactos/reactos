@@ -25,7 +25,7 @@
 
 #define __USE_PSEH2__
 
-#if defined(_USE_NATIVE_SEH) || (defined(_MSC_VER) && !(defined(__clang__) && defined(_M_AMD64)))
+#if defined(_USE_NATIVE_SEH) || defined(_MSC_VER)
 
 #define _SEH2_TRY __try
 #define _SEH2_FINALLY __finally
