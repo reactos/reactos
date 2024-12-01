@@ -48,6 +48,10 @@ if ((ARCH STREQUAL "amd64") AND (TARGET_COMPILER_ID STREQUAL "GNU"))
     add_subdirectory(gcc_plugin_seh)
 endif()
 
+if (TARGET_BUILD_TYPE)
+    # Silence warning about unused variable
+endif()
+
 if(NOT MSVC)
     add_host_tool(pefixup pefixup.c)
     if (ARCH STREQUAL "amd64" OR ARCH STREQUAL "arm64")
