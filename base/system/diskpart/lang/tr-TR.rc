@@ -125,6 +125,8 @@ BEGIN
     IDS_SELECT_NO_DISK "\nBir disk seçilmemiş.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
     IDS_SELECT_DISK "\nDisk %lu şimdi seçilen disktir.\n\n"
     IDS_SELECT_DISK_INVALID "\nGeçersiz disk.\n\n"
+    IDS_SELECT_DISK_ENUM_NO_START "\nNo disk enumeration started yet.\n\nNo disk ist currently selected.\n\n"
+    IDS_SELECT_DISK_ENUM_FINISHED "\nThe last disk has been enumerated.\n\nNo disk ist currently selected.\n\n"
     IDS_SELECT_NO_PARTITION "\nŞimdilik bir bölüm seçilmemiş.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
     IDS_SELECT_PARTITION "\nBölüm %lu şimdi seçilen bölümdür.\n\n"
     IDS_SELECT_PARTITION_NO_DISK "\nBir bölüm seçmek için bir disk yok.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"

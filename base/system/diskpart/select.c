@@ -39,35 +39,75 @@ SelectDisk(
         return TRUE;
     }
 
-    if (!IsDecString(argv[2]))
+    if (!_wcsicmp(argv[2], L"system"))
     {
-        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
-    }
+        CurrentDisk = NULL;
 
-    ulValue = wcstoul(argv[2], NULL, 10);
-    if ((ulValue == 0) && (errno == ERANGE))
-    {
-        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
-        return TRUE;
-    }
-
-    CurrentDisk = NULL;
-
-    Entry = DiskListHead.Flink;
-    while (Entry != &DiskListHead)
-    {
+        Entry = DiskListHead.Flink;
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
 
-        if (DiskEntry->DiskNumber == ulValue)
+        CurrentDisk = DiskEntry;
+        CurrentPartition = NULL;
+        ConResPrintf(StdOut, IDS_SELECT_DISK, CurrentDisk->DiskNumber);
+        return TRUE;
+    }
+    else if (!_wcsicmp(argv[2], L"next"))
+    {
+        if (CurrentDisk == NULL)
         {
-            CurrentDisk = DiskEntry;
             CurrentPartition = NULL;
-            ConResPrintf(StdOut, IDS_SELECT_DISK, CurrentDisk->DiskNumber);
+            ConResPuts(StdErr, IDS_SELECT_DISK_ENUM_NO_START);
             return TRUE;
         }
 
-        Entry = Entry->Flink;
+        if (CurrentDisk->ListEntry.Flink == &DiskListHead)
+        {
+            CurrentDisk = NULL;
+            CurrentPartition = NULL;
+            ConResPuts(StdErr, IDS_SELECT_DISK_ENUM_FINISHED);
+            return TRUE;
+        }
+
+        Entry = CurrentDisk->ListEntry.Flink;
+
+        DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
+
+        CurrentDisk = DiskEntry;
+        CurrentPartition = NULL;
+        ConResPrintf(StdOut, IDS_SELECT_DISK, CurrentDisk->DiskNumber);
+        return TRUE;
+    }
+    else if (IsDecString(argv[2]))
+    {
+        ulValue = wcstoul(argv[2], NULL, 10);
+        if ((ulValue == 0) && (errno == ERANGE))
+        {
+            ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+            return TRUE;
+        }
+
+        CurrentDisk = NULL;
+
+        Entry = DiskListHead.Flink;
+        while (Entry != &DiskListHead)
+        {
+            DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
+
+            if (DiskEntry->DiskNumber == ulValue)
+            {
+                CurrentDisk = DiskEntry;
+                CurrentPartition = NULL;
+                ConResPrintf(StdOut, IDS_SELECT_DISK, CurrentDisk->DiskNumber);
+                return TRUE;
+            }
+
+            Entry = Entry->Flink;
+        }
+    }
+    else
+    {
+        ConResPuts(StdErr, IDS_ERROR_INVALID_ARGS);
+        return TRUE;
     }
 
     ConResPuts(StdErr, IDS_SELECT_DISK_INVALID);
