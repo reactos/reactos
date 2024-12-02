@@ -25,6 +25,13 @@
 #include <windef.h>
 #include <mmddk.h>
 
+/* ReactOS-specific DLL version info */
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Multimedia API"
+#define REACTOS_STR_INTERNAL_NAME     "winmm"
+#define REACTOS_STR_ORIGINAL_FILENAME "winmm.dll"
+#include <reactos/version.rc>
+
 /* Add your language specific defines here */
 
 /* UTF-8 */
