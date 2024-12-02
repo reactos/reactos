@@ -20,6 +20,7 @@ list(APPEND UCRT_LOCALE_SOURCES
     locale/localeconv.cpp
     locale/locale_refcounting.cpp
     locale/locale_update.cpp
+    locale/MultiByteToWideChar.c
     locale/nlsdata.cpp
     locale/setlocale.cpp
     locale/wsetlocale.cpp
