@@ -5,6 +5,7 @@ list(APPEND UCRT_VCRUNTIME_SOURCES
     vcruntime/__security_init_cookie.c
     vcruntime/__vcrt_init.c
     vcruntime/initializers.cpp
+    vcruntime/isa_available.cpp
 )
 
 if(${ARCH} STREQUAL "i386")
