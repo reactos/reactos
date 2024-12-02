@@ -24,4 +24,5 @@ list(APPEND UCRT_LOCALE_SOURCES
     locale/nlsdata.cpp
     locale/setlocale.cpp
     locale/wsetlocale.cpp
+    locale/WideCharToMultiByte.c
 )
