@@ -5,6 +5,8 @@ list(APPEND LIBCNTPR_MATH_SOURCE
     math/_chgsignf.c
     math/_dsign.c
     math/_fdsign.c
+    math/_finite.c
+    math/_finitef.c
     math/_invoke_matherr.c
     math/abs.c
     math/div.c

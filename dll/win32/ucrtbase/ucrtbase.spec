@@ -371,7 +371,7 @@
 @ cdecl _findnext64(long ptr)
 @ cdecl _findnext64i32(long ptr)
 @ cdecl _finite(double)
-@ cdecl -stub -arch=!i386 _finitef(float)
+@ cdecl -arch=!i386 _finitef(float)
 @ cdecl _flushall()
 @ cdecl _fpclass(double)
 @ cdecl -stub -arch=!i386 _fpclassf(float)
