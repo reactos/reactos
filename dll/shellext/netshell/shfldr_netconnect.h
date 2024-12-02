@@ -8,7 +8,7 @@ typedef struct {
 } shvheader;
 
 class CNetworkConnections:
-    public CComCoClass<CNetworkConnections, &CLSID_ConnectionFolder>,
+    public CComCoClass<CNetworkConnections, &CLSID_NetworkConnections>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IPersistFolder2,
     public IShellExtInit,

@@ -797,7 +797,7 @@ HRESULT WINAPI CNetworkConnections::GetClassID(CLSID *lpClassId)
     if (!lpClassId)
         return E_POINTER;
 
-    *lpClassId = CLSID_ConnectionFolder;
+    *lpClassId = CLSID_NetworkConnections;
 
     return S_OK;
 }
