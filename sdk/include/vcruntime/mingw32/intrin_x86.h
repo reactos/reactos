@@ -1227,7 +1227,7 @@ __INTRIN_INLINE unsigned int __cdecl _rotl(unsigned int value, int shift)
 __INTRIN_INLINE unsigned long long _rotl64(unsigned long long value, int shift)
 {
 	unsigned long long retval;
-	__asm__("rolq %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
+	__asm__("rolq %b[shift], %[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
 #else /* __x86_64__ */
@@ -1271,7 +1271,7 @@ __INTRIN_INLINE unsigned short __cdecl _rotr16(unsigned short value, unsigned ch
 __INTRIN_INLINE unsigned long long _rotr64(unsigned long long value, int shift)
 {
 	unsigned long long retval;
-	__asm__("rorq %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
+	__asm__("rorq %b[shift], %[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
 #else /* __x86_64__ */
