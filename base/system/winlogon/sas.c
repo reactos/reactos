@@ -285,6 +285,22 @@ PlaySoundRoutine(
     return Ret;
 }
 
+static
+BOOL
+IsFirstLogon(VOID)
+{
+    /* FIXME: All of this is a HACK, designed specifically for PlayLogonSoundThread.
+     * Don't call IsFirstLogon multiple times inside the same function. And please
+     * note that this function is not thread-safe. */
+    static BOOL bFirstLogon = TRUE;
+    if (bFirstLogon)
+    {
+        bFirstLogon = FALSE;
+        return TRUE;
+    }
+    return FALSE;
+}
+
 DWORD
 WINAPI
 PlayLogonSoundThread(
@@ -347,7 +363,9 @@ PlayLogonSoundThread(
     }
     else
     {
-        PlaySoundRoutine(L"WindowsLogon", TRUE, SND_ALIAS | SND_NODEFAULT);
+        PlaySoundRoutine(IsFirstLogon() ? L"SystemStart" : L"WindowsLogon",
+                         TRUE,
+                         SND_ALIAS | SND_NODEFAULT);
         RevertToSelf();
     }
     return 0;
