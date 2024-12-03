@@ -136,15 +136,15 @@ PeLdrpLoadAndScanReferencedDll(
 
 static BOOLEAN
 PeLdrpBindImportName(
-    IN OUT PLIST_ENTRY ModuleListHead,
-    IN PVOID DllBase,
-    IN PVOID ImageBase,
-    IN PIMAGE_THUNK_DATA ThunkData,
-    IN PIMAGE_EXPORT_DIRECTORY ExportDirectory,
-    IN ULONG ExportSize,
-    IN BOOLEAN ProcessForwards,
-    IN PCSTR DirectoryPath,
-    IN PLIST_ENTRY Parent)
+    _Inout_ PLIST_ENTRY ModuleListHead,
+    _In_ PVOID DllBase,
+    _In_ PVOID ImageBase,
+    _Inout_ PIMAGE_THUNK_DATA ThunkData,
+    _In_ PIMAGE_EXPORT_DIRECTORY ExportDirectory,
+    _In_ ULONG ExportSize,
+    _In_ BOOLEAN ProcessForwards,
+    _In_ PCSTR DirectoryPath,
+    _In_ PLIST_ENTRY Parent)
 {
     ULONG Ordinal;
     PULONG NameTable, FunctionTable;
@@ -448,12 +448,12 @@ PeLdrpLoadAndScanReferencedDll(
 
 static BOOLEAN
 PeLdrpScanImportAddressTable(
-    IN OUT PLIST_ENTRY ModuleListHead,
-    IN PVOID DllBase,
-    IN PVOID ImageBase,
-    IN PIMAGE_THUNK_DATA ThunkData,
-    IN PCSTR DirectoryPath,
-    IN PLIST_ENTRY Parent)
+    _Inout_ PLIST_ENTRY ModuleListHead,
+    _In_ PVOID DllBase,
+    _In_ PVOID ImageBase,
+    _Inout_ PIMAGE_THUNK_DATA ThunkData,
+    _In_ PCSTR DirectoryPath,
+    _In_ PLIST_ENTRY Parent)
 {
     PIMAGE_EXPORT_DIRECTORY ExportDirectory = NULL;
     BOOLEAN Success;
