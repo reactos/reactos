@@ -367,13 +367,17 @@ PlayLogonSound(
 
 static
 VOID
-PlayLogoffSound(
-    _In_ PWLSESSION Session)
+PlayLogoffShutdownSound(
+    _In_ PWLSESSION Session,
+    _In_ BOOL bShutdown)
 {
     if (!ImpersonateLoggedOnUser(Session->UserToken))
         return;
 
-    PlaySoundRoutine(L"WindowsLogoff", FALSE, SND_ALIAS | SND_NODEFAULT);
+    /* NOTE: Logoff and shutdown sounds play synchronously */
+    PlaySoundRoutine(bShutdown ? L"SystemExit" : L"WindowsLogoff",
+                     FALSE,
+                     SND_ALIAS | SND_NODEFAULT);
 
     RevertToSelf();
 }
@@ -848,7 +852,7 @@ HandleLogoff(
 
     SwitchDesktop(Session->WinlogonDesktop);
 
-    PlayLogoffSound(Session);
+    PlayLogoffShutdownSound(Session, WLX_SHUTTINGDOWN(wlxAction));
 
     SetWindowStationUser(Session->InteractiveWindowStation,
                          &LuidNone, NULL, 0);
