@@ -786,8 +786,8 @@ DestroyLogoffSecurityAttributes(
 static
 NTSTATUS
 HandleLogoff(
-    IN OUT PWLSESSION Session,
-    IN UINT Flags)
+    _Inout_ PWLSESSION Session,
+    _In_ DWORD wlxAction)
 {
     PLOGOFF_SHUTDOWN_DATA LSData;
     PSECURITY_ATTRIBUTES psa;
@@ -802,7 +802,13 @@ HandleLogoff(
         ERR("Failed to allocate mem for thread data\n");
         return STATUS_NO_MEMORY;
     }
-    LSData->Flags = Flags;
+
+    LSData->Flags = EWX_LOGOFF;
+    if (wlxAction == WLX_SAS_ACTION_FORCE_LOGOFF)
+    {
+        LSData->Flags |= EWX_FORCE;
+    }
+
     LSData->Session = Session;
 
     Status = CreateLogoffSecurityAttributes(&psa);
@@ -1065,12 +1071,9 @@ DoGenericAction(
         case WLX_SAS_ACTION_SHUTDOWN_REBOOT: /* 0x0b */
             if (Session->LogonState != STATE_LOGGED_OFF)
             {
-                UINT LogOffFlags = EWX_LOGOFF;
-                if (wlxAction == WLX_SAS_ACTION_FORCE_LOGOFF)
-                    LogOffFlags |= EWX_FORCE;
                 if (!Session->Gina.Functions.WlxIsLogoffOk(Session->Gina.Context))
                     break;
-                if (!NT_SUCCESS(HandleLogoff(Session, LogOffFlags)))
+                if (!NT_SUCCESS(HandleLogoff(Session, wlxAction)))
                 {
                     RemoveStatusMessage(Session);
                     break;
