@@ -743,7 +743,6 @@ HalDisableSystemInterrupt(
     IOApicWrite(IOAPIC_REDTBL + 2 * Index, ReDirReg.Long0);
 }
 
-#ifndef _M_AMD64
 BOOLEAN
 NTAPI
 HalBeginSystemInterrupt(
@@ -826,6 +825,7 @@ HalEndSystemInterrupt(
 
 /* IRQL MANAGEMENT ************************************************************/
 
+#ifndef _M_AMD64
 KIRQL
 NTAPI
 KeGetCurrentIrql(VOID)

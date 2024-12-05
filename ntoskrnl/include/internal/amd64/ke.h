@@ -356,7 +356,10 @@ KiEndInterrupt(IN KIRQL Irql,
 {
     /* Make sure this is from the clock handler */
     ASSERT(TrapFrame->ErrorCode == 0xc10c4);
-    //KeLowerIrql(Irql);
+
+    /* Disable interrupts and end the interrupt */
+    _disable();
+    HalEndSystemInterrupt(Irql, TrapFrame);
 }
 
 FORCEINLINE
