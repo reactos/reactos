@@ -320,4 +320,16 @@ InvokeIExecuteCommandWithDataObject(
     _In_opt_ LPCMINVOKECOMMANDINFOEX pICI,
     _In_opt_ IUnknown *pSite);
 
+typedef enum {
+    FOCE_STARTOPERATIONS,
+    FOCE_FINISHOPERATIONS,
+    FOCE_PREMOVEITEM,
+    FOCE_POSTMOVEITEM,
+    FOCE_PREDELETEITEM,
+    FOCE_POSTDELETEITEM
+} FILEOPCALLBACKEVENT;
+typedef HRESULT (CALLBACK *FILEOPCALLBACK)(FILEOPCALLBACKEVENT Event, LPCWSTR Source, LPCWSTR Destination,
+                                           UINT Attributes, HRESULT hr, void *CallerData);
+int SHELL32_FileOperation(LPSHFILEOPSTRUCTW lpFileOp, FILEOPCALLBACK Callback, void *CallerData);
+
 #endif /* _PRECOMP_H__ */
