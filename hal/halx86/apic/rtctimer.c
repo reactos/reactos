@@ -191,6 +191,9 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 
     /* Update the system time -- on x86 the kernel will exit this trap  */
     KeUpdateSystemTime(TrapFrame, LastIncrement, Irql);
+
+    /* End the interrupt */
+    KiEndInterrupt(Irql, TrapFrame);
 }
 
 VOID
