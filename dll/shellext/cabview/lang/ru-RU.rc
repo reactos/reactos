@@ -1,0 +1,21 @@
+/*
+ * PROJECT:     ReactOS CabView Shell Extension
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Russian resource translation
+ * TRANSLATOR:  Copyright 2018-2020 Stanislav Motylkov <x86corez@gmail.com>
+ */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_COL_NAME    "Название"
+    IDS_COL_TYPE    "Тип"
+    IDS_COL_SIZE    "Размер"
+    IDS_COL_MDATE   "Дата изменения"
+    IDS_COL_PATH    "Path"
+    IDS_COL_ATT     "Attributes"
+
+    IDS_EXTRACT     "Extract..."
+    IDS_EXTRACTALL  "Extract &All..."
+END

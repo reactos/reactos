@@ -1,0 +1,22 @@
+/*
+ * PROJECT:     ReactOS CabView Shell Extension
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2018 George Bișoc <george.bisoc@reactos.org>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_COL_NAME    "Nume"
+    IDS_COL_TYPE    "Tip"
+    IDS_COL_SIZE    "Dimensiune"
+    IDS_COL_MDATE   "Data modificată"
+    IDS_COL_PATH    "Path"
+    IDS_COL_ATT     "Attributes"
+
+    IDS_EXTRACT     "Extract..."
+    IDS_EXTRACTALL  "Extract &All..."
+END

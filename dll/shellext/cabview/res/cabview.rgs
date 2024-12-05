@@ -1,0 +1,47 @@
+HKCR
+{
+    NoRemove CLSID
+    {
+        '{0CD7A5C0-9F37-11CE-AE65-08002B2E1262}' = s 'Cabinet Shell Folder'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ShellFolder
+            {
+                val Attributes = d '0x680001a0'
+            }
+            'Implemented Categories'
+            {
+                '{00021490-0000-0000-C000-000000000046}'
+                {
+                }
+            }
+        }
+    }
+
+    NoRemove CABFolder
+    {
+        CLSID = s '{0CD7A5C0-9F37-11CE-AE65-08002B2E1262}'
+        DefaultIcon = s '%MODULE%'
+
+        NoRemove Shell
+        {
+            NoRemove Open
+            {
+                val BrowserFlags = d '0x10'
+                val ExplorerFlags = d '0x20'
+                command = s '"explorer.exe" "%%L"'
+            }
+        }
+    }
+    NoRemove '.cab' = s 'CABFolder'
+    {
+    }
+
+    NoRemove SystemFileAssociations
+    {
+        '.cab'
+        {
+            CLSID = s '{0CD7A5C0-9F37-11CE-AE65-08002B2E1262}'
+        }
+    }
+}
