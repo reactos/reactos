@@ -31,7 +31,7 @@ CAPTION "ReactOS LiveCD"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "IDB_LOGO", IDC_STARTLOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 4, 290, 99
-    DEFPUSHBUTTON "ReactOS &Live CD schalten", IDC_RUN, 71, 108, 175, 21
+    DEFPUSHBUTTON "ReactOS &Live CD starten", IDC_RUN, 71, 108, 175, 21
     PUSHBUTTON "ReactOS &installieren", IDC_INSTALL, 71, 136, 175, 21
 
     // LTEXT "", IDC_STATIC, 7, 152, 300, 8
@@ -44,7 +44,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SHELL_FAIL "Userinit konnte die Shell nicht starten!"
-    IDS_INSTALLER_FAIL "Userinit failed to start the installer!"
+    IDS_INSTALLER_FAIL "Userinit konnte das Setup nicht starten!"
     IDS_CANCEL_CONFIRM "Sind Sie sicher, dass Sie die ReactOS LiveCD beenden möchten?\nIhr Computer wird möglicherweise neu gestartet, wenn Sie fortfahren."
 END
 
