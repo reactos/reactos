@@ -153,23 +153,28 @@ KdpTrap(
 //
 // Port Locking
 //
-VOID
-NTAPI
-KdpPortLock(
-    VOID
-);
-
-VOID
-NTAPI
-KdpPortUnlock(
-    VOID
-);
-
 BOOLEAN
 NTAPI
 KdpPollBreakInWithPortLock(
     VOID
 );
+
+_Requires_lock_not_held_(KdpDebuggerLock)
+_Acquires_lock_(KdpDebuggerLock)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_raises_(DISPATCH_LEVEL)
+VOID
+NTAPI
+KdAcquireDebuggerLock(
+    _Out_ _IRQL_saves_ PKIRQL OldIrql);
+
+_Requires_lock_held_(KdpDebuggerLock)
+_Releases_lock_(KdpDebuggerLock)
+_IRQL_requires_(DISPATCH_LEVEL)
+VOID
+NTAPI
+KdReleaseDebuggerLock(
+    _In_ _IRQL_restores_ KIRQL OldIrql);
 
 //
 // Debugger Enter, Exit, Enable and Disable

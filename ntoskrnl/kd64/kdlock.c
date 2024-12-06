@@ -14,22 +14,6 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-VOID
-NTAPI
-KdpPortLock(VOID)
-{
-    /* Acquire the lock */
-    KiAcquireSpinLock(&KdpDebuggerLock);
-}
-
-VOID
-NTAPI
-KdpPortUnlock(VOID)
-{
-    /* Release the lock */
-    KiReleaseSpinLock(&KdpDebuggerLock);
-}
-
 BOOLEAN
 NTAPI
 KdpPollBreakInWithPortLock(VOID)
@@ -66,6 +50,76 @@ KdpPollBreakInWithPortLock(VOID)
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
+
+static BOOLEAN KdpDebuggerLockIntsEnabled;
+
+/**
+ * @brief
+ * Acquires the kernel debugger global lock at DISPATCH_LEVEL.
+ *
+ * @warning
+ * ReactOS-only: Also disables the interrupts.
+ *
+ * @param[out]  OldIrql
+ * Pointer to a KIRQL variable that is set to the current IRQL when
+ * the call occurs, that is to be restored when the lock is released.
+ *
+ * @note    Exported in NT 6.3.
+ **/
+_Requires_lock_not_held_(KdpDebuggerLock)
+_Acquires_lock_(KdpDebuggerLock)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_raises_(DISPATCH_LEVEL)
+VOID
+NTAPI
+KdAcquireDebuggerLock(
+    _Out_ _IRQL_saves_ PKIRQL OldIrql)
+{
+#ifdef __REACTOS__
+    /* Disable interrupts */
+    BOOLEAN Enable = KeDisableInterrupts();
+#endif
+    /* Raise to dispatch and acquire the lock */
+    KeRaiseIrql(DISPATCH_LEVEL, OldIrql);
+    KiAcquireSpinLock(&KdpDebuggerLock);
+#ifdef __REACTOS__
+    /* Save the interrupts state now */
+    KdpDebuggerLockIntsEnabled = Enable;
+#endif
+}
+
+/**
+ * @brief
+ * Releases the kernel debugger global lock.
+ *
+ * @warning
+ * ReactOS-only: Also re-enables the interrupts.
+ *
+ * @param[in]   OldIrql
+ * Specifies the KIRQL value saved from the preceding call to KdAcquireDebuggerLock.
+ *
+ * @note    Exported in NT 6.3.
+ **/
+_Requires_lock_held_(KdpDebuggerLock)
+_Releases_lock_(KdpDebuggerLock)
+_IRQL_requires_(DISPATCH_LEVEL)
+VOID
+NTAPI
+KdReleaseDebuggerLock(
+    _In_ _IRQL_restores_ KIRQL OldIrql)
+{
+#ifdef __REACTOS__
+    /* Get the interrupts state */
+    BOOLEAN WereEnabled = KdpDebuggerLockIntsEnabled;
+#endif
+    /* Release the lock and lower IRQL back */
+    KiReleaseSpinLock(&KdpDebuggerLock);
+    KeLowerIrql(OldIrql);
+#ifdef __REACTOS__
+    /* Re-enable interrupts */
+    KeRestoreInterrupts(WereEnabled);
+#endif
+}
 
 extern void KdDbgPortPrintf(PCSTR Format, ...);
 
@@ -134,7 +188,7 @@ KdPollBreakIn(VOID)
                 }
 
                 /* Let go of the port */
-                KdpPortUnlock();
+                KeReleaseSpinLockFromDpcLevel(&KdpDebuggerLock);
             }
         }
 

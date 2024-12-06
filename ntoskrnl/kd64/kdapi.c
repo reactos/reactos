@@ -1927,20 +1927,15 @@ KdEnterDebugger(IN PKTRAP_FRAME TrapFrame,
 
     /* Check freeze flag */
     if (KiFreezeFlag & 1)
-    {
-        /* Print out errror */
         KdpDprintf("FreezeLock was jammed!  Backup SpinLock was used!\n");
-    }
 
     /* Check processor state */
     if (KiFreezeFlag & 2)
-    {
-        /* Print out errror */
         KdpDprintf("Some processors not frozen in debugger!\n");
-    }
 
     /* Make sure we acquired the port */
-    if (!KdpPortLocked) KdpDprintf("Port lock was not acquired!\n");
+    if (!KdpPortLocked)
+        KdpDprintf("Port lock was not acquired!\n");
 
     /* Return if interrupts needs to be re-enabled */
     return Enable;
@@ -1955,7 +1950,8 @@ KdExitDebugger(IN BOOLEAN Enable)
     /* Reset the debugger entered flag, restore the port state and unlock it */
     KdEnteredDebugger = FALSE;
     KdRestore(FALSE);
-    if (KdpPortLocked) KdpPortUnlock();
+    if (KdpPortLocked)
+        KeReleaseSpinLockFromDpcLevel(&KdpDebuggerLock);
 
     /* Unfreeze the CPUs, restoring also the IRQL */
     KeThawExecution(Enable);
@@ -1991,12 +1987,7 @@ NTSTATUS
 NTAPI
 KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
 {
-    KIRQL OldIrql;
-
-#if defined(__GNUC__)
-    /* Make gcc happy */
-    OldIrql = PASSIVE_LEVEL;
-#endif
+    KIRQL OldIrql = PASSIVE_LEVEL;
 
 KdDbgPortPrintf("%s\n", __FUNCTION__);
 
@@ -2008,13 +1999,9 @@ KdDbgPortPrintf("%s\n", __FUNCTION__);
         return STATUS_ACCESS_DENIED;
     }
 
-    /* Check if we need to acquire the lock */
+    /* Acquire the lock if we need to */
     if (NeedLock)
-    {
-        /* Lock the port */
-        KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-        KdpPortLock();
-    }
+        KdAcquireDebuggerLock(&OldIrql);
 
     /* Check if we're not disabled */
     KdDbgPortPrintf("    %s original KdDisableCount = %d\n", __FUNCTION__, KdDisableCount);
@@ -2023,9 +2010,8 @@ KdDbgPortPrintf("%s\n", __FUNCTION__);
         /* Check if we had locked the port before */
         if (NeedLock)
         {
-            /* Do the unlock */
-            KdpPortUnlock();
-            KeLowerIrql(OldIrql);
+            /* Unlock the port */
+            KdReleaseDebuggerLock(OldIrql);
 
             /* Fail: We're already enabled */
             KdDbgPortPrintf("    %s returned STATUS_INVALID_PARAMETER\n", __FUNCTION__);
@@ -2061,13 +2047,9 @@ KdDbgPortPrintf("%s\n", __FUNCTION__);
     }
     KdDbgPortPrintf("    %s new KdDisableCount = %d\n", __FUNCTION__, KdDisableCount);
 
-    /* Check if we had locked the port before */
+    /* If we had locked the port before, unlock it now */
     if (NeedLock)
-    {
-        /* Yes, now unlock it */
-        KdpPortUnlock();
-        KeLowerIrql(OldIrql);
-    }
+        KdReleaseDebuggerLock(OldIrql);
 
     /* We're done */
     KdDbgPortPrintf("    %s finally returned STATUS_SUCCESS\n", __FUNCTION__);
@@ -2078,13 +2060,8 @@ NTSTATUS
 NTAPI
 KdDisableDebuggerWithLock(IN BOOLEAN NeedLock)
 {
-    KIRQL OldIrql;
+    KIRQL OldIrql = PASSIVE_LEVEL;
     NTSTATUS Status;
-
-#if defined(__GNUC__)
-    /* Make gcc happy */
-    OldIrql = PASSIVE_LEVEL;
-#endif
 
 KdDbgPortPrintf("%s\n", __FUNCTION__);
 
@@ -2099,13 +2076,9 @@ KdDbgPortPrintf("%s\n", __FUNCTION__);
         return STATUS_ACCESS_DENIED;
     }
 
-    /* Check if we need to acquire the lock */
+    /* Acquire the lock if we need to */
     if (NeedLock)
-    {
-        /* Lock the port */
-        KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-        KdpPortLock();
-    }
+        KdAcquireDebuggerLock(&OldIrql);
 
     /* Check if we're not disabled */
     KdDbgPortPrintf("    %s original KdDisableCount = %d\n", __FUNCTION__, KdDisableCount);
@@ -2125,15 +2098,15 @@ KdDbgPortPrintf("%s\n", __FUNCTION__);
         KdDbgPortPrintf("    %s -- KdPreviouslyEnabled is now %s\n", __FUNCTION__, KdPreviouslyEnabled ? "TRUE" : "FALSE");
 
         /* Check if we were called from the exported API and are enabled */
-        if ((NeedLock) && (KdPreviouslyEnabled))
+        if (NeedLock && KdPreviouslyEnabled)
         {
             /* Check if it is safe to disable the debugger */
             Status = KdpAllowDisable();
             if (!NT_SUCCESS(Status))
             {
-                /* Release the lock and fail */
-                KdpPortUnlock();
-                KeLowerIrql(OldIrql);
+                /* Unlock the port and fail */
+                KdReleaseDebuggerLock(OldIrql);
+
                 KdDbgPortPrintf("    %s KdpAllowDisable returned 0x%lx\n", __FUNCTION__, Status);
                 return Status;
             }
@@ -2144,7 +2117,7 @@ KdDbgPortPrintf("%s\n", __FUNCTION__);
         {
             /*
              * Disable the debugger; suspend breakpoints
-             * and reset the debug stub
+             * and reset the debug stub.
              */
             KdpSuspendAllBreakPoints();
             KiDebugRoutine = KdpStub;
@@ -2160,13 +2133,9 @@ KdDbgPortPrintf("%s\n", __FUNCTION__);
     KdDisableCount++;
     KdDbgPortPrintf("    %s new KdDisableCount = %d\n", __FUNCTION__, KdDisableCount);
 
-    /* Check if we had locked the port before */
+    /* If we had locked the port before, unlock it now */
     if (NeedLock)
-    {
-        /* Yes, now unlock it */
-        KdpPortUnlock();
-        KeLowerIrql(OldIrql);
-    }
+        KdReleaseDebuggerLock(OldIrql);
 
     /* We're done */
     KdDbgPortPrintf("    %s finally returned STATUS_SUCCESS\n", __FUNCTION__);
