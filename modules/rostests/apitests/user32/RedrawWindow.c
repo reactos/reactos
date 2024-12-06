@@ -263,6 +263,7 @@ void TestRedrawWindow(STRUCT_TestRedrawWindow* ptestRW)
         CW_USEDEFAULT, CW_USEDEFAULT, width, height, NULL, NULL, GetModuleHandle(NULL), NULL);
     if (hwnd == NULL)
         return;
+    MoveWindow(hwnd, 10, 10, width, height, TRUE);
 
     ShowWindow(hwnd, SW_SHOW);
     if(!ptestRW->testChild)
