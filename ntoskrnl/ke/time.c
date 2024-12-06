@@ -59,6 +59,8 @@ KiCheckForTimerExpiration(
     }
 }
 
+extern void KdDbgPortPrintf(PCSTR Format, ...);
+
 VOID
 FASTCALL
 KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
@@ -68,6 +70,13 @@ KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULARGE_INTEGER CurrentTime, InterruptTime;
     LONG OldTickOffset;
+
+    {
+    KIRQL CurrIrql = KeGetCurrentIrql();
+    if (CurrIrql < CLOCK_LEVEL)
+        KdDbgPortPrintf("%s() CurrIrql %d ; PrevIrql %d\n", __FUNCTION__, CurrIrql, Irql);
+    }
+    // ASSERT(KeGetCurrentIrql() == CLOCK_LEVEL); // CLOCK2_LEVEL
 
     /* Check if this tick is being skipped */
     if (Prcb->SkipTick)

@@ -356,6 +356,13 @@ KeProfileInterruptWithSource(IN PKTRAP_FRAME TrapFrame,
 {
     PKPROCESS Process = KeGetCurrentThread()->ApcState.Process;
 
+    {
+    KIRQL CurrIrql = KeGetCurrentIrql();
+    if (CurrIrql < PROFILE_LEVEL)
+        KdDbgPortPrintf("%s() running at IRQL %d\n", __FUNCTION__, CurrIrql);
+    }
+    // ASSERT(KeGetCurrentIrql() == PROFILE_LEVEL);
+
     /* We have to parse 2 lists. Per-Process and System-Wide */
     KiParseProfileList(TrapFrame, Source, &Process->ProfileListHead);
     KiParseProfileList(TrapFrame, Source, &KiProfileListHead);
