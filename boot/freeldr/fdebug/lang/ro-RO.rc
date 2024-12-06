@@ -1,4 +1,10 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     ReactOS FreeLoader Debugger
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2024 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -10,16 +16,16 @@ BEGIN
         MENUITEM "&Conectare", IDM_FILE_CONNECT
         MENUITEM "&Deconectare", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "C&urăță ecran", IDM_FILE_CLEARDISPLAY
+        MENUITEM "C&urățare a ecranului", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "&Pornește captură", IDM_FILE_STARTCAPTURE
-        MENUITEM "&Oprește captură", IDM_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "&Pornire a capturii", IDM_FILE_STARTCAPTURE
+        MENUITEM "&Oprire a capturii", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Ecou loc&al", IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", IDM_EXIT
     END
-    POPUP "Aj&utor"
+    POPUP "&Ajutor"
     BEGIN
         MENUITEM "&Despre…", IDM_ABOUT
     END
@@ -41,8 +47,6 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Depanatorul FreeLoader\nDrept de autor (C) 2003\nde Brian Palmer (brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
     DEFPUSHBUTTON "Î&nchide", IDOK, 189, 44, 50, 14, WS_GROUP
-    ICON IDI_FDEBUG, IDC_STATIC, 19, 30, 20, 20
-    EDITTEXT IDC_LICENSE_EDIT, 53, 63, 174, 107, ES_MULTILINE | ES_READONLY | WS_VSCROLL
 END
 
 IDD_CONNECTION DIALOGEX 0, 0, 196, 100
@@ -50,12 +54,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Opțiuni de conectare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Alegeți portul COM (ex. COM1):", IDC_STATIC, 7, 7, 108, 8
+    LTEXT "Treceți portul COM (ex. COM1):", IDC_STATIC, 7, 7, 108, 8
     EDITTEXT IDC_COMPORT, 7, 17, 182, 14, ES_AUTOHSCROLL
-    LTEXT "Rata baud (ex. 115200):", IDC_STATIC, 7, 38, 114, 8
+    LTEXT "Treceți rata baud (ex. 115200):", IDC_STATIC, 7, 38, 114, 8
     EDITTEXT IDC_BAUTRATE, 7, 48, 182, 14, ES_AUTOHSCROLL
-    DEFPUSHBUTTON "Con&firmă", IDOK, 45, 79, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 100, 79, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 45, 79, 50, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 100, 79, 50, 14
 END
 
 IDD_CAPTURE DIALOGEX 0, 0, 251, 95
@@ -63,23 +67,23 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Fișierul de captură"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Numele fișierului:", IDC_STATIC, 7, 17, 62, 8
+    LTEXT "Nume fișier capt.:", IDC_STATIC, 7, 17, 62, 8
     EDITTEXT IDC_CAPTUREFILENAME, 7, 26, 181, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "&Caută", IDC_BROWSE, 194, 26, 50, 14
-    DEFPUSHBUTTON "Con&firmă", IDOK, 139, 74, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 194, 74, 50, 14
+    PUSHBUTTON "&Specificare", IDC_BROWSE, 194, 26, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 139, 74, 50, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 194, 74, 50, 14
 END
 
 /* String Tables */
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "Program de depanare FreeLoader"
-    IDS_HELLO "Salut, lume!"
+    IDS_APP_TITLE "Depanatorul FreeLoader"
+    IDS_HELLO "Salut lume!"
     IDC_FDEBUG "FDEBUG"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE "Această aplicație este un soft public; poate fi redistribuită și/sau modificată respectând termenii Licenței Publice Generale GNU publicată de Free Software Foundation; sau respectând Licența în versiunea 2, sau (la alegere) o altă versiune ulterioară.\r\n\r\nAceastă aplicație este distribuită în speranța că va fi utilă, FĂRĂ însă NICI O GARANŢIE; nici măcar cu garanția implicită a VANDABILITĂŢII sau a UTILITĂŢII ÎNTR-UN SCOP ANUME.  Consultați Licența Publică Generală GNU pentru mai multe detalii.\r\n\r\nPuteți vedea această licență aici:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDe asemenea puteți consulta traduceri neoficiale ale acestei licențe aici:\r\nhttp://www.gnu.org/licenses/translations.html"
+    IDS_LICENSE "Acest program este un software liber: dumneavoastră îl puteţi redistribui şi/sau modifica, în condiţiile Licenţei publice generale GNU, aşa cum a fost aceasta publicată de către Free Software Foundation, fie versiunea 2 a acestei Licenţe, fie (la alegerea dumneavoastră), orice versiune ulterioară.\r\n\r\nAcest program este distribuit în speranţa că va fi util, dar FĂRĂ NICIO GARANŢIE; chiar şi fără garanţia implicită de MERCANTILITATE sau de ADECVARE PENTRU UN ANUMIT SCOP. Vezi Licenţa publică generală GNU pentru mai multe detalii.\r\n\r\nTrebuie ca dumneavoastră să fi primit o copie a Licenţei publice generale GNU împreună cu acest program. Dacă nu, scrie la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 SUA."
 END
