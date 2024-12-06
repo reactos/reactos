@@ -905,7 +905,7 @@ KeRemoveQueueDpc(IN PKDPC Dpc)
     }
 
     /* Re-enable interrupts */
-    if (Enable) _enable();
+    KeRestoreInterrupts(Enable);
 
     /* Return if the DPC was in the queue or not */
     return DpcData ? TRUE : FALSE;
