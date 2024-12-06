@@ -14,21 +14,21 @@ BEGIN
     POPUP "&Jurnal"
     BEGIN
         MENUITEM "&Deschidere…", IDM_OPEN_EVENTLOG
-        MENUITEM "&Salvare jurnal de evenimente ca…", IDM_SAVE_EVENTLOG//FIXME: accelerator collision &S
+        MENUITEM "&Salvare a jurnalului de evenimente ca…", IDM_SAVE_EVENTLOG
         MENUITEM "Î&nchidere", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
         MENUITEM "Înlăt&urare a tuturor evenimentelor", IDM_CLEAR_EVENTS
         MENUITEM "&Redenumire\tF2", IDM_RENAME_EVENTLOG
-        MENUITEM "&Setări pentru jurnal…", IDM_EVENTLOG_SETTINGS//FIXME: accelerator collision &S
+        MENUITEM "Se&tări pentru jurnal…", IDM_EVENTLOG_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", IDM_EXIT
     END
     POPUP "&Afișare"
     BEGIN
-        MENUITEM "După vârstă &crescător", IDM_LIST_NEWEST
-        MENUITEM "După vârstă &descrescător", IDM_LIST_OLDEST//FIXME: accelerator collision &D
+        MENUITEM "Cel mai &nou primul", IDM_LIST_NEWEST
+        MENUITEM "Cel mai &vechi primul", IDM_LIST_OLDEST
         MENUITEM SEPARATOR
-        MENUITEM "&Detalii…\tEnter", IDM_EVENT_DETAILS//FIXME: accelerator collision &D
+        MENUITEM "&Detalii…\tEnter", IDM_EVENT_DETAILS
         MENUITEM SEPARATOR
         MENUITEM "Împ&rospătare\tF5", IDM_REFRESH
     END
@@ -41,7 +41,7 @@ BEGIN
     END
     POPUP "Aj&utor"
     BEGIN
-        MENUITEM "&Manual…", IDM_HELP
+        MENUITEM "Aju&tor", IDM_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Despre…", IDM_ABOUT
     END
@@ -51,12 +51,12 @@ IDM_EVENTWR_CTX MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Deschidere jurnalul de evenimente...", IDM_OPEN_EVENTLOG
-        MENUITEM "Salv&are jurnal de evenimente ca...", IDM_SAVE_EVENTLOG
+        MENUITEM "&Deschidere jurnalul de evenimente…", IDM_OPEN_EVENTLOG
+        MENUITEM "Salv&are a jurnalului de evenimente ca…", IDM_SAVE_EVENTLOG
         MENUITEM SEPARATOR
-        MENUITEM "Șter&gere toate evenimentele", IDM_CLEAR_EVENTS
+        MENUITEM "Șter&gere a tuturor evenimentelor", IDM_CLEAR_EVENTS
         MENUITEM "&Redenumire\tF2", IDM_RENAME_EVENTLOG
-        MENUITEM "Setări de &jurnal...", IDM_EVENTLOG_SETTINGS
+        MENUITEM "Setări ale &jurnalului…", IDM_EVENTLOG_SETTINGS
     END
 END
 
@@ -71,12 +71,12 @@ END
 IDD_EVENTDETAILS_DLG DIALOGEX 0, 0, 266, 240
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_THICKFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Detalii eveniment"
+CAPTION "Detalii despre eveniment"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "EvtDetailsCtrl", IDC_STATIC, 0, 0, 266, 215
-    PUSHBUTTON "&Manual…", IDHELP, 8, 220, 50, 14
-    DEFPUSHBUTTON "Î&nchide", IDOK, 208, 220, 50, 14
+    PUSHBUTTON "&Ajutor", IDHELP, 8, 220, 50, 14
+    DEFPUSHBUTTON "Î&nchidere", IDOK, 208, 220, 50, 14
 END
 
 IDD_EVENTDETAILS_CTRL DIALOGEX 0, 0, 266, 215
@@ -115,79 +115,79 @@ END
 
 IDD_LOGPROPERTIES_GENERAL DIALOGEX 0, 0, 252, 234
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Generale"
+CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "N&ume afișat:", IDC_STATIC, 7, 9, 60, 8
+    LTEXT "&Nume afișat:", IDC_STATIC, 7, 9, 60, 8
     EDITTEXT IDC_DISPLAYNAME, 67, 7, 178, 12, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Nume de ju&rnal:", IDC_STATIC, 7, 25, 60, 8
+    LTEXT "Numele &jurnalului:", IDC_STATIC, 7, 25, 60, 8
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Fiși&er de jurnal:", IDC_STATIC, 7, 41, 60, 8
+    LTEXT "&Fișier de jurnal:", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
 // The following 4 IDC_STATIC shall have accels in ReactOS, although MS doesn't have accels for them.
 // Translation note: First fill out ALL accels that MS has in this dialog for your language,
 // and only then as a final step use some remaining unused letters for those 4 controls!
-    LTEXT "Dimen&siune:", IDC_STATIC, 7, 57, 60, 8
+    LTEXT "&Dimensiune:", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Crea&t:", IDC_STATIC, 7, 69, 60, 8
+    LTEXT "&Creat:", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Modificat:", IDC_STATIC, 7, 81, 60, 8
     EDITTEXT IDC_MODIFIED_LABEL, 67, 81, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Accesat:", IDC_STATIC, 7, 93, 60, 8
     EDITTEXT IDC_ACCESSED_LABEL, 67, 93, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    GROUPBOX "Dimensiune jurnal", IDC_STATIC, 7, 106, 238, 99
-    LTEXT "Dimensiune ma&ximă pentru jurnal:", IDC_STATIC, 17, 122, 58, 8
+    GROUPBOX "Dimensiunea jurnalului", IDC_STATIC, 7, 106, 238, 99
+    LTEXT "Dimensiune ma&ximă a jurnalului:", IDC_STATIC, 17, 122, 58, 8
     EDITTEXT IDC_EDIT_MAXLOGSIZE, 80, 119, 40, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_MAXLOGSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 119, 10, 14
-    LTEXT "Kio", IDC_STATIC, 130, 122, 20, 8
+    LTEXT "KB", IDC_STATIC, 130, 122, 20, 8
     LTEXT "Când dimensiunea maximă este atinsă:", IDC_STATIC, 17, 140, 219, 8
-    AUTORADIOBUTTON "Suprascrie evenimentele cân&d este necesar", IDC_OVERWRITE_AS_NEEDED, 17, 155, 219, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Suprascrie evenimentele mai &vechi de", IDC_OVERWRITE_OLDER_THAN, 17, 168, 155, 10
-    AUTORADIOBUTTON "Inter&zice suprascrierea\n(gestiune manuală de jurnal)", IDC_NO_OVERWRITE, 17, 180, 143, 20, BS_MULTILINE | WS_TABSTOP
+    AUTORADIOBUTTON "&Suprascriere a evenimentelor când este necesar", IDC_OVERWRITE_AS_NEEDED, 17, 155, 219, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Suprascriere a evenimentelor mai &vechi de", IDC_OVERWRITE_OLDER_THAN, 17, 168, 155, 10
+    AUTORADIOBUTTON "Nu se suprascriu evenimentele\n(&golire manuală a jurnalului)", IDC_NO_OVERWRITE, 17, 180, 143, 20, BS_MULTILINE | WS_TABSTOP
     EDITTEXT IDC_EDIT_EVENTS_AGE, 175, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS, 104, 165, 10, 14
     LTEXT "zile", IDC_STATIC, 215, 168, 20, 8
-    PUSHBUTTON "&Opțiuni implicite", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
-    AUTOCHECKBOX "Conexiune de &bandă limitată", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
+    PUSHBUTTON "&Restaurare implicite", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
+    AUTOCHECKBOX "&Folosind o conexiune de viteză mică", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
     PUSHBUTTON "&Curăță jurnal", ID_CLEARLOG, 195, 213, 50, 14
 END
 
 STRINGTABLE
 BEGIN
     IDS_COPYRIGHT "Drept de autor (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)"
-    IDS_APP_TITLE "Observator de evenimente"
+    IDS_APP_TITLE "Vizualizator de evenimente"
     IDS_APP_TITLE_EX "%s - %s autentificat pe \\\\"
     IDS_STATUS_MSG "%s are %lu (de) eveniment(e) (afișate: %lu)"
-    IDS_LOADING_WAIT "Jurnal de evenimente în încărcare. Așteptați…"
-    IDS_NO_ITEMS "Nu există elemente de afișat." // "No events in this log."
+    IDS_LOADING_WAIT "Se încarcă jurnalele de evenimente. Așteptați…"
+    IDS_NO_ITEMS "Nu există elemente de afișat în această vizualizare." // "No events in this log."
     IDS_EVENTLOG_SYSTEM "Jurnale de sistem"
-    IDS_EVENTLOG_APP "Jurnale de aplicație"
+    IDS_EVENTLOG_APP "Jurnale de aplicații"
     IDS_EVENTLOG_USER "Jurnale de utilizator"
     IDS_SAVE_FILTER "Jurnal de evenimente (*.evt)\0*.evt\0"
     IDS_CLEAREVENTS_MSG "Doriți să salvați acest jurnal de evenimente înainte de a-l închide?"
-    IDS_RESTOREDEFAULTS "Doriți să restaurați toate setările pentru acest jurnal la valorile lor implicite?"
-    IDS_EVENTSTRINGIDNOTFOUND "Descrierea evenimentului cu ID-ul ( %lu ) în sursa ( %s ) nu a fost găsită. Este posibil ca în calculatorul local să nu existe informațiile de registru necesare sau fișierele dll de mesaje să afișeze mesaje de la un calculator din rețea.\n\nInformații aferente evenimentului:\n\n"
+    IDS_RESTOREDEFAULTS "Doriți să restabiliți toate setările pentru acest jurnal la valorile lor implicite?"
+    IDS_EVENTSTRINGIDNOTFOUND "Imposibil de găsit descrierea evenimentului cu ID-ul ( %lu ) în sursa ( %s ). Este posibil ca computerul local să nu aibă informațiile de registru necesare sau fișierele DLL de mesaje pentru a afișa mesaje de la un computer la distanță.\n\nUrmătoarele informații fac parte din eveniment:\n\n"
 END
 
 STRINGTABLE
 BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
-    IDS_USAGE "Inspector de Evenimente ReactOS\n\
+    IDS_USAGE "Vizualizatorul de evenimente ReactOS\n\
 \n\
-EventVwr [nume calculator] [/L:<fișier jurnal de evenimente>] [/?]\n\
+EventVwr [numele computerului] [/L:<fișier de jurnal de evenimente>] [/?]\n\
 \n\
-""nume calculator"" : Specifică calculatorul la distanță de la care\n\
-\tvor fi preluate evenimentele afișate. Dacă nu e furnizat un\n\
-\tnume de calculator, va fi utilizat calculatorul local.\n\
+""numele computerului"" : Specifică computerul de la distanță unde să se conecteze\n\
+\pentru a prelua evenimentele de afișat. Dacă nu este specificat niciun nume,\n\
+\tcomputerul local este folosit.\n\
 \n\
-/L:<fișier jurnal de evenimente> : Specifică deschiderea unui fișier.\n\
+/L:<fișier de jurnal de evenimente> : Specifică deschiderea unui fișier.\n\
 \tSunt acceptate doar fișierele în format .evt (NT ≤ 5.2)\n\
 \n\
 /? : Afișează acest mesaj cu informații de utilizare.\n\
 "
-    IDS_EVENTLOGFILE "Fișier jurnal de evenimente"
+    IDS_EVENTLOGFILE "Fișier de jurnal de evenimente"
 END
 
 STRINGTABLE
@@ -216,7 +216,7 @@ BEGIN
     IDS_COLUMNCATEGORY "Categorie"
     IDS_COLUMNEVENT "Eveniment"
     IDS_COLUMNUSER "Utilizator"
-    IDS_COLUMNCOMPUTER "Calculator"
+    IDS_COLUMNCOMPUTER "Computer"
 END
 
 STRINGTABLE
@@ -229,12 +229,12 @@ ID eveniment:        %s\r\n\
 Dată:                %s\r\n\
 Oră:                 %s\r\n\
 Utilizator:          %s\r\n\
-Calculator:          %s\r\n\
+Computer:            %s\r\n\
 Descriere:\r\n%s"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NONE "Nespecificată"
-    IDS_NOT_AVAILABLE "Nespecificat"
+    IDS_NONE "Nespecificat"
+    IDS_NOT_AVAILABLE "N/A"
 END
