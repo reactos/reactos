@@ -254,7 +254,7 @@ void TestRedrawWindow(STRUCT_TestRedrawWindow* ptestRW)
     wc.hInstance = GetModuleHandle(NULL);
     wc.lpszClassName = ptestRW->testName;
     RegisterClassW(&wc);
-    RECT rectWin = { 0, 0, 800, 600 };
+    RECT rectWin = { 0, 0, 700, 500 };
     style = WS_OVERLAPPEDWINDOW;
     AdjustWindowRectEx(&rectWin, style, FALSE, 0);
     width = rectWin.right - rectWin.left;
@@ -293,7 +293,7 @@ void TestRedrawWindow(STRUCT_TestRedrawWindow* ptestRW)
     }
 
     HDC hdc = GetDC(hwnd);
-    RECT drect = { 0, 0, 800, 600 };
+    RECT drect = { 0, 0, 700, 500 };
     DrawContent(hdc, &drect, RGB(255, 0, 0));
     ReleaseDC(hwnd, hdc);
 
