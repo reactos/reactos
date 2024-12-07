@@ -2071,17 +2071,24 @@ HANDLE WINAPI CopyImage(
                 } bmi;
 
                 if (!GetIconInfo((HICON)hImage, &iconinfo))
+                {
                     ERR("GetIconInfo Failed. hImage %p\n", hImage);
+                    return NULL;
+                }
                 ZeroMemory(&bmi, sizeof(bmi));
                 bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
 
                 hDC = GetDC(NULL);  // Screen hdc
-                GetDIBits(hDC, iconinfo.hbmMask, 0, 1, NULL, (BITMAPINFO *)&bmi, DIB_RGB_COLORS);
+                if (!hDC)
+                    ERR("GetDC(NULL) returned NULL\n");
+                else
+                    GetDIBits(hDC, iconinfo.hbmMask, 0, 1, NULL, (PBITMAPINFO)&bmi, DIB_RGB_COLORS);
                 DeleteObject(iconinfo.hbmMask);
                 DeleteObject(iconinfo.hbmColor);
-                ReleaseDC(NULL, hDC);
+                if (hDC)
+                    ReleaseDC(NULL, hDC);
 
-                /* If the images are the same size remove LF_COPYFROMRESOURCE and try again. */
+                /* If the images are the same size remove LF_COPYFROMRESOURCE and try again */
                 if (cxDesired == bmi.bmiHeader.biWidth && cyDesired == bmi.bmiHeader.biHeight)
                 {
                     handle = CURSORICON_CopyImage(hImage, uType == IMAGE_ICON, cxDesired,
