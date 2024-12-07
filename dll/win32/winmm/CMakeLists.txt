@@ -30,7 +30,7 @@ endif()
 
 set_module_type(winmm win32dll)
 target_link_libraries(winmm wine ${PSEH_LIB} oldnames)
-add_importlibs(winmm advapi32 user32 msvcrt kernel32 ntdll)
+add_importlibs(winmm userenv advapi32 user32 msvcrt kernel32 ntdll)
 add_pch(winmm winemm.h SOURCE)
 add_cd_file(TARGET winmm DESTINATION reactos/system32 FOR all)
 
