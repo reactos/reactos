@@ -1497,8 +1497,9 @@ SendPacket:
 
             case DbgKdPageInApi:
 
-                /* TODO */
-                KdpDprintf("Page-In support is unimplemented!\n");
+                /* This API, introduced in NT4, has been obsoleted in NT5. It is
+                 * replaced by ExpDebuggerPageIn support in ExpDebuggerWorker(). */
+                KdpDprintf("DbgKdPageInApi is obsolete!\n");
                 KdpNotSupported(&ManipulateState);
                 break;
 
