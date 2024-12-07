@@ -70,7 +70,10 @@ extern PEPROCESS ExpDebuggerProcessAttach;
 extern PEPROCESS ExpDebuggerProcessKill;
 extern ULONG_PTR ExpDebuggerPageIn;
 
-VOID NTAPI ExpDebuggerWorker(IN PVOID Context);
+VOID
+NTAPI
+ExpDebuggerWorker(
+    _In_ PVOID Context);
 
 #ifdef _WIN64
 #define HANDLE_LOW_BITS     (PAGE_SHIFT - 4)

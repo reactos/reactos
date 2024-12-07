@@ -49,7 +49,8 @@ ULONG_PTR ExpDebuggerPageIn;
  */
 VOID
 NTAPI
-ExpDebuggerWorker(IN PVOID Context)
+ExpDebuggerWorker(
+    _In_ PVOID Context)
 {
     PEPROCESS ProcessToAttach, ProcessToKill;
     ULONG_PTR PageInAddress;
@@ -83,11 +84,10 @@ ExpDebuggerWorker(IN PVOID Context)
     Process = NULL;
 
     /* Check if we need to attach or kill some process */
-    if (ProcessToAttach != NULL || ProcessToKill != NULL)
+    if (ProcessToAttach || ProcessToKill)
     {
         /* Find the process in the list */
-        Process = PsGetNextProcess(Process);
-        while (Process)
+        while ((Process = PsGetNextProcess(Process)))
         {
             /* Is this the process we want to attach to? */
             if (Process == ProcessToAttach)
@@ -104,12 +104,16 @@ ExpDebuggerWorker(IN PVOID Context)
                 ObDereferenceObject(Process);
                 return;
             }
-
-            /* Get the next process */
-            Process = PsGetNextProcess(Process);
         }
 
-        /* We either have found a process, or we default to the current process */
+        if (!Process)
+        {
+            DbgPrintEx(DPFLTR_SYSTEM_ID, DPFLTR_ERROR_LEVEL,
+                       "EX debug work: Unable to find process %p\n",
+                       ProcessToAttach ? ProcessToAttach : ProcessToKill);
+        }
+
+        /* We either have found a process, or we default to the current one */
     }
 
     /* If we have an address to page in... */
@@ -122,7 +126,9 @@ ExpDebuggerWorker(IN PVOID Context)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            DPRINT1("Failed to page in address 0x%p, Status 0x%08lx\n", PageInAddress, _SEH2_GetExceptionCode());
+            DbgPrintEx(DPFLTR_SYSTEM_ID, DPFLTR_ERROR_LEVEL,
+                       "EX page in: Failed to page-in address 0x%p, Status 0x%08lx\n",
+                       PageInAddress, _SEH2_GetExceptionCode());
         }
         _SEH2_END;
     }
@@ -135,7 +141,7 @@ ExpDebuggerWorker(IN PVOID Context)
     {
         /* ... we can detach from the process */
         KeUnstackDetachProcess(&ApcState);
-        /* Dereference the process which was referenced for us by PsGetNextProcess */
+        /* Dereference the process referenced by PsGetNextProcess() */
         ObDereferenceObject(Process);
     }
 }
