@@ -85,6 +85,9 @@ HRESULT STDMETHODCALLTYPE CMenuSite::AddBand(IUnknown * punk)
 
 HRESULT STDMETHODCALLTYPE CMenuSite::EnumBands(UINT uBand, DWORD* pdwBandID)
 {
+    if (uBand == 0xffffffff)
+        return GetBandCount();
+
     if (uBand != 0)
         return E_FAIL;
 

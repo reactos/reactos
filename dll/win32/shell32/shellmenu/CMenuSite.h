@@ -104,4 +104,5 @@ public:
 
 private:
     IUnknown * ToIUnknown() { return static_cast<IDeskBarClient*>(this); }
+    UINT GetBandCount() { return m_BandObject ? 1 : 0; }
 };

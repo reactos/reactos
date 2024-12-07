@@ -1593,13 +1593,18 @@ LRESULT CDefView::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
     if (!m_Destroyed)
     {
         m_Destroyed = TRUE;
+        RevokeDragDrop(m_hWnd);
+        SHChangeNotifyDeregister(m_hNotify);
+        if (m_pFileMenu)
+        {
+            IUnknown_SetSite(m_pFileMenu, NULL);
+            m_pFileMenu = NULL;
+        }
         if (m_hMenu)
         {
             DestroyMenu(m_hMenu);
             m_hMenu = NULL;
         }
-        RevokeDragDrop(m_hWnd);
-        SHChangeNotifyDeregister(m_hNotify);
         m_hNotify = NULL;
         SHFree(m_pidlParent);
         m_pidlParent = NULL;
@@ -3055,7 +3060,7 @@ HRESULT WINAPI CDefView::TranslateAccelerator(LPMSG lpmsg)
         TRACE("-- key=0x%04lx\n", lpmsg->wParam);
     }
 
-    return m_pShellBrowser->TranslateAcceleratorSB(lpmsg, 0);
+    return m_pShellBrowser ? m_pShellBrowser->TranslateAcceleratorSB(lpmsg, 0) : S_FALSE;
 }
 
 HRESULT WINAPI CDefView::EnableModeless(BOOL fEnable)
@@ -3290,7 +3295,7 @@ HRESULT CDefView::SaveViewState(IStream *pStream)
     lvc.mask = LVCF_WIDTH | LVCF_SUBITEM;
     for (UINT i = 0, j = 0; i < PERSISTCOLUMNS::MAXCOUNT && ListView_GetColumn(m_ListView, j, &lvc); ++j)
     {
-        HRESULT hr = MapListColumnToFolderColumn(lvc.iSubItem);
+        HRESULT hr = MapListColumnToFolderColumn(j);
         if (SUCCEEDED(hr))
         {
             cols.Columns[i] = MAKELONG(hr, lvc.cx);
