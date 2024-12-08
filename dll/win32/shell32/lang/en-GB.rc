@@ -216,7 +216,7 @@ BEGIN
     LTEXT "Choose the advanced properties you want for this shortcut.", -1, 5, 30, 210, 10
     CHECKBOX "Run with different credentials", IDC_SHORTEX_RUN_DIFFERENT, 25, 50, 150, 10
     LTEXT "This option can allow you to run the this shortcut as another user, or continue as yourself while protecting your computer and data from unauthorised program activity.", -1, 50, 60, 175, 40
-    CHECKBOX "Run in seperate memory space", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
+    CHECKBOX "Run in separate memory space", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", IDOK, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "Abort", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
 END
