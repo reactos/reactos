@@ -11,7 +11,7 @@ include_directories(
     ${REACTOS_BINARY_DIR}/sdk/include)
 
 # libschily and libsiconv are licensed under CDDL whereas mkisofs is licensed under GPL.
-# As such, we cannot mix the library sources with mkisofs sources and have to build them seperately.
+# As such, we cannot mix the library sources with mkisofs sources and have to build them separately.
 # Later on, they may still be linked together though.
 #
 # Reference: http://opensource.stackexchange.com/questions/2094

@@ -498,7 +498,7 @@ MmpFaultWorker(PVOID Parameter)
 
 /*
 
-This code seperates the action of fault handling into an upper and lower
+This code separates the action of fault handling into an upper and lower
 handler to allow the inner handler to optionally be called in work item
 if the stack is getting too deep.  My experiments show that the third
 recursive page fault taken at PASSIVE_LEVEL must be shunted away to a
@@ -739,7 +739,7 @@ MmAccessFaultCacheSection(KPROCESSOR_MODE Mode,
 
 /*
 
-As above, this code seperates the active part of fault handling from a carrier
+As above, this code separates the active part of fault handling from a carrier
 that can use the thread's active fault count to determine whether a work item
 is required.  Also as above, this function repeatedly calls the active not
 present fault handler until a clear success or failure is received, using a

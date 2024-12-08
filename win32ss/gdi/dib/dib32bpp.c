@@ -614,7 +614,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
            * Then we do a flip in place at the destination location and we are done.
            */
           if ((BltInfo->SourcePoint.y != BltInfo->DestRect.top) &&                        // The values are not equal and
-             (abs(BltInfo->SourcePoint.y - BltInfo->DestRect.top) < (DestHeight + 2)) &&  // they are NOT seperated by > DestHeight
+             (abs(BltInfo->SourcePoint.y - BltInfo->DestRect.top) < (DestHeight + 2)) &&  // they are NOT separated by > DestHeight
              (BltInfo->SourceSurface->pvScan0 == BltInfo->DestSurface->pvScan0))          // and same surface (probably screen)
           {
             DPRINT("Flips Need Adjustments, so do move here.\n");

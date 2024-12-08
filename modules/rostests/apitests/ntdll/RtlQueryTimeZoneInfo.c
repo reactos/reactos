@@ -30,7 +30,7 @@ typedef struct _RTL_SYSTEM_TIME {
 /*
  * RTL_TIME_ZONE_INFORMATION is the same as the TIME_ZONE_INFORMATION structure
  * defined in winbase.h, however we need to define RTL_TIME_ZONE_INFORMATION
- * seperately here so we don't depend on winbase.h.
+ * separately here so we don't depend on winbase.h.
  * This is used by RtlQueryTimeZoneInformation and RtlSetTimeZoneInformation.
  */
 typedef struct _RTL_TIME_ZONE_INFORMATION {
