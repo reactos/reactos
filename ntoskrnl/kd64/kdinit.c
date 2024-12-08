@@ -217,7 +217,13 @@ KdInitSystem(
 
     if (BootPhase == 0 && LoaderBlock)
     {
-        NTSTATUS Status = CpInitialize(&KdInitPort, UlongToPtr(BaseArray[2]), DEFAULT_BAUD_RATE);
+        NTSTATUS Status = CpInitialize(&KdInitPort,
+#if defined(__GNUC__)
+                                       UlongToPtr(BaseArray[1]),
+#else
+                                       UlongToPtr(BaseArray[4]),
+#endif
+                                       DEFAULT_BAUD_RATE);
         if (!NT_SUCCESS(Status))
             KdDbgPortPrintf("CpInitialize() failed, Status 0x%08lx\n", Status);
     }

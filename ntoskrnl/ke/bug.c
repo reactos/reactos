@@ -37,6 +37,8 @@ KSPIN_LOCK KiNmiCallbackListLock;
 UNICODE_STRING KeRosProcessorName, KeRosBiosDate, KeRosBiosVersion;
 UNICODE_STRING KeRosVideoBiosDate, KeRosVideoBiosVersion;
 
+extern void KdDbgPortPrintf(PCSTR Format, ...);
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 PVOID
@@ -702,7 +704,7 @@ KiDisplayBlueScreen(IN ULONG MessageId,
                        (PVOID)KiBugCheckData[4]);
     InbvDisplayString(AnsiName);
 
-    /* Check if we have a driver*/
+    /* Check if we have a driver */
     if (KiBugCheckDriver)
     {
         /* Display technical driver data */
@@ -1110,11 +1112,13 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         if (!(KdDebuggerEnabled) && !(KdPitchDebugger))
         {
             /* Enable it */
+KdDbgPortPrintf("%s(): KdEnableDebuggerWithLock(FALSE)\n", __FUNCTION__);
             KdEnableDebuggerWithLock(FALSE);
         }
         else
         {
             /* Otherwise, print the last line */
+KdDbgPortPrintf("%s(): debugger already enabled!\n", __FUNCTION__);
             InbvDisplayString("\r\n");
         }
 
@@ -1134,11 +1138,13 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         if (KeBugCheckOwnerRecursionCount == 2)
         {
             /* Break in the debugger */
+KdDbgPortPrintf("%s(): debugbreak DBG_STATUS_BUGCHECK_SECOND\n", __FUNCTION__);
             KiBugCheckDebugBreak(DBG_STATUS_BUGCHECK_SECOND);
         }
         else if (KeBugCheckOwnerRecursionCount > 2)
         {
             /* Halt execution */
+KdDbgPortPrintf("%s(): halt execution\n", __FUNCTION__);
             while (TRUE);
         }
     }
@@ -1157,6 +1163,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
     }
 
     /* Attempt to break in the debugger (otherwise halt CPU) */
+KdDbgPortPrintf("%s(): debugbreak DBG_STATUS_BUGCHECK_SECOND again\n", __FUNCTION__);
     KiBugCheckDebugBreak(DBG_STATUS_BUGCHECK_SECOND);
 
     /* Shouldn't get here */
