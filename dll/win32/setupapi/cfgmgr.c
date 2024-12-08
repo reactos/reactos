@@ -7863,10 +7863,70 @@ CM_Set_Class_Registry_PropertyW(
     _In_ ULONG ulFlags,
     _In_opt_ HMACHINE hMachine)
 {
-    FIXME("CM_Set_Class_Registry_PropertyW(%p %lx %p %lu %lx %p)\n",
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    WCHAR szGuidString[PNP_MAX_GUID_STRING_LEN + 1];
+    ULONG ulType = 0;
+    CONFIGRET ret;
+
+    TRACE("CM_Set_Class_Registry_PropertyW(%p %lx %p %lu %lx %p)\n",
           ClassGuid, ulProperty, Buffer, ulLength, ulFlags, hMachine);
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    if (ClassGuid == NULL)
+        return CR_INVALID_POINTER;
+
+    if ((Buffer == NULL) && (ulLength != 0))
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (pSetupStringFromGuid(ClassGuid,
+                             szGuidString,
+                             PNP_MAX_GUID_STRING_LEN) != 0)
+        return CR_INVALID_DATA;
+
+    if ((ulProperty < CM_CRP_MIN) || (ulProperty > CM_CRP_MAX))
+        return CR_INVALID_PROPERTY;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    ulType = GetRegistryPropertyType(ulProperty);
+    if ((ulType == REG_DWORD) && (ulLength != sizeof(DWORD)))
+        return CR_INVALID_DATA;
+
+    if (ulProperty == CM_CRP_SECURITY_SDS)
+    {
+        FIXME("Conversion from text SD to binary SD is not implemented yet!\n");
+        return CR_CALL_NOT_IMPLEMENTED;
+    }
+
+    RpcTryExcept
+    {
+        ret = PNP_SetClassRegProp(BindingHandle,
+                                  szGuidString,
+                                  ulProperty,
+                                  ulType,
+                                  (LPBYTE)Buffer,
+                                  ulLength,
+                                  ulFlags);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return ret;
 }
 
 
