@@ -67,23 +67,7 @@ NtQueryInformationProcess(
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
     ULONG Length = 0;
-    HANDLE DebugPort = 0;
-    PPROCESS_BASIC_INFORMATION ProcessBasicInfo =
-        (PPROCESS_BASIC_INFORMATION)ProcessInformation;
-    PKERNEL_USER_TIMES ProcessTime = (PKERNEL_USER_TIMES)ProcessInformation;
-    ULONG UserTime, KernelTime;
-    PPROCESS_PRIORITY_CLASS PsPriorityClass = (PPROCESS_PRIORITY_CLASS)ProcessInformation;
-    ULONG HandleCount;
-    PPROCESS_SESSION_INFORMATION SessionInfo =
-        (PPROCESS_SESSION_INFORMATION)ProcessInformation;
-    PVM_COUNTERS VmCounters = (PVM_COUNTERS)ProcessInformation;
-    PIO_COUNTERS IoCounters = (PIO_COUNTERS)ProcessInformation;
-    PQUOTA_LIMITS QuotaLimits = (PQUOTA_LIMITS)ProcessInformation;
-    PUNICODE_STRING ImageName;
-    ULONG Cookie, ExecuteOptions = 0;
-    ULONG_PTR Wow64 = 0;
-    PROCESS_VALUES ProcessValues;
-    ULONG Flags;
+
     PAGED_CODE();
 
     /* Verify Information Class validity */
@@ -119,6 +103,8 @@ NtQueryInformationProcess(
     {
         /* Basic process information */
         case ProcessBasicInformation:
+        {
+            PPROCESS_BASIC_INFORMATION ProcessBasicInfo = (PPROCESS_BASIC_INFORMATION)ProcessInformation;
 
             if (ProcessInformationLength != sizeof(PROCESS_BASIC_INFORMATION))
             {
@@ -162,9 +148,12 @@ NtQueryInformationProcess(
             /* Dereference the process */
             ObDereferenceObject(Process);
             break;
+        }
 
         /* Process quota limits */
         case ProcessQuotaLimits:
+        {
+            PQUOTA_LIMITS QuotaLimits = (PQUOTA_LIMITS)ProcessInformation;
 
             if (ProcessInformationLength != sizeof(QUOTA_LIMITS))
             {
@@ -227,8 +216,12 @@ NtQueryInformationProcess(
             /* Dereference the process */
             ObDereferenceObject(Process);
             break;
+        }
 
         case ProcessIoCounters:
+        {
+            PIO_COUNTERS IoCounters = (PIO_COUNTERS)ProcessInformation;
+            PROCESS_VALUES ProcessValues;
 
             if (ProcessInformationLength != sizeof(IO_COUNTERS))
             {
@@ -266,9 +259,13 @@ NtQueryInformationProcess(
             /* Dereference the process */
             ObDereferenceObject(Process);
             break;
+        }
 
         /* Timing */
         case ProcessTimes:
+        {
+            PKERNEL_USER_TIMES ProcessTime = (PKERNEL_USER_TIMES)ProcessInformation;
+            ULONG UserTime, KernelTime;
 
             /* Set the return length */
             if (ProcessInformationLength != sizeof(KERNEL_USER_TIMES))
@@ -308,6 +305,7 @@ NtQueryInformationProcess(
             /* Dereference the process */
             ObDereferenceObject(Process);
             break;
+        }
 
         /* Process Debug Port */
         case ProcessDebugPort:
@@ -349,6 +347,8 @@ NtQueryInformationProcess(
             break;
 
         case ProcessHandleCount:
+        {
+            ULONG HandleCount;
 
             if (ProcessInformationLength != sizeof(ULONG))
             {
@@ -387,9 +387,12 @@ NtQueryInformationProcess(
             /* Dereference the process */
             ObDereferenceObject(Process);
             break;
+        }
 
         /* Session ID for the process */
         case ProcessSessionInformation:
+        {
+            PPROCESS_SESSION_INFORMATION SessionInfo = (PPROCESS_SESSION_INFORMATION)ProcessInformation;
 
             if (ProcessInformationLength != sizeof(PROCESS_SESSION_INFORMATION))
             {
@@ -425,9 +428,12 @@ NtQueryInformationProcess(
             /* Dereference the process */
             ObDereferenceObject(Process);
             break;
+        }
 
         /* Virtual Memory Statistics */
         case ProcessVmCounters:
+        {
+            PVM_COUNTERS VmCounters = (PVM_COUNTERS)ProcessInformation;
 
             /* Validate the input length */
             if ((ProcessInformationLength != sizeof(VM_COUNTERS)) &&
@@ -477,6 +483,7 @@ NtQueryInformationProcess(
             /* Dereference the process */
             ObDereferenceObject(Process);
             break;
+        }
 
         /* Hard Error Processing Mode */
         case ProcessDefaultHardErrorMode:
@@ -558,6 +565,8 @@ NtQueryInformationProcess(
 
         /* DOS Device Map */
         case ProcessDeviceMap:
+        {
+            ULONG Flags;
 
             if (ProcessInformationLength == sizeof(PROCESS_DEVICEMAP_INFORMATION_EX))
             {
@@ -617,9 +626,12 @@ NtQueryInformationProcess(
             /* Dereference the process */
             ObDereferenceObject(Process);
             break;
+        }
 
         /* Priority class */
         case ProcessPriorityClass:
+        {
+            PPROCESS_PRIORITY_CLASS PsPriorityClass = (PPROCESS_PRIORITY_CLASS)ProcessInformation;
 
             if (ProcessInformationLength != sizeof(PROCESS_PRIORITY_CLASS))
             {
@@ -656,8 +668,11 @@ NtQueryInformationProcess(
             /* Dereference the process */
             ObDereferenceObject(Process);
             break;
+        }
 
         case ProcessImageFileName:
+        {
+            PUNICODE_STRING ImageName;
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -710,6 +725,7 @@ NtQueryInformationProcess(
             /* Dereference the process */
             ObDereferenceObject(Process);
             break;
+        }
 
         case ProcessDebugFlags:
 
@@ -787,6 +803,8 @@ NtQueryInformationProcess(
 
         /* Per-process security cookie */
         case ProcessCookie:
+        {
+            ULONG Cookie;
 
             if (ProcessInformationLength != sizeof(ULONG))
             {
@@ -836,6 +854,7 @@ NtQueryInformationProcess(
             }
             _SEH2_END;
             break;
+        }
 
         case ProcessImageInformation:
 
@@ -866,6 +885,8 @@ NtQueryInformationProcess(
             break;
 
         case ProcessDebugObjectHandle:
+        {
+            HANDLE DebugPort = 0;
 
             if (ProcessInformationLength != sizeof(HANDLE))
             {
@@ -904,6 +925,7 @@ NtQueryInformationProcess(
             }
             _SEH2_END;
             break;
+        }
 
         case ProcessHandleTracing:
             DPRINT1("Handle tracing Not implemented: %lx\n", ProcessInformationClass);
@@ -976,6 +998,8 @@ NtQueryInformationProcess(
             break;
 
         case ProcessWow64Information:
+        {
+            ULONG_PTR Wow64 = 0;
 
             if (ProcessInformationLength != sizeof(ULONG_PTR))
             {
@@ -1024,8 +1048,11 @@ NtQueryInformationProcess(
             /* Dereference the process */
             ObDereferenceObject(Process);
             break;
+        }
 
         case ProcessExecuteFlags:
+        {
+            ULONG ExecuteOptions = 0;
 
             if (ProcessInformationLength != sizeof(ULONG))
             {
@@ -1059,6 +1086,7 @@ NtQueryInformationProcess(
                 _SEH2_END;
             }
             break;
+        }
 
         case ProcessLdtInformation:
             DPRINT1("VDM/16-bit not implemented: %lx\n", ProcessInformationClass);
