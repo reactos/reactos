@@ -7843,10 +7843,77 @@ CM_Set_Class_Registry_PropertyA(
     _In_ ULONG ulFlags,
     _In_opt_ HMACHINE hMachine)
 {
-    FIXME("CM_Set_Class_Registry_PropertyA(%p %lx %p %lu %lx %p)\n",
+    LPWSTR lpBuffer;
+    ULONG ulType;
+    CONFIGRET ret;
+
+    TRACE("CM_Set_Class_Registry_PropertyA(%p %lx %p %lu %lx %p)\n",
           ClassGuid, ulProperty, Buffer, ulLength, ulFlags, hMachine);
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    if (ClassGuid == NULL)
+        return CR_INVALID_POINTER;
+
+    if ((Buffer == NULL) && (ulLength != 0))
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (Buffer == NULL)
+    {
+        ret = CM_Set_Class_Registry_PropertyW(ClassGuid,
+                                              ulProperty,
+                                              Buffer,
+                                              ulLength,
+                                              ulFlags,
+                                              hMachine);
+    }
+    else
+    {
+        /* Get property type */
+        ulType = GetRegistryPropertyType(ulProperty);
+
+        /* Allocate buffer if needed */
+        if ((ulType == REG_SZ) || (ulType == REG_MULTI_SZ))
+        {
+            lpBuffer = MyMalloc(ulLength * sizeof(WCHAR));
+            if (lpBuffer == NULL)
+            {
+                ret = CR_OUT_OF_MEMORY;
+            }
+            else
+            {
+                if (!MultiByteToWideChar(CP_ACP, 0, Buffer,
+                                         ulLength, lpBuffer, ulLength))
+                {
+                    MyFree(lpBuffer);
+                    ret = CR_FAILURE;
+                }
+                else
+                {
+                    ret = CM_Set_Class_Registry_PropertyW(ClassGuid,
+                                                          ulProperty,
+                                                          lpBuffer,
+                                                          ulLength * sizeof(WCHAR),
+                                                          ulFlags,
+                                                          hMachine);
+                    MyFree(lpBuffer);
+                }
+            }
+        }
+        else
+        {
+            ret = CM_Set_Class_Registry_PropertyW(ClassGuid,
+                                                  ulProperty,
+                                                  Buffer,
+                                                  ulLength,
+                                                  ulFlags,
+                                                  hMachine);
+        }
+
+    }
+
+    return ret;
 }
 
 
