@@ -794,7 +794,11 @@ VideoPortInitialize(
             break;
 
         default:
-            ERR_(VIDEOPRT, "Invalid HwInitializationData size.\n");
+            ERR_(VIDEOPRT, "Invalid HwInitializationData size %lu (expected %lu, %lu or %lu)\n",
+                 HwInitializationData->HwInitDataSize,
+                 SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA,
+                 SIZE_OF_W2K_VIDEO_HW_INITIALIZATION_DATA,
+                 sizeof(VIDEO_HW_INITIALIZATION_DATA));
             return STATUS_UNSUCCESSFUL;
     }
 
