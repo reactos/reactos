@@ -66,6 +66,17 @@ KiDpcInterruptHandler(VOID)
         /* Acquire the PRCB lock */
         KiAcquirePrcbLock(Prcb);
 
+        if (Prcb->NextThread == Prcb->CurrentThread)
+        {
+            __debugbreak();
+            /* This can happen, when the idle thread is running and a different
+               processor reschedules the thread */
+            ASSERT(Prcb->NextThread == Prcb->IdleThread);
+            Prcb->NextThread = NULL;
+            KiReleasePrcbLock(Prcb);
+            goto Exit;
+        }
+
         /* Capture current thread data */
         OldThread = Prcb->CurrentThread;
         NewThread = Prcb->NextThread;
@@ -78,7 +89,7 @@ KiDpcInterruptHandler(VOID)
         NewThread->State = Running;
         OldThread->WaitReason = WrDispatchInt;
 
-        /* Make the old thread ready */
+        /* Make the old thread ready (this releases the PRCB lock) */
         KxQueueReadyThread(OldThread, Prcb);
 
         /* Swap to the new thread */

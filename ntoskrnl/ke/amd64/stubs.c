@@ -158,14 +158,22 @@ KiIdleLoop(VOID)
             /* The thread is now running */
             NewThread->State = Running;
 
-            /* Clear idle summary bit */
-            InterlockedBitTestAndResetAffinity(&KiIdleSummary, Prcb->Number);
+            /* Check if we're actually running a different thread */
+            if (NewThread != OldThread)
+            {
+                /* Clear idle summary bit */
+                InterlockedBitTestAndResetAffinity(&KiIdleSummary, Prcb->Number);
 
-            /* Switch away from the idle thread */
-            KiSwapContext(APC_LEVEL, OldThread);
+                /* Switch away from the idle thread */
+                KiSwapContext(APC_LEVEL, OldThread);
 
-            /* Set idle summary bit */
-            InterlockedBitTestAndSetAffinity(&KiIdleSummary, Prcb->Number);
+                /* Set idle summary bit */
+                InterlockedBitTestAndSetAffinity(&KiIdleSummary, Prcb->Number);
+            }
+            else
+            {
+                NewThread->SwapBusy = FALSE;
+            }
 
 #ifdef CONFIG_SMP
             /* Go back to DISPATCH_LEVEL */
