@@ -1991,6 +1991,10 @@ KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
 
 KdDbgPortPrintf("%s\n", __FUNCTION__);
 
+    /* Fail if there is no debugger */
+    if (KdPitchDebugger)
+        return STATUS_DEBUGGER_INACTIVE;
+
     /* Check if enabling the debugger is blocked */
     if (KdBlockEnable)
     {
@@ -2065,10 +2069,11 @@ KdDisableDebuggerWithLock(IN BOOLEAN NeedLock)
 
 KdDbgPortPrintf("%s\n", __FUNCTION__);
 
-    /*
-     * If enabling the debugger is blocked
-     * then there is nothing to disable (duh)
-     */
+    /* Fail if there is no debugger */
+    if (KdPitchDebugger)
+        return STATUS_DEBUGGER_INACTIVE;
+
+    /* If enabling the debugger is blocked, then there is nothing to disable */
     if (KdBlockEnable)
     {
         /* Fail */
@@ -2572,10 +2577,7 @@ KdChangeOption(IN KD_OPTION Option,
 {
     /* Fail if there is no debugger */
     if (KdPitchDebugger)
-    {
-        /* No debugger, no options */
         return STATUS_DEBUGGER_INACTIVE;
-    }
 
     /* Do we recognize this option? */
     if (Option != KD_OPTION_SET_BLOCK_ENABLE)
@@ -2652,12 +2654,9 @@ KdRefreshDebuggerNotPresent(VOID)
 {
     BOOLEAN Enable, DebuggerNotPresent;
 
-    /* Check if the debugger is completely disabled */
-    if (KdPitchDebugger)
-    {
-        /* Don't try to refresh then, fail early */
-        return TRUE;
-    }
+    /* Fail if there is no debugger, or if it is currently disabled */
+    if (KdPitchDebugger || !KdDebuggerEnabled)
+        return TRUE; // (KdDebuggerNotPresent = TRUE);
 
     /* Enter the debugger */
     Enable = KdEnterDebugger(NULL, NULL);
