@@ -36,6 +36,12 @@ KiDpcInterruptHandler(VOID)
     /* Send an EOI */
     KiSendEOI();
 
+    /* Ignore idle halt DPC interrupts */
+    if (Prcb->IdleHalt)
+    {
+        goto Exit;
+    }
+
     /* Check for pending timers, pending DPCs, or pending ready threads */
     if ((Prcb->DpcData[0].DpcQueueDepth) ||
         (Prcb->TimerRequest) ||
@@ -79,6 +85,7 @@ KiDpcInterruptHandler(VOID)
         KiSwapContext(APC_LEVEL, OldThread);
     }
 
+Exit:
     /* Disable interrupts and go back to old irql */
     _disable();
     KeLowerIrql(OldIrql);
