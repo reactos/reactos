@@ -485,8 +485,27 @@ KiSwapThread(IN PKTHREAD CurrentThread,
     /* Save the wait IRQL */
     WaitIrql = CurrentThread->WaitIrql;
 
-    /* Swap contexts */
-    ApcState = KiSwapContext(WaitIrql, CurrentThread);
+#ifdef CONFIG_SMP
+    /* On SMP builds it is possible that the new thread is the old thread. */
+    if (NextThread == CurrentThread)
+    {
+        /* Unset SwapBusy */
+        CurrentThread->SwapBusy = FALSE;
+
+        /* Check for pending APCs */
+        if ((NextThread->ApcState.KernelApcPending) &&
+            (NextThread->SpecialApcDisable == FALSE) &&
+            (WaitIrql == PASSIVE_LEVEL))
+        {
+            ApcState = TRUE;
+        }
+    }
+    else
+#endif
+    {
+        /* Swap contexts */
+        ApcState = KiSwapContext(WaitIrql, CurrentThread);
+    }
 
     /* Get the wait status */
     WaitStatus = CurrentThread->WaitStatus;
