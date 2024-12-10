@@ -117,42 +117,49 @@ NTAPI
 KdDebuggerInitialize0(
     _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    PCHAR CommandLine, Port = NULL;
+    // static BOOLEAN AreParamsRetrieved = FALSE;
     ULONG i;
     BOOLEAN Success = FALSE;
 
 KdDbgPortPrintf("%s(0x%p)\n", __FUNCTION__, LoaderBlock);
 
-    if (LoaderBlock)
+    /* Check if we have a loader block, and if not, attempt to use the
+     * system one. If it's unavailable (post phase-1 init), just return. */
+    if (!LoaderBlock)
+        LoaderBlock = KeLoaderBlock;
+    // if (!LoaderBlock)
+        // return STATUS_SUCCESS;
+
+    /* Check if we have a command line */
+    if (LoaderBlock && LoaderBlock->LoadOptions)
     {
-        /* Check if we have a command line */
+        PSTR CommandLine, Port = NULL;
+
         CommandLine = LoaderBlock->LoadOptions;
-        if (CommandLine)
+        // if (!CommandLine)
+            // return STATUS_SUCCESS;
+
+        /* Upcase it */
+        _strupr(CommandLine);
+
+        /* Get terminal settings */
+        KdpGetTerminalSettings(CommandLine);
+
+        /* Check if we got the /DEBUGPORT parameter(s) */
+        Port = strstr(CommandLine, "DEBUGPORT");
+        while (Port)
         {
-            /* Upcase it */
-            _strupr(CommandLine);
+            /* Move past the actual string, to reach the port*/
+            Port += sizeof("DEBUGPORT") - 1;
 
-            /* Get terminal settings */
-            KdpGetTerminalSettings(CommandLine);
+            /* Now get past any spaces and skip the equal sign */
+            while (*Port == ' ') Port++;
+            Port++;
 
-            /* Get the port */
-            Port = strstr(CommandLine, "DEBUGPORT");
+            /* Get the debug mode and wrapper */
+            Port = KdpGetDebugMode(Port);
+            Port = strstr(Port, "DEBUGPORT");
         }
-    }
-
-    /* Check if we got the /DEBUGPORT parameter(s) */
-    while (Port)
-    {
-        /* Move past the actual string, to reach the port*/
-        Port += sizeof("DEBUGPORT") - 1;
-
-        /* Now get past any spaces and skip the equal sign */
-        while (*Port == ' ') Port++;
-        Port++;
-
-        /* Get the debug mode and wrapper */
-        Port = KdpGetDebugMode(Port);
-        Port = strstr(Port, "DEBUGPORT");
     }
 
     /* Use serial port then */
@@ -188,13 +195,13 @@ KdpDriverReinit(
     PLIST_ENTRY CurrentEntry;
     PKD_DISPATCH_TABLE CurrentTable;
     PKDP_INIT_ROUTINE KdpInitRoutine;
-    ULONG BootPhase = (Count + 1); // Do BootPhase >= 2
+    ULONG InitPhase = (Count + 1); // Do InitPhase >= 2
     BOOLEAN ScheduleReinit = FALSE;
 
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
     DPRINT("*** KD %sREINITIALIZATION - Phase %d ***\n",
-           Context ? "" : "BOOT ", BootPhase);
+           Context ? "" : "BOOT ", InitPhase);
 
     /* Call the registered providers */
     for (CurrentEntry = KdProviders.Flink;
@@ -213,7 +220,7 @@ KdpDriverReinit(
             /* Get the initialization routine and reset it */
             KdpInitRoutine = CurrentTable->KdpInitRoutine;
             CurrentTable->KdpInitRoutine = NULL;
-            CurrentTable->InitStatus = KdpInitRoutine(CurrentTable, BootPhase);
+            CurrentTable->InitStatus = KdpInitRoutine(CurrentTable, InitPhase);
             DPRINT("KdpInitRoutine(%p) returned 0x%08lx\n",
                    CurrentTable, CurrentTable->InitStatus);
 
@@ -340,6 +347,12 @@ KdDebuggerInitialize1(
 
 KdDbgPortPrintf("%s(0x%p)\n", __FUNCTION__, LoaderBlock);
 
+//
+// TODO: If Init phase 0 wasn't invoked (because the debugger started
+// in a disabled state), we need to invoke it there right now, but
+// without enabling the corresponding debug ports.
+//
+
     /* Make space for the displayed providers' signons */
     HalDisplayString("\r\n");
 
@@ -449,7 +462,7 @@ KdDbgPortPrintf("%s(0x%p)\n", __FUNCTION__, LoaderBlock);
      * Once the KdpDriverEntry() driver entrypoint is called, we register
      * KdpDriverReinit() for re-initialization with the I/O Manager, in order
      * to provide more initialization points. KdpDriverReinit() calls the KD
-     * providers at BootPhase >= 2, and schedules further reinitializations
+     * providers at InitPhase >= 2, and schedules further reinitializations
      * (at most 3 more) if any of the providers request so.
      **/
     orgHalInitPnpDriver =

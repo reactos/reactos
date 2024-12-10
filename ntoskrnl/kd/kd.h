@@ -8,7 +8,7 @@ typedef
 NTSTATUS
 (NTAPI *PKDP_INIT_ROUTINE)(
     _In_ struct _KD_DISPATCH_TABLE *DispatchTable,
-    _In_ ULONG BootPhase);
+    _In_ ULONG InitPhase);
 
 typedef
 VOID
@@ -55,19 +55,19 @@ NTSTATUS
 NTAPI
 KdpScreenInit(
     _In_ struct _KD_DISPATCH_TABLE *DispatchTable,
-    _In_ ULONG BootPhase);
+    _In_ ULONG InitPhase);
 
 NTSTATUS
 NTAPI
 KdpSerialInit(
     _In_ struct _KD_DISPATCH_TABLE *DispatchTable,
-    _In_ ULONG BootPhase);
+    _In_ ULONG InitPhase);
 
 NTSTATUS
 NTAPI
 KdpDebugLogInit(
     _In_ struct _KD_DISPATCH_TABLE *DispatchTable,
-    _In_ ULONG BootPhase);
+    _In_ ULONG InitPhase);
 
 #ifdef KDBG
 #define KdpKdbgInit KdbInitialize

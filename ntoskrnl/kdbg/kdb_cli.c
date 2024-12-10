@@ -3537,13 +3537,15 @@ KdbDebugPrint(
      * debug strings before they will be wiped over by next writes. */
 }
 
+extern void KdDbgPortPrintf(PCSTR Format, ...);
+
 /**
  * @brief   Initializes the KDBG debugger.
  *
  * @param[in]   DispatchTable
  * Pointer to the KD dispatch table.
  *
- * @param[in]   BootPhase
+ * @param[in]   InitPhase
  * Phase of initialization.
  *
  * @return  A status value.
@@ -3553,15 +3555,19 @@ NTSTATUS
 NTAPI
 KdbInitialize(
     _In_ PKD_DISPATCH_TABLE DispatchTable,
-    _In_ ULONG BootPhase)
+    _In_ ULONG InitPhase)
 {
     /* Saves the different symbol-loading status across boot phases */
     static ULONG LoadSymbols = 0;
 
-    if (BootPhase == 0)
+KdDbgPortPrintf("%s(%d)\n", __FUNCTION__, InitPhase);
+
+    if (InitPhase == 0)
     {
+/////// ENABLING PORT ///////
         /* Write out the functions that we support for now */
         DispatchTable->KdpPrintRoutine = KdbDebugPrint;
+/////////////////////////////
 
         /* Check if we have a command line */
         if (KeLoaderBlock && KeLoaderBlock->LoadOptions)
@@ -3570,13 +3576,13 @@ KdbInitialize(
             KdbpGetCommandLineSettings(KeLoaderBlock->LoadOptions);
         }
 
-        /* Register for BootPhase 1 initialization and as a Provider */
+        /* Register for InitPhase 1 initialization and as a Provider */
         DispatchTable->KdpInitRoutine = KdbInitialize;
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
     }
-    else if (BootPhase == 1)
+    else if (InitPhase == 1)
     {
-        /* Register for later BootPhase 2 reinitialization */
+        /* Register for later InitPhase 2 reinitialization */
         DispatchTable->KdpInitRoutine = KdbInitialize;
 
         /* Initialize Dmesg support */
@@ -3594,14 +3600,14 @@ KdbInitialize(
         KeInitializeSpinLock(&KdpDmesgLogSpinLock);
     }
 
-    /* Initialize symbols support in BootPhase 0 and 1 */
-    if (BootPhase <= 1)
+    /* Initialize symbols support in InitPhase 0 and 1 */
+    if (InitPhase <= 1)
     {
         LoadSymbols <<= 1;
-        LoadSymbols |= KdbSymInit(BootPhase);
+        LoadSymbols |= KdbSymInit(InitPhase);
     }
 
-    if (BootPhase == 1)
+    if (InitPhase == 1)
     {
         /* Announce ourselves */
         CHAR buffer[60];
@@ -3613,7 +3619,7 @@ KdbInitialize(
         HalDisplayString(buffer);
     }
 
-    if (BootPhase >= 2)
+    if (InitPhase >= 2)
     {
         /* I/O is now set up for disk access: load the KDBinit file */
         NTSTATUS Status = KdbpCliInit();

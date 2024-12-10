@@ -97,7 +97,7 @@ NTSTATUS
 NTAPI
 KdbInitialize(
     _In_ PKD_DISPATCH_TABLE DispatchTable,
-    _In_ ULONG BootPhase);
+    _In_ ULONG InitPhase);
 
 BOOLEAN
 NTAPI
@@ -188,7 +188,7 @@ KdbSymProcessSymbols(
 
 BOOLEAN
 KdbSymInit(
-    _In_ ULONG BootPhase);
+    _In_ ULONG InitPhase);
 
 /* from kdb.c */
 
