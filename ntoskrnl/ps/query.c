@@ -153,15 +153,19 @@ NtQueryInformationProcess(
         /* Process quota limits */
         case ProcessQuotaLimits:
         {
-            PQUOTA_LIMITS QuotaLimits = (PQUOTA_LIMITS)ProcessInformation;
+            QUOTA_LIMITS_EX QuotaLimits;
+            BOOLEAN Extended;
 
-            if (ProcessInformationLength != sizeof(QUOTA_LIMITS))
+            if (ProcessInformationLength != sizeof(QUOTA_LIMITS) &&
+                ProcessInformationLength != sizeof(QUOTA_LIMITS_EX))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
 
-            Length = sizeof(QUOTA_LIMITS);
+            /* Set return length */
+            Length = ProcessInformationLength;
+            Extended = (Length == sizeof(QUOTA_LIMITS_EX));
 
             /* Reference the process */
             Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -175,36 +179,49 @@ NtQueryInformationProcess(
             /* Indicate success */
             Status = STATUS_SUCCESS;
 
+            RtlZeroMemory(&QuotaLimits, sizeof(QuotaLimits));
+
+            /* Get max/min working set sizes */
+            QuotaLimits.MaximumWorkingSetSize =
+                Process->Vm.MaximumWorkingSetSize << PAGE_SHIFT;
+            QuotaLimits.MinimumWorkingSetSize =
+                Process->Vm.MinimumWorkingSetSize << PAGE_SHIFT;
+
+            /* Get default time limits */
+            QuotaLimits.TimeLimit.QuadPart = -1LL;
+
+            /* Is quota block a default one? */
+            if (Process->QuotaBlock == &PspDefaultQuotaBlock)
+            {
+                /* Get default pools and pagefile limits */
+                QuotaLimits.PagedPoolLimit = (SIZE_T)-1;
+                QuotaLimits.NonPagedPoolLimit = (SIZE_T)-1;
+                QuotaLimits.PagefileLimit = (SIZE_T)-1;
+            }
+            else
+            {
+                /* Get limits from non-default quota block */
+                QuotaLimits.PagedPoolLimit =
+                    Process->QuotaBlock->QuotaEntry[PsPagedPool].Limit;
+                QuotaLimits.NonPagedPoolLimit =
+                    Process->QuotaBlock->QuotaEntry[PsNonPagedPool].Limit;
+                QuotaLimits.PagefileLimit =
+                    Process->QuotaBlock->QuotaEntry[PsPageFile].Limit;
+            }
+
+            /* Get additional information, if needed */
+            if (Extended)
+            {
+                /* FIXME: Get the correct information */
+                //QuotaLimits.WorkingSetLimit = (SIZE_T)-1; // Not used on Win2k3, it is set to 0
+                QuotaLimits.Flags = QUOTA_LIMITS_HARDWS_MIN_DISABLE | QUOTA_LIMITS_HARDWS_MAX_DISABLE;
+                QuotaLimits.CpuRateLimit.RateData = 0;
+            }
+
+            /* Protect writes with SEH */
             _SEH2_TRY
             {
-                /* Set max/min working set sizes */
-                QuotaLimits->MaximumWorkingSetSize =
-                        Process->Vm.MaximumWorkingSetSize << PAGE_SHIFT;
-                QuotaLimits->MinimumWorkingSetSize =
-                        Process->Vm.MinimumWorkingSetSize << PAGE_SHIFT;
-
-                /* Set default time limits */
-                QuotaLimits->TimeLimit.LowPart = MAXULONG;
-                QuotaLimits->TimeLimit.HighPart = MAXULONG;
-
-                /* Is quota block a default one? */
-                if (Process->QuotaBlock == &PspDefaultQuotaBlock)
-                {
-                    /* Set default pools and pagefile limits */
-                    QuotaLimits->PagedPoolLimit = (SIZE_T)-1;
-                    QuotaLimits->NonPagedPoolLimit = (SIZE_T)-1;
-                    QuotaLimits->PagefileLimit = (SIZE_T)-1;
-                }
-                else
-                {
-                    /* Get limits from non-default quota block */
-                    QuotaLimits->PagedPoolLimit =
-                        Process->QuotaBlock->QuotaEntry[PsPagedPool].Limit;
-                    QuotaLimits->NonPagedPoolLimit =
-                        Process->QuotaBlock->QuotaEntry[PsNonPagedPool].Limit;
-                    QuotaLimits->PagefileLimit =
-                        Process->QuotaBlock->QuotaEntry[PsPageFile].Limit;
-                }
+                RtlCopyMemory(ProcessInformation, &QuotaLimits, Length);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
