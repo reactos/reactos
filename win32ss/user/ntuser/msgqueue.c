@@ -1487,6 +1487,12 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, BOOL* NotForUs, L
 
     pti = PsGetCurrentThreadWin32Thread();
     pwndDesktop = UserGetDesktopWindow();
+    if (pwndDesktop == NULL)
+    {
+        ERR("No desktop window!\n");
+        return FALSE;
+    }
+
     MessageQueue = pti->MessageQueue;
     CurInfo = IntGetSysCursorInfo();
     pwndMsg = ValidateHwndNoErr(msg->hwnd);
@@ -2001,7 +2007,7 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
 
          UpdateKeyStateFromMsg(MessageQueue, &msg);
          AcceptMessage = co_IntProcessHardwareMessage(&msg, &Remove, &NotForUs, ExtraInfo, MsgFilterLow, MsgFilterHigh);
-         
+
          if (!NotForUs && (MsgFilterLow != 0 || MsgFilterHigh != 0))
          {
              /* Don't return message if not in range */
