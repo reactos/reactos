@@ -13,7 +13,7 @@
 #include <ntifs.h>
 #include <windbgkd.h>
 
-// #define KDDEBUG /* uncomment to enable debugging this dll */
+#define KDDEBUG /* uncomment to enable debugging this dll */
 
 #ifndef KDDEBUG
 #define KDDBGPRINT(...)

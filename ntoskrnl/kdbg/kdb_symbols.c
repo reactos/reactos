@@ -333,23 +333,23 @@ KdbSymProcessSymbols(
 /**
  * @brief   Initializes the KDB symbols implementation.
  *
- * @param[in]   BootPhase
+ * @param[in]   InitPhase
  * Phase of initialization.
  *
  * @return
- * TRUE if symbols are to be loaded at this given BootPhase; FALSE if not.
+ * TRUE if symbols are to be loaded at this given InitPhase; FALSE if not.
  **/
 BOOLEAN
 KdbSymInit(
-    _In_ ULONG BootPhase)
+    _In_ ULONG InitPhase)
 {
 #if 1 // FIXME: This is a workaround HACK!!
     static BOOLEAN OrigLoadSymbols = FALSE;
 #endif
 
-    DPRINT("KdbSymInit() BootPhase=%d\n", BootPhase);
+    DPRINT("KdbSymInit() InitPhase=%d\n", InitPhase);
 
-    if (BootPhase == 0)
+    if (InitPhase == 0)
     {
         PSTR CommandLine;
         SHORT Found = FALSE;
@@ -405,13 +405,13 @@ KdbSymInit(
         }
 
 #if 1 // FIXME: This is a workaround HACK!!
-// Save the actual value of LoadSymbols but disable it for BootPhase 0.
+// Save the actual value of LoadSymbols but disable it for InitPhase 0.
         OrigLoadSymbols = LoadSymbols;
         LoadSymbols = FALSE;
         return OrigLoadSymbols;
 #endif
     }
-    else if (BootPhase == 1)
+    else if (InitPhase == 1)
     {
         HANDLE Thread;
         NTSTATUS Status;

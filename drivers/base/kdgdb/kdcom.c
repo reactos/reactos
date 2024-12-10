@@ -141,6 +141,110 @@ KdpPortInitialize(IN ULONG ComPortNumber,
     return STATUS_SUCCESS;
 }
 
+
+/**
+ * @brief
+ * Loads port parameters from the Loader Parameter Block, if available.
+ **/
+static NTSTATUS
+KdpRetrieveParameters(
+    _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    static BOOLEAN AreParamsRetrieved = FALSE;
+    PSTR CommandLine, PortString, BaudString, IrqString;
+    ULONG Value;
+
+    /* Load parameters only once if they haven't been already */
+    if (AreParamsRetrieved)
+        return STATUS_SUCCESS;
+    AreParamsRetrieved = TRUE;
+
+    /* Check if we have a loader block, and if not, attempt to use the
+     * system one. If it's unavailable (post phase-1 init), just return. */
+    if (!LoaderBlock)
+        LoaderBlock = KeLoaderBlock;
+    if (!LoaderBlock)
+        return STATUS_SUCCESS;
+
+    /* Check if we have a command line */
+    CommandLine = LoaderBlock->LoadOptions;
+    if (!CommandLine)
+        return STATUS_SUCCESS;
+
+    /* Upcase it */
+    _strupr(CommandLine);
+
+    /* Check if we got the /DEBUGPORT parameter */
+    PortString = strstr(CommandLine, "DEBUGPORT");
+    if (PortString)
+    {
+        /* Move past the actual string, to reach the port*/
+        PortString += strlen("DEBUGPORT");
+
+        /* Now get past any spaces and skip the equal sign */
+        while (*PortString == ' ') PortString++;
+        PortString++;
+
+        /* Do we have a serial port? */
+        if (strncmp(PortString, "COM", 3) != 0)
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        /* Check for a valid Serial Port */
+        PortString += 3;
+        Value = atol(PortString);
+        if (Value >= sizeof(BaseArray) / sizeof(BaseArray[0]))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        /* Set the port to use */
+        ComPortNumber = Value;
+    }
+
+    /* Check if we got a baud rate */
+    BaudString = strstr(CommandLine, "BAUDRATE");
+    if (BaudString)
+    {
+        /* Move past the actual string, to reach the rate */
+        BaudString += strlen("BAUDRATE");
+
+        /* Now get past any spaces */
+        while (*BaudString == ' ') BaudString++;
+
+        /* And make sure we have a rate */
+        if (*BaudString)
+        {
+            /* Read and set it */
+            Value = atol(BaudString + 1);
+            if (Value) ComPortBaudRate = Value;
+        }
+    }
+
+    /* Check Serial Port Settings [IRQ] */
+    IrqString = strstr(CommandLine, "IRQ");
+    if (IrqString)
+    {
+        /* Move past the actual string, to reach the rate */
+        IrqString += strlen("IRQ");
+
+        /* Now get past any spaces */
+        while (*IrqString == ' ') IrqString++;
+
+        /* And make sure we have an IRQ */
+        if (*IrqString)
+        {
+            /* Read and set it */
+            Value = atol(IrqString + 1);
+            if (Value) ComPortIrq = Value;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
 /**
  * @brief
  * Phase 0 initialization. Invoked by KdInitSystem() when the debugger
@@ -157,87 +261,12 @@ NTAPI
 KdDebuggerInitialize0(
     _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    PCHAR CommandLine, PortString, BaudString, IrqString;
-    ULONG Value;
+    NTSTATUS Status;
 
-    /* Check if we have a LoaderBlock */
-    if (LoaderBlock)
-    {
-        /* Get the Command Line */
-        CommandLine = LoaderBlock->LoadOptions;
-
-        /* Upcase it */
-        _strupr(CommandLine);
-
-        /* Get the port and baud rate */
-        PortString = strstr(CommandLine, "DEBUGPORT");
-        BaudString = strstr(CommandLine, "BAUDRATE");
-        IrqString  = strstr(CommandLine, "IRQ");
-
-        /* Check if we got the /DEBUGPORT parameter */
-        if (PortString)
-        {
-            /* Move past the actual string, to reach the port*/
-            PortString += strlen("DEBUGPORT");
-
-            /* Now get past any spaces and skip the equal sign */
-            while (*PortString == ' ') PortString++;
-            PortString++;
-
-            /* Do we have a serial port? */
-            if (strncmp(PortString, "COM", 3) != 0)
-            {
-                return STATUS_INVALID_PARAMETER;
-            }
-
-            /* Check for a valid Serial Port */
-            PortString += 3;
-            Value = atol(PortString);
-            if (Value >= sizeof(BaseArray) / sizeof(BaseArray[0]))
-            {
-                return STATUS_INVALID_PARAMETER;
-            }
-
-            /* Set the port to use */
-            ComPortNumber = Value;
-        }
-
-        /* Check if we got a baud rate */
-        if (BaudString)
-        {
-            /* Move past the actual string, to reach the rate */
-            BaudString += strlen("BAUDRATE");
-
-            /* Now get past any spaces */
-            while (*BaudString == ' ') BaudString++;
-
-            /* And make sure we have a rate */
-            if (*BaudString)
-            {
-                /* Read and set it */
-                Value = atol(BaudString + 1);
-                if (Value) ComPortBaudRate = Value;
-            }
-        }
-
-        /* Check Serial Port Settings [IRQ] */
-        if (IrqString)
-        {
-            /* Move past the actual string, to reach the rate */
-            IrqString += strlen("IRQ");
-
-            /* Now get past any spaces */
-            while (*IrqString == ' ') IrqString++;
-
-            /* And make sure we have an IRQ */
-            if (*IrqString)
-            {
-                /* Read and set it */
-                Value = atol(IrqString + 1);
-                if (Value) ComPortIrq = Value;
-            }
-        }
-    }
+    /* Capture the parameters if this is the first invocation */
+    Status = KdpRetrieveParameters(LoaderBlock);
+    if (!NT_SUCCESS(Status))
+        return Status; // Or, keep using the default parameters?
 
 #ifdef KDDEBUG
     /*
@@ -282,6 +311,16 @@ NTAPI
 KdDebuggerInitialize1(
     _In_opt_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    NTSTATUS Status;
+
+    /* Capture the parameters if KdDebuggerInitialize0() wasn't invoked already */
+    Status = KdpRetrieveParameters(LoaderBlock);
+    if (!NT_SUCCESS(Status))
+        return Status; // Or, keep using the default parameters?
+
+    // TODO: If we already have a MMIO COM port,
+    // map it in memory and update KdComPortInUse.
+
     return STATUS_SUCCESS;
 }
 

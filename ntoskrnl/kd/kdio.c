@@ -57,6 +57,8 @@ PKDP_INIT_ROUTINE InitRoutines[KdMax] =
 #endif
 };
 
+extern void KdDbgPortPrintf(PCSTR Format, ...);
+
 /* LOCKING FUNCTIONS *********************************************************/
 
 KIRQL
@@ -196,23 +198,27 @@ NTSTATUS
 NTAPI
 KdpDebugLogInit(
     _In_ PKD_DISPATCH_TABLE DispatchTable,
-    _In_ ULONG BootPhase)
+    _In_ ULONG InitPhase)
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
     if (!KdpDebugMode.File)
         return STATUS_PORT_DISCONNECTED;
 
-    if (BootPhase == 0)
+KdDbgPortPrintf("%s(%d)\n", __FUNCTION__, InitPhase);
+
+    if (InitPhase == 0)
     {
+/////// ENABLING PORT ///////
         /* Write out the functions that we support for now */
         DispatchTable->KdpPrintRoutine = KdpPrintToLogFile;
+/////////////////////////////
 
-        /* Register for BootPhase 1 initialization and as a Provider */
+        /* Register for InitPhase 1 initialization and as a Provider */
         DispatchTable->KdpInitRoutine = KdpDebugLogInit;
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
     }
-    else if (BootPhase == 1)
+    else if (InitPhase == 1)
     {
         /* Allocate a buffer for debug log */
         KdpDebugBuffer = ExAllocatePoolZero(NonPagedPool,
@@ -229,13 +235,13 @@ KdpDebugLogInit(
         /* Initialize spinlock */
         KeInitializeSpinLock(&KdpDebugLogSpinLock);
 
-        /* Register for later BootPhase 2 reinitialization */
+        /* Register for later InitPhase 2 reinitialization */
         DispatchTable->KdpInitRoutine = KdpDebugLogInit;
 
         /* Announce ourselves */
         HalDisplayString("   File log debugging enabled\r\n");
     }
-    else if (BootPhase >= 2)
+    else if (InitPhase >= 2)
     {
         UNICODE_STRING FileName;
         OBJECT_ATTRIBUTES ObjectAttributes;
@@ -323,6 +329,7 @@ KdpDebugLogInit(
 
         KeInitializeEvent(&KdpLoggerThreadEvent, SynchronizationEvent, TRUE);
 
+/////// ENABLING PORT ///////
         /* Create the logger thread */
         Status = PsCreateSystemThread(&ThreadHandle,
                                       THREAD_ALL_ACCESS,
@@ -345,6 +352,7 @@ KdpDebugLogInit(
                                sizeof(Priority));
 
         ZwClose(ThreadHandle);
+/////////////////////////////
         return Status;
 
 Failure:
@@ -391,13 +399,16 @@ NTSTATUS
 NTAPI
 KdpSerialInit(
     _In_ PKD_DISPATCH_TABLE DispatchTable,
-    _In_ ULONG BootPhase)
+    _In_ ULONG InitPhase)
 {
     if (!KdpDebugMode.Serial)
         return STATUS_PORT_DISCONNECTED;
 
-    if (BootPhase == 0)
+KdDbgPortPrintf("%s(%d)\n", __FUNCTION__, InitPhase);
+
+    if (InitPhase == 0)
     {
+/////// ENABLING PORT ///////
         /* Write out the functions that we support for now */
         DispatchTable->KdpPrintRoutine = KdpSerialPrint;
 
@@ -408,15 +419,16 @@ KdpSerialInit(
             return STATUS_DEVICE_DOES_NOT_EXIST;
         }
         KdComPortInUse = SerialPortInfo.Address;
+/////////////////////////////
 
         /* Initialize spinlock */
         KeInitializeSpinLock(&KdpSerialSpinLock);
 
-        /* Register for BootPhase 1 initialization and as a Provider */
+        /* Register for InitPhase 1 initialization and as a Provider */
         DispatchTable->KdpInitRoutine = KdpSerialInit;
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
     }
-    else if (BootPhase == 1)
+    else if (InitPhase == 1)
     {
         /* Announce ourselves */
         HalDisplayString("   Serial debugging enabled\r\n");
@@ -514,24 +526,30 @@ NTSTATUS
 NTAPI
 KdpScreenInit(
     _In_ PKD_DISPATCH_TABLE DispatchTable,
-    _In_ ULONG BootPhase)
+    _In_ ULONG InitPhase)
 {
     if (!KdpDebugMode.Screen)
         return STATUS_PORT_DISCONNECTED;
 
-    if (BootPhase == 0)
+KdDbgPortPrintf("%s(%d)\n", __FUNCTION__, InitPhase);
+
+    if (InitPhase == 0)
     {
+/////// ENABLING PORT ///////
         /* Write out the functions that we support for now */
         DispatchTable->KdpPrintRoutine = KdpScreenPrint;
+/////////////////////////////
 
-        /* Register for BootPhase 1 initialization and as a Provider */
+        /* Register for InitPhase 1 initialization and as a Provider */
         DispatchTable->KdpInitRoutine = KdpScreenInit;
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
     }
-    else if (BootPhase == 1)
+    else if (InitPhase == 1)
     {
+/////// ENABLING PORT ///////
         /* Take control of the display */
         KdpScreenAcquire();
+/////////////////////////////
 
         /* Announce ourselves */
         HalDisplayString("   Screen debugging enabled\r\n");
