@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/kd64/kdlock.c
- * PURPOSE:         KD64 Port Lock and Breakin Support
+ * PURPOSE:         KD64 Port Lock and Break-in Support
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
@@ -20,28 +20,28 @@ KdpPollBreakInWithPortLock(VOID)
 {
     BOOLEAN DoBreak = FALSE;
 
-    /* First make sure that KD is enabled */
-    if (KdDebuggerEnabled)
+    /* If KD is not enabled, no break to do */
+    if (!KdDebuggerEnabled)
+        return FALSE;
+
+    /* Check if a CTRL-C is in the queue */
+    if (KdpContext.KdpControlCPending)
     {
-        /* Check if a CTRL-C is in the queue */
-        if (KdpContext.KdpControlCPending)
+        /* Set it and prepare for break */
+        DoBreak = TRUE;
+        KdpContext.KdpControlCPending = FALSE;
+    }
+    else
+    {
+        /* Now get a packet */
+        if (KdReceivePacket(PACKET_TYPE_KD_POLL_BREAKIN,
+                            NULL,
+                            NULL,
+                            NULL,
+                            NULL) == KdPacketReceived)
         {
-            /* Set it and prepare for break */
+            /* Successful break-in */
             DoBreak = TRUE;
-            KdpContext.KdpControlCPending = FALSE;
-        }
-        else
-        {
-            /* Now get a packet */
-            if (KdReceivePacket(PACKET_TYPE_KD_POLL_BREAKIN,
-                                NULL,
-                                NULL,
-                                NULL,
-                                NULL) == KdPacketReceived)
-            {
-                /* Successful breakin */
-                DoBreak = TRUE;
-            }
         }
     }
 
@@ -136,67 +136,68 @@ NTAPI
 KdPollBreakIn(VOID)
 {
     BOOLEAN DoBreak = FALSE;
+    BOOLEAN Enable;
+    KIRQL OldIrql;
 
-    /* First make sure that KD is enabled */
-    if (KdDebuggerEnabled)
+    /* If KD is not enabled, no break to do */
+    if (KdPitchDebugger || !KdDebuggerEnabled)
+        return FALSE;
+
+    /* Disable interrupts */
+    Enable = KeDisableInterrupts();
+
+    /* Elevate IRQL to HIGH_LEVEL, to ensure the lock can be correctly
+     * acquired if needed -- the two cases where KdPollBreakIn() is NOT
+     * already invoked at >= DISPATCH_LEVEL is during system startup,
+     * when KiSystemStartup() invokes KdInitSystem(0, KeLoaderBlock);
+     * and when it also invokes KdPollBreakIn() itself. */
+    // See commit 835c3023
+    // ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
+    KeRaiseIrql(HIGH_LEVEL, &OldIrql);
+
+    /* Check if a CTRL-C is in the queue */
+    if (KdpContext.KdpControlCPending)
     {
-        /* Disable interrupts */
-        BOOLEAN Enable = KeDisableInterrupts();
-        KIRQL OldIrql;
+        /* Set it and prepare for break */
+        KdpControlCPressed = TRUE;
+        DoBreak = TRUE;
+        KdpContext.KdpControlCPending = FALSE;
+    }
+    else
+    {
+        // See above...
 
-        /* Elevate IRQL to HIGH_LEVEL, to ensure the lock can be correctly
-         * acquired if needed -- the two cases where KdPollBreakIn() is NOT
-         * already invoked at >= DISPATCH_LEVEL is during system startup,
-         * when KiSystemStartup() invokes KdInitSystem(0, KeLoaderBlock);
-         * and when it also invokes KdPollBreakIn() itself. */
-        // See commit 835c3023
-        // ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
-        KeRaiseIrql(HIGH_LEVEL, &OldIrql);
-
-        /* Check if a CTRL-C is in the queue */
-        if (KdpContext.KdpControlCPending)
+        /* Try to acquire the lock */
+        if (((KSPIN_LOCK)KeGetCurrentThread() | 1) == KdpDebuggerLock)
+        //if (!KeTestSpinLock(&KdpDebuggerLock))
         {
-            /* Set it and prepare for break */
-            KdpControlCPressed = TRUE;
-            DoBreak = TRUE;
-            KdpContext.KdpControlCPending = FALSE;
+            KdDbgPortPrintf("%s(%p) already owned\n", __FUNCTION__, &KdpDebuggerLock);
+            KeRosDumpStackFrames(NULL, 0);
         }
         else
+        if (KeTryToAcquireSpinLockAtDpcLevel(&KdpDebuggerLock))
         {
-            // See above...
-
-            /* Try to acquire the lock */
-            if (((KSPIN_LOCK)KeGetCurrentThread() | 1) == KdpDebuggerLock)
-            //if (!KeTestSpinLock(&KdpDebuggerLock))
+            /* Now get a packet */
+            if (KdReceivePacket(PACKET_TYPE_KD_POLL_BREAKIN,
+                                NULL,
+                                NULL,
+                                NULL,
+                                NULL) == KdPacketReceived)
             {
-                KdDbgPortPrintf("%s(%p) already owned\n", __FUNCTION__, &KdpDebuggerLock);
-                KeRosDumpStackFrames(NULL, 0);
+                /* Successful break-in */
+                DoBreak = TRUE;
+                KdpControlCPressed = TRUE;
             }
-            else
-            if (KeTryToAcquireSpinLockAtDpcLevel(&KdpDebuggerLock))
-            {
-                /* Now get a packet */
-                if (KdReceivePacket(PACKET_TYPE_KD_POLL_BREAKIN,
-                                    NULL,
-                                    NULL,
-                                    NULL,
-                                    NULL) == KdPacketReceived)
-                {
-                    /* Successful breakin */
-                    DoBreak = TRUE;
-                    KdpControlCPressed = TRUE;
-                }
 
-                /* Let go of the port */
-                KeReleaseSpinLockFromDpcLevel(&KdpDebuggerLock);
-            }
+            /* Let go of the port */
+            KeReleaseSpinLockFromDpcLevel(&KdpDebuggerLock);
         }
-
-        KeLowerIrql(OldIrql);
-
-        /* Re-enable interrupts */
-        KeRestoreInterrupts(Enable);
     }
+
+    KeLowerIrql(OldIrql);
+
+    /* Re-enable interrupts */
+    KeRestoreInterrupts(Enable);
 
     /* Tell the caller to do a break */
     return DoBreak;
