@@ -81,7 +81,11 @@ CreateFreeLoaderReactOSEntries(
     /* ReactOS_Debug */
     // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_Debug");
     BootEntry->FriendlyName = L"\"ReactOS (Debug)\"";
+#ifndef _WINKD_
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS";
+#else
+    Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /redirect=com1 /redirectbaudrate=115200";
+#endif
     AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_Debug"));
 
 #ifdef _WINKD_
@@ -96,7 +100,7 @@ CreateFreeLoaderReactOSEntries(
     /* ReactOS_KdSerial */
     // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_KdSerial");
     BootEntry->FriendlyName = L"\"ReactOS (RosDbg)\"";
-    Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /KDSERIAL";
+    Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /KDSERIAL /redirect=com1 /redirectbaudrate=115200";
     AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_KdSerial"));
 #endif
 
