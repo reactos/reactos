@@ -1074,6 +1074,15 @@ typedef struct _UCALLOUT_FRAME
 } UCALLOUT_FRAME, *PUCALLOUT_FRAME; // size = 0x0058
 
 //
+// User side APC dispatcher frame
+//
+typedef struct _UAPC_FRAME
+{
+    CONTEXT Context;
+    MACHINE_FRAME MachineFrame;
+} UAPC_FRAME, *PUAPC_FRAME;
+
+//
 // Stack frame layout for KiUserExceptionDispatcher
 // The name is totally made up
 //
