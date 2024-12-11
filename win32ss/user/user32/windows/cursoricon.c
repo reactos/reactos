@@ -2060,36 +2060,26 @@ HANDLE WINAPI CopyImage(
             if (!handle && (fuFlags & LR_COPYFROMRESOURCE))
             {
                 /* Test if the hImage is the same size as what we want by getting
-                 * its BITMAPINFO and comparing it to the desired size. */
-                HDC hDC;
-                ICONINFO iconinfo = { 0 };
-                /* struct is for BITMAPINFO plus a full-sized color table */
-                struct
-                {
-                    BITMAPINFOHEADER bmiHeader;
-                    RGBQUAD bmiColors[256];
-                } bmi;
+                 * its BITMAP and comparing its dimensions to the desired size. */
+                BITMAP bm;
 
-                if (!GetIconInfo((HICON)hImage, &iconinfo))
+                ICONINFO iconinfo = { 0 };
+                if (!GetIconInfo(hImage, &iconinfo))
                 {
                     ERR("GetIconInfo Failed. hImage %p\n", hImage);
                     return NULL;
                 }
-                ZeroMemory(&bmi, sizeof(bmi));
-                bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+                if (!GetObject(iconinfo.hbmColor, sizeof(bm), &bm))
+                {
+                    ERR("GetObject Failed. iconinfo %p\n", iconinfo);
+                    return NULL;
+                }
 
-                hDC = GetDC(NULL);  // Screen hdc
-                if (!hDC)
-                    ERR("GetDC(NULL) returned NULL\n");
-                else
-                    GetDIBits(hDC, iconinfo.hbmMask, 0, 1, NULL, (PBITMAPINFO)&bmi, DIB_RGB_COLORS);
                 DeleteObject(iconinfo.hbmMask);
                 DeleteObject(iconinfo.hbmColor);
-                if (hDC)
-                    ReleaseDC(NULL, hDC);
 
                 /* If the images are the same size remove LF_COPYFROMRESOURCE and try again */
-                if (cxDesired == bmi.bmiHeader.biWidth && cyDesired == bmi.bmiHeader.biHeight)
+                if (cxDesired == bm.bmWidth && cyDesired == bm.bmHeight)
                 {
                     handle = CURSORICON_CopyImage(hImage, uType == IMAGE_ICON, cxDesired,
                                                   cyDesired, (fuFlags & ~LR_COPYFROMRESOURCE));
