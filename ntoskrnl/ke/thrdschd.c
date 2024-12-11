@@ -307,6 +307,7 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
     Prcb = KiProcessorBlock[Processor];
     KiAcquirePrcbLock(Prcb);
 
+#ifndef CONFIG_SMP
     /* Check if we have an idle summary */
     if (KiIdleSummary)
     {
@@ -319,6 +320,7 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
         KiReleasePrcbLock(Prcb);
         return;
     }
+#endif // !CONFIG_SMP
 
     /* Get the next scheduled thread */
     NextThread = Prcb->NextThread;
