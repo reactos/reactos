@@ -53,7 +53,7 @@ Startup:
 
 Msg_Unsupported:
     .ascii "This CPU is not supported.", CR, LF
-    .ascii "Press any key to reboot...", NUL
+    .ascii "Press any key to reboot...", CR, LF, NUL
 
 Msg_Starting:
     .ascii "Starting FreeLoader...", CR, LF, NUL
