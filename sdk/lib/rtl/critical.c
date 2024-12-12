@@ -521,6 +521,7 @@ RtlEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
      */
     CriticalSection->OwningThread = Thread;
     CriticalSection->RecursionCount = 1;
+    NtCurrentTeb()->CountOfOwnedCriticalSections++;
     return STATUS_SUCCESS;
 }
 
@@ -800,6 +801,7 @@ RtlLeaveCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
          * See comment above.
          */
         CriticalSection->OwningThread = 0;
+        NtCurrentTeb()->CountOfOwnedCriticalSections--;
 
         /* Was someone wanting us? This needs to be done atomically. */
         if (-1 != InterlockedDecrement(&CriticalSection->LockCount))
@@ -837,8 +839,9 @@ RtlTryEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
     if (InterlockedCompareExchange(&CriticalSection->LockCount, 0, -1) == -1)
     {
         /* It's ours */
-        CriticalSection->OwningThread =  NtCurrentTeb()->ClientId.UniqueThread;
+        CriticalSection->OwningThread = NtCurrentTeb()->ClientId.UniqueThread;
         CriticalSection->RecursionCount = 1;
+        NtCurrentTeb()->CountOfOwnedCriticalSections++;
         return TRUE;
     }
     else if (CriticalSection->OwningThread == NtCurrentTeb()->ClientId.UniqueThread)
