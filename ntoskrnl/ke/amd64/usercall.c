@@ -318,9 +318,6 @@ KeUserModeCallback(
 
     /* Restore stack and return */
     *UserStackPointer = OldStack;
-#ifdef _M_AMD64 // could probably  move the update to TrapFrame->Rsp from the C handler to the asm code
-    __writegsqword(FIELD_OFFSET(KIPCR, UserRsp), OldStack);
-#endif
     return CallbackStatus;
 }
 
