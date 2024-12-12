@@ -159,9 +159,8 @@ KiSystemCallHandler(
     /* We don't have an exception frame yet */
     TrapFrame->ExceptionFrame = 0;
 
-    /* Before enabling interrupts get the user rsp from the KPCR */
-    UserRsp = __readgsqword(FIELD_OFFSET(KIPCR, UserRsp));
-    TrapFrame->Rsp = UserRsp;
+    /* Get the user Stack pointer */
+    UserRsp = TrapFrame->Rsp;
 
     /* Enable interrupts */
     _enable();
