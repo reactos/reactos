@@ -1,4 +1,11 @@
-/* TRANSLATOR: 2013-2020 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net> */
+/*
+ * PROJECT:     ReactOS Display Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATORS: Copyright 2013-2020 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
+ *              Copyright 2021-2023 Süleyman Poyraz <zaryob.dev@gmail.com>
+ *              Copyright 2024 Ethem Çılgın <ethemrty@gmail.com>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -23,12 +30,12 @@ BEGIN
     CONTROL "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
     CONTROL "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 8, 104, 174, 86
-    LTEXT "Duvar kağıdınız olarak kullanmak için bir resim seçiniz:", IDC_STATIC, 8, 93, 230, 9//FIXME: add accel. I used "Duvar &kağıdınız olarak kullanmak için bir resim seçiniz:" for the backport
+    LTEXT "Duvar k&ağıdınız olarak kullanmak için bir resim seçiniz:", IDC_STATIC, 8, 93, 230, 9
     PUSHBUTTON "&Göz At...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
     PUSHBUTTON "&Renk...", IDC_COLOR_BUTTON, 188, 167, 55, 15
     LTEXT "&Yerleşim:", IDC_STATIC, 188, 128, 55, 9
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Customize &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
+    PUSHBUTTON "Masaüstünü &Özelleştir...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 202
@@ -37,7 +44,7 @@ CAPTION "Ekran Koruyucu"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
-    GROUPBOX "Ekran Koruyucu", IDC_SCREENS_DUMMY, 8, 92, 230, 52//FIXME: add accel. I used "&Ekran Koruyucu" for the backport
+    GROUPBOX "&Ekran Koruyucu", IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Ayarlar", IDC_SCREENS_SETTINGS, 120, 102, 50, 15, WS_GROUP
     PUSHBUTTON "&Ön İzleme", IDC_SCREENS_TESTSC, 175, 102, 50, 15
@@ -93,7 +100,7 @@ BEGIN
     LTEXT "&Yazı Tipi", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Y&azı Tipi Boyutu", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9//FIXME: In 100 years this will not fit here in this controls width. Shorten the string! I used "B&oyut" for the backport, because the context to "&Yazı Tipi" (the LTEXT above) is absolutely clear from the dialogs layout. Keep in mind that "&Boyut" is not possible here, because that is used already.
+    LTEXT "B&oyut", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
     LTEXT "&Renk", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9
     CHECKBOX "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
@@ -106,10 +113,10 @@ END
 IDD_EFFAPPEARANCE DIALOGEX 0, 0, 285, 185
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Etkiler"
+CAPTION "Efektler"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTOCHECKBOX "&Araç ipuçları ve menüler için aşağıdaki geçiş etkisini kullan:", IDC_EFFAPPEARANCE_ANIMATION, 10, 5, 267, 19
+    AUTOCHECKBOX "&Araç ipuçları ve menüler için aşağıdaki geçiş efektini kullan:", IDC_EFFAPPEARANCE_ANIMATION, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "&Ekran yazı tiplerinin kenarlarını yumuşatmak için aşağıdaki yöntemi kullan:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
@@ -137,8 +144,8 @@ BEGIN
     LTEXT "<Yok>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
     GROUPBOX "E&kran Alanı", 1818, 3, 127, 115, 43
     CONTROL "", IDC_SETTINGS_RESOLUTION, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
-    LTEXT "Daha Az", 1815, 9, 137, 25, 9, NOT WS_GROUP
-    LTEXT "Daha Çok", 1816, 93, 137, 20, 9, NOT WS_GROUP
+    LTEXT "Daha Az", 1815, 9, 137, 30, 9, NOT WS_GROUP
+    LTEXT "Daha Çok", 1816, 93, 137, 30, 9, NOT WS_GROUP
     LTEXT "", IDC_SETTINGS_RESOLUTION_TEXT, 10, 157, 100, 10, NOT WS_GROUP | SS_CENTER
     GROUPBOX "&Renk", 1817, 125, 127, 115, 43
     COMBOBOX IDC_SETTINGS_BPP, 131, 137, 103, 80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
@@ -152,9 +159,9 @@ CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Masaüstü simgeleri", IDC_STATIC, 6, 4, 212, 40
-    AUTOCHECKBOX "&Belgelerim", IDC_ICONS_MYDOCS, 14, 14, 100, 12//FIXME: accelerator collision &B
+    AUTOCHECKBOX "B&elgelerim", IDC_ICONS_MYDOCS, 14, 14, 100, 12
     AUTOCHECKBOX "&Ağ Konumlarım", IDC_ICONS_MYNET, 116, 14, 100, 12
-    AUTOCHECKBOX "&Bu bilgisayar", IDC_ICONS_MYCOMP, 14, 28, 100, 12//FIXME: accelerator collision &B
+    AUTOCHECKBOX "B&u bilgisayar", IDC_ICONS_MYCOMP, 14, 28, 100, 12
     AUTOCHECKBOX "&İnternet tarayıcısı", IDC_ICONS_INTERNET, 116, 28, 100, 12
     CONTROL "", IDC_ICONS_LISTVIEW, "SysListView32",
             LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP | WS_HSCROLL,
@@ -169,7 +176,7 @@ CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Görüntü", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Yazı Tipi Boyutu:", -1, 14, 20, 222, 9//FIXME: add accel. I used "&Yazı Tipi Boyutu:" for the backport. 2k3sp2 does use "&DPI setting:" here now. Feel free to translate that.
+    LTEXT "&Yazı Tipi Boyutu:", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Uyumluluk", -1, 7, 67, 237, 97
@@ -211,8 +218,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SLIDEEFFECT "Kayma etkisi"
-    IDS_FADEEFFECT "Solma etkisi"
+    IDS_SLIDEEFFECT "Kayma efekti"
+    IDS_FADEEFFECT "Solma efekti"
 END
 
 STRINGTABLE
@@ -223,7 +230,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DESKTOP_ITEMS "Desktop Items"
+    IDS_DESKTOP_ITEMS "Masaüstü Öğeleri"
 END
 
 STRINGTABLE
