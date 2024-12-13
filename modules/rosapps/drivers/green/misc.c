@@ -85,18 +85,18 @@ ReadRegistryEntries(
 
 	RtlZeroMemory(Parameters, sizeof(Parameters));
 
-	Parameters[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+	Parameters[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
 	Parameters[0].Name = L"AttachedDevice";
 	Parameters[0].EntryContext = &DriverExtension->AttachedDeviceName;
 
-	Parameters[1].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[1].Name = L"DeviceReported";
 	Parameters[1].EntryContext = &DriverExtension->DeviceReported;
 	Parameters[1].DefaultType = REG_DWORD;
 	Parameters[1].DefaultData = &DefaultDeviceReported;
 	Parameters[1].DefaultLength = sizeof(ULONG);
 
-	Parameters[2].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[2].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[2].Name = L"SampleRate";
 	Parameters[2].EntryContext = &DriverExtension->SampleRate;
 	Parameters[2].DefaultType = REG_DWORD;
@@ -104,7 +104,7 @@ ReadRegistryEntries(
 	Parameters[2].DefaultLength = sizeof(ULONG);
 
 	Status = RtlQueryRegistryValues(
-		RTL_REGISTRY_ABSOLUTE,
+		RTL_REGISTRY_ABSOLUTE | RTL_REGISTRY_OPTIONAL,
 		ParametersRegistryKey.Buffer,
 		Parameters,
 		NULL,
