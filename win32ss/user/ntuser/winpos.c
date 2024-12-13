@@ -2257,9 +2257,10 @@ co_WinPosSetWindowPos(
             if (!(Window->state & WNDS_BEINGACTIVATED)) // Inside SAW?
             {
                // Set state flag to prevent recursions.
+               BOOL WasBeingActivated = (Window->state & WNDS_BEINGACTIVATED) != 0;
                Window->state |= WNDS_BEINGACTIVATED;
                co_IntSetForegroundWindow(Window); // Fixes SW_HIDE issues. Wine win test_SetActiveWindow & test_SetForegroundWindow.
-               Window->state &= ~WNDS_BEINGACTIVATED;
+               if (!WasBeingActivated) Window->state &= ~WNDS_BEINGACTIVATED;
             }
          }
       }
