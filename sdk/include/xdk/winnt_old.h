@@ -2791,9 +2791,17 @@ typedef struct _RTL_CRITICAL_SECTION_DEBUG {
   LIST_ENTRY ProcessLocksList;
   DWORD EntryCount;
   DWORD ContentionCount;
-  DWORD Flags;
-  WORD CreatorBackTraceIndexHigh;
-  WORD SpareWORD;
+  union
+  {
+    DWORD_PTR WineDebugString;
+    DWORD_PTR Spare[1];
+    struct
+    {
+      DWORD Flags;
+      WORD CreatorBackTraceIndexHigh;
+      WORD SpareWORD;
+    };
+  };
 } RTL_CRITICAL_SECTION_DEBUG, *PRTL_CRITICAL_SECTION_DEBUG, RTL_RESOURCE_DEBUG, *PRTL_RESOURCE_DEBUG;
 
 #include "pshpack8.h"
