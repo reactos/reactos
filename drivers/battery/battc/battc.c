@@ -223,7 +223,7 @@ BatteryClassIoctl(PVOID ClassData,
 
             WaitTime = IrpSp->Parameters.DeviceIoControl.InputBufferLength == sizeof(ULONG) ? *(PULONG)Irp->AssociatedIrp.SystemBuffer : 0;
 
-            Timeout.QuadPart = Int32x32To64(WaitTime, -1000);
+            Timeout.QuadPart = Int32x32To64(WaitTime, -10000);
 
             Status = BattClass->MiniportInfo.QueryTag(BattClass->MiniportInfo.Context,
                                                       (PULONG)Irp->AssociatedIrp.SystemBuffer);
@@ -272,7 +272,7 @@ BatteryClassIoctl(PVOID ClassData,
 
             BattWait = *(PBATTERY_WAIT_STATUS)Irp->AssociatedIrp.SystemBuffer;
 
-            Timeout.QuadPart = Int32x32To64(BattWait.Timeout, -1000);
+            Timeout.QuadPart = Int32x32To64(BattWait.Timeout, -10000);
 
             BattStatus = Irp->AssociatedIrp.SystemBuffer;
             Status = BattClass->MiniportInfo.QueryStatus(BattClass->MiniportInfo.Context,
