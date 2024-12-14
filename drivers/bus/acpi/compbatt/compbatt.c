@@ -1282,14 +1282,229 @@ CompBattGetBatteryGranularity(
     return STATUS_SUCCESS;
 }
 
+static
+LONG
+CompBattCalculateAtRateTime(
+    _In_ PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
+{
+    NTSTATUS Status;
+    PCOMPBATT_BATTERY_DATA BatteryData;
+    BATTERY_QUERY_INFORMATION QueryInformation;
+    PLIST_ENTRY ListHead, NextEntry;
+    ULONG Time;
+    LONG ComputedAtRate = 0;
+
+    /* Walk over the linked batteries list to poll for "At Rate" value of each battery */
+    ExAcquireFastMutex(&DeviceExtension->Lock);
+    ListHead = &DeviceExtension->BatteryList;
+    for (NextEntry = ListHead->Flink;
+         NextEntry != ListHead;
+         NextEntry = NextEntry->Flink)
+    {
+        /* Acquire the remove lock so this battery does not disappear under us */
+        BatteryData = CONTAINING_RECORD(NextEntry, COMPBATT_BATTERY_DATA, BatteryLink);
+        if (!NT_SUCCESS(IoAcquireRemoveLock(&BatteryData->RemoveLock, BatteryData->Irp)))
+            continue;
+
+        /* Now release the device lock since the battery can't go away */
+        ExReleaseFastMutex(&DeviceExtension->Lock);
+
+        /* Build the necessary information in order to query the battery estimated time */
+        QueryInformation.BatteryTag = BatteryData->Tag;
+        QueryInformation.InformationLevel = BatteryEstimatedTime;
+        QueryInformation.AtRate = 0;
+
+        /* Make sure this battery has a valid tag before issuing the IOCTL */
+        if (BatteryData->Tag != BATTERY_TAG_INVALID)
+        {
+            /*
+             * Now it is time to issue the IOCTL to the battery device.
+             * We are calculating the "At Rate" counter based on each linked
+             * battery that is discharging, one at a time. This ensures
+             * that when we will actually retrieve the estimation time of each
+             * individual battery and sum it all up as one time for the composite
+             * battery, that the estimated time is accurate enough.
+             */
+            Status = BatteryIoctl(IOCTL_BATTERY_QUERY_INFORMATION,
+                                  BatteryData->DeviceObject,
+                                  &QueryInformation,
+                                  sizeof(QueryInformation),
+                                  &Time,
+                                  sizeof(Time),
+                                  FALSE);
+            if (NT_SUCCESS(Status))
+            {
+                if ((Time != 0) && (Time != BATTERY_UNKNOWN_TIME))
+                {
+                    ComputedAtRate -= COMPUTE_ATRATE_DRAIN(BatteryData, Time);
+                }
+            }
+        }
+
+        /* We are done with this battery */
+        ExAcquireFastMutex(&DeviceExtension->Lock);
+        IoReleaseRemoveLock(&BatteryData->RemoveLock, BatteryData->Irp);
+    }
+
+    /* Release the lock as we are no longer poking through the batteries list */
+    ExReleaseFastMutex(&DeviceExtension->Lock);
+    return ComputedAtRate;
+}
+
 NTSTATUS
 NTAPI
 CompBattGetEstimatedTime(
     _Out_ PULONG Time,
     _In_ PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PCOMPBATT_BATTERY_DATA BatteryData;
+    BATTERY_STATUS BatteryStatus;
+    BATTERY_QUERY_INFORMATION QueryInformation;
+    PLIST_ENTRY ListHead, NextEntry;
+    ULONG ReturnedTime;
+    LONG ComputedAtRate;
+
+    /* Assume the battery time is not estimated yet */
+    *Time = BATTERY_UNKNOWN_TIME;
+
+    /*
+     * Before we are querying the composite estimated battery time we must
+     * refresh the battery status cache if we have not done it so.
+     */
+    Status = CompBattQueryStatus(DeviceExtension,
+                                 DeviceExtension->Tag,
+                                 &BatteryStatus);
+    if (!NT_SUCCESS(Status))
+    {
+        if (CompBattDebug & COMPBATT_DEBUG_ERR)
+            DbgPrint("CompBatt: Failed to refresh composite battery's status (Status 0x%08lx)\n", Status);
+
+        return Status;
+    }
+
+    /* Print out battery status data that has been polled */
+    if (CompBattDebug & COMPBATT_DEBUG_INFO)
+        DbgPrint("CompBatt: Latest composite battery status (when querying for estimated time)\n"
+                 "          PowerState -> 0x%lx\n"
+                 "          Capacity -> %u\n"
+                 "          Voltage -> %u\n"
+                 "          Rate -> %d\n",
+                 BatteryStatus.PowerState,
+                 BatteryStatus.Capacity,
+                 BatteryStatus.Voltage,
+                 BatteryStatus.Rate);
+
+    /*
+     * If the batteries are not being discharged and the system is directly
+     * being powered by external AC source then it makes no sense to
+     * compute the battery estimated time because that construct is for
+     * WHEN the system is powered directly from batteries and it drains power.
+     */
+    if (DeviceExtension->BatteryStatus.PowerState & BATTERY_POWER_ON_LINE)
+    {
+        if (CompBattDebug & COMPBATT_DEBUG_WARN)
+        {
+            DbgPrint("CompBatt: The system is powered by AC source, estimated time is not available\n");
+        }
+
+        return STATUS_SUCCESS;
+    }
+
+    /* Determine the draining "At Rate" counter for all batteries */
+    ComputedAtRate = CompBattCalculateAtRateTime(DeviceExtension);
+
+    /*
+     * A rate of 0 indicates none of the batteries that are linked with
+     * the composite are being drained therefore we cannot estimate the
+     * run time of the composite as it is not discharging.
+     */
+    if (ComputedAtRate == 0)
+    {
+        if (CompBattDebug & COMPBATT_DEBUG_WARN)
+            DbgPrint("CompBatt: No battery is discharging and no power is being drained, cannot estimate the run time\n");
+
+        return STATUS_SUCCESS;
+    }
+
+    /* Walk over the linked batteries list and determine the exact estimated time */
+    ExAcquireFastMutex(&DeviceExtension->Lock);
+    ListHead = &DeviceExtension->BatteryList;
+    for (NextEntry = ListHead->Flink;
+         NextEntry != ListHead;
+         NextEntry = NextEntry->Flink)
+    {
+        /* Acquire the remove lock so this battery does not disappear under us */
+        BatteryData = CONTAINING_RECORD(NextEntry, COMPBATT_BATTERY_DATA, BatteryLink);
+        if (!NT_SUCCESS(IoAcquireRemoveLock(&BatteryData->RemoveLock, BatteryData->Irp)))
+            continue;
+
+        /* Now release the device lock since the battery can't go away */
+        ExReleaseFastMutex(&DeviceExtension->Lock);
+
+        /* Build the necessary information in order to query the battery estimated time */
+        QueryInformation.BatteryTag = BatteryData->Tag;
+        QueryInformation.InformationLevel = BatteryEstimatedTime;
+        QueryInformation.AtRate = ComputedAtRate;
+
+        /* Make sure this battery has a valid tag before issuing the IOCTL */
+        if (BatteryData->Tag != BATTERY_TAG_INVALID)
+        {
+            Status = BatteryIoctl(IOCTL_BATTERY_QUERY_INFORMATION,
+                                  BatteryData->DeviceObject,
+                                  &QueryInformation,
+                                  sizeof(QueryInformation),
+                                  &ReturnedTime,
+                                  sizeof(ReturnedTime),
+                                  FALSE);
+            if (!NT_SUCCESS(Status))
+            {
+                /*
+                 * If the device is being suddenly removed then we must invalidate
+                 * both this battery and composite tags.
+                 */
+                if (Status == STATUS_DEVICE_REMOVED)
+                {
+                    Status = STATUS_NO_SUCH_DEVICE;
+                }
+
+                ExAcquireFastMutex(&DeviceExtension->Lock);
+                IoReleaseRemoveLock(&BatteryData->RemoveLock, BatteryData->Irp);
+
+                /*
+                 * In other places we are ceasing the execution of the loop but
+                 * here we want to continue looking for other linked batteries.
+                 * This is because we are querying for the estimated battery time
+                 * at the time the last battery status was valid. Also bear in
+                 * mind IOCTL_BATTERY_QUERY_INFORMATION with InformationLevel as
+                 * BatteryEstimatedTime might not be a valid request supported
+                 * by this battery.
+                 */
+                continue;
+            }
+
+            /* Now sum up the estimated battery time */
+            if (ReturnedTime != BATTERY_UNKNOWN_TIME)
+            {
+                if (*Time != BATTERY_UNKNOWN_TIME)
+                {
+                    *Time += ReturnedTime;
+                }
+                else
+                {
+                    *Time = ReturnedTime;
+                }
+            }
+        }
+
+        /* We are done with this battery */
+        ExAcquireFastMutex(&DeviceExtension->Lock);
+        IoReleaseRemoveLock(&BatteryData->RemoveLock, BatteryData->Irp);
+    }
+
+    /* Release the lock as we are no longer poking through the batteries list */
+    ExReleaseFastMutex(&DeviceExtension->Lock);
+    return Status;
 }
 
 NTSTATUS
