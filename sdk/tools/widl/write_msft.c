@@ -900,7 +900,7 @@ static int encode_type(
 
 	if (typeoffset == typelib->typelib_segdir[MSFT_SEG_TYPEDESC].length) {
 	    int mix_field;
-
+	    
 	    if (target_type & 0x80000000) {
 		mix_field = ((target_type >> 16) & 0x3fff) | VT_BYREF;
 	    } else {
@@ -936,7 +936,7 @@ static int encode_type(
 
 	if (typeoffset == typelib->typelib_segdir[MSFT_SEG_TYPEDESC].length) {
 	    int mix_field;
-
+	    
 	    if (target_type & 0x80000000) {
 		mix_field = ((target_type >> 16) & VT_TYPEMASK) | VT_ARRAY;
 	    } else {
@@ -1551,7 +1551,7 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, var_t *func, int index)
     }
 
     /* update the index data */
-    typeinfo->func_indices[typeinfo->typeinfo->cElement & 0xffff] = id;
+    typeinfo->func_indices[typeinfo->typeinfo->cElement & 0xffff] = id; 
     typeinfo->func_offsets[typeinfo->typeinfo->cElement & 0xffff] = offset;
     typeinfo->func_names[typeinfo->typeinfo->cElement & 0xffff] = name_offset;
 
@@ -1607,7 +1607,7 @@ static HRESULT add_var_desc(msft_typeinfo_t *typeinfo, UINT index, var_t* var)
     unsigned int typedata_size;
     INT *typedata;
     unsigned int var_datawidth, var_alignment = 0;
-    int var_type_size, var_kind = 0 /* VAR_PERINSTANCE */;
+    int var_type_size, var_kind = 0 /* VAR_PERINSTANCE */; 
     int alignment;
     int varflags = 0;
     const attr_t *attr;
@@ -2705,7 +2705,7 @@ int create_msft_typelib(typelib_t *typelib)
     set_help_context(msft);
     set_help_string_dll(msft);
     set_help_string_context(msft);
-
+    
     /* midl adds two sets of custom data to the library: the current unix time
        and midl's version number */
     time_override = getenv( "WIDL_TIME_OVERRIDE");

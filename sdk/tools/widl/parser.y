@@ -136,9 +136,7 @@ static struct namespace global_namespace = {
 
 static struct namespace *current_namespace = &global_namespace;
 
-#ifndef __REACTOS__
 static typelib_t *current_typelib;
-#endif
 
 %}
 %union {
