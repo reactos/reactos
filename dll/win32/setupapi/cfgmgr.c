@@ -7933,6 +7933,8 @@ CM_Set_Class_Registry_PropertyW(
     RPC_BINDING_HANDLE BindingHandle = NULL;
     WCHAR szGuidString[PNP_MAX_GUID_STRING_LEN + 1];
     ULONG ulType = 0;
+    PSECURITY_DESCRIPTOR pSecurityDescriptor = NULL;
+    ULONG SecurityDescriptorSize = 0;
     CONFIGRET ret;
 
     TRACE("CM_Set_Class_Registry_PropertyW(%p %lx %p %lu %lx %p)\n",
@@ -7973,8 +7975,19 @@ CM_Set_Class_Registry_PropertyW(
 
     if (ulProperty == CM_CRP_SECURITY_SDS)
     {
-        FIXME("Conversion from text SD to binary SD is not implemented yet!\n");
-        return CR_CALL_NOT_IMPLEMENTED;
+        if (!ConvertStringSecurityDescriptorToSecurityDescriptorW((LPCWSTR)Buffer,
+                                                                  SDDL_REVISION_1,
+                                                                  &pSecurityDescriptor,
+                                                                  &SecurityDescriptorSize))
+        {
+            ERR("ConvertStringSecurityDescriptorToSecurityDescriptorW() failed (Error %lu)\n", GetLastError());
+            return CR_INVALID_DATA;
+        }
+
+        Buffer = (PCVOID)pSecurityDescriptor;
+        ulLength = SecurityDescriptorSize;
+        ulProperty = CM_CRP_SECURITY;
+        ulType = REG_BINARY;
     }
 
     RpcTryExcept
@@ -7992,6 +8005,9 @@ CM_Set_Class_Registry_PropertyW(
         ret = RpcStatusToCmStatus(RpcExceptionCode());
     }
     RpcEndExcept;
+
+    if (pSecurityDescriptor)
+        LocalFree(pSecurityDescriptor);
 
     return ret;
 }
