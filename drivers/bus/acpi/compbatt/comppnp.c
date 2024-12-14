@@ -165,7 +165,6 @@ CompBattAddNewBattery(IN PUNICODE_STRING BatteryName,
                     /* Set IRP data */
                     IoSetNextIrpStackLocation(Irp);
                     Irp->IoStatus.Status = STATUS_DEVICE_NOT_CONNECTED;
-                    BatteryData->WaitFlag = 0;
 
                     /* Insert this battery in the list */
                     ExAcquireFastMutex(&DeviceExtension->Lock);
