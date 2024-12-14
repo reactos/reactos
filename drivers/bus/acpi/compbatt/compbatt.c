@@ -286,7 +286,7 @@ CompBattGetBatteryInformation(
                                           sizeof(InputBuffer),
                                           &BatteryData->BatteryInformation,
                                           sizeof(BatteryData->BatteryInformation),
-                                          0);
+                                          FALSE);
                     if (!NT_SUCCESS(Status))
                     {
                         /* Fail if the query had a problem */
@@ -442,7 +442,7 @@ CompBattGetBatteryGranularity(
                                       sizeof(InputBuffer),
                                       &BatteryScale,
                                       sizeof(BatteryScale),
-                                      0);
+                                      FALSE);
                 if (!NT_SUCCESS(Status))
                 {
                     /* Fail if the query had a problem */
