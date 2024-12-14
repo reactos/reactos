@@ -20,8 +20,9 @@ ULONG CompBattDebug;
 
 NTSTATUS
 NTAPI
-CompBattOpenClose(IN PDEVICE_OBJECT DeviceObject,
-                  IN PIRP Irp)
+CompBattOpenClose(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp)
 {
     PAGED_CODE();
     if (CompBattDebug & 0x100) DbgPrint("CompBatt: ENTERING OpenClose\n");
@@ -38,8 +39,9 @@ CompBattOpenClose(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-CompBattSystemControl(IN PDEVICE_OBJECT DeviceObject,
-                      IN PIRP Irp)
+CompBattSystemControl(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp)
 {
     PCOMPBATT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
     NTSTATUS Status;
@@ -67,17 +69,10 @@ CompBattSystemControl(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-CompBattMonitorIrpComplete(IN PDEVICE_OBJECT DeviceObject,
-                           IN PIRP Irp,
-                           IN PKEVENT Event)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-CompBattMonitorIrpCompleteWorker(IN PCOMPBATT_BATTERY_DATA BatteryData)
+CompBattMonitorIrpComplete(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp,
+    _In_ PVOID Context)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -85,7 +80,17 @@ CompBattMonitorIrpCompleteWorker(IN PCOMPBATT_BATTERY_DATA BatteryData)
 
 VOID
 NTAPI
-CompBattRecalculateTag(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
+CompBattMonitorIrpCompleteWorker(
+    _In_ PCOMPBATT_BATTERY_DATA BatteryData)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+VOID
+NTAPI
+CompBattRecalculateTag(
+    _In_ PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
     PCOMPBATT_BATTERY_DATA BatteryData;
     ULONG Tag;
@@ -122,8 +127,9 @@ CompBattRecalculateTag(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 
 NTSTATUS
 NTAPI
-CompBattIoctl(IN PDEVICE_OBJECT DeviceObject,
-              IN PIRP Irp)
+CompBattIoctl(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp)
 {
     PCOMPBATT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
     NTSTATUS Status;
@@ -146,8 +152,9 @@ CompBattIoctl(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-CompBattQueryTag(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
-                 OUT PULONG Tag)
+CompBattQueryTag(
+    _In_ PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
+    _Out_ PULONG Tag)
 {
     NTSTATUS Status;
     PAGED_CODE();
@@ -181,7 +188,8 @@ CompBattQueryTag(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
 
 NTSTATUS
 NTAPI
-CompBattDisableStatusNotify(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
+CompBattDisableStatusNotify(
+    _In_ PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
     PCOMPBATT_BATTERY_DATA BatteryData;
     PLIST_ENTRY ListHead, NextEntry;
@@ -208,9 +216,10 @@ CompBattDisableStatusNotify(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 
 NTSTATUS
 NTAPI
-CompBattSetStatusNotify(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
-                        IN ULONG BatteryTag,
-                        IN PBATTERY_NOTIFY BatteryNotify)
+CompBattSetStatusNotify(
+    _In_ PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
+    _In_ ULONG BatteryTag,
+    _In_ PBATTERY_NOTIFY BatteryNotify)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -218,9 +227,10 @@ CompBattSetStatusNotify(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
 
 NTSTATUS
 NTAPI
-CompBattQueryStatus(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
-                    IN ULONG Tag,
-                    IN PBATTERY_STATUS BatteryStatus)
+CompBattQueryStatus(
+    _In_ PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
+    _In_ ULONG Tag,
+    _Out_ PBATTERY_STATUS BatteryStatus)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -228,8 +238,9 @@ CompBattQueryStatus(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
 
 NTSTATUS
 NTAPI
-CompBattGetBatteryInformation(OUT PBATTERY_INFORMATION BatteryInfo,
-                              IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
+CompBattGetBatteryInformation(
+    _Out_ PBATTERY_INFORMATION BatteryInfo,
+    _In_ PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     BATTERY_QUERY_INFORMATION InputBuffer;
@@ -384,8 +395,9 @@ CompBattGetBatteryInformation(OUT PBATTERY_INFORMATION BatteryInfo,
 
 NTSTATUS
 NTAPI
-CompBattGetBatteryGranularity(OUT PBATTERY_REPORTING_SCALE ReportingScale,
-                              IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
+CompBattGetBatteryGranularity(
+    _Out_ PBATTERY_REPORTING_SCALE ReportingScale,
+    _In_ PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     BATTERY_QUERY_INFORMATION InputBuffer;
@@ -470,8 +482,9 @@ CompBattGetBatteryGranularity(OUT PBATTERY_REPORTING_SCALE ReportingScale,
 
 NTSTATUS
 NTAPI
-CompBattGetEstimatedTime(OUT PULONG Time,
-                         IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
+CompBattGetEstimatedTime(
+    _Out_ PULONG Time,
+    _In_ PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -479,13 +492,14 @@ CompBattGetEstimatedTime(OUT PULONG Time,
 
 NTSTATUS
 NTAPI
-CompBattQueryInformation(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
-                         IN ULONG Tag,
-                         IN BATTERY_QUERY_INFORMATION_LEVEL InfoLevel,
-                         IN OPTIONAL LONG AtRate,
-                         IN PVOID Buffer,
-                         IN ULONG BufferLength,
-                         OUT PULONG ReturnedLength)
+CompBattQueryInformation(
+    _In_ PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
+    _In_ ULONG Tag,
+    _In_ BATTERY_QUERY_INFORMATION_LEVEL InfoLevel,
+    _In_opt_ LONG AtRate,
+    _In_ PVOID Buffer,
+    _In_ ULONG BufferLength,
+    _Out_ PULONG ReturnedLength)
 {
     BATTERY_INFORMATION BatteryInfo;
     BATTERY_REPORTING_SCALE BatteryGranularity[4];
@@ -593,8 +607,9 @@ CompBattQueryInformation(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
 
 NTSTATUS
 NTAPI
-DriverEntry(IN PDRIVER_OBJECT DriverObject,
-            IN PUNICODE_STRING RegistryPath)
+DriverEntry(
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_ PUNICODE_STRING RegistryPath)
 {
     /* Register add device routine */
     DriverObject->DriverExtension->AddDevice = CompBattAddDevice;

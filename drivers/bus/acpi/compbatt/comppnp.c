@@ -16,8 +16,9 @@
 
 NTSTATUS
 NTAPI
-CompBattPowerDispatch(IN PDEVICE_OBJECT DeviceObject,
-                      IN PIRP Irp)
+CompBattPowerDispatch(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp)
 {
     PCOMPBATT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
     if (CompBattDebug & 1) DbgPrint("CompBatt: PowerDispatch received power IRP.\n");
@@ -32,8 +33,9 @@ CompBattPowerDispatch(IN PDEVICE_OBJECT DeviceObject,
 
 PCOMPBATT_BATTERY_DATA
 NTAPI
-RemoveBatteryFromList(IN PCUNICODE_STRING BatteryName,
-                      IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
+RemoveBatteryFromList(
+    _In_ PCUNICODE_STRING BatteryName,
+    _In_ PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
     PLIST_ENTRY ListHead, NextEntry;
     PCOMPBATT_BATTERY_DATA BatteryData;
@@ -74,8 +76,9 @@ RemoveBatteryFromList(IN PCUNICODE_STRING BatteryName,
 
 BOOLEAN
 NTAPI
-IsBatteryAlreadyOnList(IN PCUNICODE_STRING BatteryName,
-                       IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
+IsBatteryAlreadyOnList(
+    _In_ PCUNICODE_STRING BatteryName,
+    _In_ PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
     PLIST_ENTRY ListHead, NextEntry;
     PCOMPBATT_BATTERY_DATA BatteryData;
@@ -110,8 +113,9 @@ IsBatteryAlreadyOnList(IN PCUNICODE_STRING BatteryName,
 
 NTSTATUS
 NTAPI
-CompBattAddNewBattery(IN PUNICODE_STRING BatteryName,
-                      IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
+CompBattAddNewBattery(
+    _In_ PUNICODE_STRING BatteryName,
+    _In_ PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PCOMPBATT_BATTERY_DATA BatteryData;
@@ -220,8 +224,9 @@ CompBattAddNewBattery(IN PUNICODE_STRING BatteryName,
 
 NTSTATUS
 NTAPI
-CompBattRemoveBattery(IN PCUNICODE_STRING BatteryName,
-                      IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
+CompBattRemoveBattery(
+    _In_ PCUNICODE_STRING BatteryName,
+    _In_ PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
     PCOMPBATT_BATTERY_DATA BatteryData;
     if (CompBattDebug & 1) DbgPrint("CompBatt: RemoveBattery\n");
@@ -245,7 +250,8 @@ CompBattRemoveBattery(IN PCUNICODE_STRING BatteryName,
 
 NTSTATUS
 NTAPI
-CompBattGetBatteries(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
+CompBattGetBatteries(
+    _In_ PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
     PWCHAR p;
     NTSTATUS Status;
@@ -286,8 +292,9 @@ CompBattGetBatteries(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 
 NTSTATUS
 NTAPI
-CompBattPnpEventHandler(IN PDEVICE_INTERFACE_CHANGE_NOTIFICATION Notification,
-                        IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
+CompBattPnpEventHandler(
+    _In_ PDEVICE_INTERFACE_CHANGE_NOTIFICATION Notification,
+    _In_ PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
     if (CompBattDebug & 1) DbgPrint("CompBatt: ENTERING PnpEventHandler\n");
     if (CompBattDebug & 2) DbgPrint("CompBatt: Received device interface change notification\n");
@@ -319,8 +326,9 @@ CompBattPnpEventHandler(IN PDEVICE_INTERFACE_CHANGE_NOTIFICATION Notification,
 
 NTSTATUS
 NTAPI
-CompBattAddDevice(IN PDRIVER_OBJECT DriverObject,
-                  IN PDEVICE_OBJECT PdoDeviceObject)
+CompBattAddDevice(
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_ PDEVICE_OBJECT PdoDeviceObject)
 {
     NTSTATUS Status;
     UNICODE_STRING DeviceName;
@@ -402,8 +410,9 @@ CompBattAddDevice(IN PDRIVER_OBJECT DriverObject,
 
 NTSTATUS
 NTAPI
-CompBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
-                    IN PIRP Irp)
+CompBattPnpDispatch(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp)
 {
     PIO_STACK_LOCATION IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
     NTSTATUS Status;

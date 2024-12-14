@@ -14,13 +14,14 @@
 
 NTSTATUS
 NTAPI
-BatteryIoctl(IN ULONG IoControlCode,
-             IN PDEVICE_OBJECT DeviceObject,
-             IN PVOID InputBuffer,
-             IN ULONG InputBufferLength,
-             IN PVOID OutputBuffer,
-             IN ULONG OutputBufferLength,
-             IN BOOLEAN InternalDeviceIoControl)
+BatteryIoctl(
+    _In_ ULONG IoControlCode,
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PVOID InputBuffer,
+    _In_ ULONG InputBufferLength,
+    _Out_ PVOID OutputBuffer,
+    _Inout_ ULONG OutputBufferLength,
+    _In_ BOOLEAN InternalDeviceIoControl)
 {
     IO_STATUS_BLOCK IoStatusBlock;
     KEVENT Event;
@@ -71,10 +72,11 @@ BatteryIoctl(IN ULONG IoControlCode,
 
 NTSTATUS
 NTAPI
-CompBattGetDeviceObjectPointer(IN PUNICODE_STRING DeviceName,
-                               IN ACCESS_MASK DesiredAccess,
-                               OUT PFILE_OBJECT *FileObject,
-                               OUT PDEVICE_OBJECT *DeviceObject)
+CompBattGetDeviceObjectPointer(
+    _In_ PUNICODE_STRING DeviceName,
+    _In_ ACCESS_MASK DesiredAccess,
+    _Out_ PFILE_OBJECT *FileObject,
+    _Out_ PDEVICE_OBJECT *DeviceObject)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
