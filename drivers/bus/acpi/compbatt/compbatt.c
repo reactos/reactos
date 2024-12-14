@@ -25,7 +25,7 @@ CompBattOpenClose(
     _In_ PIRP Irp)
 {
     PAGED_CODE();
-    if (CompBattDebug & 0x100) DbgPrint("CompBatt: ENTERING OpenClose\n");
+    if (CompBattDebug & COMPBATT_DEBUG_TRACE) DbgPrint("CompBatt: ENTERING OpenClose\n");
 
     /* Complete the IRP with success */
     Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -33,7 +33,7 @@ CompBattOpenClose(
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     /* Return success */
-    if (CompBattDebug & 0x100) DbgPrint("CompBatt: Exiting OpenClose\n");
+    if (CompBattDebug & COMPBATT_DEBUG_TRACE) DbgPrint("CompBatt: Exiting OpenClose\n");
     return STATUS_SUCCESS;
 }
 
@@ -46,7 +46,7 @@ CompBattSystemControl(
     PCOMPBATT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
     NTSTATUS Status;
     PAGED_CODE();
-    if (CompBattDebug & 1) DbgPrint("CompBatt: ENTERING System Control\n");
+    if (CompBattDebug & COMPBATT_DEBUG_TRACE) DbgPrint("CompBatt: ENTERING System Control\n");
 
     /* Are we attached yet? */
     if (DeviceExtension->AttachedDevice)
@@ -95,7 +95,7 @@ CompBattRecalculateTag(
     PCOMPBATT_BATTERY_DATA BatteryData;
     ULONG Tag;
     PLIST_ENTRY ListHead, NextEntry;
-    if (CompBattDebug & 0x100) DbgPrint("CompBatt: ENTERING CompBattRecalculateTag\n");
+    if (CompBattDebug & COMPBATT_DEBUG_TRACE) DbgPrint("CompBatt: ENTERING CompBattRecalculateTag\n");
 
     /* Loop the battery list */
     ExAcquireFastMutex(&DeviceExtension->Lock);
@@ -122,7 +122,7 @@ CompBattRecalculateTag(
 
     /* We're done */
     ExReleaseFastMutex(&DeviceExtension->Lock);
-    if (CompBattDebug & 0x100) DbgPrint("CompBatt: EXITING CompBattRecalculateTag\n");
+    if (CompBattDebug & COMPBATT_DEBUG_TRACE) DbgPrint("CompBatt: EXITING CompBattRecalculateTag\n");
 }
 
 NTSTATUS
@@ -133,7 +133,7 @@ CompBattIoctl(
 {
     PCOMPBATT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
     NTSTATUS Status;
-    if (CompBattDebug & 1) DbgPrint("CompBatt: ENTERING Ioctl\n");
+    if (CompBattDebug & COMPBATT_DEBUG_TRACE) DbgPrint("CompBatt: ENTERING Ioctl\n");
 
     /* Let the class driver handle it */
     Status = BatteryClassIoctl(DeviceExtension->ClassData, Irp);
@@ -146,7 +146,7 @@ CompBattIoctl(
     }
 
     /* Return status */
-    if (CompBattDebug & 1) DbgPrint("CompBatt: EXITING Ioctl\n");
+    if (CompBattDebug & COMPBATT_DEBUG_TRACE) DbgPrint("CompBatt: EXITING Ioctl\n");
     return Status;
 }
 
@@ -158,7 +158,7 @@ CompBattQueryTag(
 {
     NTSTATUS Status;
     PAGED_CODE();
-    if (CompBattDebug & 0x100) DbgPrint("CompBatt: ENTERING QueryTag\n");
+    if (CompBattDebug & COMPBATT_DEBUG_TRACE) DbgPrint("CompBatt: ENTERING QueryTag\n");
 
     /* Was a tag assigned? */
     if (!(DeviceExtension->Flags & COMPBATT_TAG_ASSIGNED))
@@ -182,7 +182,7 @@ CompBattQueryTag(
     }
 
     /* Return status */
-    if (CompBattDebug & 0x100) DbgPrint("CompBatt: EXITING QueryTag\n");
+    if (CompBattDebug & COMPBATT_DEBUG_TRACE) DbgPrint("CompBatt: EXITING QueryTag\n");
     return Status;
 }
 
@@ -193,7 +193,7 @@ CompBattDisableStatusNotify(
 {
     PCOMPBATT_BATTERY_DATA BatteryData;
     PLIST_ENTRY ListHead, NextEntry;
-    if (CompBattDebug & 0x100) DbgPrint("CompBatt: ENTERING DisableStatusNotify\n");
+    if (CompBattDebug & COMPBATT_DEBUG_TRACE) DbgPrint("CompBatt: ENTERING DisableStatusNotify\n");
 
     /* Loop the battery list */
     ExAcquireFastMutex(&DeviceExtension->Lock);
@@ -210,7 +210,7 @@ CompBattDisableStatusNotify(
 
     /* Done */
     ExReleaseFastMutex(&DeviceExtension->Lock);
-    if (CompBattDebug & 0x100) DbgPrint("CompBatt: EXITING DisableStatusNotify\n");
+    if (CompBattDebug & COMPBATT_DEBUG_TRACE) DbgPrint("CompBatt: EXITING DisableStatusNotify\n");
     return STATUS_SUCCESS;
 }
 
@@ -246,7 +246,7 @@ CompBattGetBatteryInformation(
     BATTERY_QUERY_INFORMATION InputBuffer;
     PCOMPBATT_BATTERY_DATA BatteryData;
     PLIST_ENTRY ListHead, NextEntry;
-    if (CompBattDebug & 1) DbgPrint("CompBatt: ENTERING GetBatteryInformation\n");
+    if (CompBattDebug & COMPBATT_DEBUG_TRACE) DbgPrint("CompBatt: ENTERING GetBatteryInformation\n");
 
     /* Set defaults */
     BatteryInfo->DefaultAlert1 = 0;
@@ -298,7 +298,7 @@ CompBattGetBatteryInformation(
 
                     /* Next time we can use the static copy */
                     BatteryData->Flags |= COMPBATT_BATTERY_INFORMATION_PRESENT;
-                    if (CompBattDebug & 2)
+                    if (CompBattDebug & COMPBATT_DEBUG_INFO)
                         DbgPrint("CompBattGetBatteryInformation: Read individual BATTERY_INFORMATION\n"
                                  "--------  Capabilities = %x\n--------  Technology = %x\n"
                                  "--------  Chemistry[4] = %x\n--------  DesignedCapacity = %x\n"
@@ -364,7 +364,7 @@ CompBattGetBatteryInformation(
         }
 
         /* Print out final combined data */
-        if (CompBattDebug & 2)
+        if (CompBattDebug & COMPBATT_DEBUG_INFO)
             DbgPrint("CompBattGetBatteryInformation: Returning BATTERY_INFORMATION\n"
                      "--------  Capabilities = %x\n--------  Technology = %x\n"
                      "--------  Chemistry[4] = %x\n--------  DesignedCapacity = %x\n"
@@ -389,7 +389,7 @@ CompBattGetBatteryInformation(
     }
 
     /* We are done */
-    if (CompBattDebug & 1) DbgPrint("CompBatt: EXITING GetBatteryInformation\n");
+    if (CompBattDebug & COMPBATT_DEBUG_TRACE) DbgPrint("CompBatt: EXITING GetBatteryInformation\n");
     return Status;
 }
 
@@ -405,7 +405,7 @@ CompBattGetBatteryGranularity(
     BATTERY_REPORTING_SCALE BatteryScale[4];
     PLIST_ENTRY ListHead, NextEntry;
     ULONG i;
-    if (CompBattDebug & 1) DbgPrint("CompBatt: ENTERING GetBatteryGranularity\n");
+    if (CompBattDebug & COMPBATT_DEBUG_TRACE) DbgPrint("CompBatt: ENTERING GetBatteryGranularity\n");
 
     /* Set defaults */
     ReportingScale[0].Granularity = -1;
@@ -476,7 +476,7 @@ CompBattGetBatteryGranularity(
 
     /* All done */
     ExReleaseFastMutex(&DeviceExtension->Lock);
-    if (CompBattDebug & 1) DbgPrint("CompBatt: EXITING GetBatteryGranularity\n");
+    if (CompBattDebug & COMPBATT_DEBUG_TRACE) DbgPrint("CompBatt: EXITING GetBatteryGranularity\n");
     return STATUS_SUCCESS;
 }
 
@@ -510,7 +510,7 @@ CompBattQueryInformation(
     ULONG QueryLength = 0;
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
-    if (CompBattDebug & 1)  DbgPrint("CompBatt: ENTERING QueryInformation\n");
+    if (CompBattDebug & COMPBATT_DEBUG_TRACE)  DbgPrint("CompBatt: ENTERING QueryInformation\n");
 
     /* Check for valid/correct tag */
     if ((Tag != DeviceExtension->Tag) ||
@@ -601,7 +601,7 @@ CompBattQueryInformation(
     if ((NT_SUCCESS(Status)) && (QueryData)) RtlCopyMemory(Buffer, QueryData, QueryLength);
 
     /* Return function result */
-    if (CompBattDebug & 1) DbgPrint("CompBatt: EXITING QueryInformation\n");
+    if (CompBattDebug & COMPBATT_DEBUG_TRACE) DbgPrint("CompBatt: EXITING QueryInformation\n");
     return Status;
 }
 
