@@ -1,9 +1,8 @@
 /*
- * PROJECT:         ReactOS Composite Battery Driver
- * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            boot/drivers/bus/acpi/compbatt/compmisc.c
- * PURPOSE:         Miscellaneous Support Routines
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROJECT:     ReactOS Composite Battery Driver
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Miscellaneous Support Routines
+ * COPYRIGHT:   Copyright 2010 ReactOS Portable Systems Group <ros.arm@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/

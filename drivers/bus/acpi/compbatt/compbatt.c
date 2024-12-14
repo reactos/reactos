@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS Composite Battery Driver
- * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            boot/drivers/bus/acpi/compbatt/compbatt.c
- * PURPOSE:         Main Initialization Code and IRP Handling
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROJECT:     ReactOS Composite Battery Driver
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Main Initialization Code and IRP Handling
+ * COPYRIGHT:   Copyright 2010 ReactOS Portable Systems Group <ros.arm@reactos.org>
+ *              Copyright 2024 George Bișoc <george.bisoc@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
