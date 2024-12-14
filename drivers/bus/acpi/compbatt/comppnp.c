@@ -177,7 +177,7 @@ CompBattAddNewBattery(
                     ExReleaseFastMutex(&DeviceExtension->Lock);
 
                     /* Initialize the work item and delete lock */
-                    IoInitializeRemoveLock(&BatteryData->RemoveLock, 0, 0, 0);
+                    IoInitializeRemoveLock(&BatteryData->RemoveLock, COMPBATT_TAG, 0, 0);
                     ExInitializeWorkItem(&BatteryData->WorkItem,
                                          (PVOID)CompBattMonitorIrpCompleteWorker,
                                          BatteryData);
