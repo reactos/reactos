@@ -74,8 +74,19 @@ CompBattMonitorIrpComplete(
     _In_ PIRP Irp,
     _In_ PVOID Context)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PIO_STACK_LOCATION IoStackLocation;
+    PCOMPBATT_BATTERY_DATA BatteryData;
+
+    /* We do not care about the device object */
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    /* Grab the composite battery data from the I/O stack packet */
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    BatteryData = IoStackLocation->Parameters.Others.Argument2;
+
+    /* Request the IRP complete worker to do the deed */
+    ExQueueWorkItem(&BatteryData->WorkItem, DelayedWorkQueue);
+    return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
 VOID
@@ -83,8 +94,264 @@ NTAPI
 CompBattMonitorIrpCompleteWorker(
     _In_ PCOMPBATT_BATTERY_DATA BatteryData)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PIRP Irp;
+    UCHAR Mode;
+    ULONG PrevPowerState;
+    PDEVICE_OBJECT DeviceObject;
+    BATTERY_STATUS BatteryStatus;
+    PIO_STACK_LOCATION IoStackLocation;
+    PCOMPBATT_DEVICE_EXTENSION DeviceExtension;
+
+    /* Cache the necessary battery data */
+    Irp = BatteryData->Irp;
+    DeviceObject = BatteryData->DeviceObject;
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    DeviceExtension = IoStackLocation->Parameters.Others.Argument1;
+
+    /* Switch to the next stack as we have to setup the control function data there */
+    IoStackLocation = IoGetNextIrpStackLocation(Irp);
+
+    /* Has the I/O composite battery request succeeded? */
+    Status = Irp->IoStatus.Status;
+    if (!NT_SUCCESS(Status) && Status != STATUS_CANCELLED)
+    {
+        /*
+         * This battery is being removed from the composite, perform
+         * cleanups and do not inquire I/O requests again on this battery.
+         */
+        if (Status == STATUS_DEVICE_REMOVED)
+        {
+            if (CompBattDebug & COMPBATT_DEBUG_WARN)
+                DbgPrint("CompBatt: Battery (0x%p) is being removed from composite battery\n", BatteryData);
+
+            IoFreeIrp(Irp);
+            CompBattRemoveBattery(&BatteryData->BatteryName, DeviceExtension);
+            return;
+        }
+
+        /*
+         * This is the first time a battery is being added into the composite
+         * (we understand that if Status was STATUS_DEVICE_NOT_CONNECTED).
+         * We must invalidate the composite tag and request a recalculation
+         * of the battery tag.
+         */
+        if (CompBattDebug & COMPBATT_DEBUG_WARN)
+            DbgPrint("CompBatt: Battery arrived for first time or disappeared (Status 0x%08lx)\n", Status);
+
+        BatteryData->Tag = BATTERY_TAG_INVALID;
+
+        /*
+         * Invalidate the last read status interrupt time as well since the last
+         * battery status data no longer applies. Same for the composite battery
+         * as well.
+         */
+        BatteryData->InterruptTime = 0;
+        DeviceExtension->InterruptTime = 0;
+
+        /* Notify Battery Class the battery status incurs in a change */
+        BatteryClassStatusNotify(DeviceExtension->ClassData);
+
+        /* Setup the necessary I/O data to query the battery tag */
+        IoStackLocation->Parameters.DeviceIoControl.IoControlCode = IOCTL_BATTERY_QUERY_TAG;
+        IoStackLocation->Parameters.DeviceIoControl.InputBufferLength = sizeof(ULONG);
+        IoStackLocation->Parameters.DeviceIoControl.OutputBufferLength = sizeof(ULONG);
+        BatteryData->Mode = COMPBATT_QUERY_TAG;
+        BatteryData->WorkerBuffer.WorkerTag = 0xFFFFFFFF;
+
+        /* Dispatch our request now to the battery's driver */
+        goto DispatchRequest;
+    }
+
+    /* Our I/O request has been completed successfully, check what did we get */
+    Mode = BatteryData->Mode;
+    switch (Mode)
+    {
+        case COMPBATT_QUERY_TAG:
+        {
+            /*
+             * This battery has just gotten a tag, acknowledge the composite battery
+             * about that so it can recalculate its own composite tag.
+             */
+            if (CompBattDebug & COMPBATT_DEBUG_WARN)
+                DbgPrint("CompBatt: Battery (Device 0x%p) has a tag of %lu\n", DeviceObject, BatteryData->WorkerBuffer.WorkerTag);
+
+            /* Ensure the battery tag is not bogus, getting a tag of 0 is illegal */
+            ASSERT(BatteryData->WorkerBuffer.WorkerTag != 0);
+
+            /* Assign the battery tag */
+            BatteryData->Tag = BatteryData->WorkerBuffer.WorkerTag;
+            BatteryData->Flags |= COMPBATT_TAG_ASSIGNED;
+
+            /* Punt the composite battery flags, as the previous cached data no longer applies */
+            DeviceExtension->Flags = 0;
+
+            /* Notify the Battery Class driver this battery has got a tag */
+            BatteryClassStatusNotify(DeviceExtension->ClassData);
+            break;
+        }
+
+        case COMPBATT_READ_STATUS:
+        {
+            /*
+             * Read the battery status only if the IRP has not been cancelled,
+             * otherwise the request must be re-issued again. This typically
+             * happens if the wait values are in conflict which it might
+             * end up in inconsistent battery status results.
+             */
+            if (Status != STATUS_CANCELLED && !Irp->Cancel)
+            {
+                /*
+                 * If we reach here then the battery has entered into a change of
+                 * power state or its charge capacity has changed.
+                 */
+                if (CompBattDebug & COMPBATT_DEBUG_WARN)
+                    DbgPrint("CompBatt: Battery state (Device 0x%p) has changed\n", DeviceObject);
+
+                /* Copy the battery status of this battery */
+                RtlCopyMemory(&BatteryData->BatteryStatus,
+                              &BatteryData->WorkerBuffer.WorkerStatus,
+                              sizeof(BatteryData->BatteryStatus));
+
+                /* Update the interrupt time as this is the most recent read of the battery status */
+                BatteryData->InterruptTime = KeQueryInterruptTime();
+
+                /*
+                 * Ensure we have not gotten unknown capacities while we waited for new
+                 * battery status. The battery might have malfunctioned or something.
+                 */
+                if (BatteryData->WorkerBuffer.WorkerStatus.Capacity == BATTERY_UNKNOWN_CAPACITY)
+                {
+                    /* We do not know the capacity of this battery, default the low and high capacities */
+                    BatteryData->WaitStatus.LowCapacity = BATTERY_UNKNOWN_CAPACITY;
+                    BatteryData->WaitStatus.HighCapacity = BATTERY_UNKNOWN_CAPACITY;
+                }
+                else
+                {
+                    /* We know the capacity, adjust the low and high capacities accordingly */
+                    if (BatteryData->WaitStatus.LowCapacity >
+                        BatteryData->WorkerBuffer.WorkerStatus.Capacity)
+                    {
+                        BatteryData->WaitStatus.LowCapacity = BatteryData->WorkerBuffer.WorkerStatus.Capacity;
+                    }
+
+                    if (BatteryData->WaitStatus.HighCapacity <
+                        BatteryData->WorkerBuffer.WorkerStatus.Capacity)
+                    {
+                        BatteryData->WaitStatus.HighCapacity = BatteryData->WorkerBuffer.WorkerStatus.Capacity;
+                    }
+                }
+
+                /* Copy the current last read power state for the next wait */
+                BatteryData->WaitStatus.PowerState = BatteryData->WorkerBuffer.WorkerStatus.PowerState;
+
+                /*
+                 * Cache the previous power state of the composite battery and invalidate
+                 * the last computed battery status interrupt time. This is because,
+                 * logically, this specific battery incurred in a state change therefore
+                 * the previous composite status is no longer consistent.
+                 */
+                PrevPowerState = DeviceExtension->BatteryStatus.PowerState;
+                DeviceExtension->InterruptTime = 0;
+
+                /* Compute a new battery status for the composite battery */
+                Status = CompBattQueryStatus(DeviceExtension,
+                                             DeviceExtension->Tag,
+                                             &BatteryStatus);
+
+                /* Print out the current battery status of the composite to the debugger */
+                if ((CompBattDebug & COMPBATT_DEBUG_INFO) && NT_SUCCESS(Status))
+                    DbgPrint("CompBatt: Latest composite battery status\n"
+                             "          PowerState -> 0x%lx\n"
+                             "          Capacity -> %u\n"
+                             "          Voltage -> %u\n"
+                             "          Rate -> %d\n",
+                             BatteryStatus.PowerState,
+                             BatteryStatus.Capacity,
+                             BatteryStatus.Voltage,
+                             BatteryStatus.Rate);
+
+                /*
+                 * Now determine whether should we notify the Battery Class driver due to
+                 * changes in power state settings in the composite battery. This could
+                 * happen in two following conditions:
+                 *
+                 * 1. The status notify flag was set for the respective power notification
+                 *    settings, and the composite battery incurred in a change of such
+                 *    settings. In this case we have to probe the current settings that
+                 *    they have changed.
+                 *
+                 * 2. The status notify flag was not set, therefore we do not know the
+                 *    exact configuration of the notification settings. We only care that
+                 *    the power state has changed at this point.
+                 *
+                 * Why do we have to do this is because we have to warn the Battery Class
+                 * about the data that has changed.
+                 */
+                if (!(DeviceExtension->Flags & COMPBATT_STATUS_NOTIFY_SET))
+                {
+                    if (PrevPowerState != DeviceExtension->BatteryStatus.PowerState)
+                    {
+                        /* The previous power state is no longer valid, notify Battery Class */
+                        BatteryClassStatusNotify(DeviceExtension->ClassData);
+                    }
+                }
+                else
+                {
+                    /*
+                     * Unlike the condition above, we check for power state change against
+                     * the current notify wait set since the notify set flag bit is assigned.
+                     */
+                    if (DeviceExtension->WaitNotifyStatus.PowerState != DeviceExtension->BatteryStatus.PowerState ||
+                        DeviceExtension->WaitNotifyStatus.LowCapacity > DeviceExtension->BatteryStatus.Capacity ||
+                        DeviceExtension->WaitNotifyStatus.HighCapacity < DeviceExtension->BatteryStatus.Capacity)
+                    {
+                        /* The following configuration settings have changed, notify Battery Class */
+                        BatteryClassStatusNotify(DeviceExtension->ClassData);
+                    }
+                }
+            }
+
+            break;
+        }
+
+        default:
+        {
+            ASSERTMSG("CompBatt: BAD!!! WE SHOULD NOT BE HERE!\n", FALSE);
+            UNREACHABLE;
+        }
+    }
+
+    /* Setup the necessary data to read battery status */
+    BatteryData->WaitStatus.BatteryTag = BatteryData->Tag;
+    BatteryData->WaitStatus.Timeout = 3000;  // FIXME: Hardcoded (wait for 3 seconds) because we do not have ACPI notifications implemented yet...
+
+    RtlCopyMemory(&BatteryData->WorkerBuffer.WorkerWaitStatus,
+                  &BatteryData->WaitStatus,
+                  sizeof(BatteryData->WaitStatus));
+
+    IoStackLocation->Parameters.DeviceIoControl.IoControlCode = IOCTL_BATTERY_QUERY_STATUS;
+    IoStackLocation->Parameters.DeviceIoControl.InputBufferLength = sizeof(BatteryData->WorkerBuffer.WorkerWaitStatus);
+    IoStackLocation->Parameters.DeviceIoControl.OutputBufferLength = sizeof(BatteryData->WorkerBuffer.WorkerStatus);
+    BatteryData->Mode = COMPBATT_READ_STATUS;
+
+DispatchRequest:
+    /* Setup the system buffer to that of the battery data which it will hold the returned data */
+    IoStackLocation->MajorFunction = IRP_MJ_DEVICE_CONTROL;
+    Irp->AssociatedIrp.SystemBuffer = &BatteryData->WorkerBuffer;
+    Irp->Cancel = FALSE;
+    Irp->PendingReturned = FALSE;
+
+    /* Setup the worker completion routine which it will invoke the worker later on */
+    IoSetCompletionRoutine(Irp,
+                           CompBattMonitorIrpComplete,
+                           NULL,
+                           TRUE,
+                           TRUE,
+                           TRUE);
+
+    /* Dispatch the I/O request now */
+    IoCallDriver(DeviceObject, Irp);
 }
 
 VOID
