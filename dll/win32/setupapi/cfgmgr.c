@@ -7975,17 +7975,21 @@ CM_Set_Class_Registry_PropertyW(
 
     if (ulProperty == CM_CRP_SECURITY_SDS)
     {
-        if (!ConvertStringSecurityDescriptorToSecurityDescriptorW((LPCWSTR)Buffer,
-                                                                  SDDL_REVISION_1,
-                                                                  &pSecurityDescriptor,
-                                                                  &SecurityDescriptorSize))
+        if (ulLength != 0)
         {
-            ERR("ConvertStringSecurityDescriptorToSecurityDescriptorW() failed (Error %lu)\n", GetLastError());
-            return CR_INVALID_DATA;
+            if (!ConvertStringSecurityDescriptorToSecurityDescriptorW((LPCWSTR)Buffer,
+                                                                      SDDL_REVISION_1,
+                                                                      &pSecurityDescriptor,
+                                                                      &SecurityDescriptorSize))
+            {
+                ERR("ConvertStringSecurityDescriptorToSecurityDescriptorW() failed (Error %lu)\n", GetLastError());
+                return CR_INVALID_DATA;
+            }
+
+            Buffer = (PCVOID)pSecurityDescriptor;
+            ulLength = SecurityDescriptorSize;
         }
 
-        Buffer = (PCVOID)pSecurityDescriptor;
-        ulLength = SecurityDescriptorSize;
         ulProperty = CM_CRP_SECURITY;
         ulType = REG_BINARY;
     }
