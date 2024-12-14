@@ -48,4 +48,6 @@ if(MSVC)
 
     # Disable warning "'=': conversion from 'a' to 'b', possible loss of data"
     target_compile_options(widl PRIVATE "/wd4244")
+
+    target_compile_options(widl PRIVATE "-WX")
 endif()
