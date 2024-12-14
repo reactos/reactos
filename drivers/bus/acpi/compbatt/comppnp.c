@@ -183,7 +183,7 @@ CompBattAddNewBattery(
                                          BatteryData);
 
                     /* Setup the IRP work entry */
-                    CompBattMonitorIrpComplete(BatteryData->DeviceObject, Irp, 0);
+                    CompBattMonitorIrpComplete(BatteryData->DeviceObject, Irp, NULL);
                     Status = STATUS_SUCCESS;
                 }
                 else
