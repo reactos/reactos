@@ -261,7 +261,7 @@ CompBattGetBatteryInformation(
     {
         /* Try to acquire the remove lock */
         BatteryData = CONTAINING_RECORD(NextEntry, COMPBATT_BATTERY_DATA, BatteryLink);
-        if (NT_SUCCESS(IoAcquireRemoveLock(&BatteryData->RemoveLock, 0)))
+        if (NT_SUCCESS(IoAcquireRemoveLock(&BatteryData->RemoveLock, BatteryData->Irp)))
         {
             /* Now release the device lock since the battery can't go away */
             ExReleaseFastMutex(&DeviceExtension->Lock);
@@ -292,7 +292,7 @@ CompBattGetBatteryInformation(
                         /* Fail if the query had a problem */
                         if (Status == STATUS_DEVICE_REMOVED) Status = STATUS_NO_SUCH_DEVICE;
                         ExAcquireFastMutex(&DeviceExtension->Lock);
-                        IoReleaseRemoveLock(&BatteryData->RemoveLock, 0);
+                        IoReleaseRemoveLock(&BatteryData->RemoveLock, BatteryData->Irp);
                         break;
                     }
 
@@ -346,7 +346,7 @@ CompBattGetBatteryInformation(
 
             /* Re-acquire the device extension lock and release the remove lock */
             ExAcquireFastMutex(&DeviceExtension->Lock);
-            IoReleaseRemoveLock(&BatteryData->RemoveLock, 0);
+            IoReleaseRemoveLock(&BatteryData->RemoveLock, BatteryData->Irp);
         }
 
         /* Next entry */
@@ -421,7 +421,7 @@ CompBattGetBatteryGranularity(
     {
         /* Try to acquire the remove lock */
         BatteryData = CONTAINING_RECORD(NextEntry, COMPBATT_BATTERY_DATA, BatteryLink);
-        if (NT_SUCCESS(IoAcquireRemoveLock(&BatteryData->RemoveLock, 0)))
+        if (NT_SUCCESS(IoAcquireRemoveLock(&BatteryData->RemoveLock, BatteryData->Irp)))
         {
             /* Now release the device lock since the battery can't go away */
             ExReleaseFastMutex(&DeviceExtension->Lock);
@@ -447,7 +447,7 @@ CompBattGetBatteryGranularity(
                 {
                     /* Fail if the query had a problem */
                     ExAcquireFastMutex(&DeviceExtension->Lock);
-                    IoReleaseRemoveLock(&BatteryData->RemoveLock, 0);
+                    IoReleaseRemoveLock(&BatteryData->RemoveLock, BatteryData->Irp);
                     break;
                 }
 
@@ -467,7 +467,7 @@ CompBattGetBatteryGranularity(
 
             /* Re-acquire the device extension lock and release the remove lock */
             ExAcquireFastMutex(&DeviceExtension->Lock);
-            IoReleaseRemoveLock(&BatteryData->RemoveLock, 0);
+            IoReleaseRemoveLock(&BatteryData->RemoveLock, BatteryData->Irp);
         }
 
         /* Next entry */
