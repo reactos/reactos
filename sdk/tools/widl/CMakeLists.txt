@@ -35,7 +35,7 @@ list(APPEND SOURCE
     ../port/getopt1.c
     ../port/mkstemps.c)
 
-add_definitions(-DINT16=SHORT)
+add_definitions(-DINT16=SHORT -DLANG_SCOTTISH_GAELIC=0x91)
 add_host_tool(widl ${SOURCE})
 target_link_libraries(widl PRIVATE host_includes wpphost)
 
