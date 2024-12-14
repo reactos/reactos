@@ -225,7 +225,7 @@ CompBattAddNewBattery(
 NTSTATUS
 NTAPI
 CompBattRemoveBattery(
-    _In_ PCUNICODE_STRING BatteryName,
+    _In_ PUNICODE_STRING BatteryName,
     _In_ PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
     PCOMPBATT_BATTERY_DATA BatteryData;
