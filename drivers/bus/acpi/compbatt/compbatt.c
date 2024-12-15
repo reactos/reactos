@@ -67,6 +67,26 @@ CompBattSystemControl(
     return Status;
 }
 
+/**
+ * @brief
+ * Queues a work item thread worker which is bound to the individual
+ * CM (Control Method) ACPI battery to handle the IRP.
+ *
+ * @param[in] DeviceObject
+ * A pointer to a device object, this parameter is unused.
+ *
+ * @param[in] Irp
+ * A pointer to an I/O request packet. It is used to gather the I/O stack
+ * location which contains the data of the individual battery.
+ *
+ * @param[in] Context
+ * An aribtrary pointer that points to context data, this paramater
+ * is unused.
+ *
+ * @return
+ * Returns STATUS_MORE_PROCESSING_REQUIRED to indicate the I/O request
+ * is still in action, therefore the IRP is not freed.
+ */
 NTSTATUS
 NTAPI
 CompBattMonitorIrpComplete(
@@ -89,6 +109,17 @@ CompBattMonitorIrpComplete(
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
+/**
+ * @brief
+ * The brains of the battery IRP worker. It monitors the state of the
+ * IRP as well as sends the IRP down the device stack to gather battery
+ * related data, such tag and status. It also serves as the I/O
+ * completion routine of which it elaborates the gathered data.
+ *
+ * @param[in] BatteryData
+ * A pointer to battery data of an individual battery that contains
+ * the IRP to be send down the device stack.
+ */
 VOID
 NTAPI
 CompBattMonitorIrpCompleteWorker(
@@ -481,6 +512,29 @@ CompBattDisableStatusNotify(
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Calculates the total discharging/charging rate flow of each individual
+ * battery linked with the composite battery and determines whether at
+ * least one battery is behaving improperly.
+ *
+ * @param[in] DeviceExtension
+ * A pointer to a device extension which describes the composite battery
+ * itself. It is used to gather each connected battery in the list with
+ * the composite battery.
+ *
+ * @param[out] TotalRate
+ * A pointer returned to caller that describes the total accumulated
+ * rate flow of all batteries.
+ *
+ * @param[out] BatteriesCount
+ * A pointer returned to caller that describes the batteries present.
+ *
+ * @return
+ * Returns TRUE if at least one battery is behaving improperly, FALSE
+ * otherwise. This is determined by the fact if a battery has a negative
+ * rate but is charging, or if it has a positive rate but is discharging.
+ */
 static
 BOOLEAN
 CompBattCalculateTotalRateAndLinkedBatteries(
@@ -590,6 +644,33 @@ CompBattCalculateTotalRateAndLinkedBatteries(
     return BadBattery;
 }
 
+/**
+ * @brief
+ * Sets a new configuration battery wait status settings of each battery.
+ * The purpose of this is so that the composite battery gets notified
+ * of new battery status as if it was a single battery.
+ *
+ * @param[in] DeviceExtension
+ * A pointer to a device extension which describes the composite battery
+ * itself. It is used to gather each connected battery in the list with
+ * the composite battery.
+ *
+ * @param[in] BatteryTag
+ * A battery tag supplied by the caller. This is typically the tag of
+ * the composite battery which is used to check against the cached tag
+ * of the composite battery if it has changed or not.
+ *
+ * @param[in] BatteryNotify
+ * A pointer to a structure filled with battery notification settings,
+ * supplied by the caller. It is used as the new values for the
+ * configuration wait settings.
+ *
+ * @return
+ * Returns STATUS_NO_SUCH_DEVICE if the supplied battery tag does not match
+ * with that of the cached composite battery's tag or if the composite
+ * battery currently does not have a tag assigned. Otherwise STATUS_SUCCESS
+ * is returned.
+ */
 NTSTATUS
 NTAPI
 CompBattSetStatusNotify(
@@ -819,6 +900,33 @@ CompBattSetStatusNotify(
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Queries the battery status of each individiual connected battery with
+ * the composite battery and combines all the retrieved data as one
+ * single battery status for the composite battery.
+ *
+ * @param[in] DeviceExtension
+ * A pointer to a device extension which describes the composite battery
+ * itself. It is used to gather each connected battery in the list with
+ * the composite battery.
+ *
+ * @param[in] Tag
+ * A battery tag supplied by the caller. This is typically the tag of
+ * the composite battery which is used to check against the cached tag
+ * of the composite battery if it has changed or not.
+ *
+ * @param[out] BatteryStatus
+ * A pointer to a battery status that contains the combined data, returned
+ * to the caller. It serves as the battery status for the composite battery.
+ *
+ * @return
+ * Returns STATUS_NO_SUCH_DEVICE if the supplied battery tag does not match
+ * with that of the cached composite battery's tag or if the composite
+ * battery currently does not have a tag assigned. Otherwise STATUS_SUCCESS
+ * is returned, which it will also return success if the composite battery's
+ * cached battery status is fresh which indicates it has already been computed.
+ */
 NTSTATUS
 NTAPI
 CompBattQueryStatus(
@@ -1282,6 +1390,20 @@ CompBattGetBatteryGranularity(
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Calculates the "At Rate" flow of the composite battery based on the
+ * sum of all connected batteries, in order to retrieve the precise
+ * battery time estimation.
+ *
+ * @param[in] DeviceExtension
+ * A pointer to a device extension which describes the composite battery
+ * itself. It is used to gather each connected battery in the list with
+ * the composite battery.
+ *
+ * @return
+ * Returns the computed "At Rate" flow to the caller.
+ */
 static
 LONG
 CompBattCalculateAtRateTime(
@@ -1351,6 +1473,28 @@ CompBattCalculateAtRateTime(
     return ComputedAtRate;
 }
 
+/**
+ * @brief
+ * Retrieves the estimated time of the composite battery based on the
+ * power drain rate of all the batteries present in the system.
+ *
+ * @param[out] Time
+ * A pointer to the computed estimated time of the composite battery,
+ * returned to caller. Note that if there are not any batteries that
+ * are draining power, or if the system is powered by external AC source,
+ * the estimated time is unknown
+ *
+ * @param[in] DeviceExtension
+ * A pointer to a device extension which describes the composite battery
+ * itself. It is used to gather each connected battery in the list with
+ * the composite battery.
+ *
+ * @return
+ * Returns STATUS_NO_SUCH_DEVICE if the supplied battery tag does not match
+ * with that of the cached composite battery's tag or if the composite
+ * battery currently does not have a tag assigned. Otherwise STATUS_SUCCESS
+ * is returned.
+ */
 NTSTATUS
 NTAPI
 CompBattGetEstimatedTime(
