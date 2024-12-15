@@ -77,7 +77,7 @@ PKDEBUG_ROUTINE KiDebugRoutine = KdpStub;
 // Debugger Configuration Settings
 //
 BOOLEAN KdBreakAfterSymbolLoad;
-BOOLEAN KdPitchDebugger;
+BOOLEAN KdPitchDebugger = TRUE; // The debugger is unavailable by default.
 BOOLEAN KdDebuggerNotPresent;
 BOOLEAN KdDebuggerEnabled;
 BOOLEAN KdAutoEnableOnEvent;
