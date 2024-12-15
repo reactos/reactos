@@ -314,7 +314,7 @@
 @ stdcall SetupDiGetClassInstallParamsA(ptr ptr ptr long ptr)
 @ stdcall SetupDiGetClassInstallParamsW(ptr ptr ptr long ptr)
 @ stub SetupDiGetClassRegistryPropertyA
-@ stub SetupDiGetClassRegistryPropertyW
+@ stdcall SetupDiGetClassRegistryPropertyW(ptr long ptr ptr long ptr wstr ptr)
 @ stub SetupDiGetCustomDevicePropertyA
 @ stub SetupDiGetCustomDevicePropertyW
 @ stdcall SetupDiGetDeviceInfoListClass(ptr ptr)
@@ -375,7 +375,7 @@
 @ stdcall SetupDiSetClassInstallParamsA(ptr ptr ptr long)
 @ stdcall SetupDiSetClassInstallParamsW(ptr ptr ptr long)
 @ stub SetupDiSetClassRegistryPropertyA
-@ stub SetupDiSetClassRegistryPropertyW
+@ stdcall SetupDiSetClassRegistryPropertyW(ptr long ptr long wstr ptr)
 @ stdcall SetupDiSetDeviceInstallParamsA(ptr ptr ptr)
 @ stdcall SetupDiSetDeviceInstallParamsW(ptr ptr ptr)
 @ stub SetupDiSetDeviceInterfaceDefault
