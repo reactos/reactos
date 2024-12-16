@@ -179,7 +179,7 @@ BEGIN
 EventVwr [numele computerului] [/L:<fișier de jurnal de evenimente>] [/?]\n\
 \n\
 ""numele computerului"" : Specifică computerul de la distanță unde să se conecteze\n\
-\pentru a prelua evenimentele de afișat. Dacă nu este specificat niciun nume,\n\
+\tpentru a prelua evenimentele de afișat. Dacă nu este specificat niciun nume,\n\
 \tcomputerul local este folosit.\n\
 \n\
 /L:<fișier de jurnal de evenimente> : Specifică deschiderea unui fișier.\n\
