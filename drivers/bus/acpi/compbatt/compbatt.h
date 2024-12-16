@@ -78,24 +78,73 @@
 //
 typedef struct _COMPBATT_BATTERY_DATA
 {
+    /* The linked battery with the Composite Battery */
     LIST_ENTRY BatteryLink;
+
+    /* I/O remove lock which protects the battery from being removed */
     IO_REMOVE_LOCK RemoveLock;
+
+    /*
+     * The associated device object (usually CMBATT) and the I/O battery packet
+     * which is used to transport and gather battery data.
+     */
     PDEVICE_OBJECT DeviceObject;
     PIRP Irp;
+
+    /*
+     * The Executive work item, which serves as a worker item for the
+     * IRP battery monitor worker.
+     */
     WORK_QUEUE_ITEM WorkItem;
+
+    /*
+     * Execution state mode of the individual battery. Only two modes are valid:
+     *
+     * COMPBATT_QUERY_TAG - The battery is currently waiting for a tag to get assigned;
+     * COMPBATT_READ_STATUS - The battery is querying battery status.
+     */
     UCHAR Mode;
+
+    /*
+     * The battery wait configuration settings, set up by the SetStatusNotify method.
+     * These values are used to instruct CMBATT when the battery status should be retrieved.
+     */
     BATTERY_WAIT_STATUS WaitStatus;
+
+    /*
+     * A union that serves as the buffer which holds battery monitor IRP data, specifically
+     * managed by CompBattMonitorIrpCompleteWorker, to avoid allocating separate memory pools.
+     */
     union
     {
         BATTERY_WAIT_STATUS WorkerWaitStatus;
         BATTERY_STATUS WorkerStatus;
         ULONG WorkerTag;
     } WorkerBuffer;
+
+    /* The ID of the battery that associates the identification of this battery */
     ULONG Tag;
+
+    /*
+     * The battery flags that govern the behavior of the battery. The valid flags are:
+     *
+     * COMPBATT_BATTERY_INFORMATION_PRESENT - The static battery information ha been
+     * queried. Re-querying such information is not needed.
+     *
+     * COMPBATT_STATUS_NOTIFY_SET - The current notification wait settings are valid.
+     *
+     * COMPBATT_TAG_ASSIGNED - The battery has a tag assigned and it can be read.
+     */
     ULONG Flags;
+
+    /* The static battery information and battery status */
     BATTERY_INFORMATION BatteryInformation;
     BATTERY_STATUS BatteryStatus;
+
+    /* The interrupt time of which the battery status was last read */
     ULONGLONG InterruptTime;
+
+    /* A uniquely given name of the battery that associates it */
     UNICODE_STRING BatteryName;
 } COMPBATT_BATTERY_DATA, *PCOMPBATT_BATTERY_DATA;
 
@@ -104,18 +153,61 @@ typedef struct _COMPBATT_BATTERY_DATA
 //
 typedef struct _COMPBATT_DEVICE_EXTENSION
 {
+    /*
+     * The class data initialized and used by Battery Class. It contains information
+     * such as miniport data used for registration and communication between the
+     * Composite Battery and Battery Class, wait and context events, etc.
+     */
     PVOID ClassData;
+
+    /*
+     * The successor computed tag. This field is used when there are more upcoming
+     * batteries to be connected with the Composite Battery, of which the tag is
+     * incremented by 1 by each new battery that is connected.
+     */
     ULONG NextTag;
+
+    /* A list of linked batteries connected with the Composite Battery */
     LIST_ENTRY BatteryList;
+
+    /* A mutex lock which ensures proper synchronization of Composite Battery operations */
     FAST_MUTEX Lock;
+
+    /* The ID of the Composite Battery */
     ULONG Tag;
+
+    /*
+     * The battery flags that govern the behavior of the battery. The valid flags are:
+     *
+     * COMPBATT_BATTERY_INFORMATION_PRESENT - The static battery information has been
+     * queried. Re-querying such information is not needed.
+     *
+     * COMPBATT_STATUS_NOTIFY_SET - The current notification wait settings are valid.
+     *
+     * COMPBATT_TAG_ASSIGNED - The battery has a tag assigned and it can be read.
+     */
     ULONG Flags;
+
+    /*
+     * The Composite Battery static information, status and wait status settings.
+     * Note that both the battery information and status are combined, based upon
+     * the individual information and status of each linked battery.
+     */
     BATTERY_INFORMATION BatteryInformation;
     BATTERY_STATUS BatteryStatus;
     BATTERY_WAIT_STATUS WaitNotifyStatus;
+
+    /* The interrupt time of which the battery status was last read */
     ULONGLONG InterruptTime;
+
+    /*
+     * The physical device object that associates the Composite Battery and
+     * the attached device, typically the ACPI driver.
+     */
     PDEVICE_OBJECT AttachedDevice;
     PDEVICE_OBJECT DeviceObject;
+
+    /* The notification entry that identifies the registered I/O PnP notification */
     PVOID NotificationEntry;
 } COMPBATT_DEVICE_EXTENSION, *PCOMPBATT_DEVICE_EXTENSION;
 
