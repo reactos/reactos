@@ -280,7 +280,7 @@ CmBattVerifyStaticInfo(
     _In_ ULONG BatteryTag)
 {
     ACPI_BIF_DATA BifData;
-    ULONG DesignVoltage = DeviceExtension->BifData.DesignVoltage;
+    ULONG DesignVoltage;
     PBATTERY_INFORMATION Info = &DeviceExtension->BatteryInformation;
     NTSTATUS Status;
 
@@ -293,6 +293,7 @@ CmBattVerifyStaticInfo(
         RtlCopyMemory(Info->Chemistry, BifData.BatteryType, 4);
         // FIXME: take from _BIX method: Info->CycleCount
         DeviceExtension->BifData = BifData;
+        DesignVoltage = DeviceExtension->BifData.DesignVoltage;
 
         /* Check if the power stats are reported in ampere or watts */
         if (BifData.PowerUnit == ACPI_BATT_POWER_UNIT_AMPS)
