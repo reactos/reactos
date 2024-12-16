@@ -1421,6 +1421,91 @@ cleanup:
 }
 
 /***********************************************************************
+ *		SetupDiGetClassRegistryPropertyA(SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiGetClassRegistryPropertyA(
+    IN CONST GUID *ClassGuid,
+    IN DWORD Property,
+    OUT PDWORD PropertyRegDataType OPTIONAL,
+    OUT PBYTE PropertyBuffer,
+    IN  DWORD PropertyBufferSize,
+    OUT PDWORD RequiredSize OPTIONAL,
+    IN PCSTR MachineName OPTIONAL,
+    IN PVOID Reserved)
+{
+    HMACHINE hMachine = NULL;
+    DWORD PropLength = 0;
+    DWORD Error = ERROR_SUCCESS;
+    CONFIGRET cr;
+
+    TRACE("%s %lu %p %p %lu %p %s %p\n",
+          debugstr_guid(ClassGuid), Property, PropertyRegDataType, PropertyBuffer,
+          PropertyBufferSize, RequiredSize, MachineName, Reserved);
+
+    if (Reserved != NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (MachineName)
+    {
+        cr = CM_Connect_MachineA(MachineName, &hMachine);
+        if (cr != CR_SUCCESS)
+            goto done;
+    }
+
+    if (Property >= SPCRP_MAXIMUM_PROPERTY)
+    {
+        cr = CR_INVALID_PROPERTY;
+        goto done;
+    }
+
+    PropLength = PropertyBufferSize;
+    cr = CM_Get_Class_Registry_PropertyA((LPGUID)ClassGuid,
+                                         Property + (CM_DRP_DEVICEDESC - SPDRP_DEVICEDESC),
+                                         PropertyRegDataType,
+                                         PropertyBuffer,
+                                         &PropLength,
+                                         0,
+                                         hMachine);
+    if ((cr == CR_SUCCESS) || (cr == CR_BUFFER_SMALL))
+    {
+        if (RequiredSize)
+            *RequiredSize = PropLength;
+    }
+
+done:
+    if (cr != CR_SUCCESS)
+    {
+        switch (cr)
+        {
+                case CR_INVALID_DEVINST :
+                    Error = ERROR_NO_SUCH_DEVINST;
+                    break;
+
+                case CR_INVALID_PROPERTY :
+                    Error = ERROR_INVALID_REG_PROPERTY;
+                    break;
+
+                case CR_BUFFER_SMALL :
+                    Error = ERROR_INSUFFICIENT_BUFFER;
+                    break;
+
+                default :
+                    Error = GetErrorCodeFromCrCode(cr);
+        }
+    }
+
+    if (hMachine != NULL)
+        CM_Disconnect_Machine(hMachine);
+
+    SetLastError(Error);
+    return (cr == CR_SUCCESS);
+}
+
+/***********************************************************************
  *		SetupDiGetClassRegistryPropertyW(SETUPAPI.@)
  */
 BOOL WINAPI
@@ -1451,7 +1536,7 @@ SetupDiGetClassRegistryPropertyW(
 
     if (MachineName)
     {
-        cr = CM_Connect_Machine(MachineName, &hMachine);
+        cr = CM_Connect_MachineW(MachineName, &hMachine);
         if (cr != CR_SUCCESS)
             goto done;
     }
@@ -1506,6 +1591,81 @@ done:
 }
 
 /***********************************************************************
+ *		SetupDiSetClassRegistryPropertyA(SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiSetClassRegistryPropertyA(
+    IN CONST GUID *ClassGuid,
+    IN DWORD Property,
+    IN CONST BYTE *PropertyBuffer OPTIONAL,
+    IN DWORD PropertyBufferSize,
+    IN PCSTR MachineName OPTIONAL,
+    IN PVOID Reserved)
+{
+    HMACHINE hMachine = NULL;
+    DWORD Error = ERROR_SUCCESS;
+    CONFIGRET cr;
+
+    TRACE("%s %lu %p %lu %s %p\n",
+          debugstr_guid(ClassGuid), Property, PropertyBuffer,
+          PropertyBufferSize, MachineName, Reserved);
+
+    if (Reserved != NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (MachineName)
+    {
+        cr = CM_Connect_MachineA(MachineName, &hMachine);
+        if (cr != CR_SUCCESS)
+           goto done;
+    }
+
+    if (Property >= SPCRP_MAXIMUM_PROPERTY)
+    {
+        cr = CR_INVALID_PROPERTY;
+        goto done;
+    }
+
+    cr = CM_Set_Class_Registry_PropertyA((LPGUID)ClassGuid,
+                                         Property + (CM_DRP_DEVICEDESC - SPDRP_DEVICEDESC),
+                                         PropertyBuffer,
+                                         PropertyBufferSize,
+                                         0,
+                                         hMachine);
+
+done:
+    if (cr != CR_SUCCESS)
+    {
+        switch (cr)
+        {
+                case CR_INVALID_DEVINST:
+                    Error = ERROR_NO_SUCH_DEVINST;
+                    break;
+
+                case CR_INVALID_PROPERTY:
+                    Error = ERROR_INVALID_REG_PROPERTY;
+                    break;
+
+                case CR_BUFFER_SMALL:
+                    Error = ERROR_INSUFFICIENT_BUFFER;
+                    break;
+
+                default :
+                    Error = GetErrorCodeFromCrCode(cr);
+        }
+    }
+
+    if (hMachine != NULL)
+        CM_Disconnect_Machine(hMachine);
+
+    SetLastError(Error);
+    return (cr == CR_SUCCESS);
+}
+
+/***********************************************************************
  *		SetupDiSetClassRegistryPropertyW(SETUPAPI.@)
  */
 BOOL WINAPI
@@ -1533,7 +1693,7 @@ SetupDiSetClassRegistryPropertyW(
 
     if (MachineName)
     {
-        cr = CM_Connect_Machine(MachineName, &hMachine);
+        cr = CM_Connect_MachineW(MachineName, &hMachine);
         if (cr != CR_SUCCESS)
            goto done;
     }
