@@ -28,11 +28,11 @@ BEGIN
     CONTROL         "Exécuter le fichier &WIN.INI", IDC_CBX_WIN_INI, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 98, 316, 10
     CONTROL         "C&harger les services système", IDC_CBX_LOAD_SYSTEM_SERVICES, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 110, 316, 10
     CONTROL         "&Charger les éléments de démarrage", IDC_CBX_LOAD_STARTUP_ITEMS, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 122, 316, 10
-    CONTROL         "&Utiliser la configuration de démarrage d’origine", IDC_CBX_USE_ORIGINAL_BOOTCFG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 35, 134, 316, 10
+    CONTROL         "&Utiliser la configuration de démarrage d'origine", IDC_CBX_USE_ORIGINAL_BOOTCFG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 35, 134, 316, 10
     PUSHBUTTON      "Exéc&uter la restauration du système", IDC_BTN_SYSTEM_RESTORE_START, 146, 156, 124, 14
     PUSHBUTTON      "E&xtraire le fichier...", IDC_BTN_FILE_EXTRACTION, 275, 156, 85, 14
     GROUPBOX        "Sélection du mode de démarrage ", IDC_STATIC, 5, 5, 356, 145
-    LTEXT           "Charger tous les pilotes de périphériques et tous les services", IDC_STATIC, 25, 30, 322, 10
+    LTEXT           "Charger tous les pilotes de périphérique et tous les services", IDC_STATIC, 25, 30, 322, 10
     LTEXT           "Charger seulement les pilotes de périphérique et les services de base", IDC_STATIC, 25, 58, 322, 10
 END
 
