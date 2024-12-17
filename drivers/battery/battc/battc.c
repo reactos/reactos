@@ -76,11 +76,13 @@ BatteryClassQueryWmiDataBlock(PVOID ClassData,
 BCLASSAPI
 NTSTATUS
 NTAPI
-BatteryClassStatusNotify(PVOID ClassData)
+BatteryClassStatusNotify(
+    _In_ PVOID ClassData)
 {
     PBATTERY_CLASS_DATA BattClass;
     PBATTERY_WAIT_STATUS BattWait;
     BATTERY_STATUS BattStatus;
+    ULONG Tag;
     NTSTATUS Status;
 
     DPRINT("Received battery status notification from %p\n", ClassData);
@@ -99,7 +101,14 @@ BatteryClassStatusNotify(PVOID ClassData)
     {
         case EVENT_BATTERY_TAG:
             ExReleaseFastMutex(&BattClass->Mutex);
-            DPRINT1("Waiting for battery is UNIMPLEMENTED!\n");
+            Status = BattClass->MiniportInfo.QueryTag(BattClass->MiniportInfo.Context,
+                                                      &Tag);
+            if (!NT_SUCCESS(Status))
+                return Status;
+
+            ExAcquireFastMutex(&BattClass->Mutex);
+            KeSetEvent(&BattClass->WaitEvent, IO_NO_INCREMENT, FALSE);
+            ExReleaseFastMutex(&BattClass->Mutex);
             break;
 
         case EVENT_BATTERY_STATUS:

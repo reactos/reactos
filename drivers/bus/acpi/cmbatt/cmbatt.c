@@ -275,10 +275,12 @@ CmBattUnload(IN PDRIVER_OBJECT DriverObject)
 
 NTSTATUS
 NTAPI
-CmBattVerifyStaticInfo(PCMBATT_DEVICE_EXTENSION DeviceExtension,
-                       ULONG BatteryTag)
+CmBattVerifyStaticInfo(
+    _Inout_ PCMBATT_DEVICE_EXTENSION DeviceExtension,
+    _In_ ULONG BatteryTag)
 {
     ACPI_BIF_DATA BifData;
+    ULONG DesignVoltage;
     PBATTERY_INFORMATION Info = &DeviceExtension->BatteryInformation;
     NTSTATUS Status;
 
@@ -291,17 +293,46 @@ CmBattVerifyStaticInfo(PCMBATT_DEVICE_EXTENSION DeviceExtension,
         RtlCopyMemory(Info->Chemistry, BifData.BatteryType, 4);
         // FIXME: take from _BIX method: Info->CycleCount
         DeviceExtension->BifData = BifData;
+        DesignVoltage = DeviceExtension->BifData.DesignVoltage;
 
-        if (BifData.PowerUnit == 1)
+        /* Check if the power stats are reported in ampere or watts */
+        if (BifData.PowerUnit == ACPI_BATT_POWER_UNIT_AMPS)
         {
-            DPRINT1("FIXME: need to convert mAh into mWh\n");
-            Info->DesignedCapacity = BATTERY_UNKNOWN_CAPACITY;
-            Info->FullChargedCapacity = BATTERY_UNKNOWN_CAPACITY;
-            Info->DefaultAlert1 = BATTERY_UNKNOWN_CAPACITY;
-            Info->DefaultAlert2 = BATTERY_UNKNOWN_CAPACITY;
+            /*
+             * We have got power stats in milli-ampere but ReactOS expects the values
+             * to be reported in milli-watts, so we have to convert them.
+             * In order to do so we must expect the design voltage of the battery
+             * is not unknown.
+             */
+            if ((DesignVoltage != BATTERY_UNKNOWN_VOLTAGE) && (DesignVoltage != 0))
+            {
+                /* Convert the design capacity */
+                Info->DesignedCapacity = CONVERT_BATT_INFO(BifData.DesignCapacity, DesignVoltage);
+
+                /* Convert the full charged capacity */
+                Info->FullChargedCapacity = CONVERT_BATT_INFO(BifData.LastFullCapacity, DesignVoltage);
+
+                /* Convert the low capacity alarm (DefaultAlert1) */
+                Info->DefaultAlert1 = CONVERT_BATT_INFO(BifData.DesignCapacityLow, DesignVoltage);
+
+                /* Convert the designed capacity warning alarm (DefaultAlert2) */
+                Info->DefaultAlert2 = CONVERT_BATT_INFO(BifData.DesignCapacityWarning, DesignVoltage);
+            }
+            else
+            {
+                /*
+                 * Without knowing the nominal designed voltage of the battery
+                 * we cannot determine the power consumption of this battery.
+                 */
+                Info->DesignedCapacity = BATTERY_UNKNOWN_CAPACITY;
+                Info->FullChargedCapacity = BATTERY_UNKNOWN_CAPACITY;
+                Info->DefaultAlert1 = BATTERY_UNKNOWN_CAPACITY;
+                Info->DefaultAlert2 = BATTERY_UNKNOWN_CAPACITY;
+            }
         }
         else
         {
+            /* The stats are in milli-watts, use them directly */
             Info->DesignedCapacity = BifData.DesignCapacity;
             Info->FullChargedCapacity = BifData.LastFullCapacity;
             Info->DefaultAlert1 = BifData.DesignCapacityLow;
@@ -939,7 +970,7 @@ CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
             }
         }
     }
-    else if ((DesignVoltage != CM_UNKNOWN_VALUE) && (DesignVoltage))
+    else if ((DesignVoltage != CM_UNKNOWN_VALUE) && (DesignVoltage != 0)) // Same as doing DeviceExtension->BifData.PowerUnit == ACPI_BATT_POWER_UNIT_AMPS
     {
         /* We have voltage data, what about capacity? */
         if (RemainingCapacity == CM_UNKNOWN_VALUE)

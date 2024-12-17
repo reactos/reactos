@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS Userinit Logon Application
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     German resource file
+ * TRANSLATORS: Copyright 2005 Kevin Schnabel (FooDerGrosse) <kevin_schnabel@gmx.de>
+ *              Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
+ */
+
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 193
@@ -6,15 +14,15 @@ CAPTION "ReactOS LiveCD"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "IDB_LOGO", IDC_LOCALELOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 4, 290, 99
-    RTEXT "&Language:", IDC_STATIC, 20, 109, 106, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    RTEXT "&Sprache:", IDC_STATIC, 20, 109, 106, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_LANGUAGELIST, 132, 107, 176, 142, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    RTEXT "&Keyboard layout:", IDC_STATIC, 20, 132, 106, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    RTEXT "&Tastaturlayout:", IDC_STATIC, 20, 132, 106, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_LAYOUTLIST, 132, 130, 176, 81, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Select your language and keyboard layout and click Next to continue.", IDC_STATIC, 7, 152, 300, 8
+    LTEXT "Wählen Sie Ihre Sprache und Ihr Tastaturlayout aus und klicken Sie auf Weiter.", IDC_STATIC, 7, 152, 300, 8
 
     CONTROL "", IDC_STATIC, "STATIC", SS_ETCHEDHORZ, 0, 165, 317, 1
-    DEFPUSHBUTTON "&Next", IDOK, 205, 172, 50, 14
-    PUSHBUTTON "&Cancel", IDCANCEL, 260, 172, 50, 14
+    DEFPUSHBUTTON "&Weiter", IDOK, 205, 172, 50, 14
+    PUSHBUTTON "&Abbrechen", IDCANCEL, 260, 172, 50, 14
 END
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
@@ -23,24 +31,24 @@ CAPTION "ReactOS LiveCD"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "IDB_LOGO", IDC_STARTLOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 4, 290, 99
-    DEFPUSHBUTTON "Run ReactOS &Live CD", IDC_RUN, 71, 108, 175, 21
-    PUSHBUTTON "&Install ReactOS", IDC_INSTALL, 71, 136, 175, 21
+    DEFPUSHBUTTON "ReactOS &Live CD starten", IDC_RUN, 71, 108, 175, 21
+    PUSHBUTTON "ReactOS &installieren", IDC_INSTALL, 71, 136, 175, 21
 
     // LTEXT "", IDC_STATIC, 7, 152, 300, 8
 
     CONTROL "", IDC_STATIC, "STATIC", SS_ETCHEDHORZ, 0, 165, 317, 1
-    PUSHBUTTON "&Previous", IDOK, 205, 172, 50, 14
-    PUSHBUTTON "&Cancel", IDCANCEL, 260, 172, 50, 14
+    PUSHBUTTON "&Zurück", IDOK, 205, 172, 50, 14
+    PUSHBUTTON "&Abbrechen", IDCANCEL, 260, 172, 50, 14
 END
 
 STRINGTABLE
 BEGIN
     IDS_SHELL_FAIL "Userinit konnte die Shell nicht starten!"
-    IDS_INSTALLER_FAIL "Userinit failed to start the installer!"
-    IDS_CANCEL_CONFIRM "Are you sure you want to quit the ReactOS LiveCD?\nIf you choose to do so, your computer might restart."
+    IDS_INSTALLER_FAIL "Userinit konnte das Setup nicht starten!"
+    IDS_CANCEL_CONFIRM "Sind Sie sicher, dass Sie die ReactOS LiveCD beenden möchten?\nIhr Computer wird möglicherweise neu gestartet, wenn Sie fortfahren."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SPAIN "Spanish (Spain)"
+    IDS_SPAIN "Spanisch (Spanien)"
 END
