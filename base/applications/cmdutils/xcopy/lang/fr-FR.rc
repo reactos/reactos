@@ -48,7 +48,7 @@ où :\n\
 [/H]  Inclure les fichiers cachés et système dans la copie\n\
 [/C]  Continue même si une erreur survient pendant la copie\n\
 [/A]  Copie uniquement les fichiers qui ont l'attribut archive défini\n\
-[/M]  Copie uniquement les fichiers qui ont l'attribut archive défini; supprime\n\
+[/M]  Copie uniquement les fichiers qui ont l'attribut archive défini ; supprime\n\
 \tensuite l'attribut\n\
 [/K]  Copie les attributs de fichiers. Sans ce paramètre les attributs ne sont pas conservés.\n\
 [/D | /D:m-d-y] Copie uniquement les nouveaux fichiers, ou ceux modifiés après la date spécifiée.\n\

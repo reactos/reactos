@@ -269,8 +269,8 @@ BEGIN
     IDS_UNDERLINE "Underline"
     IDS_VERTICAL "Vertical"
     IDS_PRINTRES "%d x %d pixel/cm"
-    IDS_CANTPASTE "Echec lors de la copie depuis le presse-papiers. Les données sont soit incorrectes soit non supportées."
-    IDS_SAVEERROR "Echec lors de la sauvegarde dans le fichier :\n\n%s"
-    IDS_CANTSENDMAIL "Echec lors de l'envoi d'un mail."
+    IDS_CANTPASTE "Échec lors de la copie depuis le presse-papiers. Les données sont soit incorrectes soit non supportées."
+    IDS_SAVEERROR "Échec lors de la sauvegarde dans le fichier :\n\n%s"
+    IDS_CANTSENDMAIL "Échec lors de l'envoi d'un mail."
     IDS_LOSECOLOR "Les informations de couleurs vont être perdues dans cette opération. Êtes-vous sûr de continuer ?"
 END

@@ -10,9 +10,9 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDR_OSK_MENU MENU DISCARDABLE
 BEGIN
-    POPUP "Fichiers"
+    POPUP "Fichier"
     BEGIN
-        MENUITEM "&Sortie", IDM_EXIT
+        MENUITEM "&Quitter", IDM_EXIT
     END
 
     POPUP "Clavier"
@@ -61,7 +61,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_OSK "On-Screen Keyboard"
+    IDS_OSK "Clavier visuel"
     IDS_AUTHORS "Copyright Denis Robert"
     IDS_NUMLOCK "Num"
     IDS_CAPSLOCK "Caps"

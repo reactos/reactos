@@ -25,7 +25,7 @@ BEGIN
     POPUP "&Fichier"
     BEGIN
         MENUITEM "&Nouveau\tCtrl+N", CMD_NEW
-        MENUITEM "Nouvelle &Fenêtre\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "Nouvelle &fenêtre\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Ouvrir\tCtrl+O", CMD_OPEN
         MENUITEM "&Enregistrer\tCtrl+S", CMD_SAVE
         MENUITEM "Enregistrer &sous...", CMD_SAVE_AS
@@ -75,18 +75,18 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
 FONT 8, "MS Shell Dlg"
 CAPTION "Page Setup"
 BEGIN
-    GROUPBOX "Previsualisation", 0, 240, 6, 120, 153, BS_GROUPBOX
+    GROUPBOX "Aperçu", 0, 240, 6, 120, 153, BS_GROUPBOX
     CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
     CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
     CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
     GROUPBOX "Papier", grp2, 8, 6, 224, 56, BS_GROUPBOX
-    LTEXT "&Dimension:", stc2, 16, 22, 36, 8
+    LTEXT "&Dimension :", stc2, 16, 22, 36, 8
     COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Tray:", stc3, 16, 42, 36, 8
+    LTEXT "&Bac :", stc3, 16, 42, 36, 8
     COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
     GROUPBOX "Orientation", grp1, 8, 66, 64, 56, BS_GROUPBOX
     AUTORADIOBUTTON "&Portrait", rad1, 16, 80, 52, 12, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "&Paysage", rad2, 16, 100, 52, 12
+    AUTORADIOBUTTON "Pa&ysage", rad2, 16, 100, 52, 12
     GROUPBOX "Bordures", grp4, 80, 66, 152, 56, BS_GROUPBOX
     LTEXT "&Gauche :", stc15, 88, 82, 30, 8
     EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
@@ -96,14 +96,14 @@ BEGIN
     EDITTEXT edt5, 119, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
     LTEXT "&Bas :", stc18, 159, 102, 30, 8
     EDITTEXT edt7, 190, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "&Entête :", 0x140, 8, 132, 40, 15
+    LTEXT "&En-tête :", 0x140, 8, 132, 40, 15
     EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Pied de page :", 0x142, 8, 149, 40, 15
     EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
     PUSHBUTTON "Aide", IDHELP, 8, 170, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
     PUSHBUTTON "Annuler", IDCANCEL, 254, 170, 50, 14
-    PUSHBUTTON "Im&primer...", psh3, 310, 170, 50, 14
+    PUSHBUTTON "&Imprimer...", psh3, 310, 170, 50, 14
 END
 
 /* Dialog 'Encoding' */
@@ -176,7 +176,7 @@ de la mémoire."
     STRING_LINE_COLUMN "Ligne %d, colonne %d"
     STRING_PRINTERROR "Impossible d'imprimer le fichier '%s'.\n\nVérifiez que l'imprimante est allumée et correctement configurée."
     STRING_DEFAULTFONT "Lucida Console"
-    STRING_LINE_NUMBER_OUT_OF_RANGE "Le numéro de ligne spécifié est hors des limites."
+    STRING_LINE_NUMBER_OUT_OF_RANGE "Le numéro de ligne spécifié est hors limite."
     STRING_NOWPRINTING "Impression de la page en cours..."
     STRING_PRINTCANCELING "Le travail d'impression est en train d'être annulé..."
     STRING_PRINTCOMPLETE "L'impression a été effectuée avec succès."
