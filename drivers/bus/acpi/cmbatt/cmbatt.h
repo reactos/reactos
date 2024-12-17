@@ -67,6 +67,13 @@ typedef enum _CMBATT_EXTENSION_TYPE
 #define CM_MAX_VALUE                0x7FFFFFFF
 #define CM_UNKNOWN_VALUE            0xFFFFFFFF
 
+#define CONVERT_MAH_TO_MWH(mA, Volts) (((mA) * (Volts) + 500) / 1000)
+
+#define CONVERT_BATT_INFO(Capacity, DesignVoltage) \
+    (((Capacity) != BATTERY_UNKNOWN_CAPACITY) \
+        ? CONVERT_MAH_TO_MWH((Capacity), (DesignVoltage)) \
+        : BATTERY_UNKNOWN_CAPACITY)
+
 typedef struct _ACPI_BST_DATA
 {
     ULONG State;
