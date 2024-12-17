@@ -445,6 +445,70 @@ CmBattGetBifData(PCMBATT_DEVICE_EXTENSION DeviceExtension,
                                  RTL_NUMBER_OF(BifFields));
 }
 
+/**
+ * @brief
+ * Retrieves the eXtended static battery information from the
+ * ACPI _BIX method.
+ *
+ * @param[in] DeviceExtension
+ * A pointer to a Control Method (CM) battery device extension.
+ * It is used to send the ACPI method evaluation operation
+ * to the ACPI driver of which it is attached to this CM battery.
+ *
+ * @param[out] BixData
+ * A pointer to a structure that contains the _BIX data fields,
+ * returned to caller.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the operation has succeeded successfully,
+ * otherwise a failure NTSTATUS code is returned.
+ */
+NTSTATUS
+NTAPI
+CmBattGetBixData(
+    _In_ PCMBATT_DEVICE_EXTENSION DeviceExtension,
+    _Out_ PACPI_BIX_DATA BixData)
+{
+    ACPI_PACKAGE_FIELD BixFields[] = {
+        { "Revision", FALSE, &BixData->Revision },
+        { "PowerUnit", FALSE, &BixData->PowerUnit },
+        { "DesignCapacity", FALSE, &BixData->DesignCapacity },
+        { "LastFullCapacity", FALSE, &BixData->LastFullCapacity },
+        { "BatteryTechnology", FALSE, &BixData->BatteryTechnology },
+        { "DesignVoltage", FALSE, &BixData->DesignVoltage },
+        { "DesignCapacityWarning", FALSE, &BixData->DesignCapacityWarning },
+        { "DesignCapacityLow", FALSE, &BixData->DesignCapacityLow },
+        { "CycleCount", FALSE, &BixData->CycleCount },
+        { "Accuracy", FALSE, &BixData->Accuracy },
+        { "MaxSampleTime", FALSE, &BixData->MaxSampleTime },
+        { "MinSampleTime", FALSE, &BixData->MinSampleTime },
+        { "MaxAverageInterval", FALSE, &BixData->MaxAverageInterval },
+        { "MinAverageInterval", FALSE, &BixData->MinAverageInterval },
+        { "BatteryCapacityGranularity1", FALSE, &BixData->BatteryCapacityGranularity1 },
+        { "BatteryCapacityGranularity2", FALSE, &BixData->BatteryCapacityGranularity2 },
+        { "ModelNumber", TRUE, &BixData->ModelNumber },
+        { "SerialNumber", TRUE, &BixData->SerialNumber },
+        { "BatteryType", TRUE, &BixData->BatteryType },
+        { "OemInfo", TRUE, &BixData->OemInfo },
+        { "SwapCapability", FALSE, &BixData->SwapCapability },
+    };
+    PAGED_CODE();
+
+    if (CmBattDebug & CMBATT_ACPI_ENTRY_EXIT)
+    {
+        DbgPrint("CmBattGetBixData: Buffer (0x%x) Device %x Tid %x\n",
+                 BixData, DeviceExtension->DeviceId, KeGetCurrentThread());
+    }
+
+    /* Request the ACPI driver to get the _BIX data for us */
+    return CmBattCallAcpiPackage("CmBattGetBifData",
+                                 DeviceExtension,
+                                 'XIB_',
+                                 512,
+                                 BixFields,
+                                 RTL_NUMBER_OF(BixFields));
+}
+
 NTSTATUS
 NTAPI
 CmBattGetBstData(PCMBATT_DEVICE_EXTENSION DeviceExtension,

@@ -273,71 +273,276 @@ CmBattUnload(IN PDRIVER_OBJECT DriverObject)
     }
 }
 
+/**
+ * @brief
+ * Retrieves the static information of the battery.
+ *
+ * @param[in] DeviceExtension
+ * A pointer to a Control Method (CM) battery device extension.
+ * It is used for debugging purposes.
+ *
+ * @param[out] UseBix
+ * A pointer to a boolean value, returned to caller. This can return
+ * TRUE if this machine supports the _BIX method, FALSE otherwise.
+ *
+ * @param[out] BattInfo
+ * A pointer to a structure that contains the static info of the
+ * battery. ONLY ONE type of information is filled. See Remarks.
+ *
+ * @return
+ * Returns STATUS_INSUFFICIENT_RESOURCES if there is no enough
+ * memory to allocate for the static info buffer. Returns
+ * STATUS_SUCCESS if the operation has succeeded. Otherwise an
+ * error NTSTATUS code is returned.
+ *
+ * @remarks
+ * It is important to note that a machine can only support one method,
+ * _BIX or _BIF. Starting with ACPI 4.0, _BIF has become deprecated.
+ * The caller MUST INSPECT the boolean value, ExtendedData, in order
+ * to determine if the machine has returned the extended information
+ * data or not.
+ */
+static
+NTSTATUS
+CmBattGetBattStaticInfo(
+    _In_ PCMBATT_DEVICE_EXTENSION DeviceExtension,
+    _Out_ PBOOLEAN UseBix,
+    _Outptr_ PACPI_BATT_STATIC_INFO *BattInfo)
+{
+    NTSTATUS Status;
+    ACPI_BIF_DATA BifData;
+    ACPI_BIX_DATA BixData;
+    PACPI_BATT_STATIC_INFO Info;
+
+    /* Allocate pool space for the static information */
+    Info = ExAllocatePoolZero(PagedPool,
+                              sizeof(*Info),
+                              CMBATT_BATT_STATIC_INFO_TAG);
+    if (Info == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Assume this machine supports the _BIX method */
+    *UseBix = TRUE;
+
+    /* Retrieve extended battery static info from _BIX method */
+    Status = CmBattGetBixData(DeviceExtension, &BixData);
+    if (!NT_SUCCESS(Status))
+    {
+        /*
+         * It failed. This can be expected because not every machine supports
+         * _BIX, especially the older machines which do not support ACPI 4.0.
+         * Fallback to _BIF at this point.
+         */
+        Status = CmBattGetBifData(DeviceExtension, &BifData);
+        if (!NT_SUCCESS(Status))
+        {
+            /* That failed too, time to punt */
+            ExFreePoolWithTag(Info, CMBATT_BATT_STATIC_INFO_TAG);
+            return Status;
+        }
+
+        /* Acknowledge the caller it will be going to use _BIF */
+        *UseBix = FALSE;
+        Info->BifData = BifData;
+    }
+    else
+    {
+        Info->BixData = BixData;
+    }
+
+    /* Return the battery static info to caller */
+    Info->ExtendedData = *UseBix;
+    *BattInfo = Info;
+    return Status;
+}
+
+/**
+ * @brief
+ * Verifies the extended battery information (_BIX) and translates
+ * such data to the BATTERY_INFORMATION structure.
+ *
+ * @param[in] DeviceExtension
+ * A pointer to a Control Method (CM) battery device extension.
+ * It is used to gather _BIX data.
+ *
+ * @param[in,out] Info
+ * A pointer to a structure of which this function fills in
+ * battery information that can be by other battery miniport
+ * drivers, such as the Composite Battery driver.
+ */
+static
+VOID
+CmBattVerifyBixData(
+    _In_ PCMBATT_DEVICE_EXTENSION DeviceExtension,
+    _Inout_ PBATTERY_INFORMATION Info)
+{
+    ULONG DesignVoltage;
+    ACPI_BIX_DATA BixData = DeviceExtension->BattInfo.BixData;
+
+    /* Copy the battery info data */
+    Info->Technology = BixData.BatteryTechnology;
+    Info->CycleCount = BixData.CycleCount;
+    RtlCopyMemory(Info->Chemistry, BixData.BatteryType, 4);
+
+    /* Check if the power stats are reported in ampere or watts */
+    if (BixData.PowerUnit == ACPI_BATT_POWER_UNIT_AMPS)
+    {
+        /*
+         * We have got power stats in milli-ampere but ReactOS expects the values
+         * to be reported in milli-watts, so we have to convert them.
+         * In order to do so we must expect the design voltage of the battery
+         * is not unknown.
+         */
+        DesignVoltage = BixData.DesignVoltage;
+        if ((DesignVoltage != BATTERY_UNKNOWN_VOLTAGE) && (DesignVoltage != 0))
+        {
+            /* Convert the design capacity */
+            Info->DesignedCapacity = CONVERT_BATT_INFO(BixData.DesignCapacity, DesignVoltage);
+
+            /* Convert the full charged capacity */
+            Info->FullChargedCapacity = CONVERT_BATT_INFO(BixData.LastFullCapacity, DesignVoltage);
+
+            /* Convert the low capacity alarm (DefaultAlert1) */
+            Info->DefaultAlert1 = CONVERT_BATT_INFO(BixData.DesignCapacityLow, DesignVoltage);
+
+            /* Convert the designed capacity warning alarm (DefaultAlert2) */
+            Info->DefaultAlert2 = CONVERT_BATT_INFO(BixData.DesignCapacityWarning, DesignVoltage);
+        }
+        else
+        {
+            /*
+             * Without knowing the nominal designed voltage of the battery
+             * we cannot determine the power consumption of this battery.
+             */
+            Info->DesignedCapacity = BATTERY_UNKNOWN_CAPACITY;
+            Info->FullChargedCapacity = BATTERY_UNKNOWN_CAPACITY;
+            Info->DefaultAlert1 = BATTERY_UNKNOWN_CAPACITY;
+            Info->DefaultAlert2 = BATTERY_UNKNOWN_CAPACITY;
+        }
+    }
+    else
+    {
+        /* The stats are in milli-watts, use them directly */
+        Info->DesignedCapacity = BixData.DesignCapacity;
+        Info->FullChargedCapacity = BixData.LastFullCapacity;
+        Info->DefaultAlert1 = BixData.DesignCapacityLow;
+        Info->DefaultAlert2 = BixData.DesignCapacityWarning;
+    }
+}
+
+/**
+ * @brief
+ * Verifies the battery information (_BIF) and translates
+ * such data to the BATTERY_INFORMATION structure.
+ *
+ * @param[in] DeviceExtension
+ * A pointer to a Control Method (CM) battery device extension.
+ * It is used to gather _BIF data.
+ *
+ * @param[in,out] Info
+ * A pointer to a structure of which this function fills in
+ * battery information that can be by other battery miniport
+ * drivers, such as the Composite Battery driver.
+ */
+static
+VOID
+CmBattVerifyBifData(
+    _In_ PCMBATT_DEVICE_EXTENSION DeviceExtension,
+    _Inout_ PBATTERY_INFORMATION Info)
+{
+    ULONG DesignVoltage;
+    ACPI_BIF_DATA BifData = DeviceExtension->BattInfo.BifData;
+
+    /* Copy the battery info data, CycleCount is not supported in _BIF */
+    Info->Technology = BifData.BatteryTechnology;
+    Info->CycleCount = 0;
+    RtlCopyMemory(Info->Chemistry, BifData.BatteryType, 4);
+
+    /* Check if the power stats are reported in ampere or watts */
+    if (BifData.PowerUnit == ACPI_BATT_POWER_UNIT_AMPS)
+    {
+        /*
+         * We have got power stats in milli-ampere but ReactOS expects the values
+         * to be reported in milli-watts, so we have to convert them.
+         * In order to do so we must expect the design voltage of the battery
+         * is not unknown.
+         */
+        DesignVoltage = BifData.DesignVoltage;
+        if ((DesignVoltage != BATTERY_UNKNOWN_VOLTAGE) && (DesignVoltage != 0))
+        {
+            /* Convert the design capacity */
+            Info->DesignedCapacity = CONVERT_BATT_INFO(BifData.DesignCapacity, DesignVoltage);
+
+            /* Convert the full charged capacity */
+            Info->FullChargedCapacity = CONVERT_BATT_INFO(BifData.LastFullCapacity, DesignVoltage);
+
+            /* Convert the low capacity alarm (DefaultAlert1) */
+            Info->DefaultAlert1 = CONVERT_BATT_INFO(BifData.DesignCapacityLow, DesignVoltage);
+
+            /* Convert the designed capacity warning alarm (DefaultAlert2) */
+            Info->DefaultAlert2 = CONVERT_BATT_INFO(BifData.DesignCapacityWarning, DesignVoltage);
+        }
+        else
+        {
+            /*
+             * Without knowing the nominal designed voltage of the battery
+             * we cannot determine the power consumption of this battery.
+             */
+            Info->DesignedCapacity = BATTERY_UNKNOWN_CAPACITY;
+            Info->FullChargedCapacity = BATTERY_UNKNOWN_CAPACITY;
+            Info->DefaultAlert1 = BATTERY_UNKNOWN_CAPACITY;
+            Info->DefaultAlert2 = BATTERY_UNKNOWN_CAPACITY;
+        }
+    }
+    else
+    {
+        /* The stats are in milli-watts, use them directly */
+        Info->DesignedCapacity = BifData.DesignCapacity;
+        Info->FullChargedCapacity = BifData.LastFullCapacity;
+        Info->DefaultAlert1 = BifData.DesignCapacityLow;
+        Info->DefaultAlert2 = BifData.DesignCapacityWarning;
+    }
+}
+
 NTSTATUS
 NTAPI
 CmBattVerifyStaticInfo(
     _Inout_ PCMBATT_DEVICE_EXTENSION DeviceExtension,
     _In_ ULONG BatteryTag)
 {
-    ACPI_BIF_DATA BifData;
-    ULONG DesignVoltage;
-    PBATTERY_INFORMATION Info = &DeviceExtension->BatteryInformation;
     NTSTATUS Status;
+    BOOLEAN UseBix;
+    PACPI_BATT_STATIC_INFO BattInfo;
+    PBATTERY_INFORMATION Info = &DeviceExtension->BatteryInformation;
 
-    Status = CmBattGetBifData(DeviceExtension, &BifData);
+    /* FIXME: This function is not fully implemented, more checks need to be implemented */
+    UNREFERENCED_PARAMETER(BatteryTag);
+
+    /* Retrieve the battery static info */
+    Status = CmBattGetBattStaticInfo(DeviceExtension, &UseBix, &BattInfo);
     if (NT_SUCCESS(Status))
     {
+        /* Initialize the battery information data */
         RtlZeroMemory(Info, sizeof(*Info));
         Info->Capabilities = BATTERY_SYSTEM_BATTERY;
-        Info->Technology = BifData.BatteryTechnology;
-        RtlCopyMemory(Info->Chemistry, BifData.BatteryType, 4);
-        // FIXME: take from _BIX method: Info->CycleCount
-        DeviceExtension->BifData = BifData;
-        DesignVoltage = DeviceExtension->BifData.DesignVoltage;
 
-        /* Check if the power stats are reported in ampere or watts */
-        if (BifData.PowerUnit == ACPI_BATT_POWER_UNIT_AMPS)
+        /* Copy the static information to the device extension of the battery */
+        RtlCopyMemory(&DeviceExtension->BattInfo, BattInfo, sizeof(*BattInfo));
+
+        /* Check if the data from _BIX has to be used or not */
+        if (UseBix)
         {
-            /*
-             * We have got power stats in milli-ampere but ReactOS expects the values
-             * to be reported in milli-watts, so we have to convert them.
-             * In order to do so we must expect the design voltage of the battery
-             * is not unknown.
-             */
-            if ((DesignVoltage != BATTERY_UNKNOWN_VOLTAGE) && (DesignVoltage != 0))
-            {
-                /* Convert the design capacity */
-                Info->DesignedCapacity = CONVERT_BATT_INFO(BifData.DesignCapacity, DesignVoltage);
-
-                /* Convert the full charged capacity */
-                Info->FullChargedCapacity = CONVERT_BATT_INFO(BifData.LastFullCapacity, DesignVoltage);
-
-                /* Convert the low capacity alarm (DefaultAlert1) */
-                Info->DefaultAlert1 = CONVERT_BATT_INFO(BifData.DesignCapacityLow, DesignVoltage);
-
-                /* Convert the designed capacity warning alarm (DefaultAlert2) */
-                Info->DefaultAlert2 = CONVERT_BATT_INFO(BifData.DesignCapacityWarning, DesignVoltage);
-            }
-            else
-            {
-                /*
-                 * Without knowing the nominal designed voltage of the battery
-                 * we cannot determine the power consumption of this battery.
-                 */
-                Info->DesignedCapacity = BATTERY_UNKNOWN_CAPACITY;
-                Info->FullChargedCapacity = BATTERY_UNKNOWN_CAPACITY;
-                Info->DefaultAlert1 = BATTERY_UNKNOWN_CAPACITY;
-                Info->DefaultAlert2 = BATTERY_UNKNOWN_CAPACITY;
-            }
+            CmBattVerifyBixData(DeviceExtension, Info);
         }
         else
         {
-            /* The stats are in milli-watts, use them directly */
-            Info->DesignedCapacity = BifData.DesignCapacity;
-            Info->FullChargedCapacity = BifData.LastFullCapacity;
-            Info->DefaultAlert1 = BifData.DesignCapacityLow;
-            Info->DefaultAlert2 = BifData.DesignCapacityWarning;
+            CmBattVerifyBifData(DeviceExtension, Info);
         }
+
+        /* Free the static information buffer as we already copied it */
+        ExFreePoolWithTag(BattInfo, CMBATT_BATT_STATIC_INFO_TAG);
     }
 
     return Status;
@@ -530,20 +735,44 @@ CmBattIoctl(IN PDEVICE_OBJECT DeviceObject,
                 }
                 break;
 
-            case IOCTL_BATTERY_QUERY_BIF:
+            case IOCTL_BATTERY_QUERY_BIF_BIX:
 
-                /* Data is 1060 bytes long */
-                if (OutputBufferLength == sizeof(ACPI_BIF_DATA))
+                /* Return the battery static information to the caller depending on the supported ACPI method */
+                if (DeviceExtension->BattInfo.ExtendedData)
                 {
-                    /* Query it */
-                    Status = CmBattGetBifData(DeviceExtension,
-                                              Irp->AssociatedIrp.SystemBuffer);
-                    if (NT_SUCCESS(Status)) Irp->IoStatus.Information = sizeof(ACPI_BIF_DATA);
+                    if (OutputBufferLength == sizeof(ACPI_BIX_DATA))
+                    {
+                        /* Query it */
+                        Status = CmBattGetBixData(DeviceExtension,
+                                                  Irp->AssociatedIrp.SystemBuffer);
+                        if (NT_SUCCESS(Status))
+                        {
+                            Irp->IoStatus.Information = sizeof(ACPI_BIX_DATA);
+                        }
+                    }
+                    else
+                    {
+                        /* Buffer size invalid */
+                        Status = STATUS_INVALID_BUFFER_SIZE;
+                    }
                 }
                 else
                 {
-                    /* Buffer size invalid */
-                    Status = STATUS_INVALID_BUFFER_SIZE;
+                    if (OutputBufferLength == sizeof(ACPI_BIF_DATA))
+                    {
+                        /* Query it */
+                        Status = CmBattGetBifData(DeviceExtension,
+                                                  Irp->AssociatedIrp.SystemBuffer);
+                        if (NT_SUCCESS(Status))
+                        {
+                            Irp->IoStatus.Information = sizeof(ACPI_BIF_DATA);
+                        }
+                    }
+                    else
+                    {
+                        /* Buffer size invalid */
+                        Status = STATUS_INVALID_BUFFER_SIZE;
+                    }
                 }
                 break;
 
@@ -699,7 +928,7 @@ CmBattSetStatusNotify(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
 {
     NTSTATUS Status;
     ACPI_BST_DATA BstData;
-    ULONG Capacity, NewTripPoint, TripPoint, DesignVoltage;
+    ULONG PowerUnit, Capacity, NewTripPoint, TripPoint, DesignVoltage;
     BOOLEAN Charging;
     PAGED_CODE();
     if (CmBattDebug & (CMBATT_ACPI_WARNING | CMBATT_GENERIC_INFO))
@@ -738,11 +967,22 @@ CmBattSetStatusNotify(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
         NewTripPoint = BatteryNotify->LowCapacity;
     }
 
+    /* Is this machine supporting _BIX or _BIF? */
+    if (DeviceExtension->BattInfo.ExtendedData)
+    {
+        PowerUnit = DeviceExtension->BattInfo.BixData.PowerUnit;
+        DesignVoltage = DeviceExtension->BattInfo.BixData.DesignVoltage;
+    }
+    else
+    {
+        PowerUnit = DeviceExtension->BattInfo.BifData.PowerUnit;
+        DesignVoltage = DeviceExtension->BattInfo.BifData.DesignVoltage;
+    }
+
     /* Do we have data in Amps or Watts? */
-    if (DeviceExtension->BifData.PowerUnit == ACPI_BATT_POWER_UNIT_AMPS)
+    if (PowerUnit == ACPI_BATT_POWER_UNIT_AMPS)
     {
         /* We need the voltage to do the conversion */
-        DesignVoltage = DeviceExtension->BifData.DesignVoltage;
         if ((DesignVoltage != BATTERY_UNKNOWN_VOLTAGE) && (DesignVoltage))
         {
             /* Convert from mAh into Ah */
@@ -846,6 +1086,7 @@ CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
     ULONG PsrData = 0;
     NTSTATUS Status;
     ULONG BstState;
+    ULONG PowerUnit;
     ULONG DesignVoltage, PresentRate, RemainingCapacity;
     PAGED_CODE();
     if (CmBattDebug & CMBATT_GENERIC_INFO)
@@ -946,13 +1187,24 @@ CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
         DbgPrint("CmBattGetBatteryStatus: AC adapter is NOT connected\n");
     }
 
+    /* Is this machine supporting _BIX or _BIF? */
+    if (DeviceExtension->BattInfo.ExtendedData)
+    {
+        PowerUnit = DeviceExtension->BattInfo.BixData.PowerUnit;
+        DesignVoltage = DeviceExtension->BattInfo.BixData.DesignVoltage;
+    }
+    else
+    {
+        PowerUnit = DeviceExtension->BattInfo.BifData.PowerUnit;
+        DesignVoltage = DeviceExtension->BattInfo.BifData.DesignVoltage;
+    }
+
     /* Get some data we'll need */
-    DesignVoltage = DeviceExtension->BifData.DesignVoltage;
     PresentRate = DeviceExtension->BstData.PresentRate;
     RemainingCapacity = DeviceExtension->BstData.RemainingCapacity;
 
     /* Check if we have battery data in Watts instead of Amps */
-    if (DeviceExtension->BifData.PowerUnit == ACPI_BATT_POWER_UNIT_WATTS)
+    if (PowerUnit == ACPI_BATT_POWER_UNIT_WATTS)
     {
         /* Get the data from the BST */
         DeviceExtension->RemainingCapacity = RemainingCapacity;
@@ -970,7 +1222,7 @@ CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
             }
         }
     }
-    else if ((DesignVoltage != CM_UNKNOWN_VALUE) && (DesignVoltage != 0)) // Same as doing DeviceExtension->BifData.PowerUnit == ACPI_BATT_POWER_UNIT_AMPS
+    else if ((DesignVoltage != CM_UNKNOWN_VALUE) && (DesignVoltage != 0)) // Same as doing PowerUnit == ACPI_BATT_POWER_UNIT_AMPS
     {
         /* We have voltage data, what about capacity? */
         if (RemainingCapacity == CM_UNKNOWN_VALUE)
@@ -1180,7 +1432,14 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
         case BatteryDeviceName:
 
             /* Build the model number string */
-            RtlInitAnsiString(&TempString, FdoExtension->BifData.ModelNumber);
+            if (FdoExtension->BattInfo.ExtendedData)
+            {
+                RtlInitAnsiString(&TempString, FdoExtension->BattInfo.BixData.ModelNumber);
+            }
+            else
+            {
+                RtlInitAnsiString(&TempString, FdoExtension->BattInfo.BifData.ModelNumber);
+            }
 
             /* Convert it to Unicode */
             InfoString.Buffer = InfoBuffer;
@@ -1202,7 +1461,14 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
         case BatteryManufactureName:
 
             /* Build the OEM info string */
-            RtlInitAnsiString(&TempString, FdoExtension->BifData.OemInfo);
+            if (FdoExtension->BattInfo.ExtendedData)
+            {
+                RtlInitAnsiString(&TempString, FdoExtension->BattInfo.BixData.OemInfo);
+            }
+            else
+            {
+                RtlInitAnsiString(&TempString, FdoExtension->BattInfo.BifData.OemInfo);
+            }
 
             /* Convert it to Unicode */
             InfoString.Buffer = InfoBuffer;
@@ -1217,7 +1483,14 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
         case BatteryUniqueID:
 
             /* Build the serial number string */
-            RtlInitAnsiString(&TempString, FdoExtension->BifData.SerialNumber);
+            if (FdoExtension->BattInfo.ExtendedData)
+            {
+                RtlInitAnsiString(&TempString, FdoExtension->BattInfo.BixData.SerialNumber);
+            }
+            else
+            {
+                RtlInitAnsiString(&TempString, FdoExtension->BattInfo.BifData.SerialNumber);
+            }
 
             /* Convert it to Unicode */
             InfoString.Buffer = InfoBuffer;
@@ -1229,10 +1502,18 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
             TempString2.MaximumLength = sizeof(TempBuffer);
 
             /* Check if there's an OEM string */
-            if (FdoExtension->BifData.OemInfo[0])
+            if ((FdoExtension->BattInfo.ExtendedData && FdoExtension->BattInfo.BixData.OemInfo[0]) ||
+                FdoExtension->BattInfo.BifData.OemInfo[0])
             {
                 /* Build the OEM info string */
-                RtlInitAnsiString(&TempString, FdoExtension->BifData.OemInfo);
+                if (FdoExtension->BattInfo.ExtendedData)
+                {
+                    RtlInitAnsiString(&TempString, FdoExtension->BattInfo.BixData.OemInfo);
+                }
+                else
+                {
+                    RtlInitAnsiString(&TempString, FdoExtension->BattInfo.BifData.OemInfo);
+                }
 
                 /* Convert it to Unicode and append it */
                 RtlAnsiStringToUnicodeString(&TempString2, &TempString, 0);
@@ -1240,7 +1521,14 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
             }
 
             /* Build the model number string */
-            RtlInitAnsiString(&TempString, FdoExtension->BifData.ModelNumber);
+            if (FdoExtension->BattInfo.ExtendedData)
+            {
+                RtlInitAnsiString(&TempString, FdoExtension->BattInfo.BixData.ModelNumber);
+            }
+            else
+            {
+                RtlInitAnsiString(&TempString, FdoExtension->BattInfo.BifData.ModelNumber);
+            }
 
             /* Convert it to Unicode and append it */
             RtlAnsiStringToUnicodeString(&TempString2, &TempString, 0);

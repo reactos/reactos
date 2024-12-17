@@ -26,7 +26,7 @@
 #define IOCTL_BATTERY_SET_TRIP_POINT \
     CTL_CODE(FILE_DEVICE_BATTERY, 0x104, METHOD_BUFFERED, FILE_READ_ACCESS) // 0x294410
 
-#define IOCTL_BATTERY_QUERY_BIF \
+#define IOCTL_BATTERY_QUERY_BIF_BIX \
     CTL_CODE(FILE_DEVICE_BATTERY, 0x105, METHOD_BUFFERED, FILE_READ_ACCESS) // 0x294414
 
 #define IOCTL_BATTERY_QUERY_BST \
@@ -85,6 +85,8 @@ typedef struct _ACPI_BST_DATA
 #define ACPI_BATT_POWER_UNIT_WATTS  0x0
 #define ACPI_BATT_POWER_UNIT_AMPS   0x1
 
+#define ASCIIZ_MAX_LENGTH   256
+
 typedef struct _ACPI_BIF_DATA
 {
     ULONG PowerUnit;
@@ -96,11 +98,45 @@ typedef struct _ACPI_BIF_DATA
     ULONG DesignCapacityLow;
     ULONG BatteryCapacityGranularity1;
     ULONG BatteryCapacityGranularity2;
-    CHAR ModelNumber[256];
-    CHAR SerialNumber[256];
-    CHAR BatteryType[256];
-    CHAR OemInfo[256];
+    CHAR ModelNumber[ASCIIZ_MAX_LENGTH];
+    CHAR SerialNumber[ASCIIZ_MAX_LENGTH];
+    CHAR BatteryType[ASCIIZ_MAX_LENGTH];
+    CHAR OemInfo[ASCIIZ_MAX_LENGTH];
 } ACPI_BIF_DATA, *PACPI_BIF_DATA;
+
+typedef struct _ACPI_BIX_DATA
+{
+    ULONG Revision;
+    ULONG PowerUnit;
+    ULONG DesignCapacity;
+    ULONG LastFullCapacity;
+    ULONG BatteryTechnology;
+    ULONG DesignVoltage;
+    ULONG DesignCapacityWarning;
+    ULONG DesignCapacityLow;
+    ULONG CycleCount;
+    ULONG Accuracy;
+    ULONG MaxSampleTime;
+    ULONG MinSampleTime;
+    ULONG MaxAverageInterval;
+    ULONG MinAverageInterval;
+    ULONG BatteryCapacityGranularity1;
+    ULONG BatteryCapacityGranularity2;
+    CHAR ModelNumber[ASCIIZ_MAX_LENGTH];
+    CHAR SerialNumber[ASCIIZ_MAX_LENGTH];
+    CHAR BatteryType[ASCIIZ_MAX_LENGTH];
+    CHAR OemInfo[ASCIIZ_MAX_LENGTH];
+    ULONG SwapCapability;
+} ACPI_BIX_DATA, *PACPI_BIX_DATA;
+
+typedef struct _ACPI_BATT_STATIC_INFO
+{
+    ACPI_BIF_DATA BifData;
+    ACPI_BIX_DATA BixData;
+    BOOLEAN ExtendedData;
+} ACPI_BATT_STATIC_INFO, *PACPI_BATT_STATIC_INFO;
+
+#define CMBATT_BATT_STATIC_INFO_TAG     'nItS'
 
 #define CMBATT_AR_NOTIFY            0x01
 #define CMBATT_AR_INSERT            0x02
@@ -132,7 +168,7 @@ typedef struct _CMBATT_DEVICE_EXTENSION
     ULONG TagData;
     ULONG Tag;
     ACPI_BST_DATA BstData;
-    ACPI_BIF_DATA BifData;
+    ACPI_BATT_STATIC_INFO BattInfo;
     ULONG Id;
     ULONG State;
     ULONG RemainingCapacity;
@@ -201,6 +237,13 @@ NTAPI
 CmBattGetBifData(
     PCMBATT_DEVICE_EXTENSION DeviceExtension,
     PACPI_BIF_DATA BifData
+);
+
+NTSTATUS
+NTAPI
+CmBattGetBixData(
+    _In_ PCMBATT_DEVICE_EXTENSION DeviceExtension,
+    _Out_ PACPI_BIX_DATA BixData
 );
 
 NTSTATUS
