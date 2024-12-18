@@ -24,6 +24,7 @@
 
 #include <stdio.h>
 #include <winnls.h>
+#include <assert.h>
 
 /* Global variables */
 HINSTANCE hDllInstance;
@@ -353,6 +354,10 @@ SearchDriverRecursive(
     BOOL retval = FALSE;
     HANDLE hFindFile = INVALID_HANDLE_VALUE;
 
+    /* Path + 3 characters (pattern + zero terminal) is too long to be searched */
+    if (wcslen(Path) + 3 > MAX_PATH)
+        return FALSE;
+
     wcscpy(DirPath, Path);
 
     if (DirPath[wcslen(DirPath) - 1] != '\\')
@@ -366,12 +371,20 @@ SearchDriverRecursive(
         ok = FindNextFileW(hFindFile, &wfd))
     {
 
+        /* Filename is too long to be searched */
+        if (wcslen(wfd.cFileName) + 1 > MAX_PATH)
+            continue;
+
         wcscpy(FileName, wfd.cFileName);
         if (IsDots(FileName))
             continue;
 
         if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
+            /* Path is too long to be searched */
+            if (wcslen(DirPath) + wcslen(FileName) + 1 > MAX_PATH)
+                continue;
+
             /* Recursive search */
             wcscpy(FullPath, DirPath);
             wcscat(FullPath, FileName);
@@ -389,9 +402,8 @@ SearchDriverRecursive(
             {
                 wcscpy(LastDirPath, DirPath);
 
-                if (wcslen(DirPath) > MAX_PATH)
-                    /* Path is too long to be searched */
-                    continue;
+                /* if wcslen(DirPath) >= MAX_PATH here it's too late, program has already crashed */
+                assert(wcslen(DirPath) < MAX_PATH);
 
                 if (SearchDriver(DevInstData, DirPath, NULL))
                 {
