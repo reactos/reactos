@@ -92,12 +92,12 @@ MapVerbToCmdId(PVOID Verb, BOOL IsUnicode, IContextMenu *pCM, UINT idFirst, UINT
     {
         WCHAR buf[MAX_PATH];
         *buf = UNICODE_NULL;
-        HRESULT hr = pCM->GetCommandString(id, gcs, NULL, (char*)buf, _countof(buf));
+        HRESULT hr = pCM->GetCommandString(id, gcs, NULL, (LPSTR)buf, _countof(buf));
         if (FAILED(hr) || !*buf)
             continue;
-        else if (IsUnicode && !_wcsicmp((WCHAR*)Verb, buf))
+        else if (IsUnicode && !_wcsicmp((LPWSTR)Verb, buf))
             return id;
-        else if (!IsUnicode && !lstrcmpiA((CHAR*)Verb, (CHAR*)buf))
+        else if (!IsUnicode && !lstrcmpiA((LPSTR)Verb, (LPSTR)buf))
             return id;
     }
     return HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
