@@ -139,7 +139,7 @@ void FreeChangeNotifications(void) DECLSPEC_HIDDEN;
 BOOL SHELL_DeleteDirectoryW(HWND hwnd, LPCWSTR pwszDir, BOOL bShowUI);
 BOOL SHELL_ConfirmYesNoW(HWND hWnd, int nKindOfDialog, LPCWSTR szDir);
 
-void WINAPI _InsertMenuItemW (HMENU hmenu, UINT indexMenu, BOOL fByPosition,
+BOOL WINAPI _InsertMenuItemW (HMENU hmenu, UINT indexMenu, BOOL fByPosition,
 			UINT wID, UINT fType, LPCWSTR dwTypeData, UINT fState);
 
 static __inline BOOL SHELL_OsIsUnicode(void)

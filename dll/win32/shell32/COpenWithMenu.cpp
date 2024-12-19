@@ -1250,6 +1250,11 @@ VOID COpenWithMenu::AddApp(PVOID pApp)
         m_idCmdLast++;
 }
 
+static const CMVERBMAP g_VerbMap[] = {
+    { "openas", 0 },
+    { NULL }
+};
+
 HRESULT WINAPI COpenWithMenu::QueryContextMenu(
     HMENU hMenu,
     UINT indexMenu,
@@ -1328,14 +1333,19 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
 HRESULT WINAPI
 COpenWithMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 {
+    const SIZE_T idChooseApp = m_idCmdLast;
     HRESULT hr = E_FAIL;
 
     TRACE("This %p idFirst %u idLast %u idCmd %u\n", this, m_idCmdFirst, m_idCmdLast, m_idCmdFirst + LOWORD(lpici->lpVerb));
 
-    if (HIWORD(lpici->lpVerb) == 0 && m_idCmdFirst + LOWORD(lpici->lpVerb) <= m_idCmdLast)
+    if (!IS_INTRESOURCE(lpici->lpVerb) && SHELL_MapContextMenuVerbToCmdId(lpici, g_VerbMap) == 0)
+        goto DoChooseApp;
+
+    if (IS_INTRESOURCE(lpici->lpVerb) && m_idCmdFirst + LOWORD(lpici->lpVerb) <= m_idCmdLast)
     {
-        if (m_idCmdFirst + LOWORD(lpici->lpVerb) == m_idCmdLast)
+        if (m_idCmdFirst + LOWORD(lpici->lpVerb) == idChooseApp)
         {
+DoChooseApp:
             OPENASINFO info;
             LPCWSTR pwszExt = PathFindExtensionW(m_wszPath);
 
@@ -1371,8 +1381,12 @@ HRESULT WINAPI
 COpenWithMenu::GetCommandString(UINT_PTR idCmd, UINT uType,
                                 UINT* pwReserved, LPSTR pszName, UINT cchMax )
 {
-    FIXME("%p %lu %u %p %p %u\n", this,
+    TRACE("%p %lu %u %p %p %u\n", this,
           idCmd, uType, pwReserved, pszName, cchMax );
+
+    const SIZE_T idChooseApp = m_idCmdLast;
+    if (m_idCmdFirst + idCmd == idChooseApp)
+        return SHELL_GetCommandStringImpl(0, uType, pszName, cchMax, g_VerbMap);
 
     return E_NOTIMPL;
 }

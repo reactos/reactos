@@ -103,6 +103,12 @@ CCopyAsPathMenu::DoCopyAsPath(IDataObject *pdto)
     return hr;
 }
 
+static const CMVERBMAP g_VerbMap[] =
+{
+    { "copyaspath", IDC_COPYASPATH },
+    { NULL }
+};
+
 STDMETHODIMP
 CCopyAsPathMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
 {
@@ -133,7 +139,8 @@ CCopyAsPathMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
     TRACE("CCopyAsPathMenu::InvokeCommand(%p %p)\n", this, lpcmi);
 
-    if (IS_INTRESOURCE(lpcmi->lpVerb) && LOWORD(lpcmi->lpVerb) == IDC_COPYASPATH)
+    int CmdId = SHELL_MapContextMenuVerbToCmdId(lpcmi, g_VerbMap);
+    if (CmdId == IDC_COPYASPATH)
         return DoCopyAsPath(m_pDataObject);
 
     return E_FAIL;
@@ -142,10 +149,9 @@ CCopyAsPathMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 STDMETHODIMP
 CCopyAsPathMenu::GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
 {
-    FIXME("CCopyAsPathMenu::GetCommandString(%p %lu %u %p %p %u)\n", this,
+    TRACE("CCopyAsPathMenu::GetCommandString(%p %lu %u %p %p %u)\n", this,
           idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
-
-    return E_NOTIMPL;
+    return SHELL_GetCommandStringImpl(idCommand, uFlags, lpszName, uMaxNameLen, g_VerbMap);
 }
 
 STDMETHODIMP

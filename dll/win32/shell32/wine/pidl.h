@@ -157,16 +157,6 @@ typedef struct tagPIDLPrinterStruct
     WCHAR szName[1];
 } PIDLPrinterStruct;
 
-typedef struct tagPIDLRecycleStruct
-{
-    FILETIME LastModification;
-    FILETIME DeletionTime;
-    ULARGE_INTEGER FileSize;
-    ULARGE_INTEGER PhysicalFileSize;
-    DWORD Attributes;
-    WCHAR szName[1];
-} PIDLRecycleStruct;
-
 #endif /* !__REACTOS__ */
 
 typedef struct tagGUIDStruct
@@ -233,7 +223,6 @@ typedef struct tagPIDLDATA
 #ifdef __REACTOS__
           struct tagPIDLFontStruct cfont;
           struct tagPIDLPrinterStruct cprinter;
-          struct tagPIDLRecycleStruct crecycle;
 #endif
 	}u;
 } PIDLDATA, *LPPIDLDATA;
@@ -243,7 +232,6 @@ typedef struct tagPIDLDATA
  * getting special values from simple pidls
  */
 DWORD   _ILSimpleGetTextW   (LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize) DECLSPEC_HIDDEN;
-BOOL    _ILGetFileDate      (LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize) DECLSPEC_HIDDEN;
 DWORD   _ILGetFileSize      (LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize) DECLSPEC_HIDDEN;
 BOOL    _ILGetExtension     (LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize) DECLSPEC_HIDDEN;
 DWORD   _ILGetFileAttributes(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize) DECLSPEC_HIDDEN;
@@ -261,6 +249,7 @@ BOOL	_ILIsMyDocuments	(LPCITEMIDLIST pidl);
 BOOL	_ILIsBitBucket		(LPCITEMIDLIST pidl);
 BOOL	_ILIsNetHood		(LPCITEMIDLIST pidl);
 BOOL    _ILIsControlPanel   (LPCITEMIDLIST pidl);
+#define _ILIsFolderOrFile   _ILGetFSType
 #endif
 BOOL	_ILIsDrive		(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
 BOOL	_ILIsFolder		(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;

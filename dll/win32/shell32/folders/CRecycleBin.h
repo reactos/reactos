@@ -37,12 +37,15 @@ class CRecycleBin :
 {
     private:
         LPITEMIDLIST pidl;
-        INT iIdEmpty;
-        BOOL RecycleBinIsEmpty();
+        IShellFolder *m_pFSFolders[RECYCLEBINMAXDRIVECOUNT];
+        bool m_IsBackgroundMenu;
+
+        IShellFolder* GetFSFolderForItem(LPCITEMIDLIST pidl);
 
     public:
         CRecycleBin();
         ~CRecycleBin();
+        static inline REFCLSID GetClassID() { return CLSID_RecycleBin; }
 
         // IPersistFolder
         STDMETHOD(GetClassID)(CLSID *pClassID) override;

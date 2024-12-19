@@ -1729,18 +1729,10 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetIconLocation(LPWSTR pszIconPath, INT cc
 static HRESULT SHELL_PidlGetIconLocationW(PCIDLIST_ABSOLUTE pidl,
         UINT uFlags, PWSTR pszIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
 {
-    LPCITEMIDLIST pidlLast;
-    CComPtr<IShellFolder> psf;
-
-    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psf), &pidlLast);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
     CComPtr<IExtractIconW> pei;
-    hr = psf->GetUIObjectOf(0, 1, &pidlLast, IID_NULL_PPV_ARG(IExtractIconW, &pei));
+    HRESULT hr = SHELL_GetUIObjectOfAbsoluteItem(NULL, pidl, IID_PPV_ARG(IExtractIconW, &pei));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-
     hr = pei->GetIconLocation(uFlags, pszIconFile, cchMax, piIndex, pwFlags);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
@@ -3142,20 +3134,9 @@ HRESULT STDMETHODCALLTYPE CShellLink::DragEnter(IDataObject *pDataObject,
     if (*pdwEffect == DROPEFFECT_NONE)
         return S_OK;
 
-    LPCITEMIDLIST pidlLast;
-    CComPtr<IShellFolder> psf;
-
-    HRESULT hr = SHBindToParent(m_pPidl, IID_PPV_ARG(IShellFolder, &psf), &pidlLast);
-
+    HRESULT hr = SHELL_GetUIObjectOfAbsoluteItem(NULL, m_pPidl, IID_PPV_ARG(IDropTarget, &m_DropTarget));
     if (SUCCEEDED(hr))
-    {
-        hr = psf->GetUIObjectOf(0, 1, &pidlLast, IID_NULL_PPV_ARG(IDropTarget, &m_DropTarget));
-
-        if (SUCCEEDED(hr))
-            hr = m_DropTarget->DragEnter(pDataObject, dwKeyState, pt, pdwEffect);
-        else
-            *pdwEffect = DROPEFFECT_NONE;
-    }
+        hr = m_DropTarget->DragEnter(pDataObject, dwKeyState, pt, pdwEffect);
     else
         *pdwEffect = DROPEFFECT_NONE;
 

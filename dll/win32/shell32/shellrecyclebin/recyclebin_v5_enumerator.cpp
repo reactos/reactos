@@ -28,13 +28,18 @@ public:
     STDMETHODIMP_(ULONG) Release() override;
 
     /* IRecycleBinFile methods */
+    STDMETHODIMP IsEqualIdentity(const RECYCLEBINFILEIDENTITY *pFI) override
+    {
+        RECYCLEBINFILEIDENTITY self = { m_deletedFile.DeletionTime, m_FullName };
+        return RecycleBinGeneric_IsEqualFileIdentity(pFI, &self) ? S_OK : S_FALSE;
+    }
+    STDMETHODIMP GetInfo(PDELETED_FILE_INFO pInfo) override;
     STDMETHODIMP GetLastModificationTime(FILETIME *pLastModificationTime) override;
     STDMETHODIMP GetDeletionTime(FILETIME *pDeletionTime) override;
     STDMETHODIMP GetFileSize(ULARGE_INTEGER *pFileSize) override;
     STDMETHODIMP GetPhysicalFileSize(ULARGE_INTEGER *pPhysicalFileSize) override;
     STDMETHODIMP GetAttributes(DWORD *pAttributes) override;
     STDMETHODIMP GetFileName(SIZE_T BufferSize, LPWSTR Buffer, SIZE_T *RequiredSize) override;
-    STDMETHODIMP GetTypeName(SIZE_T BufferSize, LPWSTR Buffer, SIZE_T *RequiredSize) override;
     STDMETHODIMP Delete() override;
     STDMETHODIMP Restore() override;
 
@@ -53,14 +58,8 @@ STDMETHODIMP RecycleBin5File::QueryInterface(REFIID riid, void **ppvObject)
         return E_POINTER;
 
     if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_IRecycleBinFile))
-        *ppvObject = static_cast<IRecycleBinFile *>(this);
-    else if (IsEqualIID(riid, IID_IExtractIconA) || IsEqualIID(riid, IID_IExtractIconW))
     {
-        DWORD dwAttributes;
-        if (GetAttributes(&dwAttributes) == S_OK)
-            return SHCreateFileExtractIconW(m_FullName, dwAttributes, riid, ppvObject);
-        else
-            return S_FALSE;
+        *ppvObject = static_cast<IRecycleBinFile *>(this);
     }
     else
     {
@@ -94,13 +93,29 @@ STDMETHODIMP_(ULONG) RecycleBin5File::Release()
     return refCount;
 }
 
+STDMETHODIMP RecycleBin5File::GetInfo(PDELETED_FILE_INFO pInfo)
+{
+    HRESULT hr = S_OK;
+    ULARGE_INTEGER uli;
+    if (FAILED(GetLastModificationTime(&pInfo->LastModification)))
+        ZeroMemory(&pInfo->LastModification, sizeof(pInfo->LastModification));
+    pInfo->DeletionTime = m_deletedFile.DeletionTime;
+    C_ASSERT(sizeof(pInfo->FileSize) <= sizeof(UINT));
+    pInfo->FileSize = FAILED(GetFileSize(&uli)) ? INVALID_FILE_SIZE : uli.LowPart;
+    if (FAILED(hr = GetAttributes(&pInfo->Attributes)))
+        pInfo->Attributes = 0;
+    InitializeRecycleBinStringRef(&pInfo->OriginalFullPath, m_deletedFile.FileNameW);
+    InitializeRecycleBinStringRef(&pInfo->RecycledFullPath, m_FullName);
+    return hr;
+}
+
 STDMETHODIMP RecycleBin5File::GetLastModificationTime(FILETIME *pLastModificationTime)
 {
     TRACE("(%p, %p)\n", this, pLastModificationTime);
 
     DWORD dwAttributes = ::GetFileAttributesW(m_FullName);
     if (dwAttributes == INVALID_FILE_ATTRIBUTES)
-        return HRESULT_FROM_WIN32(GetLastError());
+        return HResultFromWin32(GetLastError());
 
     HANDLE hFile;
     hFile = CreateFileW(m_FullName,
@@ -112,13 +127,13 @@ STDMETHODIMP RecycleBin5File::GetLastModificationTime(FILETIME *pLastModificatio
                         (dwAttributes & FILE_ATTRIBUTE_DIRECTORY) ? FILE_FLAG_BACKUP_SEMANTICS : 0,
                         NULL);
     if (hFile == INVALID_HANDLE_VALUE)
-        return HRESULT_FROM_WIN32(GetLastError());
+        return HResultFromWin32(GetLastError());
 
     HRESULT hr;
     if (GetFileTime(hFile, NULL, NULL, pLastModificationTime))
         hr = S_OK;
     else
-        hr = HRESULT_FROM_WIN32(GetLastError());
+        hr = HResultFromWin32(GetLastError());
     CloseHandle(hFile);
     return hr;
 }
@@ -174,7 +189,7 @@ STDMETHODIMP RecycleBin5File::GetAttributes(DWORD *pAttributes)
 
     dwAttributes = GetFileAttributesW(m_FullName);
     if (dwAttributes == INVALID_FILE_ATTRIBUTES)
-        return HRESULT_FROM_WIN32(GetLastError());
+        return HResultFromWin32(GetLastError());
 
     *pAttributes = dwAttributes;
     return S_OK;
@@ -196,36 +211,6 @@ STDMETHODIMP RecycleBin5File::GetFileName(SIZE_T BufferSize, LPWSTR Buffer, SIZE
     if (BufferSize < dwRequired)
         return E_OUTOFMEMORY;
     CopyMemory(Buffer, m_deletedFile.FileNameW, dwRequired);
-    return S_OK;
-}
-
-STDMETHODIMP RecycleBin5File::GetTypeName(SIZE_T BufferSize, LPWSTR Buffer, SIZE_T *RequiredSize)
-{
-    HRESULT hr;
-    DWORD dwRequired;
-    DWORD dwAttributes;
-    SHFILEINFOW shFileInfo;
-
-    TRACE("(%p, %u, %p, %p)\n", this, BufferSize, Buffer, RequiredSize);
-
-    hr = GetAttributes(&dwAttributes);
-    if (!SUCCEEDED(hr))
-        return hr;
-
-    hr = SHGetFileInfoW(m_FullName, dwAttributes, &shFileInfo, sizeof(shFileInfo), SHGFI_TYPENAME | SHGFI_USEFILEATTRIBUTES);
-    if (!SUCCEEDED(hr))
-        return hr;
-
-    dwRequired = (DWORD)(wcslen(shFileInfo.szTypeName) + 1) * sizeof(WCHAR);
-    if (RequiredSize)
-        *RequiredSize = dwRequired;
-
-    if (BufferSize == 0 && !Buffer)
-        return S_OK;
-
-    if (BufferSize < dwRequired)
-        return E_OUTOFMEMORY;
-    CopyMemory(Buffer, shFileInfo.szTypeName, dwRequired);
     return S_OK;
 }
 
@@ -390,7 +375,7 @@ STDMETHODIMP RecycleBin5Enum::Next(DWORD celt, IRecycleBinFile **rgelt, DWORD *p
     ULARGE_INTEGER FileSize;
     FileSize.u.LowPart = GetFileSize(m_hInfo, &FileSize.u.HighPart);
     if (FileSize.u.LowPart == 0)
-        return HRESULT_FROM_WIN32(GetLastError());
+        return HResultFromWin32(GetLastError());
 
     DWORD dwEntries =
         (DWORD)((FileSize.QuadPart - sizeof(INFO2_HEADER)) / sizeof(DELETED_FILE_RECORD));
@@ -455,7 +440,7 @@ RecycleBin5Enum::Init(
     m_hInfo = hInfo;
     m_pInfo = (PINFO2_HEADER)MapViewOfFile(hInfoMapped, FILE_MAP_READ, 0, 0, 0);
     if (!m_pInfo)
-        return HRESULT_FROM_WIN32(GetLastError());
+        return HResultFromWin32(GetLastError());
 
     if (m_pInfo->dwVersion != 5 || m_pInfo->dwRecordSize != sizeof(DELETED_FILE_RECORD))
         return E_FAIL;

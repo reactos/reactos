@@ -84,6 +84,25 @@ UINT MapVerbToDfmCmd(_In_ LPCSTR verba)
     return 0;
 }
 
+static HRESULT
+MapVerbToCmdId(PVOID Verb, BOOL IsUnicode, IContextMenu *pCM, UINT idFirst, UINT idLast)
+{
+    const UINT gcs = IsUnicode ? GCS_VERBW : GCS_VERBA;
+    for (UINT id = idFirst; id <= idLast; ++id)
+    {
+        WCHAR buf[MAX_PATH];
+        *buf = UNICODE_NULL;
+        HRESULT hr = pCM->GetCommandString(id, gcs, NULL, (LPSTR)buf, _countof(buf));
+        if (FAILED(hr) || !*buf)
+            continue;
+        else if (IsUnicode && !_wcsicmp((LPWSTR)Verb, buf))
+            return id;
+        else if (!IsUnicode && !lstrcmpiA((LPSTR)Verb, (LPSTR)buf))
+            return id;
+    }
+    return HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+}
+
 static inline bool IsVerbListSeparator(WCHAR Ch)
 {
     return Ch == L' ' || Ch == L','; // learn.microsoft.com/en-us/windows/win32/shell/context-menu-handlers
@@ -738,7 +757,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
     return cIds;
 }
 
-void WINAPI _InsertMenuItemW(
+BOOL WINAPI _InsertMenuItemW(
     HMENU hMenu,
     UINT indexMenu,
     BOOL fByPosition,
@@ -764,7 +783,7 @@ void WINAPI _InsertMenuItemW(
             else
             {
                 ERR("failed to load string %p\n", dwTypeData);
-                return;
+                return FALSE;
             }
         }
         else
@@ -774,7 +793,7 @@ void WINAPI _InsertMenuItemW(
 
     mii.wID = wID;
     mii.fType = fType;
-    InsertMenuItemW(hMenu, indexMenu, fByPosition, &mii);
+    return InsertMenuItemW(hMenu, indexMenu, fByPosition, &mii);
 }
 
 void
@@ -1212,6 +1231,18 @@ CDefaultContextMenu::MapVerbToCmdId(PVOID Verb, PUINT idCmd, BOOL IsUnicode)
         }
     }
 
+    for (POSITION it = m_DynamicEntries.GetHeadPosition(); it != NULL;)
+    {
+        DynamicShellEntry& entry = m_DynamicEntries.GetNext(it);
+        if (!entry.NumIds)
+            continue;
+        HRESULT hr = ::MapVerbToCmdId(Verb, IsUnicode, entry.pCM, 0, entry.NumIds - 1);
+        if (SUCCEEDED(hr))
+        {
+            *idCmd = m_iIdSHEFirst + entry.iIdCmdFirst + hr;
+            return TRUE;
+        }
+    }
     return FALSE;
 }
 

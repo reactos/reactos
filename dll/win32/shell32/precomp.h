@@ -262,6 +262,12 @@ SHBindToObjectEx(
     _In_ REFIID riid,
     _Out_ void **ppvObj);
 
+EXTERN_C HRESULT
+SHELL_GetUIObjectOfAbsoluteItem(
+    _In_opt_ HWND hWnd,
+    _In_ PCIDLIST_ABSOLUTE pidl,
+    _In_ REFIID riid, _Out_ void **ppvObj);
+
 DWORD
 SHGetAttributes(_In_ IShellFolder *psf, _In_ LPCITEMIDLIST pidl, _In_ DWORD dwAttributes);
 HRESULT SHELL_GetIDListTarget(_In_ LPCITEMIDLIST pidl, _Out_ PIDLIST_ABSOLUTE *ppidl);
