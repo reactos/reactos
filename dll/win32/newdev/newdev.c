@@ -23,6 +23,7 @@
 #include "newdev_private.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <winnls.h>
 #include <assert.h>
 
@@ -354,8 +355,8 @@ SearchDriverRecursive(
     BOOL retval = FALSE;
     HANDLE hFindFile = INVALID_HANDLE_VALUE;
 
-    /* Path + 3 characters (pattern + zero terminal) is too long to be searched */
-    if (wcslen(Path) + 3 > MAX_PATH)
+    /* Path with pattern is too long to be searched */
+    if (wcslen(Path) + 2 >= _countof(PathWithPattern))
         return FALSE;
 
     wcscpy(DirPath, Path);
@@ -372,7 +373,7 @@ SearchDriverRecursive(
     {
 
         /* Filename is too long to be searched */
-        if (wcslen(wfd.cFileName) + 1 > MAX_PATH)
+        if (wcslen(wfd.cFileName) >= _countof(FileName))
             continue;
 
         wcscpy(FileName, wfd.cFileName);
@@ -382,7 +383,7 @@ SearchDriverRecursive(
         if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             /* Path is too long to be searched */
-            if (wcslen(DirPath) + wcslen(FileName) + 1 > MAX_PATH)
+            if (wcslen(DirPath) + wcslen(FileName) >= _countof(FullPath))
                 continue;
 
             /* Recursive search */
