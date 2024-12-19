@@ -382,7 +382,7 @@ SearchDriverRecursive(
 
         if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
-            /* Path is too long to be searched */
+            /* Full path is too long to be searched */
             if (wcslen(DirPath) + wcslen(FileName) >= _countof(FullPath))
                 continue;
 
