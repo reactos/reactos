@@ -15,7 +15,7 @@ jobs:
           - dllver: 0x600
             config: Release
       fail-fast: false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - name: Get RosBE build specifics
       id: get_rosbe_spec
