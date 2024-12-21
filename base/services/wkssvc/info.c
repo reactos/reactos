@@ -326,6 +326,7 @@ InitWorkstationInfo(VOID)
     else
         WkstaInfo502.wki502_use_unlock_behind = 1;
 
+    dwSize = sizeof(dwValue);
     dwError = RegQueryValueExW(hInfoKey,
                                L"UseCloseBehind",
                                0,
@@ -337,6 +338,7 @@ InitWorkstationInfo(VOID)
     else
         WkstaInfo502.wki502_use_close_behind = 1;
 
+    dwSize = sizeof(dwValue);
     dwError = RegQueryValueExW(hInfoKey,
                                L"BufNamedPipes",
                                0,
@@ -348,6 +350,7 @@ InitWorkstationInfo(VOID)
     else
         WkstaInfo502.wki502_buf_named_pipes = 1;
 
+    dwSize = sizeof(dwValue);
     dwError = RegQueryValueExW(hInfoKey,
                                L"UseLockReadUnlock",
                                0,
@@ -359,6 +362,7 @@ InitWorkstationInfo(VOID)
     else
         WkstaInfo502.wki502_use_lock_read_unlock = 1;
 
+    dwSize = sizeof(dwValue);
     dwError = RegQueryValueExW(hInfoKey,
                                L"UtilizeNtCaching",
                                0,
@@ -370,6 +374,7 @@ InitWorkstationInfo(VOID)
     else
         WkstaInfo502.wki502_utilize_nt_caching = 1;
 
+    dwSize = sizeof(dwValue);
     dwError = RegQueryValueExW(hInfoKey,
                                L"UseRawRead",
                                0,
@@ -381,6 +386,7 @@ InitWorkstationInfo(VOID)
     else
         WkstaInfo502.wki502_use_raw_read = 1;
 
+    dwSize = sizeof(dwValue);
     dwError = RegQueryValueExW(hInfoKey,
                                L"UseRawWrite",
                                0,
@@ -392,6 +398,7 @@ InitWorkstationInfo(VOID)
     else
         WkstaInfo502.wki502_use_raw_write = 1;
 
+    dwSize = sizeof(dwValue);
     dwError = RegQueryValueExW(hInfoKey,
                                L"UseWriteRawData",
                                0,
@@ -403,6 +410,7 @@ InitWorkstationInfo(VOID)
     else
         WkstaInfo502.wki502_use_write_raw_data = 0;
 
+    dwSize = sizeof(dwValue);
     dwError = RegQueryValueExW(hInfoKey,
                                L"UseEncryption",
                                0,
@@ -414,6 +422,7 @@ InitWorkstationInfo(VOID)
     else
         WkstaInfo502.wki502_use_encryption = 1;
 
+    dwSize = sizeof(dwValue);
     dwError = RegQueryValueExW(hInfoKey,
                                L"BufFilesDenyWrite",
                                0,
@@ -425,6 +434,7 @@ InitWorkstationInfo(VOID)
     else
         WkstaInfo502.wki502_buf_files_deny_write = 0;
 
+    dwSize = sizeof(dwValue);
     dwError = RegQueryValueExW(hInfoKey,
                                L"BufReadOnlyFiles",
                                0,
@@ -436,6 +446,7 @@ InitWorkstationInfo(VOID)
     else
         WkstaInfo502.wki502_buf_read_only_files = 0;
 
+    dwSize = sizeof(dwValue);
     dwError = RegQueryValueExW(hInfoKey,
                                L"ForceCoreCreateMode",
                                0,
@@ -447,6 +458,7 @@ InitWorkstationInfo(VOID)
     else
         WkstaInfo502.wki502_force_core_create_mode = 0;
 
+    dwSize = sizeof(dwValue);
     dwError = RegQueryValueExW(hInfoKey,
                                L"Use512ByteMaxTransfer",
                                0,
