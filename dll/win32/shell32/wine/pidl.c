@@ -333,8 +333,10 @@ HRESULT WINAPI ILLoadFromStream (IStream * pStream, LPITEMIDLIST * ppPidl)
     if (*ppPidl && !pcheck(*ppPidl))
     {
         WARN("Check failed\n");
+#ifndef __REACTOS__ /* We don't know all pidl formats, must allow loading unknown */
         SHFree(*ppPidl);
         *ppPidl = NULL;
+#endif
     }
 
     IStream_Release (pStream);
