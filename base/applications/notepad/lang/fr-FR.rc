@@ -85,9 +85,9 @@ BEGIN
     LTEXT "&Bac :", stc3, 16, 42, 36, 8
     COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
     GROUPBOX "Orientation", grp1, 8, 66, 64, 56, BS_GROUPBOX
-    AUTORADIOBUTTON "&Portrait", rad1, 16, 80, 52, 12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "P&ortrait", rad1, 16, 80, 52, 12, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Pa&ysage", rad2, 16, 100, 52, 12
-    GROUPBOX "Bordures", grp4, 80, 66, 152, 56, BS_GROUPBOX
+    GROUPBOX "Marges", grp4, 80, 66, 152, 56, BS_GROUPBOX
     LTEXT "&Gauche :", stc15, 88, 82, 30, 8
     EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
     LTEXT "&Droite :", stc16, 159, 82, 30, 8
@@ -103,7 +103,7 @@ BEGIN
     PUSHBUTTON "Aide", IDHELP, 8, 170, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
     PUSHBUTTON "Annuler", IDCANCEL, 254, 170, 50, 14
-    PUSHBUTTON "&Imprimer...", psh3, 310, 170, 50, 14
+    PUSHBUTTON "&Imprimante...", psh3, 310, 170, 50, 14
 END
 
 /* Dialog 'Encoding' */
