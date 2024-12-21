@@ -243,6 +243,7 @@ NetrWkstaSetInfo(
     LPWKSTA_INFO WkstaInfo,
     unsigned long *ErrorParameter)
 {
+    DWORD dwErrParam = 0;
     DWORD dwResult = NERR_Success;
 
     TRACE("NetrWkstaSetInfo(%lu %p %p)\n",
@@ -254,45 +255,50 @@ NetrWkstaSetInfo(
             if (WkstaInfo->WkstaInfo502.wki502_keep_conn >= 1 && WkstaInfo->WkstaInfo502.wki502_keep_conn <= 65535)
             {
                 WkstaInfo502.wki502_keep_conn = WkstaInfo->WkstaInfo502.wki502_keep_conn;
-
-                if (WkstaInfo->WkstaInfo502.wki502_max_cmds >= 50 && WkstaInfo->WkstaInfo502.wki502_max_cmds <= 65535)
-                {
-                    WkstaInfo502.wki502_max_cmds = WkstaInfo->WkstaInfo502.wki502_max_cmds;
-
-                    if (WkstaInfo->WkstaInfo502.wki502_sess_timeout >= 60 && WkstaInfo->WkstaInfo502.wki502_sess_timeout <= 65535)
-                    {
-                        WkstaInfo502.wki502_sess_timeout = WkstaInfo->WkstaInfo502.wki502_sess_timeout;
-
-                        if (WkstaInfo->WkstaInfo502.wki502_dormant_file_limit != 0)
-                        {
-                            WkstaInfo502.wki502_dormant_file_limit = WkstaInfo->WkstaInfo502.wki502_dormant_file_limit;
-                        }
-                        else
-                        {
-                            if (ErrorParameter)
-                                *ErrorParameter = WKSTA_DORMANTFILELIMIT_PARMNUM;
-                            dwResult = ERROR_INVALID_PARAMETER;
-                        }
-                    }
-                    else
-                    {
-                        if (ErrorParameter)
-                            *ErrorParameter = WKSTA_SESSTIMEOUT_PARMNUM;
-                        dwResult = ERROR_INVALID_PARAMETER;
-                    }
-                }
-                else
-                {
-                    if (ErrorParameter)
-                        *ErrorParameter = WKSTA_MAXCMDS_PARMNUM;
-                    dwResult = ERROR_INVALID_PARAMETER;
-                }
             }
             else
             {
-                if (ErrorParameter)
-                    *ErrorParameter = WKSTA_KEEPCONN_PARMNUM;
+                dwErrParam = WKSTA_KEEPCONN_PARMNUM;
                 dwResult = ERROR_INVALID_PARAMETER;
+            }
+
+            if (dwResult == NERR_Success)
+            {
+                if (WkstaInfo->WkstaInfo502.wki502_max_cmds >= 50 && WkstaInfo->WkstaInfo502.wki502_max_cmds <= 65535)
+                {
+                    WkstaInfo502.wki502_max_cmds = WkstaInfo->WkstaInfo502.wki502_max_cmds;
+                }
+                else
+                {
+                    dwErrParam = WKSTA_MAXCMDS_PARMNUM;
+                    dwResult = ERROR_INVALID_PARAMETER;
+                }
+            }
+
+            if (dwResult == NERR_Success)
+            {
+                if (WkstaInfo->WkstaInfo502.wki502_sess_timeout >= 60 && WkstaInfo->WkstaInfo502.wki502_sess_timeout <= 65535)
+                {
+                    WkstaInfo502.wki502_sess_timeout = WkstaInfo->WkstaInfo502.wki502_sess_timeout;
+                }
+                else
+                {
+                    dwErrParam = WKSTA_SESSTIMEOUT_PARMNUM;
+                    dwResult = ERROR_INVALID_PARAMETER;
+                }
+            }
+
+            if (dwResult == NERR_Success)
+            {
+                if (WkstaInfo->WkstaInfo502.wki502_dormant_file_limit != 0)
+                {
+                    WkstaInfo502.wki502_dormant_file_limit = WkstaInfo->WkstaInfo502.wki502_dormant_file_limit;
+                }
+                else
+                {
+                    dwErrParam = WKSTA_DORMANTFILELIMIT_PARMNUM;
+                    dwResult = ERROR_INVALID_PARAMETER;
+                }
             }
             break;
 
@@ -303,8 +309,7 @@ NetrWkstaSetInfo(
             }
             else
             {
-                if (ErrorParameter)
-                    *ErrorParameter = WKSTA_KEEPCONN_PARMNUM;
+                dwErrParam = WKSTA_KEEPCONN_PARMNUM;
                 dwResult = ERROR_INVALID_PARAMETER;
             }
             break;
@@ -316,8 +321,7 @@ NetrWkstaSetInfo(
             }
             else
             {
-                if (ErrorParameter)
-                    *ErrorParameter = WKSTA_SESSTIMEOUT_PARMNUM;
+                dwErrParam = WKSTA_SESSTIMEOUT_PARMNUM;
                 dwResult = ERROR_INVALID_PARAMETER;
             }
             break;
@@ -329,23 +333,27 @@ NetrWkstaSetInfo(
             }
             else
             {
-                if (ErrorParameter)
-                    *ErrorParameter = WKSTA_DORMANTFILELIMIT_PARMNUM;
+                dwErrParam = WKSTA_DORMANTFILELIMIT_PARMNUM;
                 dwResult = ERROR_INVALID_PARAMETER;
             }
             break;
 
         default:
-            FIXME("Level %lu unimplemented\n", Level);
+            ERR("Invalid Level %lu\n", Level);
             dwResult = ERROR_INVALID_LEVEL;
             break;
     }
 
     /* Save the workstation in the registry */
     if (dwResult == NERR_Success)
+    {
         SaveWorkstationInfo(Level);
 
-    /* FIXME: Notify the redirector */
+        /* FIXME: Notify the redirector */
+    }
+
+    if ((dwResult == ERROR_INVALID_PARAMETER) && (ErrorParameter != NULL))
+        *ErrorParameter = dwErrParam;
 
     return dwResult;
 }
