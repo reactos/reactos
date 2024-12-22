@@ -380,15 +380,13 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::SetDeskBarSite(IUnknown *punkSite)
 
     if (punkSite == NULL)
     {
-
         TRACE("Destroying site\n");
         /* Cleanup our bands */
-        while (EnumBands(-1, NULL))
+        for (UINT i = EnumBands(-1, NULL); i;)
         {
-            hResult = EnumBands(0, &dwBandID);
-            if(FAILED_UNEXPECTEDLY(hResult))
-                continue;
-            RemoveBand(dwBandID);
+            hResult = EnumBands(--i, &dwBandID);
+            if (!FAILED_UNEXPECTEDLY(hResult))
+                RemoveBand(dwBandID);
         }
         fDeskBarSite = NULL;
     }
@@ -535,7 +533,7 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::EnumBands(UINT uBand, DWORD *pdwBandID)
 {
     REBARBANDINFO bandInfo;
 
-    if (uBand == 0xffffffff)
+    if (uBand == -1ul)
         return (DWORD)SendMessage(RB_GETBANDCOUNT, 0, 0);
     if (pdwBandID == NULL)
         return E_INVALIDARG;
