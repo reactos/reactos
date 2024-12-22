@@ -534,7 +534,7 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::EnumBands(UINT uBand, DWORD *pdwBandID)
     REBARBANDINFO bandInfo;
 
     if (uBand == -1ul)
-        return (DWORD)SendMessage(RB_GETBANDCOUNT, 0, 0);
+        return (HRESULT)SendMessage(RB_GETBANDCOUNT, 0, 0);
     if (pdwBandID == NULL)
         return E_INVALIDARG;
 
@@ -768,7 +768,7 @@ HRESULT CBaseBarSite::FindBandByGUID(REFGUID pGuid, DWORD *pdwBandID)
     CBarInfo                    *realInfo;
 
     numBands = EnumBands(-1, NULL);
-    for(i = 0; i < numBands; i++)
+    for (i = 0; i < numBands; i++)
     {
         if (FAILED_UNEXPECTEDLY(GetInternalBandInfo(i, &bandInfo)))
             return E_FAIL;

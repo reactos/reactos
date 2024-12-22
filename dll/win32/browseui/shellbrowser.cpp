@@ -1277,7 +1277,7 @@ BOOL CShellBrowser::IsBandLoaded(const CLSID clsidBand, bool vertical, DWORD *pd
         return FALSE;
 
     numBands = bandSite->EnumBands(-1, NULL);
-    for(i = 0; i < numBands; i++)
+    for (i = 0; i < numBands; i++)
     {
         CComPtr<IPersist> bandPersist;
 
