@@ -641,11 +641,11 @@ HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     {
         CmdId = IDS_NET_PROPERTIES;
     }
-    else if ((SIZE_T)lpcmi->lpVerb == FCIDM_SHVIEW_RENAME) // DefView accelerator
+    else if ((UINT_PTR)lpcmi->lpVerb == FCIDM_SHVIEW_RENAME) // DefView accelerator
     {
         CmdId = IDS_NET_RENAME;
     }
-    else if ((SIZE_T)lpcmi->lpVerb == FCIDM_SHVIEW_PROPERTIES) // DefView accelerator
+    else if ((UINT_PTR)lpcmi->lpVerb == FCIDM_SHVIEW_PROPERTIES) // DefView accelerator
     {
         CmdId = IDS_NET_PROPERTIES;
     }
