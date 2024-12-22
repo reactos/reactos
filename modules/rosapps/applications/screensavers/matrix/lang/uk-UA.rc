@@ -6,8 +6,6 @@
  * TRANSLATOR:  Artem Reznikov
  */
 
-#include "resource.h"
-
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDD_CONFIG DIALOGEX 0, 0, 340, 183

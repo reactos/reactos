@@ -9,17 +9,17 @@
 #include <winuser.h>
 #include "resource.h"
 
-#include "mydocs_version.rc"
-
-/* UTF-8 */
-#pragma code_page(65001)
-
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+#include "mydocs_version.rc"
 
 100 ICON "../../win32/shell32/res/icons/235.ico" // IDI_SHELL_MY_DOCUMENTS
 101 ICON "../../win32/shell32/res/icons/236.ico" // IDI_SHELL_MY_PICTURES
 
 IDR_MYDOCS REGISTRY "res/mydocs.rgs"
+
+/* UTF-8 */
+#pragma code_page(65001)
 
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"

@@ -20,7 +20,6 @@
 
 #include "wineacm.h"
 
-
 #include <reactos/manifest_dll.rc>
 
 /* UTF-8 */

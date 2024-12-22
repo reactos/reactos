@@ -9,6 +9,7 @@
 
 /* UTF-8 */
 #pragma code_page(65001)
+
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
 #endif

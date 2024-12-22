@@ -20,9 +20,6 @@
  *
  */
 
-/* UTF-8 */
-#pragma code_page(65001)
-
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE

@@ -1,6 +1,8 @@
 #include <windows.h>
 #include <commctrl.h>
-#pragma code_page(65001) /* UTF-8 */
+
+/* UTF-8 */
+#pragma code_page(65001)
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 

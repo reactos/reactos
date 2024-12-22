@@ -7,8 +7,6 @@
  * DATE:        2007-12-02
  */
 
-#include "resource.h"
-
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 IDD_CONFIG DIALOGEX 0, 0, 340, 183

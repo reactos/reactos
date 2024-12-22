@@ -6,6 +6,7 @@
  */
 
 /* INCLUDES ******************************************************************/
+
 #include "precomp.h"
 
 #define REACTOS_STR_FILE_DESCRIPTION  "ReactOS On Screen Keyboard"
@@ -16,7 +17,6 @@
 
 IDI_OSK             ICON "res/osk.ico"
 IDI_SOUNDCLICK      WAVE "res/click.wav"
-
 
 IDI_BACK      ICON "res/back.ico"
 IDI_TAB       ICON "res/tab.ico"
@@ -35,8 +35,9 @@ IDI_BOTTOM    ICON "res/bottom.ico"
 
 #include <reactos/manifest_exe.rc>
 
-// UTF-8
+/* UTF-8 */
 #pragma code_page(65001)
+
 #ifdef LANGUAGE_AR_DZ
     #include "lang/ar-DZ.rc"
 #endif
@@ -100,4 +101,5 @@ IDI_BOTTOM    ICON "res/bottom.ico"
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"
 #endif
+
 /* EOF */

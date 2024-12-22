@@ -6,8 +6,6 @@
  * TRANSLATOR:  Sergey Stopkin
  */
 
-#include "resource.h"
-
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_CONFIG DIALOGEX 0, 0, 340, 183

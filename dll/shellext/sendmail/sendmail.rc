@@ -9,14 +9,14 @@
 #include <winuser.h>
 #include "resource.h"
 
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
 #include "sendmail_version.rc"
+
+IDR_DESKLINK REGISTRY "res/desklink.rgs"
 
 /* UTF-8 */
 #pragma code_page(65001)
-
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-
-IDR_DESKLINK REGISTRY "res/desklink.rgs"
 
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"

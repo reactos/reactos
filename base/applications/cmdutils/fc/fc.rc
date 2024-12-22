@@ -6,7 +6,9 @@
 #define REACTOS_STR_ORIGINAL_FILENAME   "fc.exe"
 #include <reactos/version.rc>
 
-#pragma code_page(65001) /* UTF-8 */
+/* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
 #endif

@@ -19,10 +19,9 @@
  *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
-/* Chinese text is encoded in UTF-8 */
-#pragma code_page(65001)
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
-STRINGTABLE LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+STRINGTABLE
 BEGIN
 
 /* MMSYS errors */
@@ -128,9 +127,12 @@ MCIERR_SEQ_PORT_MISCERROR, 	"用指定的端口时出错。"
 MCIERR_SEQ_PORT_NONEXISTENT, 	"在系统上没有安装指定的 MIDI 设备。使用控制面板中的驱动程序选项来安装一个 MIDI 设备。"
 MCIERR_SEQ_PORTUNSPECIFIED, 	"系统没有指定当前 MIDI 端口。"
 MCIERR_SEQ_TIMER, 		"所有多媒体定时器正在被其他应用程序使用。退出这些应用程序;然后，再试一次。"
+
 END
 
-STRINGTABLE LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
 BEGIN
 
 /* MMSYS errors */
@@ -236,4 +238,5 @@ MCIERR_SEQ_PORT_MISCERROR, 	"指定的連接埠發生了錯誤。"
 MCIERR_SEQ_PORT_NONEXISTENT, 	"指定的 MIDI 裝置未安裝到系統上。請使用控制臺中的「驅動程式」選項以安裝 MIDI 裝置。"
 MCIERR_SEQ_PORTUNSPECIFIED, 	"系統尚未指定目前的 MIDI 連接埠。"
 MCIERR_SEQ_TIMER, 		"所有多媒體計時器正被其他應用程式使用中。請結束其中某一個應用程式，然後再試一次。"
+
 END

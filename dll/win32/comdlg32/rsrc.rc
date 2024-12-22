@@ -42,7 +42,8 @@
  * get localized bitmaps for example.
  */
 
-#pragma code_page(65001) // UTF-8
+/* UTF-8 */
+#pragma code_page(65001)
 
 #ifdef LANGUAGE_BG_BG
     #include "lang/cdlg_Bg.rc"

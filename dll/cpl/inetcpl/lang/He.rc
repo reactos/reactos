@@ -22,8 +22,6 @@
  *
  */
 
-#pragma code_page(65001)
-
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 STRINGTABLE

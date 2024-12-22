@@ -20,14 +20,14 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME "fontsub.exe"
 #include <reactos/version.rc>
 
-/* UTF-8 */
-#pragma code_page(65001)
-
 1 ICON "fontsub.ico"
 
 2 BITMAP "up.bmp"
 3 BITMAP "down.bmp"
 4 BITMAP "nil.bmp"
+
+/* UTF-8 */
+#pragma code_page(65001)
 
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"

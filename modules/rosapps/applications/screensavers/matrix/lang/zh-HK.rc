@@ -5,8 +5,6 @@
  * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
-#include "resource.h"
-
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
 
 IDD_CONFIG DIALOGEX 0, 0, 340, 183

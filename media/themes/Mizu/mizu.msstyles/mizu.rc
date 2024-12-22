@@ -183,6 +183,7 @@ NORMAL_IE_PERSONALBARMENU_BMP BITMAP "bitmaps/dummy.bmp"
 NORMAL_NORMALGROUPCOLLAPSE_BMP BITMAP "bitmaps/dummy.bmp"
 NORMAL_NORMALGROUPEXPAND_BMP BITMAP "bitmaps/dummy.bmp"
 
+/* UTF-8 */
 #pragma code_page(65001)
 
 #ifdef LANGUAGE_CS_CZ

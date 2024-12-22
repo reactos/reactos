@@ -1,7 +1,5 @@
 /* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
 
-#include "resource.h"
-
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDD_CONFIG DIALOGEX 0, 0, 340, 183

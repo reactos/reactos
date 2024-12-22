@@ -22,8 +22,6 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
 STRINGTABLE
 {
     IDS_TO_PRIMITIVE        "Eroare la convertirea obiectului la un tip primitiv"

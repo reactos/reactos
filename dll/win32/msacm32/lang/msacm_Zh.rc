@@ -21,9 +21,6 @@
  *              Copyright 2021 Chan Chilung <eason066@gmail.com>
  */
 
-/* Chinese text is encoded in UTF-8 */
-#pragma code_page(65001)
-
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 DLG_ACMFORMATCHOOSE_ID DIALOGEX  10, 20, 225, 118
