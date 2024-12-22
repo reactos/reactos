@@ -2032,12 +2032,9 @@ DWORD _ILGetDrive(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uSize)
  */
 BOOL _ILIsUnicode(LPCITEMIDLIST pidl)
 {
-    const BYTE bits = PT_FS | PT_FS_UNICODE_FLAG;
-    BYTE type = _ILGetType(pidl);
-
     TRACE("(%p)\n",pidl);
 
-    return (type & bits) == bits;
+    return (_ILGetFSType(pidl) & PT_FS_UNICODE_FLAG) != 0;
 }
 
 BOOL _ILIsDesktop(LPCITEMIDLIST pidl)
