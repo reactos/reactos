@@ -883,7 +883,7 @@ int WINAPI StrToIntW(LPCWSTR lpszStr)
  *  the string is treated as a decimal string. A leading '-' is ignored for
  *  hexadecimal numbers.
  */
-BOOL WINAPI StrToIntExA(LPCSTR lpszStr, DWORD dwFlags, LPINT lpiRet)
+BOOL WINAPI StrToIntExA(LPCSTR lpszStr, DWORD dwFlags, int *lpiRet)
 {
   LONGLONG li;
   BOOL bRes;
@@ -967,7 +967,7 @@ BOOL WINAPI StrToInt64ExA(LPCSTR lpszStr, DWORD dwFlags, LONGLONG *lpiRet)
  *
  * See StrToIntExA.
  */
-BOOL WINAPI StrToIntExW(LPCWSTR lpszStr, DWORD dwFlags, LPINT lpiRet)
+BOOL WINAPI StrToIntExW(LPCWSTR lpszStr, DWORD dwFlags, int *lpiRet)
 {
   LONGLONG li;
   BOOL bRes;
