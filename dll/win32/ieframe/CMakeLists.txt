@@ -1,6 +1,6 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-add_definitions(-D__WINESRC__)
+add_definitions(-D__WINESRC__ -D__ROS_LONG64__)
 spec2def(ieframe.dll ieframe.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
