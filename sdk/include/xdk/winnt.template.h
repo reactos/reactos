@@ -28,8 +28,8 @@
 #error Compiler too old!
 #endif
 
-#if defined(__LP64__) || (!defined(_M_AMD64) && defined(__WINESRC__))
-#if !defined(__ROS_LONG64__)
+#if (defined(_LP64) || defined(__LP64__)) && !defined(_M_AMD64)
+#ifndef __ROS_LONG64__
 #define __ROS_LONG64__
 #endif
 #endif

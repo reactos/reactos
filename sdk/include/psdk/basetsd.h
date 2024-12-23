@@ -6,8 +6,8 @@
 #include <msvctarget.h>
 #endif
 
-#if defined(__LP64__) || (!defined(_M_AMD64) && defined(__WINESRC__))
-#if !defined(__ROS_LONG64__)
+#if (defined(_LP64) || defined(__LP64__)) && !defined(_M_AMD64)
+#ifndef __ROS_LONG64__
 #define __ROS_LONG64__
 #endif
 #endif
@@ -161,7 +161,7 @@ static inline void* ULongToPtr( const unsigned long ul )
     { return( (void*)(ULONG_PTR)ul ); }
 #endif /* !__midl */
 #else /*  !_WIN64 */
-#if !defined(__ROS_LONG64__)
+#ifndef __ROS_LONG64__
 typedef int INT_PTR, *PINT_PTR;
 typedef unsigned int UINT_PTR, *PUINT_PTR;
 #else
