@@ -5414,7 +5414,7 @@ HRESULT VariantChangeTypeForRead(_Inout_ VARIANTARG *pvarg, _In_ VARTYPE vt)
 
     if (vt == VT_I1 || vt == VT_I2 || vt == VT_I4)
     {
-        if (!StrToIntExW(V_BSTR(&vargTemp), STIF_SUPPORT_HEX, &V_I4(&variTemp)))
+        if (!StrToIntExW(V_BSTR(&vargTemp), STIF_SUPPORT_HEX, (int*)&V_I4(&variTemp)))
             goto DoDefault;
 
         V_VT(&variTemp) = VT_INT;
@@ -5429,7 +5429,7 @@ HRESULT VariantChangeTypeForRead(_Inout_ VARIANTARG *pvarg, _In_ VARTYPE vt)
 
     if (vt == VT_UI1 || vt == VT_UI2 || vt == VT_UI4)
     {
-        if (!StrToIntExW(V_BSTR(&vargTemp), STIF_SUPPORT_HEX, (LPINT)&V_UI4(&variTemp)))
+        if (!StrToIntExW(V_BSTR(&vargTemp), STIF_SUPPORT_HEX, (int*)&V_UI4(&variTemp)))
             goto DoDefault;
 
         V_VT(&variTemp) = VT_UINT;
@@ -5441,7 +5441,7 @@ HRESULT VariantChangeTypeForRead(_Inout_ VARIANTARG *pvarg, _In_ VARTYPE vt)
 
     if (vt == VT_INT || vt == VT_UINT)
     {
-        if (!StrToIntExW(V_BSTR(&vargTemp), STIF_SUPPORT_HEX, &V_INT(&variTemp)))
+        if (!StrToIntExW(V_BSTR(&vargTemp), STIF_SUPPORT_HEX, (int*)&V_INT(&variTemp)))
             goto DoDefault;
 
         V_VT(&variTemp) = VT_UINT;
