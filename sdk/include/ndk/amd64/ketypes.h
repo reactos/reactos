@@ -129,6 +129,21 @@ typedef enum
 #define KGDT64_R0_LDT           0x0060
 
 //
+// CR0
+//
+#define CR0_PE                  0x00000001
+#define CR0_MP                  0x00000002
+#define CR0_EM                  0x00000004
+#define CR0_TS                  0x00000008
+#define CR0_ET                  0x00000010
+#define CR0_NE                  0x00000020
+#define CR0_WP                  0x00010000
+#define CR0_AM                  0x00040000
+#define CR0_NW                  0x20000000
+#define CR0_CD                  0x40000000
+#define CR0_PG                  0x80000000
+
+//
 // CR4
 //
 #define CR4_VME                 0x1
@@ -322,6 +337,8 @@ typedef enum
 //
 // HAL Variables
 //
+#define PRIMARY_VECTOR_BASE     0x30
+#define MAXIMUM_IDTVECTOR       0xFF
 #define INITIAL_STALL_COUNT     100
 #define MM_HAL_VA_START         0xFFFFFFFFFFC00000ULL /* This is Vista+ */
 #define MM_HAL_VA_END           0xFFFFFFFFFFFFFFFFULL
@@ -344,6 +361,9 @@ typedef enum
 
 #define NMI_STACK_SIZE 0x2000
 #define ISR_STACK_SIZE 0x6000
+
+/* Number of bytes reserved for syscall parameters */
+#define MAX_SYSCALL_PARAM_SIZE (16 * 8)
 
 //
 // Synchronization-level IRQL
