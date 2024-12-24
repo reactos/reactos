@@ -289,7 +289,7 @@ VOID
 NTAPI
 MmRebalanceMemoryConsumers(VOID)
 {
-    // if (InterlockedCompareExchange(&PageOutThreadActive, 0, 1) == 0)
+    if (InterlockedCompareExchange(&PageOutThreadActive, 1, 0) == 0)
     {
         KeSetEvent(&MiBalancerEvent, IO_NO_INCREMENT, FALSE);
     }
@@ -404,7 +404,11 @@ MiBalancerThread(PVOID Unused)
             while (InitialTarget != 0);
 
             if (Status == STATUS_WAIT_0)
-                InterlockedDecrement(&PageOutThreadActive);
+            {
+                LONG Active = InterlockedExchange(&PageOutThreadActive, 0);
+                ASSERT(Active == 1);
+                DBG_UNREFERENCED_LOCAL_VARIABLE(Active);
+            }
         }
         else
         {
