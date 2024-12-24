@@ -314,10 +314,12 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
                             PPFN_NUMBER AllocatedPage)
 {
     PFN_NUMBER Page;
+
+    /* Delay some requests for the Memory Manager to recover pages (CORE-17624).
+     * FIXME: This is suboptimal.
+     */
     static INT i = 0;
     static LARGE_INTEGER TinyTime = {{-1L, -1L}};
-
-    /* Delay some requests for the Memory Manager to recover pages */
     if (i++ >= 100)
     {
         KeDelayExecutionThread(KernelMode, FALSE, &TinyTime);
