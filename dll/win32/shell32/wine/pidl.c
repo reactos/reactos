@@ -333,8 +333,10 @@ HRESULT WINAPI ILLoadFromStream (IStream * pStream, LPITEMIDLIST * ppPidl)
     if (*ppPidl && !pcheck(*ppPidl))
     {
         WARN("Check failed\n");
+#ifndef __REACTOS__ /* We don't know all pidl formats, must allow loading unknown */
         SHFree(*ppPidl);
         *ppPidl = NULL;
+#endif
     }
 
     IStream_Release (pStream);
@@ -2030,11 +2032,9 @@ DWORD _ILGetDrive(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uSize)
  */
 BOOL _ILIsUnicode(LPCITEMIDLIST pidl)
 {
-    LPPIDLDATA lpPData = _ILGetDataPointer(pidl);
-
     TRACE("(%p)\n",pidl);
 
-    return (pidl && lpPData && PT_VALUEW == lpPData->type);
+    return (_ILGetFSType(pidl) & PT_FS_UNICODE_FLAG) != 0;
 }
 
 BOOL _ILIsDesktop(LPCITEMIDLIST pidl)
