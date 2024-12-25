@@ -59,6 +59,67 @@ KiInitGdtEntry(PKGDTENTRY64 Entry, ULONG64 Base, ULONG Size, UCHAR Type, UCHAR D
     Entry->MustBeZero = 0;
 }
 
+// FIXME: these should go to immintrin.h
+void __cdecl _fxsave64(void *);
+void __cdecl _xsave64(void *, unsigned __int64);
+void __cdecl _xsaveopt64(void *, unsigned __int64);
+void __cdecl _xsavec64(void *, unsigned __int64);
+void __cdecl _xsaves64(void *, unsigned __int64);
+void __cdecl _fxrstor64(void const *);
+void __cdecl _xrstor64(void *, unsigned __int64);
+void __cdecl _xrstors64(void *, unsigned __int64);
+void __cdecl _xrstors64(void *, unsigned __int64);
+unsigned __int64 __cdecl _xgetbv(unsigned int);
+void __cdecl _xsetbv(unsigned int, unsigned __int64);
+
+extern ULONG64 KeFeatureBits;
+
+FORCEINLINE
+VOID
+KiSaveXState(
+    _Out_ PVOID Buffer,
+    _In_ ULONG64 ComponentMask)
+{
+    ULONG64 npxState = ComponentMask & ~2;
+    if (KeFeatureBits & KF_XSAVES)
+    {
+        _xsaves64(Buffer, npxState);
+    }
+    else if (KeFeatureBits & KF_XSAVEOPT)
+    {
+        _xsaveopt64(Buffer, npxState);
+    }
+    else if (KeFeatureBits & KF_XSTATE)
+    {
+        _xsave64(Buffer, npxState);
+    }
+    else
+    {
+        _fxsave64(Buffer);
+    }
+}
+
+FORCEINLINE
+VOID
+KiRestoreXState(
+    _Inout_ PVOID Buffer,
+    _In_ ULONG64 ComponentMask)
+{
+    ULONG64 npxState = ComponentMask & ~2;
+    if (KeFeatureBits & KF_XSAVES)
+    {
+        _xrstors64(Buffer, npxState);
+    }
+    else if (KeFeatureBits & KF_XSTATE)
+    {
+        _xrstor64(Buffer, npxState);
+    }
+    else
+    {
+        _fxrstor64(Buffer);
+    }
+}
+
 #if defined(__GNUC__)
 
 static __inline__ __attribute__((always_inline)) void __lgdt(void *Source)
