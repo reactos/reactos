@@ -40,7 +40,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT       "L'installation de ReactOS peut mettre à niveau les installations disponibles de ReactOS listées ci-dessous, ou, si une installation de ReactOS est endommagée, l'installation peut essayer de la réparer.", IDC_STATIC, 6, 6, 300, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
-    PUSHBUTTON  "&Ne pas mettre à jour", IDC_SKIPUPGRADE, 230, 128, 80, 14
+    PUSHBUTTON  "&Ne pas mettre à niveau", IDC_SKIPUPGRADE, 230, 128, 80, 14
     LTEXT       "Appuyer sur Suivant pour mettre à niveau l'installation sélectionnée, ou sur 'Ne pas mettre à niveau' pour continuer une nouvelle installation.", IDC_STATIC, 7, 124, 222, 16
 END
 
@@ -157,8 +157,8 @@ BEGIN
     IDS_CAPTION "Installation de ReactOS"
     IDS_TYPETITLE "Type d'installation"
     IDS_TYPESUBTITLE "Vous pouvez configurer une nouvelle installation de ReactOS, ou bien mettre à niveau ou réparer une installation existante."
-    IDS_UPDATETITLE "Update or Repair ReactOS"
-    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
+    IDS_UPDATETITLE "Mise à niveau ou Réparation de ReactOS"
+    IDS_UPDATESUBTITLE "Choisissez quelle installation existante de ReactOS vous souhaitez mettre à niveau ou réparer."
     IDS_DEVICETITLE "Configurer les périphériques de base"
     IDS_DEVICESUBTITLE "Configurer l'affichage et le clavier."
     IDS_DRIVETITLE "Configurer la partition d'installation et le dossier système"
