@@ -1214,7 +1214,7 @@ CDefaultContextMenu::MapVerbToCmdId(PVOID Verb, PUINT idCmd, BOOL IsUnicode)
         {
             /* The static verbs are ANSI, get a unicode version before doing the compare */
             SHAnsiToUnicode(g_StaticInvokeCmdMap[i].szStringVerb, UnicodeStr, MAX_VERB);
-            if (!wcsicmp(UnicodeStr, (LPWSTR)Verb))
+            if (!_wcsicmp(UnicodeStr, (LPWSTR)Verb))
             {
                 /* Return the Corresponding Id */
                 *idCmd = g_StaticInvokeCmdMap[i].IntVerb;
@@ -1223,7 +1223,7 @@ CDefaultContextMenu::MapVerbToCmdId(PVOID Verb, PUINT idCmd, BOOL IsUnicode)
         }
         else
         {
-            if (!stricmp(g_StaticInvokeCmdMap[i].szStringVerb, (LPSTR)Verb))
+            if (!_stricmp(g_StaticInvokeCmdMap[i].szStringVerb, (LPSTR)Verb))
             {
                 *idCmd = g_StaticInvokeCmdMap[i].IntVerb;
                 return TRUE;
