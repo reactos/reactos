@@ -349,20 +349,20 @@ CcRosTrimCache(
     _In_ ULONG Target,
     _Out_ PULONG NrFreed);
 
-VOID NTAPI
+VOID
+NTAPI
 MiBalancerThread(PVOID Unused)
 {
     PVOID WaitObjects[2];
     NTSTATUS Status;
-    ULONG i;
 
     WaitObjects[0] = &MiBalancerEvent;
     WaitObjects[1] = &MiBalancerTimer;
 
-    while (1)
+    while (TRUE)
     {
         KeSetEvent(&MiBalancerDoneEvent, IO_NO_INCREMENT, FALSE);
-        Status = KeWaitForMultipleObjects(2,
+        Status = KeWaitForMultipleObjects(_countof(WaitObjects),
                                           WaitObjects,
                                           WaitAny,
                                           Executive,
@@ -382,7 +382,7 @@ MiBalancerThread(PVOID Unused)
                 ULONG OldTarget = InitialTarget;
 
                 /* Trim each consumer */
-                for (i = 0; i < MC_MAXIMUM; i++)
+                for (ULONG i = 0; i < MC_MAXIMUM; i++)
                 {
                     InitialTarget = MiTrimMemoryConsumer(i, InitialTarget);
                 }
@@ -397,7 +397,7 @@ MiBalancerThread(PVOID Unused)
 
                 /* No pages left to swap! */
                 if (InitialTarget != 0 &&
-                        InitialTarget == OldTarget)
+                    InitialTarget == OldTarget)
                 {
                     /* Game over */
                     KeBugCheck(NO_PAGES_AVAILABLE);
