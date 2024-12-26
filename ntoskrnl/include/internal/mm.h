@@ -1239,13 +1239,6 @@ MmGetSavedSwapEntryPage(PFN_NUMBER Page);
 
 VOID
 NTAPI
-MmSetCleanPage(
-    struct _EPROCESS *Process,
-    PVOID Address
-);
-
-VOID
-NTAPI
 MmSetDirtyBit(PEPROCESS Process, PVOID Address, BOOLEAN Bit);
 #define MmSetCleanPage(__P, __A) MmSetDirtyBit(__P, __A, FALSE)
 #define MmSetDirtyPage(__P, __A) MmSetDirtyBit(__P, __A, TRUE)
