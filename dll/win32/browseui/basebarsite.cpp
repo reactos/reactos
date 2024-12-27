@@ -380,15 +380,13 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::SetDeskBarSite(IUnknown *punkSite)
 
     if (punkSite == NULL)
     {
-
-        TRACE("Destroying site \n");
+        TRACE("Destroying site\n");
         /* Cleanup our bands */
-        while(SUCCEEDED(EnumBands(-1, &dwBandID)) && dwBandID)
+        for (UINT i = EnumBands(-1, NULL); i;)
         {
-            hResult = EnumBands(0, &dwBandID);
-            if(FAILED_UNEXPECTEDLY(hResult))
-                continue;
-            RemoveBand(dwBandID);
+            hResult = EnumBands(--i, &dwBandID);
+            if (!FAILED_UNEXPECTEDLY(hResult))
+                RemoveBand(dwBandID);
         }
         fDeskBarSite = NULL;
     }
@@ -535,13 +533,11 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::EnumBands(UINT uBand, DWORD *pdwBandID)
 {
     REBARBANDINFO bandInfo;
 
+    if (uBand == -1ul)
+        return (HRESULT)SendMessage(RB_GETBANDCOUNT, 0, 0);
     if (pdwBandID == NULL)
         return E_INVALIDARG;
-    if (uBand == 0xffffffff)
-    {
-        *pdwBandID = (DWORD)SendMessage(RB_GETBANDCOUNT, 0, 0);
-        return S_OK;
-    }
+
     if (!SUCCEEDED(GetInternalBandInfo(uBand, &bandInfo)))
         return E_INVALIDARG;
     *pdwBandID = bandInfo.wID;
@@ -565,7 +561,7 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::RemoveBand(DWORD dwBandID)
     HRESULT                         hr;
     CBarInfo                        *pInfo;
     CComPtr<IObjectWithSite>        pSite;
-    CComPtr<IDeskBand>              pDockWnd;
+    CComPtr<IDockingWindow>         pDockWnd;
     DWORD                           index;
 
     // Retrieve the right index of the coolbar knowing the id
@@ -580,19 +576,14 @@ HRESULT STDMETHODCALLTYPE CBaseBarSite::RemoveBand(DWORD dwBandID)
     if (!pInfo)
         return E_INVALIDARG;
 
-    hr = pInfo->fTheBar->QueryInterface(IID_PPV_ARG(IDeskBand, &pDockWnd));
-    if (FAILED_UNEXPECTEDLY(hr))
-    {
-        return E_NOINTERFACE;
-    }
-    hr = pInfo->fTheBar->QueryInterface(IID_PPV_ARG(IObjectWithSite, &pSite));
-    if (FAILED_UNEXPECTEDLY(hr))
-    {
-        return E_NOINTERFACE;
-    }
     /* Windows sends a CloseDW before setting site to NULL */
-    pDockWnd->CloseDW(0);
-    pSite->SetSite(NULL);
+    hr = pInfo->fTheBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &pDockWnd));
+    if (SUCCEEDED(hr))
+        pDockWnd->CloseDW(0);
+
+    hr = pInfo->fTheBar->QueryInterface(IID_PPV_ARG(IObjectWithSite, &pSite));
+    if (SUCCEEDED(hr))
+        pSite->SetSite(NULL);
 
     // Delete the band from rebar
     if (!SendMessage(RB_DELETEBAND, index, 0))
@@ -773,15 +764,11 @@ HRESULT CBaseBarSite::FindBandByGUID(REFGUID pGuid, DWORD *pdwBandID)
 {
     DWORD                       numBands;
     DWORD                       i;
-    HRESULT                     hr;
     REBARBANDINFO               bandInfo;
     CBarInfo                    *realInfo;
 
-    hr = EnumBands(-1, &numBands);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return E_FAIL;
-
-    for(i = 0; i < numBands; i++)
+    numBands = EnumBands(-1, NULL);
+    for (i = 0; i < numBands; i++)
     {
         if (FAILED_UNEXPECTEDLY(GetInternalBandInfo(i, &bandInfo)))
             return E_FAIL;
