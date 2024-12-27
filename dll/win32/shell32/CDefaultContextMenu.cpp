@@ -1214,7 +1214,7 @@ CDefaultContextMenu::MapVerbToCmdId(PVOID Verb, PUINT idCmd, BOOL IsUnicode)
         {
             /* The static verbs are ANSI, get a unicode version before doing the compare */
             SHAnsiToUnicode(g_StaticInvokeCmdMap[i].szStringVerb, UnicodeStr, MAX_VERB);
-            if (!wcscmp(UnicodeStr, (LPWSTR)Verb))
+            if (!_wcsicmp(UnicodeStr, (LPWSTR)Verb))
             {
                 /* Return the Corresponding Id */
                 *idCmd = g_StaticInvokeCmdMap[i].IntVerb;
@@ -1223,7 +1223,7 @@ CDefaultContextMenu::MapVerbToCmdId(PVOID Verb, PUINT idCmd, BOOL IsUnicode)
         }
         else
         {
-            if (!strcmp(g_StaticInvokeCmdMap[i].szStringVerb, (LPSTR)Verb))
+            if (!_stricmp(g_StaticInvokeCmdMap[i].szStringVerb, (LPSTR)Verb))
             {
                 *idCmd = g_StaticInvokeCmdMap[i].IntVerb;
                 return TRUE;
@@ -1527,6 +1527,8 @@ CDefaultContextMenu::InvokeCommand(
         /* Get the ID which corresponds to this verb, and update our local copy */
         if (MapVerbToCmdId((LPVOID)LocalInvokeInfo.lpVerb, &CmdId, FALSE))
             LocalInvokeInfo.lpVerb = MAKEINTRESOURCEA(CmdId);
+        else
+            return E_INVALIDARG;
     }
 
     CmdId = LOWORD(LocalInvokeInfo.lpVerb);
