@@ -27,7 +27,7 @@ PartitionCreateDevice(
     UNICODE_STRING deviceName;
     UINT32 volumeNum;
 
-    // create the device object
+    // Create the partition/volume device object
 
     volumeNum = HarddiskVolumeNextId++;
     swprintf(nameBuf, L"\\Device\\HarddiskVolume%lu", volumeNum);
@@ -41,7 +41,6 @@ PartitionCreateDevice(
                                      FILE_DEVICE_SECURE_OPEN,
                                      FALSE,
                                      &partitionDevice);
-
     if (!NT_SUCCESS(status))
     {
         ERR("Unable to create device object %wZ\n", &deviceName);
@@ -81,10 +80,10 @@ PartitionCreateDevice(
     partExt->DeviceObject = partitionDevice;
     partExt->LowerDevice = FDObject;
 
+    // The device is initialized
     partitionDevice->Flags &= ~DO_DEVICE_INITIALIZING;
 
     *PDO = partitionDevice;
-
     return status;
 }
 
@@ -136,11 +135,9 @@ PartitionHandleStartDevice(
         return status;
     }
 
+    INFO("Partition interface %wZ\n", &interfaceName);
     PartExt->PartitionInterfaceName = interfaceName;
     status = IoSetDeviceInterfaceState(&interfaceName, TRUE);
-
-    INFO("Partition interface %wZ\n", &interfaceName);
-
     if (!NT_SUCCESS(status))
     {
         RtlFreeUnicodeString(&interfaceName);
@@ -157,11 +154,9 @@ PartitionHandleStartDevice(
         return status;
     }
 
+    INFO("Volume interface %wZ\n", &interfaceName);
     PartExt->VolumeInterfaceName = interfaceName;
     status = IoSetDeviceInterfaceState(&interfaceName, TRUE);
-
-    INFO("Volume interface %wZ\n", &interfaceName);
-
     if (!NT_SUCCESS(status))
     {
         RtlFreeUnicodeString(&interfaceName);
