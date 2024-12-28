@@ -55,13 +55,6 @@ BOOLEAN KiFastCallCopyDoneOnce;
 volatile LONG KiTbFlushTimeStamp;
 
 /* CPU Signatures */
-static const CHAR CmpIntelID[]       = "GenuineIntel";
-static const CHAR CmpAmdID[]         = "AuthenticAMD";
-static const CHAR CmpCyrixID[]       = "CyrixInstead";
-static const CHAR CmpTransmetaID[]   = "GenuineTMx86";
-static const CHAR CmpCentaurID[]     = "CentaurHauls";
-static const CHAR CmpRiseID[]        = "RiseRiseRise";
-
 typedef union _CPU_SIGNATURE
 {
     struct
@@ -105,55 +98,12 @@ setCx86(UCHAR reg, UCHAR data)
 /* FUNCTIONS *****************************************************************/
 
 CODE_SEG("INIT")
+static
 ULONG
-NTAPI
 KiGetCpuVendor(VOID)
 {
-    PKPRCB Prcb = KeGetCurrentPrcb();
-    CPU_INFO CpuInfo;
-
-    /* Get the Vendor ID */
-    KiCpuId(&CpuInfo, 0);
-
-    /* Copy it to the PRCB and null-terminate it */
-    *(ULONG*)&Prcb->VendorString[0] = CpuInfo.Ebx;
-    *(ULONG*)&Prcb->VendorString[4] = CpuInfo.Edx;
-    *(ULONG*)&Prcb->VendorString[8] = CpuInfo.Ecx;
-    Prcb->VendorString[12] = 0;
-
-    /* Now check the CPU Type */
-    if (!strcmp(Prcb->VendorString, CmpIntelID))
-    {
-        return CPU_INTEL;
-    }
-    else if (!strcmp(Prcb->VendorString, CmpAmdID))
-    {
-        return CPU_AMD;
-    }
-    else if (!strcmp(Prcb->VendorString, CmpCyrixID))
-    {
-        DPRINT1("Cyrix CPU support not fully tested!\n");
-        return CPU_CYRIX;
-    }
-    else if (!strcmp(Prcb->VendorString, CmpTransmetaID))
-    {
-        DPRINT1("Transmeta CPU support not fully tested!\n");
-        return CPU_TRANSMETA;
-    }
-    else if (!strcmp(Prcb->VendorString, CmpCentaurID))
-    {
-        DPRINT1("Centaur CPU support not fully tested!\n");
-        return CPU_CENTAUR;
-    }
-    else if (!strcmp(Prcb->VendorString, CmpRiseID))
-    {
-        DPRINT1("Rise CPU support not fully tested!\n");
-        return CPU_RISE;
-    }
-
-    /* Unknown CPU */
-    DPRINT1("%s CPU support not fully tested!\n", Prcb->VendorString);
-    return CPU_UNKNOWN;
+    ASSERT(KeGetCurrentPrcb()->VendorString[0] != 0);
+    return KiIdentifyCpuVendor(KeGetCurrentPrcb()->VendorString);
 }
 
 CODE_SEG("INIT")
@@ -220,6 +170,9 @@ KiGetFeatureBits(VOID)
     UCHAR Ccr1;
     BOOLEAN ExtendedCPUID = TRUE;
     ULONG CpuFeatures = 0;
+
+    /* Get the CPU vendor string */
+    KiGetCpuVendorString(Prcb->VendorString);
 
     /* Get the Vendor ID */
     Vendor = KiGetCpuVendor();

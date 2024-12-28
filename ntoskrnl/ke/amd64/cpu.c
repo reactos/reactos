@@ -34,10 +34,6 @@ BOOLEAN KiSMTProcessorsPresent;
 volatile LONG KiTbFlushTimeStamp;
 
 /* CPU Signatures */
-static const CHAR CmpIntelID[]       = "GenuineIntel";
-static const CHAR CmpAmdID[]         = "AuthenticAMD";
-static const CHAR CmpCentaurID[]     = "CentaurHauls";
-
 typedef union _CPU_SIGNATURE
 {
     struct
@@ -55,57 +51,20 @@ typedef union _CPU_SIGNATURE
 
 /* FUNCTIONS *****************************************************************/
 
-ULONG
-NTAPI
-KiGetCpuVendor(VOID)
-{
-    PKPRCB Prcb = KeGetCurrentPrcb();
-    CPU_INFO CpuInfo;
-
-    /* Get the Vendor ID and null-terminate it */
-    KiCpuId(&CpuInfo, 0);
-
-    /* Copy it to the PRCB and null-terminate it */
-    *(ULONG*)&Prcb->VendorString[0] = CpuInfo.Ebx;
-    *(ULONG*)&Prcb->VendorString[4] = CpuInfo.Edx;
-    *(ULONG*)&Prcb->VendorString[8] = CpuInfo.Ecx;
-    Prcb->VendorString[12] = 0;
-
-    /* Now check the CPU Type */
-    if (!strcmp((PCHAR)Prcb->VendorString, CmpIntelID))
-    {
-        Prcb->CpuVendor = CPU_INTEL;
-    }
-    else if (!strcmp((PCHAR)Prcb->VendorString, CmpAmdID))
-    {
-        Prcb->CpuVendor = CPU_AMD;
-    }
-    else if (!strcmp((PCHAR)Prcb->VendorString, CmpCentaurID))
-    {
-        DPRINT1("VIA CPUs not fully supported\n");
-        Prcb->CpuVendor = CPU_VIA;
-    }
-    else
-    {
-        /* Invalid CPU */
-        DPRINT1("%s CPU support not fully tested!\n", Prcb->VendorString);
-        Prcb->CpuVendor = CPU_UNKNOWN;
-    }
-
-    return Prcb->CpuVendor;
-}
-
 VOID
 NTAPI
 KiSetProcessorType(VOID)
 {
+    PKPRCB Prcb = KeGetCurrentPrcb();
     CPU_INFO CpuInfo;
     CPU_SIGNATURE CpuSignature;
     BOOLEAN ExtendModel;
     ULONG Stepping, Type, Vendor;
 
     /* This initializes Prcb->CpuVendor */
-    Vendor = KiGetCpuVendor();
+    KiGetCpuVendorString(Prcb->VendorString);
+    Prcb->CpuVendor = KiIdentifyCpuVendor(Prcb->VendorString);
+    Vendor = Prcb->CpuVendor;
 
     /* Do CPUID 1 now */
     KiCpuId(&CpuInfo, 1);
@@ -143,9 +102,9 @@ KiSetProcessorType(VOID)
     }
 
     /* Save them in the PRCB */
-    KeGetCurrentPrcb()->CpuID = TRUE;
-    KeGetCurrentPrcb()->CpuType = (UCHAR)Type;
-    KeGetCurrentPrcb()->CpuStep = (USHORT)Stepping;
+    Prcb->CpuID = TRUE;
+    Prcb->CpuType = (UCHAR)Type;
+    Prcb->CpuStep = (USHORT)Stepping;
 }
 
 /*!
