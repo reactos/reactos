@@ -756,8 +756,10 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpVerb,
     WCHAR wBuffer[256];      /* Used to GetProfileString */
     UINT  retval = SE_ERR_NOASSOC;
     WCHAR *tok;              /* token pointer */
-    WCHAR xlpFile[256];      /* result of SearchPath */
+    WCHAR xlpFile[MAX_PATH]; /* result of SearchPath */
     DWORD attribs;           /* file attributes */
+    WCHAR curdir[MAX_PATH];
+    const WCHAR *search_paths[3] = {0};
 
     TRACE("%s\n", debugstr_w(lpFile));
 
@@ -782,17 +784,56 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpVerb,
         return 33;
     }
 
-    if (SearchPathW(lpPath, lpFile, L".exe", ARRAY_SIZE(xlpFile), xlpFile, NULL))
+    GetCurrentDirectoryW(ARRAY_SIZE(curdir), curdir);
+    if (!PathIsFileSpecW(lpFile))
     {
-        TRACE("SearchPathW returned non-zero\n");
-        lpFile = xlpFile;
-        /* The file was found in the application-supplied default directory (or the system search path) */
+        BOOL found = FALSE;
+        if (lpPath && *lpPath)
+        {
+            TRACE("lpPath %s\n", debugstr_w(lpPath));
+            PathCombineW(xlpFile, lpPath, lpFile);
+            if (PathFileExistsDefExtW(xlpFile, WHICH_DEFAULT | WHICH_OPTIONAL) || PathFileExistsW(xlpFile))
+            {
+                GetFullPathNameW(xlpFile, ARRAY_SIZE(xlpFile), xlpFile, NULL);
+                found = TRUE;
+            }
+        }
+        if (!found)
+        {
+            lstrcpyW(xlpFile, lpFile);
+            if (PathFileExistsDefExtW(xlpFile, WHICH_DEFAULT | WHICH_OPTIONAL) || PathFileExistsW(xlpFile))
+            {
+                GetFullPathNameW(xlpFile, ARRAY_SIZE(xlpFile), xlpFile, NULL);
+                found = TRUE;
+            }
+        }
+        if (found)
+        {
+            lpFile = xlpFile;
+            lstrcpyW(lpResult, xlpFile);
+        }
+        else
+            xlpFile[0] = '\0';
     }
-    else if (lpPath && SearchPathW(NULL, lpFile, L".exe", ARRAY_SIZE(xlpFile), xlpFile, NULL))
+    else
     {
-        TRACE("SearchPathW returned non-zero\n");
-        lpFile = xlpFile;
-        /* The file was found in one of the directories in the system-wide search path */
+        if (lpPath && *lpPath)
+        {
+            search_paths[0] = lpPath;
+            search_paths[1] = curdir;
+        }
+        else
+            search_paths[0] = curdir;
+        lstrcpyW(xlpFile, lpFile);
+        if (PathResolveW(xlpFile, search_paths, PRF_TRYPROGRAMEXTENSIONS | PRF_VERIFYEXISTS))
+        {
+            TRACE("PathResolveW returned non-zero\n");
+            lpFile = xlpFile;
+            lstrcpyW(lpResult, xlpFile);
+            /* The file was found in lpPath or one of the directories in the system-wide search path */
+        }
+        else
+            xlpFile[0] = '\0';
     }
 
     attribs = GetFileAttributesW(lpFile);
@@ -932,7 +973,7 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpVerb,
         }
     }
 
-    TRACE("returning %s\n", debugstr_w(lpResult));
+    TRACE("returning path %s, retval %d\n", debugstr_w(lpResult), retval);
     return retval;
 }
 
