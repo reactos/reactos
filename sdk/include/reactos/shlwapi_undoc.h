@@ -69,7 +69,7 @@ SHRestrictionLookup(
     _In_ const POLICYDATA *polTable,
     _Inout_ LPDWORD polArr);
 
-#define GACF_WIN95SHLEXEC 0x00000200 /* Geoff Chappell */
+#define SHACF_WIN95SHLEXEC 0x00000200 /* Geoff Chappell */
 DWORD WINAPI SHGetAppCompatFlags(DWORD dwMask);
 
 BOOL WINAPI SHAboutInfoA(LPSTR lpszDest, DWORD dwDestLen);

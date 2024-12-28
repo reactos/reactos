@@ -2341,7 +2341,7 @@ HINSTANCE WINAPI ShellExecuteA(HWND hWnd, LPCSTR lpVerb, LPCSTR lpFile,
     sei.dwHotKey = 0;
     sei.hProcess = 0;
 
-    if (!(SHGetAppCompatFlags(GACF_WIN95SHLEXEC) & GACF_WIN95SHLEXEC))
+    if (!(SHGetAppCompatFlags(SHACF_WIN95SHLEXEC) & SHACF_WIN95SHLEXEC))
         sei.fMask |= SEE_MASK_NOASYNC;
     ShellExecuteExA(&sei);
     return sei.hInstApp;
@@ -2502,7 +2502,7 @@ HINSTANCE WINAPI ShellExecuteW(HWND hwnd, LPCWSTR lpVerb, LPCWSTR lpFile,
     sei.dwHotKey = 0;
     sei.hProcess = 0;
 
-    if (!(SHGetAppCompatFlags(GACF_WIN95SHLEXEC) & GACF_WIN95SHLEXEC))
+    if (!(SHGetAppCompatFlags(SHACF_WIN95SHLEXEC) & SHACF_WIN95SHLEXEC))
         sei.fMask |= SEE_MASK_NOASYNC;
     ShellExecuteExW(&sei);
     return sei.hInstApp;
