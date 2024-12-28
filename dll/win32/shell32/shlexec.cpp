@@ -2341,6 +2341,8 @@ HINSTANCE WINAPI ShellExecuteA(HWND hWnd, LPCSTR lpVerb, LPCSTR lpFile,
     sei.dwHotKey = 0;
     sei.hProcess = 0;
 
+    if (!(SHGetAppCompatFlags(GACF_WIN95SHLEXEC) & GACF_WIN95SHLEXEC))
+        sei.fMask |= SEE_MASK_NOASYNC;
     ShellExecuteExA(&sei);
     return sei.hInstApp;
 }
@@ -2479,9 +2481,6 @@ ShellExecuteExW(LPSHELLEXECUTEINFOW sei)
 
 /*************************************************************************
  * ShellExecuteW            [SHELL32.294]
- * from shellapi.h
- * WINSHELLAPI HINSTANCE APIENTRY ShellExecuteW(HWND hwnd, LPCWSTR lpVerb,
- * LPCWSTR lpFile, LPCWSTR lpParameters, LPCWSTR lpDirectory, INT nShowCmd);
  */
 HINSTANCE WINAPI ShellExecuteW(HWND hwnd, LPCWSTR lpVerb, LPCWSTR lpFile,
                                LPCWSTR lpParameters, LPCWSTR lpDirectory, INT nShowCmd)
@@ -2503,7 +2502,9 @@ HINSTANCE WINAPI ShellExecuteW(HWND hwnd, LPCWSTR lpVerb, LPCWSTR lpFile,
     sei.dwHotKey = 0;
     sei.hProcess = 0;
 
-    SHELL_execute(&sei, SHELL_ExecuteW);
+    if (!(SHGetAppCompatFlags(GACF_WIN95SHLEXEC) & GACF_WIN95SHLEXEC))
+        sei.fMask |= SEE_MASK_NOASYNC;
+    ShellExecuteExW(&sei);
     return sei.hInstApp;
 }
 
