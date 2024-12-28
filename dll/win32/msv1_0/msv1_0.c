@@ -17,6 +17,10 @@ typedef struct _LOGON_LIST_ENTRY
     LIST_ENTRY ListEntry;
     LUID LogonId;
     ULONG EnumHandle;
+    UNICODE_STRING UserName;
+    UNICODE_STRING LogonDomainName;
+    UNICODE_STRING LogonServer;
+    SECURITY_LOGON_TYPE LogonType;
 } LOGON_LIST_ENTRY, *PLOGON_LIST_ENTRY;
 
 /* GLOBALS *****************************************************************/
@@ -26,6 +30,32 @@ LIST_ENTRY LogonListHead;
 ULONG EnumCounter;
 
 /* FUNCTIONS ***************************************************************/
+
+static
+PLOGON_LIST_ENTRY
+GetLogonByLogonId(
+    _In_ PLUID LogonId)
+{
+    PLOGON_LIST_ENTRY LogonEntry;
+    PLIST_ENTRY CurrentEntry;
+
+    CurrentEntry = LogonListHead.Flink;
+    while (CurrentEntry != &LogonListHead)
+    {
+        LogonEntry = CONTAINING_RECORD(CurrentEntry,
+                                       LOGON_LIST_ENTRY,
+                                       ListEntry);
+
+        if ((LogonEntry->LogonId.HighPart == LogonId->HighPart) &&
+            (LogonEntry->LogonId.LowPart == LogonId->LowPart))
+            return LogonEntry;
+
+        CurrentEntry = CurrentEntry->Flink;
+    }
+
+    return NULL;
+}
+
 
 static
 NTSTATUS
@@ -286,6 +316,7 @@ done:
     NtlmUStrFree(&ComputerNameUCS);
     return Status;
 }
+
 
 static
 PSID
@@ -854,6 +885,12 @@ MsvpEnumerateUsers(
 
     TRACE("MsvpEnumerateUsers()\n");
 
+    if (SubmitBufferLength < sizeof(MSV1_0_ENUMUSERS_REQUEST))
+    {
+        ERR("Invalid SubmitBufferLength %lu\n", SubmitBufferLength);
+        return STATUS_INVALID_PARAMETER;
+    }
+
     /* Count the currently logged-on users */
     CurrentEntry = LogonListHead.Flink;
     while (CurrentEntry != &LogonListHead)
@@ -931,7 +968,7 @@ MsvpEnumerateUsers(
         goto done;
     }
 
-    *ProtocolReturnBuffer = (PMSV1_0_INTERACTIVE_PROFILE)ClientBaseAddress;
+    *ProtocolReturnBuffer = ClientBaseAddress;
     *ReturnBufferLength = BufferLength;
     *ProtocolStatus = STATUS_SUCCESS;
 
@@ -946,7 +983,134 @@ done:
                                            ClientBaseAddress);
     }
 
-    return STATUS_SUCCESS;
+    return Status;
+}
+
+
+static
+NTSTATUS
+MsvpGetUserInfo(
+    _In_ PLSA_CLIENT_REQUEST ClientRequest,
+    _In_ PVOID ProtocolSubmitBuffer,
+    _In_ PVOID ClientBufferBase,
+    _In_ ULONG SubmitBufferLength,
+    _Out_ PVOID *ProtocolReturnBuffer,
+    _Out_ PULONG ReturnBufferLength,
+    _Out_ PNTSTATUS ProtocolStatus)
+{
+    PMSV1_0_GETUSERINFO_REQUEST RequestBuffer;
+    PLOGON_LIST_ENTRY LogonEntry;
+    PMSV1_0_GETUSERINFO_RESPONSE LocalBuffer = NULL;
+    PVOID ClientBaseAddress = NULL;
+    ULONG BufferLength;
+    PWSTR BufferPtr;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("MsvpGetUserInfo()\n");
+
+    if (SubmitBufferLength < sizeof(MSV1_0_GETUSERINFO_REQUEST))
+    {
+        ERR("Invalid SubmitBufferLength %lu\n", SubmitBufferLength);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    RequestBuffer = (PMSV1_0_GETUSERINFO_REQUEST)ProtocolSubmitBuffer;
+
+    TRACE("LogonId: 0x%lx\n", RequestBuffer->LogonId.LowPart);
+
+    LogonEntry = GetLogonByLogonId(&RequestBuffer->LogonId);
+    if (LogonEntry == NULL)
+    {
+        ERR("No logon found for LogonId %lx\n", RequestBuffer->LogonId.LowPart);
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    TRACE("UserName: %wZ\n", &LogonEntry->UserName);
+    TRACE("LogonDomain: %wZ\n", &LogonEntry->LogonDomainName);
+    TRACE("LogonServer: %wZ\n", &LogonEntry->LogonServer);
+
+    BufferLength = sizeof(MSV1_0_GETUSERINFO_RESPONSE) + 
+                   LogonEntry->UserName.MaximumLength +
+                   LogonEntry->LogonDomainName.MaximumLength +
+                   LogonEntry->LogonServer.MaximumLength;
+
+    LocalBuffer = DispatchTable.AllocateLsaHeap(BufferLength);
+    if (LocalBuffer == NULL)
+    {
+        ERR("Failed to allocate the local buffer!\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = DispatchTable.AllocateClientBuffer(ClientRequest,
+                                                BufferLength,
+                                                &ClientBaseAddress);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("DispatchTable.AllocateClientBuffer failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    TRACE("ClientBaseAddress: %p\n", ClientBaseAddress);
+
+    /* Fill the local buffer */
+    LocalBuffer->MessageType = MsV1_0GetUserInfo;
+
+    BufferPtr = (PWSTR)((ULONG_PTR)LocalBuffer + sizeof(MSV1_0_GETUSERINFO_RESPONSE));
+
+    /* UserName */
+    LocalBuffer->UserName.Length = LogonEntry->UserName.Length;
+    LocalBuffer->UserName.MaximumLength = LogonEntry->UserName.MaximumLength;
+    LocalBuffer->UserName.Buffer = (PWSTR)((ULONG_PTR)ClientBaseAddress + (ULONG_PTR)BufferPtr - (ULONG_PTR)LocalBuffer);
+
+    RtlCopyMemory(BufferPtr, LogonEntry->UserName.Buffer, LogonEntry->UserName.MaximumLength);
+    BufferPtr = (PWSTR)((ULONG_PTR)BufferPtr + (ULONG_PTR)LocalBuffer->UserName.MaximumLength);
+
+    /* LogonDomainName */
+    LocalBuffer->LogonDomainName.Length = LogonEntry->LogonDomainName.Length;
+    LocalBuffer->LogonDomainName.MaximumLength = LogonEntry->LogonDomainName.MaximumLength;
+    LocalBuffer->LogonDomainName.Buffer = (PWSTR)((ULONG_PTR)ClientBaseAddress + (ULONG_PTR)BufferPtr - (ULONG_PTR)LocalBuffer);
+
+    RtlCopyMemory(BufferPtr, LogonEntry->LogonDomainName.Buffer, LogonEntry->LogonDomainName.MaximumLength);
+    BufferPtr = (PWSTR)((ULONG_PTR)BufferPtr + (ULONG_PTR)LocalBuffer->LogonDomainName.MaximumLength);
+
+    /* LogonServer */
+    LocalBuffer->LogonServer.Length = LogonEntry->LogonServer.Length;
+    LocalBuffer->LogonServer.MaximumLength = LogonEntry->LogonServer.MaximumLength;
+    LocalBuffer->LogonServer.Buffer = (PWSTR)((ULONG_PTR)ClientBaseAddress + (ULONG_PTR)BufferPtr - (ULONG_PTR)LocalBuffer);
+
+    RtlCopyMemory(BufferPtr, LogonEntry->LogonServer.Buffer, LogonEntry->LogonServer.MaximumLength);
+
+    /* Logon Type */
+    LocalBuffer->LogonType = LogonEntry->LogonType;
+
+    Status = DispatchTable.CopyToClientBuffer(ClientRequest,
+                                              BufferLength,
+                                              ClientBaseAddress,
+                                              LocalBuffer);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("DispatchTable.CopyToClientBuffer failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    *ProtocolReturnBuffer = ClientBaseAddress;
+    *ReturnBufferLength = BufferLength;
+    *ProtocolStatus = STATUS_SUCCESS;
+
+done:
+    if (LocalBuffer != NULL)
+        DispatchTable.FreeLsaHeap(LocalBuffer);
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (ClientBaseAddress != NULL)
+            DispatchTable.FreeClientBuffer(ClientRequest,
+                                           ClientBaseAddress);
+    }
+
+    return Status;
 }
 
 
@@ -994,6 +1158,15 @@ LsaApCallPackage(IN PLSA_CLIENT_REQUEST ClientRequest,
              break;
 
         case MsV1_0GetUserInfo:
+             Status = MsvpGetUserInfo(ClientRequest,
+                                      ProtocolSubmitBuffer,
+                                      ClientBufferBase,
+                                      SubmitBufferLength,
+                                      ProtocolReturnBuffer,
+                                      ReturnBufferLength,
+                                      ProtocolStatus);
+             break;
+
         case MsV1_0ReLogonUsers:
             Status = STATUS_INVALID_PARAMETER;
             break;
@@ -1483,6 +1656,30 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
         RtlCopyMemory(&LogonEntry->LogonId, LogonId, sizeof(LUID));
         LogonEntry->EnumHandle = EnumCounter;
         EnumCounter++;
+
+        TRACE("Logon User: %wZ %wZ %lx\n", LogonUserName, LogonDomain, LogonId->LowPart);
+        LogonEntry->UserName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, LogonUserName->MaximumLength);
+        if (LogonEntry->UserName.Buffer)
+        {
+            LogonEntry->UserName.MaximumLength = LogonUserName->MaximumLength;
+            RtlCopyUnicodeString(&LogonEntry->UserName, LogonUserName);
+        }
+
+        LogonEntry->LogonDomainName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, LogonDomain->MaximumLength);
+        if (LogonEntry->LogonDomainName.Buffer)
+        {
+            LogonEntry->LogonDomainName.MaximumLength = LogonDomain->MaximumLength;
+            RtlCopyUnicodeString(&LogonEntry->LogonDomainName, LogonDomain);
+        }
+
+        LogonEntry->LogonServer.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, ComputerName.MaximumLength);
+        if (LogonEntry->LogonServer.Buffer)
+        {
+            LogonEntry->LogonServer.MaximumLength = ComputerName.MaximumLength;
+            RtlCopyUnicodeString(&LogonEntry->LogonServer, &ComputerName);
+        }
+
+        LogonEntry->LogonType = LogonType;
 
         InsertTailList(&LogonListHead, &LogonEntry->ListEntry);
     }
