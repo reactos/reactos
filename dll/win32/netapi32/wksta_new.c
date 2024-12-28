@@ -1116,20 +1116,19 @@ NetWkstaUserEnum(
 }
 
 
-#if 0
 NET_API_STATUS
 WINAPI
 NetWkstaUserGetInfo(
-    LPWSTR reserved,
+    _In_ LPWSTR reserved,
     _In_ DWORD level,
-    _Out_ PBYTE *bufptr)
+    _Out_ LPBYTE *bufptr)
 {
     NET_API_STATUS status;
 
     TRACE("NetWkstaUserGetInfo(%s, %d, %p)\n",
           debugstr_w(reserved), level, bufptr);
 
-    if (reserved != NULL)
+    if (reserved != NULL || bufptr == NULL)
         return ERROR_INVALID_PARAMETER;
 
     *bufptr = NULL;
@@ -1138,7 +1137,7 @@ NetWkstaUserGetInfo(
     {
         status = NetrWkstaUserGetInfo(NULL,
                                       level,
-                                      (LPWKSTA_USER_INFO)bufptr);
+                                      (LPWKSTA_USER_INFO*)bufptr);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1148,13 +1147,12 @@ NetWkstaUserGetInfo(
 
     return status;
 }
-#endif
 
 
 NET_API_STATUS
 WINAPI
 NetWkstaUserSetInfo(
-    LPWSTR reserved,
+    _In_ LPWSTR reserved,
     _In_ DWORD level,
     _In_ LPBYTE buf,
     _Out_ LPDWORD parm_err)
