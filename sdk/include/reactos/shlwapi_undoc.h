@@ -69,9 +69,6 @@ SHRestrictionLookup(
     _In_ const POLICYDATA *polTable,
     _Inout_ LPDWORD polArr);
 
-#define SHACF_WIN95SHLEXEC 0x00000200 /* Geoff Chappell */
-DWORD WINAPI SHGetAppCompatFlags(DWORD dwMask);
-
 BOOL WINAPI SHAboutInfoA(LPSTR lpszDest, DWORD dwDestLen);
 BOOL WINAPI SHAboutInfoW(LPWSTR lpszDest, DWORD dwDestLen);
 #ifdef UNICODE
@@ -366,6 +363,9 @@ IContextMenu_Invoke(
     _In_ UINT uFlags);
 
 DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid);
+
+#define SHACF_WIN95SHLEXEC 0x00000200 /* Geoff Chappell */
+DWORD WINAPI SHGetAppCompatFlags(DWORD dwMask);
 
 /*
  * HACK! These functions are conflicting with <shobjidl.h> inline functions...
