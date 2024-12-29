@@ -212,9 +212,13 @@ NtQueryInformationProcess(
             /* Get additional information, if needed */
             if (Extended)
             {
+                QuotaLimits.Flags |= (Process->Vm.Flags.MaximumWorkingSetHard ?
+                    QUOTA_LIMITS_HARDWS_MAX_ENABLE : QUOTA_LIMITS_HARDWS_MAX_DISABLE);
+                QuotaLimits.Flags |= (Process->Vm.Flags.MinimumWorkingSetHard ?
+                    QUOTA_LIMITS_HARDWS_MIN_ENABLE : QUOTA_LIMITS_HARDWS_MIN_DISABLE);
+
                 /* FIXME: Get the correct information */
                 //QuotaLimits.WorkingSetLimit = (SIZE_T)-1; // Not used on Win2k3, it is set to 0
-                QuotaLimits.Flags = QUOTA_LIMITS_HARDWS_MIN_DISABLE | QUOTA_LIMITS_HARDWS_MAX_DISABLE;
                 QuotaLimits.CpuRateLimit.RateData = 0;
             }
 
