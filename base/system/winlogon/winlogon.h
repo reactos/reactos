@@ -233,6 +233,7 @@ typedef struct _WLSESSION
     HANDLE hProfileInfo;
     LOGON_STATE LogonState;
     DWORD DialogTimeout; /* Timeout for dialog boxes, in seconds */
+    SYSTEMTIME LastLogon;
 
     /* Screen-saver informations */
 #ifndef USE_GETLASTINPUTINFO
@@ -284,6 +285,24 @@ extern PWLSESSION WLSession;
    ((Status) == WLX_SAS_ACTION_SHUTDOWN_SLEEP2) || \
    ((Status) == WLX_SAS_ACTION_SHUTDOWN_HIBERNATE) \
   )
+
+FORCEINLINE
+VOID
+SetLogonTimestamp(
+    _Inout_ PWLSESSION Session)
+{
+    GetSystemTime(&Session->LastLogon);
+}
+
+FORCEINLINE
+BOOL
+IsFirstLogon(
+    _In_ PWLSESSION Session)
+{
+    /* The WLSESSION::LastLogon is initialized to 0 and the day value returned
+     * by GetSystemTime can't be 0 so this is OK */
+    return (Session->LastLogon.wDay == 0);
+}
 
 /* environment.c */
 BOOL
