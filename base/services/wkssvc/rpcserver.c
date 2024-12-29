@@ -141,6 +141,7 @@ NetrWkstaGetInfo(
     LSA_OBJECT_ATTRIBUTES ObjectAttributes;
     LSA_HANDLE PolicyHandle;
     PPOLICY_PRIMARY_DOMAIN_INFO DomainInfo = NULL;
+    ULONG LoggedOnUsers;
     NTSTATUS NtStatus;
     DWORD dwResult = NERR_Success;
 
@@ -171,6 +172,33 @@ NetrWkstaGetInfo(
     {
         WARN("LsaQueryInformationPolicy() failed (Status 0x%08lx)\n", NtStatus);
         return LsaNtStatusToWinError(NtStatus);
+    }
+
+    if (Level == 102)
+    {
+        MSV1_0_ENUMUSERS_REQUEST EnumRequest;
+        PMSV1_0_ENUMUSERS_RESPONSE EnumResponseBuffer = NULL;
+        DWORD EnumResponseBufferSize = 0;
+        NTSTATUS ProtocolStatus;
+
+        /* enumerate all currently logged-on users */
+        EnumRequest.MessageType = MsV1_0EnumerateUsers;
+        NtStatus = LsaCallAuthenticationPackage(LsaHandle,
+                                                LsaAuthenticationPackage,
+                                                &EnumRequest,
+                                                sizeof(EnumRequest),
+                                                (PVOID*)&EnumResponseBuffer,
+                                                &EnumResponseBufferSize,
+                                                &ProtocolStatus);
+        if (!NT_SUCCESS(NtStatus))
+        {
+            dwResult = RtlNtStatusToDosError(NtStatus);
+            goto done;
+        }
+
+        LoggedOnUsers = EnumResponseBuffer->NumberOfLoggedOnUsers;
+
+        LsaFreeReturnBuffer(EnumResponseBuffer);
     }
 
     switch (Level)
@@ -252,7 +280,7 @@ NetrWkstaGetInfo(
             if (pWkstaInfo->WkstaInfo102.wki102_lanroot != NULL)
                 wcscpy(pWkstaInfo->WkstaInfo102.wki102_lanroot, pszLanRoot);
 
-            pWkstaInfo->WkstaInfo102.wki102_logged_on_users = 1; /* FIXME */
+            pWkstaInfo->WkstaInfo102.wki102_logged_on_users = LoggedOnUsers;
 
             *WkstaInfo = pWkstaInfo;
             break;
@@ -276,6 +304,7 @@ NetrWkstaGetInfo(
             break;
     }
 
+done:
     if (DomainInfo != NULL)
         LsaFreeMemory(DomainInfo);
 
