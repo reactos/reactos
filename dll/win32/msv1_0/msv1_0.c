@@ -1322,9 +1322,30 @@ LsaApInitializePackage(IN ULONG AuthenticationPackageId,
  */
 VOID
 NTAPI
-LsaApLogonTerminated(IN PLUID LogonId)
+LsaApLogonTerminated(
+    _In_ PLUID LogonId)
 {
+    PLOGON_LIST_ENTRY LogonEntry;
+
     TRACE("LsaApLogonTerminated()\n");
+
+    /* Remove the given logon entry from the list */
+    LogonEntry = GetLogonByLogonId(LogonId);
+    if (LogonEntry != NULL)
+    {
+        RemoveEntryList(&LogonEntry->ListEntry);
+
+        if (LogonEntry->UserName.Buffer)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, LogonEntry->UserName.Buffer);
+
+        if (LogonEntry->LogonDomainName.Buffer)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, LogonEntry->LogonDomainName.Buffer);
+
+        if (LogonEntry->LogonServer.Buffer)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, LogonEntry->LogonServer.Buffer);
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, LogonEntry);
+    }
 }
 
 
