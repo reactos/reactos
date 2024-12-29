@@ -364,6 +364,9 @@ IContextMenu_Invoke(
 
 DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid);
 
+#define SHACF_WIN95SHLEXEC 0x00000200 /* Geoff Chappell */
+DWORD WINAPI SHGetAppCompatFlags(DWORD dwMask);
+
 /*
  * HACK! These functions are conflicting with <shobjidl.h> inline functions...
  * We provide a macro option SHLWAPI_ISHELLFOLDER_HELPERS for using these functions.
