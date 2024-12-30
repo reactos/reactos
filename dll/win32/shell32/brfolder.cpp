@@ -408,8 +408,8 @@ BrFolder_Expand(
     ULONG ulFetched;
     while (S_OK == pEnum->Next(1, &pidlTemp, &ulFetched))
     {
-        if (!BrFolder_InsertItem(info, lpsf, pidlTemp, pidlFull, hParent))
-            break;
+        /* Ignore return value of BrFolder_InsertItem to avoid incomplete folder listing */
+        BrFolder_InsertItem(info, lpsf, pidlTemp, pidlFull, hParent);
         pidlTemp.Free(); // Finally, free the pidl that the shell gave us...
     }
 
