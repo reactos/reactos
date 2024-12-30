@@ -41,6 +41,7 @@ list(APPEND SOURCE
     NtQueryInformationThread.c
     NtQueryInformationToken.c
     NtQueryKey.c
+    NtQueryObject.c
     NtQueryOpenSubKeys.c
     NtQuerySystemEnvironmentValue.c
     NtQuerySystemInformation.c
