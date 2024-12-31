@@ -240,8 +240,8 @@ static FILE_SYSTEM RegisteredFileSystems[] =
     { L"NTFS" , NtfsFormat, NtfsChkdsk },
 #endif
     { L"BTRFS", BtrfsFormat, BtrfsChkdsk },
-#if 0
     { L"EXT2" , Ext2Format, Ext2Chkdsk },
+#if 0
     { L"EXT3" , Ext2Format, Ext2Chkdsk },
     { L"EXT4" , Ext2Format, Ext2Chkdsk },
 #endif
