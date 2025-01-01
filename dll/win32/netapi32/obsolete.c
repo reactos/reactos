@@ -145,7 +145,7 @@ NetErrorLogRead(
     _In_opt_ LPDWORD Reserved2,
     _In_ DWORD Reserved3,
     _In_ DWORD OffsetFlag,
-    _Deref_out_ LPBYTE *BufPtr,
+    _Outptr_ LPBYTE *BufPtr,
     _In_ DWORD PrefMaxSize,
     _Out_ LPDWORD BytesRead,
     _Out_ LPDWORD TotalAvailable)
@@ -409,11 +409,11 @@ NetReplSetInfo(
 NET_API_STATUS
 WINAPI
 NetServiceControl(
-    __in_opt LPCWSTR servername,
-    __in LPCWSTR service,
-    __in DWORD opcode,
-    __in DWORD arg,
-    __deref_out LPBYTE *bufptr)
+    _In_opt_ LPCWSTR servername,
+    _In_ LPCWSTR service,
+    _In_ DWORD opcode,
+    _In_ DWORD arg,
+    _Outptr_ LPBYTE *bufptr)
 {
     return ERROR_NOT_SUPPORTED;
 }
@@ -422,13 +422,13 @@ NetServiceControl(
 NET_API_STATUS
 WINAPI
 NetServiceEnum(
-    __in_opt LPCWSTR servername,
-    __in DWORD level,
-    __deref_out LPBYTE *bufptr,
-    __in DWORD prefmaxlen,
-    __out LPDWORD entriesread,
-    __out LPDWORD totalentries,
-    __inout_opt LPDWORD resume_handle)
+    _In_opt_ LPCWSTR servername,
+    _In_ DWORD level,
+    _Outptr_ LPBYTE *bufptr,
+    _In_ DWORD prefmaxlen,
+    _Out_ LPDWORD entriesread,
+    _Out_ LPDWORD totalentries,
+    _Inout_opt_ LPDWORD resume_handle)
 {
     return ERROR_NOT_SUPPORTED;
 }
@@ -437,10 +437,10 @@ NetServiceEnum(
 NET_API_STATUS
 WINAPI
 NetServiceGetInfo(
-    __in_opt LPCWSTR servername,
-    __in LPCWSTR service,
-    __in DWORD level,
-    __deref_out LPBYTE *bufptr)
+    _In_opt_ LPCWSTR servername,
+    _In_ LPCWSTR service,
+    _In_ DWORD level,
+    _Outptr_ LPBYTE *bufptr)
 {
     return ERROR_NOT_SUPPORTED;
 }
@@ -449,11 +449,11 @@ NetServiceGetInfo(
 NET_API_STATUS
 WINAPI
 NetServiceInstall(
-    __in_opt LPCWSTR servername,
-    __in LPCWSTR service,
-    __in DWORD argc,
-    __in_ecount(argc) LPCWSTR argv[],
-    __deref_out LPBYTE *bufptr)
+    _In_opt_ LPCWSTR servername,
+    _In_ LPCWSTR service,
+    _In_ DWORD argc,
+    _In_reads_(argc) LPCWSTR argv[],
+    _Outptr_ LPBYTE *bufptr)
 {
     return ERROR_NOT_SUPPORTED;
 }
