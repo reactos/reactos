@@ -7,16 +7,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Welcome to the ReactOS Setup Wizard", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "This wizard will install or upgrade ReactOS on your computer, \
-and prepare the second part of the setup.", IDC_STATIC, 115, 40, 195, 27
+    LTEXT "Welcome to the ReactOS Setup Wizard!", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "This wizard will install or upgrade ReactOS on your device, \
+and prepare for the second part of the setup.", IDC_STATIC, 115, 40, 195, 27
 ////
-    GROUPBOX " IMPORTANT INFORMATION ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
-    LTEXT "ReactOS is in Alpha stage: it is not feature- complete and is \
+    GROUPBOX " IMPORTANT INFORMATION! ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
+    LTEXT "ReactOS is in Alpha stage: it is not feature-complete and is \
 under heavy development. It is recommended to use it only for \
 evaluation and testing and not as your daily-usage OS.\n\
 It may corrupt your data or damage your hardware.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
-    LTEXT "Backup your data or test on a secondary computer \
+    LTEXT "Backup your data or test on a secondary device \
 if you attempt to run ReactOS on real hardware.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
 ////
     LTEXT "Click Next to continue with Setup.", IDC_STATIC, 115, 169, 195, 17
@@ -28,9 +28,9 @@ CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "&Install ReactOS", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
+    LTEXT "Create a clean installation of ReactOS on your device. This option will not keep your files, settings, and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
     AUTORADIOBUTTON "&Update or repair ReactOS", IDC_UPDATE, 7, 80, 277, 10
-    LTEXT "Update or repair an installed copy of ReactOS. This option keeps your files, settings and programs. This option is only available if ReactOS is already installed on this computer.", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
+    LTEXT "Update or repair an installation of ReactOS. This option will keep your files, settings, and programs. This option is only available if ReactOS is already installed on this device.", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
@@ -38,10 +38,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT       "The ReactOS Setup can upgrade one of the available ReactOS installations listed below, or, if a ReactOS installation is damaged, the Setup program can attempt to repair it.", IDC_STATIC, 6, 6, 300, 18
+    LTEXT       "The ReactOS Setup can upgrade one of the available ReactOS installations listed below, or, if an installation is damaged, attempt to repair it.", IDC_STATIC, 6, 6, 300, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "&Do not upgrade", IDC_SKIPUPGRADE, 230, 128, 80, 14
-    LTEXT       "Click Next to upgrade the selected OS installation, or on 'Do not upgrade' to continue a new installation without upgrading.", IDC_STATIC, 7, 124, 222, 16
+    LTEXT       "Click Next to upgrade the selected OS installation, or 'Do not upgrade' to continue a new installation without upgrading.", IDC_STATIC, 7, 124, 222, 16
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143

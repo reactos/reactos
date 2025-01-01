@@ -5,9 +5,9 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 /* Default settings */
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS - Welcome"
+    IDS_APPTITLE "Welcome to ReactOS"
     IDS_DEFAULT_TOPIC_TITLE "ReactOS"
-    IDS_DEFAULT_TOPIC_DESC "Welcome to ReactOS Operating System.\n\nClick a topic on the left."
+    IDS_DEFAULT_TOPIC_DESC "Welcome to the ReactOS Operating System.\n\nClick a topic on the left to begin.\nHover over a topic for more details."
     IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Show this dialog again"
     IDS_CLOSETEXT "&Exit"
@@ -32,7 +32,7 @@ END
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_DESC0 "Create a new ReactOS installation on your computer or upgrade an existing installation."
-    IDS_TOPIC_DESC1 "Browse the CD."
-    IDS_TOPIC_DESC2 "Click to exit this application."
+    IDS_TOPIC_DESC0 "Install ReactOS on your computer for the first time, reset your device with a clean installation, or upgrade an existing installation to a newer version."
+    IDS_TOPIC_DESC1 "Browse the installation media."
+    IDS_TOPIC_DESC2 "Exit the ReactOS welcome program."
 END
