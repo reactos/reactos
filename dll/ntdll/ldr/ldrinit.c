@@ -1255,7 +1255,7 @@ LdrShutdownThread(VOID)
 
 NTSTATUS
 NTAPI
-LdrpInitializeTls()
+LdrpInitializeTls(VOID)
 {
     PLIST_ENTRY NextEntry, ListHead;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
@@ -1285,8 +1285,7 @@ LdrpInitializeTls()
 
         /* Check if we have a directory */
         if (!TlsDirectory) continue;
-        /* Tentatively this flag should be named LDRP_TLS_LOADED  */
-        if (LdrEntry->Flags & 0x10) continue;
+        if (LdrEntry->Flags & LDRP_TLS_LOADED) continue;
 
         /* Check if the image has TLS */
         if (!LdrpImageHasTls) LdrpImageHasTls = TRUE;
@@ -1307,7 +1306,7 @@ LdrpInitializeTls()
         /* Lock the DLL and mark it for TLS Usage */
         LdrEntry->LoadCount = -1;
         LdrEntry->TlsIndex = -1;
-        LdrEntry->Flags |= 0x10;
+        LdrEntry->Flags |= LDRP_TLS_LOADED;
 
         /* Save the cached TLS data */
         TlsData->TlsDirectory = *TlsDirectory;
