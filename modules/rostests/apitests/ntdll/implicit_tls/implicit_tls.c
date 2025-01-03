@@ -46,6 +46,9 @@ DllMain(IN HINSTANCE hDllHandle,
     PULONG ModuleHandle = TlsVector[_tls_index];
     if (dwReason == DLL_PROCESS_ATTACH)
     {
+        #if defined(_MSC_VER)
+        #pragma warning( disable : 4311)
+        #endif
         *ModuleHandle = (int)GetModuleHandleA(NULL) + 1;
 	}
     return TRUE;

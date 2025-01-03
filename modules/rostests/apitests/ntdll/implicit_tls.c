@@ -11,7 +11,7 @@
 
 #define TLS_VECTOR_MAX_SIZE 512
 
-WCHAR dllpath[MAX_PATH];
+WCHAR dllpath_implicit_tls[MAX_PATH];
 
 HANDLE ThreadEvent;
 
@@ -67,10 +67,10 @@ START_TEST(implicit_tls)
     IsSuccess = GetTempPathW(_countof(workdir), workdir);
     ok(IsSuccess, "GetTempPathW error: %lu\n", GetLastError());
 
-    Length = GetTempFileNameW(workdir, L"implicit_tls", 0, dllpath);
+    Length = GetTempFileNameW(workdir, L"implicit_tls", 0, dllpath_implicit_tls);
     ok(Length != 0, "GetTempFileNameW failed with %lu\n", GetLastError());
 
-    IsSuccess = CopyFileW(L"implicit_tls.dll", dllpath, FALSE);
+    IsSuccess = CopyFileW(L"implicit_tls.dll", dllpath_implicit_tls, FALSE);
     ok(IsSuccess, "CopyFileW failed with %lu\n", GetLastError());
 
     ThreadEvent = CreateEventA(NULL, FALSE, FALSE, NULL);
@@ -81,6 +81,9 @@ START_TEST(implicit_tls)
 
     TlsVector = Teb->ThreadLocalStoragePointer;
     PULONG ModuleHandle = TlsVector[0];
+    #if defined(_MSC_VER)
+    #pragma warning( disable : 4311)
+    #endif
     *ModuleHandle = (ULONG)GetModuleHandleA(NULL) + 3;
 
     TlsIdx0Value = *(PULONG)TlsVector[0];
@@ -96,7 +99,7 @@ START_TEST(implicit_tls)
         StringCchPrintfW(basedllname, MAX_PATH, L"basedllname_%d", i);
         Length = GetTempFileNameW(workdir, basedllname, 0, duplicatepath);
         ok(Length != 0, "GetTempFileNameW failed with %lu\n", GetLastError());
-        IsSuccess = CopyFileW(dllpath, duplicatepath, FALSE);
+        IsSuccess = CopyFileW(dllpath_implicit_tls, duplicatepath, FALSE);
         ok(IsSuccess, "CopyFileW failed with %lu\n", GetLastError());
         DllAddr[i] = LoadLibraryW(duplicatepath);
         ok(DllAddr[i] != NULL, "LoadLibraryW failed with %lu\n", GetLastError());
@@ -140,5 +143,5 @@ START_TEST(implicit_tls)
         FreeLibrary(DllAddr[i]);
     }
 
-    DeleteFileW(dllpath);
+    DeleteFileW(dllpath_implicit_tls);
 }
