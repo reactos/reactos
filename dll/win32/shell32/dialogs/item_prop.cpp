@@ -27,7 +27,7 @@ struct ShellPropSheetDialog
                                           HKEY *hKeys, UINT *cKeys);
 
     static HRESULT Show(const CLSID *pClsidDefault, IDataObject *pDO,
-                        PFNINITIALIZE InitFunc, LPCWSTR InitString)
+                        PFNINITIALIZE InitFunc, LPCWSTR InitString, HANDLE hEvent = NULL)
     {
         HRESULT hr;
         CRegKeyHandleArray keys;
@@ -36,6 +36,8 @@ struct ShellPropSheetDialog
         WCHAR szCaption[MAX_PATH], *pszCaption = NULL;
         if (SUCCEEDED(SHELL_GetCaptionFromDataObject(pDO, szCaption, _countof(szCaption))))
             pszCaption = szCaption;
+        if (hEvent)
+            SetEvent(hEvent);
         hr = SHOpenPropSheetW(pszCaption, keys, keys, pClsidDefault, pDO, NULL, NULL) ? S_OK : E_FAIL;
         return hr;
     }
@@ -47,6 +49,7 @@ struct ShellPropSheetDialog
         CLSID ClsidDefault;
         const CLSID *pClsidDefault;
         IStream *pObjStream;
+        HANDLE hEvent;
     };
 
     static void FreeData(DATA *pData)
@@ -74,6 +77,7 @@ struct ShellPropSheetDialog
             pData->ClsidDefault = *pClsidDefault;
             pData->pClsidDefault = &pData->ClsidDefault;
         }
+        HANDLE hEvent = pData->hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
 
         HRESULT hr = S_OK;
         if (pDO)
@@ -86,8 +90,21 @@ struct ShellPropSheetDialog
                 pData->pObjStream->Release();
             hr = E_FAIL;
         }
-        if (FAILED(hr))
+
+        if (SUCCEEDED(hr))
+        {
+            if (hEvent)
+            {
+                DWORD index;
+                // Pump COM messages until InitFunc is done (for CORE-19933)
+                CoWaitForMultipleHandles(COWAIT_DEFAULT, INFINITE, 1, &hEvent, &index);
+                CloseHandle(hEvent);
+            }
+        }
+        else
+        {
             FreeData(pData);
+        }
         return hr;
     }
 
@@ -97,7 +114,7 @@ struct ShellPropSheetDialog
         CComPtr<IDataObject> pDO;
         if (pData->pObjStream)
             CoGetInterfaceAndReleaseStream(pData->pObjStream, IID_PPV_ARG(IDataObject, &pDO));
-        Show(pData->pClsidDefault, pDO, pData->InitFunc, pData->InitString);
+        Show(pData->pClsidDefault, pDO, pData->InitFunc, pData->InitString, pData->hEvent);
         FreeData(pData);
         return 0;
     }
