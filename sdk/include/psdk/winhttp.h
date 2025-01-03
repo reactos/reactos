@@ -25,7 +25,12 @@
 #include <pshpack4.h>
 #endif
 
-#define WINHTTPAPI
+#ifdef _WINHTTP_INTERNAL_
+# define WINHTTPAPI
+#else
+# define WINHTTPAPI DECLSPEC_IMPORT
+#endif
+
 #define BOOLAPI WINHTTPAPI BOOL WINAPI
 
 
@@ -46,6 +51,8 @@ typedef INTERNET_PORT *LPINTERNET_PORT;
 typedef int INTERNET_SCHEME, *LPINTERNET_SCHEME;
 
 #define ICU_ESCAPE  0x80000000
+#define ICU_ESCAPE_AUTHORITY 0x00002000
+#define ICU_REJECT_USERPWD   0x00004000
 
 /* flags for WinHttpOpen */
 #define WINHTTP_FLAG_ASYNC                  0x10000000
@@ -62,6 +69,7 @@ typedef int INTERNET_SCHEME, *LPINTERNET_SCHEME;
 #define WINHTTP_ACCESS_TYPE_DEFAULT_PROXY   0
 #define WINHTTP_ACCESS_TYPE_NO_PROXY        1
 #define WINHTTP_ACCESS_TYPE_NAMED_PROXY     3
+#define WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY 4
 
 #define WINHTTP_NO_PROXY_NAME               NULL
 #define WINHTTP_NO_PROXY_BYPASS             NULL
@@ -108,6 +116,7 @@ typedef int INTERNET_SCHEME, *LPINTERNET_SCHEME;
 #define WINHTTP_OPTION_URL                           34
 #define WINHTTP_OPTION_SECURITY_KEY_BITNESS          36
 #define WINHTTP_OPTION_PROXY                         38
+#define WINHTTP_OPTION_PROXY_RESULT_ENTRY            39
 #define WINHTTP_OPTION_USER_AGENT                    41
 #define WINHTTP_OPTION_CONTEXT_VALUE                 45
 #define WINHTTP_OPTION_CLIENT_CERT_CONTEXT           47
@@ -141,13 +150,50 @@ typedef int INTERNET_SCHEME, *LPINTERNET_SCHEME;
 #define WINHTTP_OPTION_UNLOAD_NOTIFY_EVENT           99
 #define WINHTTP_OPTION_REJECT_USERPWD_IN_URL         100
 #define WINHTTP_OPTION_USE_GLOBAL_SERVER_CREDENTIALS 101
-#define WINHTTP_LAST_OPTION                          WINHTTP_OPTION_USE_GLOBAL_SERVER_CREDENTIALS
+#define WINHTTP_OPTION_RECEIVE_PROXY_CONNECT_RESPONSE   103
+#define WINHTTP_OPTION_IS_PROXY_CONNECT_RESPONSE        104
+#define WINHTTP_OPTION_SERVER_SPN_USED                  106
+#define WINHTTP_OPTION_PROXY_SPN_USED                   107
+#define WINHTTP_OPTION_SERVER_CBT                       108
+#define WINHTTP_OPTION_UNSAFE_HEADER_PARSING            110
+#define WINHTTP_OPTION_ASSURED_NON_BLOCKING_CALLBACKS   111
+#define WINHTTP_OPTION_UPGRADE_TO_WEB_SOCKET            114
+#define WINHTTP_OPTION_WEB_SOCKET_CLOSE_TIMEOUT         115
+#define WINHTTP_OPTION_WEB_SOCKET_KEEPALIVE_INTERVAL    116
+#define WINHTTP_OPTION_DECOMPRESSION                    118
+#define WINHTTP_OPTION_WEB_SOCKET_RECEIVE_BUFFER_SIZE   122
+#define WINHTTP_OPTION_WEB_SOCKET_SEND_BUFFER_SIZE      123
+#define WINHTTP_OPTION_TCP_PRIORITY_HINT                128
+#define WINHTTP_OPTION_CONNECTION_FILTER                131
+#define WINHTTP_OPTION_ENABLE_HTTP_PROTOCOL             133
+#define WINHTTP_OPTION_HTTP_PROTOCOL_USED               134
+#define WINHTTP_OPTION_KDC_PROXY_SETTINGS               136
+#define WINHTTP_OPTION_ENCODE_EXTRA                     138
+#define WINHTTP_OPTION_DISABLE_STREAM_QUEUE             139
+#define WINHTTP_OPTION_IPV6_FAST_FALLBACK               140
+#define WINHTTP_OPTION_CONNECTION_STATS_V0              141
+#define WINHTTP_OPTION_REQUEST_TIMES                    142
+#define WINHTTP_OPTION_EXPIRE_CONNECTION                143
+#define WINHTTP_OPTION_DISABLE_SECURE_PROTOCOL_FALLBACK 144
+#define WINHTTP_OPTION_HTTP_PROTOCOL_REQUIRED           145
+#define WINHTTP_OPTION_REQUEST_STATS                    146
+#define WINHTTP_OPTION_SERVER_CERT_CHAIN_CONTEXT        147
+#define WINHTTP_LAST_OPTION                          WINHTTP_OPTION_SERVER_CERT_CHAIN_CONTEXT
 #define WINHTTP_OPTION_USERNAME                      0x1000
 #define WINHTTP_OPTION_PASSWORD                      0x1001
 #define WINHTTP_OPTION_PROXY_USERNAME                0x1002
 #define WINHTTP_OPTION_PROXY_PASSWORD                0x1003
 
 #define WINHTTP_CONNS_PER_SERVER_UNLIMITED 0xFFFFFFFF
+
+#define WINHTTP_DECOMPRESSION_FLAG_GZIP     0x00000001
+#define WINHTTP_DECOMPRESSION_FLAG_DEFLATE  0x00000002
+
+#define WINHTTP_DECOMPRESSION_FLAG_ALL ( WINHTTP_DECOMPRESSION_FLAG_GZIP | WINHTTP_DECOMPRESSION_FLAG_DEFLATE )
+
+#define WINHTTP_PROTOCOL_FLAG_HTTP2 0x1
+#define WINHTTP_PROTOCOL_FLAG_HTTP3 0x2
+#define WINHTTP_PROTOCOL_MASK (WINHTTP_PROTOCOL_FLAG_HTTP2 | WINHTTP_PROTOCOL_FLAG_HTTP3)
 
 #define WINHTTP_AUTOLOGON_SECURITY_LEVEL_MEDIUM   0
 #define WINHTTP_AUTOLOGON_SECURITY_LEVEL_LOW      1
@@ -223,6 +269,8 @@ typedef int INTERNET_SCHEME, *LPINTERNET_SCHEME;
 #define ERROR_WINHTTP_SECURE_CERT_REVOKED                   (WINHTTP_ERROR_BASE + 170)
 #define ERROR_WINHTTP_NOT_INITIALIZED                       (WINHTTP_ERROR_BASE + 172)
 #define ERROR_WINHTTP_SECURE_FAILURE                        (WINHTTP_ERROR_BASE + 175)
+#define ERROR_WINHTTP_UNHANDLED_SCRIPT_TYPE                 (WINHTTP_ERROR_BASE + 176)
+#define ERROR_WINHTTP_SCRIPT_EXECUTION_ERROR                (WINHTTP_ERROR_BASE + 177)
 #define ERROR_WINHTTP_AUTO_PROXY_SERVICE_ERROR              (WINHTTP_ERROR_BASE + 178)
 #define ERROR_WINHTTP_SECURE_CERT_WRONG_USAGE               (WINHTTP_ERROR_BASE + 179)
 #define ERROR_WINHTTP_AUTODETECTION_FAILED                  (WINHTTP_ERROR_BASE + 180)
@@ -232,7 +280,20 @@ typedef int INTERNET_SCHEME, *LPINTERNET_SCHEME;
 #define ERROR_WINHTTP_RESPONSE_DRAIN_OVERFLOW               (WINHTTP_ERROR_BASE + 184)
 #define ERROR_WINHTTP_CLIENT_CERT_NO_PRIVATE_KEY            (WINHTTP_ERROR_BASE + 185)
 #define ERROR_WINHTTP_CLIENT_CERT_NO_ACCESS_PRIVATE_KEY     (WINHTTP_ERROR_BASE + 186)
-#define WINHTTP_ERROR_LAST                                  (WINHTTP_ERROR_BASE + 186)
+#define ERROR_WINHTTP_CLIENT_AUTH_CERT_NEEDED_PROXY         (WINHTTP_ERROR_BASE + 187)
+#define ERROR_WINHTTP_SECURE_FAILURE_PROXY                  (WINHTTP_ERROR_BASE + 188)
+#define ERROR_WINHTTP_RESERVED_189                          (WINHTTP_ERROR_BASE + 189)
+#define ERROR_WINHTTP_HTTP_PROTOCOL_MISMATCH                (WINHTTP_ERROR_BASE + 190)
+#define WINHTTP_ERROR_LAST                                  (WINHTTP_ERROR_BASE + 188)
+
+#define WINHTTP_RESET_STATE                     0x00000001
+#define WINHTTP_RESET_SWPAD_CURRENT_NETWORK     0x00000002
+#define WINHTTP_RESET_SWPAD_ALL                 0x00000004
+#define WINHTTP_RESET_SCRIPT_CACHE              0x00000008
+#define WINHTTP_RESET_ALL                       0x0000FFFF
+#define WINHTTP_RESET_NOTIFY_NETWORK_CHANGED    0x00010000
+#define WINHTTP_RESET_OUT_OF_PROC               0x00020000
+#define WINHTTP_RESET_DISCARD_RESOLVERS         0x00040000
 
 /* WinHttp status codes */
 #define HTTP_STATUS_CONTINUE            100
@@ -252,6 +313,7 @@ typedef int INTERNET_SCHEME, *LPINTERNET_SCHEME;
 #define HTTP_STATUS_NOT_MODIFIED        304
 #define HTTP_STATUS_USE_PROXY           305
 #define HTTP_STATUS_REDIRECT_KEEP_VERB  307
+#define HTTP_STATUS_PERMANENT_REDIRECT  308
 #define HTTP_STATUS_BAD_REQUEST         400
 #define HTTP_STATUS_DENIED              401
 #define HTTP_STATUS_PAYMENT_REQ         402
@@ -375,6 +437,7 @@ typedef int INTERNET_SCHEME, *LPINTERNET_SCHEME;
 #define WINHTTP_QUERY_FLAG_REQUEST_HEADERS         0x80000000
 #define WINHTTP_QUERY_FLAG_SYSTEMTIME              0x40000000
 #define WINHTTP_QUERY_FLAG_NUMBER                  0x20000000
+#define WINHTTP_QUERY_FLAG_NUMBER64                0x08000000
 
 /* Callback options */
 #define WINHTTP_CALLBACK_STATUS_RESOLVING_NAME          0x00000001
@@ -399,6 +462,11 @@ typedef int INTERNET_SCHEME, *LPINTERNET_SCHEME;
 #define WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE          0x00100000
 #define WINHTTP_CALLBACK_STATUS_REQUEST_ERROR           0x00200000
 #define WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE    0x00400000
+#define WINHTTP_CALLBACK_STATUS_GETPROXYFORURL_COMPLETE 0x01000000
+#define WINHTTP_CALLBACK_STATUS_CLOSE_COMPLETE          0x02000000
+#define WINHTTP_CALLBACK_STATUS_SHUTDOWN_COMPLETE       0x04000000
+#define WINHTTP_CALLBACK_STATUS_SETTINGS_WRITE_COMPLETE 0x10000000
+#define WINHTTP_CALLBACK_STATUS_SETTINGS_READ_COMPLETE  0x20000000
 #define WINHTTP_CALLBACK_FLAG_RESOLVE_NAME              (WINHTTP_CALLBACK_STATUS_RESOLVING_NAME | WINHTTP_CALLBACK_STATUS_NAME_RESOLVED)
 #define WINHTTP_CALLBACK_FLAG_CONNECT_TO_SERVER         (WINHTTP_CALLBACK_STATUS_CONNECTING_TO_SERVER | WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER)
 #define WINHTTP_CALLBACK_FLAG_SEND_REQUEST              (WINHTTP_CALLBACK_STATUS_SENDING_REQUEST | WINHTTP_CALLBACK_STATUS_REQUEST_SENT)
@@ -415,9 +483,11 @@ typedef int INTERNET_SCHEME, *LPINTERNET_SCHEME;
 #define WINHTTP_CALLBACK_FLAG_READ_COMPLETE             WINHTTP_CALLBACK_STATUS_READ_COMPLETE
 #define WINHTTP_CALLBACK_FLAG_WRITE_COMPLETE            WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE
 #define WINHTTP_CALLBACK_FLAG_REQUEST_ERROR             WINHTTP_CALLBACK_STATUS_REQUEST_ERROR
+#define WINHTTP_CALLBACK_FLAG_GETPROXYFORURL_COMPLETE   WINHTTP_CALLBACK_STATUS_GETPROXYFORURL_COMPLETE
 #define WINHTTP_CALLBACK_FLAG_ALL_COMPLETIONS           (WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE | WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE \
                                                         | WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE | WINHTTP_CALLBACK_STATUS_READ_COMPLETE          \
-                                                        | WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE | WINHTTP_CALLBACK_STATUS_REQUEST_ERROR)
+                                                        | WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE | WINHTTP_CALLBACK_STATUS_REQUEST_ERROR \
+                                                        | WINHTTP_CALLBACK_STATUS_GETPROXYFORURL_COMPLETE)
 #define WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS         0xffffffff
 #define WINHTTP_INVALID_STATUS_CALLBACK                 ((WINHTTP_STATUS_CALLBACK)(-1))
 
@@ -426,6 +496,7 @@ typedef int INTERNET_SCHEME, *LPINTERNET_SCHEME;
 #define API_READ_DATA                 (3)
 #define API_WRITE_DATA                (4)
 #define API_SEND_REQUEST              (5)
+#define API_GET_PROXY_FOR_URL         (6)
 
 #define WINHTTP_HANDLE_TYPE_SESSION                  1
 #define WINHTTP_HANDLE_TYPE_CONNECT                  2
@@ -445,6 +516,7 @@ typedef int INTERNET_SCHEME, *LPINTERNET_SCHEME;
 #define WINHTTP_FLAG_SECURE_PROTOCOL_TLS1   0x00000080
 #define WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_1 0x00000200
 #define WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2 0x00000800
+#define WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_3 0x00002000
 #define WINHTTP_FLAG_SECURE_PROTOCOL_ALL    (WINHTTP_FLAG_SECURE_PROTOCOL_SSL2 |\
                                              WINHTTP_FLAG_SECURE_PROTOCOL_SSL3 |\
                                              WINHTTP_FLAG_SECURE_PROTOCOL_TLS1)
@@ -524,13 +596,24 @@ typedef VOID
   _In_ LPVOID,
   _In_ DWORD);
 
+typedef WINHTTP_STATUS_CALLBACK * LPWINHTTP_STATUS_CALLBACK;
+
 #define WINHTTP_AUTO_DETECT_TYPE_DHCP   0x00000001
 #define WINHTTP_AUTO_DETECT_TYPE_DNS_A  0x00000002
 
 #define WINHTTP_AUTOPROXY_AUTO_DETECT           0x00000001
 #define WINHTTP_AUTOPROXY_CONFIG_URL            0x00000002
+#define WINHTTP_AUTOPROXY_HOST_KEEPCASE         0x00000004
+#define WINHTTP_AUTOPROXY_HOST_LOWERCASE        0x00000008
+#define WINHTTP_AUTOPROXY_ALLOW_AUTOCONFIG      0x00000100
+#define WINHTTP_AUTOPROXY_ALLOW_STATIC          0x00000200
+#define WINHTTP_AUTOPROXY_ALLOW_CM              0x00000400
 #define WINHTTP_AUTOPROXY_RUN_INPROCESS         0x00010000
 #define WINHTTP_AUTOPROXY_RUN_OUTPROCESS_ONLY   0x00020000
+#define WINHTTP_AUTOPROXY_NO_DIRECTACCESS       0x00040000
+#define WINHTTP_AUTOPROXY_NO_CACHE_CLIENT       0x00080000
+#define WINHTTP_AUTOPROXY_NO_CACHE_SVC          0x00100000
+#define WINHTTP_AUTOPROXY_SORT_RESULTS          0x00400000
 
 typedef struct
 {
@@ -541,6 +624,56 @@ typedef struct
     DWORD dwReserved;
     BOOL fAutoLogonIfChallenged;
 } WINHTTP_AUTOPROXY_OPTIONS;
+
+typedef struct _WINHTTP_PROXY_RESULT_ENTRY
+{
+    BOOL            fProxy;
+    BOOL            fBypass;
+    INTERNET_SCHEME ProxyScheme;
+    PWSTR           pwszProxy;
+    INTERNET_PORT   ProxyPort;
+} WINHTTP_PROXY_RESULT_ENTRY;
+
+typedef struct _WINHTTP_PROXY_RESULT
+{
+    DWORD cEntries;
+    WINHTTP_PROXY_RESULT_ENTRY *pEntries;
+} WINHTTP_PROXY_RESULT;
+
+typedef struct _WINHTTP_PROXY_RESULT_EX
+{
+    DWORD cEntries;
+    WINHTTP_PROXY_RESULT_ENTRY *pEntries;
+    HANDLE hProxyDetectionHandle;
+    DWORD dwProxyInterfaceAffinity;
+} WINHTTP_PROXY_RESULT_EX;
+
+#define NETWORKING_KEY_BUFSIZE 128
+
+typedef struct _WinHttpProxyNetworkKey
+{
+    unsigned char pbBuffer[NETWORKING_KEY_BUFSIZE];
+} WINHTTP_PROXY_NETWORKING_KEY, *PWINHTTP_PROXY_NETWORKING_KEY;
+
+typedef struct _WINHTTP_PROXY_SETTINGS
+{
+    DWORD dwStructSize;
+    DWORD dwFlags;
+    DWORD dwCurrentSettingsVersion;
+    PWSTR pwszConnectionName;
+    PWSTR pwszProxy;
+    PWSTR pwszProxyBypass;
+    PWSTR pwszAutoconfigUrl;
+    PWSTR pwszAutoconfigSecondaryUrl;
+    DWORD dwAutoDiscoveryFlags;
+    PWSTR pwszLastKnownGoodAutoConfigUrl;
+    DWORD dwAutoconfigReloadDelayMins;
+    FILETIME ftLastKnownDetectTime;
+    DWORD dwDetectedInterfaceIpCount;
+    PDWORD pdwDetectedInterfaceIp;
+    DWORD cNetworkKeys;
+    PWINHTTP_PROXY_NETWORKING_KEY pNetworkKeys;
+} WINHTTP_PROXY_SETTINGS, *PWINHTTP_PROXY_SETTINGS;
 
 typedef struct
 {
@@ -556,6 +689,139 @@ typedef struct
     SOCKADDR_STORAGE RemoteAddress;
 } WINHTTP_CONNECTION_INFO;
 #endif
+
+typedef enum _WINHTTP_REQUEST_TIME_ENTRY
+{
+    WinHttpProxyDetectionStart = 0,
+    WinHttpProxyDetectionEnd,
+    WinHttpConnectionAcquireStart,
+    WinHttpConnectionAcquireWaitEnd,
+    WinHttpConnectionAcquireEnd,
+    WinHttpNameResolutionStart,
+    WinHttpNameResolutionEnd,
+    WinHttpConnectionEstablishmentStart,
+    WinHttpConnectionEstablishmentEnd,
+    WinHttpTlsHandshakeClientLeg1Start,
+    WinHttpTlsHandshakeClientLeg1End,
+    WinHttpTlsHandshakeClientLeg2Start,
+    WinHttpTlsHandshakeClientLeg2End,
+    WinHttpTlsHandshakeClientLeg3Start,
+    WinHttpTlsHandshakeClientLeg3End,
+    WinHttpStreamWaitStart,
+    WinHttpStreamWaitEnd,
+    WinHttpSendRequestStart,
+    WinHttpSendRequestHeadersCompressionStart,
+    WinHttpSendRequestHeadersCompressionEnd,
+    WinHttpSendRequestHeadersEnd,
+    WinHttpSendRequestEnd,
+    WinHttpReceiveResponseStart,
+    WinHttpReceiveResponseHeadersDecompressionStart,
+    WinHttpReceiveResponseHeadersDecompressionEnd,
+    WinHttpReceiveResponseHeadersEnd,
+    WinHttpReceiveResponseBodyDecompressionDelta,
+    WinHttpReceiveResponseEnd,
+    WinHttpProxyTunnelStart,
+    WinHttpProxyTunnelEnd,
+    WinHttpProxyTlsHandshakeClientLeg1Start,
+    WinHttpProxyTlsHandshakeClientLeg1End,
+    WinHttpProxyTlsHandshakeClientLeg2Start,
+    WinHttpProxyTlsHandshakeClientLeg2End,
+    WinHttpProxyTlsHandshakeClientLeg3Start,
+    WinHttpProxyTlsHandshakeClientLeg3End,
+    WinHttpRequestTimeLast,
+    WinHttpRequestTimeMax = 64
+} WINHTTP_REQUEST_TIME_ENTRY;
+
+typedef struct _WINHTTP_REQUEST_TIMES
+{
+    ULONG cTimes;
+    ULONGLONG rgullTimes[WinHttpRequestTimeMax];
+} WINHTTP_REQUEST_TIMES, *PWINHTTP_REQUEST_TIMES;
+
+typedef enum _WINHTTP_REQUEST_STAT_ENTRY
+{
+    WinHttpConnectFailureCount = 0,
+    WinHttpProxyFailureCount,
+    WinHttpTlsHandshakeClientLeg1Size,
+    WinHttpTlsHandshakeServerLeg1Size,
+    WinHttpTlsHandshakeClientLeg2Size,
+    WinHttpTlsHandshakeServerLeg2Size,
+    WinHttpRequestHeadersSize,
+    WinHttpRequestHeadersCompressedSize,
+    WinHttpResponseHeadersSize,
+    WinHttpResponseHeadersCompressedSize,
+    WinHttpResponseBodySize,
+    WinHttpResponseBodyCompressedSize,
+    WinHttpProxyTlsHandshakeClientLeg1Size,
+    WinHttpProxyTlsHandshakeServerLeg1Size,
+    WinHttpProxyTlsHandshakeClientLeg2Size,
+    WinHttpProxyTlsHandshakeServerLeg2Size,
+    WinHttpRequestStatLast,
+    WinHttpRequestStatMax = 32
+} WINHTTP_REQUEST_STAT_ENTRY;
+
+#define WINHTTP_REQUEST_STAT_FLAG_TCP_FAST_OPEN                 0x00000001
+#define WINHTTP_REQUEST_STAT_FLAG_TLS_SESSION_RESUMPTION        0x00000002
+#define WINHTTP_REQUEST_STAT_FLAG_TLS_FALSE_START               0x00000004
+#define WINHTTP_REQUEST_STAT_FLAG_PROXY_TLS_SESSION_RESUMPTION  0x00000008
+#define WINHTTP_REQUEST_STAT_FLAG_PROXY_TLS_FALSE_START         0x00000010
+#define WINHTTP_REQUEST_STAT_FLAG_FIRST_REQUEST                 0x00000020
+
+typedef struct _WINHTTP_REQUEST_STATS
+{
+    ULONGLONG ullFlags;
+    ULONG ulIndex;
+    ULONG cStats;
+    ULONGLONG rgullStats[WinHttpRequestStatMax];
+} WINHTTP_REQUEST_STATS, *PWINHTTP_REQUEST_STATS;
+
+typedef enum _WINHTTP_WEB_SOCKET_OPERATION
+{
+    WINHTTP_WEB_SOCKET_SEND_OPERATION     = 0,
+    WINHTTP_WEB_SOCKET_RECEIVE_OPERATION  = 1,
+    WINHTTP_WEB_SOCKET_CLOSE_OPERATION    = 2,
+    WINHTTP_WEB_SOCKET_SHUTDOWN_OPERATION = 3
+} WINHTTP_WEB_SOCKET_OPERATION;
+
+typedef enum _WINHTTP_WEB_SOCKET_BUFFER_TYPE
+{
+    WINHTTP_WEB_SOCKET_BINARY_MESSAGE_BUFFER_TYPE  = 0,
+    WINHTTP_WEB_SOCKET_BINARY_FRAGMENT_BUFFER_TYPE = 1,
+    WINHTTP_WEB_SOCKET_UTF8_MESSAGE_BUFFER_TYPE    = 2,
+    WINHTTP_WEB_SOCKET_UTF8_FRAGMENT_BUFFER_TYPE   = 3,
+    WINHTTP_WEB_SOCKET_CLOSE_BUFFER_TYPE           = 4
+} WINHTTP_WEB_SOCKET_BUFFER_TYPE;
+
+typedef enum _WINHTTP_WEB_SOCKET_CLOSE_STATUS
+{
+    WINHTTP_WEB_SOCKET_SUCCESS_CLOSE_STATUS                = 1000,
+    WINHTTP_WEB_SOCKET_ENDPOINT_TERMINATED_CLOSE_STATUS    = 1001,
+    WINHTTP_WEB_SOCKET_PROTOCOL_ERROR_CLOSE_STATUS         = 1002,
+    WINHTTP_WEB_SOCKET_INVALID_DATA_TYPE_CLOSE_STATUS      = 1003,
+    WINHTTP_WEB_SOCKET_EMPTY_CLOSE_STATUS                  = 1005,
+    WINHTTP_WEB_SOCKET_ABORTED_CLOSE_STATUS                = 1006,
+    WINHTTP_WEB_SOCKET_INVALID_PAYLOAD_CLOSE_STATUS        = 1007,
+    WINHTTP_WEB_SOCKET_POLICY_VIOLATION_CLOSE_STATUS       = 1008,
+    WINHTTP_WEB_SOCKET_MESSAGE_TOO_BIG_CLOSE_STATUS        = 1009,
+    WINHTTP_WEB_SOCKET_UNSUPPORTED_EXTENSIONS_CLOSE_STATUS = 1010,
+    WINHTTP_WEB_SOCKET_SERVER_ERROR_CLOSE_STATUS           = 1011,
+    WINHTTP_WEB_SOCKET_SECURE_HANDSHAKE_ERROR_CLOSE_STATUS = 1015
+} WINHTTP_WEB_SOCKET_CLOSE_STATUS;
+
+typedef struct _WINHTTP_WEB_SOCKET_ASYNC_RESULT
+{
+    WINHTTP_ASYNC_RESULT AsyncResult;
+    WINHTTP_WEB_SOCKET_OPERATION Operation;
+} WINHTTP_WEB_SOCKET_ASYNC_RESULT;
+
+typedef struct _WINHTTP_WEB_SOCKET_STATUS
+{
+    DWORD dwBytesTransferred;
+    WINHTTP_WEB_SOCKET_BUFFER_TYPE eBufferType;
+} WINHTTP_WEB_SOCKET_STATUS;
+
+#define WINHTTP_WEB_SOCKET_MAX_CLOSE_REASON_LENGTH   123
+#define WINHTTP_WEB_SOCKET_MIN_KEEPALIVE_VALUE     15000
 
 #ifdef __cplusplus
 extern "C" {
@@ -596,6 +862,12 @@ WinHttpCrackUrl(
   _In_ DWORD,
   _Inout_ LPURL_COMPONENTS);
 
+DWORD
+WINAPI
+WinHttpCreateProxyResolver(
+  _Out_ HINTERNET,
+  _Out_ HINTERNET*);
+
 _Success_(return != 0)
 BOOL
 WINAPI
@@ -604,6 +876,16 @@ WinHttpCreateUrl(
   _In_ DWORD,
   _Out_writes_to_opt_(*pdwUrlLength, *pdwUrlLength) LPWSTR,
   _Inout_ LPDWORD pdwUrlLength);
+
+void
+WINAPI
+WinHttpFreeProxyResult(
+  _Inout_ WINHTTP_PROXY_RESULT*);
+
+void
+WINAPI
+WinHttpFreeProxyResultEx(
+  _Inout_ WINHTTP_PROXY_RESULT_EX*);
 
 BOOL
 WINAPI
@@ -622,6 +904,51 @@ WinHttpGetProxyForUrl(
   _In_ LPCWSTR,
   _In_ WINHTTP_AUTOPROXY_OPTIONS*,
   _Out_ WINHTTP_PROXY_INFO*);
+
+DWORD
+WINAPI
+WinHttpGetProxyForUrlEx(
+  _In_ HINTERNET,
+  _In_ PCWSTR,
+  _In_ WINHTTP_AUTOPROXY_OPTIONS*,
+  _Out_ DWORD_PTR);
+
+DWORD
+WINAPI
+WinHttpGetProxyForUrlEx2(
+  _In_ HINTERNET,
+  _In_ PCWSTR,
+  _In_ WINHTTP_AUTOPROXY_OPTIONS*,
+  DWORD,
+  BYTE*,
+  _Out_ DWORD_PTR);
+
+DWORD
+WINAPI
+WinHttpGetProxyResult(
+  _In_ HINTERNET,
+  _Out_ WINHTTP_PROXY_RESULT*);
+
+DWORD
+WINAPI
+WinHttpGetProxyResultEx(
+  _In_ HINTERNET,
+  _Out_ WINHTTP_PROXY_RESULT_EX*);
+
+DWORD
+WINAPI
+WinHttpGetProxySettingsVersion(
+  _In_ HINTERNET,
+  _Out_ DWORD*);
+
+DWORD
+WINAPI
+WinHttpIsHostInProxyBypassList(
+  _In_ const WINHTTP_PROXY_INFO*,
+  _In_ PCWSTR,
+  _In_ INTERNET_SCHEME,
+  _In_ INTERNET_PORT,
+  _Inout_ BOOL*);
 
 HINTERNET
 WINAPI
@@ -644,6 +971,7 @@ WinHttpOpenRequest(
   _In_ DWORD);
 
 BOOL
+WINHTTPAPI
 WINAPI
 WinHttpQueryAuthParams(
   _In_ HINTERNET,
@@ -651,6 +979,7 @@ WinHttpQueryAuthParams(
   _Out_ LPVOID*);
 
 BOOL
+WINHTTPAPI
 WINAPI
 WinHttpQueryAuthSchemes(
   _In_ HINTERNET,
@@ -659,6 +988,7 @@ WinHttpQueryAuthSchemes(
   _Out_ LPDWORD);
 
 BOOL
+WINHTTPAPI
 WINAPI
 WinHttpQueryDataAvailable(
   _In_ HINTERNET,
@@ -666,6 +996,7 @@ WinHttpQueryDataAvailable(
 
 _Success_(return != 0)
 BOOL
+WINHTTPAPI
 WINAPI
 WinHttpQueryHeaders(
   _In_ HINTERNET,
@@ -677,6 +1008,7 @@ WinHttpQueryHeaders(
 
 _Success_(return != 0)
 BOOL
+WINHTTPAPI
 WINAPI
 WinHttpQueryOption(
   _In_ HINTERNET,
@@ -685,6 +1017,7 @@ WinHttpQueryOption(
   _Inout_ LPDWORD lpdwBufferLength);
 
 BOOL
+WINHTTPAPI
 WINAPI
 WinHttpReadData(
   _In_ HINTERNET,
@@ -692,9 +1025,24 @@ WinHttpReadData(
   _In_ DWORD dwNumberOfBytesToRead,
   _Out_ LPDWORD lpdwNumberOfBytesRead);
 
-BOOL WINAPI WinHttpReceiveResponse(_In_ HINTERNET, _Reserved_ LPVOID);
+DWORD
+WINHTTPAPI
+WINAPI
+WinHttpReadProxySettings(
+  _In_ HINTERNET,
+  PCWSTR,
+  BOOL,
+  BOOL,
+  LPDWORD,
+  BOOL*,
+  _Out_ PWINHTTP_PROXY_SETTINGS);
+
+BOOL WINHTTPAPI WINAPI WinHttpReceiveResponse(_In_ HINTERNET, _Reserved_ LPVOID);
+
+DWORD WINHTTPAPI WINAPI WinHttpResetAutoProxy(_In_ HINTERNET, _In_ DWORD);
 
 BOOL
+WINHTTPAPI
 WINAPI
 WinHttpSendRequest(
   _In_ HINTERNET,
@@ -706,11 +1054,13 @@ WinHttpSendRequest(
   _In_ DWORD_PTR);
 
 BOOL
+WINHTTPAPI
 WINAPI
 WinHttpSetDefaultProxyConfiguration(
   _In_ WINHTTP_PROXY_INFO*);
 
 BOOL
+WINHTTPAPI
 WINAPI
 WinHttpSetCredentials(
   _In_ HINTERNET,
@@ -721,6 +1071,7 @@ WinHttpSetCredentials(
   _Reserved_ LPVOID);
 
 BOOL
+WINHTTPAPI
 WINAPI
 WinHttpSetOption(
   _In_opt_ HINTERNET,
@@ -741,6 +1092,7 @@ WinHttpSetOption(
   _In_ DWORD dwBufferLength);
 
 WINHTTP_STATUS_CALLBACK
+WINHTTPAPI
 WINAPI
 WinHttpSetStatusCallback(
   _In_ HINTERNET,
@@ -749,6 +1101,7 @@ WinHttpSetStatusCallback(
   _Reserved_ DWORD_PTR);
 
 BOOL
+WINHTTPAPI
 WINAPI
 WinHttpSetTimeouts(
   _In_ HINTERNET,
@@ -758,6 +1111,7 @@ WinHttpSetTimeouts(
   _In_ int);
 
 BOOL
+WINHTTPAPI
 WINAPI
 WinHttpTimeFromSystemTime(
   _In_ CONST SYSTEMTIME *,
@@ -765,13 +1119,76 @@ WinHttpTimeFromSystemTime(
 
 BOOL WINAPI WinHttpTimeToSystemTime(_In_z_ LPCWSTR, _Out_ SYSTEMTIME*);
 
+DWORD
+WINHTTPAPI
+WINAPI
+WinHttpWebSocketClose(
+  _In_ HINTERNET,
+  _In_ USHORT,
+  _In_opt_ PVOID,
+  _In_ DWORD);
+
+HINTERNET
+WINHTTPAPI
+WINAPI
+WinHttpWebSocketCompleteUpgrade(
+  _In_ HINTERNET,
+  _In_opt_ DWORD_PTR);
+
+DWORD
+WINHTTPAPI
+WINAPI
+WinHttpWebSocketQueryCloseStatus(
+  _In_ HINTERNET,
+  _Out_ USHORT*,
+  _Out_ void*,
+  _In_ DWORD,
+  _Out_ DWORD*);
+
+DWORD
+WINHTTPAPI
+WINAPI
+WinHttpWebSocketReceive(
+  _In_ HINTERNET,
+  _Out_ PVOID,
+  _In_ DWORD,
+  _Out_ DWORD*,
+  _Out_ WINHTTP_WEB_SOCKET_BUFFER_TYPE*);
+
+DWORD
+WINHTTPAPI
+WINAPI
+WinHttpWebSocketSend(
+  _In_ HINTERNET,
+  _In_ WINHTTP_WEB_SOCKET_BUFFER_TYPE,
+  _In_reads_bytes_(dwBufferLength) PVOID pvBuffer,
+  _In_ DWORD dwBufferLength);
+
+DWORD
+WINHTTPAPI
+WINAPI
+WinHttpWebSocketShutdown(
+  _In_ HINTERNET,
+  _In_ USHORT,
+  _In_reads_bytes_(dwReasonLength) _In_opt_ void* pvReason,
+  _In_ DWORD dwReasonLength);
+
 BOOL
+WINHTTPAPI
 WINAPI
 WinHttpWriteData(
   _In_ HINTERNET,
   _In_reads_bytes_opt_(dwNumberOfBytesToWrite) LPCVOID,
   _In_ DWORD dwNumberOfBytesToWrite,
   _Out_ LPDWORD);
+
+DWORD
+WINHTTPAPI
+WINAPI
+WinHttpWriteProxySettings(
+  _In_ HINTERNET,
+  BOOL,
+  _In_ PWINHTTP_PROXY_SETTINGS);
 
 #ifdef __cplusplus
 }
