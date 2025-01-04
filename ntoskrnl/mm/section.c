@@ -4876,7 +4876,8 @@ MmPurgeSegment(
     }
 
     /* Find byte offset of the page to start */
-    PurgeStart.QuadPart = PAGE_ROUND_DOWN(PurgeStart.QuadPart);
+    PurgeStart.QuadPart >>= PAGE_SHIFT;
+    PurgeStart.QuadPart <<= PAGE_SHIFT;
 
     while (PurgeStart.QuadPart < PurgeEnd.QuadPart)
     {
@@ -4947,7 +4948,8 @@ MmIsDataSectionResident(
         return FALSE;
 
     /* Find byte offset of the page to start */
-    RangeStart.QuadPart = PAGE_ROUND_DOWN(RangeStart.QuadPart);
+    RangeStart.QuadPart >>= PAGE_SHIFT;
+    RangeStart.QuadPart <<= PAGE_SHIFT;
 
     MmLockSectionSegment(Segment);
 
@@ -5010,7 +5012,8 @@ MmMakeSegmentDirty(
         return STATUS_NOT_MAPPED_VIEW;
 
     /* Find byte offset of the page to start */
-    RangeStart.QuadPart = PAGE_ROUND_DOWN(RangeStart.QuadPart);
+    RangeStart.QuadPart >>= PAGE_SHIFT;
+    RangeStart.QuadPart <<= PAGE_SHIFT;
 
     MmLockSectionSegment(Segment);
 
@@ -5098,7 +5101,8 @@ MmFlushSegment(
     }
 
     /* Find byte offset of the page to start */
-    FlushStart.QuadPart = PAGE_ROUND_DOWN(FlushStart.QuadPart);
+    FlushStart.QuadPart >>= PAGE_SHIFT;
+    FlushStart.QuadPart <<= PAGE_SHIFT;
 
     while (FlushStart.QuadPart < FlushEnd.QuadPart)
     {
