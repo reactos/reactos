@@ -18,35 +18,35 @@ HANDLE ThreadEvent;
 ULONG ExtantTlsEntryCount = 0;
 
 DWORD WINAPI AuxThread0Proc(
-  IN LPVOID lpParameter
+  _In_ LPVOID pParameter
 )
 {
-  PVOID* TlsVector;
-  PTEB Teb = NtCurrentTeb();
-  int i = 0;
-  WaitForSingleObject(ThreadEvent, INFINITE);
-  TlsVector = Teb->ThreadLocalStoragePointer;
-  while(1)
-  {
-      if(TlsVector[i] && !((ULONG_PTR)TlsVector[i] % 4))
-        ++i;
-      else
-        break;
-  }
-  WaitForSingleObject(ThreadEvent, INFINITE);
-  ok(i == TLS_VECTOR_MAX_SIZE + ExtantTlsEntryCount, "ThreadLocalStoragePointer length is %d, expected length %d\n", i, TLS_VECTOR_MAX_SIZE + ExtantTlsEntryCount);
-  return 0;
+    PVOID* TlsVector;
+    PTEB Teb = NtCurrentTeb();
+    int i = 0;
+    WaitForSingleObject(ThreadEvent, INFINITE);
+    TlsVector = Teb->ThreadLocalStoragePointer;
+    while(1)
+    {
+        if(TlsVector[i] && !((ULONG_PTR)TlsVector[i] % 4))
+            ++i;
+        else
+            break;
+    }
+    WaitForSingleObject(ThreadEvent, INFINITE);
+    ok(i == TLS_VECTOR_MAX_SIZE + ExtantTlsEntryCount, "ThreadLocalStoragePointer length is %d, expected length %lu\n", i, TLS_VECTOR_MAX_SIZE + ExtantTlsEntryCount);
+    return 0;
 }
 
 DWORD WINAPI AuxThread1Proc(
-  IN LPVOID lpParameter
+  _In_ LPVOID pParameter
 )
 {
-  PVOID* TlsVector;
-  PTEB Teb = NtCurrentTeb();
-  TlsVector = Teb->ThreadLocalStoragePointer;
-  ok(TlsVector[1] != 0, "ThreadLocalStoragePointer index 1 is NULL; failed to initialize other thread with TLS entries present\n");
-  return 0;
+    PVOID* TlsVector;
+    PTEB Teb = NtCurrentTeb();
+    TlsVector = Teb->ThreadLocalStoragePointer;
+    ok(TlsVector[1] != NULL, "ThreadLocalStoragePointer index 1 is NULL; failed to initialize other thread with TLS entries present\n");
+    return 0;
 }
 
 START_TEST(implicit_tls)
@@ -77,7 +77,7 @@ START_TEST(implicit_tls)
     ok(ThreadEvent != INVALID_HANDLE_VALUE, "CreateEventA failed with %lu\n", GetLastError());
 
     AuxThread0 = CreateThread(NULL, 0, AuxThread0Proc, NULL, 0, NULL);
-    ok(AuxThread0 != 0, "CreateThread failed with %lu\n", GetLastError());
+    ok(AuxThread0 != NULL, "CreateThread failed with %lu\n", GetLastError());
 
     TlsVector = Teb->ThreadLocalStoragePointer;
     PULONG ModuleHandle = TlsVector[0];
@@ -89,10 +89,10 @@ START_TEST(implicit_tls)
     TlsIdx0Value = *(PULONG)TlsVector[0];
     while(1)
     {
-      if(TlsVector[ExtantTlsEntryCount] && !((ULONG_PTR)TlsVector[ExtantTlsEntryCount] % 4))
-        ++ExtantTlsEntryCount;
-      else
-        break;
+        if(TlsVector[ExtantTlsEntryCount] && !((ULONG_PTR)TlsVector[ExtantTlsEntryCount] % 4))
+            ++ExtantTlsEntryCount;
+        else
+            break;
     }
     for (i = 0; i < TLS_VECTOR_MAX_SIZE; i++)
     {
@@ -106,13 +106,13 @@ START_TEST(implicit_tls)
 
         if (i == TLS_VECTOR_MAX_SIZE / 2)
         {
-           AuxThread1 = CreateThread(NULL, 0, AuxThread1Proc, NULL, 0, NULL);
-		   ok(AuxThread1 != 0, "CreateThread failed with %lu\n", GetLastError());
+            AuxThread1 = CreateThread(NULL, 0, AuxThread1Proc, NULL, 0, NULL);
+		    ok(AuxThread1 != NULL, "CreateThread failed with %lu\n", GetLastError());
         }
     }
 
     TlsVector = Teb->ThreadLocalStoragePointer;
-    ok(TlsVector[1] != 0, "ThreadLocalStoragePointer index 1 is NULL; Implicit TLS unavailable\n");
+    ok(TlsVector[1] != NULL, "ThreadLocalStoragePointer index 1 is NULL; Implicit TLS unavailable\n");
 
     SetEvent(ThreadEvent);
 
@@ -125,11 +125,11 @@ START_TEST(implicit_tls)
     while(1)
     {
         if(TlsVector[i] && !((ULONG_PTR)TlsVector[i] % 4))
-          ++i;
+             ++i;
         else
-          break;
+            break;
     }
-    ok(i == TLS_VECTOR_MAX_SIZE + ExtantTlsEntryCount, "ThreadLocalStoragePointer length is %d, expected length %d\n", i, TLS_VECTOR_MAX_SIZE + ExtantTlsEntryCount);
+    ok(i == TLS_VECTOR_MAX_SIZE + ExtantTlsEntryCount, "ThreadLocalStoragePointer length is %d, expected length %lu\n", i, TLS_VECTOR_MAX_SIZE + ExtantTlsEntryCount);
 
     SetEvent(ThreadEvent);
 

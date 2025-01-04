@@ -1345,11 +1345,10 @@ LdrpAllocateTls(VOID)
 
     /* Allocate the vector array */
     TlsVector = RtlAllocateHeap(RtlGetProcessHeap(),
-                                    0,
-                                    LdrpNumberOfTlsEntries * sizeof(PVOID));
+                                0,
+                                LdrpNumberOfTlsEntries * sizeof(PVOID));
     if (!TlsVector) return STATUS_NO_MEMORY;
     /* Grab old TLS vector to retrieve existing values */
-    /* Todo: create TLS vector list to deallocate when thread exits */
     OldTlsVector = Teb->ThreadLocalStoragePointer;
 
     /* Loop the TLS Array */
@@ -1475,12 +1474,14 @@ LdrpFreeTls(VOID)
 
     if(Teb->SystemReserved1[0])
     {
-		/* Loop through it */
-		ListHead = Teb->SystemReserved1[0];
-		NextEntry = ListHead->Flink;
+        /* Loop through it */
+        ListHead = Teb->SystemReserved1[0];
+        NextEntry = ListHead->Flink;
         while (NextEntry != ListHead)
         {
-            OldTlsVectorDataEntry = CONTAINING_RECORD(NextEntry, LDRP_OLD_TLS_VECTOR_ENTRY, TlsVectorLinks);
+            OldTlsVectorDataEntry = CONTAINING_RECORD(NextEntry,
+                                                      LDRP_OLD_TLS_VECTOR_ENTRY,
+                                                      TlsVectorLinks);
             NextEntry = NextEntry->Flink;
 
             /* Free each old TLS vector. */
