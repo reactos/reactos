@@ -113,7 +113,7 @@ NetpGetClientLogonId(
         goto done;
     }
 
-    FIXME("Client LUID: %lx\n", Statistics.AuthenticationId.LowPart);
+    TRACE("Client LUID: %lx\n", Statistics.AuthenticationId.LowPart);
     RtlCopyLuid(LogonId, &Statistics.AuthenticationId);
 
 done:
