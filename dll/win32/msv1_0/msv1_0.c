@@ -27,6 +27,7 @@ typedef struct _LOGON_LIST_ENTRY
 
 BOOL PackageInitialized = FALSE;
 LIST_ENTRY LogonListHead;
+RTL_RESOURCE LogonListResource;
 ULONG EnumCounter;
 
 /* FUNCTIONS ***************************************************************/
@@ -891,6 +892,8 @@ MsvpEnumerateUsers(
         return STATUS_INVALID_PARAMETER;
     }
 
+    RtlAcquireResourceShared(&LogonListResource, TRUE);
+
     /* Count the currently logged-on users */
     CurrentEntry = LogonListHead.Flink;
     while (CurrentEntry != &LogonListHead)
@@ -973,6 +976,8 @@ MsvpEnumerateUsers(
     *ProtocolStatus = STATUS_SUCCESS;
 
 done:
+    RtlReleaseResource(&LogonListResource);
+
     if (LocalBuffer != NULL)
         DispatchTable.FreeLsaHeap(LocalBuffer);
 
@@ -1017,6 +1022,8 @@ MsvpGetUserInfo(
     RequestBuffer = (PMSV1_0_GETUSERINFO_REQUEST)ProtocolSubmitBuffer;
 
     TRACE("LogonId: 0x%lx\n", RequestBuffer->LogonId.LowPart);
+
+    RtlAcquireResourceShared(&LogonListResource, TRUE);
 
     LogonEntry = GetLogonByLogonId(&RequestBuffer->LogonId);
     if (LogonEntry == NULL)
@@ -1100,6 +1107,8 @@ MsvpGetUserInfo(
     *ProtocolStatus = STATUS_SUCCESS;
 
 done:
+    RtlReleaseResource(&LogonListResource);
+
     if (LocalBuffer != NULL)
         DispatchTable.FreeLsaHeap(LocalBuffer);
 
@@ -1278,6 +1287,7 @@ LsaApInitializePackage(IN ULONG AuthenticationPackageId,
     if (!PackageInitialized)
     {
         InitializeListHead(&LogonListHead);
+        RtlInitializeResource(&LogonListResource);
         EnumCounter = 0;
         PackageInitialized = TRUE;
     }
@@ -1333,7 +1343,9 @@ LsaApLogonTerminated(
     LogonEntry = GetLogonByLogonId(LogonId);
     if (LogonEntry != NULL)
     {
+        RtlAcquireResourceExclusive(&LogonListResource, TRUE);
         RemoveEntryList(&LogonEntry->ListEntry);
+        RtlReleaseResource(&LogonListResource);
 
         if (LogonEntry->UserName.Buffer)
             RtlFreeHeap(RtlGetProcessHeap(), 0, LogonEntry->UserName.Buffer);
@@ -1702,7 +1714,9 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
 
         LogonEntry->LogonType = LogonType;
 
+        RtlAcquireResourceExclusive(&LogonListResource, TRUE);
         InsertTailList(&LogonListHead, &LogonEntry->ListEntry);
+        RtlReleaseResource(&LogonListResource);
     }
 
     if (LogonType == Interactive || LogonType == Batch || LogonType == Service)
