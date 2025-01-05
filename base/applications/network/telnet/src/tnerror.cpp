@@ -81,6 +81,38 @@ int printit(const char * it){
 	return 0;
 }
 
+
+int wprintit(LPCWSTR it)
+{
+    DWORD numwritten;
+    if (!ini.get_output_redir())
+    {
+        if (!WriteConsoleW(
+            GetStdHandle(STD_OUTPUT_HANDLE),	// handle of a console screen buffer
+            it,	// address of buffer to write from
+            wcslen(it),	// number of characters to write
+            &numwritten,	// address of number of characters written
+            0 	// reserved
+        )) return -1;
+        // FIX ME!!! We need to tell the console that the cursor has moved.
+        // Does this mean making Console global?
+        // Paul Brannan 6/14/98
+        // Console.sync();
+    }
+    else
+    {
+        if (!WriteFile(
+            GetStdHandle(STD_OUTPUT_HANDLE),	// handle of a console screen buffer
+            it,	// address of buffer to write from
+            wcslen(it) * sizeof(*it),	// number of characters to write
+            &numwritten,	// address of number of characters written
+            NULL // no overlapped I/O
+        )) return -1;
+    }
+    return 0;
+}
+
+
 int printm(LPTSTR szModule, BOOL fSystem, DWORD dwMessageId, ...)
 {
 	int Result = 0;
@@ -92,19 +124,19 @@ int printm(LPTSTR szModule, BOOL fSystem, DWORD dwMessageId, ...)
 	va_list Ellipsis;
 	va_start(Ellipsis, dwMessageId);
 
-	LPTSTR pszMessage = 0;
+	LPWSTR wszMessage = 0;
 	DWORD dwMessage = 0;
 	if(fSystem) {
-		dwMessage = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+		dwMessage = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
 			FORMAT_MESSAGE_FROM_SYSTEM, hModule, dwMessageId,
-			LANG_USER_DEFAULT, (LPTSTR)&pszMessage, 128, &Ellipsis);
+			LANG_USER_DEFAULT, (LPWSTR)&wszMessage, 128, &Ellipsis);
 	} else {
 		// we will use a string table.
-		char szString[256];
-		if(LoadString(0, dwMessageId, szString, sizeof(szString)))
-			dwMessage = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-				FORMAT_MESSAGE_FROM_STRING, szString, dwMessageId,
-				LANG_USER_DEFAULT, (LPTSTR)&pszMessage, 256, &Ellipsis);
+		WCHAR wszString[256];
+		if(LoadStringW(0, dwMessageId, wszString, sizeof(wszString) / sizeof(*wszString)))
+			dwMessage = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+				FORMAT_MESSAGE_FROM_STRING, wszString, dwMessageId,
+				LANG_USER_DEFAULT, (LPWSTR)&wszMessage, 256, &Ellipsis);
 	}
 
 	va_end(Ellipsis);
@@ -114,8 +146,8 @@ int printm(LPTSTR szModule, BOOL fSystem, DWORD dwMessageId, ...)
 
 	if (dwMessage) {
 
-		Result = printit(pszMessage);
-		LocalFree(pszMessage);
+		Result = wprintit(wszMessage);
+		LocalFree(wszMessage);
 	}
 
 	return Result;
