@@ -1201,16 +1201,15 @@ PartMgrAddDevice(
     deviceExtension->IsFDO = TRUE;
     deviceExtension->DeviceObject = deviceObject;
     deviceExtension->LowerDevice = IoAttachDeviceToDeviceStack(deviceObject, PhysicalDeviceObject);
+    if (!deviceExtension->LowerDevice)
+    {
+        // The attachment failed
+        IoDeleteDevice(deviceObject);
+        return STATUS_DEVICE_REMOVED;
+    }
     deviceExtension->PhysicalDiskDO = PhysicalDeviceObject;
     KeInitializeEvent(&deviceExtension->SyncEvent, SynchronizationEvent, TRUE);
 
-    // the the attaching failed
-    if (!deviceExtension->LowerDevice)
-    {
-        IoDeleteDevice(deviceObject);
-
-        return STATUS_DEVICE_REMOVED;
-    }
     deviceObject->Flags |= DO_DIRECT_IO | DO_POWER_PAGABLE;
 
     // The device is initialized

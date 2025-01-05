@@ -52,6 +52,9 @@ PartitionCreateDevice(
     PPARTITION_EXTENSION partExt = partitionDevice->DeviceExtension;
     RtlZeroMemory(partExt, sizeof(*partExt));
 
+    partExt->DeviceObject = partitionDevice;
+    partExt->LowerDevice = FDObject;
+
     partitionDevice->StackSize = FDObject->StackSize;
     partitionDevice->Flags |= DO_DIRECT_IO;
 
@@ -76,9 +79,6 @@ PartitionCreateDevice(
     partExt->OnDiskNumber = PartitionEntry->PartitionNumber; // the "physical" partition number
     partExt->DetectedNumber = PdoNumber; // counts only partitions with PDO created
     partExt->VolumeNumber = volumeNum;
-
-    partExt->DeviceObject = partitionDevice;
-    partExt->LowerDevice = FDObject;
 
     // The device is initialized
     partitionDevice->Flags &= ~DO_DEVICE_INITIALIZING;
