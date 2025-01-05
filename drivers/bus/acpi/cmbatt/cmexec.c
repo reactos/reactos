@@ -300,7 +300,7 @@ CmBattGetStaData(IN PDEVICE_OBJECT DeviceObject,
     ASSERT(StaData != NULL);
     *StaData = 0;
 
-    /* Request the _PSR method */
+    /* Request the _STA method */
     *(PULONG)InputBuffer.MethodName = 'ATS_';
     InputBuffer.Signature = ACPI_EVAL_INPUT_BUFFER_SIGNATURE;
 
@@ -346,7 +346,7 @@ CmBattGetUniqueId(IN PDEVICE_OBJECT DeviceObject,
     ASSERT(UniqueId != NULL);
     *UniqueId = 0;
 
-    /* Request the _PSR method */
+    /* Request the _UID method */
     *(PULONG)InputBuffer.MethodName = 'DIU_';
     InputBuffer.Signature = ACPI_EVAL_INPUT_BUFFER_SIGNATURE;
 
