@@ -84,7 +84,7 @@
 #define TAG_IOWI                'IWOI'
 #define TAG_IRP                 ' prI'
 #define TAG_IOBUF               'UBOI'
-#define TAG_KINTERRUPT          'RSIK'
+#define TAG_IO_INTERRUPT        'nioI'
 #define TAG_MDL                 ' LDM'
 #define TAG_IO_DEVNODE          'donD'
 #define TAG_PNP_NOTIFY          'NPnP'
