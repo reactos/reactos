@@ -88,25 +88,21 @@ int wprintit(LPCWSTR it)
     if (!ini.get_output_redir())
     {
         if (!WriteConsoleW(
-            GetStdHandle(STD_OUTPUT_HANDLE),	// handle of a console screen buffer
-            it,	// address of buffer to write from
-            wcslen(it),	// number of characters to write
-            &numwritten,	// address of number of characters written
-            0 	// reserved
+            GetStdHandle(STD_OUTPUT_HANDLE),
+            it,
+            wcslen(it),
+            &numwritten,
+            0
         )) return -1;
-        // FIX ME!!! We need to tell the console that the cursor has moved.
-        // Does this mean making Console global?
-        // Paul Brannan 6/14/98
-        // Console.sync();
     }
     else
     {
         if (!WriteFile(
-            GetStdHandle(STD_OUTPUT_HANDLE),	// handle of a console screen buffer
-            it,	// address of buffer to write from
-            wcslen(it) * sizeof(*it),	// number of characters to write
-            &numwritten,	// address of number of characters written
-            NULL // no overlapped I/O
+            GetStdHandle(STD_OUTPUT_HANDLE),
+            it,
+            wcslen(it) * sizeof(*it),
+            &numwritten,
+            NULL
         )) return -1;
     }
     return 0;
@@ -136,7 +132,7 @@ int printm(LPTSTR szModule, BOOL fSystem, DWORD dwMessageId, ...)
 		if(LoadStringW(0, dwMessageId, wszString, sizeof(wszString) / sizeof(*wszString)))
 			dwMessage = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
 				FORMAT_MESSAGE_FROM_STRING, wszString, dwMessageId,
-				LANG_USER_DEFAULT, (LPWSTR)&wszMessage, 256, &Ellipsis);
+				LANG_USER_DEFAULT, (LPWSTR)&wszMessage, sizeof(wszString) / sizeof(*wszString), &Ellipsis);
 	}
 
 	va_end(Ellipsis);
