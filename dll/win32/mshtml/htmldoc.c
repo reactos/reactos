@@ -2553,8 +2553,21 @@ static HRESULT WINAPI HTMLDocument4_focus(IHTMLDocument4 *iface)
 static HRESULT WINAPI HTMLDocument4_hasFocus(IHTMLDocument4 *iface, VARIANT_BOOL *pfFocus)
 {
     HTMLDocument *This = impl_from_IHTMLDocument4(iface);
-    FIXME("(%p)->(%p)\n", This, pfFocus);
-    return E_NOTIMPL;
+    cpp_bool has_focus;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, pfFocus);
+
+    if(!This->doc_node->nsdoc) {
+        FIXME("Unimplemented for fragments.\n");
+        return E_NOTIMPL;
+    }
+
+    nsres = nsIDOMHTMLDocument_HasFocus(This->doc_node->nsdoc, &has_focus);
+    assert(nsres == NS_OK);
+
+    *pfFocus = has_focus ? VARIANT_TRUE : VARIANT_FALSE;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLDocument4_put_onselectionchange(IHTMLDocument4 *iface, VARIANT v)
