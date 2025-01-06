@@ -1420,7 +1420,7 @@ static void test_get_set_attr(IHTMLDocument2 *doc)
 
     hres = IHTMLElement_getAttribute(elem, bstr, 2, &val);
     ok(hres == S_OK, "getAttribute failed: %08x\n", hres);
-    ok(V_VT(&val) == VT_BSTR, "V_VT(val) = %u, expected VT_BSTR", V_VT(&val));
+    ok(V_VT(&val) == VT_BSTR, "V_VT(val) = %u, expected VT_BSTR\n", V_VT(&val));
     ok(!strcmp_wa(V_BSTR(&val), "null"), "V_BSTR(val) = %s, expected \"null\"\n", wine_dbgstr_w(V_BSTR(&val)));
     VariantClear(&val);
 
