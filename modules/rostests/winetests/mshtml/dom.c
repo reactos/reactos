@@ -5267,6 +5267,8 @@ static void test_insert_adjacent_elems(IHTMLDocument2 *doc, IHTMLElement *parent
     static const elem_type_t br_div_br[] = {ET_BR, ET_DIV, ET_BR};
 
     elem = test_create_elem(doc, "BR");
+    elem2 = test_elem_get_parent((IUnknown*)elem);
+    ok(!elem2, "get_parentElement returned %p\n", elem2);
     insert_adjacent_elem(parent, "BeforeEnd", elem);
     IHTMLElement_Release(elem);
 
