@@ -3858,7 +3858,7 @@ static HRESULT WINAPI HTMLElement4_put_onfocusin(IHTMLElement4 *iface, VARIANT v
 {
     HTMLElement *This = impl_from_IHTMLElement4(iface);
 
-    FIXME("(%p)->(%s) semi-stub\n", This, debugstr_variant(&v));
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
 
     return set_node_event(&This->node, EVENTID_FOCUSIN, &v);
 }

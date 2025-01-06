@@ -1328,7 +1328,19 @@ HRESULT ensure_doc_nsevent_handler(HTMLDocumentNode *doc, eventid_t eid)
 
     TRACE("%s\n", debugstr_w(event_info[eid].name));
 
-    if(!doc->nsdoc || doc->event_vector[eid] || !(event_info[eid].flags & (EVENT_DEFAULTLISTENER|EVENT_BIND_TO_BODY)))
+    if(!doc->nsdoc)
+        return S_OK;
+
+    switch(eid) {
+    case EVENTID_FOCUSIN:
+        doc->event_vector[eid] = TRUE;
+        eid = EVENTID_FOCUS;
+        break;
+    default:
+        break;
+    }
+
+    if(doc->event_vector[eid] || !(event_info[eid].flags & (EVENT_DEFAULTLISTENER|EVENT_BIND_TO_BODY)))
         return S_OK;
 
     if(event_info[eid].flags & EVENT_BIND_TO_BODY) {

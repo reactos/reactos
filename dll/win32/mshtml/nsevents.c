@@ -337,6 +337,16 @@ static nsresult NSAPI handle_htmlevent(nsIDOMEventListener *iface, nsIDOMEvent *
     if(FAILED(hres))
         return NS_OK;
 
+    /* If we fine need for more special cases here, we may consider handling it in a more generic way. */
+    switch(eid) {
+    case EVENTID_FOCUS:
+        if(doc->event_vector[EVENTID_FOCUSIN])
+            fire_event(doc, EVENTID_FOCUSIN, TRUE, node, NULL, NULL);
+        break;
+    default:
+        break;
+    }
+
     fire_event(doc, eid, TRUE, node, event, NULL);
 
     node_release(node);
