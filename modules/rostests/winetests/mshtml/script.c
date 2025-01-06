@@ -3320,6 +3320,15 @@ static void run_js_tests(void)
     run_script_as_http_with_mode("xhr.js", NULL, "11");
     run_script_as_http_with_mode("navigation.js", NULL, NULL);
     run_script_as_http_with_mode("navigation.js", NULL, "11");
+
+    run_script_as_http_with_mode("documentmode.js", "?5", NULL);
+    run_script_as_http_with_mode("documentmode.js", "?5", "5");
+    run_script_as_http_with_mode("documentmode.js", "?5", "6");
+    run_script_as_http_with_mode("documentmode.js", "?7", "7");
+    run_script_as_http_with_mode("documentmode.js", "?8", "8");
+    run_script_as_http_with_mode("documentmode.js", "?9", "9");
+    run_script_as_http_with_mode("documentmode.js", "?10", "10");
+    run_script_as_http_with_mode("documentmode.js", "?11", "11");
 }
 
 static BOOL init_registry(BOOL init)

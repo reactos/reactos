@@ -40,6 +40,9 @@ navigation.js HTML "navigation.js"
 /* @makedep: xhr.js */
 xhr.js HTML "xhr.js"
 
+/* @makedep: documentmode.js */
+documentmode.js HTML "documentmode.js"
+
 /* @makedep: blank.html */
 blank.html HTML "blank.html"
 
