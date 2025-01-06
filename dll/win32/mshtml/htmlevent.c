@@ -102,6 +102,9 @@ static const WCHAR onkeyupW[] = {'o','n','k','e','y','u','p',0};
 static const WCHAR loadW[] = {'l','o','a','d',0};
 static const WCHAR onloadW[] = {'o','n','l','o','a','d',0};
 
+static const WCHAR messageW[] = {'m','e','s','s','a','g','e',0};
+static const WCHAR onmessageW[] = {'o','n','m','e','s','s','a','g','e',0};
+
 static const WCHAR mousedownW[] = {'m','o','u','s','e','d','o','w','n',0};
 static const WCHAR onmousedownW[] = {'o','n','m','o','u','s','e','d','o','w','n',0};
 
@@ -210,6 +213,8 @@ static const event_info_t event_info[] = {
         EVENT_DEFAULTLISTENER|EVENT_BUBBLE},
     {loadW,              onloadW,              EVENTT_HTML,   DISPID_EVMETH_ONLOAD,
         EVENT_BIND_TO_BODY},
+    {messageW,           onmessageW,           EVENTT_NONE,   DISPID_EVMETH_ONMESSAGE,
+        EVENT_FORWARDBODY /* FIXME: remove when we get the target right */ },
     {mousedownW,         onmousedownW,         EVENTT_MOUSE,  DISPID_EVMETH_ONMOUSEDOWN,
         EVENT_DEFAULTLISTENER|EVENT_BUBBLE|EVENT_CANCELABLE},
     {mousemoveW,         onmousemoveW,         EVENTT_MOUSE,  DISPID_EVMETH_ONMOUSEMOVE,
