@@ -2693,6 +2693,35 @@ static void _test_elem_getelembytag(unsigned line, IUnknown *unk, elem_type_t ty
     IHTMLElementCollection_Release(col);
 }
 
+#define test_doc_getelembytag(a,b,c,d) _test_doc_getelembytag(__LINE__,a,b,c,d)
+static void _test_doc_getelembytag(unsigned line, IHTMLDocument2 *unk, const char *tag, elem_type_t type, LONG exlen)
+{
+    IHTMLDocument3 *doc = _get_doc3_iface(line, unk);
+    IHTMLElementCollection *col = NULL;
+    elem_type_t *types = NULL;
+    BSTR tmp;
+    int i;
+    HRESULT hres;
+
+    tmp = a2bstr(elem_type_infos[type].tag);
+    hres = IHTMLDocument3_getElementsByTagName(doc, tmp, &col);
+    SysFreeString(tmp);
+    ok_(__FILE__,line) (hres == S_OK, "getElementByTagName failed: %08x\n", hres);
+    ok_(__FILE__,line) (col != NULL, "col == NULL\n");
+
+    if(exlen) {
+        types = HeapAlloc(GetProcessHeap(), 0, exlen*sizeof(elem_type_t));
+        for(i=0; i<exlen; i++)
+            types[i] = type;
+    }
+
+    _test_elem_collection(line, (IUnknown*)col, types, exlen);
+
+    HeapFree(GetProcessHeap(), 0, types);
+    IHTMLElementCollection_Release(col);
+    IHTMLDocument3_Release(doc);
+}
+
 #define test_elem_innertext(e,t) _test_elem_innertext(__LINE__,e,t)
 static void _test_elem_innertext(unsigned line, IHTMLElement *elem, const char *extext)
 {
@@ -8283,20 +8312,7 @@ static void test_elems(IHTMLDocument2 *doc)
     }
     IDispatch_Release(disp);
 
-    hres = IHTMLDocument2_QueryInterface(doc, &IID_IHTMLDocument3, (void**)&doc3);
-    ok(hres == S_OK, "Could not get IHTMLDocument3 iface: %08x\n", hres);
-
-    str = a2bstr("Img");
-    hres = IHTMLDocument3_getElementsByTagName(doc3, str, &col);
-    ok(hres == S_OK, "getElementsByTagName(%s) failed: %08x\n", wine_dbgstr_w(str), hres);
-    SysFreeString(str);
-    if(hres == S_OK)
-    {
-        static const elem_type_t img_types[] = { ET_IMG };
-
-        test_elem_collection((IUnknown*)col, img_types, sizeof(img_types)/sizeof(img_types[0]));
-        IHTMLElementCollection_Release(col);
-    }
+    test_doc_getelembytag(doc, "Img", ET_IMG, 1);
 
     elem = get_doc_elem_by_id(doc, "y");
     test_elem_set_innerhtml((IUnknown*)elem, "inner html");
@@ -8312,6 +8328,9 @@ static void test_elems(IHTMLDocument2 *doc)
     IHTMLDOMNode_Release(node);
     IHTMLElement_Release(elem2);
     IHTMLElement_Release(elem);
+
+    hres = IHTMLDocument2_QueryInterface(doc, &IID_IHTMLDocument3, (void**)&doc3);
+    ok(hres == S_OK, "Could not get IHTMLDocument3 iface: %08x\n", hres);
 
     hres = IHTMLDocument3_recalc(doc3, VARIANT_TRUE);
     ok(hres == S_OK, "recalc failed: %08x\n", hres);
@@ -9262,6 +9281,9 @@ static void test_docfrag(IHTMLDocument2 *doc)
     test_node_append_child((IUnknown*)frag, (IUnknown*)br);
     test_elem_source_index(br, 0);
     IHTMLElement_Release(br);
+
+    test_doc_getelembytag(frag, "a", ET_A, 0);
+    test_doc_getelembytag(frag, "Br", ET_BR, 1);
 
     div = get_elem_by_id(doc, "divid", TRUE);
     test_node_append_child((IUnknown*)div, (IUnknown*)frag);
