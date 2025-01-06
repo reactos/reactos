@@ -575,7 +575,7 @@ static ULONG WINAPI ResProtocol_AddRef(IInternetProtocol *iface)
 
 static ULONG WINAPI ResProtocol_Release(IInternetProtocol *iface)
 {
-    ResProtocol *This = (ResProtocol*)iface;
+    ResProtocol *This = ResProtocol_from_IInternetProtocol(iface);
     IUnknown *pUnkOuter = This->pUnkOuter;
     ULONG ref = InterlockedDecrement(&This->ref);
 
