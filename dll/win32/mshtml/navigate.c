@@ -1862,8 +1862,7 @@ HRESULT channelbsc_load_stream(HTMLInnerWindow *pending_window, IMoniker *mon, I
     if(SUCCEEDED(hres))
         hres = async_stop_request(bscallback);
     if(FAILED(hres))
-        IBindStatusCallback_OnStopBinding(&bscallback->bsc.IBindStatusCallback_iface, hres,
-                ERROR_SUCCESS);
+        IBindStatusCallback_OnStopBinding(&bscallback->bsc.IBindStatusCallback_iface, hres, NULL);
 
     return hres;
 }
