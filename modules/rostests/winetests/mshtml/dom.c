@@ -5775,7 +5775,7 @@ static void test_location(IHTMLDocument2 *doc)
     SysFreeString(str);
 
     ref = IHTMLLocation_Release(location);
-    ok(!ref, "location chould be destroyed here\n");
+    ok(!ref, "location should be destroyed here\n");
 }
 
 static void test_plugins_col(IHTMLDocument2 *doc)
