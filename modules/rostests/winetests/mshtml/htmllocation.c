@@ -215,7 +215,8 @@ static void test_port(IHTMLLocation *loc, const struct location_test *test)
     hres = IHTMLLocation_get_port(loc, &str);
     ok(hres == S_OK, "%s: get_port failed: 0x%08x\n", test->name, hres);
     if(hres == S_OK)
-        ok(str_eq_wa(str, test->port),
+        ok(str_eq_wa(str, test->port)
+           || (!str && !*test->port), /* IE11 */
                 "%s: expected retrieved port to be L\"%s\", was: %s\n",
                 test->name, test->port, wine_dbgstr_w(str));
     SysFreeString(str);
