@@ -31,6 +31,7 @@ typedef struct {
     BOOL pending_readystatechange_event;
     READYSTATE readystate;
     WCHAR *src_text; /* sctipt text downloaded from src */
+    BSCallback *binding; /* weak reference to current binding */
 } HTMLScriptElement;
 
 typedef struct {
@@ -40,7 +41,7 @@ typedef struct {
 
 HRESULT script_elem_from_nsscript(HTMLDocumentNode*,nsIDOMHTMLScriptElement*,HTMLScriptElement**) DECLSPEC_HIDDEN;
 void bind_event_scripts(HTMLDocumentNode*) DECLSPEC_HIDDEN;
-HRESULT load_script(HTMLScriptElement*,const WCHAR*) DECLSPEC_HIDDEN;
+HRESULT load_script(HTMLScriptElement*,const WCHAR*,BOOL) DECLSPEC_HIDDEN;
 
 void release_script_hosts(HTMLInnerWindow*) DECLSPEC_HIDDEN;
 void connect_scripts(HTMLInnerWindow*) DECLSPEC_HIDDEN;

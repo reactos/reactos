@@ -796,7 +796,6 @@ static void parse_elem_text(ScriptHost *script_host, HTMLScriptElement *script_e
         TRACE("<<<\n");
     else
         WARN("<<< %08x\n", hres);
-
 }
 
 typedef struct {
@@ -939,6 +938,8 @@ static HRESULT ScriptBSC_start_binding(BSCallback *bsc)
 {
     ScriptBSC *This = impl_from_BSCallback(bsc);
 
+    This->script_elem->binding = &This->bsc;
+
     /* FIXME: We should find a better to decide if 'loading' state is supposed to be used by the protocol. */
     if(This->scheme == URL_SCHEME_HTTPS || This->scheme == URL_SCHEME_HTTP)
         set_script_elem_readystate(This->script_elem, READYSTATE_LOADING);
@@ -952,6 +953,9 @@ static HRESULT ScriptBSC_stop_binding(BSCallback *bsc, HRESULT result)
 
     if(SUCCEEDED(result) && !This->script_elem)
         result = E_UNEXPECTED;
+
+    assert(FAILED(result) || This->script_elem->binding == &This->bsc);
+    This->script_elem->binding = NULL;
 
     if(This->script_elem->readystate == READYSTATE_LOADING)
         set_script_elem_readystate(This->script_elem, READYSTATE_LOADED);
@@ -1027,7 +1031,7 @@ static const BSCallbackVtbl ScriptBSCVtbl = {
 };
 
 
-HRESULT load_script(HTMLScriptElement *script_elem, const WCHAR *src)
+HRESULT load_script(HTMLScriptElement *script_elem, const WCHAR *src, BOOL async)
 {
     HTMLInnerWindow *window;
     ScriptBSC *bsc;
@@ -1040,7 +1044,7 @@ HRESULT load_script(HTMLScriptElement *script_elem, const WCHAR *src)
     if(strlenW(src) > sizeof(wine_schemaW)/sizeof(WCHAR) && !memcmp(src, wine_schemaW, sizeof(wine_schemaW)))
         src += sizeof(wine_schemaW)/sizeof(WCHAR);
 
-    TRACE("(%p %s)\n", script_elem, debugstr_w(src));
+    TRACE("(%p %s %x)\n", script_elem, debugstr_w(src), async);
 
     if(!script_elem->element.node.doc || !(window = script_elem->element.node.doc->window)) {
         ERR("no window\n");
@@ -1061,7 +1065,7 @@ HRESULT load_script(HTMLScriptElement *script_elem, const WCHAR *src)
         return E_OUTOFMEMORY;
     }
 
-    init_bscallback(&bsc->bsc, &ScriptBSCVtbl, mon, 0);
+    init_bscallback(&bsc->bsc, &ScriptBSCVtbl, mon, async ? BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE | BINDF_PULLDATA : 0);
     IMoniker_Release(mon);
 
     hres = IUri_GetScheme(uri, &bsc->scheme);
@@ -1128,7 +1132,7 @@ static BOOL parse_script_elem(ScriptHost *script_host, HTMLScriptElement *script
     if(NS_FAILED(nsres)) {
         ERR("GetSrc failed: %08x\n", nsres);
     }else if(*src) {
-        load_script(script_elem, src);
+        load_script(script_elem, src, FALSE);
         is_complete = script_elem->parsed;
     }else {
         parse_inline_script(script_host, script_elem);
@@ -1273,7 +1277,7 @@ void doc_insert_script(HTMLInnerWindow *window, HTMLScriptElement *script_elem, 
             script_elem->parsed = TRUE;
             parse_elem_text(script_host, script_elem, script_elem->src_text);
             is_complete = TRUE;
-        }else {
+        }else if(!script_elem->binding) {
             is_complete = parse_script_elem(script_host, script_elem);
         }
     }

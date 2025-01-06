@@ -115,12 +115,17 @@ static HRESULT WINAPI HTMLScriptElement_put_src(IHTMLScriptElement *iface, BSTR 
         return S_OK;
     }
 
+    if(This->binding) {
+        FIXME("binding in progress\n");
+        return E_FAIL;
+    }
+
     nsAString_Init(&src_str, NULL);
     nsres = nsIDOMHTMLScriptElement_GetSrc(This->nsscript, &src_str);
     if(NS_SUCCEEDED(nsres)) {
         const PRUnichar *src;
         nsAString_GetData(&src_str, &src);
-        hres = load_script(This, src);
+        hres = load_script(This, src, TRUE);
     }else {
         ERR("SetSrc failed: %08x\n", nsres);
         hres = E_FAIL;
