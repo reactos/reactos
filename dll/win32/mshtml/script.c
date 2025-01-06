@@ -110,6 +110,26 @@ static void set_script_prop(ScriptHost *script_host, DWORD property, VARIANT *va
         WARN("SetProperty(%x) failed: %08x\n", property, hres);
 }
 
+static BOOL is_quirks_mode(HTMLDocumentNode *doc)
+{
+    const WCHAR *compat_mode;
+    nsAString nsstr;
+    nsresult nsres;
+    BOOL ret = FALSE;
+
+    static const WCHAR BackCompatW[] = {'B','a','c','k','C','o','m','p','a','t',0};
+
+    nsAString_Init(&nsstr, NULL);
+    nsres = nsIDOMHTMLDocument_GetCompatMode(doc->nsdoc, &nsstr);
+    if(NS_SUCCEEDED(nsres)) {
+        nsAString_GetData(&nsstr, &compat_mode);
+        if(!strcmpW(compat_mode, BackCompatW))
+            ret = TRUE;
+    }
+    nsAString_Finish(&nsstr);
+    return ret;
+}
+
 static BOOL init_script_engine(ScriptHost *script_host)
 {
     IObjectSafety *safety;
@@ -148,7 +168,7 @@ static BOOL init_script_engine(ScriptHost *script_host)
         return FALSE;
 
     V_VT(&var) = VT_I4;
-    V_I4(&var) = 1;
+    V_I4(&var) = is_quirks_mode(script_host->window->doc) ? 1 : 2;
     set_script_prop(script_host, SCRIPTPROP_INVOKEVERSIONING, &var);
 
     V_VT(&var) = VT_BOOL;
