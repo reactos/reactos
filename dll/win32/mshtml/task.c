@@ -183,7 +183,7 @@ static BOOL queue_timer(thread_data_t *thread_data, task_timer_t *timer)
     return FALSE;
 }
 
-HRESULT set_task_timer(HTMLInnerWindow *window, DWORD msec, BOOL interval, IDispatch *disp, LONG *id)
+HRESULT set_task_timer(HTMLInnerWindow *window, LONG msec, BOOL interval, IDispatch *disp, LONG *id)
 {
     thread_data_t *thread_data;
     task_timer_t *timer;
@@ -198,6 +198,9 @@ HRESULT set_task_timer(HTMLInnerWindow *window, DWORD msec, BOOL interval, IDisp
     timer = heap_alloc(sizeof(task_timer_t));
     if(!timer)
         return E_OUTOFMEMORY;
+
+    if(msec < 1)
+        msec = 1;
 
     timer->id = id_cnt++;
     timer->window = window;

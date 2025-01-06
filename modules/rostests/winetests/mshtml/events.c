@@ -2259,6 +2259,25 @@ static void test_timeout(IHTMLDocument2 *doc)
     hres = IHTMLWindow2_clearTimeout(window, id);
     ok(hres == S_OK, "clearTimeout failed: %08x\n", hres);
 
+    V_VT(&expr) = VT_DISPATCH;
+    V_DISPATCH(&expr) = (IDispatch*)&timeoutFunc;
+    V_VT(&var) = VT_EMPTY;
+    id = 0;
+    hres = IHTMLWindow3_setInterval(win3, &expr, 1, &var, &id);
+    ok(hres == S_OK, "setInterval failed: %08x\n", hres);
+    ok(id, "id = 0\n");
+
+    SET_EXPECT(timeout);
+    pump_msgs(&called_timeout);
+    CHECK_CALLED(timeout);
+
+    SET_EXPECT(timeout);
+    pump_msgs(&called_timeout);
+    CHECK_CALLED(timeout);
+
+    hres = IHTMLWindow2_clearInterval(window, id);
+    ok(hres == S_OK, "clearTimeout failer: %08x\n", hres);
+
     IHTMLWindow3_Release(win3);
 }
 
