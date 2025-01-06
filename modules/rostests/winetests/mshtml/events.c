@@ -295,6 +295,7 @@ static IHTMLElement *_get_elem_id(unsigned line, IHTMLDocument2 *doc, const char
     SysFreeString(str);
     IHTMLDocument3_Release(doc3);
     ok_(__FILE__,line) (hres == S_OK, "getElementById failed: %08x\n", hres);
+    ok_(__FILE__,line) (elem != NULL, "elem == NULL\n");
 
     return elem;
 }
@@ -2206,48 +2207,36 @@ static void test_timeout(IHTMLDocument2 *doc)
     IHTMLWindow3_Release(win3);
 }
 
-static IHTMLElement* find_element_by_id(IHTMLDocument2 *doc, const char *id)
+static IHTMLWindow2 *get_iframe_window(IHTMLIFrameElement *iframe)
 {
-    HRESULT hres;
-    IHTMLDocument3 *doc3;
-    IHTMLElement *result;
-    BSTR idW = a2bstr(id);
-
-    hres = IHTMLDocument2_QueryInterface(doc, &IID_IHTMLDocument3, (void**)&doc3);
-    ok(hres == S_OK, "QueryInterface(IID_IHTMLDocument3) failed: %08x\n", hres);
-
-    hres = IHTMLDocument3_getElementById(doc3, idW, &result);
-    ok(hres == S_OK, "getElementById failed: %08x\n", hres);
-    ok(result != NULL, "result == NULL\n");
-    SysFreeString(idW);
-
-    IHTMLDocument3_Release(doc3);
-    return result;
-}
-
-static IHTMLDocument2* get_iframe_doc(IHTMLIFrameElement *iframe)
-{
-    HRESULT hres;
+    IHTMLWindow2 *window;
     IHTMLFrameBase2 *base;
-    IHTMLDocument2 *result = NULL;
+    HRESULT hres;
 
     hres = IHTMLIFrameElement_QueryInterface(iframe, &IID_IHTMLFrameBase2, (void**)&base);
     ok(hres == S_OK, "QueryInterface(IID_IHTMLFrameBase2) failed: %08x\n", hres);
-    if(hres == S_OK) {
-        IHTMLWindow2 *window;
 
-        hres = IHTMLFrameBase2_get_contentWindow(base, &window);
-        ok(hres == S_OK, "get_contentWindow failed: %08x\n", hres);
-        ok(window != NULL, "window == NULL\n");
-        if(window) {
-            hres = IHTMLWindow2_get_document(window, &result);
-            ok(hres == S_OK, "get_document failed: %08x\n", hres);
-            ok(result != NULL, "result == NULL\n");
-            IHTMLWindow2_Release(window);
-        }
-    }
+    hres = IHTMLFrameBase2_get_contentWindow(base, &window);
+    ok(hres == S_OK, "get_contentWindow failed: %08x\n", hres);
+    ok(window != NULL, "window == NULL\n");
+
     if(base) IHTMLFrameBase2_Release(base);
+    return window;
+}
 
+static IHTMLDocument2 *get_iframe_doc(IHTMLIFrameElement *iframe)
+{
+    IHTMLDocument2 *result = NULL;
+    IHTMLWindow2 *window;
+    HRESULT hres;
+
+    window = get_iframe_window(iframe);
+
+    hres = IHTMLWindow2_get_document(window, &result);
+    ok(hres == S_OK, "get_document failed: %08x\n", hres);
+    ok(result != NULL, "result == NULL\n");
+
+    IHTMLWindow2_Release(window);
     return result;
 }
 
@@ -2263,7 +2252,7 @@ static void test_iframe_connections(IHTMLDocument2 *doc)
 
     trace("iframe tests...\n");
 
-    element = find_element_by_id(doc, "ifr");
+    element = get_elem_id(doc, "ifr");
     iframe = get_iframe_iface((IUnknown*)element);
     IHTMLElement_Release(element);
 
