@@ -469,11 +469,6 @@ HRESULT get_dispids(tid_t tid, DWORD *ret_size, DISPID **ret)
     return S_OK;
 }
 
-static dispex_data_t *get_dispex_data(DispatchEx *This)
-{
-    return This->info;
-}
-
 static inline BOOL is_custom_dispid(DISPID id)
 {
     return MSHTML_DISPID_CUSTOM_MIN <= id && id <= MSHTML_DISPID_CUSTOM_MAX;
@@ -895,25 +890,20 @@ static HRESULT get_builtin_func(dispex_data_t *data, DISPID id, func_info_t **re
 
 static HRESULT get_builtin_id(DispatchEx *This, BSTR name, DWORD grfdex, DISPID *ret)
 {
-    dispex_data_t *data;
     int min, max, n, c;
 
-    data = get_dispex_data(This);
-    if(!data)
-        return E_FAIL;
-
     min = 0;
-    max = data->func_cnt-1;
+    max = This->info->func_cnt-1;
 
     while(min <= max) {
         n = (min+max)/2;
 
-        c = strcmpiW(data->name_table[n]->name, name);
+        c = strcmpiW(This->info->name_table[n]->name, name);
         if(!c) {
-            if((grfdex & fdexNameCaseSensitive) && strcmpW(data->name_table[n]->name, name))
+            if((grfdex & fdexNameCaseSensitive) && strcmpW(This->info->name_table[n]->name, name))
                 break;
 
-            *ret = data->name_table[n]->id;
+            *ret = This->info->name_table[n]->id;
             return S_OK;
         }
 
@@ -1213,15 +1203,10 @@ static HRESULT function_invoke(DispatchEx *This, func_info_t *func, WORD flags, 
 static HRESULT invoke_builtin_prop(DispatchEx *This, DISPID id, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *res, EXCEPINFO *ei, IServiceProvider *caller)
 {
-    dispex_data_t *data;
     func_info_t *func;
     HRESULT hres;
 
-    data = get_dispex_data(This);
-    if(!data)
-        return E_FAIL;
-
-    hres = get_builtin_func(data, id, &func);
+    hres = get_builtin_func(This->info, id, &func);
     if(id == DISPID_VALUE && hres == DISP_E_UNKNOWNNAME)
         return dispex_value(This, lcid, flags, dp, res, ei, caller);
     if(FAILED(hres))
@@ -1289,15 +1274,10 @@ HRESULT remove_attribute(DispatchEx *This, DISPID id, VARIANT_BOOL *success)
     case DISPEXPROP_BUILTIN: {
         VARIANT var;
         DISPPARAMS dp = {&var,NULL,1,0};
-        dispex_data_t *data;
         func_info_t *func;
         HRESULT hres;
 
-        data = get_dispex_data(This);
-        if(!data)
-            return E_FAIL;
-
-        hres = get_builtin_func(data, id, &func);
+        hres = get_builtin_func(This->info, id, &func);
         if(FAILED(hres))
             return hres;
 
@@ -1561,7 +1541,6 @@ static HRESULT WINAPI DispatchEx_GetMemberProperties(IDispatchEx *iface, DISPID 
 static HRESULT WINAPI DispatchEx_GetMemberName(IDispatchEx *iface, DISPID id, BSTR *pbstrName)
 {
     DispatchEx *This = impl_from_IDispatchEx(iface);
-    dispex_data_t *data;
     func_info_t *func;
     HRESULT hres;
 
@@ -1580,11 +1559,7 @@ static HRESULT WINAPI DispatchEx_GetMemberName(IDispatchEx *iface, DISPID id, BS
         return S_OK;
     }
 
-    data = get_dispex_data(This);
-    if(!data)
-        return E_FAIL;
-
-    hres = get_builtin_func(data, id, &func);
+    hres = get_builtin_func(This->info, id, &func);
     if(FAILED(hres))
         return hres;
 
@@ -1611,7 +1586,6 @@ static HRESULT next_dynamic_id(DispatchEx *dispex, DWORD idx, DISPID *ret_id)
 static HRESULT WINAPI DispatchEx_GetNextDispID(IDispatchEx *iface, DWORD grfdex, DISPID id, DISPID *pid)
 {
     DispatchEx *This = impl_from_IDispatchEx(iface);
-    dispex_data_t *data;
     func_info_t *func;
     HRESULT hres;
 
@@ -1626,20 +1600,16 @@ static HRESULT WINAPI DispatchEx_GetNextDispID(IDispatchEx *iface, DWORD grfdex,
         return next_dynamic_id(This, idx+1, pid);
     }
 
-    data = get_dispex_data(This);
-    if(!data)
-        return E_FAIL;
-
     if(id == DISPID_STARTENUM) {
-        func = data->funcs;
+        func = This->info->funcs;
     }else {
-        hres = get_builtin_func(data, id, &func);
+        hres = get_builtin_func(This->info, id, &func);
         if(FAILED(hres))
             return hres;
         func++;
     }
 
-    while(func < data->funcs+data->func_cnt) {
+    while(func < This->info->funcs + This->info->func_cnt) {
         /* FIXME: Skip hidden properties */
         if(func->func_disp_idx == -1) {
             *pid = func->id;
