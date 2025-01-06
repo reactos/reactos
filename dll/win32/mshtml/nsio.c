@@ -2821,7 +2821,7 @@ static nsresult NSAPI nsURI_GetAsciiHostPort(nsIFileURL *iface, nsACString *aAsc
 
     WARN("(%p)->(%p) FIXME: Use Uri_PUNYCODE_IDN_HOST flag\n", This, aAsciiHostPort);
 
-    return nsIFileURL_GetAsciiHostPort(&This->nsIFileURL_iface, aAsciiHostPort);
+    return nsIFileURL_GetHostPort(&This->nsIFileURL_iface, aAsciiHostPort);
 }
 
 static nsresult NSAPI nsURI_GetAsciiHost(nsIFileURL *iface, nsACString *aAsciiHost)
