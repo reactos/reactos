@@ -458,7 +458,7 @@ HRESULT get_frame_by_name(HTMLOuterWindow *This, const WCHAR *name, BOOL deep, H
         return hres;
 
     *ret = window;
-    return NS_OK;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLWindow2_item(IHTMLWindow2 *iface, VARIANT *pvarIndex, VARIANT *pvarResult)

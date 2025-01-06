@@ -494,7 +494,7 @@ static HRESULT get_nsstyle_attr_nsval(nsIDOMCSSStyleDeclaration *nsstyle, stylei
 
     nsAString_Finish(&str_name);
 
-    return NS_OK;
+    return S_OK;
 }
 
 static HRESULT nsstyle_to_bstr(const WCHAR *val, DWORD flags, BSTR *p)

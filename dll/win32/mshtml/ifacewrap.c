@@ -60,7 +60,7 @@ static HRESULT WINAPI wrapper_QueryInterface(IUnknown *iface, REFIID riid, void 
     return IUnknown_QueryInterface(This->ref_unk, riid, ppv);
 }
 
-static HRESULT WINAPI wrapper_AddRef(IUnknown *iface)
+static ULONG WINAPI wrapper_AddRef(IUnknown *iface)
 {
     iface_wrapper_t *This = impl_from_IUnknown(iface);
     LONG ref = InterlockedIncrement(&This->ref);
@@ -70,7 +70,7 @@ static HRESULT WINAPI wrapper_AddRef(IUnknown *iface)
     return ref;
 }
 
-static HRESULT WINAPI wrapper_Release(IUnknown *iface)
+static ULONG WINAPI wrapper_Release(IUnknown *iface)
 {
     iface_wrapper_t *This = impl_from_IUnknown(iface);
     LONG ref = InterlockedDecrement(&This->ref);

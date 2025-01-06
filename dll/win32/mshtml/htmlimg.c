@@ -291,7 +291,7 @@ static HRESULT WINAPI HTMLImgElement_put_src(IHTMLImgElement *iface, BSTR v)
     if(NS_FAILED(nsres))
         ERR("SetSrc failed: %08x\n", nsres);
 
-    return NS_OK;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLImgElement_get_src(IHTMLImgElement *iface, BSTR *p)

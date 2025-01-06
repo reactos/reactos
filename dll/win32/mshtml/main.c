@@ -392,7 +392,7 @@ HRESULT WINAPI RunHTMLApplication( HINSTANCE hinst, HINSTANCE hPrevInst,
                                LPSTR szCmdLine, INT nCmdShow )
 {
     FIXME("%p %p %s %d\n", hinst, hPrevInst, debugstr_a(szCmdLine), nCmdShow );
-    return 0;
+    return S_OK;
 }
 
 /***********************************************************************
