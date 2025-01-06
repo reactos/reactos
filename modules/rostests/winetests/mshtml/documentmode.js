@@ -29,6 +29,11 @@ function test_doc_mode() {
 
     ok(opt === document.documentMode, "documentMode = " + document.documentMode);
 
+    if(document.documentMode > 5)
+        ok(document.compatMode === "CSS1Compat", "document.compatMode = " + document.compatMode);
+    else
+        ok(document.compatMode === "BackCompat", "document.compatMode = " + document.compatMode);
+
     next_test();
 }
 

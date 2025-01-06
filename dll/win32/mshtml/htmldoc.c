@@ -2951,19 +2951,14 @@ static HRESULT WINAPI HTMLDocument5_get_onbeforedeactivate(IHTMLDocument5 *iface
 static HRESULT WINAPI HTMLDocument5_get_compatMode(IHTMLDocument5 *iface, BSTR *p)
 {
     HTMLDocument *This = impl_from_IHTMLDocument5(iface);
-    nsAString mode_str;
-    nsresult nsres;
+
+    static const WCHAR BackCompatW[] = {'B','a','c','k','C','o','m','p','a','t',0};
+    static const WCHAR CSS1CompatW[] = {'C','S','S','1','C','o','m','p','a','t',0};
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    if(!This->doc_node->nsdoc) {
-        WARN("NULL nsdoc\n");
-        return E_UNEXPECTED;
-    }
-
-    nsAString_Init(&mode_str, NULL);
-    nsres = nsIDOMHTMLDocument_GetCompatMode(This->doc_node->nsdoc, &mode_str);
-    return return_nsstr(nsres, &mode_str, p);
+    *p = SysAllocString(This->doc_node->document_mode == COMPAT_MODE_QUIRKS ? BackCompatW : CSS1CompatW);
+    return *p ? S_OK : E_OUTOFMEMORY;
 }
 
 static const IHTMLDocument5Vtbl HTMLDocument5Vtbl = {
