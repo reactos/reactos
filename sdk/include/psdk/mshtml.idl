@@ -14947,6 +14947,28 @@ interface IHTMLDocument7 : IDispatch
 }
 
 /*****************************************************************************
+ *    IDocumentSelector interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(30510462-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IDocumentSelector : IDispatch
+{
+    [id(DISPID_IDOCUMENTSELECTOR_QUERYSELECTOR)]
+    HRESULT querySelector(
+        [in] BSTR v,
+        [out, retval] IHTMLElement **pel);
+
+    [id(DISPID_IDOCUMENTSELECTOR_QUERYSELECTORALL)]
+    HRESULT querySelectorAll(
+        [in] BSTR v,
+        [out, retval] IHTMLDOMChildrenCollection **pel);
+}
+
+/*****************************************************************************
  *    DispHTMLDocument dispinterface
  */
 [
@@ -15547,6 +15569,12 @@ methods:
     void updateSettings();
 
     WINE_HTMLDOMNODE_DISPINTERFACE_DECL;
+
+    [id(DISPID_IDOCUMENTSELECTOR_QUERYSELECTOR)]
+    IHTMLElement *querySelector([in] BSTR v);
+
+    [id(DISPID_IDOCUMENTSELECTOR_QUERYSELECTORALL)]
+    IHTMLDOMChildrenCollection *querySelectorAll([in] BSTR v);
 }
 
 /*****************************************************************************
