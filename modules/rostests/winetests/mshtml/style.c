@@ -1792,7 +1792,7 @@ static void test_body_style(IHTMLStyle *style)
     ok(hres == S_OK, "put_borderStyle failed: %08x\n", hres);
     SysFreeString(sDefault);
 
-    /* backgoundColor */
+    /* backgroundColor */
     hres = IHTMLStyle_get_backgroundColor(style, &v);
     ok(hres == S_OK, "get_backgroundColor: %08x\n", hres);
     ok(V_VT(&v) == VT_BSTR, "type failed: %d\n", V_VT(&v));
