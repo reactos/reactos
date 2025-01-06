@@ -351,7 +351,7 @@ static int func_name_cmp(const void *p1, const void *p2)
     return strcmpiW((*(func_info_t* const*)p1)->name, (*(func_info_t* const*)p2)->name);
 }
 
-static dispex_data_t *preprocess_dispex_data(DispatchEx *This)
+static dispex_data_t *preprocess_dispex_data(const dispex_static_data_t *desc)
 {
     const tid_t *tid;
     dispex_data_t *data;
@@ -359,10 +359,8 @@ static dispex_data_t *preprocess_dispex_data(DispatchEx *This)
     ITypeInfo *dti;
     HRESULT hres;
 
-    TRACE("(%p)\n", This);
-
-    if(This->data->disp_tid) {
-        hres = get_typeinfo(This->data->disp_tid, &dti);
+    if(desc->disp_tid) {
+        hres = get_typeinfo(desc->disp_tid, &dti);
         if(FAILED(hres)) {
             ERR("Could not get disp type info: %08x\n", hres);
             return NULL;
@@ -385,14 +383,14 @@ static dispex_data_t *preprocess_dispex_data(DispatchEx *This)
     }
     list_add_tail(&dispex_data_list, &data->entry);
 
-    for(tid = This->data->iface_tids; *tid; tid++) {
+    for(tid = desc->iface_tids; *tid; tid++) {
         hres = process_interface(data, *tid, dti);
         if(FAILED(hres))
             break;
     }
 
-    if(This->data->additional_tid)
-        process_interface(data, This->data->additional_tid, NULL);
+    if(desc->additional_tid)
+        process_interface(data, desc->additional_tid, NULL);
 
     if(!data->func_cnt) {
         heap_free(data->funcs);
@@ -470,16 +468,6 @@ HRESULT get_dispids(tid_t tid, DWORD *ret_size, DISPID **ret)
 
 static dispex_data_t *get_dispex_data(DispatchEx *This)
 {
-    if(This->data->data)
-        return This->data->data;
-
-    EnterCriticalSection(&cs_dispex_static_data);
-
-    if(!This->data->data)
-        This->data->data = preprocess_dispex_data(This);
-
-    LeaveCriticalSection(&cs_dispex_static_data);
-
     return This->data->data;
 }
 
@@ -1777,6 +1765,13 @@ void release_dispex(DispatchEx *This)
 
 void init_dispex(DispatchEx *dispex, IUnknown *outer, dispex_static_data_t *data)
 {
+    if(!data->data) {
+        EnterCriticalSection(&cs_dispex_static_data);
+        if(!data->data)
+            data->data = preprocess_dispex_data(data);
+        LeaveCriticalSection(&cs_dispex_static_data);
+    }
+
     dispex->IDispatchEx_iface.lpVtbl = &DispatchExVtbl;
     dispex->outer = outer;
     dispex->data = data;
