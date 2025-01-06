@@ -927,6 +927,8 @@ static HRESULT on_start_nsrequest(nsChannelBSC *This)
 {
     nsresult nsres;
 
+    This->nschannel->binding = This;
+
     /* FIXME: it's needed for http connections from BindToObject. */
     if(!This->nschannel->response_status)
         This->nschannel->response_status = 200;
@@ -972,11 +974,15 @@ static void on_stop_nsrequest(nsChannelBSC *This, HRESULT result)
             WARN("OnStopRequest failed: %08x\n", nsres);
     }
 
-    if(This->nschannel && This->nschannel->load_group) {
-        nsres = nsILoadGroup_RemoveRequest(This->nschannel->load_group,
-                (nsIRequest*)&This->nschannel->nsIHttpChannel_iface, NULL, request_result);
-        if(NS_FAILED(nsres))
-            ERR("RemoveRequest failed: %08x\n", nsres);
+    if(This->nschannel) {
+        if(This->nschannel->load_group) {
+            nsres = nsILoadGroup_RemoveRequest(This->nschannel->load_group,
+                    (nsIRequest*)&This->nschannel->nsIHttpChannel_iface, NULL, request_result);
+            if(NS_FAILED(nsres))
+                ERR("RemoveRequest failed: %08x\n", nsres);
+        }
+        if(This->nschannel->binding == This)
+            This->nschannel->binding = NULL;
     }
 }
 
@@ -1217,8 +1223,11 @@ static void nsChannelBSC_destroy(BSCallback *bsc)
 {
     nsChannelBSC *This = nsChannelBSC_from_BSCallback(bsc);
 
-    if(This->nschannel)
+    if(This->nschannel) {
+        if(This->nschannel->binding == This)
+            This->nschannel->binding = NULL;
         nsIHttpChannel_Release(&This->nschannel->nsIHttpChannel_iface);
+    }
     if(This->nslistener)
         nsIStreamListener_Release(This->nslistener);
     if(This->nscontext)
