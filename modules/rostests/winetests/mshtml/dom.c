@@ -6208,6 +6208,35 @@ static void test_default_selection(IHTMLDocument2 *doc)
     IHTMLTxtRange_Release(range);
 }
 
+static void test_unique_id(IHTMLDocument2 *doc)
+{
+    IHTMLDocument3 *doc3 = get_doc3_iface(doc);
+    BSTR id, id2;
+    HRESULT hres;
+
+    static const WCHAR prefixW[] = {'m','s','_','_','i','d',0};
+
+    hres = IHTMLDocument3_get_uniqueID(doc3, &id);
+    ok(hres == S_OK, "get_uniqueID failed: %08x\n", hres);
+    ok(SysStringLen(id) >= sizeof(prefixW)/sizeof(*prefixW), "id %s too short\n", wine_dbgstr_w(id));
+
+    hres = IHTMLDocument3_get_uniqueID(doc3, &id2);
+    ok(hres == S_OK, "get_uniqueID failed: %08x\n", hres);
+    ok(SysStringLen(id2) >= sizeof(prefixW)/sizeof(*prefixW), "id %s too short\n", wine_dbgstr_w(id2));
+
+    ok(lstrcmpW(id, id2), "same unique ids %s\n", wine_dbgstr_w(id));
+
+    id[sizeof(prefixW)/sizeof(*prefixW)-1] = 0;
+    ok(!lstrcmpW(id, prefixW), "unexpected prefix %s\n", wine_dbgstr_w(id));
+    id2[sizeof(prefixW)/sizeof(*prefixW)-1] = 0;
+    ok(!lstrcmpW(id2, prefixW), "unexpected prefix %s\n", wine_dbgstr_w(id2));
+
+    SysFreeString(id);
+    SysFreeString(id2);
+
+    IHTMLDocument3_Release(doc3);
+}
+
 static void test_doc_elem(IHTMLDocument2 *doc)
 {
     IHTMLDocument2 *doc_node, *owner_doc;
@@ -6244,6 +6273,8 @@ static void test_doc_elem(IHTMLDocument2 *doc)
     test_elem_client_rect((IUnknown*)elem);
 
     IHTMLElement_Release(elem);
+
+    test_unique_id(doc);
 }
 
 static void test_default_body(IHTMLBodyElement *body)

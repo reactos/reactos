@@ -824,6 +824,8 @@ struct HTMLDocumentNode {
 
     UINT charset;
 
+    unsigned unique_id;
+
     struct list selection_list;
     struct list range_list;
     struct list plugin_hosts;
