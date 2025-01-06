@@ -16,9 +16,33 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "mshtml_private.h"
+#include <stdarg.h>
+#include <assert.h>
 
-#include <exdispid.h>
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "mshtmdid.h"
+#include "shlguid.h"
+#include "shobjidl.h"
+#include "exdispid.h"
+
+#define NO_SHLWAPI_REG
+#include "shlwapi.h"
+
+#include "wine/debug.h"
+
+#include "mshtml_private.h"
+#include "htmlevent.h"
+#include "htmlscript.h"
+#include "pluginhost.h"
+#include "binding.h"
+#include "resource.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 static struct list window_list = LIST_INIT(window_list);
 

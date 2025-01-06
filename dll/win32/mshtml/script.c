@@ -16,9 +16,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "mshtml_private.h"
+#include "config.h"
 
-#include <activdbg.h>
+#include <stdarg.h>
+#include <assert.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "activscp.h"
+#include "activdbg.h"
+#include "shlwapi.h"
+
+#include "wine/debug.h"
+
+#include "mshtml_private.h"
+#include "htmlscript.h"
+#include "pluginhost.h"
+#include "htmlevent.h"
+#include "binding.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 #ifdef _WIN64
 
@@ -839,10 +860,10 @@ static HRESULT ScriptBSC_read_data(BSCallback *bsc, IStream *stream)
 
     do {
         if(This->bsc.readed >= This->size) {
-            void *new_buf;
-            new_buf = heap_realloc(This->buf, This->size << 1);
-            if(!new_buf)
-                return E_OUTOFMEMORY;
+	  void *new_buf;
+	  new_buf = heap_realloc(This->buf, This->size << 1);
+	  if(!new_buf)
+	    return E_OUTOFMEMORY;
             This->size <<= 1;
             This->buf = new_buf;
         }

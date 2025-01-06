@@ -16,7 +16,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+
+#include <stdarg.h>
+#include <assert.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "ole2.h"
+#include "shlguid.h"
+#include "wininet.h"
+#include "shlwapi.h"
+
+#include "wine/debug.h"
+
 #include "mshtml_private.h"
+#include "binding.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 #define NS_IOSERVICE_CLASSNAME "nsIOService"
 #define NS_IOSERVICE_CONTRACTID "@mozilla.org/network/io-service;1"
