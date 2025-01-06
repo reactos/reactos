@@ -1423,10 +1423,17 @@ static HRESULT handle_redirect(nsChannelBSC *This, const WCHAR *new_url)
     nsRedirectCallback *callback;
     nsIChannelEventSink *sink;
     nsChannel *new_channel;
+    IMoniker *mon;
     nsresult nsres;
     HRESULT hres;
 
     TRACE("(%p)->(%s)\n", This, debugstr_w(new_url));
+
+    hres = CreateURLMoniker(NULL, new_url, &mon);
+    if(FAILED(hres))
+        return hres;
+    IMoniker_Release(This->bsc.mon);
+    This->bsc.mon = mon;
 
     if(!This->nschannel || !This->nschannel->notif_callback)
         return S_OK;
