@@ -2134,8 +2134,16 @@ static HRESULT WINAPI HTMLWindow6_get_maxConnectionsPerServer(IHTMLWindow6 *ifac
 static HRESULT WINAPI HTMLWindow6_postMessage(IHTMLWindow6 *iface, BSTR msg, VARIANT targetOrigin)
 {
     HTMLWindow *This = impl_from_IHTMLWindow6(iface);
-    FIXME("(%p)->(%s %s)\n", This, debugstr_w(msg), debugstr_variant(&targetOrigin));
-    return E_NOTIMPL;
+
+    FIXME("(%p)->(%s %s) semi-stub\n", This, debugstr_w(msg), debugstr_variant(&targetOrigin));
+
+    if(!This->inner_window->doc) {
+        FIXME("No document\n");
+        return E_FAIL;
+    }
+
+    fire_event(This->inner_window->doc, EVENTID_MESSAGE, TRUE, &This->inner_window->doc->node, NULL, NULL);
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLWindow6_toStaticHTML(IHTMLWindow6 *iface, BSTR bstrHTML, BSTR *pbstrStaticHTML)
