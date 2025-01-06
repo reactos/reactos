@@ -25,7 +25,7 @@ add_executable(mshtml_winetest
     rsrc.rc)
 
 if(NOT MSVC)
-    target_compile_options(mshtml_winetest PRIVATE -Wno-unused-function)
+    target_compile_options(mshtml_winetest PRIVATE -Wno-unused-function -Wno-sequence-point)
 endif()
 
 list(APPEND mshtml_winetest_rc_deps
@@ -36,7 +36,10 @@ list(APPEND mshtml_winetest_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/nav_test.html
     ${CMAKE_CURRENT_SOURCE_DIR}/vbtest.html
     ${CMAKE_CURRENT_SOURCE_DIR}/events.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/externscr.js)
+    ${CMAKE_CURRENT_SOURCE_DIR}/externscr.js
+    ${CMAKE_CURRENT_SOURCE_DIR}/winetest.js
+    ${CMAKE_CURRENT_SOURCE_DIR}/xhr.js
+)
 
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS "${mshtml_winetest_rc_deps}")
 target_link_libraries(mshtml_winetest uuid strmiids)

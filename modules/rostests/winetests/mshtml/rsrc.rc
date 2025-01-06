@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/* @makedep: winetest.js */
+winetest.js HTML "winetest.js"
+
 /* @makedep: exectest.html */
 exectest.html HTML "exectest.html"
 
@@ -33,6 +36,9 @@ externscr.js HTML "externscr.js"
 
 /* @makedep: nav_test.html */
 nav_test.html HTML "nav_test.html"
+
+/* @makedep: xhr.js */
+xhr.js HTML "xhr.js"
 
 /* @makedep: blank.html */
 blank.html HTML "blank.html"
