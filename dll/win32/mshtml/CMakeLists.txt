@@ -103,6 +103,10 @@ add_library(mshtml MODULE
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mshtml.def)
 
+if(NOT MSVC)
+    target_compile_options(mshtml PRIVATE -Wno-misleading-indentation)
+endif()
+
 list(APPEND mshtml_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/blank.htm
     ${CMAKE_CURRENT_SOURCE_DIR}/mshtml.inf

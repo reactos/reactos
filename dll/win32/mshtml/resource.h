@@ -16,7 +16,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef __REACTOS__
 #pragma once
+#endif // __REACTOS__
+
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
 
 #define IDS_HTMLDOCUMENT    7501
 

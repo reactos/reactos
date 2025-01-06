@@ -16,11 +16,33 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef __REACTOS__
 #include "mshtml_private.h"
-
 #include <wincon.h>
-#include <shlobj.h>
+#endif // __REACTOS__
 
+#include "config.h"
+
+#include <stdarg.h>
+#include <assert.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "ole2.h"
+#include "shlobj.h"
+#include "shlwapi.h"
+
+#include "wine/debug.h"
+
+#include "mshtml_private.h"
+#include "htmlevent.h"
+#include "binding.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 WINE_DECLARE_DEBUG_CHANNEL(gecko);
 
 #define NS_APPSTARTUPNOTIFIER_CONTRACTID "@mozilla.org/embedcomp/appstartup-notifier;1"
@@ -383,9 +405,9 @@ static void register_nscontainer_class(void)
     nscontainer_class = RegisterClassExW(&wndclass);
 }
 
-#ifndef __REACTOS__
 static BOOL install_wine_gecko(void)
 {
+#ifndef __REACTOS__
     PROCESS_INFORMATION pi;
     STARTUPINFOW si;
     WCHAR app[MAX_PATH];
@@ -420,8 +442,10 @@ static BOOL install_wine_gecko(void)
     }
 
     return ret;
-}
+#else
+    return FALSE;
 #endif
+}
 
 static void set_environment(LPCWSTR gre_path)
 {
@@ -757,12 +781,8 @@ BOOL load_gecko(void)
     if(!loading_thread) {
         loading_thread = GetCurrentThreadId();
 
-#ifdef __REACTOS__
-        if(load_wine_gecko(gre_path))
-#else
         if(load_wine_gecko(gre_path)
            || (install_wine_gecko() && load_wine_gecko(gre_path)))
-#endif
             ret = init_xpcom(gre_path);
         else
            MESSAGE("Could not load wine-gecko. HTML rendering will be disabled.\n");

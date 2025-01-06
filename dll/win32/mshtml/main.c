@@ -20,22 +20,44 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "mshtml_private.h"
+#include <stdarg.h>
+#include <stdio.h>
 
-#include <advpub.h>
-#include <rpcproxy.h>
-#include <mlang.h>
-#include <initguid.h>
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "ole2.h"
+#include "advpub.h"
+#include "shlwapi.h"
+#include "optary.h"
+#include "rpcproxy.h"
+#include "shlguid.h"
+#include "mlang.h"
+
+#include "wine/debug.h"
+
+#define INIT_GUID
+#include "mshtml_private.h"
+#include "resource.h"
+#include "pluginhost.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 HINSTANCE hInst;
 DWORD mshtml_tls = TLS_OUT_OF_INDEXES;
 
+#ifdef __REACTOS__
+#include <initguid.h>
 void (__cdecl *ccp_init)(ExternalCycleCollectionParticipant*,const CCObjCallback*);
 nsrefcnt (__cdecl *ccref_incr)(nsCycleCollectingAutoRefCnt*,nsISupports*);
 nsrefcnt (__cdecl *ccref_decr)(nsCycleCollectingAutoRefCnt*,nsISupports*,ExternalCycleCollectionParticipant*);
 void (__cdecl *ccref_init)(nsCycleCollectingAutoRefCnt*,nsrefcnt);
 void (__cdecl *describe_cc_node)(nsCycleCollectingAutoRefCnt*,const char*,nsCycleCollectionTraversalCallback*);
 void (__cdecl *note_cc_edge)(nsISupports*,const char*,nsCycleCollectionTraversalCallback*);
+#endif // __REACTOS__
 
 static HINSTANCE shdoclc = NULL;
 static HDC display_dc;
@@ -487,6 +509,10 @@ static HRESULT register_server(BOOL do_register)
     for(i=0; i < sizeof(pse)/sizeof(pse[0]); i++)
         heap_free(pse[i].pszValue);
 
+#ifndef __REACTOS__
+    if(FAILED(hres))
+        ERR("RegInstall failed: %08x\n", hres);
+#else // __REACTOS__
     if(FAILED(hres)) {
         ERR("RegInstall failed: %08x\n", hres);
         return hres;
@@ -506,7 +532,7 @@ static HRESULT register_server(BOOL do_register)
 
     if(FAILED(hres))
         ERR("typelib registration failed: %08x\n", hres);
-
+#endif // __REACTOS__
     return hres;
 }
 
