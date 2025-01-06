@@ -807,7 +807,6 @@ static const tid_t HTMLAnchorElement_iface_tids[] = {
 static dispex_static_data_t HTMLAnchorElement_dispex = {
     NULL,
     DispHTMLAnchorElement_tid,
-    NULL,
     HTMLAnchorElement_iface_tids
 };
 

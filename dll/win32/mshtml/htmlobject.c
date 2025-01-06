@@ -773,7 +773,6 @@ static const tid_t HTMLObjectElement_iface_tids[] = {
 static dispex_static_data_t HTMLObjectElement_dispex = {
     NULL,
     DispHTMLObjectElement_tid,
-    NULL,
     HTMLObjectElement_iface_tids
 };
 

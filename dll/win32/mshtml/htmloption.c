@@ -444,7 +444,6 @@ static const tid_t HTMLOptionElement_iface_tids[] = {
 static dispex_static_data_t HTMLOptionElement_dispex = {
     NULL,
     DispHTMLOptionElement_tid,
-    NULL,
     HTMLOptionElement_iface_tids
 };
 
@@ -625,7 +624,6 @@ static const tid_t HTMLOptionElementFactory_iface_tids[] = {
 static dispex_static_data_t HTMLOptionElementFactory_dispex = {
     NULL,
     IHTMLOptionElementFactory_tid,
-    NULL,
     HTMLOptionElementFactory_iface_tids
 };
 

@@ -200,7 +200,6 @@ static const tid_t HTMLCommentElement_iface_tids[] = {
 static dispex_static_data_t HTMLCommentElement_dispex = {
     NULL,
     DispHTMLCommentElement_tid,
-    NULL,
     HTMLCommentElement_iface_tids
 };
 

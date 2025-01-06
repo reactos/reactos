@@ -739,7 +739,6 @@ static const tid_t HTMLXMLHttpRequest_iface_tids[] = {
 static dispex_static_data_t HTMLXMLHttpRequest_dispex = {
     &HTMLXMLHttpRequest_dispex_vtbl,
     DispHTMLXMLHttpRequest_tid,
-    NULL,
     HTMLXMLHttpRequest_iface_tids
 };
 
@@ -909,7 +908,6 @@ static const tid_t HTMLXMLHttpRequestFactory_iface_tids[] = {
 static dispex_static_data_t HTMLXMLHttpRequestFactory_dispex = {
     &HTMLXMLHttpRequestFactory_dispex_vtbl,
     IHTMLXMLHttpRequestFactory_tid,
-    NULL,
     HTMLXMLHttpRequestFactory_iface_tids
 };
 

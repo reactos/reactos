@@ -842,7 +842,6 @@ static const tid_t HTMLEventObj_iface_tids[] = {
 static dispex_static_data_t HTMLEventObj_dispex = {
     NULL,
     DispCEventObj_tid,
-    NULL,
     HTMLEventObj_iface_tids
 };
 

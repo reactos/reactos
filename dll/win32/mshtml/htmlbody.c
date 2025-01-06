@@ -889,7 +889,6 @@ static const tid_t HTMLBodyElement_iface_tids[] = {
 static dispex_static_data_t HTMLBodyElement_dispex = {
     NULL,
     DispHTMLBody_tid,
-    NULL,
     HTMLBodyElement_iface_tids
 };
 

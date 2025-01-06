@@ -1730,7 +1730,6 @@ static const tid_t HTMLTxtRange_iface_tids[] = {
 static dispex_static_data_t HTMLTxtRange_dispex = {
     NULL,
     IHTMLTxtRange_tid,
-    NULL,
     HTMLTxtRange_iface_tids
 };
 

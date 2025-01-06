@@ -360,7 +360,6 @@ static const tid_t HTMLDOMTextNode_iface_tids[] = {
 static dispex_static_data_t HTMLDOMTextNode_dispex = {
     NULL,
     DispHTMLDOMTextNode_tid,
-    0,
     HTMLDOMTextNode_iface_tids
 };
 

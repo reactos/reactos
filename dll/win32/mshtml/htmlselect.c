@@ -717,7 +717,6 @@ static const tid_t HTMLSelectElement_tids[] = {
 static dispex_static_data_t HTMLSelectElement_dispex = {
     NULL,
     DispHTMLSelectElement_tid,
-    NULL,
     HTMLSelectElement_tids
 };
 

@@ -4690,7 +4690,6 @@ static const tid_t HTMLStyle_iface_tids[] = {
 static dispex_static_data_t HTMLStyle_dispex = {
     &HTMLStyle_dispex_vtbl,
     DispHTMLStyle_tid,
-    NULL,
     HTMLStyle_iface_tids
 };
 

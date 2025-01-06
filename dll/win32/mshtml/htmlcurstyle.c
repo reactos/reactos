@@ -1317,7 +1317,6 @@ static const tid_t HTMLCurrentStyle_iface_tids[] = {
 static dispex_static_data_t HTMLCurrentStyle_dispex = {
     NULL,
     DispHTMLCurrentStyle_tid,
-    NULL,
     HTMLCurrentStyle_iface_tids
 };
 

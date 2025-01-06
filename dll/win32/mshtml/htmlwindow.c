@@ -2956,7 +2956,6 @@ static const tid_t HTMLWindow_iface_tids[] = {
 static dispex_static_data_t HTMLWindow_dispex = {
     &HTMLWindow_dispex_vtbl,
     DispHTMLWindow2_tid,
-    NULL,
     HTMLWindow_iface_tids,
     IHTMLWindow5_tid
 };

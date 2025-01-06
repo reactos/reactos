@@ -250,7 +250,6 @@ static const tid_t HTMLMetaElement_iface_tids[] = {
 static dispex_static_data_t HTMLMetaElement_dispex = {
     NULL,
     DispHTMLMetaElement_tid,
-    NULL,
     HTMLMetaElement_iface_tids
 };
 

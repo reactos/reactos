@@ -194,7 +194,6 @@ static const tid_t HTMLStorage_iface_tids[] = {
 static dispex_static_data_t HTMLStorage_dispex = {
     NULL,
     IHTMLStorage_tid,
-    NULL,
     HTMLStorage_iface_tids
 };
 

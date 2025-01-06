@@ -317,7 +317,6 @@ static const tid_t HTMLFrameElement_iface_tids[] = {
 static dispex_static_data_t HTMLFrameElement_dispex = {
     NULL,
     DispHTMLFrameElement_tid,
-    NULL,
     HTMLFrameElement_iface_tids
 };
 

@@ -170,7 +170,6 @@ static const tid_t HTMLTitleElement_iface_tids[] = {
 static dispex_static_data_t HTMLTitleElement_dispex = {
     NULL,
     DispHTMLTitleElement_tid,
-    NULL,
     HTMLTitleElement_iface_tids
 };
 
@@ -353,7 +352,6 @@ static const tid_t HTMLHtmlElement_iface_tids[] = {
 static dispex_static_data_t HTMLHtmlElement_dispex = {
     NULL,
     DispHTMLHtmlElement_tid,
-    NULL,
     HTMLHtmlElement_iface_tids
 };
 
@@ -513,7 +511,6 @@ static const tid_t HTMLHeadElement_iface_tids[] = {
 static dispex_static_data_t HTMLHeadElement_dispex = {
     NULL,
     DispHTMLHeadElement_tid,
-    NULL,
     HTMLHeadElement_iface_tids
 };
 

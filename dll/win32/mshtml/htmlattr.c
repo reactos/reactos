@@ -487,7 +487,6 @@ static const tid_t HTMLDOMAttribute_iface_tids[] = {
 static dispex_static_data_t HTMLDOMAttribute_dispex = {
     NULL,
     DispHTMLDOMAttribute_tid,
-    0,
     HTMLDOMAttribute_iface_tids
 };
 

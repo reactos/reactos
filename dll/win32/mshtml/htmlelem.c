@@ -538,7 +538,6 @@ static const tid_t HTMLRect_iface_tids[] = {
 static dispex_static_data_t HTMLRect_dispex = {
     NULL,
     IHTMLRect_tid,
-    NULL,
     HTMLRect_iface_tids
 };
 
@@ -5115,7 +5114,6 @@ static dispex_static_data_vtbl_t HTMLElement_dispex_vtbl = {
 static dispex_static_data_t HTMLElement_dispex = {
     &HTMLElement_dispex_vtbl,
     DispHTMLUnknownElement_tid,
-    NULL,
     HTMLElement_iface_tids
 };
 
@@ -5367,7 +5365,6 @@ static const tid_t HTMLFiltersCollection_iface_tids[] = {
 static dispex_static_data_t HTMLFiltersCollection_dispex = {
     &HTMLFiltersCollection_dispex_vtbl,
     IHTMLFiltersCollection_tid,
-    NULL,
     HTMLFiltersCollection_iface_tids
 };
 
@@ -5937,7 +5934,6 @@ static const tid_t HTMLAttributeCollection_iface_tids[] = {
 static dispex_static_data_t HTMLAttributeCollection_dispex = {
     &HTMLAttributeCollection_dispex_vtbl,
     DispHTMLAttributeCollection_tid,
-    NULL,
     HTMLAttributeCollection_iface_tids
 };
 

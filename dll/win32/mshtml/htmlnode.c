@@ -436,7 +436,6 @@ static const tid_t HTMLDOMChildrenCollection_iface_tids[] = {
 static dispex_static_data_t HTMLDOMChildrenCollection_dispex = {
     &HTMLDOMChildrenCollection_dispex_vtbl,
     DispDOMChildrenCollection_tid,
-    NULL,
     HTMLDOMChildrenCollection_iface_tids
 };
 

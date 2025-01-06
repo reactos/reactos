@@ -240,7 +240,6 @@ static const tid_t HTMLScreen_iface_tids[] = {
 static dispex_static_data_t HTMLScreen_dispex = {
     NULL,
     DispHTMLScreen_tid,
-    NULL,
     HTMLScreen_iface_tids
 };
 

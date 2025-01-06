@@ -447,7 +447,6 @@ static const tid_t HTMLTableCell_iface_tids[] = {
 static dispex_static_data_t HTMLTableCell_dispex = {
     NULL,
     DispHTMLTableCell_tid,
-    NULL,
     HTMLTableCell_iface_tids
 };
 
