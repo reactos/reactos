@@ -328,6 +328,13 @@ static const IID * const frame_iids[] = {
     NULL
 };
 
+static const IID * const html_iids[] = {
+    ELEM_IFACES,
+    &IID_IHTMLHtmlElement,
+    &IID_IConnectionPointContainer,
+    NULL
+};
+
 static const IID * const head_iids[] = {
     ELEM_IFACES,
     &IID_IHTMLHeadElement,
@@ -449,7 +456,7 @@ typedef struct {
 
 static const elem_type_info_t elem_type_infos[] = {
     {"",          none_iids,        NULL},
-    {"HTML",      elem_iids,        NULL},
+    {"HTML",      html_iids,        &DIID_DispHTMLHtmlElement},
     {"HEAD",      head_iids,        &DIID_DispHTMLHeadElement},
     {"TITLE",     title_iids,       &DIID_DispHTMLTitleElement},
     {"BODY",      body_iids,        &DIID_DispHTMLBody},
@@ -6353,7 +6360,7 @@ static void test_doc_elem(IHTMLDocument2 *doc)
 
     test_node_name((IUnknown*)elem, "HTML");
     test_elem_tag((IUnknown*)elem, "HTML");
-    todo_wine test_elem_set_outertext_fail(elem);
+    test_elem_set_outertext_fail(elem);
 
     doc_node = get_doc_node(doc);
     owner_doc = get_owner_doc((IUnknown*)elem);
