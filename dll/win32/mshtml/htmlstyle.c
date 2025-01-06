@@ -700,7 +700,7 @@ static HRESULT get_nsstyle_pixel_val(HTMLStyle *This, styleid_t sid, LONG *p)
 
     hres = get_nsstyle_attr_nsval(This->nsstyle, sid, &str_value);
     if(hres == S_OK) {
-        WCHAR *ptr;
+        WCHAR *ptr = NULL;
         const PRUnichar *value;
 
         nsAString_GetData(&str_value, &value);
@@ -711,15 +711,10 @@ static HRESULT get_nsstyle_pixel_val(HTMLStyle *This, styleid_t sid, LONG *p)
                 /* Skip all digits. We have tests showing that we should not round the value. */
                 while(isdigitW(*++ptr));
             }
-
-            if(*ptr && strcmpW(ptr, pxW)) {
-                nsAString_Finish(&str_value);
-                FIXME("%s: only px values are currently supported\n", debugstr_w(value));
-                hres = E_NOTIMPL;
-            }
-        }else {
-            *p = 0;
         }
+
+        if(!ptr || (*ptr && strcmpW(ptr, pxW)))
+            *p = 0;
     }
 
     nsAString_Finish(&str_value);

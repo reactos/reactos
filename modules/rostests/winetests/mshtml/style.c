@@ -1099,6 +1099,11 @@ static void test_body_style(IHTMLStyle *style)
     ok(!strcmp_wa(V_BSTR(&v), "auto"), "V_BSTR(v)=%s\n", wine_dbgstr_w(V_BSTR(&v)));
     VariantClear(&v);
 
+    l = 0xdeadbeef;
+    hres = IHTMLStyle_get_pixelWidth(style, &l);
+    ok(hres == S_OK, "get_pixelWidth failed: %08x\n", hres);
+    ok(!l, "pixelWidth = %d\n", l);
+
     V_VT(&v) = VT_I4;
     V_I4(&v) = 100;
     hres = IHTMLStyle_put_width(style, v);
@@ -1361,6 +1366,17 @@ static void test_body_style(IHTMLStyle *style)
     ok(hres == S_OK, "get_pixelTop failed: %08x\n", hres);
     ok(l == 3, "pixelTop = %d\n", l);
 
+    V_VT(&v) = VT_BSTR;
+    V_BSTR(&v) = a2bstr("100%");
+    hres = IHTMLStyle_put_top(style, v);
+    ok(hres == S_OK, "put_top failed: %08x\n", hres);
+    VariantClear(&v);
+
+    l = 0xdeadbeef;
+    hres = IHTMLStyle_get_pixelTop(style, &l);
+    ok(hres == S_OK, "get_pixelTop failed: %08x\n", hres);
+    ok(!l, "pixelTop = %d\n", l);
+
     V_VT(&v) = VT_NULL;
     hres = IHTMLStyle_put_top(style, v);
     ok(hres == S_OK, "put_top failed: %08x\n", hres);
@@ -1431,6 +1447,17 @@ static void test_body_style(IHTMLStyle *style)
     hres = IHTMLStyle_get_pixelHeight(style, &l);
     ok(hres == S_OK, "get_pixelHeight failed: %08x\n", hres);
     ok(l == 70, "pixelHeight = %d\n", l);
+
+    V_VT(&v) = VT_BSTR;
+    V_BSTR(&v) = a2bstr("50%");
+    hres = IHTMLStyle_put_height(style, v);
+    ok(hres == S_OK, "put_height failed: %08x\n", hres);
+    VariantClear(&v);
+
+    l = 0xdeadbeef;
+    hres = IHTMLStyle_get_pixelHeight(style, &l);
+    ok(hres == S_OK, "get_pixelHeight failed: %08x\n", hres);
+    ok(!l, "pixelHeight = %d\n", l);
 
     V_VT(&v) = VT_BSTR;
     V_BSTR(&v) = NULL;
