@@ -866,22 +866,20 @@ static void script_file_available(ScriptBSC *bsc)
     HTMLScriptElement *script_elem = bsc->script_elem;
     HTMLInnerWindow *window = bsc->bsc.window;
     ScriptHost *script_host;
-    WCHAR *text;
     HRESULT hres;
 
-    hres = get_binding_text(bsc, &text);
+    assert(window != NULL);
+
+    hres = get_binding_text(bsc, &script_elem->src_text);
     if(FAILED(hres))
         return;
 
     script_host = get_elem_script_host(window, script_elem);
-    if(!script_host) {
-        heap_free(text);
+    if(!script_host)
         return;
-    }
 
     script_elem->parsed = TRUE;
-    parse_elem_text(script_host, script_elem, text);
-    heap_free(text);
+    parse_elem_text(script_host, script_elem, script_elem->src_text);
 }
 
 static inline ScriptBSC *impl_from_BSCallback(BSCallback *iface)

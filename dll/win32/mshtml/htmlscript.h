@@ -30,6 +30,7 @@ typedef struct {
     BOOL parse_on_bind;
     BOOL pending_readystatechange_event;
     READYSTATE readystate;
+    WCHAR *src_text; /* sctipt text downloaded from src */
 } HTMLScriptElement;
 
 typedef struct {

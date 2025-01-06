@@ -391,6 +391,13 @@ static HRESULT HTMLScriptElement_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
     return HTMLElement_QI(&This->element.node, riid, ppv);
 }
 
+static void HTMLScriptElement_destructor(HTMLDOMNode *iface)
+{
+    HTMLScriptElement *This = impl_from_HTMLDOMNode(iface);
+    heap_free(This->src_text);
+    HTMLElement_destructor(&This->element.node);
+}
+
 static HRESULT HTMLScriptElement_get_readystate(HTMLDOMNode *iface, BSTR *p)
 {
     HTMLScriptElement *This = impl_from_HTMLDOMNode(iface);
@@ -439,7 +446,7 @@ static void HTMLScriptElement_unlink(HTMLDOMNode *iface)
 
 static const NodeImplVtbl HTMLScriptElementImplVtbl = {
     HTMLScriptElement_QI,
-    HTMLElement_destructor,
+    HTMLScriptElement_destructor,
     HTMLElement_cpc,
     HTMLElement_clone,
     HTMLElement_handle_event,
