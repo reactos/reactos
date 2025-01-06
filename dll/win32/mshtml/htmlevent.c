@@ -1284,11 +1284,6 @@ HRESULT dispatch_event(HTMLDOMNode *node, const WCHAR *event_name, VARIANT *even
         if(FAILED(hres))
             return hres;
     }else {
-        if(!(event_info[eid].flags & EVENT_DEFAULTLISTENER)) {
-            FIXME("not EVENT_DEFAULTEVENTHANDLER\n");
-            return E_NOTIMPL;
-        }
-
         fire_event(node->doc, eid, TRUE, node->nsnode, NULL, NULL);
     }
 
