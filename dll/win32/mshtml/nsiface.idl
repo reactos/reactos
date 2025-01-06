@@ -134,7 +134,6 @@ typedef nsISupports nsISHistory;
 typedef nsISupports nsIWidget;
 typedef nsISupports nsIPrompt;
 typedef nsISupports nsIAuthPrompt;
-typedef nsISupports nsIDOMDocumentType;
 typedef nsISupports nsIDOMDOMImplementation;
 typedef nsISupports nsIDOMCDATASection;
 typedef nsISupports nsIDOMProcessingInstruction;
@@ -1197,6 +1196,20 @@ interface nsIDOMText : nsIDOMCharacterData
 ]
 interface nsIDOMComment : nsIDOMCharacterData
 {
+}
+
+[
+    object,
+    uuid(cd7467b9-0f26-4787-a359-66e80ba8db92),
+    local
+]
+interface nsIDOMDocumentType : nsIDOMNode
+{
+    nsresult GetName(nsAString *aName);
+    nsresult GetPublicId(nsAString *aPublicId);
+    nsresult GetSystemId(nsAString *aSystemId);
+    nsresult GetInternalSubset(nsAString *aInternalSubset);
+    nsresult MozRemove();
 }
 
 [

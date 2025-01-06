@@ -729,6 +729,17 @@ static void NSAPI nsDocumentObserver_BindToDocument(nsIDocumentObserver *iface, 
         return;
     }
 
+    if(This->document_mode == COMPAT_MODE_QUIRKS) {
+        nsIDOMDocumentType *nsdoctype;
+        nsres = nsIContent_QueryInterface(aContent, &IID_nsIDOMDocumentType, (void**)&nsdoctype);
+        if(NS_SUCCEEDED(nsres)) {
+            TRACE("doctype node\n");
+            /* FIXME: We should set it to something higher for internet zone. */
+            set_document_mode(This, COMPAT_MODE_IE7);
+            nsIDOMDocumentType_Release(nsdoctype);
+        }
+    }
+
     nsres = nsIContent_QueryInterface(aContent, &IID_nsIDOMHTMLElement, (void**)&nselem);
     if(NS_FAILED(nsres))
         return;
