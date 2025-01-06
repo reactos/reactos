@@ -16,9 +16,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+#define CONST_VTABLE
 
-#include <activdbg.h>
+#include <wine/test.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "ole2.h"
+#include "wininet.h"
+#include "docobj.h"
+#include "dispex.h"
+#include "hlink.h"
+#include "mshtml.h"
+#include "mshtmhst.h"
+#include "initguid.h"
+#include "activscp.h"
+#include "activdbg.h"
+#include "objsafe.h"
+#include "mshtmdid.h"
+#include "mshtml_test.h"
 
 DEFINE_GUID(CLSID_IdentityUnmarshal,0x0000001b,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
 

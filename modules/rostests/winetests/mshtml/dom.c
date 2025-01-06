@@ -16,9 +16,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#define COBJMACROS
+#define CONST_VTABLE
 
+#include <wine/test.h>
+#include <stdarg.h>
 #include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "ole2.h"
+#include "mshtml.h"
+#include "mshtmcid.h"
+#include "mshtmhst.h"
+#include "docobj.h"
+#include "hlink.h"
+#include "dispex.h"
+#include "mshtml_test.h"
+#include "objsafe.h"
+#include "htiface.h"
+#include "tlogstg.h"
 
 static INT (WINAPI *pLCIDToLocaleName)(LCID,LPWSTR,INT,DWORD);
 static LANGID (WINAPI *pGetUserDefaultUILanguage)(void);
