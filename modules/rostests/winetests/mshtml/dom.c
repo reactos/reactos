@@ -8524,8 +8524,10 @@ static void test_elems(IHTMLDocument2 *doc)
 
 static void test_attr(IHTMLDocument2 *doc, IHTMLElement *elem)
 {
-    IHTMLDOMAttribute *attr, *attr2;
+    IHTMLDOMAttribute *attr, *attr2, *attr3;
+    IHTMLElement4 *elem4;
     VARIANT v;
+    HRESULT hres;
 
     get_elem_attr_node((IUnknown*)elem, "noattr", FALSE);
 
@@ -8636,6 +8638,57 @@ static void test_attr(IHTMLDocument2 *doc, IHTMLElement *elem)
     SysFreeString(V_BSTR(&v));
     test_attr_value(attr, "testing");
 
+    elem4 = get_elem4_iface((IUnknown*)elem);
+
+    hres = IHTMLElement4_setAttributeNode(elem4, attr, &attr2);
+    ok(hres == S_OK, "setAttributeNode failed: %08x\n", hres);
+    ok(!attr2, "attr2 != NULL\n");
+
+    test_elem_attr(elem, "Test", "testing");
+    put_attr_value(attr, "new value");
+    test_elem_attr(elem, "Test", "new value");
+
+    attr2 = get_elem_attr_node((IUnknown*)elem, "Test", TRUE);
+    ok(iface_cmp((IUnknown*)attr2, (IUnknown*)attr), "attr2 != attr\n");
+    IHTMLDOMAttribute_Release(attr2);
+
+    attr3 = create_attr((IUnknown*)doc, "Test");
+    put_attr_value(attr3, "replace test");
+
+    hres = IHTMLElement4_setAttributeNode(elem4, attr3, &attr2);
+    ok(hres == S_OK, "setAttributeNode failed: %08x\n", hres);
+    ok(iface_cmp((IUnknown*)attr2, (IUnknown*)attr), "attr2 != attr\n");
+    IHTMLDOMAttribute_Release(attr2);
+
+    test_elem_attr(elem, "Test", "replace test");
+    test_attr_value(attr, "new value");
+    test_attr_value(attr3, "replace test");
+
+    attr2 = get_elem_attr_node((IUnknown*)elem, "Test", TRUE);
+    ok(iface_cmp((IUnknown*)attr2, (IUnknown*)attr3), "attr2 != attr3\n");
+    IHTMLDOMAttribute_Release(attr2);
+
+    put_attr_value(attr, "new value2");
+    test_elem_attr(elem, "Test", "replace test");
+    test_attr_value(attr, "new value2");
+    test_attr_value(attr3, "replace test");
+
+    put_attr_value(attr3, "new replace value");
+    test_elem_attr(elem, "Test", "new replace value");
+    test_attr_value(attr, "new value2");
+    test_attr_value(attr3, "new replace value");
+
+    /* Attached attributes cause errors. */
+    hres = IHTMLElement4_setAttributeNode(elem4, attr3, &attr2);
+    ok(hres == E_INVALIDARG, "setAttributeNode failed: %08x, expected E_INVALIDARG\n", hres);
+    IHTMLDOMAttribute_Release(attr3);
+
+    attr2 = get_elem_attr_node((IUnknown*)elem, "id", TRUE);
+    hres = IHTMLElement4_setAttributeNode(elem4, attr2, &attr3);
+    ok(hres == E_INVALIDARG, "setAttributeNode failed: %08x, expected E_INVALIDARG\n", hres);
+    IHTMLDOMAttribute_Release(attr2);
+
+    IHTMLElement4_Release(elem4);
     IHTMLDOMAttribute_Release(attr);
 }
 

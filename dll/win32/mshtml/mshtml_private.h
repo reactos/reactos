@@ -991,14 +991,17 @@ typedef struct {
 
     LONG ref;
 
-    /* name and value are valid only for detached attributes (when elem == NULL). */
-    WCHAR *name;
+    /* value is valid only for detached attributes (when elem == NULL). */
     VARIANT value;
+    /* name must be valid for detached attributes */
+    WCHAR *name;
 
     HTMLElement *elem;
     DISPID dispid;
     struct list entry;
 } HTMLDOMAttribute;
+
+HTMLDOMAttribute *unsafe_impl_from_IHTMLDOMAttribute(IHTMLDOMAttribute*) DECLSPEC_HIDDEN;
 
 HRESULT HTMLDOMAttribute_Create(const WCHAR*,HTMLElement*,DISPID,HTMLDOMAttribute**) DECLSPEC_HIDDEN;
 

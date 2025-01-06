@@ -491,6 +491,11 @@ static dispex_static_data_t HTMLDOMAttribute_dispex = {
     HTMLDOMAttribute_iface_tids
 };
 
+HTMLDOMAttribute *unsafe_impl_from_IHTMLDOMAttribute(IHTMLDOMAttribute *iface)
+{
+    return iface->lpVtbl == &HTMLDOMAttributeVtbl ? impl_from_IHTMLDOMAttribute(iface) : NULL;
+}
+
 HRESULT HTMLDOMAttribute_Create(const WCHAR *name, HTMLElement *elem, DISPID dispid, HTMLDOMAttribute **attr)
 {
     HTMLAttributeCollection *col;
