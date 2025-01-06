@@ -3402,6 +3402,19 @@ static void _test_attr_node_name(unsigned line, IHTMLDOMAttribute *attr, const c
     SysFreeString(str);
 }
 
+#define test_attr_parent(a) _test_attr_parent(__LINE__,a)
+static void _test_attr_parent(unsigned line, IHTMLDOMAttribute *attr)
+{
+    IHTMLDOMAttribute2 *attr2 = _get_attr2_iface(line, (IUnknown*)attr);
+    IHTMLDOMNode *parent = (void*)0xdeadbeef;
+    HRESULT hres;
+
+    hres = IHTMLDOMAttribute2_get_parentNode(attr2, &parent);
+    ok_(__FILE__,line)(hres == S_OK, "get_parentNode failed: %08x\n", hres);
+    ok_(__FILE__,line)(!parent, "parent != NULL\n");
+    IHTMLDOMAttribute2_Release(attr2);
+}
+
 static void test_attr_collection_disp(IDispatch *disp)
 {
     IDispatchEx *dispex;
@@ -8522,6 +8535,7 @@ static void test_attr(IHTMLDocument2 *doc, IHTMLElement *elem)
     test_ifaces((IUnknown*)attr, attr_iids);
     test_no_iface((IUnknown*)attr, &IID_IHTMLDOMNode);
     test_attr_specified(attr, VARIANT_TRUE);
+    test_attr_parent(attr);
 
     attr2 = get_elem_attr_node((IUnknown*)elem, "id", TRUE);
     ok(iface_cmp((IUnknown*)attr, (IUnknown*)attr2), "attr != attr2\n");
