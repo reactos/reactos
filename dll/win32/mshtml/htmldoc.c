@@ -3057,12 +3057,31 @@ static HRESULT WINAPI HTMLDocument6_get_compatible(IHTMLDocument6 *iface,
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLDocument6_get_documentMode(IHTMLDocument6 *iface,
-        VARIANT *p)
+static HRESULT WINAPI HTMLDocument6_get_documentMode(IHTMLDocument6 *iface, VARIANT *p)
 {
     HTMLDocument *This = impl_from_IHTMLDocument6(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    static const int docmode_values[] = {
+        5,  /* DOCMODE_QUIRKS */
+        7,  /* DOCMODE_IE7 */
+        8,  /* DOCMODE_IE8 */
+        9,  /* DOCMODE_IE8 */
+        10, /* DOCMODE_IE10 */
+        11  /* DOCMODE_IE11 */
+    };
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    if(!This->doc_node) {
+        FIXME("NULL doc_node\n");
+        return E_UNEXPECTED;
+    }
+
+    assert(This->doc_node->document_mode < sizeof(docmode_values)/sizeof(*docmode_values));
+
+    V_VT(p) = VT_I4;
+    V_I4(p) = docmode_values[This->doc_node->document_mode];
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLDocument6_get_onstorage(IHTMLDocument6 *iface,
