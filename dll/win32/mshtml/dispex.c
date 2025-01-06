@@ -62,6 +62,7 @@ typedef struct {
 
 struct dispex_data_t {
     DWORD func_cnt;
+    DWORD func_size;
     func_info_t *funcs;
     func_info_t **name_table;
     DWORD func_disp_cnt;
@@ -225,7 +226,7 @@ static BOOL is_arg_type_supported(VARTYPE vt)
     return FALSE;
 }
 
-static void add_func_info(dispex_data_t *data, DWORD *size, tid_t tid, const FUNCDESC *desc, ITypeInfo *dti)
+static void add_func_info(dispex_data_t *data, tid_t tid, const FUNCDESC *desc, ITypeInfo *dti)
 {
     func_info_t *info;
     HRESULT hres;
@@ -239,8 +240,8 @@ static void add_func_info(dispex_data_t *data, DWORD *size, tid_t tid, const FUN
     }
 
     if(info == data->funcs+data->func_cnt) {
-        if(data->func_cnt == *size)
-            data->funcs = heap_realloc_zero(data->funcs, (*size <<= 1)*sizeof(func_info_t));
+        if(data->func_cnt == data->func_size)
+            data->funcs = heap_realloc_zero(data->funcs, (data->func_size <<= 1)*sizeof(func_info_t));
         info = data->funcs+data->func_cnt;
 
         hres = ITypeInfo_GetDocumentation(dti, desc->memid, &info->name, NULL, NULL, NULL);
@@ -315,7 +316,7 @@ static void add_func_info(dispex_data_t *data, DWORD *size, tid_t tid, const FUN
     }
 }
 
-static HRESULT process_interface(dispex_data_t *data, tid_t tid, ITypeInfo *disp_typeinfo, DWORD *size)
+static HRESULT process_interface(dispex_data_t *data, tid_t tid, ITypeInfo *disp_typeinfo)
 {
     unsigned i = 7; /* skip IDispatch functions */
     ITypeInfo *typeinfo;
@@ -333,7 +334,7 @@ static HRESULT process_interface(dispex_data_t *data, tid_t tid, ITypeInfo *disp
 
         TRACE("adding...\n");
 
-        add_func_info(data, size, tid, funcdesc, disp_typeinfo ? disp_typeinfo : typeinfo);
+        add_func_info(data, tid, funcdesc, disp_typeinfo ? disp_typeinfo : typeinfo);
         ITypeInfo_ReleaseFuncDesc(typeinfo, funcdesc);
     }
 
@@ -354,7 +355,7 @@ static dispex_data_t *preprocess_dispex_data(DispatchEx *This)
 {
     const tid_t *tid;
     dispex_data_t *data;
-    DWORD size = 16, i;
+    DWORD i;
     ITypeInfo *dti;
     HRESULT hres;
 
@@ -375,7 +376,8 @@ static dispex_data_t *preprocess_dispex_data(DispatchEx *This)
     }
     data->func_cnt = 0;
     data->func_disp_cnt = 0;
-    data->funcs = heap_alloc_zero(size*sizeof(func_info_t));
+    data->func_size = 16;
+    data->funcs = heap_alloc_zero(data->func_size*sizeof(func_info_t));
     if (!data->funcs) {
         heap_free (data);
         ERR("Out of memory\n");
@@ -384,18 +386,19 @@ static dispex_data_t *preprocess_dispex_data(DispatchEx *This)
     list_add_tail(&dispex_data_list, &data->entry);
 
     for(tid = This->data->iface_tids; *tid; tid++) {
-        hres = process_interface(data, *tid, dti, &size);
+        hres = process_interface(data, *tid, dti);
         if(FAILED(hres))
             break;
     }
 
     if(This->data->additional_tid)
-        process_interface(data, This->data->additional_tid, NULL, &size);
+        process_interface(data, This->data->additional_tid, NULL);
 
     if(!data->func_cnt) {
         heap_free(data->funcs);
         data->name_table = NULL;
         data->funcs = NULL;
+        data->func_size = 0;
         return data;
     }
 
