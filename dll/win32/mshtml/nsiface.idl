@@ -1146,6 +1146,23 @@ interface nsIDOMHTMLHeadElement : nsISupports
 
 [
     object,
+    uuid(2a3f789e-0667-464f-a8d7-6f58513443d9),
+    local
+]
+interface nsIDOMHTMLMetaElement : nsISupports
+{
+    nsresult GetContent(nsAString *aContent);
+    nsresult SetContent(const nsAString *aContent);
+    nsresult GetHttpEquiv(nsAString *aHttpEquiv);
+    nsresult SetHttpEquiv(const nsAString *aHttpEquiv);
+    nsresult GetName(nsAString *aName);
+    nsresult SetName(const nsAString *aName);
+    nsresult GetScheme(nsAString *aScheme);
+    nsresult SetScheme(const nsAString *aScheme);
+}
+
+[
+    object,
     uuid(4109a2d2-e7af-445d-bb72-c7c9b875f35e),
     local
 ]

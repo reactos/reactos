@@ -361,6 +361,79 @@ static nsresult run_insert_script(HTMLDocumentNode *doc, nsISupports *script_ifa
     return NS_OK;
 }
 
+static void set_document_mode(HTMLDocumentNode *doc, compat_mode_t document_mode)
+{
+    TRACE("%p: %d\n", doc, document_mode);
+    doc->document_mode = document_mode;
+}
+
+static BOOL parse_ua_compatible(const WCHAR *p, compat_mode_t *r)
+{
+    int v = 0;
+
+    if(p[0] != 'I' || p[1] != 'E' || p[2] != '=')
+        return FALSE;
+
+    p += 3;
+    while('0' <= *p && *p <= '9')
+        v = v*10 + *(p++)-'0';
+    if(*p || !v)
+        return FALSE;
+
+    switch(v){
+    case 7:
+        *r = COMPAT_MODE_IE7;
+        break;
+    case 8:
+        *r = COMPAT_MODE_IE8;
+        break;
+    case 9:
+        *r = COMPAT_MODE_IE9;
+        break;
+    case 10:
+        *r = COMPAT_MODE_IE10;
+        break;
+    default:
+        *r = v < 7 ? COMPAT_MODE_QUIRKS : COMPAT_MODE_IE11;
+    }
+
+    return TRUE;
+}
+
+static void process_meta_element(HTMLDocumentNode *doc, nsIDOMHTMLMetaElement *meta_element)
+{
+    nsAString http_equiv_str, content_str;
+    nsresult nsres;
+
+    static const WCHAR x_ua_compatibleW[] = {'x','-','u','a','-','c','o','m','p','a','t','i','b','l','e',0};
+
+    nsAString_Init(&http_equiv_str, NULL);
+    nsAString_Init(&content_str, NULL);
+    nsres = nsIDOMHTMLMetaElement_GetHttpEquiv(meta_element, &http_equiv_str);
+    if(NS_SUCCEEDED(nsres))
+        nsres = nsIDOMHTMLMetaElement_GetContent(meta_element, &content_str);
+
+    if(NS_SUCCEEDED(nsres)) {
+        const PRUnichar *http_equiv, *content;
+
+        nsAString_GetData(&http_equiv_str, &http_equiv);
+        nsAString_GetData(&content_str, &content);
+
+        TRACE("%s: %s\n", debugstr_w(http_equiv), debugstr_w(content));
+
+        if(!strcmpiW(http_equiv, x_ua_compatibleW)) {
+            compat_mode_t document_mode;
+            if(parse_ua_compatible(content, &document_mode))
+                set_document_mode(doc, document_mode);
+            else
+                FIXME("Unsupported document mode %s\n", debugstr_w(content));
+        }
+    }
+
+    nsAString_Finish(&http_equiv_str);
+    nsAString_Finish(&content_str);
+}
+
 typedef struct nsRunnable nsRunnable;
 
 typedef nsresult (*runnable_proc_t)(HTMLDocumentNode*,nsISupports*,nsISupports*);
@@ -640,17 +713,12 @@ static void NSAPI nsDocumentObserver_BindToDocument(nsIDocumentObserver *iface, 
     nsIDOMHTMLIFrameElement *nsiframe;
     nsIDOMHTMLFrameElement *nsframe;
     nsIDOMHTMLScriptElement *nsscript;
+    nsIDOMHTMLMetaElement *nsmeta;
     nsIDOMHTMLElement *nselem;
     nsIDOMComment *nscomment;
     nsresult nsres;
 
     TRACE("(%p)->(%p %p)\n", This, aDocument, aContent);
-
-    nsres = nsIContent_QueryInterface(aContent, &IID_nsIDOMHTMLElement, (void**)&nselem);
-    if(NS_SUCCEEDED(nsres)) {
-        check_event_attr(This, nselem);
-        nsIDOMHTMLElement_Release(nselem);
-    }
 
     nsres = nsIContent_QueryInterface(aContent, &IID_nsIDOMComment, (void**)&nscomment);
     if(NS_SUCCEEDED(nsres)) {
@@ -660,6 +728,13 @@ static void NSAPI nsDocumentObserver_BindToDocument(nsIDocumentObserver *iface, 
         nsIDOMComment_Release(nscomment);
         return;
     }
+
+    nsres = nsIContent_QueryInterface(aContent, &IID_nsIDOMHTMLElement, (void**)&nselem);
+    if(NS_FAILED(nsres))
+        return;
+
+    check_event_attr(This, nselem);
+    nsIDOMHTMLElement_Release(nselem);
 
     nsres = nsIContent_QueryInterface(aContent, &IID_nsIDOMHTMLIFrameElement, (void**)&nsiframe);
     if(NS_SUCCEEDED(nsres)) {
@@ -695,6 +770,13 @@ static void NSAPI nsDocumentObserver_BindToDocument(nsIDocumentObserver *iface, 
             add_script_runner(This, run_insert_script, (nsISupports*)nsscript, NULL);
 
         IHTMLScriptElement_Release(&script_elem->IHTMLScriptElement_iface);
+        return;
+    }
+
+    nsres = nsIContent_QueryInterface(aContent, &IID_nsIDOMHTMLMetaElement, (void**)&nsmeta);
+    if(NS_SUCCEEDED(nsres)) {
+        process_meta_element(This, nsmeta);
+        nsIDOMHTMLMetaElement_Release(nsmeta);
     }
 }
 

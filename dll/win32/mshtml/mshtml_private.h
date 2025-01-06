@@ -277,6 +277,18 @@ TID_LIST
     LAST_tid
 } tid_t;
 
+typedef enum {
+    COMPAT_MODE_QUIRKS,
+    COMPAT_MODE_IE7,
+    COMPAT_MODE_IE8,
+    COMPAT_MODE_IE9,
+    COMPAT_MODE_IE10,
+    COMPAT_MODE_IE11
+} compat_mode_t;
+
+#define COMPAT_MODE_CNT (COMPAT_MODE_IE11+1)
+#define COMPAT_MODE_NONE COMPAT_MODE_QUIRKS
+
 typedef struct dispex_data_t dispex_data_t;
 typedef struct dispex_dynamic_data_t dispex_dynamic_data_t;
 
@@ -823,6 +835,7 @@ struct HTMLDocumentNode {
 
     LONG ref;
 
+    compat_mode_t document_mode;
     HTMLInnerWindow *window;
 
     nsIDOMHTMLDocument *nsdoc;
