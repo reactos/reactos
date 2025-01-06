@@ -3463,7 +3463,8 @@ HRESULT create_doc_uri(HTMLOuterWindow *window, IUri *iuri, nsWineURI **ret)
     nsWineURI *uri;
     nsresult nsres;
 
-    nsres = create_nsuri(iuri, window, window->doc_obj->nscontainer, NULL, &uri);
+    nsres = create_nsuri(iuri, window, window->doc_obj ? window->doc_obj->nscontainer : NULL,
+            NULL, &uri);
     if(NS_FAILED(nsres))
         return E_FAIL;
 
