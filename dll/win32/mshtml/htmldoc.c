@@ -2025,15 +2025,10 @@ static HRESULT WINAPI HTMLDocument3_get_documentElement(IHTMLDocument3 *iface, I
 static HRESULT WINAPI HTMLDocument3_get_uniqueID(IHTMLDocument3 *iface, BSTR *p)
 {
     HTMLDocument *This = impl_from_IHTMLDocument3(iface);
-    WCHAR buf[32];
-
-    static const WCHAR formatW[] = {'m','s','_','_','i','d','%','u',0};
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    sprintfW(buf, formatW, ++This->doc_node->unique_id);
-    *p = SysAllocString(buf);
-    return *p ? S_OK : E_OUTOFMEMORY;
+    return elem_unique_id(++This->doc_node->unique_id, p);
 }
 
 static HRESULT WINAPI HTMLDocument3_attachEvent(IHTMLDocument3 *iface, BSTR event,

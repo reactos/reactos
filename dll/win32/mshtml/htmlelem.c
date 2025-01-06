@@ -3843,6 +3843,17 @@ static HRESULT WINAPI HTMLUniqueName_Invoke(IHTMLUniqueName *iface, DISPID dispI
             wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
+HRESULT elem_unique_id(unsigned id, BSTR *p)
+{
+    WCHAR buf[32];
+
+    static const WCHAR formatW[] = {'m','s','_','_','i','d','%','u',0};
+
+    sprintfW(buf, formatW, id);
+    *p = SysAllocString(buf);
+    return *p ? S_OK : E_OUTOFMEMORY;
+}
+
 static void ensure_unique_id(HTMLElement *elem)
 {
     if(!elem->unique_id)
@@ -3863,8 +3874,11 @@ static HRESULT WINAPI HTMLUniqueName_get_uniqueNumber(IHTMLUniqueName *iface, LO
 static HRESULT WINAPI HTMLUniqueName_get_uniqueID(IHTMLUniqueName *iface, BSTR *p)
 {
     HTMLElement *This = impl_from_IHTMLUniqueName(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    ensure_unique_id(This);
+    return elem_unique_id(This->unique_id, p);
 }
 
 static const IHTMLUniqueNameVtbl HTMLUniqueNameVtbl = {

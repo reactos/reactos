@@ -761,6 +761,7 @@ typedef struct {
     HTMLStyle *runtime_style;
     HTMLAttributeCollection *attrs;
     WCHAR *filter;
+    unsigned unique_id;
 } HTMLElement;
 
 #define HTMLELEMENT_TIDS    \
@@ -1066,6 +1067,8 @@ HRESULT get_elem_source_index(HTMLElement*,LONG*) DECLSPEC_HIDDEN;
 nsresult get_elem_attr_value(nsIDOMHTMLElement*,const WCHAR*,nsAString*,const PRUnichar**) DECLSPEC_HIDDEN;
 HRESULT elem_string_attr_getter(HTMLElement*,const WCHAR*,BOOL,BSTR*) DECLSPEC_HIDDEN;
 HRESULT elem_string_attr_setter(HTMLElement*,const WCHAR*,const WCHAR*) DECLSPEC_HIDDEN;
+
+HRESULT elem_unique_id(unsigned id, BSTR *p) DECLSPEC_HIDDEN;
 
 /* commands */
 typedef struct {
