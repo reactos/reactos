@@ -786,8 +786,6 @@ static void parse_elem_text(ScriptHost *script_host, HTMLScriptElement *script_e
 
     TRACE("%s\n", debugstr_w(text));
 
-    set_script_elem_readystate(script_elem, READYSTATE_INTERACTIVE);
-
     VariantInit(&var);
     memset(&excepinfo, 0, sizeof(excepinfo));
     TRACE(">>>\n");
@@ -1089,6 +1087,8 @@ static void parse_inline_script(ScriptHost *script_host, HTMLScriptElement *scri
     nsres = nsIDOMHTMLScriptElement_GetText(script_elem->nsscript, &text_str);
     nsAString_GetData(&text_str, &text);
 
+    set_script_elem_readystate(script_elem, READYSTATE_INTERACTIVE);
+
     if(NS_FAILED(nsres)) {
         ERR("GetText failed: %08x\n", nsres);
     }else if(*text) {
@@ -1257,7 +1257,7 @@ static ScriptHost *get_elem_script_host(HTMLInnerWindow *window, HTMLScriptEleme
     return get_script_host(window, &guid);
 }
 
-void doc_insert_script(HTMLInnerWindow *window, HTMLScriptElement *script_elem)
+void doc_insert_script(HTMLInnerWindow *window, HTMLScriptElement *script_elem, BOOL from_parser)
 {
     ScriptHost *script_host;
     BOOL is_complete = FALSE;
@@ -1268,6 +1268,8 @@ void doc_insert_script(HTMLInnerWindow *window, HTMLScriptElement *script_elem)
 
     if(script_host->parse) {
         if(script_elem->src_text) {
+            if(from_parser)
+                set_script_elem_readystate(script_elem, READYSTATE_INTERACTIVE);
             script_elem->parsed = TRUE;
             parse_elem_text(script_host, script_elem, script_elem->src_text);
             is_complete = TRUE;

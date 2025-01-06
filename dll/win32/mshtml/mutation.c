@@ -337,13 +337,13 @@ static nsresult run_insert_script(HTMLDocumentNode *doc, nsISupports *script_ifa
 
     IHTMLWindow2_AddRef(&window->base.IHTMLWindow2_iface);
 
-    doc_insert_script(window, script_elem);
+    doc_insert_script(window, script_elem, TRUE);
 
     while(!list_empty(&window->script_queue)) {
         iter = LIST_ENTRY(list_head(&window->script_queue), script_queue_entry_t, entry);
         list_remove(&iter->entry);
         if(!iter->script->parsed)
-            doc_insert_script(window, iter->script);
+            doc_insert_script(window, iter->script, TRUE);
         IHTMLScriptElement_Release(&iter->script->IHTMLScriptElement_iface);
         heap_free(iter);
     }

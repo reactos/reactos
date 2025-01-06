@@ -44,7 +44,7 @@ HRESULT load_script(HTMLScriptElement*,const WCHAR*) DECLSPEC_HIDDEN;
 
 void release_script_hosts(HTMLInnerWindow*) DECLSPEC_HIDDEN;
 void connect_scripts(HTMLInnerWindow*) DECLSPEC_HIDDEN;
-void doc_insert_script(HTMLInnerWindow*,HTMLScriptElement*) DECLSPEC_HIDDEN;
+void doc_insert_script(HTMLInnerWindow*,HTMLScriptElement*,BOOL) DECLSPEC_HIDDEN;
 IDispatch *script_parse_event(HTMLInnerWindow*,LPCWSTR) DECLSPEC_HIDDEN;
 HRESULT exec_script(HTMLInnerWindow*,const WCHAR*,const WCHAR*,VARIANT*) DECLSPEC_HIDDEN;
 void set_script_mode(HTMLOuterWindow*,SCRIPTMODE) DECLSPEC_HIDDEN;

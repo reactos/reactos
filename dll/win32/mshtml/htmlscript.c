@@ -203,7 +203,7 @@ static HRESULT WINAPI HTMLScriptElement_put_text(IHTMLScriptElement *iface, BSTR
     }
 
     nsIDOMNode_Release(parent);
-    doc_insert_script(window, This);
+    doc_insert_script(window, This, FALSE);
     return S_OK;
 }
 
@@ -400,7 +400,7 @@ static HRESULT HTMLScriptElement_bind_to_tree(HTMLDOMNode *iface)
     }
 
     This->parse_on_bind = FALSE;
-    doc_insert_script(This->element.node.doc->window, This);
+    doc_insert_script(This->element.node.doc->window, This, FALSE);
     return S_OK;
 }
 
