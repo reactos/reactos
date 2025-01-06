@@ -73,6 +73,7 @@ DEFINE_EXPECT(iframe_onreadystatechange_complete);
 DEFINE_EXPECT(iframedoc_onreadystatechange);
 DEFINE_EXPECT(img_onload);
 DEFINE_EXPECT(img_onerror);
+DEFINE_EXPECT(link_onload);
 DEFINE_EXPECT(input_onfocus);
 DEFINE_EXPECT(input_onblur);
 DEFINE_EXPECT(div_onfocusin);
@@ -114,6 +115,9 @@ static const char readystate_doc_str[] =
 
 static const char img_doc_str[] =
     "<html><body><img id=\"imgid\"></img></body></html>";
+
+static const char link_doc_str[] =
+    "<html><body><link id=\"linkid\" rel=\"stylesheet\" type=\"text/css\"></link></body></html>";
 
 static const char input_doc_str[] =
     "<html><body><div id=\"divid\"><input id=\"inputid\"></input></div></body></html>";
@@ -947,6 +951,17 @@ static HRESULT WINAPI img_onload(IDispatchEx *iface, DISPID id, LCID lcid, WORD 
 }
 
 EVENT_HANDLER_FUNC_OBJ(img_onload);
+
+static HRESULT WINAPI link_onload(IDispatchEx *iface, DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp,
+        VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller)
+{
+    CHECK_EXPECT(link_onload);
+    test_event_args(&DIID_DispHTMLLinkElement, id, wFlags, pdp, pvarRes, pei, pspCaller);
+    test_event_src("LINK");
+    return S_OK;
+}
+
+EVENT_HANDLER_FUNC_OBJ(link_onload);
 
 static HRESULT WINAPI unattached_img_onload(IDispatchEx *iface, DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp,
         VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller)
@@ -1995,6 +2010,48 @@ static void test_imgload(IHTMLDocument2 *doc)
     CHECK_CALLED(img_onload);
 
     IHTMLImgElement_Release(img);
+}
+
+static void test_link_load(IHTMLDocument2 *doc)
+{
+    IHTMLLinkElement *link;
+    IHTMLElement *elem;
+    VARIANT v;
+    BSTR str;
+    HRESULT hres;
+
+    elem = get_elem_id(doc, "linkid");
+    hres = IHTMLElement_QueryInterface(elem, &IID_IHTMLLinkElement, (void**)&link);
+    IHTMLElement_Release(elem);
+    ok(hres == S_OK, "Could not get IHTMLLinkElement iface: %08x\n", hres);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = IHTMLLinkElement_get_onload(link, &v);
+    ok(hres == S_OK, "get_onload failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_NULL, "V_VT(onload) = %d\n", V_VT(&v));
+
+    V_VT(&v) = VT_DISPATCH;
+    V_DISPATCH(&v) = (IDispatch*)&link_onload_obj;
+    hres = IHTMLLinkElement_put_onload(link, v);
+    ok(hres == S_OK, "put_onload failed: %08x\n", hres);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = IHTMLLinkElement_get_onload(link, &v);
+    ok(hres == S_OK, "get_onload failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(onload) = %d\n", V_VT(&v));
+    ok(V_DISPATCH(&v) == (IDispatch*)&link_onload_obj, "V_DISPATCH(onload) != onloadkFunc\n");
+    VariantClear(&v);
+
+    str = a2bstr("http://test.winehq.org/tests/winehq_snapshot/index_files/styles.css");
+    hres = IHTMLLinkElement_put_href(link, str);
+    ok(hres == S_OK, "put_src failed: %08x\n", hres);
+    SysFreeString(str);
+
+    SET_EXPECT(link_onload);
+    pump_msgs(&called_link_onload);
+    CHECK_CALLED(link_onload);
+
+    IHTMLLinkElement_Release(link);
 }
 
 static void test_focus(IHTMLDocument2 *doc)
@@ -3069,6 +3126,7 @@ START_TEST(events)
         run_test(click_doc_str, test_onclick);
         run_test(readystate_doc_str, test_onreadystatechange);
         run_test(img_doc_str, test_imgload);
+        run_test(link_doc_str, test_link_load);
         run_test(input_doc_str, test_focus);
         run_test(form_doc_str, test_submit);
         run_test(iframe_doc_str, test_iframe_connections);
