@@ -83,7 +83,7 @@ DEFINE_EXPECT(xmlhttprequest_onreadystatechange_loading);
 DEFINE_EXPECT(xmlhttprequest_onreadystatechange_done);
 
 #define test_disp(u,id) _test_disp(__LINE__,u,id)
-static void _test_disp(unsigned line, IUnknown *unk, const IID *diid)
+static void _test_disp(unsigned line, IUnknown *unk, const IID *diid, const IID *broken_diid)
 {
     IDispatchEx *dispex;
     ITypeInfo *typeinfo;
@@ -108,8 +108,9 @@ static void _test_disp(unsigned line, IUnknown *unk, const IID *diid)
 
         hres = ITypeInfo_GetTypeAttr(typeinfo, &type_attr);
         ok_(__FILE__,line) (hres == S_OK, "GetTypeAttr failed: %08x\n", hres);
-        ok_(__FILE__,line) (IsEqualGUID(&type_attr->guid, diid), "unexpected guid %s\n",
-                            wine_dbgstr_guid(&type_attr->guid));
+        ok_(__FILE__,line) (IsEqualGUID(&type_attr->guid, diid)
+                            || broken(broken_diid && IsEqualGUID(&type_attr->guid, broken_diid)),
+                            "unexpected guid %s\n", wine_dbgstr_guid(&type_attr->guid));
 
         ITypeInfo_ReleaseTypeAttr(typeinfo, type_attr);
         ITypeInfo_Release(typeinfo);
@@ -118,9 +119,9 @@ static void _test_disp(unsigned line, IUnknown *unk, const IID *diid)
     IDispatchEx_Release(dispex);
 }
 
-#define test_event_args(a,b,c,d,e,f,g) _test_event_args(__LINE__,a,b,c,d,e,f,g)
-static void _test_event_args(unsigned line, const IID *dispiid, DISPID id, WORD wFlags, DISPPARAMS *pdp,
-        VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller)
+#define test_event_args(a,b,c,d,e,f,g,h) _test_event_args(__LINE__,a,b,c,d,e,f,g,h)
+static void _test_event_args(unsigned line, const IID *dispiid, const IID *broken_dispiid, DISPID id, WORD wFlags,
+        DISPPARAMS *pdp, VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller)
 {
     ok_(__FILE__,line) (id == DISPID_VALUE, "id = %d\n", id);
     ok_(__FILE__,line) (wFlags == DISPATCH_METHOD, "wFlags = %x\n", wFlags);
@@ -135,7 +136,7 @@ static void _test_event_args(unsigned line, const IID *dispiid, DISPID id, WORD 
     ok_(__FILE__,line) (!pspCaller, "pspCaller != NULL\n");
 
     if(dispiid)
-        _test_disp(line, (IUnknown*)V_DISPATCH(pdp->rgvarg), dispiid);
+        _test_disp(line, (IUnknown*)V_DISPATCH(pdp->rgvarg), dispiid, broken_dispiid);
 }
 
 static HRESULT WINAPI DispatchEx_QueryInterface(IDispatchEx *iface, REFIID riid, void **ppv)
@@ -242,7 +243,7 @@ static HRESULT WINAPI xmlhttprequest_onreadystatechange(IDispatchEx *iface, DISP
     HRESULT hres;
 
     if (!expect_xmlhttprequest_onreadystatechange_loading)
-    test_event_args(&DIID_DispHTMLXMLHttpRequest, id, wFlags, pdp, pvarRes, pei, pspCaller);
+    test_event_args(&DIID_DispHTMLXMLHttpRequest, &IID_IHTMLXMLHttpRequest, id, wFlags, pdp, pvarRes, pei, pspCaller);
 
     hres = IHTMLXMLHttpRequest_get_readyState(xhr, &val);
     disable_success_count
