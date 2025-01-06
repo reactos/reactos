@@ -162,7 +162,7 @@ void set_current_mon(HTMLOuterWindow *This, IMoniker *mon, DWORD flags)
         if(SUCCEEDED(hres)) {
             hres = create_uri(url, 0, &uri);
             if(FAILED(hres)) {
-                WARN("CrateUri failed: %08x\n", hres);
+                WARN("CreateUri failed: %08x\n", hres);
                 set_current_uri(This, NULL);
                 This->url = SysAllocString(url);
                 CoTaskMemFree(url);
