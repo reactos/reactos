@@ -2935,14 +2935,17 @@ static void test_current_style(IHTMLCurrentStyle *current_style)
     IHTMLCurrentStyle3_Release(current_style3);
 
     hres = IHTMLCurrentStyle_QueryInterface(current_style, &IID_IHTMLCurrentStyle4, (void**)&current_style4);
-    ok(hres == S_OK, "Could not get IHTMLCurrentStyle4 iface: %08x\n", hres);
+    ok(hres == S_OK || broken(hres == E_NOINTERFACE), "Could not get IHTMLCurrentStyle4 iface: %08x\n", hres);
+    if(SUCCEEDED(hres)) {
+        hres = IHTMLCurrentStyle4_get_minWidth(current_style4, &v);
+        ok(hres == S_OK, "get_minWidth failed: %08x\n", hres);
+        ok(V_VT(&v) == VT_BSTR, "V_VT(minWidth) = %d\n", V_VT(&v));
+        VariantClear(&v);
 
-    hres = IHTMLCurrentStyle4_get_minWidth(current_style4, &v);
-    ok(hres == S_OK, "get_minWidth failed: %08x\n", hres);
-    ok(V_VT(&v) == VT_BSTR, "V_VT(minWidth) = %d\n", V_VT(&v));
-    VariantClear(&v);
-
-    IHTMLCurrentStyle4_Release(current_style4);
+        IHTMLCurrentStyle4_Release(current_style4);
+    }else {
+        win_skip("IHTMLCurrentStyle4 not supported.\n");
+    }
 }
 
 static const char basic_test_str[] = "<html><body><div id=\"divid\"></div/</body></html>";
