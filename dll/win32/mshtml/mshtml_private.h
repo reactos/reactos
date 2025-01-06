@@ -754,6 +754,7 @@ typedef struct {
     IHTMLElement2 IHTMLElement2_iface;
     IHTMLElement3 IHTMLElement3_iface;
     IHTMLElement4 IHTMLElement4_iface;
+    IHTMLUniqueName IHTMLUniqueName_iface;
 
     nsIDOMHTMLElement *nselem;
     HTMLStyle *style;

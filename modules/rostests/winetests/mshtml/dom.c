@@ -179,6 +179,7 @@ static const IID * const doc_obj_iids[] = {
     &IID_IHTMLElement2, \
     &IID_IHTMLElement3, \
     &IID_IHTMLElement4, \
+    &IID_IHTMLUniqueName, \
     &IID_IDispatchEx
 
 static const IID * const elem_iids[] = {
