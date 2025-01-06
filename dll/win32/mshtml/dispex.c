@@ -343,6 +343,15 @@ static HRESULT process_interface(dispex_data_t *data, tid_t tid, ITypeInfo *disp
     return S_OK;
 }
 
+void dispex_info_add_interface(dispex_data_t *info, tid_t tid)
+{
+    HRESULT hres;
+
+    hres = process_interface(info, tid, NULL);
+    if(FAILED(hres))
+        ERR("process_interface failed: %08x\n", hres);
+}
+
 static int dispid_cmp(const void *p1, const void *p2)
 {
     return ((const func_info_t*)p1)->id - ((const func_info_t*)p2)->id;
@@ -386,14 +395,14 @@ static dispex_data_t *preprocess_dispex_data(const dispex_static_data_t *desc)
     }
     list_add_tail(&dispex_data_list, &data->entry);
 
+    if(desc->init_info)
+        desc->init_info(data);
+
     for(tid = desc->iface_tids; *tid; tid++) {
         hres = process_interface(data, *tid, dti);
         if(FAILED(hres))
             break;
     }
-
-    if(desc->additional_tid)
-        process_interface(data, desc->additional_tid, NULL);
 
     if(!data->func_cnt) {
         heap_free(data->funcs);
