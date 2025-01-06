@@ -3843,11 +3843,21 @@ static HRESULT WINAPI HTMLUniqueName_Invoke(IHTMLUniqueName *iface, DISPID dispI
             wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
+static void ensure_unique_id(HTMLElement *elem)
+{
+    if(!elem->unique_id)
+        elem->unique_id = ++elem->node.doc->unique_id;
+}
+
 static HRESULT WINAPI HTMLUniqueName_get_uniqueNumber(IHTMLUniqueName *iface, LONG *p)
 {
     HTMLElement *This = impl_from_IHTMLUniqueName(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    ensure_unique_id(This);
+    *p = This->unique_id;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLUniqueName_get_uniqueID(IHTMLUniqueName *iface, BSTR *p)
