@@ -5965,10 +5965,15 @@ static void test_navigator(IHTMLDocument2 *doc)
 
     hres = IHTMLWindow2_get_navigator(window, &navigator2);
     ok(hres == S_OK, "get_navigator failed: %08x\n", hres);
-    ok(navigator != navigator2, "navigator2 != navihgator\n");
+    ok(navigator != navigator2, "navigator2 != navigator\n");
+    IOmNavigator_Release(navigator2);
+
+    hres = IHTMLWindow2_get_clientInformation(window, &navigator2);
+    ok(hres == S_OK, "get_clientInformation failed: %08x\n", hres);
+    todo_wine ok(iface_cmp((IUnknown*)navigator, (IUnknown*)navigator2), "navigator2 != navigator\n");
+    IOmNavigator_Release(navigator2);
 
     IHTMLWindow2_Release(window);
-    IOmNavigator_Release(navigator2);
 
     hres = IOmNavigator_get_appCodeName(navigator, &bstr);
     ok(hres == S_OK, "get_appCodeName failed: %08x\n", hres);
