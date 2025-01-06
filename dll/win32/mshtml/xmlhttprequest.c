@@ -828,12 +828,44 @@ static const IHTMLXMLHttpRequestFactoryVtbl HTMLXMLHttpRequestFactoryVtbl = {
     HTMLXMLHttpRequestFactory_create
 };
 
+static inline HTMLXMLHttpRequestFactory *factory_from_DispatchEx(DispatchEx *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLXMLHttpRequestFactory, dispex);
+}
+
+static HRESULT HTMLXMLHttpRequestFactory_value(DispatchEx *iface, LCID lcid, WORD flags, DISPPARAMS *params,
+        VARIANT *res, EXCEPINFO *ei, IServiceProvider *caller)
+{
+    HTMLXMLHttpRequestFactory *This = factory_from_DispatchEx(iface);
+    IHTMLXMLHttpRequest *xhr;
+    HRESULT hres;
+
+    TRACE("\n");
+
+    if(flags != DISPATCH_CONSTRUCT) {
+        FIXME("flags %x not supported\n", flags);
+        return E_NOTIMPL;
+    }
+
+    hres = IHTMLXMLHttpRequestFactory_create(&This->IHTMLXMLHttpRequestFactory_iface, &xhr);
+    if(FAILED(hres))
+        return hres;
+
+    V_VT(res) = VT_DISPATCH;
+    V_DISPATCH(res) = (IDispatch*)xhr;
+    return S_OK;
+}
+
+static const dispex_static_data_vtbl_t HTMLXMLHttpRequestFactory_dispex_vtbl = {
+    HTMLXMLHttpRequestFactory_value
+};
+
 static const tid_t HTMLXMLHttpRequestFactory_iface_tids[] = {
     IHTMLXMLHttpRequestFactory_tid,
     0
 };
 static dispex_static_data_t HTMLXMLHttpRequestFactory_dispex = {
-    NULL,
+    &HTMLXMLHttpRequestFactory_dispex_vtbl,
     IHTMLXMLHttpRequestFactory_tid,
     NULL,
     HTMLXMLHttpRequestFactory_iface_tids
