@@ -372,6 +372,7 @@ static ULONG WINAPI HTMLRect_Release(IHTMLRect *iface)
     if(!ref) {
         if(This->nsrect)
             nsIDOMClientRect_Release(This->nsrect);
+        release_dispex(&This->dispex);
         heap_free(This);
     }
 
