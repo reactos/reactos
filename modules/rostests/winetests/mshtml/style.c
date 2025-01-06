@@ -2904,6 +2904,11 @@ static void test_current_style(IHTMLCurrentStyle *current_style)
     ok(!strcmp_wa(str, "none"), "styleFloat = %s\n", wine_dbgstr_w(str));
     SysFreeString(str);
 
+    hres = IHTMLCurrentStyle_get_overflowX(current_style, &str);
+    ok(hres == S_OK, "get_overflowX failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "hidden"), "overflowX = %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+
     current_style2 = get_current_style2_iface((IUnknown*)current_style);
 
     b = 100;
