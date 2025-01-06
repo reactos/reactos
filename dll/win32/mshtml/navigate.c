@@ -500,8 +500,8 @@ static HRESULT WINAPI HttpNegotiate_GetRootSecurityId(IHttpNegotiate2 *iface,
         BYTE *pbSecurityId, DWORD *pcbSecurityId, DWORD_PTR dwReserved)
 {
     BSCallback *This = impl_from_IHttpNegotiate2(iface);
-    FIXME("(%p)->(%p %p %ld)\n", This, pbSecurityId, pcbSecurityId, dwReserved);
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p %p %ld)\n", This, pbSecurityId, pcbSecurityId, dwReserved);
+    return E_NOTIMPL; /* FIXME */
 }
 
 static const IHttpNegotiate2Vtbl HttpNegotiate2Vtbl = {
