@@ -810,6 +810,57 @@ typedef struct {
     HRESULT hres;
 } ScriptBSC;
 
+static HRESULT get_binding_text(ScriptBSC *bsc, WCHAR **ret)
+{
+    UINT cp = CP_UTF8;
+    WCHAR *text;
+
+    if(!bsc->bsc.readed) {
+        text = heap_alloc(sizeof(WCHAR));
+        if(!text)
+            return E_OUTOFMEMORY;
+        *text = 0;
+        *ret = text;
+        return S_OK;
+    }
+
+    switch(bsc->bsc.bom) {
+    case BOM_UTF16:
+        if(bsc->bsc.readed % sizeof(WCHAR)) {
+            FIXME("The buffer is not a valid utf16 string\n");
+            return E_FAIL;
+        }
+
+        text = heap_alloc(bsc->bsc.readed+sizeof(WCHAR));
+        if(!text)
+            return E_OUTOFMEMORY;
+
+        memcpy(text, bsc->buf, bsc->bsc.readed);
+        text[bsc->bsc.readed/sizeof(WCHAR)] = 0;
+        break;
+
+    default:
+        /* FIXME: Try to use charset from HTTP headers first */
+        if(bsc->script_elem)
+            cp = get_document_charset(bsc->script_elem->element.node.doc);
+        /* fall through */
+    case BOM_UTF8: {
+        DWORD len;
+
+        len = MultiByteToWideChar(cp, 0, bsc->buf, bsc->bsc.readed, NULL, 0);
+        text = heap_alloc((len+1)*sizeof(WCHAR));
+        if(!text)
+            return E_OUTOFMEMORY;
+
+        MultiByteToWideChar(cp, 0, bsc->buf, bsc->bsc.readed, text, len);
+        text[len] = 0;
+    }
+    }
+
+    *ret = text;
+    return S_OK;
+}
+
 static inline ScriptBSC *impl_from_BSCallback(BSCallback *iface)
 {
     return CONTAINING_RECORD(iface, ScriptBSC, bsc);
@@ -924,10 +975,8 @@ static const BSCallbackVtbl ScriptBSCVtbl = {
 
 static HRESULT bind_script_to_text(HTMLInnerWindow *window, IUri *uri, HTMLScriptElement *script_elem, WCHAR **ret)
 {
-    UINT cp = CP_UTF8;
     ScriptBSC *bsc;
     IMoniker *mon;
-    WCHAR *text;
     HRESULT hres;
 
     hres = CreateURLMonikerEx2(NULL, uri, &mon, URL_MK_UNIFORM);
@@ -954,59 +1003,11 @@ static HRESULT bind_script_to_text(HTMLInnerWindow *window, IUri *uri, HTMLScrip
     hres = start_binding(window, &bsc->bsc, NULL);
     if(SUCCEEDED(hres))
         hres = bsc->hres;
-    if(FAILED(hres)) {
-        IBindStatusCallback_Release(&bsc->bsc.IBindStatusCallback_iface);
-        return hres;
-    }
-
-    if(!bsc->bsc.readed) {
-        *ret = NULL;
-        return S_OK;
-    }
-
-    switch(bsc->bsc.bom) {
-    case BOM_UTF16:
-        if(bsc->bsc.readed % sizeof(WCHAR)) {
-            FIXME("The buffer is not a valid utf16 string\n");
-            hres = E_FAIL;
-            break;
-        }
-
-        text = heap_alloc(bsc->bsc.readed+sizeof(WCHAR));
-        if(!text) {
-            hres = E_OUTOFMEMORY;
-            break;
-        }
-
-        memcpy(text, bsc->buf, bsc->bsc.readed);
-        text[bsc->bsc.readed/sizeof(WCHAR)] = 0;
-        break;
-
-    default:
-        /* FIXME: Try to use charset from HTTP headers first */
-        cp = get_document_charset(window->doc);
-        /* fall through */
-    case BOM_UTF8: {
-        DWORD len;
-
-        len = MultiByteToWideChar(cp, 0, bsc->buf, bsc->bsc.readed, NULL, 0);
-        text = heap_alloc((len+1)*sizeof(WCHAR));
-        if(!text) {
-            hres = E_OUTOFMEMORY;
-            break;
-        }
-
-        MultiByteToWideChar(cp, 0, bsc->buf, bsc->bsc.readed, text, len);
-        text[len] = 0;
-    }
-    }
+    if(SUCCEEDED(hres))
+        hres = get_binding_text(bsc, ret);
 
     IBindStatusCallback_Release(&bsc->bsc.IBindStatusCallback_iface);
-    if(FAILED(hres))
-        return hres;
-
-    *ret = text;
-    return S_OK;
+    return hres;
 }
 
 static void parse_extern_script(ScriptHost *script_host, HTMLScriptElement *script_elem, LPCWSTR src)
