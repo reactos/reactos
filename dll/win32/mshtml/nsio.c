@@ -1303,7 +1303,11 @@ static nsresult NSAPI nsChannel_SetReferrerWithPolicy(nsIHttpChannel *iface, nsI
     nsChannel *This = impl_from_nsIHttpChannel(iface);
     DWORD channel_scheme, referrer_scheme;
     nsWineURI *referrer;
+    BSTR referrer_uri;
     nsresult nsres;
+    HRESULT hres;
+
+    static const WCHAR refererW[] = {'R','e','f','e','r','e','r'};
 
     TRACE("(%p)->(%p %d)\n", This, aReferrer, aReferrerPolicy);
 
@@ -1337,6 +1341,10 @@ static nsresult NSAPI nsChannel_SetReferrerWithPolicy(nsIHttpChannel *iface, nsI
         nsIFileURL_Release(&referrer->nsIFileURL_iface);
         return NS_OK;
     }
+
+    hres = IUri_GetDisplayUri(referrer->uri, &referrer_uri);
+    if(SUCCEEDED(hres) )
+        set_http_header(&This->request_headers, refererW, sizeof(refererW)/sizeof(WCHAR), referrer_uri, SysStringLen(referrer_uri));
 
     This->referrer = (nsIURI*)&referrer->nsIFileURL_iface;
     return NS_OK;
