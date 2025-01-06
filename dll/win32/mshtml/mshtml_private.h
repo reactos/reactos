@@ -173,6 +173,7 @@ typedef struct event_target_t event_target_t;
     XDIID(HTMLDocumentEvents) \
     XDIID(HTMLElementEvents2) \
     XIID(IDocumentSelector) \
+    XIID(IElementSelector) \
     XIID(IHTMLAnchorElement) \
     XIID(IHTMLAreaElement) \
     XIID(IHTMLAttributeCollection) \
@@ -765,6 +766,7 @@ typedef struct {
     IHTMLElement3 IHTMLElement3_iface;
     IHTMLElement4 IHTMLElement4_iface;
     IHTMLUniqueName IHTMLUniqueName_iface;
+    IElementSelector IElementSelector_iface;
 
     nsIDOMHTMLElement *nselem;
     HTMLStyle *style;
@@ -781,7 +783,8 @@ typedef struct {
     IHTMLElement2_tid,      \
     IHTMLElement3_tid,      \
     IHTMLElement4_tid,      \
-    IHTMLUniqueName_tid
+    IHTMLUniqueName_tid,    \
+    IElementSelector_tid
 
 extern cp_static_data_t HTMLElementEvents2_data DECLSPEC_HIDDEN;
 #define HTMLELEMENT_CPC {&DIID_HTMLElementEvents2, &HTMLElementEvents2_data}

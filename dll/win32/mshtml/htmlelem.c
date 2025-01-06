@@ -4020,6 +4020,83 @@ static const IHTMLUniqueNameVtbl HTMLUniqueNameVtbl = {
     HTMLUniqueName_get_uniqueID
 };
 
+static inline HTMLElement *impl_from_IElementSelector(IElementSelector *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLElement, IElementSelector_iface);
+}
+
+static HRESULT WINAPI ElementSelector_QueryInterface(IElementSelector *iface, REFIID riid, void **ppv)
+{
+    HTMLElement *This = impl_from_IElementSelector(iface);
+    return IHTMLElement_QueryInterface(&This->IHTMLElement_iface, riid, ppv);
+}
+
+static ULONG WINAPI ElementSelector_AddRef(IElementSelector *iface)
+{
+    HTMLElement *This = impl_from_IElementSelector(iface);
+    return IHTMLElement_AddRef(&This->IHTMLElement_iface);
+}
+
+static ULONG WINAPI ElementSelector_Release(IElementSelector *iface)
+{
+    HTMLElement *This = impl_from_IElementSelector(iface);
+    return IHTMLElement_Release(&This->IHTMLElement_iface);
+}
+
+static HRESULT WINAPI ElementSelector_GetTypeInfoCount(IElementSelector *iface, UINT *pctinfo)
+{
+    HTMLElement *This = impl_from_IElementSelector(iface);
+    return IDispatchEx_GetTypeInfoCount(&This->node.event_target.dispex.IDispatchEx_iface, pctinfo);
+}
+
+static HRESULT WINAPI ElementSelector_GetTypeInfo(IElementSelector *iface, UINT iTInfo,
+        LCID lcid, ITypeInfo **ppTInfo)
+{
+    HTMLElement *This = impl_from_IElementSelector(iface);
+    return IDispatchEx_GetTypeInfo(&This->node.event_target.dispex.IDispatchEx_iface, iTInfo, lcid, ppTInfo);
+}
+
+static HRESULT WINAPI ElementSelector_GetIDsOfNames(IElementSelector *iface, REFIID riid,
+        LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
+{
+    HTMLElement *This = impl_from_IElementSelector(iface);
+    return IDispatchEx_GetIDsOfNames(&This->node.event_target.dispex.IDispatchEx_iface, riid, rgszNames, cNames, lcid, rgDispId);
+}
+
+static HRESULT WINAPI ElementSelector_Invoke(IElementSelector *iface, DISPID dispIdMember, REFIID riid,
+        LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
+{
+    HTMLElement *This = impl_from_IElementSelector(iface);
+    return IDispatchEx_Invoke(&This->node.event_target.dispex.IDispatchEx_iface, dispIdMember, riid, lcid, wFlags,
+            pDispParams, pVarResult, pExcepInfo, puArgErr);
+}
+
+static HRESULT WINAPI ElementSelector_querySelector(IElementSelector *iface, BSTR v, IHTMLElement **pel)
+{
+    HTMLElement *This = impl_from_IElementSelector(iface);
+    FIXME("(%p)->(%s %p)\n", This, debugstr_w(v), pel);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ElementSelector_querySelectorAll(IElementSelector *iface, BSTR v, IHTMLDOMChildrenCollection **pel)
+{
+    HTMLElement *This = impl_from_IElementSelector(iface);
+    FIXME("(%p)->(%s %p)\n", This, debugstr_w(v), pel);
+    return E_NOTIMPL;
+}
+
+static const IElementSelectorVtbl ElementSelectorVtbl = {
+    ElementSelector_QueryInterface,
+    ElementSelector_AddRef,
+    ElementSelector_Release,
+    ElementSelector_GetTypeInfoCount,
+    ElementSelector_GetTypeInfo,
+    ElementSelector_GetIDsOfNames,
+    ElementSelector_Invoke,
+    ElementSelector_querySelector,
+    ElementSelector_querySelectorAll
+};
+
 static inline HTMLElement *impl_from_HTMLDOMNode(HTMLDOMNode *iface)
 {
     return CONTAINING_RECORD(iface, HTMLElement, node);
@@ -4043,6 +4120,8 @@ HRESULT HTMLElement_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
         *ppv = &This->IHTMLElement4_iface;
     }else if(IsEqualGUID(&IID_IHTMLUniqueName, riid)) {
         *ppv = &This->IHTMLUniqueName_iface;
+    }else if(IsEqualGUID(&IID_IElementSelector, riid)) {
+        *ppv = &This->IElementSelector_iface;
     }else if(IsEqualGUID(&IID_IConnectionPointContainer, riid)) {
         *ppv = &This->cp_container.IConnectionPointContainer_iface;
     }else {
@@ -4313,6 +4392,7 @@ void HTMLElement_Init(HTMLElement *This, HTMLDocumentNode *doc, nsIDOMHTMLElemen
     This->IHTMLElement3_iface.lpVtbl = &HTMLElement3Vtbl;
     This->IHTMLElement4_iface.lpVtbl = &HTMLElement4Vtbl;
     This->IHTMLUniqueName_iface.lpVtbl = &HTMLUniqueNameVtbl;
+    This->IElementSelector_iface.lpVtbl = &ElementSelectorVtbl;
 
     if(dispex_data && !dispex_data->vtbl)
         dispex_data->vtbl = &HTMLElement_dispex_vtbl;
