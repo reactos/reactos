@@ -217,6 +217,7 @@ static void release_outer_window(HTMLOuterWindow *This)
 
     remove_target_tasks(This->task_magic);
     set_current_mon(This, NULL, 0);
+    set_current_uri(This, NULL);
     if(This->base.inner_window)
         detach_inner_window(This->base.inner_window);
     release_children(This);
