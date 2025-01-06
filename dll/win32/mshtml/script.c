@@ -1056,12 +1056,15 @@ HRESULT load_script(HTMLScriptElement *script_elem, const WCHAR *src, BOOL async
         return hres;
 
     hres = CreateURLMonikerEx2(NULL, uri, &mon, URL_MK_UNIFORM);
-    if(FAILED(hres))
+    if(FAILED(hres)) {
+        IUri_Release(uri);
         return hres;
+    }
 
     bsc = heap_alloc_zero(sizeof(*bsc));
     if(!bsc) {
         IMoniker_Release(mon);
+        IUri_Release(uri);
         return E_OUTOFMEMORY;
     }
 
@@ -1069,6 +1072,7 @@ HRESULT load_script(HTMLScriptElement *script_elem, const WCHAR *src, BOOL async
     IMoniker_Release(mon);
 
     hres = IUri_GetScheme(uri, &bsc->scheme);
+    IUri_Release(uri);
     if(FAILED(hres))
         bsc->scheme = URL_SCHEME_UNKNOWN;
 
