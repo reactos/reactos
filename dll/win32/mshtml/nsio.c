@@ -1687,7 +1687,7 @@ static nsresult NSAPI nsUploadChannel_SetUploadStream(nsIUploadChannel *iface,
     const char *content_type;
 
     static const WCHAR content_typeW[] =
-        {'C','o','n','t','e','n','t','-','T','y','p','e',0};
+        {'C','o','n','t','e','n','t','-','T','y','p','e'};
 
     TRACE("(%p)->(%p %s %s)\n", This, aStream, debugstr_nsacstr(aContentType), wine_dbgstr_longlong(aContentLength));
 
