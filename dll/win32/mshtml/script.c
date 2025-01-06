@@ -92,6 +92,8 @@ struct ScriptHost {
     struct list entry;
 };
 
+static ScriptHost *get_elem_script_host(HTMLInnerWindow*,HTMLScriptElement*);
+
 static void set_script_prop(ScriptHost *script_host, DWORD property, VARIANT *val)
 {
     IActiveScriptProperty *script_prop;
@@ -807,7 +809,6 @@ typedef struct {
 
     DWORD size;
     char *buf;
-    HRESULT hres;
 } ScriptBSC;
 
 static HRESULT get_binding_text(ScriptBSC *bsc, WCHAR **ret)
@@ -841,8 +842,7 @@ static HRESULT get_binding_text(ScriptBSC *bsc, WCHAR **ret)
 
     default:
         /* FIXME: Try to use charset from HTTP headers first */
-        if(bsc->script_elem)
-            cp = get_document_charset(bsc->script_elem->element.node.doc);
+        cp = get_document_charset(bsc->script_elem->element.node.doc);
         /* fall through */
     case BOM_UTF8: {
         DWORD len;
@@ -859,6 +859,29 @@ static HRESULT get_binding_text(ScriptBSC *bsc, WCHAR **ret)
 
     *ret = text;
     return S_OK;
+}
+
+static void script_file_available(ScriptBSC *bsc)
+{
+    HTMLScriptElement *script_elem = bsc->script_elem;
+    HTMLInnerWindow *window = bsc->bsc.window;
+    ScriptHost *script_host;
+    WCHAR *text;
+    HRESULT hres;
+
+    hres = get_binding_text(bsc, &text);
+    if(FAILED(hres))
+        return;
+
+    script_host = get_elem_script_host(window, script_elem);
+    if(!script_host) {
+        heap_free(text);
+        return;
+    }
+
+    script_elem->parsed = TRUE;
+    parse_elem_text(script_host, script_elem, text);
+    heap_free(text);
 }
 
 static inline ScriptBSC *impl_from_BSCallback(BSCallback *iface)
@@ -899,11 +922,14 @@ static HRESULT ScriptBSC_stop_binding(BSCallback *bsc, HRESULT result)
 {
     ScriptBSC *This = impl_from_BSCallback(bsc);
 
-    This->hres = result;
+    if(SUCCEEDED(result) && !This->script_elem)
+        result = E_UNEXPECTED;
 
     if(SUCCEEDED(result)) {
         if(This->script_elem->readystate == READYSTATE_LOADING)
             set_script_elem_readystate(This->script_elem, READYSTATE_LOADED);
+
+        script_file_available(This);
     }else {
         FIXME("binding failed %08x\n", result);
         heap_free(This->buf);
@@ -973,7 +999,7 @@ static const BSCallbackVtbl ScriptBSCVtbl = {
 };
 
 
-static HRESULT bind_script_to_text(HTMLInnerWindow *window, IUri *uri, HTMLScriptElement *script_elem, WCHAR **ret)
+static HRESULT bind_script(HTMLInnerWindow *window, IUri *uri, HTMLScriptElement *script_elem)
 {
     ScriptBSC *bsc;
     IMoniker *mon;
@@ -991,7 +1017,6 @@ static HRESULT bind_script_to_text(HTMLInnerWindow *window, IUri *uri, HTMLScrip
 
     init_bscallback(&bsc->bsc, &ScriptBSCVtbl, mon, 0);
     IMoniker_Release(mon);
-    bsc->hres = E_FAIL;
 
     hres = IUri_GetScheme(uri, &bsc->scheme);
     if(FAILED(hres))
@@ -1001,10 +1026,6 @@ static HRESULT bind_script_to_text(HTMLInnerWindow *window, IUri *uri, HTMLScrip
     bsc->script_elem = script_elem;
 
     hres = start_binding(window, &bsc->bsc, NULL);
-    if(SUCCEEDED(hres))
-        hres = bsc->hres;
-    if(SUCCEEDED(hres))
-        hres = get_binding_text(bsc, ret);
 
     IBindStatusCallback_Release(&bsc->bsc.IBindStatusCallback_iface);
     return hres;
@@ -1012,7 +1033,6 @@ static HRESULT bind_script_to_text(HTMLInnerWindow *window, IUri *uri, HTMLScrip
 
 static void parse_extern_script(ScriptHost *script_host, HTMLScriptElement *script_elem, LPCWSTR src)
 {
-    WCHAR *text;
     IUri *uri;
     HRESULT hres;
 
@@ -1025,14 +1045,8 @@ static void parse_extern_script(ScriptHost *script_host, HTMLScriptElement *scri
     if(FAILED(hres))
         return;
 
-    hres = bind_script_to_text(script_host->window, uri, script_elem, &text);
+    hres = bind_script(script_host->window, uri, script_elem);
     IUri_Release(uri);
-    if(FAILED(hres) || !text)
-        return;
-
-    parse_elem_text(script_host, script_elem, text);
-
-    heap_free(text);
 }
 
 static void parse_inline_script(ScriptHost *script_host, HTMLScriptElement *script_elem)
@@ -1083,7 +1097,6 @@ static void parse_script_elem(ScriptHost *script_host, HTMLScriptElement *script
     if(NS_FAILED(nsres)) {
         ERR("GetSrc failed: %08x\n", nsres);
     }else if(*src) {
-        script_elem->parsed = TRUE;
         parse_extern_script(script_host, script_elem, src);
     }else {
         parse_inline_script(script_host, script_elem);
