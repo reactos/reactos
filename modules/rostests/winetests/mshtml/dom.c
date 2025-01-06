@@ -147,6 +147,7 @@ static const IID * const doc_node_iids[] = {
     &IID_IHTMLDocument3,
     &IID_IHTMLDocument4,
     &IID_IHTMLDocument5,
+    &IID_IDocumentSelector,
     &IID_IDispatchEx,
     &IID_IConnectionPointContainer,
     &IID_IInternetHostSecurityManager,
@@ -162,6 +163,7 @@ static const IID * const doc_obj_iids[] = {
     &IID_IHTMLDocument3,
     &IID_IHTMLDocument4,
     &IID_IHTMLDocument5,
+    &IID_IDocumentSelector,
     &IID_IDispatchEx,
     &IID_IConnectionPointContainer,
     &IID_ICustomDoc,
@@ -2696,6 +2698,20 @@ static void _test_doc_all(unsigned line, IHTMLDocument2 *doc, const elem_type_t 
     IHTMLElementCollection_Release(col);
 }
 
+#define test_children_collection_length(a,b) _test_children_collection_length(__LINE__,a,b)
+static LONG _test_children_collection_length(unsigned line, IHTMLDOMChildrenCollection *collection, LONG exlen)
+{
+    LONG length;
+    HRESULT hres;
+
+    hres = IHTMLDOMChildrenCollection_get_length(collection, &length);
+    ok_(__FILE__,line)(hres == S_OK, "get_length failed: %08x\n", hres);
+    if(exlen != -1)
+        ok_(__FILE__,line)(length == exlen, "length = %d, expected %d\n", length, exlen);
+
+    return length;
+}
+
 #define test_elem_getelembytag(a,b,c,d) _test_elem_getelembytag(__LINE__,a,b,c,d)
 static void _test_elem_getelembytag(unsigned line, IUnknown *unk, elem_type_t type, LONG exlen, IHTMLElement **ret)
 {
@@ -2791,12 +2807,10 @@ static void _test_elem_set_innertext(unsigned line, IHTMLElement *elem, const ch
     col = _get_child_nodes(line, (IUnknown*)elem);
     ok(col != NULL, "col == NULL\n");
     if(col) {
-        LONG length = 0, type;
+        LONG type;
         IHTMLDOMNode *node;
 
-        hres = IHTMLDOMChildrenCollection_get_length(col, &length);
-        ok(hres == S_OK, "get_length failed: %08x\n", hres);
-        ok(length == 1, "length = %d\n", length);
+        _test_children_collection_length(line, col, 1);
 
         node = _get_child_item(line, col, 0);
         ok(node != NULL, "node == NULL\n");
@@ -7892,6 +7906,41 @@ static void test_enum_children(IUnknown *unk, unsigned len)
     IEnumVARIANT_Release(enum_var);
 }
 
+static void test_doc_selector(IHTMLDocument2 *doc, IHTMLElement *div)
+{
+    IHTMLDOMChildrenCollection *collection;
+    IDocumentSelector *doc_selector;
+    BSTR str;
+    HRESULT hres;
+
+    test_elem_set_innerhtml((IUnknown*)div, "<div class=\"cl1\"><form class=\"cl1\"></form></div><div class=\"cl2\"></div>");
+
+    hres = IHTMLDocument2_QueryInterface(doc, &IID_IDocumentSelector, (void**)&doc_selector);
+    ok(hres == S_OK || broken(hres == E_NOINTERFACE), "Could not get IDocumentSelector iface: %08x\n", hres);
+    if(FAILED(hres)) {
+        win_skip("IDocumentSelector tests skipped.\n");
+        return;
+    }
+
+    collection = NULL;
+    str = a2bstr("nomatch");
+    hres = IDocumentSelector_querySelectorAll(doc_selector, str, &collection);
+    ok(hres == S_OK, "querySelectorAll failed: %08x\n", hres);
+    ok(collection != NULL, "collection == NULL\n");
+    test_children_collection_length(collection, 0);
+    IHTMLDOMChildrenCollection_Release(collection);
+
+    collection = NULL;
+    str = a2bstr(".cl1");
+    hres = IDocumentSelector_querySelectorAll(doc_selector, str, &collection);
+    ok(hres == S_OK, "querySelectorAll failed: %08x\n", hres);
+    ok(collection != NULL, "collection == NULL\n");
+    test_children_collection_length(collection, 2);
+    IHTMLDOMChildrenCollection_Release(collection);
+
+    IDocumentSelector_Release(doc_selector);
+}
+
 static void test_elems(IHTMLDocument2 *doc)
 {
     IHTMLElementCollection *col;
@@ -8418,13 +8467,10 @@ static void test_elems(IHTMLDocument2 *doc)
     ok(child_col != NULL, "child_coll == NULL\n");
     if(child_col) {
         IUnknown *enum_unk;
-        LONG length = 0;
+        LONG length;
 
         test_disp((IUnknown*)child_col, &DIID_DispDOMChildrenCollection, "[object]");
-
-        hres = IHTMLDOMChildrenCollection_get_length(child_col, &length);
-        ok(hres == S_OK, "get_length failed: %08x\n", hres);
-        ok(length, "length=0\n");
+        length = test_children_collection_length(child_col, -1);
 
         node2 = NULL;
         node = get_child_item(child_col, 0);
@@ -8958,6 +9004,8 @@ static void test_elems2(IHTMLDocument2 *doc)
         }
         IHTMLElement_Release(elem2);
     }
+
+    test_doc_selector(doc, div);
 
     test_elem_set_innerhtml((IUnknown*)div, "<div id=\"elemid\">test</div>");
     elem = get_elem_by_id(doc, "elemid", TRUE);

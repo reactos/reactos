@@ -4067,8 +4067,23 @@ static HRESULT WINAPI DocumentSelector_querySelector(IDocumentSelector *iface, B
 static HRESULT WINAPI DocumentSelector_querySelectorAll(IDocumentSelector *iface, BSTR v, IHTMLDOMChildrenCollection **pel)
 {
     HTMLDocument *This = impl_from_IDocumentSelector(iface);
-    FIXME("(%p)->(%s %p)\n", This, debugstr_w(v), pel);
-    return E_NOTIMPL;
+    nsIDOMNodeList *node_list;
+    nsAString nsstr;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s %p)\n", This, debugstr_w(v), pel);
+
+    nsAString_InitDepend(&nsstr, v);
+    nsres = nsIDOMHTMLDocument_QuerySelectorAll(This->doc_node->nsdoc, &nsstr, &node_list);
+    nsAString_Finish(&nsstr);
+    if(NS_FAILED(nsres)) {
+        ERR("QuerySelectorAll failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    *pel = create_child_collection(This->doc_node, node_list);
+    nsIDOMNodeList_Release(node_list);
+    return *pel ? S_OK : E_OUTOFMEMORY;
 }
 
 static const IDocumentSelectorVtbl DocumentSelectorVtbl = {
