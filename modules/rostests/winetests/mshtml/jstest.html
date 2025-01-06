@@ -383,6 +383,9 @@ function runTests() {
     var r = window.execScript("globalVar = true;");
     ok(r === undefined, "execScript returned " + r);
     ok(globalVar === true, "globalVar = " + globalVar);
+
+    /* Call setTimeout without specified time. */
+    window.setTimeout(function() { external.reportSuccess(); });
 }
 
 function runTest() {
@@ -391,8 +394,6 @@ function runTest() {
     }catch(e) {
         ok(false, "got exception " + e.message);
     }
-
-    external.reportSuccess();
 }
 </script>
 <body onload="runTest();">

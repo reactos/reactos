@@ -2628,9 +2628,13 @@ static HRESULT WINAPI WindowDispEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID 
 
     TRACE("(%p)->(%x %x %x %p %p %p %p)\n", This, id, lcid, wFlags, pdp, pvarRes, pei, pspCaller);
 
-    if(id == DISPID_IHTMLWINDOW2_LOCATION && (wFlags & DISPATCH_PROPERTYPUT)) {
+    switch(id) {
+    case DISPID_IHTMLWINDOW2_LOCATION: {
         HTMLLocation *location;
         HRESULT hres;
+
+        if(!(wFlags & DISPATCH_PROPERTYPUT))
+            break;
 
         TRACE("forwarding to location.href\n");
 
@@ -2642,6 +2646,27 @@ static HRESULT WINAPI WindowDispEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID 
                 wFlags, pdp, pvarRes, pei, pspCaller);
         IHTMLLocation_Release(&location->IHTMLLocation_iface);
         return hres;
+    }
+    case DISPID_IHTMLWINDOW2_SETTIMEOUT:
+    case DISPID_IHTMLWINDOW3_SETTIMEOUT: {
+        VARIANT args[2];
+        DISPPARAMS dp = {args, NULL, 2, 0};
+
+        /*
+         * setTimeout calls shoud use default value 0 for the second argument if only one is provided,
+         * but IDL file does not reflect that. We fixup arguments here instead.
+         */
+        if(!(wFlags & DISPATCH_METHOD) || pdp->cArgs != 1 || pdp->cNamedArgs)
+            break;
+
+        TRACE("Fixing args\n");
+
+        V_VT(args) = VT_I4;
+        V_I4(args) = 0;
+        args[1] = *pdp->rgvarg;
+        return IDispatchEx_InvokeEx(&window->event_target.dispex.IDispatchEx_iface, id, lcid,
+                wFlags, &dp, pvarRes, pei, pspCaller);
+    }
     }
 
     return IDispatchEx_InvokeEx(&window->event_target.dispex.IDispatchEx_iface, id, lcid, wFlags, pdp, pvarRes, pei, pspCaller);
