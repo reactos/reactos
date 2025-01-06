@@ -141,6 +141,9 @@ static const WCHAR onselectstartW[] = {'o','n','s','e','l','e','c','t','s','t','
 static const WCHAR submitW[] = {'s','u','b','m','i','t',0};
 static const WCHAR onsubmitW[] = {'o','n','s','u','b','m','i','t',0};
 
+static const WCHAR unloadW[] = {'u','n','l','o','a','d',0};
+static const WCHAR onunloadW[] = {'o','n','u','n','l','o','a','d',0};
+
 static const WCHAR HTMLEventsW[] = {'H','T','M','L','E','v','e','n','t','s',0};
 static const WCHAR KeyboardEventW[] = {'K','e','y','b','o','a','r','d','E','v','e','n','t',0};
 static const WCHAR MouseEventW[] = {'M','o','u','s','e','E','v','e','n','t',0};
@@ -239,7 +242,9 @@ static const event_info_t event_info[] = {
     {selectstartW,       onselectstartW,       EVENTT_MOUSE,  DISPID_EVMETH_ONSELECTSTART,
         EVENT_CANCELABLE},
     {submitW,            onsubmitW,            EVENTT_HTML,   DISPID_EVMETH_ONSUBMIT,
-        EVENT_DEFAULTLISTENER|EVENT_BUBBLE|EVENT_CANCELABLE|EVENT_HASDEFAULTHANDLERS}
+        EVENT_DEFAULTLISTENER|EVENT_BUBBLE|EVENT_CANCELABLE|EVENT_HASDEFAULTHANDLERS},
+    {unloadW,            onunloadW,            EVENTT_HTML,   DISPID_EVMETH_ONUNLOAD,
+        EVENT_FIXME}
 };
 
 eventid_t str_to_eid(LPCWSTR str)
