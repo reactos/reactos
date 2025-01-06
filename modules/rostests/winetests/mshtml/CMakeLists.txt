@@ -33,7 +33,6 @@ list(APPEND mshtml_winetest_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/blank.html
     ${CMAKE_CURRENT_SOURCE_DIR}/exectest.html
     ${CMAKE_CURRENT_SOURCE_DIR}/jstest.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/nav_test.html
     ${CMAKE_CURRENT_SOURCE_DIR}/vbtest.html
     ${CMAKE_CURRENT_SOURCE_DIR}/events.html
     ${CMAKE_CURRENT_SOURCE_DIR}/externscr.js
