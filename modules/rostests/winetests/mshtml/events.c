@@ -1442,6 +1442,34 @@ static const IDispatchExVtbl timeoutFuncVtbl = {
 
 static IDispatchEx timeoutFunc = { &timeoutFuncVtbl };
 
+static HRESULT WINAPI timeoutFunc2_Invoke(IDispatchEx *iface, DISPID dispIdMember,
+        REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
+        VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
+{
+    ok(0, "unexpected call\n");
+    return E_FAIL;
+}
+
+static const IDispatchExVtbl timeoutFunc2Vtbl = {
+    DispatchEx_QueryInterface,
+    DispatchEx_AddRef,
+    DispatchEx_Release,
+    DispatchEx_GetTypeInfoCount,
+    DispatchEx_GetTypeInfo,
+    DispatchEx_GetIDsOfNames,
+    timeoutFunc2_Invoke,
+    DispatchEx_GetDispID,
+    DispatchEx_InvokeEx,
+    DispatchEx_DeleteMemberByName,
+    DispatchEx_DeleteMemberByDispID,
+    DispatchEx_GetMemberProperties,
+    DispatchEx_GetMemberName,
+    DispatchEx_GetNextDispID,
+    DispatchEx_GetNameSpaceParent
+};
+
+static IDispatchEx timeoutFunc2 = { &timeoutFunc2Vtbl };
+
 static HRESULT WINAPI div_onclick_disp_Invoke(IDispatchEx *iface, DISPID id,
         REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pdp,
         VARIANT *pvarRes, EXCEPINFO *pei, UINT *puArgErr)
@@ -2235,6 +2263,17 @@ static void test_timeout(IHTMLDocument2 *doc)
 
     hres = IHTMLWindow2_QueryInterface(window, &IID_IHTMLWindow3, (void**)&win3);
     ok(hres == S_OK, "Could not get IHTMLWindow3 iface: %08x\n", hres);
+
+    V_VT(&expr) = VT_DISPATCH;
+    V_DISPATCH(&expr) = (IDispatch*)&timeoutFunc2;
+    V_VT(&var) = VT_EMPTY;
+    id = 0;
+    hres = IHTMLWindow3_setInterval(win3, &expr, 1, &var, &id);
+    ok(hres == S_OK, "setInterval failed: %08x\n", hres);
+    ok(id, "id = 0\n");
+
+    hres = IHTMLWindow2_clearTimeout(window, id);
+    ok(hres == S_OK, "clearTimeout failer: %08x\n", hres);
 
     V_VT(&expr) = VT_DISPATCH;
     V_DISPATCH(&expr) = (IDispatch*)&timeoutFunc;

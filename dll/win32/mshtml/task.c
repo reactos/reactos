@@ -218,7 +218,7 @@ HRESULT set_task_timer(HTMLInnerWindow *window, LONG msec, BOOL interval, IDispa
     return S_OK;
 }
 
-HRESULT clear_task_timer(HTMLInnerWindow *window, BOOL interval, DWORD id)
+HRESULT clear_task_timer(HTMLInnerWindow *window, DWORD id)
 {
     thread_data_t *thread_data = get_thread_data(FALSE);
     task_timer_t *iter;
@@ -227,7 +227,7 @@ HRESULT clear_task_timer(HTMLInnerWindow *window, BOOL interval, DWORD id)
         return S_OK;
 
     LIST_FOR_EACH_ENTRY(iter, &thread_data->timer_list, task_timer_t, entry) {
-        if(iter->id == id && iter->window == window && !iter->interval == !interval) {
+        if(iter->id == id && iter->window == window) {
             release_task_timer(thread_data->thread_hwnd, iter);
             return S_OK;
         }
