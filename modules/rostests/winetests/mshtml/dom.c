@@ -3586,6 +3586,36 @@ static void _set_elem_language(unsigned line, IHTMLElement *elem, const char *la
     _test_elem_language(line, elem, lang);
 }
 
+#define test_elem_lang(e,i) _test_elem_lang(__LINE__,e,i)
+static void _test_elem_lang(unsigned line, IHTMLElement *elem, const char *exlang)
+{
+    BSTR lang = (void*)0xdeadbeef;
+    HRESULT hres;
+
+    hres = IHTMLElement_get_lang(elem, &lang);
+    ok_(__FILE__,line) (hres == S_OK, "get_lang failed: %08x\n", hres);
+
+    if(exlang)
+        ok_(__FILE__,line) (!strcmp_wa(lang, exlang), "unexpected lang %s\n", wine_dbgstr_w(lang));
+    else
+        ok_(__FILE__,line) (!lang, "lang=%s\n", wine_dbgstr_w(lang));
+
+    SysFreeString(lang);
+}
+
+#define set_elem_lang(e,i) _set_elem_lang(__LINE__,e,i)
+static void _set_elem_lang(unsigned line, IHTMLElement *elem, const char *lang)
+{
+    BSTR str = a2bstr(lang);
+    HRESULT hres;
+
+    hres = IHTMLElement_put_lang(elem, str);
+    ok_(__FILE__,line) (hres == S_OK, "get_lang failed: %08x\n", hres);
+    SysFreeString(str);
+
+    _test_elem_lang(line, elem, lang);
+}
+
 #define test_elem_put_id(u,i) _test_elem_put_id(__LINE__,u,i)
 static void _test_elem_put_id(unsigned line, IUnknown *unk, const char *new_id)
 {
@@ -8033,6 +8063,9 @@ static void test_elems(IHTMLDocument2 *doc)
 
         test_input_readOnly(input, VARIANT_TRUE);
         test_input_readOnly(input, VARIANT_FALSE);
+
+        test_elem_lang(elem, NULL);
+        set_elem_lang(elem, "en-us");
 
         IHTMLInputElement_Release(input);
         IHTMLElement_Release(elem);
