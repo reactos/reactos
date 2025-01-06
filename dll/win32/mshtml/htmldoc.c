@@ -4005,6 +4005,84 @@ static const IHTMLDocument7Vtbl HTMLDocument7Vtbl = {
     HTMLDocument7_get_head
 };
 
+static inline HTMLDocument *impl_from_IDocumentSelector(IDocumentSelector *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLDocument, IDocumentSelector_iface);
+}
+
+static HRESULT WINAPI DocumentSelector_QueryInterface(IDocumentSelector *iface, REFIID riid, void **ppv)
+{
+    HTMLDocument *This = impl_from_IDocumentSelector(iface);
+    return htmldoc_query_interface(This, riid, ppv);
+}
+
+static ULONG WINAPI DocumentSelector_AddRef(IDocumentSelector *iface)
+{
+    HTMLDocument *This = impl_from_IDocumentSelector(iface);
+    return htmldoc_addref(This);
+}
+
+static ULONG WINAPI DocumentSelector_Release(IDocumentSelector *iface)
+{
+    HTMLDocument *This = impl_from_IDocumentSelector(iface);
+    return htmldoc_release(This);
+}
+
+static HRESULT WINAPI DocumentSelector_GetTypeInfoCount(IDocumentSelector *iface, UINT *pctinfo)
+{
+    HTMLDocument *This = impl_from_IDocumentSelector(iface);
+    return IDispatchEx_GetTypeInfoCount(&This->IDispatchEx_iface, pctinfo);
+}
+
+static HRESULT WINAPI DocumentSelector_GetTypeInfo(IDocumentSelector *iface, UINT iTInfo,
+        LCID lcid, ITypeInfo **ppTInfo)
+{
+    HTMLDocument *This = impl_from_IDocumentSelector(iface);
+    return IDispatchEx_GetTypeInfo(&This->IDispatchEx_iface, iTInfo, lcid, ppTInfo);
+}
+
+static HRESULT WINAPI DocumentSelector_GetIDsOfNames(IDocumentSelector *iface, REFIID riid,
+        LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
+{
+    HTMLDocument *This = impl_from_IDocumentSelector(iface);
+    return IDispatchEx_GetIDsOfNames(&This->IDispatchEx_iface, riid, rgszNames, cNames, lcid,
+            rgDispId);
+}
+
+static HRESULT WINAPI DocumentSelector_Invoke(IDocumentSelector *iface, DISPID dispIdMember, REFIID riid,
+        LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
+{
+    HTMLDocument *This = impl_from_IDocumentSelector(iface);
+    return IDispatchEx_Invoke(&This->IDispatchEx_iface, dispIdMember, riid, lcid, wFlags,
+            pDispParams, pVarResult, pExcepInfo, puArgErr);
+}
+
+static HRESULT WINAPI DocumentSelector_querySelector(IDocumentSelector *iface, BSTR v, IHTMLElement **pel)
+{
+    HTMLDocument *This = impl_from_IDocumentSelector(iface);
+    FIXME("(%p)->(%s %p)\n", This, debugstr_w(v), pel);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI DocumentSelector_querySelectorAll(IDocumentSelector *iface, BSTR v, IHTMLDOMChildrenCollection **pel)
+{
+    HTMLDocument *This = impl_from_IDocumentSelector(iface);
+    FIXME("(%p)->(%s %p)\n", This, debugstr_w(v), pel);
+    return E_NOTIMPL;
+}
+
+static const IDocumentSelectorVtbl DocumentSelectorVtbl = {
+    DocumentSelector_QueryInterface,
+    DocumentSelector_AddRef,
+    DocumentSelector_Release,
+    DocumentSelector_GetTypeInfoCount,
+    DocumentSelector_GetTypeInfo,
+    DocumentSelector_GetIDsOfNames,
+    DocumentSelector_Invoke,
+    DocumentSelector_querySelector,
+    DocumentSelector_querySelectorAll
+};
+
 static void HTMLDocument_on_advise(IUnknown *iface, cp_static_data_t *cp)
 {
     HTMLDocument *This = impl_from_IHTMLDocument2((IHTMLDocument2*)iface);
@@ -4330,6 +4408,8 @@ static BOOL htmldoc_qi(HTMLDocument *This, REFIID riid, void **ppv)
         *ppv = &This->IHTMLDocument6_iface;
     else if(IsEqualGUID(&IID_IHTMLDocument7, riid))
         *ppv = &This->IHTMLDocument7_iface;
+    else if(IsEqualGUID(&IID_IDocumentSelector, riid))
+        *ppv = &This->IDocumentSelector_iface;
     else if(IsEqualGUID(&IID_IPersist, riid))
         *ppv = &This->IPersistFile_iface;
     else if(IsEqualGUID(&IID_IPersistMoniker, riid))
@@ -4430,6 +4510,7 @@ static void init_doc(HTMLDocument *doc, IUnknown *unk_impl, IDispatchEx *dispex)
     doc->IHTMLDocument6_iface.lpVtbl = &HTMLDocument6Vtbl;
     doc->IHTMLDocument7_iface.lpVtbl = &HTMLDocument7Vtbl;
     doc->IDispatchEx_iface.lpVtbl = &DocDispatchExVtbl;
+    doc->IDocumentSelector_iface.lpVtbl = &DocumentSelectorVtbl;
     doc->ISupportErrorInfo_iface.lpVtbl = &SupportErrorInfoVtbl;
     doc->IProvideClassInfo_iface.lpVtbl = &ProvideClassInfoVtbl;
 
@@ -4648,6 +4729,7 @@ static const tid_t HTMLDocumentNode_iface_tids[] = {
     IHTMLDocument3_tid,
     IHTMLDocument4_tid,
     IHTMLDocument5_tid,
+    IDocumentSelector_tid,
     0
 };
 
