@@ -973,6 +973,7 @@ static HRESULT WINAPI PropertyNotifySink_OnChanged(IPropertyNotifySink *iface, D
     case 1014:
         CHECK_EXPECT2(OnChanged_1014);
         return S_OK;
+    case 1029:
     case 1030:
     case 3000022:
     case 3000023:
@@ -7733,6 +7734,37 @@ static void test_cookies(IHTMLDocument2 *doc)
     SysFreeString(str2);
 }
 
+static void test_doc_domain(IHTMLDocument2 *doc)
+{
+    BSTR str;
+    HRESULT hres;
+
+    hres = IHTMLDocument2_get_domain(doc, &str);
+    ok(hres == S_OK, "get_domain failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "test.winehq.org"), "domain = %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+
+    str = a2bstr("winehq.org");
+    hres = IHTMLDocument2_put_domain(doc, str);
+    ok(hres == S_OK, "put_domain failed: %08x\n", hres);
+    SysFreeString(str);
+
+    hres = IHTMLDocument2_get_domain(doc, &str);
+    ok(hres == S_OK, "get_domain failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "winehq.org"), "domain = %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+
+    str = a2bstr("winehq.com");
+    hres = IHTMLDocument2_put_domain(doc, str);
+    ok(hres == E_INVALIDARG, "put_domain failed: %08x, expected E_INVALIDARG\n", hres);
+    SysFreeString(str);
+
+    hres = IHTMLDocument2_get_domain(doc, &str);
+    ok(hres == S_OK, "get_domain failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "winehq.org"), "domain = %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+}
+
 static void test_HTMLDocument_http(BOOL with_wbapp)
 {
     IMoniker *http_mon;
@@ -7770,6 +7802,7 @@ static void test_HTMLDocument_http(BOOL with_wbapp)
     test_GetCurMoniker((IUnknown*)doc, http_mon, NULL, FALSE);
     test_travellog(doc);
     test_binding_ui((IUnknown*)doc);
+    test_doc_domain(doc);
 
     nav_url = nav_serv_url = "http://test.winehq.org/tests/winehq_snapshot/"; /* for valid prev nav_url */
     if(support_wbapp) {

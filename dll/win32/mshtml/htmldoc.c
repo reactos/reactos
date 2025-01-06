@@ -799,24 +799,46 @@ static HRESULT WINAPI HTMLDocument_get_URL(IHTMLDocument2 *iface, BSTR *p)
 static HRESULT WINAPI HTMLDocument_put_domain(IHTMLDocument2 *iface, BSTR v)
 {
     HTMLDocument *This = impl_from_IHTMLDocument2(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    nsAString nsstr;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    nsAString_InitDepend(&nsstr, v);
+    nsres = nsIDOMHTMLDocument_SetDomain(This->doc_node->nsdoc, &nsstr);
+    nsAString_Finish(&nsstr);
+    if(NS_FAILED(nsres)) {
+        ERR("SetDomain failed: %08x\n", nsres);
+        return E_INVALIDARG;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLDocument_get_domain(IHTMLDocument2 *iface, BSTR *p)
 {
     HTMLDocument *This = impl_from_IHTMLDocument2(iface);
-    HRESULT hres;
+    nsAString nsstr;
+    nsresult nsres;
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    if(!This->window || !This->window->uri) {
-        FIXME("No current URI\n");
-        return E_FAIL;
+    nsAString_Init(&nsstr, NULL);
+    nsres = nsIDOMHTMLDocument_GetDomain(This->doc_node->nsdoc, &nsstr);
+    if(NS_SUCCEEDED(nsres) && This->window && This->window->uri) {
+        const PRUnichar *str;
+        HRESULT hres;
+
+        nsAString_GetData(&nsstr, &str);
+        if(!*str) {
+            TRACE("Gecko returned emptry string, fallback to loaded URL.\n");
+            nsAString_Finish(&nsstr);
+            hres = IUri_GetHost(This->window->uri, p);
+            return FAILED(hres) ? hres : S_OK;
+        }
     }
 
-    hres = IUri_GetHost(This->window->uri, p);
-    return FAILED(hres) ? hres : S_OK;
+    return return_nsstr(nsres, &nsstr, p);
 }
 
 static HRESULT WINAPI HTMLDocument_put_cookie(IHTMLDocument2 *iface, BSTR v)
