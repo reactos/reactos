@@ -1922,8 +1922,8 @@ static nsresult NSAPI nsHttpChannelInternal_SetCorsIncludeCredentials(nsIHttpCha
         cpp_bool aCorsIncludeCredentials)
 {
     nsChannel *This = impl_from_nsIHttpChannelInternal(iface);
-    FIXME("(%p)->(%x)\n", This, aCorsIncludeCredentials);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    TRACE("(%p)->(%x)\n", This, aCorsIncludeCredentials);
+    return NS_OK;
 }
 
 static nsresult NSAPI nsHttpChannelInternal_GetCorsMode(nsIHttpChannelInternal *iface, UINT32 *aCorsMode)
@@ -1936,8 +1936,8 @@ static nsresult NSAPI nsHttpChannelInternal_GetCorsMode(nsIHttpChannelInternal *
 static nsresult NSAPI nsHttpChannelInternal_SetCorsMode(nsIHttpChannelInternal *iface, UINT32 aCorsMode)
 {
     nsChannel *This = impl_from_nsIHttpChannelInternal(iface);
-    FIXME("(%p)->(%d)\n", This, aCorsMode);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    TRACE("(%p)->(%d)\n", This, aCorsMode);
+    return NS_OK;
 }
 
 static nsresult NSAPI nsHttpChannelInternal_GetTopWindowURI(nsIHttpChannelInternal *iface, nsIURI **aTopWindowURI)
