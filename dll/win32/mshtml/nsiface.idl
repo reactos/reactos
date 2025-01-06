@@ -652,9 +652,11 @@ interface nsIHttpChannelInternal : nsISupports
     nsresult SetDocumentURI(nsIURI *aDocumentURI);
     nsresult GetRequestVersion(uint32_t *major, uint32_t *minor);
     nsresult GetResponseVersion(uint32_t *major, uint32_t *minor);
-    nsresult TakeAllSecurityMessages(void /*securityMessagesArray*/ *aMessages);
+    nsresult TakeAllSecurityMessages(void /*nsCOMArray<nsISecurityConsoleMessage>*/ *aMessages);
     nsresult SetCookie(const char *aCookieHeader);
     nsresult SetupFallbackChannel(const char *aFallbackKey);
+    nsresult GetThirdPartyFlags(uint32_t *aThirdPartyFlags);
+    nsresult SetThirdPartyFlags(uint32_t aThirdPartyFlags);
     nsresult GetForceAllowThirdPartyCookie(bool *aForceAllowThirdPartyCookie);
     nsresult SetForceAllowThirdPartyCookie(bool aForceAllowThirdPartyCookie);
     nsresult GetCanceled(bool *aCanceled);
