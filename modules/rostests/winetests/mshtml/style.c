@@ -2634,6 +2634,7 @@ static void test_current_style(IHTMLCurrentStyle *current_style)
 {
     IHTMLCurrentStyle2 *current_style2;
     IHTMLCurrentStyle3 *current_style3;
+    IHTMLCurrentStyle4 *current_style4;
     VARIANT_BOOL b;
     BSTR str;
     HRESULT hres;
@@ -2932,6 +2933,16 @@ static void test_current_style(IHTMLCurrentStyle *current_style)
     SysFreeString(str);
 
     IHTMLCurrentStyle3_Release(current_style3);
+
+    hres = IHTMLCurrentStyle_QueryInterface(current_style, &IID_IHTMLCurrentStyle4, (void**)&current_style4);
+    ok(hres == S_OK, "Could not get IHTMLCurrentStyle4 iface: %08x\n", hres);
+
+    hres = IHTMLCurrentStyle4_get_minWidth(current_style4, &v);
+    ok(hres == S_OK, "get_minWidth failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(minWidth) = %d\n", V_VT(&v));
+    VariantClear(&v);
+
+    IHTMLCurrentStyle4_Release(current_style4);
 }
 
 static const char basic_test_str[] = "<html><body><div id=\"divid\"></div/</body></html>";
