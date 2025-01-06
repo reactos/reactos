@@ -1301,17 +1301,44 @@ static nsresult NSAPI nsChannel_GetReferrerPolicy(nsIHttpChannel *iface, UINT32 
 static nsresult NSAPI nsChannel_SetReferrerWithPolicy(nsIHttpChannel *iface, nsIURI *aReferrer, UINT32 aReferrerPolicy)
 {
     nsChannel *This = impl_from_nsIHttpChannel(iface);
+    DWORD channel_scheme, referrer_scheme;
+    nsWineURI *referrer;
+    nsresult nsres;
 
     TRACE("(%p)->(%p %d)\n", This, aReferrer, aReferrerPolicy);
 
     if(aReferrerPolicy)
         FIXME("refferer policy %d not implemented\n", aReferrerPolicy);
 
-    if(aReferrer)
-        nsIURI_AddRef(aReferrer);
-    if(This->referrer)
+    if(This->referrer) {
         nsIURI_Release(This->referrer);
-    This->referrer = aReferrer;
+        This->referrer = NULL;
+    }
+    if(!aReferrer)
+        return NS_OK;
+
+    nsres = nsIURI_QueryInterface(aReferrer, &IID_nsWineURI, (void**)&referrer);
+    if(NS_FAILED(nsres))
+        return NS_OK;
+
+    if(!ensure_uri(referrer)) {
+        nsIFileURL_Release(&referrer->nsIFileURL_iface);
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    if(!ensure_uri(This->uri) || FAILED(IUri_GetScheme(This->uri->uri, &channel_scheme)))
+        channel_scheme = INTERNET_SCHEME_UNKNOWN;
+
+    if(FAILED(IUri_GetScheme(referrer->uri, &referrer_scheme)))
+        referrer_scheme = INTERNET_SCHEME_UNKNOWN;
+
+    if(referrer_scheme == INTERNET_SCHEME_HTTPS && channel_scheme != INTERNET_SCHEME_HTTPS) {
+        TRACE("Ignoring https referrer on non-https channel\n");
+        nsIFileURL_Release(&referrer->nsIFileURL_iface);
+        return NS_OK;
+    }
+
+    This->referrer = (nsIURI*)&referrer->nsIFileURL_iface;
     return NS_OK;
 }
 
