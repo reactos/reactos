@@ -61,6 +61,8 @@ typedef struct {
 } func_info_t;
 
 struct dispex_data_t {
+    const dispex_static_data_t *desc;
+
     DWORD func_cnt;
     DWORD func_size;
     func_info_t *funcs;
@@ -372,6 +374,7 @@ static dispex_data_t *preprocess_dispex_data(const dispex_static_data_t *desc)
         ERR("Out of memory\n");
         return NULL;
     }
+    data->desc = desc;
     data->func_cnt = 0;
     data->func_disp_cnt = 0;
     data->func_size = 16;
@@ -468,7 +471,7 @@ HRESULT get_dispids(tid_t tid, DWORD *ret_size, DISPID **ret)
 
 static dispex_data_t *get_dispex_data(DispatchEx *This)
 {
-    return This->data->data;
+    return This->info;
 }
 
 static inline BOOL is_custom_dispid(DISPID id)
@@ -510,8 +513,8 @@ static inline dispex_dynamic_data_t *get_dynamic_data(DispatchEx *This)
     if(!This->dynamic_data)
         return NULL;
 
-    if(This->data->vtbl && This->data->vtbl->populate_props)
-        This->data->vtbl->populate_props(This);
+    if(This->info->desc->vtbl && This->info->desc->vtbl->populate_props)
+        This->info->desc->vtbl->populate_props(This);
 
     return This->dynamic_data;
 }
@@ -601,8 +604,8 @@ HRESULT dispex_get_dynid(DispatchEx *This, const WCHAR *name, DISPID *id)
 static HRESULT dispex_value(DispatchEx *This, LCID lcid, WORD flags, DISPPARAMS *params,
         VARIANT *res, EXCEPINFO *ei, IServiceProvider *caller)
 {
-    if(This->data->vtbl && This->data->vtbl->value)
-        return This->data->vtbl->value(This, lcid, flags, params, res, ei, caller);
+    if(This->info->desc->vtbl && This->info->desc->vtbl->value)
+        return This->info->desc->vtbl->value(This, lcid, flags, params, res, ei, caller);
 
     switch(flags) {
     case DISPATCH_PROPERTYGET:
@@ -845,7 +848,7 @@ static HRESULT get_func_obj_entry(DispatchEx *This, func_info_t *func, func_obj_
         return E_OUTOFMEMORY;
 
     if(!dynamic_data->func_disps) {
-        dynamic_data->func_disps = heap_alloc_zero(This->data->data->func_disp_cnt * sizeof(*dynamic_data->func_disps));
+        dynamic_data->func_disps = heap_alloc_zero(This->info->func_disp_cnt * sizeof(*dynamic_data->func_disps));
         if(!dynamic_data->func_disps)
             return E_OUTOFMEMORY;
     }
@@ -920,10 +923,10 @@ static HRESULT get_builtin_id(DispatchEx *This, BSTR name, DWORD grfdex, DISPID 
             min = n+1;
     }
 
-    if(This->data->vtbl && This->data->vtbl->get_dispid) {
+    if(This->info->desc->vtbl && This->info->desc->vtbl->get_dispid) {
         HRESULT hres;
 
-        hres = This->data->vtbl->get_dispid(This, name, grfdex, ret);
+        hres = This->info->desc->vtbl->get_dispid(This, name, grfdex, ret);
         if(hres != DISP_E_UNKNOWNNAME)
             return hres;
     }
@@ -1381,7 +1384,7 @@ static HRESULT WINAPI DispatchEx_GetTypeInfo(IDispatchEx *iface, UINT iTInfo,
 
     TRACE("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
 
-    hres = get_typeinfo(This->data->disp_tid, ppTInfo);
+    hres = get_typeinfo(This->info->desc->disp_tid, ppTInfo);
     if(FAILED(hres))
         return hres;
 
@@ -1458,9 +1461,9 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
 
     switch(get_dispid_type(id)) {
     case DISPEXPROP_CUSTOM:
-        if(!This->data->vtbl || !This->data->vtbl->invoke)
+        if(!This->info->desc->vtbl || !This->info->desc->vtbl->invoke)
             return DISP_E_UNKNOWNNAME;
-        return This->data->vtbl->invoke(This, id, lcid, wFlags, pdp, pvarRes, pei, pspCaller);
+        return This->info->desc->vtbl->invoke(This, id, lcid, wFlags, pdp, pvarRes, pei, pspCaller);
 
     case DISPEXPROP_DYNAMIC: {
         DWORD idx = id - DISPID_DYNPROP_0;
@@ -1511,8 +1514,8 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
     case DISPEXPROP_BUILTIN:
         if(wFlags == DISPATCH_CONSTRUCT) {
             if(id == DISPID_VALUE) {
-                if(This->data->vtbl && This->data->vtbl->value) {
-                    return This->data->vtbl->value(This, lcid, wFlags, pdp, pvarRes, pei, pspCaller);
+                if(This->info->desc->vtbl && This->info->desc->vtbl->value) {
+                    return This->info->desc->vtbl->value(This, lcid, wFlags, pdp, pvarRes, pei, pspCaller);
                 }
                 FIXME("DISPATCH_CONSTRUCT flag but missing value function\n");
                 return E_FAIL;
@@ -1729,7 +1732,7 @@ void dispex_unlink(DispatchEx *This)
 
 const dispex_static_data_vtbl_t *dispex_get_vtbl(DispatchEx *dispex)
 {
-    return dispex->data->vtbl;
+    return dispex->info->desc->vtbl;
 }
 
 void release_dispex(DispatchEx *This)
@@ -1749,7 +1752,7 @@ void release_dispex(DispatchEx *This)
     if(This->dynamic_data->func_disps) {
         func_obj_entry_t *iter;
 
-        for(iter = This->dynamic_data->func_disps; iter < This->dynamic_data->func_disps+This->data->data->func_disp_cnt; iter++) {
+        for(iter = This->dynamic_data->func_disps; iter < This->dynamic_data->func_disps + This->info->func_disp_cnt; iter++) {
             if(iter->func_obj) {
                 iter->func_obj->obj = NULL;
                 IDispatchEx_Release(&iter->func_obj->dispex.IDispatchEx_iface);
@@ -1774,6 +1777,6 @@ void init_dispex(DispatchEx *dispex, IUnknown *outer, dispex_static_data_t *data
 
     dispex->IDispatchEx_iface.lpVtbl = &DispatchExVtbl;
     dispex->outer = outer;
-    dispex->data = data;
+    dispex->info = data->data;
     dispex->dynamic_data = NULL;
 }
