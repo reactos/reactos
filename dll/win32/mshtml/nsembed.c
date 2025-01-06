@@ -19,6 +19,7 @@
 #ifdef __REACTOS__
 #include "mshtml_private.h"
 #include <wincon.h>
+#include <wine/asm.h>
 #endif // __REACTOS__
 
 #include "config.h"
@@ -54,7 +55,6 @@ WINE_DECLARE_DEBUG_CHANNEL(gecko);
 #define NS_VARIANT_CONTRACTID "@mozilla.org/variant;1"
 #define NS_CATEGORYMANAGER_CONTRACTID "@mozilla.org/categorymanager;1"
 #define NS_XMLHTTPREQUEST_CONTRACTID "@mozilla.org/xmlextras/xmlhttprequest;1"
-#define NS_SCRIPTSECURITYMANAGER_CONTRACTID "@mozilla.org/scriptsecuritymanager;1"
 
 #define PR_UINT32_MAX 0xffffffff
 
@@ -2168,34 +2168,33 @@ void NSContainer_Release(NSContainer *This)
     nsIWebBrowserChrome_Release(&This->nsIWebBrowserChrome_iface);
 }
 
+/*
+ * FIXME: nsIScriptObjectPrincipal uses thiscall calling convention, so we need this hack on i386.
+ * This will be removed after the next Gecko update, that will change calling convention on Gecko side.
+ */
+#ifdef __i386__
+extern void *call_thiscall_func;
+__ASM_GLOBAL_FUNC(call_thiscall_func,
+        "popl %eax\n\t"
+        "popl %edx\n\t"
+        "popl %ecx\n\t"
+        "pushl %eax\n\t"
+        "jmp *%edx\n\t")
+#define nsIScriptObjectPrincipal_GetPrincipal(this) ((void* (WINAPI*)(void*,void*))&call_thiscall_func)((this)->lpVtbl->GetPrincipal,this)
+#endif
+
 nsIXMLHttpRequest *create_nsxhr(nsIDOMWindow *nswindow)
 {
+    nsIScriptObjectPrincipal *sop;
     mozIDOMWindow *inner_window;
-    nsIScriptSecurityManager *secman;
-    nsIPrincipal             *nspri;
-    nsIGlobalObject          *nsglo;
-    nsIXMLHttpRequest        *nsxhr;
-    nsresult                  nsres;
-
-    nsres = nsIServiceManager_GetServiceByContractID(pServMgr,
-            NS_SCRIPTSECURITYMANAGER_CONTRACTID,
-            &IID_nsIScriptSecurityManager, (void**)&secman);
-    if(NS_FAILED(nsres)) {
-        ERR("Could not get sec manager service: %08x\n", nsres);
-        return NULL;
-    }
-
-    nsres = nsIScriptSecurityManager_GetSystemPrincipal(secman, &nspri);
-    nsIScriptSecurityManager_Release(secman);
-    if(NS_FAILED(nsres)) {
-        ERR("GetSystemPrincipal failed: %08x\n", nsres);
-        return NULL;
-    }
+    nsIPrincipal *nspri;
+    nsIGlobalObject *nsglo;
+    nsIXMLHttpRequest *nsxhr;
+    nsresult nsres;
 
     nsres = nsIDOMWindow_GetInnerWindow(nswindow, &inner_window);
     if(NS_FAILED(nsres)) {
         ERR("Could not get inner window: %08x\n", nsres);
-        nsISupports_Release(nspri);
         return NULL;
     }
 
@@ -2203,24 +2202,26 @@ nsIXMLHttpRequest *create_nsxhr(nsIDOMWindow *nswindow)
     mozIDOMWindow_Release(inner_window);
     assert(nsres == NS_OK);
 
+    nsres = nsIGlobalObject_QueryInterface(nsglo, &IID_nsIScriptObjectPrincipal, (void**)&sop);
+    assert(nsres == NS_OK);
+
+    nspri = nsIScriptObjectPrincipal_GetPrincipal(sop);
+    nsIScriptObjectPrincipal_Release(sop);
+
     nsres = nsIComponentManager_CreateInstanceByContractID(pCompMgr,
             NS_XMLHTTPREQUEST_CONTRACTID, NULL, &IID_nsIXMLHttpRequest,
             (void**)&nsxhr);
-    if(NS_FAILED(nsres)) {
-        ERR("Could not get nsIXMLHttpRequest: %08x\n", nsres);
-        nsISupports_Release(nspri);
-        nsIGlobalObject_Release(nsglo);
-        return NULL;
+    if(NS_SUCCEEDED(nsres)) {
+        nsres = nsIXMLHttpRequest_Init(nsxhr, nspri, NULL, nsglo, NULL, NULL);
+        if(NS_FAILED(nsres))
+            nsIXMLHttpRequest_Release(nsxhr);
     }
-
-    nsres = nsIXMLHttpRequest_Init(nsxhr, nspri, NULL, nsglo, NULL, NULL);
-
     nsISupports_Release(nspri);
     nsIGlobalObject_Release(nsglo);
     if(NS_FAILED(nsres)) {
         ERR("nsIXMLHttpRequest_Init failed: %08x\n", nsres);
-        nsIXMLHttpRequest_Release(nsxhr);
         return NULL;
     }
+
     return nsxhr;
 }

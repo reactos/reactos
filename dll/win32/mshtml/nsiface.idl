@@ -4150,6 +4150,16 @@ interface nsIGlobalObject : nsISupports
 
 [
     object,
+    uuid(3eedba38-8d22-41e1-817a-0e43e165b664),
+    local
+]
+interface nsIScriptObjectPrincipal : nsISupports
+{
+    nsIPrincipal* /* thiscall */ GetPrincipal();
+}
+
+[
+    object,
     uuid(6f54214c-7175-498d-9d2d-0429e38c2869),
     local
 ]
@@ -4183,42 +4193,6 @@ interface nsIXMLHttpRequest : nsISupports
     nsresult SetOnreadystatechange(JSContext*cx, int /*JS::HandleValue*/ aOnreadystatechange);
     nsresult GetMozAnon(bool *aMozAnon);
     nsresult GetMozSystem(bool *aMozSystem);
-}
-
-[
-    object,
-    uuid(b7ae2310-576e-11e5-a837-0800200c9a66),
-    local
-]
-interface nsIScriptSecurityManager : nsISupports {
-    nsresult CanCreateWrapper(JSContext *aJSContext, const nsIID *aIID, nsISupports *aObj, nsIClassInfo *aClassInfo);
-    nsresult CanCreateInstance(JSContext *aJSContext, const nsCID *aCID);
-    nsresult CanGetService(JSContext *aJSContext, const nsCID *aCID);
-    nsresult CheckLoadURIFromScript(JSContext *cx, nsIURI *uri);
-    nsresult CheckLoadURIWithPrincipal(nsIPrincipal *aPrincipal, nsIURI *uri, uint32_t flags);
-    nsresult CheckLoadURIStrWithPrincipal(nsIPrincipal *aPrincipal, const nsACString *uri, uint32_t flags);
-    bool ScriptAllowed(JSObject *aGlobal);
-    nsresult GetSystemPrincipal(nsIPrincipal **_retval);
-    nsresult GetSimpleCodebasePrincipal(nsIURI *aURI, nsIPrincipal **_retval);
-    nsresult GetAppCodebasePrincipal(nsIURI *uri, uint32_t appId, bool inMozBrowser, nsIPrincipal **_retval);
-    nsresult GetLoadContextCodebasePrincipal(nsIURI *uri, nsILoadContext *loadContext, nsIPrincipal **_retval);
-    nsresult GetDocShellCodebasePrincipal(nsIURI *uri, nsIDocShell *docShell, nsIPrincipal **_retval);
-    nsresult GetNoAppCodebasePrincipal(nsIURI *uri, nsIPrincipal **_retval);
-    nsresult GetCodebasePrincipal(nsIURI *uri, nsIPrincipal **_retval);
-    nsresult CreateCodebasePrincipal(nsIURI *uri, int /*JS::HandleValue*/ originAttributes, JSContext* cx, nsIPrincipal **_retval);
-    nsresult CreateCodebasePrincipalFromOrigin(const nsACString *origin, nsIPrincipal **_retval);
-    nsresult CreateNullPrincipal(int /*JS::HandleValue*/ originAttributes, JSContext *cx, nsIPrincipal **_retval);
-    nsresult CreateExpandedPrincipal(nsIPrincipal **aPrincipalArray, uint32_t aLength, nsIPrincipal **_retval);
-    nsresult CheckSameOriginURI(nsIURI *aSourceURI, nsIURI *aTargetURI, bool reportError);
-    nsresult GetChannelResultPrincipal(nsIChannel *aChannel, nsIPrincipal **_retval);
-    nsresult GetChannelURIPrincipal(nsIChannel *aChannel, nsIPrincipal **_retval);
-    nsresult IsSystemPrincipal(nsIPrincipal *aPrincipal, bool *_retval);
-    nsresult GetJarPrefix(uint32_t appId, bool inMozBrowser, nsACString *_retval);
-    nsresult ActivateDomainPolicy(nsIDomainPolicy **_retval);
-    nsresult GetDomainPolicyActive(bool *aDomainPolicyActive);
-    nsresult ActivateDomainPolicyInternal(nsIDomainPolicy **_retval);
-    void CloneDomainPolicy(int /*mozilla::dom::DomainPolicyClone*/ *aClone);
-    nsresult PolicyAllowsScript(nsIURI *aDomain, bool *_retval);
 }
 
 cpp_quote("DEFINE_GUID(IID_nsCycleCollectionISupports, 0xc61eac14,0x5f7a,0x4481,0x96,0x5e,0x7e,0xaa,0x6e,0xff,0xa8,0x5f);")

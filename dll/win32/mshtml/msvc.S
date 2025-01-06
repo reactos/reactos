@@ -18,6 +18,16 @@ _FuncName SETS "_wrapper_func_":CC:"$n"
 
 .code
 
+#ifdef _M_IX86
+PUBLIC _call_thiscall_func
+_call_thiscall_func:
+    pop eax // pop return address
+    pop edx // pop this pointer
+    pop ecx // pop thiscall-function address
+    push eax // push return address
+    jmp edx // jump to thiscall function address
+#endif
+
 MACRO(DEFINE_WRAPPER_FUNC, n, off, x)
 #ifdef _M_IX86
 PUBLIC _wrapper_func_&n&
