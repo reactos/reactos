@@ -1601,6 +1601,20 @@ static HRESULT WINAPI DispatchEx_GetMemberName(IDispatchEx *iface, DISPID id, BS
     return S_OK;
 }
 
+static HRESULT next_dynamic_id(DispatchEx *dispex, DWORD idx, DISPID *ret_id)
+{
+    while(idx < dispex->dynamic_data->prop_cnt && dispex->dynamic_data->props[idx].flags & DYNPROP_DELETED)
+        idx++;
+
+    if(idx == dispex->dynamic_data->prop_cnt) {
+        *ret_id = DISPID_STARTENUM;
+        return S_FALSE;
+    }
+
+    *ret_id = DISPID_DYNPROP_0+idx;
+    return S_OK;
+}
+
 static HRESULT WINAPI DispatchEx_GetNextDispID(IDispatchEx *iface, DWORD grfdex, DISPID id, DISPID *pid)
 {
     DispatchEx *This = impl_from_IDispatchEx(iface);
@@ -1616,15 +1630,7 @@ static HRESULT WINAPI DispatchEx_GetNextDispID(IDispatchEx *iface, DWORD grfdex,
         if(!get_dynamic_data(This) || This->dynamic_data->prop_cnt <= idx)
             return DISP_E_UNKNOWNNAME;
 
-        while(++idx < This->dynamic_data->prop_cnt && This->dynamic_data->props[idx].flags & DYNPROP_DELETED);
-
-        if(idx == This->dynamic_data->prop_cnt) {
-            *pid = DISPID_STARTENUM;
-            return S_FALSE;
-        }
-
-        *pid = DISPID_DYNPROP_0+idx;
-        return S_OK;
+        return next_dynamic_id(This, idx+1, pid);
     }
 
     data = get_dispex_data(This);
@@ -1649,10 +1655,8 @@ static HRESULT WINAPI DispatchEx_GetNextDispID(IDispatchEx *iface, DWORD grfdex,
         func++;
     }
 
-    if(get_dynamic_data(This) && This->dynamic_data->prop_cnt) {
-        *pid = DISPID_DYNPROP_0;
-        return S_OK;
-    }
+    if(get_dynamic_data(This) && This->dynamic_data->prop_cnt)
+        return next_dynamic_id(This, 0, pid);
 
     *pid = DISPID_STARTENUM;
     return S_FALSE;
