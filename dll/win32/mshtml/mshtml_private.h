@@ -770,7 +770,8 @@ typedef struct {
     IHTMLElement_tid,       \
     IHTMLElement2_tid,      \
     IHTMLElement3_tid,      \
-    IHTMLElement4_tid
+    IHTMLElement4_tid,      \
+    IHTMLUniqueName_tid
 
 extern cp_static_data_t HTMLElementEvents2_data DECLSPEC_HIDDEN;
 #define HTMLELEMENT_CPC {&DIID_HTMLElementEvents2, &HTMLElementEvents2_data}
