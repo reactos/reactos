@@ -6646,6 +6646,12 @@ static void test_window(IHTMLDocument2 *doc)
     set_window_status(window, "Test!");
     test_history(window);
 
+    hres = IHTMLWindow2_moveBy(window, 0, 0);
+    ok(hres == S_FALSE, "moveBy failed: %08x\n", hres);
+
+    hres = IHTMLWindow2_resizeBy(window, 0, 0);
+    ok(hres == S_FALSE, "resizeBy failed: %08x\n", hres);
+
     hres = IHTMLWindow2_QueryInterface(window, &IID_IHTMLWindow5, (void**)&window5);
     if(SUCCEEDED(hres)) {
         ok(window5 != NULL, "window5 == NULL\n");

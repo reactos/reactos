@@ -1461,7 +1461,7 @@ static HRESULT WINAPI HTMLWindow2_moveBy(IHTMLWindow2 *iface, LONG x, LONG y)
 {
     HTMLWindow *This = impl_from_IHTMLWindow2(iface);
     FIXME("(%p)->(%d %d)\n", This, x, y);
-    return E_NOTIMPL;
+    return S_FALSE;
 }
 
 static HRESULT WINAPI HTMLWindow2_resizeTo(IHTMLWindow2 *iface, LONG x, LONG y)
@@ -1475,7 +1475,7 @@ static HRESULT WINAPI HTMLWindow2_resizeBy(IHTMLWindow2 *iface, LONG x, LONG y)
 {
     HTMLWindow *This = impl_from_IHTMLWindow2(iface);
     FIXME("(%p)->(%d %d)\n", This, x, y);
-    return E_NOTIMPL;
+    return S_FALSE;
 }
 
 static HRESULT WINAPI HTMLWindow2_get_external(IHTMLWindow2 *iface, IDispatch **p)
