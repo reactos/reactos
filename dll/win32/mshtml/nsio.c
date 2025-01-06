@@ -1288,12 +1288,7 @@ static nsresult NSAPI nsChannel_SetReferrer(nsIHttpChannel *iface, nsIURI *aRefe
 
     TRACE("(%p)->(%p)\n", This, aReferrer);
 
-    if(aReferrer)
-        nsIURI_AddRef(aReferrer);
-    if(This->referrer)
-        nsIURI_Release(This->referrer);
-    This->referrer = aReferrer;
-    return NS_OK;
+    return nsIHttpChannel_SetReferrerWithPolicy(&This->nsIHttpChannel_iface, aReferrer, 0);
 }
 
 static nsresult NSAPI nsChannel_GetReferrerPolicy(nsIHttpChannel *iface, UINT32 *aReferrerPolicy)
@@ -1306,8 +1301,18 @@ static nsresult NSAPI nsChannel_GetReferrerPolicy(nsIHttpChannel *iface, UINT32 
 static nsresult NSAPI nsChannel_SetReferrerWithPolicy(nsIHttpChannel *iface, nsIURI *aReferrer, UINT32 aReferrerPolicy)
 {
     nsChannel *This = impl_from_nsIHttpChannel(iface);
-    FIXME("(%p)->(%p %x)\n", This, aReferrer, aReferrerPolicy);
-    return NS_ERROR_NOT_IMPLEMENTED;
+
+    TRACE("(%p)->(%p %d)\n", This, aReferrer, aReferrerPolicy);
+
+    if(aReferrerPolicy)
+        FIXME("refferer policy %d not implemented\n", aReferrerPolicy);
+
+    if(aReferrer)
+        nsIURI_AddRef(aReferrer);
+    if(This->referrer)
+        nsIURI_Release(This->referrer);
+    This->referrer = aReferrer;
+    return NS_OK;
 }
 
 static nsresult NSAPI nsHttpChannel_GetProtocolVersion(nsIHttpChannel *iface, nsACString *aProtocolVersion)
