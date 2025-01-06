@@ -9772,7 +9772,7 @@ interface IHTMLSelection : IDispatch
     [id(DISPID_IHTMLSELECTION_COLLAPSE)]
     HRESULT collapse(
         [in] IDispatch *parentNode,
-        [in] long offfset);
+        [in] long offset);
 
     [id(DISPID_IHTMLSELECTION_COLLAPSETOSTART)]
     HRESULT collapseToStart();
