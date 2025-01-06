@@ -991,7 +991,9 @@ typedef struct {
 
     LONG ref;
 
+    /* name and value are valid only for detached attributes (when elem == NULL). */
     WCHAR *name;
+    VARIANT value;
 
     HTMLElement *elem;
     DISPID dispid;

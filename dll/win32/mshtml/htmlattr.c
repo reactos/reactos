@@ -83,6 +83,7 @@ static ULONG WINAPI HTMLDOMAttribute_Release(IHTMLDOMAttribute *iface)
     if(!ref) {
         assert(!This->elem);
         release_dispex(&This->dispex);
+        VariantClear(&This->value);
         heap_free(This->name);
         heap_free(This);
     }
@@ -150,10 +151,8 @@ static HRESULT WINAPI HTMLDOMAttribute_put_nodeValue(IHTMLDOMAttribute *iface, V
 
     TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
 
-    if(!This->elem) {
-        FIXME("NULL This->elem\n");
-        return E_UNEXPECTED;
-    }
+    if(!This->elem)
+        return VariantCopy(&This->value, &v);
 
     memset(&ei, 0, sizeof(ei));
 
@@ -167,10 +166,8 @@ static HRESULT WINAPI HTMLDOMAttribute_get_nodeValue(IHTMLDOMAttribute *iface, V
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    if(!This->elem) {
-        FIXME("NULL This->elem\n");
-        return E_UNEXPECTED;
-    }
+    if(!This->elem)
+        return VariantCopy(p, &This->value);
 
     return get_elem_attr_value_by_dispid(This->elem, This->dispid, 0, p);
 }
