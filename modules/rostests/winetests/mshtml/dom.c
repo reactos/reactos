@@ -4550,7 +4550,7 @@ static void test_select_form(IUnknown *uselect, IUnknown  *uform)
     ok(hres == S_OK, "get_form failed: %08x\n", hres);
     ok(form != NULL, "form == NULL\n");
 
-    test_form_length((IUnknown*)form, 1);
+    test_form_length((IUnknown*)form, 2);
     test_form_elements((IUnknown*)form);
     test_form_name((IUnknown*)form, "form_name");
 
@@ -6976,13 +6976,32 @@ static void _set_button_value(unsigned line, IHTMLElement *elem, const char *val
     _test_button_value(line, elem, value);
 }
 
+#define get_button_form(a) _get_button_form(__LINE__,a)
+static IHTMLFormElement *_get_button_form(unsigned line, IHTMLElement *elem)
+{
+    IHTMLButtonElement *button = _get_button_iface(line, (IUnknown*)elem);
+    IHTMLFormElement *form;
+    HRESULT hres;
+
+    hres = IHTMLButtonElement_get_form(button, &form);
+    ok_(__FILE__,line)(hres == S_OK, "get_form failed: %08x\n", hres);
+    IHTMLButtonElement_Release(button);
+
+    return form;
+}
+
 static void test_button_elem(IHTMLElement *elem)
 {
+    IHTMLFormElement *form;
+
     test_button_name(elem, NULL);
     set_button_name(elem, "button name");
     test_button_type(elem, "submit");
     test_button_value(elem, NULL);
     set_button_value(elem, "val");
+
+    form = get_button_form(elem);
+    ok(!form, "form != NULL\n");
 
     test_elem_istextedit(elem, VARIANT_TRUE);
 }
@@ -9062,10 +9081,12 @@ static void test_elems2(IHTMLDocument2 *doc)
     }
 
     test_elem_set_innerhtml((IUnknown*)div,
-            "<form id=\"form\" name=\"form_name\"><select id=\"sform\"><option id=\"oform\"></option></select></form>");
+            "<form id=\"form\" name=\"form_name\"><select id=\"sform\"><option id=\"oform\"></option></select><button id=\"btnid\"></button></form>");
     elem = get_elem_by_id(doc, "sform", TRUE);
     elem2 = get_elem_by_id(doc, "form", TRUE);
     if(elem && elem2) {
+        IHTMLFormElement *form;
+
         test_select_form((IUnknown*)elem, (IUnknown*)elem2);
         IHTMLElement_Release(elem);
 
@@ -9074,6 +9095,14 @@ static void test_elems2(IHTMLDocument2 *doc)
             test_option_form((IUnknown*)elem, (IUnknown*)elem2);
             IHTMLElement_Release(elem);
         }
+
+        elem = get_elem_by_id(doc, "btnid", TRUE);
+
+        form = get_button_form(elem);
+        ok(iface_cmp((IUnknown*)form, (IUnknown*)elem2), "form != elem2\n");
+        IHTMLFormElement_Release(form);
+
+        IHTMLElement_Release(elem);
         IHTMLElement_Release(elem2);
     }
 
