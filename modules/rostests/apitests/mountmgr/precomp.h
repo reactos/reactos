@@ -25,4 +25,9 @@ LPCSTR wine_dbgstr_us(const UNICODE_STRING *us);
 HANDLE
 GetMountMgrHandle(VOID);
 
+VOID
+DumpBuffer(
+    _In_ PVOID Buffer,
+    _In_ ULONG Length);
+
 /* EOF */

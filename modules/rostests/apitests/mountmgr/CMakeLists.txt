@@ -1,5 +1,6 @@
 
 list(APPEND SOURCE
+    QueryDosVolumePaths.c
     QueryPoints.c
     utils.c)
 

@@ -47,3 +47,56 @@ GetMountMgrHandle(VOID)
 
     return MountMgrHandle;
 }
+
+VOID
+DumpBuffer(
+    _In_ PVOID Buffer,
+    _In_ ULONG Length)
+{
+#define LINE_SIZE   (75 + 2)
+    ULONG i;
+    PBYTE Ptr1, Ptr2;
+    CHAR  LineBuffer[LINE_SIZE];
+    PCHAR Line;
+    ULONG LineSize;
+
+    Ptr1 = Ptr2 = Buffer;
+    while ((ULONG_PTR)Buffer + Length - (ULONG_PTR)Ptr1 > 0)
+    {
+        Ptr1 = Ptr2;
+        Line = LineBuffer;
+
+        /* Print the address */
+        Line += _snprintf(Line, LINE_SIZE + LineBuffer - Line, "%08Ix ", (ULONG_PTR)Ptr1);
+
+        /* Print up to 16 bytes... */
+
+        /* ... in hexadecimal form first... */
+        i = 0;
+        while (i++ <= 0x0F && ((ULONG_PTR)Buffer + Length - (ULONG_PTR)Ptr1 > 0))
+        {
+            Line += _snprintf(Line, LINE_SIZE + LineBuffer - Line, " %02x", *Ptr1);
+            ++Ptr1;
+        }
+
+        /* ... align with spaces if needed... */
+        RtlFillMemory(Line, (0x0F + 2 - i) * 3 + 2, ' ');
+        Line += (0x0F + 2 - i) * 3 + 2;
+
+        /* ... then in character form. */
+        i = 0;
+        while (i++ <= 0x0F && ((ULONG_PTR)Buffer + Length - (ULONG_PTR)Ptr2 > 0))
+        {
+            *Line++ = ((*Ptr2 >= 0x20 && *Ptr2 <= 0x7E) || (*Ptr2 >= 0x80 && *Ptr2 < 0xFF) ? *Ptr2 : '.');
+            ++Ptr2;
+        }
+
+        /* Newline */
+        *Line++ = '\r';
+        *Line++ = '\n';
+
+        /* Finally display the line */
+        LineSize = Line - LineBuffer;
+        printf("%.*s", (int)LineSize, LineBuffer);
+    }
+}
