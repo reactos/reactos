@@ -876,7 +876,7 @@ static HRESULT WINAPI PersistStreamInit_IsDirty(IPersistStreamInit *iface)
     return S_FALSE;
 }
 
-static HRESULT WINAPI PersistStreamInit_Load(IPersistStreamInit *iface, LPSTREAM pStm)
+static HRESULT WINAPI PersistStreamInit_Load(IPersistStreamInit *iface, IStream *pStm)
 {
     HTMLDocument *This = impl_from_IPersistStreamInit(iface);
     IMoniker *mon;
@@ -900,7 +900,7 @@ static HRESULT WINAPI PersistStreamInit_Load(IPersistStreamInit *iface, LPSTREAM
     return hres;
 }
 
-static HRESULT WINAPI PersistStreamInit_Save(IPersistStreamInit *iface, LPSTREAM pStm,
+static HRESULT WINAPI PersistStreamInit_Save(IPersistStreamInit *iface, IStream *pStm,
                                              BOOL fClearDirty)
 {
     HTMLDocument *This = impl_from_IPersistStreamInit(iface);

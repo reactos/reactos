@@ -697,14 +697,14 @@ static HRESULT WINAPI OleDocumentView_CloseView(IOleDocumentView *iface, DWORD d
     return S_OK;
 }
 
-static HRESULT WINAPI OleDocumentView_SaveViewState(IOleDocumentView *iface, LPSTREAM pstm)
+static HRESULT WINAPI OleDocumentView_SaveViewState(IOleDocumentView *iface, IStream *pstm)
 {
     HTMLDocument *This = impl_from_IOleDocumentView(iface);
     FIXME("(%p)->(%p)\n", This, pstm);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI OleDocumentView_ApplyViewState(IOleDocumentView *iface, LPSTREAM pstm)
+static HRESULT WINAPI OleDocumentView_ApplyViewState(IOleDocumentView *iface, IStream *pstm)
 {
     HTMLDocument *This = impl_from_IOleDocumentView(iface);
     FIXME("(%p)->(%p)\n", This, pstm);
