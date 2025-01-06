@@ -2375,18 +2375,44 @@ static HRESULT WINAPI HTMLDocument3_getElementsByTagName(IHTMLDocument3 *iface, 
 
     TRACE("(%p)->(%s %p)\n", This, debugstr_w(v), pelColl);
 
-    if(!This->doc_node->nsdoc) {
-        WARN("NULL nsdoc\n");
-        return E_UNEXPECTED;
+    if(This->doc_node->nsdoc) {
+        nsAString_InitDepend(&id_str, v);
+        nsres = nsIDOMHTMLDocument_GetElementsByTagName(This->doc_node->nsdoc, &id_str, &nslist);
+        nsAString_Finish(&id_str);
+        if(FAILED(nsres)) {
+            ERR("GetElementByName failed: %08x\n", nsres);
+            return E_FAIL;
+        }
+    }else {
+        nsIDOMDocumentFragment *docfrag;
+        nsAString nsstr;
+
+        if(v) {
+            const WCHAR *ptr;
+            for(ptr=v; *ptr; ptr++) {
+                if(!isalnumW(*ptr)) {
+                    FIXME("Unsupported invalid tag %s\n", debugstr_w(v));
+                    return E_NOTIMPL;
+                }
+            }
+        }
+
+        nsres = nsIDOMNode_QueryInterface(This->doc_node->node.nsnode, &IID_nsIDOMDocumentFragment, (void**)&docfrag);
+        if(NS_FAILED(nsres)) {
+            ERR("Could not get nsIDOMDocumentFragment iface: %08x\n", nsres);
+            return E_UNEXPECTED;
+        }
+
+        nsAString_InitDepend(&nsstr, v);
+        nsres = nsIDOMDocumentFragment_QuerySelectorAll(docfrag, &nsstr, &nslist);
+        nsAString_Finish(&nsstr);
+        nsIDOMDocumentFragment_Release(docfrag);
+        if(NS_FAILED(nsres)) {
+            ERR("QuerySelectorAll failed: %08x\n", nsres);
+            return E_FAIL;
+        }
     }
 
-    nsAString_InitDepend(&id_str, v);
-    nsres = nsIDOMHTMLDocument_GetElementsByTagName(This->doc_node->nsdoc, &id_str, &nslist);
-    nsAString_Finish(&id_str);
-    if(FAILED(nsres)) {
-        ERR("GetElementByName failed: %08x\n", nsres);
-        return E_FAIL;
-    }
 
     *pelColl = create_collection_from_nodelist(This->doc_node, nslist);
     nsIDOMNodeList_Release(nslist);
