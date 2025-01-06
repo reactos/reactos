@@ -49,7 +49,6 @@ list(APPEND SOURCE
     htmlselect.c
     htmlstorage.c
     htmlstyle.c
-    htmlstyle3.c
     htmlstyleelem.c
     htmlstylesheet.c
     htmltable.c
