@@ -1328,7 +1328,7 @@ HRESULT setup_edit_mode(HTMLDocumentObj *doc)
         if(doc->ip_window)
             call_set_active_object(doc->ip_window, &doc->basedoc.IOleInPlaceActiveObject_iface);
 
-        memset(&rcBorderWidths, 0, sizeof(rcBorderWidths));
+        SetRectEmpty(&rcBorderWidths);
         if(doc->frame)
             IOleInPlaceFrame_SetBorderSpace(doc->frame, &rcBorderWidths);
     }

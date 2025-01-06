@@ -650,7 +650,7 @@ static HRESULT WINAPI OleDocumentView_UIActivate(IOleDocumentView *iface, BOOL f
         if(This->doc_obj->ip_window)
             call_set_active_object(This->doc_obj->ip_window, &This->IOleInPlaceActiveObject_iface);
 
-        memset(&rcBorderWidths, 0, sizeof(rcBorderWidths));
+        SetRectEmpty(&rcBorderWidths);
         IOleInPlaceFrame_SetBorderSpace(This->doc_obj->frame, &rcBorderWidths);
 
         This->doc_obj->ui_active = TRUE;
