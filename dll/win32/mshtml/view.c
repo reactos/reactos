@@ -507,7 +507,7 @@ static HRESULT WINAPI OleDocumentView_SetRect(IOleDocumentView *iface, LPRECT pr
 
     if(This->doc_obj->hwnd) {
         GetClientRect(This->doc_obj->hwnd, &rect);
-        if(memcmp(prcView, &rect, sizeof(RECT))) {
+        if(!EqualRect(prcView, &rect)) {
             InvalidateRect(This->doc_obj->hwnd, NULL, TRUE);
             SetWindowPos(This->doc_obj->hwnd, NULL, prcView->left, prcView->top, prcView->right,
                     prcView->bottom, SWP_NOZORDER | SWP_NOACTIVATE);

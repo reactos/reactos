@@ -313,7 +313,7 @@ void update_plugin_window(PluginHost *host, HWND hwnd, const RECT *rect)
 
     TRACE("%p %s\n", hwnd, wine_dbgstr_rect(rect));
 
-    if(memcmp(rect, &host->rect, sizeof(RECT))) {
+    if(!EqualRect(rect, &host->rect)) {
         host->rect = *rect;
         rect_changed = TRUE;
     }
