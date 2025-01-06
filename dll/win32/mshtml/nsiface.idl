@@ -2961,7 +2961,7 @@ interface nsIDOMWindowUtils : nsISupports
     nsresult SetDisplayPortForElement(float aXPx, float aYPx, float aWidthPx, float aHeightPx,
             nsIDOMElement *aElement, uint32_t aPriority);
     nsresult SetDisplayPortMarginsForElement(float aLeftMargin, float aTopMargin, float aRightMargin, float aBottomMargin,
-            uint32_t aAlignmentX, uint32_t aAlignmentY, nsIDOMElement *aElement, uint32_t aPriority);
+            nsIDOMElement *aElement, uint32_t aPriority);
     nsresult SetDisplayPortBaseForElement(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, nsIDOMElement *aElement);
     nsresult SetResolution(float aResolution);
     nsresult GetResolution(float *aResolution);
@@ -3893,8 +3893,8 @@ interface nsIDocShell : nsIDocShellTreeItem
     nsresult GatherCharsetMenuTelemetry();
     nsresult GetForcedCharset(nsIAtom **aForcedCharset);
     nsresult SetForcedCharset(nsIAtom *aForcedCharset);
-    void SetParentCharset(const nsACString *parentCharset, int32_t parentCharsetSource, nsIPrincipal *parentCharsetPrincipal);
-    void GetParentCharset(nsACString *parentCharset, int32_t *parentCharsetSource, nsIPrincipal **parentCharsetPrincipal);
+    void /* thiscall */ SetParentCharset(const nsACString *parentCharset, int32_t parentCharsetSource, nsIPrincipal *parentCharsetPrincipal);
+    void /* thiscall */ GetParentCharset(nsACString *parentCharset, int32_t *parentCharsetSource, nsIPrincipal **parentCharsetPrincipal);
     nsresult GetRecordProfileTimelineMarkers(bool *aRecordProfileTimelineMarkers);
     nsresult SetRecordProfileTimelineMarkers(bool aRecordProfileTimelineMarkers);
     nsresult Now(int /* DOMHighResTimeStamp */ *_retval);
@@ -3921,7 +3921,7 @@ interface nsIDocShell : nsIDocShellTreeItem
     nsresult SetSandboxFlags(uint32_t aSandboxFlags);
     nsresult GetOnePermittedSandboxedNavigator(nsIDocShell **aOnePermittedSandboxedNavigator);
     nsresult SetOnePermittedSandboxedNavigator(nsIDocShell *aOnePermittedSandboxedNavigator);
-    bool IsSandboxedFrom(nsIDocShell *aTargetDocShell);
+    bool /* thiscall */ IsSandboxedFrom(nsIDocShell *aTargetDocShell);
     nsresult GetMixedContentChannel(nsIChannel **aMixedContentChannel);
     nsresult SetMixedContentChannel(nsIChannel *aMixedContentChannel);
     nsresult GetAllowMixedContentAndConnectionData(bool *rootHasSecureConnection, bool *allowMixedContent, bool *isRootDocShell);
