@@ -3171,18 +3171,6 @@ HRESULT update_window_doc(HTMLInnerWindow *window)
     return hres;
 }
 
-HTMLOuterWindow *nswindow_to_window(const nsIDOMWindow *nswindow)
-{
-    HTMLOuterWindow *iter;
-
-    LIST_FOR_EACH_ENTRY(iter, &window_list, HTMLOuterWindow, entry) {
-        if(iter->nswindow == nswindow)
-            return iter;
-    }
-
-    return NULL;
-}
-
 HTMLOuterWindow *mozwindow_to_window(const mozIDOMWindowProxy *mozwindow)
 {
     HTMLOuterWindow *iter;
