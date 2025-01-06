@@ -1397,10 +1397,10 @@ static HRESULT nsChannelBSC_stop_binding(BSCallback *bsc, HRESULT result)
 {
     nsChannelBSC *This = nsChannelBSC_from_BSCallback(bsc);
 
-    if(result != E_ABORT) {
+    if(result != E_ABORT && This->is_doc_channel && This->bsc.window) {
         if(FAILED(result))
             handle_navigation_error(This, result);
-        else if(This->is_doc_channel && This->nschannel) {
+        else if(This->nschannel) {
             result = async_stop_request(This);
             if(SUCCEEDED(result))
                 return S_OK;
