@@ -191,6 +191,7 @@ typedef struct event_target_t event_target_t;
     XIID(IHTMLDocument3) \
     XIID(IHTMLDocument4) \
     XIID(IHTMLDocument5) \
+    XIID(IHTMLDocument6) \
     XIID(IHTMLDOMAttribute) \
     XIID(IHTMLDOMAttribute2) \
     XIID(IHTMLDOMChildrenCollection) \
