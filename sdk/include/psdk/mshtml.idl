@@ -6101,6 +6101,279 @@ interface IHTMLElement4 : IDispatch
     VARIANT onfocusout()
 
 /*****************************************************************************
+ *    IHTMLElement6 interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(305106f8-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLElement6 : IDispatch
+{
+    [id(DISPID_IHTMLELEMENT6_GETATTRIBUTENS)]
+    HRESULT getAttributeNS(
+        [in] VARIANT *pvarNS,
+        [in] BSTR strAttributeName,
+        [out, retval] VARIANT *AttributeValue);
+
+    [id(DISPID_IHTMLELEMENT6_SETATTRIBUTENS)]
+    HRESULT setAttributeNS(
+        [in] VARIANT *pvarNS,
+        [in] BSTR strAttributeName,
+        [in] VARIANT *pvarAttributeValue);
+
+    [id(DISPID_IHTMLELEMENT6_REMOVEATTRIBUTENS)]
+    HRESULT removeAttributeNS(
+        [in] VARIANT *pvarNS,
+        [in] BSTR strAttributeName);
+
+    [id(DISPID_IHTMLELEMENT6_GETATTRIBUTENODENS)]
+    HRESULT getAttributeNodeNS(
+        [in] VARIANT *pvarNS,
+        [in] BSTR bstrname,
+        [out, retval] IHTMLDOMAttribute2 **ppretAttribute);
+
+    [id(DISPID_IHTMLELEMENT6_SETATTRIBUTENODENS)]
+    HRESULT setAttributeNodeNS(
+        [in] IHTMLDOMAttribute2 *pattr,
+        [out, retval] IHTMLDOMAttribute2 **ppretAttribute);
+
+    [id(DISPID_IHTMLELEMENT6_HASATTRIBUTENS)]
+    HRESULT hasAttributeNS(
+        [in] VARIANT *pvarNS,
+        [in] BSTR name,
+        [out, retval] VARIANT_BOOL *pfHasAttribute);
+
+    [id(DISPID_IHTMLELEMENT6_IE9_GETATTRIBUTE)]
+    HRESULT getAttribute(
+        [in] BSTR strAttributeName,
+        [out, retval] VARIANT *AttributeValue);
+
+    [id(DISPID_IHTMLELEMENT6_IE9_SETATTRIBUTE)]
+    HRESULT setAttribute(
+        [in] BSTR strAttributeName,
+        [in] VARIANT *pvarAttributeValue);
+
+    [id(DISPID_IHTMLELEMENT6_IE9_REMOVEATTRIBUTE)]
+    HRESULT removeAttribute(
+        [in] BSTR strAttributeName);
+
+    [id(DISPID_IHTMLELEMENT6_IE9_GETATTRIBUTENODE)]
+    HRESULT getAttributeNode(
+        [in] BSTR strAttributeName,
+        [out, retval] IHTMLDOMAttribute2 **ppretAttribute);
+
+    [id(DISPID_IHTMLELEMENT6_IE9_SETATTRIBUTENODE)]
+    HRESULT setAttributeNode(
+        [in] IHTMLDOMAttribute2 *pattr,
+        [out, retval] IHTMLDOMAttribute2 **ppretAttribute);
+
+    [id(DISPID_IHTMLELEMENT6_IE9_REMOVEATTRIBUTENODE)]
+    HRESULT removeAttributeNode(
+        [in] IHTMLDOMAttribute2 *pattr,
+        [out, retval] IHTMLDOMAttribute2 **ppretAttribute);
+
+    [id(DISPID_IHTMLELEMENT6_IE9_HASATTRIBUTE)]
+    HRESULT hasAttribute(
+        [in] BSTR name,
+        [out, retval] VARIANT_BOOL *pfHasAttribute);
+
+    [id(DISPID_IHTMLELEMENT6_GETELEMENTSBYTAGNAMENS)]
+    HRESULT getElementsByTagNameNS(
+        [in] VARIANT *varNS,
+        [in] BSTR bstrLocalName,
+        [out, retval] IHTMLElementCollection **pelColl);
+
+    [propget, id(DISPID_IHTMLELEMENT6_IE9_TAGNAME)]
+    HRESULT tagName([out, retval] BSTR *p);
+
+    [propget, id(DISPID_IHTMLELEMENT6_IE9_NODENAME)]
+    HRESULT nodeName([out, retval] BSTR *p);
+
+    [id(DISPID_IHTMLELEMENT6_GETELEMENTSBYCLASSNAME)]
+    HRESULT getElementsByClassName(
+        [in] BSTR v,
+        [out, retval] IHTMLElementCollection **pel);
+
+    [id(DISPID_IHTMLELEMENT6_MSMATCHESSELECTOR)]
+    HRESULT msMatchesSelector(
+        [in] BSTR v,
+        [out, retval] VARIANT_BOOL *pfMatches);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONABORT), displaybind, bindable]
+    HRESULT onabort([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONABORT), displaybind, bindable]
+    HRESULT onabort([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONCANPLAY), displaybind, bindable, hidden]
+    HRESULT oncanplay([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONCANPLAY), displaybind, bindable, hidden]
+    HRESULT oncanplay([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONCANPLAYTHROUGH), displaybind, bindable, hidden]
+    HRESULT oncanplaythrough([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONCANPLAYTHROUGH), displaybind, bindable, hidden]
+    HRESULT oncanplaythrough([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONCHANGE), displaybind, bindable]
+    HRESULT onchange([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONCHANGE), displaybind, bindable]
+    HRESULT onchange([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONDURATIONCHANGE), displaybind, bindable, hidden]
+    HRESULT ondurationchange([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONDURATIONCHANGE), displaybind, bindable, hidden]
+    HRESULT ondurationchange([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONEMPTIED), displaybind, bindable, hidden]
+    HRESULT onemptied([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONEMPTIED), displaybind, bindable, hidden]
+    HRESULT onemptied([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONENDED), displaybind, bindable, hidden]
+    HRESULT onended([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONENDED), displaybind, bindable, hidden]
+    HRESULT onended([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONERROR), displaybind, bindable]
+    HRESULT onerror([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONERROR), displaybind, bindable]
+    HRESULT onerror([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONINPUT), displaybind, bindable, hidden]
+    HRESULT oninput([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONINPUT), displaybind, bindable, hidden]
+    HRESULT oninput([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONLOAD), displaybind, bindable]
+    HRESULT onload([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONLOAD), displaybind, bindable]
+    HRESULT onload([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONLOADEDDATA), displaybind, bindable, hidden]
+    HRESULT onloadeddata([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONLOADEDDATA), displaybind, bindable, hidden]
+    HRESULT onloadeddata([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONLOADEDMETADATA), displaybind, bindable, hidden]
+    HRESULT onloadedmetadata([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONLOADEDMETADATA), displaybind, bindable, hidden]
+    HRESULT onloadedmetadata([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONLOADSTART), displaybind, bindable, hidden]
+    HRESULT onloadstart([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONLOADSTART), displaybind, bindable, hidden]
+    HRESULT onloadstart([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONPAUSE), displaybind, bindable, hidden]
+    HRESULT onpause([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONPAUSE), displaybind, bindable, hidden]
+    HRESULT onpause([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONPLAY), displaybind, bindable, hidden]
+    HRESULT onplay([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONPLAY), displaybind, bindable, hidden]
+    HRESULT onplay([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONPLAYING), displaybind, bindable, hidden]
+    HRESULT onplaying([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONPLAYING), displaybind, bindable, hidden]
+    HRESULT onplaying([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONPROGRESS), displaybind, bindable, hidden]
+    HRESULT onprogress([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONPROGRESS), displaybind, bindable, hidden]
+    HRESULT onprogress([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONRATECHANGE), displaybind, bindable, hidden]
+    HRESULT onratechange([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONRATECHANGE), displaybind, bindable, hidden]
+    HRESULT onratechange([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONRESET), displaybind, bindable]
+    HRESULT onreset([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONRESET), displaybind, bindable]
+    HRESULT onreset([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONSEEKED), displaybind, bindable, hidden]
+    HRESULT onseeked([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONSEEKED), displaybind, bindable, hidden]
+    HRESULT onseeked([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONSEEKING), displaybind, bindable, hidden]
+    HRESULT onseeking([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONSEEKING), displaybind, bindable, hidden]
+    HRESULT onseeking([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONSELECT), displaybind, bindable]
+    HRESULT onselect([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONSELECT), displaybind, bindable]
+    HRESULT onselect([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONSTALLED), displaybind, bindable, hidden]
+    HRESULT onstalled([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONSTALLED), displaybind, bindable, hidden]
+    HRESULT onstalled([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONSUBMIT), displaybind, bindable]
+    HRESULT onsubmit([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONSUBMIT), displaybind, bindable]
+    HRESULT onsubmit([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONSUSPEND), displaybind, bindable, hidden]
+    HRESULT onsuspend([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONSUSPEND), displaybind, bindable, hidden]
+    HRESULT onsuspend([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONTIMEUPDATE), displaybind, bindable, hidden]
+    HRESULT ontimeupdate([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONTIMEUPDATE), displaybind, bindable, hidden]
+    HRESULT ontimeupdate([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONVOLUMECHANGE), displaybind, bindable, hidden]
+    HRESULT onvolumechange([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONVOLUMECHANGE), displaybind, bindable, hidden]
+    HRESULT onvolumechange([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLELEMENT6_ONWAITING), displaybind, bindable, hidden]
+    HRESULT onwaiting([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLELEMENT6_ONWAITING), displaybind, bindable, hidden]
+    HRESULT onwaiting([out, retval] VARIANT *p);
+
+    [id(DISPID_IHTMLELEMENT6_IE9_HASATTRIBUTES)]
+    HRESULT hasAttributes([out, retval] VARIANT_BOOL *pfHasAttributes);
+}
+
+/*****************************************************************************
  *    IElementSelector interface
  */
 [
