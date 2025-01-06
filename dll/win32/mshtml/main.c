@@ -64,24 +64,34 @@ static HDC display_dc;
 static WCHAR *status_strings[IDS_STATUS_LAST-IDS_STATUS_FIRST+1];
 static IMultiLanguage2 *mlang;
 
+static BOOL ensure_mlang(void)
+{
+    IMultiLanguage2 *new_mlang;
+    HRESULT hres;
+
+    if(mlang)
+        return TRUE;
+
+    hres = CoCreateInstance(&CLSID_CMultiLanguage, NULL, CLSCTX_INPROC_SERVER,
+            &IID_IMultiLanguage2, (void**)&new_mlang);
+    if(FAILED(hres)) {
+        ERR("Could not create CMultiLanguage instance\n");
+        return FALSE;
+    }
+
+    if(InterlockedCompareExchangePointer((void**)&mlang, new_mlang, NULL))
+        IMultiLanguage2_Release(new_mlang);
+
+    return TRUE;
+}
+
 UINT cp_from_charset_string(BSTR charset)
 {
     MIMECSETINFO info;
     HRESULT hres;
 
-    if(!mlang) {
-        IMultiLanguage2 *new_mlang;
-
-        hres = CoCreateInstance(&CLSID_CMultiLanguage, NULL, CLSCTX_INPROC_SERVER,
-                &IID_IMultiLanguage2, (void**)&new_mlang);
-        if(FAILED(hres)) {
-            ERR("Could not create CMultiLanguage instance\n");
-            return CP_UTF8;
-        }
-
-        if(InterlockedCompareExchangePointer((void**)&mlang, new_mlang, NULL))
-            IMultiLanguage2_Release(new_mlang);
-    }
+    if(!ensure_mlang())
+        return CP_UTF8;
 
     hres = IMultiLanguage2_GetCharsetInfo(mlang, charset, &info);
     if(FAILED(hres)) {
@@ -90,6 +100,23 @@ UINT cp_from_charset_string(BSTR charset)
     }
 
     return info.uiInternetEncoding;
+}
+
+BSTR charset_string_from_cp(UINT cp)
+{
+    MIMECPINFO info;
+    HRESULT hres;
+
+    if(!ensure_mlang())
+        return SysAllocString(NULL);
+
+    hres = IMultiLanguage2_GetCodePageInfo(mlang, cp, GetUserDefaultUILanguage(), &info);
+    if(FAILED(hres)) {
+        ERR("GetCodePageInfo failed: %08x\n", hres);
+        return SysAllocString(NULL);
+    }
+
+    return SysAllocString(info.wszWebCharset);
 }
 
 static void thread_detach(void)
