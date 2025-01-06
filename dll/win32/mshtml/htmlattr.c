@@ -335,7 +335,7 @@ static HRESULT WINAPI HTMLDOMAttribute2_get_expando(IHTMLDOMAttribute2 *iface, V
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    *p = get_dispid_type(This->dispid) == DISPEXPROP_BUILTIN ? VARIANT_FALSE : VARIANT_TRUE;
+    *p = !This->elem || get_dispid_type(This->dispid) == DISPEXPROP_BUILTIN ? VARIANT_FALSE : VARIANT_TRUE;
     return S_OK;
 }
 

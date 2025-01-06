@@ -8919,6 +8919,7 @@ static void test_create_elems(IHTMLDocument2 *doc)
             test_no_iface((IUnknown*)attr, &IID_IHTMLDOMNode);
 
             test_attr_node_name(attr, "Test");
+            test_attr_expando(attr, VARIANT_FALSE);
 
             IHTMLDOMAttribute_Release(attr);
         }
