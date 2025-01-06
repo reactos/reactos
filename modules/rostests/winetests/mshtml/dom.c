@@ -6209,10 +6209,13 @@ static void test_default_selection(IHTMLDocument2 *doc)
     IHTMLTxtRange_Release(range);
 }
 
-static void test_unique_id(IHTMLDocument2 *doc)
+static void test_unique_id(IHTMLDocument2 *doc, IHTMLElement *elem)
 {
     IHTMLDocument3 *doc3 = get_doc3_iface(doc);
+    IHTMLUniqueName *unique_name;
+    char buf[32];
     BSTR id, id2;
+    LONG num;
     HRESULT hres;
 
     static const WCHAR prefixW[] = {'m','s','_','_','i','d',0};
@@ -6235,6 +6238,30 @@ static void test_unique_id(IHTMLDocument2 *doc)
     SysFreeString(id);
     SysFreeString(id2);
 
+    hres = IHTMLElement_QueryInterface(elem, &IID_IHTMLUniqueName, (void**)&unique_name);
+    ok(hres == S_OK, "Could not get IHTMLUniqueName iface: %08x\n", hres);
+
+    hres = IHTMLUniqueName_get_uniqueID(unique_name, &id);
+    ok(hres == S_OK, "get_uniqueName failed: %08x\n", hres);
+    trace("id %s\n", wine_dbgstr_w(id));
+
+    hres = IHTMLUniqueName_get_uniqueID(unique_name, &id2);
+    ok(hres == S_OK, "get_uniqueName failed: %08x\n", hres);
+    ok(!lstrcmpW(id, id2), "unique names differ\n");
+    trace("id %s\n", wine_dbgstr_w(id2));
+
+    hres = IHTMLUniqueName_get_uniqueNumber(unique_name, &num);
+    ok(hres == S_OK, "get_uniqueName failed: %08x\n", hres);
+    ok(num, "num = 0\n");
+
+    sprintf(buf, "ms__id%u", num);
+    ok(!strcmp_wa(id, buf), "unexpected id %s\n", wine_dbgstr_w(id));
+    trace("num %d\n", num);
+
+    SysFreeString(id);
+    SysFreeString(id2);
+
+    IHTMLUniqueName_Release(unique_name);
     IHTMLDocument3_Release(doc3);
 }
 
@@ -6272,10 +6299,9 @@ static void test_doc_elem(IHTMLDocument2 *doc)
     IHTMLDocument2_Release(doc_node);
 
     test_elem_client_rect((IUnknown*)elem);
+    test_unique_id(doc, elem);
 
     IHTMLElement_Release(elem);
-
-    test_unique_id(doc);
 }
 
 static void test_default_body(IHTMLBodyElement *body)
