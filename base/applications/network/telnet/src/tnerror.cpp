@@ -81,7 +81,7 @@ int printit(const char * it){
 	return 0;
 }
 
-
+#ifdef __REACTOS__
 int wprintit(LPCWSTR it)
 {
     DWORD numwritten;
@@ -107,7 +107,7 @@ int wprintit(LPCWSTR it)
     }
     return 0;
 }
-
+#endif
 
 int printm(LPTSTR szModule, BOOL fSystem, DWORD dwMessageId, ...)
 {
@@ -119,9 +119,10 @@ int printm(LPTSTR szModule, BOOL fSystem, DWORD dwMessageId, ...)
 
 	va_list Ellipsis;
 	va_start(Ellipsis, dwMessageId);
-
+#ifdef __REACTOS__
 	LPWSTR wszMessage = 0;
 	DWORD dwMessage = 0;
+
 	if(fSystem) {
 		dwMessage = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
 			FORMAT_MESSAGE_FROM_SYSTEM, hModule, dwMessageId,
@@ -134,6 +135,22 @@ int printm(LPTSTR szModule, BOOL fSystem, DWORD dwMessageId, ...)
 				FORMAT_MESSAGE_FROM_STRING, wszString, dwMessageId,
 				LANG_USER_DEFAULT, (LPWSTR)&wszMessage, sizeof(wszString) / sizeof(*wszString), &Ellipsis);
 	}
+#else
+    LPTSTR pszMessage = 0;
+	DWORD dwMessage = 0;
+	if(fSystem) {
+		dwMessage = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+			FORMAT_MESSAGE_FROM_SYSTEM, hModule, dwMessageId,
+			LANG_USER_DEFAULT, (LPTSTR)&pszMessage, 128, &Ellipsis);
+	} else {
+		// we will use a string table.
+		char szString[256];
+		if(LoadString(0, dwMessageId, szString, sizeof(szString)))
+			dwMessage = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+				FORMAT_MESSAGE_FROM_STRING, szString, dwMessageId,
+				LANG_USER_DEFAULT, (LPTSTR)&pszMessage, 256, &Ellipsis);
+	}
+#endif
 
 	va_end(Ellipsis);
 
@@ -141,9 +158,13 @@ int printm(LPTSTR szModule, BOOL fSystem, DWORD dwMessageId, ...)
 		FreeLibrary(hModule);
 
 	if (dwMessage) {
-
+#ifdef __REACTOS__
 		Result = wprintit(wszMessage);
 		LocalFree(wszMessage);
+#else
+        Result = printit(pszMessage);
+		LocalFree(pszMessage);
+#endif
 	}
 
 	return Result;
