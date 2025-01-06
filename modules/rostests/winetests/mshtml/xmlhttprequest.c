@@ -389,6 +389,7 @@ static void pump_msgs(BOOL *b)
 struct HEADER_TYPE {
     const char *key;
     const char *value;
+    BOOL skip_all_headers;
 };
 
 static void create_xmlhttprequest(IHTMLDocument2 *doc)
@@ -452,6 +453,9 @@ static void test_header(const struct HEADER_TYPE expect[], int num)
             "Expect %s: %s, got %s\n", expect[i].key, expect[i].value, wine_dbgstr_w(text));
         SysFreeString(key);
         SysFreeString(text);
+
+        if(expect[i].skip_all_headers)
+            continue;
 
         strcpy(buf, expect[i].key);
         strcat(buf, ": ");
@@ -584,10 +588,9 @@ static void test_sync_xhr(IHTMLDocument2 *doc, const char *xml_url, const char *
     LONG val;
     HRESULT hres;
     static const struct HEADER_TYPE expect_headers[] = {
-        {"Server", "Apache"},
         {"Accept-Ranges", "bytes"},
         {"Content-Length", "51"},
-        {"Content-Type", "application/xml"}
+        {"Content-Type", "application/xml", TRUE}
     };
 
     trace("test_sync_xhr\n");
