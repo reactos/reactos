@@ -310,12 +310,11 @@ static HRESULT WINAPI HTMLDOMAttribute2_get_value(IHTMLDOMAttribute2 *iface, BST
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    if(!This->elem) {
-        FIXME("NULL This->elem\n");
-        return E_UNEXPECTED;
-    }
-
-    hres = get_elem_attr_value_by_dispid(This->elem, This->dispid, &val);
+    V_VT(&val) = VT_EMPTY;
+    if(This->elem)
+        hres = get_elem_attr_value_by_dispid(This->elem, This->dispid, &val);
+    else
+        hres = VariantCopy(&val, &This->value);
     if(SUCCEEDED(hres))
         hres = attr_value_to_string(&val);
     if(FAILED(hres))

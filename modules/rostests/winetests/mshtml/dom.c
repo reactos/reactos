@@ -8610,10 +8610,17 @@ static void test_attr(IHTMLDocument2 *doc, IHTMLElement *elem)
 
     get_attr_node_value(attr, &v, VT_I4);
     ok(V_I4(&v) == 1, "nodeValue = %d\n", V_I4(&v));
+    test_attr_value(attr, "1");
 
     V_VT(&v) = VT_EMPTY;
     put_attr_node_value(attr, v);
     get_attr_node_value(attr, &v, VT_EMPTY);
+
+    V_VT(&v) = VT_BSTR;
+    V_BSTR(&v) = a2bstr("testing");
+    put_attr_node_value(attr, v);
+    SysFreeString(V_BSTR(&v));
+    test_attr_value(attr, "testing");
 
     IHTMLDOMAttribute_Release(attr);
 }
