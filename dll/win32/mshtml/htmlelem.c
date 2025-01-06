@@ -848,6 +848,11 @@ static HRESULT WINAPI HTMLElement_get_parentElement(IHTMLElement *iface, IHTMLEl
     if(FAILED(hres))
         return hres;
 
+    if(!node) {
+        *p = NULL;
+        return S_OK;
+    }
+
     hres = IHTMLDOMNode_QueryInterface(node, &IID_IHTMLElement, (void**)p);
     IHTMLDOMNode_Release(node);
     if(FAILED(hres))
