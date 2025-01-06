@@ -126,7 +126,6 @@ typedef enum {
 } styleid_t;
 
 HRESULT HTMLStyle_Create(HTMLElement*,HTMLStyle**) DECLSPEC_HIDDEN;
-void HTMLStyle2_Init(HTMLStyle*) DECLSPEC_HIDDEN;
 void HTMLStyle3_Init(HTMLStyle*) DECLSPEC_HIDDEN;
 
 HRESULT get_nsstyle_attr(nsIDOMCSSStyleDeclaration*,styleid_t,BSTR*,DWORD) DECLSPEC_HIDDEN;
