@@ -1968,7 +1968,7 @@ static void test_func(IDispatchEx *obj)
     memset(&ei, 0, sizeof(ei));
     VariantInit(&var);
     hres = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dp, &var, &ei, NULL);
-    ok(hres == S_OK || broken(E_ACCESSDENIED), "InvokeEx failed: %08x\n", hres);
+    ok(hres == S_OK || broken(hres == E_ACCESSDENIED), "InvokeEx failed: %08x\n", hres);
     if(SUCCEEDED(hres)) {
         DISPID named_args[2] = { DISPID_THIS, 0xdeadbeef };
         VARIANT args[2];
