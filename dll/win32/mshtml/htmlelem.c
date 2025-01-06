@@ -4103,8 +4103,25 @@ static HRESULT WINAPI HTMLElement6_get_nodeName(IHTMLElement6 *iface, BSTR *p)
 static HRESULT WINAPI HTMLElement6_getElementsByClassName(IHTMLElement6 *iface, BSTR v, IHTMLElementCollection **pel)
 {
     HTMLElement *This = impl_from_IHTMLElement6(iface);
-    FIXME("(%p)->(%s %p)\n", This, debugstr_w(v), pel);
-    return E_NOTIMPL;
+    nsIDOMHTMLCollection *nscol = NULL;
+    nsAString nsstr;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s %p)\n", This, debugstr_w(v), pel);
+
+    if(This->nselem) {
+        nsAString_InitDepend(&nsstr, v);
+        nsres = nsIDOMHTMLElement_GetElementsByClassName(This->nselem, &nsstr, &nscol);
+        nsAString_Finish(&nsstr);
+        if(NS_FAILED(nsres)) {
+            ERR("GetElementsByClassName failed: %08x\n", nsres);
+            return E_FAIL;
+        }
+    }
+
+    *pel = create_collection_from_htmlcol(This->node.doc, nscol);
+    nsIDOMHTMLCollection_Release(nscol);
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLElement6_msMatchesSelector(IHTMLElement6 *iface, BSTR v, VARIANT_BOOL *pfMatches)

@@ -8038,6 +8038,43 @@ static void test_selectors(IHTMLDocument2 *doc, IHTMLElement *div)
     IElementSelector_Release(elem_selector);
 }
 
+static void test_elemsbyclass(IHTMLElement *div)
+{
+    IHTMLElementCollection *collection;
+    IHTMLElement6 *elem;
+    BSTR str;
+    HRESULT hres;
+
+    static const elem_type_t types[] = {ET_DIV, ET_FORM};
+
+    test_elem_set_innerhtml((IUnknown*)div, "<div class=\"cl1\"><form class=\"cl1\"></form></div><div class=\"cl2\"></div>");
+
+    hres = IHTMLElement_QueryInterface(div, &IID_IHTMLElement6, (void**)&elem);
+    ok(hres == S_OK || broken(hres == E_NOINTERFACE), "Could not get IHTMLElement6 iface: %08x\n", hres);
+    if(FAILED(hres)) {
+        win_skip("IHTMLElement6 tests skipped.\n");
+        return;
+    }
+
+    collection = NULL;
+    str = a2bstr("nomatch");
+    hres = IHTMLElement6_getElementsByClassName(elem, str, &collection);
+    ok(hres == S_OK, "getElementsByClassName failed: %08x\n", hres);
+    ok(collection != NULL, "collection == NULL\n");
+    test_elem_collection((IUnknown*)collection, NULL, 0);
+    IHTMLElementCollection_Release(collection);
+
+    collection = NULL;
+    str = a2bstr("cl1");
+    hres = IHTMLElement6_getElementsByClassName(elem, str, &collection);
+    ok(hres == S_OK, "getElementsByClassName failed: %08x\n", hres);
+    ok(collection != NULL, "collection == NULL\n");
+    test_elem_collection((IUnknown*)collection, types, sizeof(types)/sizeof(*types));
+    IHTMLElementCollection_Release(collection);
+
+    IHTMLElement6_Release(elem);
+}
+
 static void test_elems(IHTMLDocument2 *doc)
 {
     IHTMLElementCollection *col;
@@ -9113,6 +9150,7 @@ static void test_elems2(IHTMLDocument2 *doc)
     }
 
     test_selectors(doc, div);
+    test_elemsbyclass(div);
 
     test_elem_set_innerhtml((IUnknown*)div, "<div id=\"elemid\">test</div>");
     elem = get_elem_by_id(doc, "elemid", TRUE);

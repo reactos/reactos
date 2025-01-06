@@ -723,7 +723,8 @@ IHTMLElementCollection *create_collection_from_htmlcol(HTMLDocumentNode *doc, ns
     HTMLDOMNode *node;
     HRESULT hres = S_OK;
 
-    nsIDOMHTMLCollection_GetLength(nscol, &length);
+    if(nscol)
+        nsIDOMHTMLCollection_GetLength(nscol, &length);
 
     buf.len = buf.size = length;
     if(buf.len) {
