@@ -1064,11 +1064,8 @@ IHTMLElementCollection *create_all_collection(HTMLDOMNode*,BOOL) DECLSPEC_HIDDEN
 IHTMLElementCollection *create_collection_from_nodelist(HTMLDocumentNode*,nsIDOMNodeList*) DECLSPEC_HIDDEN;
 IHTMLElementCollection *create_collection_from_htmlcol(HTMLDocumentNode*,nsIDOMHTMLCollection*) DECLSPEC_HIDDEN;
 
-#define ATTRFLAG_CASESENSITIVE  0x0001
-#define ATTRFLAG_ASSTRING       0x0002
-#define ATTRFLAG_EXPANDURL      0x0004
-
-HRESULT get_elem_attr_value_by_dispid(HTMLElement*,DISPID,DWORD,VARIANT*) DECLSPEC_HIDDEN;
+HRESULT attr_value_to_string(VARIANT*) DECLSPEC_HIDDEN;
+HRESULT get_elem_attr_value_by_dispid(HTMLElement*,DISPID,VARIANT*) DECLSPEC_HIDDEN;
 HRESULT get_elem_source_index(HTMLElement*,LONG*) DECLSPEC_HIDDEN;
 
 nsresult get_elem_attr_value(nsIDOMHTMLElement*,const WCHAR*,nsAString*,const PRUnichar**) DECLSPEC_HIDDEN;

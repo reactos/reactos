@@ -63,6 +63,10 @@ static const WCHAR textareaW[] = {'T','E','X','T','A','R','E','A',0};
 static const WCHAR title_tagW[]= {'T','I','T','L','E',0};
 static const WCHAR trW[]       = {'T','R',0};
 
+#define ATTRFLAG_CASESENSITIVE  0x0001
+#define ATTRFLAG_ASSTRING       0x0002
+#define ATTRFLAG_EXPANDURL      0x0004
+
 typedef struct {
     const WCHAR *name;
     HRESULT (*constructor)(HTMLDocumentNode*,nsIDOMHTMLElement*,HTMLElement**);
@@ -638,39 +642,39 @@ static HRESULT WINAPI HTMLElement_setAttribute(IHTMLElement *iface, BSTR strAttr
             LOCALE_SYSTEM_DEFAULT, DISPATCH_PROPERTYPUT, &dispParams, NULL, &excep, NULL);
 }
 
-HRESULT get_elem_attr_value_by_dispid(HTMLElement *elem, DISPID dispid, DWORD flags, VARIANT *ret)
+HRESULT get_elem_attr_value_by_dispid(HTMLElement *elem, DISPID dispid, VARIANT *ret)
 {
     DISPPARAMS dispParams = {NULL, NULL, 0, 0};
     EXCEPINFO excep;
+
+    return IDispatchEx_InvokeEx(&elem->node.event_target.dispex.IDispatchEx_iface, dispid, LOCALE_SYSTEM_DEFAULT,
+            DISPATCH_PROPERTYGET, &dispParams, ret, &excep, NULL);
+}
+
+HRESULT attr_value_to_string(VARIANT *v)
+{
     HRESULT hres;
 
     static const WCHAR nullW[] = {'n','u','l','l',0};
 
-    hres = IDispatchEx_InvokeEx(&elem->node.event_target.dispex.IDispatchEx_iface, dispid, LOCALE_SYSTEM_DEFAULT,
-            DISPATCH_PROPERTYGET, &dispParams, ret, &excep, NULL);
-    if(FAILED(hres))
-        return hres;
-
-    if(flags & ATTRFLAG_ASSTRING) {
-        switch(V_VT(ret)) {
-        case VT_BSTR:
-            break;
-        case VT_NULL:
-            V_BSTR(ret) = SysAllocString(nullW);
-            if(!V_BSTR(ret))
-                return E_OUTOFMEMORY;
-            V_VT(ret) = VT_BSTR;
-            break;
-        case VT_DISPATCH:
-            IDispatch_Release(V_DISPATCH(ret));
-            V_VT(ret) = VT_BSTR;
-            V_BSTR(ret) = SysAllocString(NULL);
-            break;
-        default:
-            hres = VariantChangeType(ret, ret, 0, VT_BSTR);
-            if(FAILED(hres))
-                return hres;
-        }
+    switch(V_VT(v)) {
+    case VT_BSTR:
+        break;
+    case VT_NULL:
+        V_BSTR(v) = SysAllocString(nullW);
+        if(!V_BSTR(v))
+            return E_OUTOFMEMORY;
+        V_VT(v) = VT_BSTR;
+        break;
+    case VT_DISPATCH:
+        IDispatch_Release(V_DISPATCH(v));
+        V_VT(v) = VT_BSTR;
+        V_BSTR(v) = SysAllocString(NULL);
+        break;
+    default:
+        hres = VariantChangeType(v, v, 0, VT_BSTR);
+        if(FAILED(hres))
+            return hres;
     }
 
     return S_OK;
@@ -700,7 +704,10 @@ static HRESULT WINAPI HTMLElement_getAttribute(IHTMLElement *iface, BSTR strAttr
         return hres;
     }
 
-    return get_elem_attr_value_by_dispid(This, dispid, lFlags, AttributeValue);
+    hres = get_elem_attr_value_by_dispid(This, dispid, AttributeValue);
+    if(SUCCEEDED(hres) && (lFlags & ATTRFLAG_ASSTRING))
+        hres = attr_value_to_string(AttributeValue);
+    return hres;
 }
 
 static HRESULT WINAPI HTMLElement_removeAttribute(IHTMLElement *iface, BSTR strAttributeName,
