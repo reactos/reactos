@@ -535,7 +535,7 @@ HRESULT get_node_text(HTMLDOMNode *node, BSTR *ret)
     if (!wstrbuf_init(&buf))
         return E_OUTOFMEMORY;
     wstrbuf_append_node_rec(&buf, node->nsnode);
-    if(buf.buf) {
+    if(buf.buf && *buf.buf) {
         *ret = SysAllocString(buf.buf);
         if(!*ret)
             hres = E_OUTOFMEMORY;
