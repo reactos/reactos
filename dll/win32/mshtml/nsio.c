@@ -617,9 +617,13 @@ static nsresult NSAPI nsChannel_Cancel(nsIHttpChannel *iface, nsresult aStatus)
 {
     nsChannel *This = impl_from_nsIHttpChannel(iface);
 
-    FIXME("(%p)->(%08x)\n", This, aStatus);
+    TRACE("(%p)->(%08x)\n", This, aStatus);
 
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if(This->binding && This->binding->bsc.binding)
+        IBinding_Abort(This->binding->bsc.binding);
+    else
+        WARN("No binding to cancel\n");
+    return NS_OK;
 }
 
 static nsresult NSAPI nsChannel_Suspend(nsIHttpChannel *iface)

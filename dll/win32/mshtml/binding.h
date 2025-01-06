@@ -59,6 +59,8 @@ typedef struct {
     REQUEST_METHOD request_method;
     struct list response_headers;
     struct list request_headers;
+
+    nsChannelBSC *binding;
 } nsChannel;
 
 typedef struct {
