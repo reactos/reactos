@@ -3566,7 +3566,7 @@ static HRESULT  WINAPI DocObjectService_IsErrorUrl(
         LPCWSTR lpszUrl,
         BOOL *pfIsError)
 {
-    CHECK_EXPECT(IsErrorUrl);
+    CHECK_EXPECT2(IsErrorUrl);
     *pfIsError = FALSE;
     return S_OK;
 }
