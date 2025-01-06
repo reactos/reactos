@@ -7906,10 +7906,11 @@ static void test_enum_children(IUnknown *unk, unsigned len)
     IEnumVARIANT_Release(enum_var);
 }
 
-static void test_doc_selector(IHTMLDocument2 *doc, IHTMLElement *div)
+static void test_selectors(IHTMLDocument2 *doc, IHTMLElement *div)
 {
     IHTMLDOMChildrenCollection *collection;
     IDocumentSelector *doc_selector;
+    IElementSelector *elem_selector;
     BSTR str;
     HRESULT hres;
 
@@ -7939,6 +7940,27 @@ static void test_doc_selector(IHTMLDocument2 *doc, IHTMLElement *div)
     IHTMLDOMChildrenCollection_Release(collection);
 
     IDocumentSelector_Release(doc_selector);
+
+    hres = IHTMLElement_QueryInterface(div, &IID_IElementSelector, (void**)&elem_selector);
+    ok(hres == S_OK, "Could not get IElementSelector iface: %08x\n", hres);
+
+    collection = NULL;
+    str = a2bstr("nomatch");
+    hres = IElementSelector_querySelectorAll(elem_selector, str, &collection);
+    ok(hres == S_OK, "querySelectorAll failed: %08x\n", hres);
+    ok(collection != NULL, "collection == NULL\n");
+    test_children_collection_length(collection, 0);
+    IHTMLDOMChildrenCollection_Release(collection);
+
+    collection = NULL;
+    str = a2bstr(".cl1");
+    hres = IElementSelector_querySelectorAll(elem_selector, str, &collection);
+    ok(hres == S_OK, "querySelectorAll failed: %08x\n", hres);
+    ok(collection != NULL, "collection == NULL\n");
+    test_children_collection_length(collection, 2);
+    IHTMLDOMChildrenCollection_Release(collection);
+
+    IElementSelector_Release(elem_selector);
 }
 
 static void test_elems(IHTMLDocument2 *doc)
@@ -9005,7 +9027,7 @@ static void test_elems2(IHTMLDocument2 *doc)
         IHTMLElement_Release(elem2);
     }
 
-    test_doc_selector(doc, div);
+    test_selectors(doc, div);
 
     test_elem_set_innerhtml((IUnknown*)div, "<div id=\"elemid\">test</div>");
     elem = get_elem_by_id(doc, "elemid", TRUE);
