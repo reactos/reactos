@@ -1386,6 +1386,7 @@ void detach_events(HTMLDocumentNode *doc)
     release_nsevents(doc);
 }
 
+/* Caller should ensure that it's called only once for given event in the target. */
 static void bind_event(EventTarget *event_target, eventid_t eid)
 {
     if(event_target->dispex.data->vtbl->bind_event)
@@ -1423,13 +1424,17 @@ static HRESULT set_event_handler_disp(EventTarget *event_target, eventid_t eid, 
     if(!data)
         return E_OUTOFMEMORY;
 
-    if(!alloc_handler_vector(data, eid, 0))
-        return E_OUTOFMEMORY;
+    if(!data->event_table[eid]) {
+        if(!alloc_handler_vector(data, eid, 0))
+            return E_OUTOFMEMORY;
+
+        bind_event(event_target, eid);
+    }else if(data->event_table[eid]->handler_prop) {
+        IDispatch_Release(data->event_table[eid]->handler_prop);
+    }
 
     data->event_table[eid]->handler_prop = disp;
     IDispatch_AddRef(disp);
-
-    bind_event(event_target, eid);
     return S_OK;
 }
 
@@ -1522,14 +1527,14 @@ HRESULT attach_event(EventTarget *event_target, BSTR name, IDispatch *disp, VARI
             i++;
         if(i == data->event_table[eid]->handler_cnt && !alloc_handler_vector(data, eid, i+1))
             return E_OUTOFMEMORY;
-    }else if(!alloc_handler_vector(data, eid, i+1)) {
+    }else if(alloc_handler_vector(data, eid, i+1)) {
+        bind_event(event_target, eid);
+    }else {
         return E_OUTOFMEMORY;
     }
 
     IDispatch_AddRef(disp);
     data->event_table[eid]->handlers[i] = disp;
-
-    bind_event(event_target, eid);
 
     *res = VARIANT_TRUE;
     return S_OK;
