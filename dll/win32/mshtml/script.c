@@ -955,10 +955,10 @@ static HRESULT ScriptBSC_stop_binding(BSCallback *bsc, HRESULT result)
     if(SUCCEEDED(result) && !This->script_elem)
         result = E_UNEXPECTED;
 
-    if(SUCCEEDED(result)) {
-        if(This->script_elem->readystate == READYSTATE_LOADING)
-            set_script_elem_readystate(This->script_elem, READYSTATE_LOADED);
+    if(This->script_elem->readystate == READYSTATE_LOADING)
+        set_script_elem_readystate(This->script_elem, READYSTATE_LOADED);
 
+    if(SUCCEEDED(result)) {
         script_file_available(This);
     }else {
         FIXME("binding failed %08x\n", result);
