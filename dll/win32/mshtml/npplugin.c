@@ -246,7 +246,7 @@ static nsIDOMHTMLElement *get_dom_element(NPP instance)
 
 static HTMLInnerWindow *get_elem_window(nsIDOMHTMLElement *elem)
 {
-    nsIDOMWindow *nswindow;
+    mozIDOMWindowProxy *mozwindow;
     nsIDOMDocument *nsdoc;
     HTMLOuterWindow *window;
     nsresult nsres;
@@ -255,13 +255,13 @@ static HTMLInnerWindow *get_elem_window(nsIDOMHTMLElement *elem)
     if(NS_FAILED(nsres))
         return NULL;
 
-    nsres = nsIDOMDocument_GetDefaultView(nsdoc, &nswindow);
+    nsres = nsIDOMDocument_GetDefaultView(nsdoc, &mozwindow);
     nsIDOMDocument_Release(nsdoc);
-    if(NS_FAILED(nsres) || !nswindow)
+    if(NS_FAILED(nsres) || !mozwindow)
         return NULL;
 
-    window = nswindow_to_window(nswindow);
-    nsIDOMWindow_Release(nswindow);
+    window = mozwindow_to_window(mozwindow);
+    mozIDOMWindowProxy_Release(mozwindow);
 
     return window->base.inner_window;
 }

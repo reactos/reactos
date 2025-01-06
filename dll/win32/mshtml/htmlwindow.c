@@ -217,6 +217,8 @@ static void release_outer_window(HTMLOuterWindow *This)
 
     if(This->nswindow)
         nsIDOMWindow_Release(This->nswindow);
+    if(This->window_proxy)
+        mozIDOMWindowProxy_Release(This->window_proxy);
 
     list_remove(&This->entry);
     heap_free(This);
@@ -333,7 +335,7 @@ static HRESULT WINAPI HTMLWindow2_Invoke(IHTMLWindow2 *iface, DISPID dispIdMembe
 static HRESULT get_frame_by_index(HTMLOuterWindow *This, UINT32 index, HTMLOuterWindow **ret)
 {
     nsIDOMWindowCollection *nsframes;
-    nsIDOMWindow *nswindow;
+    mozIDOMWindowProxy *mozwindow;
     UINT32 length;
     nsresult nsres;
 
@@ -351,16 +353,16 @@ static HRESULT get_frame_by_index(HTMLOuterWindow *This, UINT32 index, HTMLOuter
         return DISP_E_MEMBERNOTFOUND;
     }
 
-    nsres = nsIDOMWindowCollection_Item(nsframes, index, &nswindow);
+    nsres = nsIDOMWindowCollection_Item(nsframes, index, &mozwindow);
     nsIDOMWindowCollection_Release(nsframes);
     if(NS_FAILED(nsres)) {
         FIXME("nsIDOMWindowCollection_Item failed: 0x%08x\n", nsres);
         return E_FAIL;
     }
 
-    *ret = nswindow_to_window(nswindow);
+    *ret = mozwindow_to_window(mozwindow);
 
-    nsIDOMWindow_Release(nswindow);
+    mozIDOMWindowProxy_Release(mozwindow);
     return S_OK;
 }
 
@@ -368,7 +370,7 @@ HRESULT get_frame_by_name(HTMLOuterWindow *This, const WCHAR *name, BOOL deep, H
 {
     nsIDOMWindowCollection *nsframes;
     HTMLOuterWindow *window = NULL;
-    nsIDOMWindow *nswindow;
+    mozIDOMWindowProxy *mozwindow;
     nsAString name_str;
     UINT32 length, i;
     nsresult nsres;
@@ -386,15 +388,15 @@ HRESULT get_frame_by_name(HTMLOuterWindow *This, const WCHAR *name, BOOL deep, H
     }
 
     nsAString_InitDepend(&name_str, name);
-    nsres = nsIDOMWindowCollection_NamedItem(nsframes, &name_str, &nswindow);
+    nsres = nsIDOMWindowCollection_NamedItem(nsframes, &name_str, &mozwindow);
     nsAString_Finish(&name_str);
     if(NS_FAILED(nsres)) {
         nsIDOMWindowCollection_Release(nsframes);
         return E_FAIL;
     }
 
-    if(nswindow) {
-        *ret = nswindow_to_window(nswindow);
+    if(mozwindow) {
+        *ret = mozwindow_to_window(mozwindow);
         return S_OK;
     }
 
@@ -405,19 +407,19 @@ HRESULT get_frame_by_name(HTMLOuterWindow *This, const WCHAR *name, BOOL deep, H
         HTMLOuterWindow *window_iter;
         BSTR id;
 
-        nsres = nsIDOMWindowCollection_Item(nsframes, i, &nswindow);
+        nsres = nsIDOMWindowCollection_Item(nsframes, i, &mozwindow);
         if(NS_FAILED(nsres)) {
             FIXME("nsIDOMWindowCollection_Item failed: 0x%08x\n", nsres);
             hres = E_FAIL;
             break;
         }
 
-        window_iter = nswindow_to_window(nswindow);
+        window_iter = mozwindow_to_window(mozwindow);
 
-        nsIDOMWindow_Release(nswindow);
+        mozIDOMWindowProxy_Release(mozwindow);
 
         if(!window_iter) {
-            WARN("nsIDOMWindow without HTMLOuterWindow: %p\n", nswindow);
+            WARN("nsIDOMWindow without HTMLOuterWindow: %p\n", mozwindow);
             continue;
         }
 
@@ -3035,8 +3037,13 @@ HRESULT HTMLOuterWindow_Create(HTMLDocumentObj *doc_obj, nsIDOMWindow *nswindow,
     window->window_ref->ref = 1;
 
     if(nswindow) {
+        nsresult nsres;
+
         nsIDOMWindow_AddRef(nswindow);
         window->nswindow = nswindow;
+
+        nsres = nsIDOMWindow_QueryInterface(nswindow, &IID_mozIDOMWindowProxy, (void**)&window->window_proxy);
+        assert(nsres == NS_OK);
     }
 
     window->scriptmode = parent ? parent->scriptmode : SCRIPTMODE_GECKO;
@@ -3170,6 +3177,18 @@ HTMLOuterWindow *nswindow_to_window(const nsIDOMWindow *nswindow)
 
     LIST_FOR_EACH_ENTRY(iter, &window_list, HTMLOuterWindow, entry) {
         if(iter->nswindow == nswindow)
+            return iter;
+    }
+
+    return NULL;
+}
+
+HTMLOuterWindow *mozwindow_to_window(const mozIDOMWindowProxy *mozwindow)
+{
+    HTMLOuterWindow *iter;
+
+    LIST_FOR_EACH_ENTRY(iter, &window_list, HTMLOuterWindow, entry) {
+        if(iter->window_proxy == mozwindow)
             return iter;
     }
 

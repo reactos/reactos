@@ -4888,6 +4888,7 @@ static dispex_static_data_t HTMLDocumentObj_dispex = {
 
 HRESULT HTMLDocument_Create(IUnknown *pUnkOuter, REFIID riid, void** ppvObject)
 {
+    mozIDOMWindowProxy *mozwindow;
     HTMLDocumentObj *doc;
     nsIDOMWindow *nswindow = NULL;
     nsresult nsres;
@@ -4923,9 +4924,13 @@ HRESULT HTMLDocument_Create(IUnknown *pUnkOuter, REFIID riid, void** ppvObject)
     if(FAILED(hres))
         return hres;
 
-    nsres = nsIWebBrowser_GetContentDOMWindow(doc->nscontainer->webbrowser, &nswindow);
+    nsres = nsIWebBrowser_GetContentDOMWindow(doc->nscontainer->webbrowser, &mozwindow);
     if(NS_FAILED(nsres))
         ERR("GetContentDOMWindow failed: %08x\n", nsres);
+
+    nsres = mozIDOMWindowProxy_QueryInterface(mozwindow, &IID_nsIDOMWindow, (void**)&nswindow);
+    mozIDOMWindowProxy_Release(mozwindow);
+    assert(nsres == NS_OK);
 
     hres = HTMLOuterWindow_Create(doc, nswindow, NULL /* FIXME */, &doc->basedoc.window);
     if(nswindow)

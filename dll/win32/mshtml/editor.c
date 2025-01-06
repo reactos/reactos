@@ -136,7 +136,7 @@ static nsresult get_ns_command_state(NSContainer *This, const char *cmd, nsIComm
         return nsres;
     }
 
-    nsres = nsICommandManager_GetCommandState(cmdmgr, cmd, This->doc->basedoc.window->nswindow, nsparam);
+    nsres = nsICommandManager_GetCommandState(cmdmgr, cmd, This->doc->basedoc.window->window_proxy, nsparam);
     if(NS_FAILED(nsres))
         ERR("GetCommandState(%s) failed: %08x\n", debugstr_a(cmd), nsres);
 
@@ -379,23 +379,23 @@ static void set_font_size(HTMLDocument *This, LPCWSTR size)
     set_dirty(This, VARIANT_TRUE);
 }
 
-static void handle_arrow_key(HTMLDocument *This, nsIDOMKeyEvent *event, const char * const cmds[4])
+static void handle_arrow_key(HTMLDocument *This, nsIDOMEvent *event, nsIDOMKeyEvent *key_event, const char * const cmds[4])
 {
     int i=0;
     cpp_bool b;
 
-    nsIDOMKeyEvent_GetCtrlKey(event, &b);
+    nsIDOMKeyEvent_GetCtrlKey(key_event, &b);
     if(b)
         i |= 1;
 
-    nsIDOMKeyEvent_GetShiftKey(event, &b);
+    nsIDOMKeyEvent_GetShiftKey(key_event, &b);
     if(b)
         i |= 2;
 
     if(cmds[i])
         do_ns_editor_command(This->doc_obj->nscontainer, cmds[i]);
 
-    nsIDOMKeyEvent_PreventDefault(event);
+    nsIDOMEvent_PreventDefault(event);
 }
 
 void handle_edit_event(HTMLDocument *This, nsIDOMEvent *event)
@@ -417,7 +417,7 @@ void handle_edit_event(HTMLDocument *This, nsIDOMEvent *event)
         };
 
         TRACE("left\n");
-        handle_arrow_key(This, key_event, cmds);
+        handle_arrow_key(This, event, key_event, cmds);
         break;
     }
     case DOM_VK_RIGHT: {
@@ -429,7 +429,7 @@ void handle_edit_event(HTMLDocument *This, nsIDOMEvent *event)
         };
 
         TRACE("right\n");
-        handle_arrow_key(This, key_event, cmds);
+        handle_arrow_key(This, event, key_event, cmds);
         break;
     }
     case DOM_VK_UP: {
@@ -441,7 +441,7 @@ void handle_edit_event(HTMLDocument *This, nsIDOMEvent *event)
         };
 
         TRACE("up\n");
-        handle_arrow_key(This, key_event, cmds);
+        handle_arrow_key(This, event, key_event, cmds);
         break;
     }
     case DOM_VK_DOWN: {
@@ -453,7 +453,7 @@ void handle_edit_event(HTMLDocument *This, nsIDOMEvent *event)
         };
 
         TRACE("down\n");
-        handle_arrow_key(This, key_event, cmds);
+        handle_arrow_key(This, event, key_event, cmds);
         break;
     }
     case DOM_VK_DELETE: {
@@ -464,7 +464,7 @@ void handle_edit_event(HTMLDocument *This, nsIDOMEvent *event)
         };
 
         TRACE("delete\n");
-        handle_arrow_key(This, key_event, cmds);
+        handle_arrow_key(This, event, key_event, cmds);
         break;
     }
     case DOM_VK_HOME: {
@@ -476,7 +476,7 @@ void handle_edit_event(HTMLDocument *This, nsIDOMEvent *event)
         };
 
         TRACE("home\n");
-        handle_arrow_key(This, key_event, cmds);
+        handle_arrow_key(This, event, key_event, cmds);
         break;
     }
     case DOM_VK_END: {
@@ -488,7 +488,7 @@ void handle_edit_event(HTMLDocument *This, nsIDOMEvent *event)
         };
 
         TRACE("end\n");
-        handle_arrow_key(This, key_event, cmds);
+        handle_arrow_key(This, event, key_event, cmds);
         break;
     }
     }

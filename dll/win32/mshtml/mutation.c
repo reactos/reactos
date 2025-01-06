@@ -606,33 +606,30 @@ static void NSAPI nsDocumentObserver_DocumentStatesChanged(nsIDocumentObserver *
 {
 }
 
-static void NSAPI nsDocumentObserver_StyleSheetAdded(nsIDocumentObserver *iface, nsIDocument *aDocument,
-        nsIStyleSheet *aStyleSheet, cpp_bool aDocumentSheet)
+static void NSAPI nsDocumentObserver_StyleSheetAdded(nsIDocumentObserver *iface, mozilla_StyleSheetHandle aStyleSheet,
+        cpp_bool aDocumentSheet)
 {
 }
 
-static void NSAPI nsDocumentObserver_StyleSheetRemoved(nsIDocumentObserver *iface, nsIDocument *aDocument,
-        nsIStyleSheet *aStyleSheet, cpp_bool aDocumentSheet)
+static void NSAPI nsDocumentObserver_StyleSheetRemoved(nsIDocumentObserver *iface, mozilla_StyleSheetHandle aStyleSheet,
+        cpp_bool aDocumentSheet)
 {
 }
 
 static void NSAPI nsDocumentObserver_StyleSheetApplicableStateChanged(nsIDocumentObserver *iface,
-        nsIDocument *aDocument, nsIStyleSheet *aStyleSheet, cpp_bool aApplicable)
+        mozilla_StyleSheetHandle aStyleSheet)
 {
 }
 
-static void NSAPI nsDocumentObserver_StyleRuleChanged(nsIDocumentObserver *iface, nsIDocument *aDocument,
-        nsIStyleSheet *aStyleSheet, nsIStyleRule *aOldStyleRule, nsIStyleSheet *aNewStyleRule)
+static void NSAPI nsDocumentObserver_StyleRuleChanged(nsIDocumentObserver *iface, mozilla_StyleSheetHandle aStyleSheet)
 {
 }
 
-static void NSAPI nsDocumentObserver_StyleRuleAdded(nsIDocumentObserver *iface, nsIDocument *aDocument,
-        nsIStyleSheet *aStyleSheet, nsIStyleRule *aStyleRule)
+static void NSAPI nsDocumentObserver_StyleRuleAdded(nsIDocumentObserver *iface, mozilla_StyleSheetHandle aStyleSheet)
 {
 }
 
-static void NSAPI nsDocumentObserver_StyleRuleRemoved(nsIDocumentObserver *iface, nsIDocument *aDocument,
-        nsIStyleSheet *aStyleSheet, nsIStyleRule *aStyleRule)
+static void NSAPI nsDocumentObserver_StyleRuleRemoved(nsIDocumentObserver *iface, mozilla_StyleSheetHandle aStyleSheet)
 {
 }
 

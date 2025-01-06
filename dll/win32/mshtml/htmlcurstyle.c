@@ -17,6 +17,7 @@
  */
 
 #include <stdarg.h>
+#include <assert.h>
 
 #define COBJMACROS
 
@@ -1323,7 +1324,8 @@ static dispex_static_data_t HTMLCurrentStyle_dispex = {
 HRESULT HTMLCurrentStyle_Create(HTMLElement *elem, IHTMLCurrentStyle **p)
 {
     nsIDOMCSSStyleDeclaration *nsstyle;
-    nsIDOMWindow *nsview;
+    mozIDOMWindowProxy *nsview;
+    nsIDOMWindow *nswindow;
     nsAString nsempty_str;
     HTMLCurrentStyle *ret;
     nsresult nsres;
@@ -1339,10 +1341,14 @@ HRESULT HTMLCurrentStyle_Create(HTMLElement *elem, IHTMLCurrentStyle **p)
         return E_FAIL;
     }
 
+    nsres = mozIDOMWindowProxy_QueryInterface(nsview, &IID_nsIDOMWindow, (void**)&nswindow);
+    mozIDOMWindowProxy_Release(nsview);
+    assert(nsres == NS_OK);
+
     nsAString_Init(&nsempty_str, NULL);
-    nsres = nsIDOMWindow_GetComputedStyle(nsview, (nsIDOMElement*)elem->nselem, &nsempty_str, &nsstyle);
+    nsres = nsIDOMWindow_GetComputedStyle(nswindow, (nsIDOMElement*)elem->nselem, &nsempty_str, &nsstyle);
     nsAString_Finish(&nsempty_str);
-    nsIDOMWindow_Release(nsview);
+    nsIDOMWindow_Release(nswindow);
     if(NS_FAILED(nsres)) {
         ERR("GetComputedStyle failed: %08x\n", nsres);
         return E_FAIL;

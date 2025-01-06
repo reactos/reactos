@@ -955,7 +955,7 @@ static HTMLOuterWindow *get_window_from_load_group(nsChannel *This)
 static HTMLOuterWindow *get_channel_window(nsChannel *This)
 {
     nsIWebProgress *web_progress;
-    nsIDOMWindow *nswindow;
+    mozIDOMWindowProxy *mozwindow;
     HTMLOuterWindow *window;
     nsresult nsres;
 
@@ -985,20 +985,20 @@ static HTMLOuterWindow *get_channel_window(nsChannel *This)
         return NULL;
     }
 
-    nsres = nsIWebProgress_GetDOMWindow(web_progress, &nswindow);
+    nsres = nsIWebProgress_GetDOMWindow(web_progress, &mozwindow);
     nsIWebProgress_Release(web_progress);
-    if(NS_FAILED(nsres) || !nswindow) {
+    if(NS_FAILED(nsres) || !mozwindow) {
         ERR("GetDOMWindow failed: %08x\n", nsres);
         return NULL;
     }
 
-    window = nswindow_to_window(nswindow);
-    nsIDOMWindow_Release(nswindow);
+    window = mozwindow_to_window(mozwindow);
+    mozIDOMWindowProxy_Release(mozwindow);
 
     if(window)
         IHTMLWindow2_AddRef(&window->base.IHTMLWindow2_iface);
     else
-        FIXME("NULL window for %p\n", nswindow);
+        FIXME("NULL window for %p\n", mozwindow);
     return window;
 }
 
@@ -1310,6 +1310,34 @@ static nsresult NSAPI nsChannel_SetReferrerWithPolicy(nsIHttpChannel *iface, nsI
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+static nsresult NSAPI nsHttpChannel_GetProtocolVersion(nsIHttpChannel *iface, nsACString *aProtocolVersion)
+{
+    nsChannel *This = impl_from_nsIHttpChannel(iface);
+    FIXME("(%p)->(%p)\n", This, aProtocolVersion);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+static nsresult NSAPI nsHttpChannel_GetTransferSize(nsIHttpChannel *iface, UINT64 *aTransferSize)
+{
+    nsChannel *This = impl_from_nsIHttpChannel(iface);
+    FIXME("(%p)->(%p)\n", This, aTransferSize);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+static nsresult NSAPI nsHttpChannel_GetDecodedBodySize(nsIHttpChannel *iface, UINT64 *aDecodedBodySize)
+{
+    nsChannel *This = impl_from_nsIHttpChannel(iface);
+    FIXME("(%p)->(%p)\n", This, aDecodedBodySize);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+static nsresult NSAPI nsHttpChannel_GetEncodedBodySize(nsIHttpChannel *iface, UINT64 *aEncodedBodySize)
+{
+    nsChannel *This = impl_from_nsIHttpChannel(iface);
+    FIXME("(%p)->(%p)\n", This, aEncodedBodySize);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 static nsresult NSAPI nsChannel_GetRequestHeader(nsIHttpChannel *iface,
          const nsACString *aHeader, nsACString *_retval)
 {
@@ -1525,11 +1553,11 @@ static nsresult NSAPI nsChannel_IsPrivateResponse(nsIHttpChannel *iface, cpp_boo
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-static nsresult NSAPI nsChannel_RedirectTo(nsIHttpChannel *iface, nsIURI *aNewURI)
+static nsresult NSAPI nsChannel_RedirectTo(nsIHttpChannel *iface, nsIURI *aTargetURI)
 {
     nsChannel *This = impl_from_nsIHttpChannel(iface);
 
-    FIXME("(%p)->(%p)\n", This, aNewURI);
+    FIXME("(%p)->(%p)\n", This, aTargetURI);
 
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1597,6 +1625,10 @@ static const nsIHttpChannelVtbl nsChannelVtbl = {
     nsChannel_SetReferrer,
     nsChannel_GetReferrerPolicy,
     nsChannel_SetReferrerWithPolicy,
+    nsHttpChannel_GetProtocolVersion,
+    nsHttpChannel_GetTransferSize,
+    nsHttpChannel_GetDecodedBodySize,
+    nsHttpChannel_GetEncodedBodySize,
     nsChannel_GetRequestHeader,
     nsChannel_SetRequestHeader,
     nsChannel_SetEmptyRequestHeader,
@@ -2074,10 +2106,24 @@ static nsresult NSAPI nsHttpChannelInternal_GetProxyURI(nsIHttpChannelInternal *
 }
 
 static nsresult NSAPI nsHttpChannelInternal_SetCorsPreflightParameters(nsIHttpChannelInternal *iface,
-        const void /*nsTArray<nsCString>*/ *unsafeHeaders, cpp_bool withCredentials, nsIPrincipal *preflightPrincipal)
+        const void /*nsTArray<nsCString>*/ *unsafeHeaders)
 {
     nsChannel *This = impl_from_nsIHttpChannelInternal(iface);
-    FIXME("(%p %p %x %p)\n", This, unsafeHeaders, withCredentials, preflightPrincipal);
+    FIXME("(%p)->(%p)\n", This, unsafeHeaders);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+static nsresult NSAPI nsHttpChannelInternal_GetBlockAuthPrompt(nsIHttpChannelInternal *iface, cpp_bool *aBlockAuthPrompt)
+{
+    nsChannel *This = impl_from_nsIHttpChannelInternal(iface);
+    FIXME("(%p)->(%p)\n", This, aBlockAuthPrompt);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+static nsresult NSAPI nsHttpChannelInternal_SetBlockAuthPrompt(nsIHttpChannelInternal *iface, cpp_bool aBlockAuthPrompt)
+{
+    nsChannel *This = impl_from_nsIHttpChannelInternal(iface);
+    FIXME("(%p)->(%x)\n", This, aBlockAuthPrompt);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -2127,7 +2173,9 @@ static const nsIHttpChannelInternalVtbl nsHttpChannelInternalVtbl = {
     nsHttpChannelInternal_GetNetworkInterfaceId,
     nsHttpChannelInternal_SetNetworkInterfaceId,
     nsHttpChannelInternal_GetProxyURI,
-    nsHttpChannelInternal_SetCorsPreflightParameters
+    nsHttpChannelInternal_SetCorsPreflightParameters,
+    nsHttpChannelInternal_GetBlockAuthPrompt,
+    nsHttpChannelInternal_SetBlockAuthPrompt
 };
 
 
@@ -3315,13 +3363,21 @@ static nsresult NSAPI nsStandardURL_Init(nsIStandardURL *iface, UINT32 aUrlType,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+static nsresult NSAPI nsStandardURL_SetDefaultPort(nsIStandardURL *iface, LONG aNewDefaultPort)
+{
+    nsWineURI *This = impl_from_nsIStandardURL(iface);
+    FIXME("(%p)->(%d)\n", This, aNewDefaultPort);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 static const nsIStandardURLVtbl nsStandardURLVtbl = {
     nsStandardURL_QueryInterface,
     nsStandardURL_AddRef,
     nsStandardURL_Release,
     nsStandardURL_GetMutable,
     nsStandardURL_SetMutable,
-    nsStandardURL_Init
+    nsStandardURL_Init,
+    nsStandardURL_SetDefaultPort
 };
 
 static nsresult create_nsuri(IUri *iuri, HTMLOuterWindow *window, NSContainer *container,

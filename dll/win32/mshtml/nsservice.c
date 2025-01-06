@@ -74,7 +74,7 @@ static nsrefcnt NSAPI nsPromptService_Release(nsIPromptService *iface)
     return 1;
 }
 
-static nsresult NSAPI nsPromptService_Alert(nsIPromptService *iface, nsIDOMWindow *aParent,
+static nsresult NSAPI nsPromptService_Alert(nsIPromptService *iface, mozIDOMWindowProxy *aParent,
         const PRUnichar *aDialogTitle, const PRUnichar *aText)
 {
     HTMLOuterWindow *window;
@@ -82,9 +82,9 @@ static nsresult NSAPI nsPromptService_Alert(nsIPromptService *iface, nsIDOMWindo
 
     TRACE("(%p %s %s)\n", aParent, debugstr_w(aDialogTitle), debugstr_w(aText));
 
-    window = nswindow_to_window(aParent);
+    window = mozwindow_to_window(aParent);
     if(!window) {
-        WARN("Could not find HTMLWindow for nsIDOMWindow %p\n", aParent);
+        WARN("Could not find HTMLWindow for mozIDOMWindowProxy %p\n", aParent);
         return NS_ERROR_UNEXPECTED;
     }
 
@@ -96,7 +96,7 @@ static nsresult NSAPI nsPromptService_Alert(nsIPromptService *iface, nsIDOMWindo
 }
 
 static nsresult NSAPI nsPromptService_AlertCheck(nsIPromptService *iface,
-        nsIDOMWindow *aParent, const PRUnichar *aDialogTitle,
+        mozIDOMWindowProxy *aParent, const PRUnichar *aDialogTitle,
         const PRUnichar *aText, const PRUnichar *aCheckMsg, cpp_bool *aCheckState)
 {
     FIXME("(%p %s %s %s %p)\n", aParent, debugstr_w(aDialogTitle), debugstr_w(aText),
@@ -105,7 +105,7 @@ static nsresult NSAPI nsPromptService_AlertCheck(nsIPromptService *iface,
 }
 
 static nsresult NSAPI nsPromptService_Confirm(nsIPromptService *iface,
-        nsIDOMWindow *aParent, const PRUnichar *aDialogTitle, const PRUnichar *aText,
+        mozIDOMWindowProxy *aParent, const PRUnichar *aDialogTitle, const PRUnichar *aText,
         cpp_bool *_retval)
 {
     FIXME("(%p %s %s %p)\n", aParent, debugstr_w(aDialogTitle), debugstr_w(aText), _retval);
@@ -113,7 +113,7 @@ static nsresult NSAPI nsPromptService_Confirm(nsIPromptService *iface,
 }
 
 static nsresult NSAPI nsPromptService_ConfirmCheck(nsIPromptService *iface,
-        nsIDOMWindow *aParent, const PRUnichar *aDialogTitle,
+        mozIDOMWindowProxy *aParent, const PRUnichar *aDialogTitle,
         const PRUnichar *aText, const PRUnichar *aCheckMsg, cpp_bool *aCheckState,
         cpp_bool *_retval)
 {
@@ -123,7 +123,7 @@ static nsresult NSAPI nsPromptService_ConfirmCheck(nsIPromptService *iface,
 }
 
 static nsresult NSAPI nsPromptService_ConfirmEx(nsIPromptService *iface,
-        nsIDOMWindow *aParent, const PRUnichar *aDialogTitle,
+        mozIDOMWindowProxy *aParent, const PRUnichar *aDialogTitle,
         const PRUnichar *aText, UINT32 aButtonFlags, const PRUnichar *aButton0Title,
         const PRUnichar *aButton1Title, const PRUnichar *aButton2Title,
         const PRUnichar *aCheckMsg, cpp_bool *aCheckState, LONG *_retval)
@@ -153,7 +153,7 @@ static nsresult NSAPI nsPromptService_ConfirmEx(nsIPromptService *iface,
 }
 
 static nsresult NSAPI nsPromptService_Prompt(nsIPromptService *iface,
-        nsIDOMWindow *aParent, const PRUnichar *aDialogTitle,
+        mozIDOMWindowProxy *aParent, const PRUnichar *aDialogTitle,
         const PRUnichar *aText, PRUnichar **aValue, const PRUnichar *aCheckMsg,
         cpp_bool *aCheckState, cpp_bool *_retval)
 {
@@ -163,7 +163,7 @@ static nsresult NSAPI nsPromptService_Prompt(nsIPromptService *iface,
 }
 
 static nsresult NSAPI nsPromptService_PromptUsernameAndPassword(nsIPromptService *iface,
-        nsIDOMWindow *aParent, const PRUnichar *aDialogTitle,
+        mozIDOMWindowProxy *aParent, const PRUnichar *aDialogTitle,
         const PRUnichar *aText, PRUnichar **aUsername, PRUnichar **aPassword,
         const PRUnichar *aCheckMsg, cpp_bool *aCheckState, cpp_bool *_retval)
 {
@@ -174,7 +174,7 @@ static nsresult NSAPI nsPromptService_PromptUsernameAndPassword(nsIPromptService
 }
 
 static nsresult NSAPI nsPromptService_PromptPassword(nsIPromptService *iface,
-        nsIDOMWindow *aParent, const PRUnichar *aDialogTitle,
+        mozIDOMWindowProxy *aParent, const PRUnichar *aDialogTitle,
         const PRUnichar *aText, PRUnichar **aPassword, const PRUnichar *aCheckMsg,
         cpp_bool *aCheckState, cpp_bool *_retval)
 {
@@ -184,7 +184,7 @@ static nsresult NSAPI nsPromptService_PromptPassword(nsIPromptService *iface,
 }
 
 static nsresult NSAPI nsPromptService_Select(nsIPromptService *iface,
-        nsIDOMWindow *aParent, const PRUnichar *aDialogTitle,
+        mozIDOMWindowProxy *aParent, const PRUnichar *aDialogTitle,
         const PRUnichar *aText, UINT32 aCount, const PRUnichar **aSelectList,
         LONG *aOutSelection, cpp_bool *_retval)
 {

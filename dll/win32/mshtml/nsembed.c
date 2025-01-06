@@ -1068,7 +1068,7 @@ void get_editor_controller(NSContainer *This)
     }
 
     nsres = nsIEditingSession_GetEditorForWindow(editing_session,
-            This->doc->basedoc.window->nswindow, &This->editor);
+            This->doc->basedoc.window->window_proxy, &This->editor);
     nsIEditingSession_Release(editing_session);
     if(NS_FAILED(nsres)) {
         ERR("Could not get editor: %08x\n", nsres);
@@ -1912,9 +1912,9 @@ static nsresult NSAPI nsInterfaceRequestor_GetInterface(nsIInterfaceRequestor *i
 {
     NSContainer *This = impl_from_nsIInterfaceRequestor(iface);
 
-    if(IsEqualGUID(&IID_nsIDOMWindow, riid)) {
+    if(IsEqualGUID(&IID_mozIDOMWindowProxy, riid)) {
         TRACE("(%p)->(IID_nsIDOMWindow %p)\n", This, result);
-        return nsIWebBrowser_GetContentDOMWindow(This->webbrowser, (nsIDOMWindow**)result);
+        return nsIWebBrowser_GetContentDOMWindow(This->webbrowser, (mozIDOMWindowProxy**)result);
     }
 
     return nsIWebBrowserChrome_QueryInterface(&This->nsIWebBrowserChrome_iface, riid, result);
@@ -2170,6 +2170,7 @@ void NSContainer_Release(NSContainer *This)
 
 nsIXMLHttpRequest *create_nsxhr(nsIDOMWindow *nswindow)
 {
+    mozIDOMWindow *inner_window;
     nsIScriptSecurityManager *secman;
     nsIPrincipal             *nspri;
     nsIGlobalObject          *nsglo;
@@ -2191,7 +2192,15 @@ nsIXMLHttpRequest *create_nsxhr(nsIDOMWindow *nswindow)
         return NULL;
     }
 
-    nsres = nsIDOMWindow_QueryInterface(nswindow, &IID_nsIGlobalObject, (void **)&nsglo);
+    nsres = nsIDOMWindow_GetInnerWindow(nswindow, &inner_window);
+    if(NS_FAILED(nsres)) {
+        ERR("Could not get inner window: %08x\n", nsres);
+        nsISupports_Release(nspri);
+        return NULL;
+    }
+
+    nsres = mozIDOMWindow_QueryInterface(inner_window, &IID_nsIGlobalObject, (void **)&nsglo);
+    mozIDOMWindow_Release(inner_window);
     assert(nsres == NS_OK);
 
     nsres = nsIComponentManager_CreateInstanceByContractID(pCompMgr,
