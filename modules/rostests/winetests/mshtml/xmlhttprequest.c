@@ -853,10 +853,8 @@ static void test_async_xhr(IHTMLDocument2 *doc, const char *xml_url, const char 
     CHECK_CALLED(xmlhttprequest_onreadystatechange_loading);
     CHECK_CALLED(xmlhttprequest_onreadystatechange_done);
     /* Workaround for loading large files */
-    if(expect_text)
+    todo_wine_if(!expect_text)
         ok(loading_cnt == 1, "loading_cnt = %d\n", loading_cnt);
-    else
-        todo_wine ok(loading_cnt == 1, "loading_cnt = %d\n", loading_cnt);
 
     if(FAILED(hres)) {
         IHTMLXMLHttpRequest_Release(xhr);

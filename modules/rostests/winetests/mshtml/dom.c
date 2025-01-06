@@ -7603,12 +7603,7 @@ static void _test_stylesheet_csstext(unsigned line, IHTMLStyleSheet *stylesheet,
 
     hres = IHTMLStyleSheet_get_cssText(stylesheet, &str);
     ok_(__FILE__,line)(hres == S_OK, "get_cssText failed: %08x\n", hres);
-    if(!is_todo) {
-        if(exstr)
-            ok_(__FILE__,line)(is_prefix_wa(str, exstr), "cssText = %s\n", wine_dbgstr_w(str));
-        else
-            ok_(__FILE__,line)(!str, "cssText = %s\n", wine_dbgstr_w(str));
-    }else todo_wine {
+    todo_wine_if(is_todo) {
         if(exstr)
             ok_(__FILE__,line)(is_prefix_wa(str, exstr), "cssText = %s\n", wine_dbgstr_w(str));
         else
@@ -7625,10 +7620,8 @@ static void _set_stylesheet_csstext(unsigned line, IHTMLStyleSheet *stylesheet, 
     HRESULT hres;
 
     hres = IHTMLStyleSheet_put_cssText(stylesheet, str);
-    if(!is_todo)
+    todo_wine_if(is_todo)
         ok_(__FILE__,line)(hres == S_OK, "put_cssText failed: %08x\n", hres);
-    else
-        todo_wine ok_(__FILE__,line)(hres == S_OK, "put_cssText failed: %08x\n", hres);
     SysFreeString(str);
 }
 
