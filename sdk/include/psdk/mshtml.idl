@@ -6100,6 +6100,28 @@ interface IHTMLElement4 : IDispatch
     [propget, id(DISPID_IHTMLELEMENT4_ONFOCUSOUT), displaybind, bindable] \
     VARIANT onfocusout()
 
+/*****************************************************************************
+ *    IElementSelector interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(30510463-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IElementSelector : IDispatch
+{
+    [id(DISPID_IELEMENTSELECTOR_QUERYSELECTOR)]
+    HRESULT querySelector(
+        [in] BSTR v,
+        [out, retval] IHTMLElement **pel);
+
+    [id(DISPID_IELEMENTSELECTOR_QUERYSELECTORALL)]
+    HRESULT querySelectorAll(
+        [in] BSTR v,
+        [out, retval] IHTMLDOMChildrenCollection **pel);
+}
+
 #define WINE_IELEMENTSELECTOR_DISPINTERFACE_DECL                \
     [id(DISPID_IELEMENTSELECTOR_QUERYSELECTOR)]                 \
     IHTMLElement *querySelector([in] BSTR v);                   \
