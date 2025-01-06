@@ -576,6 +576,47 @@ static void test_responseXML(const char *expect_text)
     IDispatch_Release(disp);
 }
 
+#define xhr_open(a,b) _xhr_open(__LINE__,a,b)
+static HRESULT _xhr_open(unsigned line, const char *url_a, const char *method_a)
+{
+    BSTR method = a2bstr(method_a);
+    BSTR url = a2bstr(url_a);
+    VARIANT async, empty;
+    HRESULT hres;
+
+    V_VT(&async) = VT_BOOL;
+    V_BOOL(&async) = VARIANT_TRUE;
+    V_VT(&empty) = VT_EMPTY;
+
+    hres = IHTMLXMLHttpRequest_open(xhr, method, url, async, empty, empty);
+    ok_(__FILE__,line)(hres == S_OK, "open failed: %08x\n", hres);
+
+    SysFreeString(method);
+    SysFreeString(url);
+    return hres;
+}
+
+#define test_response_text(a) _test_response_text(__LINE__,a)
+static void _test_response_text(unsigned line, const char *expect_text)
+{
+    BSTR text = NULL;
+    HRESULT hres;
+
+    hres = IHTMLXMLHttpRequest_get_responseText(xhr, &text);
+    ok(hres == S_OK, "get_responseText failed: %08x\n", hres);
+    ok(text != NULL, "test == NULL\n");
+    if(expect_text) {
+        unsigned len;
+        /* Some recent version of IE strip trailing '\n' from post.php response, while others don't. */
+        len = SysStringLen(text);
+        if(text[len-1] == '\n')
+            text[len-1] = 0;
+        ok_(__FILE__,line)(!strcmp_wa(text, expect_text), "expect %s, got %s\n",
+                           expect_text, wine_dbgstr_w(text));
+    }
+    SysFreeString(text);
+}
+
 static void test_sync_xhr(IHTMLDocument2 *doc, const char *xml_url, const char *expect_text)
 {
     VARIANT vbool, vempty, var;
@@ -728,14 +769,7 @@ static void test_sync_xhr(IHTMLDocument2 *doc, const char *xml_url, const char *
     ok(hres == S_OK, "get_readyState failed: %08x\n", hres);
     ok(val == 4, "Expect DONE, got %d\n", val);
 
-    hres = IHTMLXMLHttpRequest_get_responseText(xhr, &text);
-    ok(hres == S_OK, "get_responseText failed: %08x\n", hres);
-    ok(text != NULL, "test == NULL\n");
-    if(expect_text)
-        ok(!strcmp_wa(text, expect_text), "expect %s, got %s\n",
-            expect_text, wine_dbgstr_w(text));
-    SysFreeString(text);
-
+    test_response_text(expect_text);
     test_responseXML(expect_text);
 
     IHTMLXMLHttpRequest_Release(xhr);
@@ -744,8 +778,7 @@ static void test_sync_xhr(IHTMLDocument2 *doc, const char *xml_url, const char *
 
 static void test_async_xhr(IHTMLDocument2 *doc, const char *xml_url, const char *expect_text)
 {
-    VARIANT vbool, vempty, var;
-    BSTR method, url;
+    VARIANT var, vempty;
     BSTR text;
     LONG val;
     HRESULT hres;
@@ -807,19 +840,9 @@ static void test_async_xhr(IHTMLDocument2 *doc, const char *xml_url, const char 
     ok(hres == S_OK, "get_readyState failed: %08x\n", hres);
     ok(val == 0, "Expect UNSENT, got %d\n", val);
 
-    method = a2bstr("GET");
-    url = a2bstr(xml_url);
-    V_VT(&vbool) = VT_BOOL;
-    V_BOOL(&vbool) = VARIANT_TRUE;
-    V_VT(&vempty) = VT_EMPTY;
-
     SET_EXPECT(xmlhttprequest_onreadystatechange_opened);
-    hres = IHTMLXMLHttpRequest_open(xhr, method, url, vbool, vempty, vempty);
-    ok(hres == S_OK, "open failed: %08x\n", hres);
+    hres = xhr_open(xml_url, "GET");
     CHECK_CALLED(xmlhttprequest_onreadystatechange_opened);
-
-    SysFreeString(method);
-    SysFreeString(url);
 
     if(FAILED(hres)) {
         IHTMLXMLHttpRequest_Release(xhr);
@@ -858,6 +881,7 @@ static void test_async_xhr(IHTMLDocument2 *doc, const char *xml_url, const char 
     SET_EXPECT(xmlhttprequest_onreadystatechange_loading);
     SET_EXPECT(xmlhttprequest_onreadystatechange_done);
     loading_cnt = 0;
+    V_VT(&vempty) = VT_EMPTY;
     hres = IHTMLXMLHttpRequest_send(xhr, vempty);
 
     ok(hres == S_OK, "send failed: %08x\n", hres);
@@ -903,15 +927,7 @@ static void test_async_xhr(IHTMLDocument2 *doc, const char *xml_url, const char 
     ok(hres == S_OK, "get_readyState failed: %08x\n", hres);
     ok(val == 4, "Expect DONE, got %d\n", val);
 
-    text = NULL;
-    hres = IHTMLXMLHttpRequest_get_responseText(xhr, &text);
-    ok(hres == S_OK, "get_responseText failed: %08x\n", hres);
-    ok(text != NULL, "test == NULL\n");
-    if(expect_text)
-        ok(!strcmp_wa(text, expect_text), "expect %s, got %s\n",
-            expect_text, wine_dbgstr_w(text));
-    SysFreeString(text);
-
+    test_response_text(expect_text);
     test_responseXML(expect_text);
 
     IHTMLXMLHttpRequest_Release(xhr);
@@ -920,15 +936,10 @@ static void test_async_xhr(IHTMLDocument2 *doc, const char *xml_url, const char 
 
 static void test_async_xhr_abort(IHTMLDocument2 *doc, const char *xml_url)
 {
-    VARIANT vbool, vempty, var;
-    BSTR method, url;
+    VARIANT vempty, var;
     LONG val;
     HRESULT hres;
 
-    method = a2bstr("GET");
-    url = a2bstr(xml_url);
-    V_VT(&vbool) = VT_BOOL;
-    V_BOOL(&vbool) = VARIANT_TRUE;
     V_VT(&vempty) = VT_EMPTY;
 
     trace("abort before send() is fired\n");
@@ -941,8 +952,7 @@ static void test_async_xhr_abort(IHTMLDocument2 *doc, const char *xml_url)
     hres = IHTMLXMLHttpRequest_put_onreadystatechange(xhr, var);
 
     SET_EXPECT(xmlhttprequest_onreadystatechange_opened);
-    hres = IHTMLXMLHttpRequest_open(xhr, method, url, vbool, vempty, vempty);
-    ok(hres == S_OK, "open failed: %08x\n", hres);
+    xhr_open(xml_url, "GET");
     CHECK_CALLED(xmlhttprequest_onreadystatechange_opened);
 
     hres = IHTMLXMLHttpRequest_abort(xhr);
@@ -966,8 +976,7 @@ static void test_async_xhr_abort(IHTMLDocument2 *doc, const char *xml_url)
     hres = IHTMLXMLHttpRequest_put_onreadystatechange(xhr, var);
 
     SET_EXPECT(xmlhttprequest_onreadystatechange_opened);
-    hres = IHTMLXMLHttpRequest_open(xhr, method, url, vbool, vempty, vempty);
-    ok(hres == S_OK, "open failed: %08x\n", hres);
+    xhr_open(xml_url, "GET");
     CHECK_CALLED(xmlhttprequest_onreadystatechange_opened);
 
     loading_cnt = 0;
@@ -995,9 +1004,56 @@ static void test_async_xhr_abort(IHTMLDocument2 *doc, const char *xml_url)
 
     IHTMLXMLHttpRequest_Release(xhr);
     xhr = NULL;
+}
 
-    SysFreeString(method);
-    SysFreeString(url);
+static void test_xhr_post(IHTMLDocument2 *doc)
+{
+    VARIANT v;
+    HRESULT hres;
+
+    trace("send string...\n");
+
+    create_xmlhttprequest(doc);
+    if(!xhr)
+        return;
+
+    V_VT(&v) = VT_DISPATCH;
+    V_DISPATCH(&v) = (IDispatch*)&xmlhttprequest_onreadystatechange_obj;
+    hres = IHTMLXMLHttpRequest_put_onreadystatechange(xhr, v);
+    ok(hres == S_OK, "put_onreadystatechange failed: %08x\n", hres);
+
+    SET_EXPECT(xmlhttprequest_onreadystatechange_opened);
+    xhr_open("http://test.winehq.org/tests/post.php", "POST");
+    CHECK_CALLED(xmlhttprequest_onreadystatechange_opened);
+
+    set_request_header(xhr, "Content-Type", "application/x-www-form-urlencoded");
+
+    V_VT(&v) = VT_BSTR;
+    V_BSTR(&v) = a2bstr("X=Testing");
+
+    loading_cnt = 0;
+    SET_EXPECT(xmlhttprequest_onreadystatechange_opened);
+    SET_EXPECT(xmlhttprequest_onreadystatechange_headers_received);
+    SET_EXPECT(xmlhttprequest_onreadystatechange_loading);
+    SET_EXPECT(xmlhttprequest_onreadystatechange_done);
+
+    hres = IHTMLXMLHttpRequest_send(xhr, v);
+    ok(hres == S_OK, "send failed: %08x\n", hres);
+    if(SUCCEEDED(hres))
+        pump_msgs(&called_xmlhttprequest_onreadystatechange_done);
+
+    todo_wine CHECK_CALLED(xmlhttprequest_onreadystatechange_opened);
+    CHECK_CALLED(xmlhttprequest_onreadystatechange_headers_received);
+    CHECK_CALLED(xmlhttprequest_onreadystatechange_loading);
+    CHECK_CALLED(xmlhttprequest_onreadystatechange_done);
+    ok(loading_cnt == 1, "loading_cnt = %d\n", loading_cnt);
+
+    SysFreeString(V_BSTR(&v));
+
+    test_response_text("X => Testing");
+
+    IHTMLXMLHttpRequest_Release(xhr);
+    xhr = NULL;
 }
 
 static IHTMLDocument2 *create_doc_from_url(const char *start_url)
@@ -1048,7 +1104,7 @@ START_TEST(xmlhttprequest)
     static const char start_url[] = "http://test.winehq.org/tests/hello.html";
     static const char xml_url[] = "http://test.winehq.org/tests/xmltest.xml";
     static const char large_page_url[] = "http://test.winehq.org/tests/data.php";
-    static const char expect_response_text[] = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<a>TEST</a>\n";
+    static const char expect_response_text[] = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<a>TEST</a>";
 
     CoInitialize(NULL);
 
@@ -1060,6 +1116,7 @@ START_TEST(xmlhttprequest)
         test_async_xhr(doc, xml_url, expect_response_text);
         test_async_xhr(doc, large_page_url, NULL);
         test_async_xhr_abort(doc, large_page_url);
+        test_xhr_post(doc);
         IHTMLDocument2_Release(doc);
     }
     SysFreeString(content_type);
