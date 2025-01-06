@@ -4100,15 +4100,19 @@ static HRESULT WINAPI HTMLElement6_msMatchesSelector(IHTMLElement6 *iface, BSTR 
 static HRESULT WINAPI HTMLElement6_put_onabort(IHTMLElement6 *iface, VARIANT v)
 {
     HTMLElement *This = impl_from_IHTMLElement6(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    return set_node_event(&This->node, EVENTID_ABORT, &v);
 }
 
 static HRESULT WINAPI HTMLElement6_get_onabort(IHTMLElement6 *iface, VARIANT *p)
 {
     HTMLElement *This = impl_from_IHTMLElement6(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_node_event(&This->node, EVENTID_ABORT, p);
 }
 
 static HRESULT WINAPI HTMLElement6_put_oncanplay(IHTMLElement6 *iface, VARIANT v)
@@ -4142,15 +4146,19 @@ static HRESULT WINAPI HTMLElement6_get_oncanplaythrough(IHTMLElement6 *iface, VA
 static HRESULT WINAPI HTMLElement6_put_onchange(IHTMLElement6 *iface, VARIANT v)
 {
     HTMLElement *This = impl_from_IHTMLElement6(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    return set_node_event(&This->node, EVENTID_CHANGE, &v);
 }
 
 static HRESULT WINAPI HTMLElement6_get_onchange(IHTMLElement6 *iface, VARIANT *p)
 {
     HTMLElement *This = impl_from_IHTMLElement6(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_node_event(&This->node, EVENTID_CHANGE, p);
 }
 
 static HRESULT WINAPI HTMLElement6_put_ondurationchange(IHTMLElement6 *iface, VARIANT v)
@@ -4198,15 +4206,19 @@ static HRESULT WINAPI HTMLElement6_get_onended(IHTMLElement6 *iface, VARIANT *p)
 static HRESULT WINAPI HTMLElement6_put_onerror(IHTMLElement6 *iface, VARIANT v)
 {
     HTMLElement *This = impl_from_IHTMLElement6(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    return set_node_event(&This->node, EVENTID_ERROR, &v);
 }
 
 static HRESULT WINAPI HTMLElement6_get_onerror(IHTMLElement6 *iface, VARIANT *p)
 {
     HTMLElement *This = impl_from_IHTMLElement6(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_node_event(&This->node, EVENTID_ERROR, p);
 }
 
 static HRESULT WINAPI HTMLElement6_put_oninput(IHTMLElement6 *iface, VARIANT v)
@@ -4226,15 +4238,19 @@ static HRESULT WINAPI HTMLElement6_get_oninput(IHTMLElement6 *iface, VARIANT *p)
 static HRESULT WINAPI HTMLElement6_put_onload(IHTMLElement6 *iface, VARIANT v)
 {
     HTMLElement *This = impl_from_IHTMLElement6(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    return set_node_event(&This->node, EVENTID_LOAD, &v);
 }
 
 static HRESULT WINAPI HTMLElement6_get_onload(IHTMLElement6 *iface, VARIANT *p)
 {
     HTMLElement *This = impl_from_IHTMLElement6(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_node_event(&This->node, EVENTID_LOAD, p);
 }
 
 static HRESULT WINAPI HTMLElement6_put_onloadeddata(IHTMLElement6 *iface, VARIANT v)
@@ -4422,15 +4438,19 @@ static HRESULT WINAPI HTMLElement6_get_onstalled(IHTMLElement6 *iface, VARIANT *
 static HRESULT WINAPI HTMLElement6_put_onsubmit(IHTMLElement6 *iface, VARIANT v)
 {
     HTMLElement *This = impl_from_IHTMLElement6(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    return set_node_event(&This->node, EVENTID_SUBMIT, &v);
 }
 
 static HRESULT WINAPI HTMLElement6_get_onsubmit(IHTMLElement6 *iface, VARIANT *p)
 {
     HTMLElement *This = impl_from_IHTMLElement6(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_node_event(&This->node, EVENTID_SUBMIT, p);
 }
 
 static HRESULT WINAPI HTMLElement6_put_onsuspend(IHTMLElement6 *iface, VARIANT v)
