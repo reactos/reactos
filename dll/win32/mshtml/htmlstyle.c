@@ -485,14 +485,12 @@ static HRESULT get_nsstyle_attr_nsval(nsIDOMCSSStyleDeclaration *nsstyle, stylei
     nsresult nsres;
 
     nsAString_InitDepend(&str_name, style_tbl[sid].name);
-
     nsres = nsIDOMCSSStyleDeclaration_GetPropertyValue(nsstyle, &str_name, value);
+    nsAString_Finish(&str_name);
     if(NS_FAILED(nsres)) {
         ERR("SetProperty failed: %08x\n", nsres);
         return E_FAIL;
     }
-
-    nsAString_Finish(&str_name);
 
     return S_OK;
 }
