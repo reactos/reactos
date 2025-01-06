@@ -527,6 +527,19 @@ static void test_illegal_xml(IXMLDOMDocument *xmldom)
     ok(last == NULL, "last != NULL\n");
 }
 
+#define set_request_header(a,b,c) _set_request_header(__LINE__,a,b,c)
+static void _set_request_header(unsigned line, IHTMLXMLHttpRequest *xhr, const char *header_a, const char *value_a)
+{
+    BSTR header = a2bstr(header_a), value = a2bstr(value_a);
+    HRESULT hres;
+
+    hres = IHTMLXMLHttpRequest_setRequestHeader(xhr, header, value);
+    ok_(__FILE__,line)(hres == S_OK, "setRequestHeader failed: %08x\n", hres);
+
+    SysFreeString(header);
+    SysFreeString(value);
+}
+
 static void test_responseXML(const char *expect_text)
 {
     IDispatch *disp;
@@ -675,6 +688,8 @@ static void test_sync_xhr(IHTMLDocument2 *doc, const char *xml_url, const char *
     hres = IHTMLXMLHttpRequest_get_readyState(xhr, &val);
     ok(hres == S_OK, "get_readyState failed: %08x\n", hres);
     ok(val == 1, "Expect OPENED, got %d\n", val);
+
+    set_request_header(xhr, "x-wine-test", "sync-test");
 
     SET_EXPECT(xmlhttprequest_onreadystatechange_opened);
     SET_EXPECT(xmlhttprequest_onreadystatechange_headers_received);
@@ -837,6 +852,8 @@ static void test_async_xhr(IHTMLDocument2 *doc, const char *xml_url, const char 
     hres = IHTMLXMLHttpRequest_get_readyState(xhr, &val);
     ok(hres == S_OK, "get_readyState failed: %08x\n", hres);
     ok(val == 1, "Expect OPENED, got %d\n", val);
+
+    set_request_header(xhr, "x-wine-test", "async-test");
 
     SET_EXPECT(xmlhttprequest_onreadystatechange_opened);
     SET_EXPECT(xmlhttprequest_onreadystatechange_headers_received);

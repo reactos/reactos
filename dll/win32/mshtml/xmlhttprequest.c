@@ -613,8 +613,35 @@ static HRESULT WINAPI HTMLXMLHttpRequest_getResponseHeader(IHTMLXMLHttpRequest *
 static HRESULT WINAPI HTMLXMLHttpRequest_setRequestHeader(IHTMLXMLHttpRequest *iface, BSTR bstrHeader, BSTR bstrValue)
 {
     HTMLXMLHttpRequest *This = impl_from_IHTMLXMLHttpRequest(iface);
-    FIXME("(%p)->(%s %s)\n", This, debugstr_w(bstrHeader), debugstr_w(bstrValue));
-    return E_NOTIMPL;
+    char *header_u, *value_u;
+    nsACString header, value;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s %s)\n", This, debugstr_w(bstrHeader), debugstr_w(bstrValue));
+
+    header_u = heap_strdupWtoU(bstrHeader);
+    if(bstrHeader && !header_u)
+        return E_OUTOFMEMORY;
+
+    value_u = heap_strdupWtoU(bstrValue);
+    if(bstrValue && !value_u) {
+        heap_free(header_u);
+        return E_OUTOFMEMORY;
+    }
+
+    nsACString_InitDepend(&header, header_u);
+    nsACString_InitDepend(&value, value_u);
+    nsres = nsIXMLHttpRequest_SetRequestHeader(This->nsxhr, &header, &value);
+    nsACString_Finish(&header);
+    nsACString_Finish(&value);
+    heap_free(header_u);
+    heap_free(value_u);
+    if(NS_FAILED(nsres)) {
+        ERR("SetRequestHeader failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
 static const IHTMLXMLHttpRequestVtbl HTMLXMLHttpRequestVtbl = {
