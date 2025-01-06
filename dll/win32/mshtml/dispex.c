@@ -241,8 +241,8 @@ static void add_func_info(dispex_data_t *data, DWORD *size, tid_t tid, const FUN
     if(info == data->funcs+data->func_cnt) {
         if(data->func_cnt == *size)
             data->funcs = heap_realloc_zero(data->funcs, (*size <<= 1)*sizeof(func_info_t));
-
         info = data->funcs+data->func_cnt;
+
         hres = ITypeInfo_GetDocumentation(dti, desc->memid, &info->name, NULL, NULL, NULL);
         if(FAILED(hres))
             return;
@@ -315,6 +315,31 @@ static void add_func_info(dispex_data_t *data, DWORD *size, tid_t tid, const FUN
     }
 }
 
+static HRESULT process_interface(dispex_data_t *data, tid_t tid, ITypeInfo *disp_typeinfo, DWORD *size)
+{
+    unsigned i = 7; /* skip IDispatch functions */
+    ITypeInfo *typeinfo;
+    FUNCDESC *funcdesc;
+    HRESULT hres;
+
+    hres = get_typeinfo(tid, &typeinfo);
+    if(FAILED(hres))
+        return hres;
+
+    while(1) {
+        hres = ITypeInfo_GetFuncDesc(typeinfo, i++, &funcdesc);
+        if(FAILED(hres))
+            break;
+
+        TRACE("adding...\n");
+
+        add_func_info(data, size, tid, funcdesc, disp_typeinfo ? disp_typeinfo : typeinfo);
+        ITypeInfo_ReleaseFuncDesc(typeinfo, funcdesc);
+    }
+
+    return S_OK;
+}
+
 static int dispid_cmp(const void *p1, const void *p2)
 {
     return ((const func_info_t*)p1)->id - ((const func_info_t*)p2)->id;
@@ -327,11 +352,10 @@ static int func_name_cmp(const void *p1, const void *p2)
 
 static dispex_data_t *preprocess_dispex_data(DispatchEx *This)
 {
-    const tid_t *tid = This->data->iface_tids;
-    FUNCDESC *funcdesc;
+    const tid_t *tid;
     dispex_data_t *data;
     DWORD size = 16, i;
-    ITypeInfo *ti, *dti;
+    ITypeInfo *dti;
     HRESULT hres;
 
     TRACE("(%p)\n", This);
@@ -359,23 +383,14 @@ static dispex_data_t *preprocess_dispex_data(DispatchEx *This)
     }
     list_add_tail(&dispex_data_list, &data->entry);
 
-    while(*tid) {
-        hres = get_typeinfo(*tid, &ti);
+    for(tid = This->data->iface_tids; *tid; tid++) {
+        hres = process_interface(data, *tid, dti, &size);
         if(FAILED(hres))
             break;
-
-        i=7;
-        while(1) {
-            hres = ITypeInfo_GetFuncDesc(ti, i++, &funcdesc);
-            if(FAILED(hres))
-                break;
-
-            add_func_info(data, &size, *tid, funcdesc, dti);
-            ITypeInfo_ReleaseFuncDesc(ti, funcdesc);
-        }
-
-        tid++;
     }
+
+    if(This->data->additional_tid)
+        process_interface(data, This->data->additional_tid, NULL, &size);
 
     if(!data->func_cnt) {
         heap_free(data->funcs);
@@ -392,7 +407,6 @@ static dispex_data_t *preprocess_dispex_data(DispatchEx *This)
     for(i=0; i < data->func_cnt; i++)
         data->name_table[i] = data->funcs+i;
     qsort(data->name_table, data->func_cnt, sizeof(func_info_t*), func_name_cmp);
-
     return data;
 }
 

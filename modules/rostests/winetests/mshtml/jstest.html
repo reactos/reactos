@@ -354,6 +354,14 @@ function test_text_node() {
     ok(text2.data == "testing", "text2.data = " + text2.data);
 }
 
+function test_xhr() {
+    ok("XMLHttpRequest" in window, "XMLHttpRequest not found in window object\n");
+    ok(typeof(XMLHttpRequest) === "object", "typeof(XMLHttpRequest) = " + typeof(XMLHttpRequest));
+
+    var xhr = new XMLHttpRequest();
+    ok(typeof(xhr) === "object", "typeof(xhr) = " + typeof(xhr));
+}
+
 var globalVar = false;
 
 function runTests() {
@@ -379,6 +387,7 @@ function runTests() {
     test_whitespace_nodes();
     test_language_attribute();
     test_text_node();
+    test_xhr();
 
     var r = window.execScript("globalVar = true;");
     ok(r === undefined, "execScript returned " + r);

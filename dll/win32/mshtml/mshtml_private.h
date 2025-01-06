@@ -296,6 +296,7 @@ typedef struct {
     const tid_t disp_tid;
     dispex_data_t *data;
     const tid_t* const iface_tids;
+    const tid_t additional_tid;
 } dispex_static_data_t;
 
 struct DispatchEx {

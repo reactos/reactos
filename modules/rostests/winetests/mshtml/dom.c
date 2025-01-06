@@ -6598,6 +6598,28 @@ static void test_dom_implementation(IHTMLDocument2 *doc)
     IHTMLDOMImplementation_Release(dom_implementation);
 }
 
+static void test_xhr(IHTMLDocument2 *doc)
+{
+    IHTMLWindow2 *window;
+    IDispatchEx *dispex;
+    DISPID id;
+    BSTR str;
+    HRESULT hres;
+
+    hres = IHTMLDocument2_get_parentWindow(doc, &window);
+    ok(hres == S_OK, "get_parentWindow failed: %08x\n", hres);
+
+    hres = IHTMLWindow2_QueryInterface(window, &IID_IDispatchEx, (void**)&dispex);
+    ok(hres == S_OK, "Could not get IDispatchEx iface: %08x\n", hres);
+
+    str = a2bstr("XMLHttpRequest");
+    hres = IDispatchEx_GetDispID(dispex, str, 0, &id);
+    ok(hres == S_OK, "GetDispID failed: %08x\n", hres);
+    SysFreeString(str);
+
+    IHTMLWindow2_Release(window);
+}
+
 static void test_defaults(IHTMLDocument2 *doc)
 {
     IHTMLStyleSheetsCollection *stylesheetcol;
@@ -6669,6 +6691,8 @@ static void test_defaults(IHTMLDocument2 *doc)
         test_elem_collection((IUnknown*)collection, NULL, 0);
         IHTMLElementCollection_Release(collection);
     }
+
+    test_xhr(doc);
 
     hres = IHTMLElement_QueryInterface(elem, &IID_IHTMLBodyElement, (void**)&body);
     ok(hres == S_OK, "Could not get IHTMBodyElement: %08x\n", hres);
