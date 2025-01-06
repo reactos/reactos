@@ -1926,6 +1926,23 @@ static void test_func(IDispatchEx *obj)
     hres = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dp, &var, &ei, NULL);
     ok(hres == S_OK || broken(E_ACCESSDENIED), "InvokeEx failed: %08x\n", hres);
     if(SUCCEEDED(hres)) {
+        DISPID named_args[2] = { DISPID_THIS, 0xdeadbeef };
+        VARIANT args[2];
+
+        ok(V_VT(&var) == VT_BSTR, "V_VT(var)=%d\n", V_VT(&var));
+        ok(!strcmp_wa(V_BSTR(&var), "[object]"), "V_BSTR(var) = %s\n", wine_dbgstr_w(V_BSTR(&var)));
+        VariantClear(&var);
+
+        dp.rgdispidNamedArgs = named_args;
+        dp.cNamedArgs = 2;
+        dp.cArgs = 2;
+        dp.rgvarg = &var;
+        V_VT(args) = VT_DISPATCH;
+        V_DISPATCH(args) = (IDispatch*)obj;
+        V_VT(args+1) = VT_I4;
+        V_I4(args+1) = 3;
+        hres = IDispatchEx_Invoke(dispex, DISPID_VALUE, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dp, &var, &ei, NULL);
+        ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
         ok(V_VT(&var) == VT_BSTR, "V_VT(var)=%d\n", V_VT(&var));
         ok(!strcmp_wa(V_BSTR(&var), "[object]"), "V_BSTR(var) = %s\n", wine_dbgstr_w(V_BSTR(&var)));
         VariantClear(&var);
