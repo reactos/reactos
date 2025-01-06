@@ -6539,7 +6539,7 @@ static void test_body_funs(IHTMLBodyElement *body)
     ok(!strcmp_wa(V_BSTR(&vbg), "#ff0000"), "Unexpected bgcolor %s\n", wine_dbgstr_w(V_BSTR(&vbg)));
     VariantClear(&vbg);
 
-    /* Restore Originial */
+    /* Restore Original */
     hres = IHTMLBodyElement_put_bgColor(body, vDefaultbg);
     ok(hres == S_OK, "put_bgColor failed: %08x\n", hres);
     VariantClear(&vDefaultbg);
@@ -7194,7 +7194,7 @@ static void test_tr_elem(IHTMLElement *elem)
     ok(!strcmp_wa(V_BSTR(&vbg), "#ff0000"), "Unexpected bgcolor %s\n", wine_dbgstr_w(V_BSTR(&vbg)));
     VariantClear(&vbg);
 
-    /* Restore Originial */
+    /* Restore Original */
     hres = IHTMLTableRow_put_bgColor(row, vDefaultbg);
     ok(hres == S_OK, "put_bgColor failed: %08x\n", hres);
     VariantClear(&vDefaultbg);
@@ -7265,7 +7265,7 @@ static void test_td_elem(IHTMLElement *elem)
     ok(!strcmp_wa(V_BSTR(&vbg), "#ff0000"), "Unexpected bgcolor %s\n", wine_dbgstr_w(V_BSTR(&vbg)));
     VariantClear(&vbg);
 
-    /* Restore Originial */
+    /* Restore Original */
     hres = IHTMLTableCell_put_bgColor(cell, vDefaultbg);
     ok(hres == S_OK, "put_bgColor failed: %08x\n", hres);
     VariantClear(&vDefaultbg);
@@ -7510,7 +7510,7 @@ static void test_table_elem(IHTMLElement *elem)
     ok(!strcmp_wa(V_BSTR(&vbg), "#ff0000"), "Unexpected bgcolor %s\n", wine_dbgstr_w(V_BSTR(&vbg)));
     VariantClear(&vbg);
 
-    /* Restore Originial */
+    /* Restore Original */
     hres = IHTMLTable_put_bgColor(table, vDefaultbg);
     ok(hres == S_OK, "put_bgColor failed: %08x\n", hres);
     VariantClear(&vDefaultbg);
