@@ -398,6 +398,25 @@ static HRESULT HTMLScriptElement_get_readystate(HTMLDOMNode *iface, BSTR *p)
     return IHTMLScriptElement_get_readyState(&This->IHTMLScriptElement_iface, p);
 }
 
+static HRESULT HTMLScriptElement_bind_to_tree(HTMLDOMNode *iface)
+{
+    HTMLScriptElement *This = impl_from_HTMLDOMNode(iface);
+
+    TRACE("(%p)\n", This);
+
+    if(!This->parse_on_bind)
+        return S_OK;
+
+    if(!This->element.node.doc || !This->element.node.doc->window) {
+        ERR("No window\n");
+        return E_UNEXPECTED;
+    }
+
+    This->parse_on_bind = FALSE;
+    doc_insert_script(This->element.node.doc->window, This);
+    return S_OK;
+}
+
 static void HTMLScriptElement_traverse(HTMLDOMNode *iface, nsCycleCollectionTraversalCallback *cb)
 {
     HTMLScriptElement *This = impl_from_HTMLDOMNode(iface);
@@ -433,7 +452,7 @@ static const NodeImplVtbl HTMLScriptElementImplVtbl = {
     HTMLScriptElement_get_readystate,
     NULL,
     NULL,
-    NULL,
+    HTMLScriptElement_bind_to_tree,
     HTMLScriptElement_traverse,
     HTMLScriptElement_unlink
 };
