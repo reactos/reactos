@@ -717,7 +717,8 @@ static const tid_t HTMLSelectElement_tids[] = {
 static dispex_static_data_t HTMLSelectElement_dispex = {
     NULL,
     DispHTMLSelectElement_tid,
-    HTMLSelectElement_tids
+    HTMLSelectElement_tids,
+    HTMLElement_init_dispex_info
 };
 
 HRESULT HTMLSelectElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem, HTMLElement **elem)

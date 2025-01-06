@@ -317,7 +317,8 @@ static const tid_t HTMLFrameElement_iface_tids[] = {
 static dispex_static_data_t HTMLFrameElement_dispex = {
     NULL,
     DispHTMLFrameElement_tid,
-    HTMLFrameElement_iface_tids
+    HTMLFrameElement_iface_tids,
+    HTMLElement_init_dispex_info
 };
 
 HRESULT HTMLFrameElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem, HTMLElement **elem)

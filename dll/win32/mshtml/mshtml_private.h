@@ -805,8 +805,7 @@ typedef struct {
     IHTMLElement2_tid,      \
     IHTMLElement3_tid,      \
     IHTMLElement4_tid,      \
-    IHTMLUniqueName_tid,    \
-    IElementSelector_tid
+    IHTMLUniqueName_tid
 
 extern cp_static_data_t HTMLElementEvents2_data DECLSPEC_HIDDEN;
 #define HTMLELEMENT_CPC {&DIID_HTMLElementEvents2, &HTMLElementEvents2_data}
@@ -1079,6 +1078,7 @@ void HTMLElement_destructor(HTMLDOMNode*) DECLSPEC_HIDDEN;
 HRESULT HTMLElement_clone(HTMLDOMNode*,nsIDOMNode*,HTMLDOMNode**) DECLSPEC_HIDDEN;
 HRESULT HTMLElement_get_attr_col(HTMLDOMNode*,HTMLAttributeCollection**) DECLSPEC_HIDDEN;
 HRESULT HTMLElement_handle_event(HTMLDOMNode*,DWORD,nsIDOMEvent*,BOOL*) DECLSPEC_HIDDEN;
+void HTMLElement_init_dispex_info(dispex_data_t*,compat_mode_t) DECLSPEC_HIDDEN;
 
 HRESULT HTMLFrameBase_QI(HTMLFrameBase*,REFIID,void**) DECLSPEC_HIDDEN;
 void HTMLFrameBase_destructor(HTMLFrameBase*) DECLSPEC_HIDDEN;

@@ -169,7 +169,8 @@ static const tid_t HTMLGenericElement_iface_tids[] = {
 static dispex_static_data_t HTMLGenericElement_dispex = {
     NULL,
     DispHTMLGenericElement_tid,
-    HTMLGenericElement_iface_tids
+    HTMLGenericElement_iface_tids,
+    HTMLElement_init_dispex_info
 };
 
 HRESULT HTMLGenericElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem, HTMLElement **elem)

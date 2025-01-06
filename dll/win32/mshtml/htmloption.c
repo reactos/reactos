@@ -444,7 +444,8 @@ static const tid_t HTMLOptionElement_iface_tids[] = {
 static dispex_static_data_t HTMLOptionElement_dispex = {
     NULL,
     DispHTMLOptionElement_tid,
-    HTMLOptionElement_iface_tids
+    HTMLOptionElement_iface_tids,
+    HTMLElement_init_dispex_info
 };
 
 HRESULT HTMLOptionElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem, HTMLElement **elem)
@@ -624,7 +625,8 @@ static const tid_t HTMLOptionElementFactory_iface_tids[] = {
 static dispex_static_data_t HTMLOptionElementFactory_dispex = {
     NULL,
     IHTMLOptionElementFactory_tid,
-    HTMLOptionElementFactory_iface_tids
+    HTMLOptionElementFactory_iface_tids,
+    HTMLElement_init_dispex_info
 };
 
 HRESULT HTMLOptionElementFactory_Create(HTMLInnerWindow *window, HTMLOptionElementFactory **ret_ptr)

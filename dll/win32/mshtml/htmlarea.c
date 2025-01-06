@@ -451,7 +451,8 @@ static const tid_t HTMLAreaElement_iface_tids[] = {
 static dispex_static_data_t HTMLAreaElement_dispex = {
     NULL,
     DispHTMLAreaElement_tid,
-    HTMLAreaElement_iface_tids
+    HTMLAreaElement_iface_tids,
+    HTMLElement_init_dispex_info
 };
 
 HRESULT HTMLAreaElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem, HTMLElement **elem)

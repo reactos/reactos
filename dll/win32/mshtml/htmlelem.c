@@ -5097,6 +5097,12 @@ static void HTMLElement_bind_event(DispatchEx *dispex, int eid)
     }
 }
 
+void HTMLElement_init_dispex_info(dispex_data_t *info, compat_mode_t mode)
+{
+    if(mode >= COMPAT_MODE_IE8)
+        dispex_info_add_interface(info, IElementSelector_tid);
+}
+
 static const tid_t HTMLElement_iface_tids[] = {
     HTMLELEMENT_TIDS,
     0
@@ -5114,7 +5120,8 @@ static dispex_static_data_vtbl_t HTMLElement_dispex_vtbl = {
 static dispex_static_data_t HTMLElement_dispex = {
     &HTMLElement_dispex_vtbl,
     DispHTMLUnknownElement_tid,
-    HTMLElement_iface_tids
+    HTMLElement_iface_tids,
+    HTMLElement_init_dispex_info
 };
 
 void HTMLElement_Init(HTMLElement *This, HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem, dispex_static_data_t *dispex_data)
@@ -5129,8 +5136,8 @@ void HTMLElement_Init(HTMLElement *This, HTMLDocumentNode *doc, nsIDOMHTMLElemen
 
     if(dispex_data && !dispex_data->vtbl)
         dispex_data->vtbl = &HTMLElement_dispex_vtbl;
-    init_dispex(&This->node.event_target.dispex, (IUnknown*)&This->IHTMLElement_iface,
-            dispex_data ? dispex_data : &HTMLElement_dispex);
+    init_dispex_with_compat_mode(&This->node.event_target.dispex, (IUnknown*)&This->IHTMLElement_iface,
+            dispex_data ? dispex_data : &HTMLElement_dispex, doc->document_mode);
 
     if(nselem) {
         HTMLDOMNode_Init(doc, &This->node, (nsIDOMNode*)nselem);

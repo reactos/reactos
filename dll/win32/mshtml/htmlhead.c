@@ -170,7 +170,8 @@ static const tid_t HTMLTitleElement_iface_tids[] = {
 static dispex_static_data_t HTMLTitleElement_dispex = {
     NULL,
     DispHTMLTitleElement_tid,
-    HTMLTitleElement_iface_tids
+    HTMLTitleElement_iface_tids,
+    HTMLElement_init_dispex_info
 };
 
 HRESULT HTMLTitleElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem, HTMLElement **elem)
@@ -352,7 +353,8 @@ static const tid_t HTMLHtmlElement_iface_tids[] = {
 static dispex_static_data_t HTMLHtmlElement_dispex = {
     NULL,
     DispHTMLHtmlElement_tid,
-    HTMLHtmlElement_iface_tids
+    HTMLHtmlElement_iface_tids,
+    HTMLElement_init_dispex_info
 };
 
 HRESULT HTMLHtmlElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem, HTMLElement **elem)
@@ -511,7 +513,8 @@ static const tid_t HTMLHeadElement_iface_tids[] = {
 static dispex_static_data_t HTMLHeadElement_dispex = {
     NULL,
     DispHTMLHeadElement_tid,
-    HTMLHeadElement_iface_tids
+    HTMLHeadElement_iface_tids,
+    HTMLElement_init_dispex_info
 };
 
 HRESULT HTMLHeadElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem, HTMLElement **elem)

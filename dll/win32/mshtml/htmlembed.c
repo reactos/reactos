@@ -267,7 +267,8 @@ static const tid_t HTMLEmbedElement_iface_tids[] = {
 static dispex_static_data_t HTMLEmbedElement_dispex = {
     NULL,
     DispHTMLEmbed_tid,
-    HTMLEmbedElement_iface_tids
+    HTMLEmbedElement_iface_tids,
+    HTMLElement_init_dispex_info
 };
 
 HRESULT HTMLEmbedElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem, HTMLElement **elem)

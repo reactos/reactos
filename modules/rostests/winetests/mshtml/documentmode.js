@@ -16,6 +16,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+function test_elem_props() {
+    var elem = document.documentElement;
+
+    function test_exposed(prop, expect) {
+        if(expect)
+            ok(prop in elem, prop + " not found in element.");
+        else
+            ok(!(prop in elem), prop + " found in element.");
+    }
+
+    var v = document.documentMode;
+
+    test_exposed("querySelectorAll", v >= 8);
+
+    next_test();
+}
+
 function test_doc_mode() {
     var opt = parseInt(document.location.search.substring(1));
 
@@ -38,5 +55,6 @@ function test_doc_mode() {
 }
 
 var tests = [
-    test_doc_mode
+    test_doc_mode,
+    test_elem_props
 ];

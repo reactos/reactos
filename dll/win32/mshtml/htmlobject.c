@@ -773,7 +773,8 @@ static const tid_t HTMLObjectElement_iface_tids[] = {
 static dispex_static_data_t HTMLObjectElement_dispex = {
     NULL,
     DispHTMLObjectElement_tid,
-    HTMLObjectElement_iface_tids
+    HTMLObjectElement_iface_tids,
+    HTMLElement_init_dispex_info
 };
 
 HRESULT HTMLObjectElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem, HTMLElement **elem)
