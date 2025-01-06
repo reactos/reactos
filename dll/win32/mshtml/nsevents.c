@@ -273,8 +273,16 @@ static nsresult NSAPI handle_load(nsIDOMEventListener *iface, nsIDOMEvent *event
 
         nsres = nsIDOMHTMLDocument_GetBody(doc->nsdoc, &nsbody);
         if(NS_SUCCEEDED(nsres) && nsbody) {
-            fire_event(doc, EVENTID_LOAD, TRUE, (nsIDOMNode*)nsbody, event, (IDispatch*)&doc->window->base.IDispatchEx_iface);
+            HTMLDOMNode *node;
+            HRESULT hres;
+
+            hres = get_node(doc, (nsIDOMNode*)nsbody, TRUE, &node);
             nsIDOMHTMLElement_Release(nsbody);
+            if(SUCCEEDED(hres)) {
+                fire_event(doc, EVENTID_LOAD, TRUE, node, event,
+                        (IDispatch*)&doc->window->base.IDispatchEx_iface);
+                node_release(node);
+            }
         }
     }else {
         ERR("NULL nsdoc\n");
@@ -293,8 +301,10 @@ static nsresult NSAPI handle_htmlevent(nsIDOMEventListener *iface, nsIDOMEvent *
     nsIDOMEventTarget *event_target;
     nsIDOMNode *nsnode;
     nsAString type_str;
+    HTMLDOMNode *node;
     eventid_t eid;
     nsresult nsres;
+    HRESULT hres;
 
     TRACE("%p\n", This->This);
 
@@ -322,10 +332,14 @@ static nsresult NSAPI handle_htmlevent(nsIDOMEventListener *iface, nsIDOMEvent *
         return NS_OK;
     }
 
-    fire_event(doc, eid, TRUE, nsnode, event, NULL);
-
+    hres = get_node(doc, nsnode, TRUE, &node);
     nsIDOMNode_Release(nsnode);
+    if(FAILED(hres))
+        return NS_OK;
 
+    fire_event(doc, eid, TRUE, node, event, NULL);
+
+    node_release(node);
     return NS_OK;
 }
 

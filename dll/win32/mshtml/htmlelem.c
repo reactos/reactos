@@ -4112,7 +4112,7 @@ HRESULT HTMLElement_handle_event(HTMLDOMNode *iface, DWORD eid, nsIDOMEvent *eve
             switch(code) {
             case VK_F1: /* DOM_VK_F1 */
                 TRACE("F1 pressed\n");
-                fire_event(This->node.doc, EVENTID_HELP, TRUE, This->node.nsnode, NULL, NULL);
+                fire_event(This->node.doc, EVENTID_HELP, TRUE, &This->node, NULL, NULL);
                 *prevent_default = TRUE;
             }
 

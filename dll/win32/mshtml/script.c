@@ -735,7 +735,7 @@ static void fire_readystatechange_proc(task_t *_task)
         return;
 
     task->elem->pending_readystatechange_event = FALSE;
-    fire_event(task->elem->element.node.doc, EVENTID_READYSTATECHANGE, FALSE, task->elem->element.node.nsnode, NULL, NULL);
+    fire_event(task->elem->element.node.doc, EVENTID_READYSTATECHANGE, FALSE, &task->elem->element.node, NULL, NULL);
 }
 
 static void fire_readystatechange_task_destr(task_t *_task)
@@ -771,7 +771,7 @@ static void set_script_elem_readystate(HTMLScriptElement *script_elem, READYSTAT
         }else {
             script_elem->pending_readystatechange_event = FALSE;
             fire_event(script_elem->element.node.doc, EVENTID_READYSTATECHANGE, FALSE,
-                    script_elem->element.node.nsnode, NULL, NULL);
+                    &script_elem->element.node, NULL, NULL);
         }
     }
 }

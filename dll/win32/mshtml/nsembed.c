@@ -1471,13 +1471,14 @@ static nsresult NSAPI nsContextMenuListener_OnShowContextMenu(nsIContextMenuList
 
     TRACE("(%p)->(%08x %p %p)\n", This, aContextFlags, aEvent, aNode);
 
-    fire_event(This->doc->basedoc.doc_node /* FIXME */, EVENTID_CONTEXTMENU, TRUE, aNode, aEvent, NULL);
+    hres = get_node(This->doc->basedoc.doc_node, aNode, TRUE, &node);
+    if(FAILED(hres))
+        return NS_ERROR_FAILURE;
+
+    fire_event(This->doc->basedoc.doc_node /* FIXME */, EVENTID_CONTEXTMENU, TRUE, node, aEvent, NULL);
 
     nsres = nsIDOMEvent_QueryInterface(aEvent, &IID_nsIDOMMouseEvent, (void**)&event);
-    if(NS_FAILED(nsres)) {
-        ERR("Could not get nsIDOMMouseEvent interface: %08x\n", nsres);
-        return nsres;
-    }
+    assert(NS_SUCCEEDED(nsres));
 
     nsIDOMMouseEvent_GetScreenX(event, &pt.x);
     nsIDOMMouseEvent_GetScreenY(event, &pt.y);
@@ -1514,10 +1515,6 @@ static nsresult NSAPI nsContextMenuListener_OnShowContextMenu(nsIContextMenuList
     default:
         FIXME("aContextFlags=%08x\n", aContextFlags);
     };
-
-    hres = get_node(This->doc->basedoc.doc_node, aNode, TRUE, &node);
-    if(FAILED(hres))
-        return NS_ERROR_FAILURE;
 
     show_context_menu(This->doc, dwID, &pt, (IDispatch*)&node->IHTMLDOMNode_iface);
     node_release(node);
