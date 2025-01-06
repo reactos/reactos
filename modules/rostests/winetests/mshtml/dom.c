@@ -6944,11 +6944,45 @@ static void _test_button_type(unsigned line, IHTMLElement *elem, const char *ext
     IHTMLButtonElement_Release(button);
 }
 
+#define test_button_value(a,b) _test_button_value(__LINE__,a,b)
+static void _test_button_value(unsigned line, IHTMLElement *elem, const char *exvalue)
+{
+    IHTMLButtonElement *button = _get_button_iface(line, (IUnknown*)elem);
+    BSTR str;
+    HRESULT hres;
+
+    hres = IHTMLButtonElement_get_value(button, &str);
+    ok_(__FILE__,line)(hres == S_OK, "get_value failed: %08x\n", hres);
+    if(exvalue)
+        ok_(__FILE__,line)(!strcmp_wa(str, exvalue), "value = %s, expected %s\n", wine_dbgstr_w(str), exvalue);
+    else
+        ok_(__FILE__,line)(!str, "value = %s, expected NULL\n", wine_dbgstr_w(str));
+    SysFreeString(str);
+
+    IHTMLButtonElement_Release(button);
+}
+
+#define set_button_value(a,b) _set_button_value(__LINE__,a,b)
+static void _set_button_value(unsigned line, IHTMLElement *elem, const char *value)
+{
+    IHTMLButtonElement *button = _get_button_iface(line, (IUnknown*)elem);
+    BSTR str = a2bstr(value);
+    HRESULT hres;
+
+    hres = IHTMLButtonElement_put_value(button, str);
+    ok_(__FILE__,line)(hres == S_OK, "put_value failed: %08x\n", hres);
+    IHTMLButtonElement_Release(button);
+
+    _test_button_value(line, elem, value);
+}
+
 static void test_button_elem(IHTMLElement *elem)
 {
     test_button_name(elem, NULL);
     set_button_name(elem, "button name");
     test_button_type(elem, "submit");
+    test_button_value(elem, NULL);
+    set_button_value(elem, "val");
 
     test_elem_istextedit(elem, VARIANT_TRUE);
 }

@@ -1638,15 +1638,33 @@ static HRESULT WINAPI HTMLButtonElement_get_type(IHTMLButtonElement *iface, BSTR
 static HRESULT WINAPI HTMLButtonElement_put_value(IHTMLButtonElement *iface, BSTR v)
 {
     HTMLButtonElement *This = impl_from_IHTMLButtonElement(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    nsAString nsstr;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    nsAString_InitDepend(&nsstr, v);
+    nsres = nsIDOMHTMLButtonElement_SetValue(This->nsbutton, &nsstr);
+    nsAString_Finish(&nsstr);
+    if(NS_FAILED(nsres)) {
+        ERR("SetValue failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLButtonElement_get_value(IHTMLButtonElement *iface, BSTR *p)
 {
     HTMLButtonElement *This = impl_from_IHTMLButtonElement(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsAString value_str;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsAString_Init(&value_str, NULL);
+    nsres = nsIDOMHTMLButtonElement_GetValue(This->nsbutton, &value_str);
+    return return_nsstr(nsres, &value_str, p);
 }
 
 static HRESULT WINAPI HTMLButtonElement_put_name(IHTMLButtonElement *iface, BSTR v)
