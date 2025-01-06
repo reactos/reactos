@@ -2177,15 +2177,42 @@ static HRESULT WINAPI HTMLDocument3_get_onpropertychange(IHTMLDocument3 *iface, 
 static HRESULT WINAPI HTMLDocument3_put_dir(IHTMLDocument3 *iface, BSTR v)
 {
     HTMLDocument *This = impl_from_IHTMLDocument3(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    nsAString dir_str;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    if(!This->doc_node->nsdoc) {
+        FIXME("NULL nsdoc\n");
+        return E_UNEXPECTED;
+    }
+
+    nsAString_InitDepend(&dir_str, v);
+    nsres = nsIDOMHTMLDocument_SetDir(This->doc_node->nsdoc, &dir_str);
+    nsAString_Finish(&dir_str);
+    if(NS_FAILED(nsres)) {
+        ERR("SetDir failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLDocument3_get_dir(IHTMLDocument3 *iface, BSTR *p)
 {
     HTMLDocument *This = impl_from_IHTMLDocument3(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsAString dir_str;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    if(!This->doc_node->nsdoc) {
+        FIXME("NULL nsdoc\n");
+        return E_UNEXPECTED;
+    }
+
+    nsres = nsIDOMHTMLDocument_GetDir(This->doc_node->nsdoc, &dir_str);
+    return return_nsstr(nsres, &dir_str, p);
 }
 
 static HRESULT WINAPI HTMLDocument3_put_oncontextmenu(IHTMLDocument3 *iface, VARIANT v)

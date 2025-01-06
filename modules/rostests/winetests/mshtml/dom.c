@@ -6304,6 +6304,42 @@ static void test_default_selection(IHTMLDocument2 *doc)
     IHTMLTxtRange_Release(range);
 }
 
+static void test_doc_dir(IHTMLDocument2 *doc2)
+{
+    IHTMLDocument3 *doc = get_doc3_iface(doc2);
+    BSTR dir;
+    HRESULT hres;
+
+    dir = (BSTR)0xdeadbeef;
+    hres = IHTMLDocument3_get_dir(doc, &dir);
+    ok(hres == S_OK, "get_dir failed: %08x\n", hres);
+    ok(!dir, "dir = %s\n", wine_dbgstr_w(dir));
+
+    dir = a2bstr("rtl");
+    hres = IHTMLDocument3_put_dir(doc, dir);
+    ok(hres == S_OK, "put_dir failed: %08x\n", hres);
+    SysFreeString(dir);
+
+    dir = NULL;
+    hres = IHTMLDocument3_get_dir(doc, &dir);
+    ok(hres == S_OK, "get_dir failed: %08x\n", hres);
+    ok(!strcmp_wa(dir, "rtl"), "dir = %s\n", wine_dbgstr_w(dir));
+    SysFreeString(dir);
+
+    dir = a2bstr("ltr");
+    hres = IHTMLDocument3_put_dir(doc, dir);
+    ok(hres == S_OK, "put_dir failed: %08x\n", hres);
+    SysFreeString(dir);
+
+    dir = NULL;
+    hres = IHTMLDocument3_get_dir(doc, &dir);
+    ok(hres == S_OK, "get_dir failed: %08x\n", hres);
+    ok(!strcmp_wa(dir, "ltr"), "dir = %s\n", wine_dbgstr_w(dir));
+    SysFreeString(dir);
+
+    IHTMLDocument3_Release(doc);
+}
+
 static void test_unique_id(IHTMLDocument2 *doc, IHTMLElement *elem)
 {
     IHTMLDocument3 *doc3 = get_doc3_iface(doc);
@@ -6393,6 +6429,7 @@ static void test_doc_elem(IHTMLDocument2 *doc)
 
     test_elem_client_rect((IUnknown*)elem);
     test_unique_id(doc, elem);
+    test_doc_dir(doc);
 
     IHTMLElement_Release(elem);
 }
