@@ -44,7 +44,22 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
-static struct list window_list = LIST_INIT(window_list);
+static int window_map_compare(const void *key, const struct wine_rb_entry *entry)
+{
+    HTMLOuterWindow *window = WINE_RB_ENTRY_VALUE(entry, HTMLOuterWindow, entry);
+
+    if(window->window_proxy == key)
+        return 0;
+    return (void*)window->window_proxy > key ? -1 : 1;
+}
+
+static struct wine_rb_tree window_map = { window_map_compare };
+
+HTMLOuterWindow *mozwindow_to_window(const mozIDOMWindowProxy *mozwindow)
+{
+    struct wine_rb_entry *entry = wine_rb_get(&window_map, mozwindow);
+    return entry ? WINE_RB_ENTRY_VALUE(entry, HTMLOuterWindow, entry) : NULL;
+}
 
 static inline BOOL is_outer_window(HTMLWindow *window)
 {
@@ -220,7 +235,7 @@ static void release_outer_window(HTMLOuterWindow *This)
     if(This->window_proxy)
         mozIDOMWindowProxy_Release(This->window_proxy);
 
-    list_remove(&This->entry);
+    wine_rb_remove(&window_map, &This->entry);
     heap_free(This);
 }
 
@@ -3052,6 +3067,10 @@ HRESULT HTMLOuterWindow_Create(HTMLDocumentObj *doc_obj, nsIDOMWindow *nswindow,
 
     window->scriptmode = parent ? parent->scriptmode : SCRIPTMODE_GECKO;
     window->readystate = READYSTATE_UNINITIALIZED;
+    window->task_magic = get_task_target_magic();
+
+    list_init(&window->children);
+    wine_rb_put(&window_map, window->window_proxy, &window->entry);
 
     hres = create_pending_window(window, NULL);
     if(SUCCEEDED(hres))
@@ -3066,11 +3085,6 @@ HRESULT HTMLOuterWindow_Create(HTMLDocumentObj *doc_obj, nsIDOMWindow *nswindow,
         IHTMLWindow2_Release(&window->base.IHTMLWindow2_iface);
         return hres;
     }
-
-    window->task_magic = get_task_target_magic();
-
-    list_init(&window->children);
-    list_add_head(&window_list, &window->entry);
 
     if(parent) {
         IHTMLWindow2_AddRef(&window->base.IHTMLWindow2_iface);
@@ -3173,16 +3187,4 @@ HRESULT update_window_doc(HTMLInnerWindow *window)
     }
 
     return hres;
-}
-
-HTMLOuterWindow *mozwindow_to_window(const mozIDOMWindowProxy *mozwindow)
-{
-    HTMLOuterWindow *iter;
-
-    LIST_FOR_EACH_ENTRY(iter, &window_list, HTMLOuterWindow, entry) {
-        if(iter->window_proxy == mozwindow)
-            return iter;
-    }
-
-    return NULL;
 }

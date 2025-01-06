@@ -59,6 +59,7 @@
 #include <wine/debug.h>
 #include <wine/list.h>
 #include <wine/unicode.h>
+#include <wine/rbtree.h>
 
 #else //  __REACTOS__
 
@@ -77,6 +78,7 @@
 #include "shdeprecated.h"
 
 #include "wine/list.h"
+#include "wine/rbtree.h"
 #include "wine/unicode.h"
 
 #ifdef INIT_GUID
@@ -514,7 +516,7 @@ struct HTMLOuterWindow {
 
     struct list children;
     struct list sibling_entry;
-    struct list entry;
+    struct wine_rb_entry entry;
 };
 
 struct HTMLInnerWindow {
