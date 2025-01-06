@@ -801,7 +801,6 @@ static const NodeImplVtbl HTMLAnchorElementImplVtbl = {
 static const tid_t HTMLAnchorElement_iface_tids[] = {
     IHTMLAnchorElement_tid,
     HTMLELEMENT_TIDS,
-    IHTMLUniqueName_tid,
     0
 };
 

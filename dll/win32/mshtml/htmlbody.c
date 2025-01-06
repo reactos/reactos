@@ -871,7 +871,6 @@ static const tid_t HTMLBodyElement_iface_tids[] = {
     IHTMLBodyElement2_tid,
     HTMLELEMENT_TIDS,
     IHTMLTextContainer_tid,
-    IHTMLUniqueName_tid,
     0
 };
 
