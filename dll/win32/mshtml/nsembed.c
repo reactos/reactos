@@ -467,9 +467,9 @@ static void set_environment(LPCWSTR gre_path)
     if(TRACE_ON(gecko))
         debug_level = 5;
     else if(WARN_ON(gecko))
-        debug_level = 3;
-    else if(ERR_ON(gecko))
         debug_level = 2;
+    else if(ERR_ON(gecko))
+        debug_level = 1;
 
     sprintfW(buf, debug_formatW, debug_level);
     SetEnvironmentVariableW(nspr_log_modulesW, buf);
@@ -730,12 +730,7 @@ static BOOL init_xpcom(const PRUnichar *gre_path)
     if(NS_FAILED(nsres))
         ERR("Could not get nsIComponentManager: %08x\n", nsres);
 
-    nsres = NS_GetComponentRegistrar(&registrar);
-    if(NS_SUCCEEDED(nsres))
-        init_nsio(pCompMgr, registrar);
-    else
-        ERR("NS_GetComponentRegistrar failed: %08x\n", nsres);
-
+    init_nsio(pCompMgr);
     init_mutation(pCompMgr);
     set_preferences();
 
@@ -744,9 +739,12 @@ static BOOL init_xpcom(const PRUnichar *gre_path)
     if(NS_FAILED(nsres))
         ERR("Could not get category manager service: %08x\n", nsres);
 
-    if(registrar) {
+    nsres = NS_GetComponentRegistrar(&registrar);
+    if(NS_SUCCEEDED(nsres)) {
         register_nsservice(registrar, pServMgr);
         nsIComponentRegistrar_Release(registrar);
+    }else {
+        ERR("NS_GetComponentRegistrar failed: %08x\n", nsres);
     }
 
     init_node_cc();

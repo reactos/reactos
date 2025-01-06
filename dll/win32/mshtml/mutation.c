@@ -526,12 +526,17 @@ static void NSAPI nsDocumentObserver_CharacterDataChanged(nsIDocumentObserver *i
 }
 
 static void NSAPI nsDocumentObserver_AttributeWillChange(nsIDocumentObserver *iface, nsIDocument *aDocument,
-        nsIContent *aContent, LONG aNameSpaceID, nsIAtom *aAttribute, LONG aModType)
+        void *aElement, LONG aNameSpaceID, nsIAtom *aAttribute, LONG aModType, const nsAttrValue *aNewValue)
 {
 }
 
 static void NSAPI nsDocumentObserver_AttributeChanged(nsIDocumentObserver *iface, nsIDocument *aDocument,
-        nsIContent *aContent, LONG aNameSpaceID, nsIAtom *aAttribute, LONG aModType)
+        void *aElement, LONG aNameSpaceID, nsIAtom *aAttribute, LONG aModType, const nsAttrValue *aOldValue)
+{
+}
+
+static void NSAPI nsDocumentObserver_NativeAnonymousChildListChange(nsIDocumentObserver *iface, nsIDocument *aDocument,
+        nsIContent *aContent, cpp_bool aIsRemove)
 {
 }
 
@@ -722,6 +727,7 @@ static const nsIDocumentObserverVtbl nsDocumentObserverVtbl = {
     nsDocumentObserver_CharacterDataChanged,
     nsDocumentObserver_AttributeWillChange,
     nsDocumentObserver_AttributeChanged,
+    nsDocumentObserver_NativeAnonymousChildListChange,
     nsDocumentObserver_AttributeSetToCurrentValue,
     nsDocumentObserver_ContentAppended,
     nsDocumentObserver_ContentInserted,
