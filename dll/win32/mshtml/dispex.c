@@ -231,12 +231,19 @@ static BOOL is_arg_type_supported(VARTYPE vt)
 static void add_func_info(dispex_data_t *data, tid_t tid, const FUNCDESC *desc, ITypeInfo *dti)
 {
     func_info_t *info;
+    BSTR name;
     HRESULT hres;
 
+    hres = ITypeInfo_GetDocumentation(dti, desc->memid, &name, NULL, NULL, NULL);
+    if(FAILED(hres))
+        return;
+
     for(info = data->funcs; info < data->funcs+data->func_cnt; info++) {
-        if(info->id == desc->memid) {
-            if(info->tid != tid)
+        if(info->id == desc->memid || !strcmpW(info->name, name)) {
+            if(info->tid != tid) {
+                SysFreeString(name);
                 return; /* Duplicated in other interface */
+            }
             break;
         }
     }
@@ -246,16 +253,15 @@ static void add_func_info(dispex_data_t *data, tid_t tid, const FUNCDESC *desc, 
             data->funcs = heap_realloc_zero(data->funcs, (data->func_size <<= 1)*sizeof(func_info_t));
         info = data->funcs+data->func_cnt;
 
-        hres = ITypeInfo_GetDocumentation(dti, desc->memid, &info->name, NULL, NULL, NULL);
-        if(FAILED(hres))
-            return;
-
         data->func_cnt++;
 
         info->id = desc->memid;
+        info->name = name;
         info->tid = tid;
         info->func_disp_idx = -1;
         info->prop_vt = VT_EMPTY;
+    }else {
+        SysFreeString(name);
     }
 
     if(desc->invkind & DISPATCH_METHOD) {
