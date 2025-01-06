@@ -1903,6 +1903,22 @@ static void _test_comment_text(unsigned line, IUnknown *unk, const char *extext)
     SysFreeString(text);
 }
 
+#define create_attr(a,b) _create_attr(__LINE__,a,b)
+static IHTMLDOMAttribute *_create_attr(unsigned line, IUnknown *unk, const char *name)
+{
+    IHTMLDocument5 *doc = _get_htmldoc5_iface(line, unk);
+    BSTR str = a2bstr("Test");
+    IHTMLDOMAttribute *attr;
+    HRESULT hres;
+
+    hres = IHTMLDocument5_createAttribute(doc, str, &attr);
+    ok_(__FILE__,line)(hres == S_OK, "createAttribute dailed: %08x\n", hres);
+    SysFreeString(str);
+    IHTMLDocument5_Release(doc);
+
+    return attr;
+}
+
 #define test_attr_specified(a,b) _test_attr_specified(__LINE__,a,b)
 static void _test_attr_specified(unsigned line, IHTMLDOMAttribute *attr, VARIANT_BOOL expected)
 {
@@ -8493,7 +8509,7 @@ static void test_elems(IHTMLDocument2 *doc)
     IHTMLWindow2_Release(window);
 }
 
-static void test_attr(IHTMLElement *elem)
+static void test_attr(IHTMLDocument2 *doc, IHTMLElement *elem)
 {
     IHTMLDOMAttribute *attr, *attr2;
     VARIANT v;
@@ -8574,6 +8590,31 @@ static void test_attr(IHTMLElement *elem)
     attr = get_elem_attr_node((IUnknown*)elem, "tabIndex", TRUE);
     test_attr_specified(attr, VARIANT_FALSE);
     test_attr_expando(attr, VARIANT_FALSE);
+    IHTMLDOMAttribute_Release(attr);
+
+    /* Test created, detached attribute. */
+    attr = create_attr((IUnknown*)doc, "Test");
+
+    test_disp((IUnknown*)attr, &DIID_DispHTMLDOMAttribute, "[object]");
+    test_ifaces((IUnknown*)attr, attr_iids);
+    test_no_iface((IUnknown*)attr, &IID_IHTMLDOMNode);
+
+    test_attr_node_name(attr, "Test");
+    test_attr_expando(attr, VARIANT_FALSE);
+
+    get_attr_node_value(attr, &v, VT_EMPTY);
+
+    V_VT(&v) = VT_I4;
+    V_I4(&v) = 1;
+    put_attr_node_value(attr, v);
+
+    get_attr_node_value(attr, &v, VT_I4);
+    ok(V_I4(&v) == 1, "nodeValue = %d\n", V_I4(&v));
+
+    V_VT(&v) = VT_EMPTY;
+    put_attr_node_value(attr, v);
+    get_attr_node_value(attr, &v, VT_EMPTY);
+
     IHTMLDOMAttribute_Release(attr);
 }
 
@@ -8796,7 +8837,7 @@ static void test_elems2(IHTMLDocument2 *doc)
         IHTMLElement_Release(elem2);
     }
 
-    test_attr(div);
+    test_attr(doc, div);
     test_blocked(doc, div);
     test_elem_names(doc);
 
@@ -8807,7 +8848,6 @@ static void test_create_elems(IHTMLDocument2 *doc)
 {
     IHTMLElement *elem, *body, *elem2;
     IHTMLDOMNode *node, *node2, *node3, *comment;
-    IHTMLDOMAttribute *attr;
     IHTMLDocument5 *doc5;
     IDispatch *disp;
     VARIANT var;
@@ -8909,36 +8949,6 @@ static void test_create_elems(IHTMLDocument2 *doc)
             IHTMLDOMNode_Release(node2);
 
             IHTMLDOMNode_Release(comment);
-        }
-
-        str = a2bstr("Test");
-        hres = IHTMLDocument5_createAttribute(doc5, str, &attr);
-        ok(hres == S_OK, "createAttribute dailed: %08x\n", hres);
-        SysFreeString(str);
-        if(SUCCEEDED(hres)) {
-            VARIANT v;
-
-            test_disp((IUnknown*)attr, &DIID_DispHTMLDOMAttribute, "[object]");
-            test_ifaces((IUnknown*)attr, attr_iids);
-            test_no_iface((IUnknown*)attr, &IID_IHTMLDOMNode);
-
-            test_attr_node_name(attr, "Test");
-            test_attr_expando(attr, VARIANT_FALSE);
-
-            get_attr_node_value(attr, &v, VT_EMPTY);
-
-            V_VT(&v) = VT_I4;
-            V_I4(&v) = 1;
-            put_attr_node_value(attr, v);
-
-            get_attr_node_value(attr, &v, VT_I4);
-            ok(V_I4(&v) == 1, "nodeValue = %d\n", V_I4(&v));
-
-            V_VT(&v) = VT_EMPTY;
-            put_attr_node_value(attr, v);
-            get_attr_node_value(attr, &v, VT_EMPTY);
-
-            IHTMLDOMAttribute_Release(attr);
         }
 
         IHTMLDocument5_Release(doc5);
