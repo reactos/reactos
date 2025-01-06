@@ -2346,6 +2346,8 @@ static nsrefcnt NSAPI nsURI_Release(nsIFileURL *iface)
             nsIWebBrowserChrome_Release(&This->container->nsIWebBrowserChrome_iface);
         if(This->uri)
             IUri_Release(This->uri);
+        if(This->uri_builder)
+            IUriBuilder_Release(This->uri_builder);
         heap_free(This->origin_charset);
         heap_free(This);
     }
