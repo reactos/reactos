@@ -2653,7 +2653,7 @@ static HRESULT WINAPI WindowDispEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID 
         DISPPARAMS dp = {args, NULL, 2, 0};
 
         /*
-         * setTimeout calls shoud use default value 0 for the second argument if only one is provided,
+         * setTimeout calls should use default value 0 for the second argument if only one is provided,
          * but IDL file does not reflect that. We fixup arguments here instead.
          */
         if(!(wFlags & DISPATCH_METHOD) || pdp->cArgs != 1 || pdp->cNamedArgs)
