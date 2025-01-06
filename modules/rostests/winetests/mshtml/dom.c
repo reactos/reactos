@@ -54,7 +54,7 @@ static const char elem_test_str[] =
     "<a id=\"a\" href=\"http://test\" name=\"x\">link</a>"
     "<label for=\"in\" id=\"labelid\">Label:</label>"
     "<input id=\"in\" class=\"testclass\" tabIndex=\"2\" title=\"test title\" />"
-    "<button id=\"btnid\"></button>"
+    "<button id=\"btnid\" type=\"submit\"></button>"
     "<select id=\"s\"><option id=\"x\" value=\"val1\">opt1</option><option id=\"y\">opt2</option></select>"
     "<textarea id=\"X\">text text</textarea>"
     "<table id=\"tbl\"><tbody><tr></tr><tr id=\"row2\"><td id=\"td1\">td1 text</td><td id=\"td2\">td2 text</td></tr></tbody></table>"
@@ -6929,10 +6929,26 @@ static void _test_button_set_disabled(unsigned line, IHTMLElement *elem, VARIANT
     _test_button_get_disabled(line, elem, b);
 }
 
+#define test_button_type(a,b) _test_button_type(__LINE__,a,b)
+static void _test_button_type(unsigned line, IHTMLElement *elem, const char *extype)
+{
+    IHTMLButtonElement *button = _get_button_iface(line, (IUnknown*)elem);
+    BSTR str;
+    HRESULT hres;
+
+    hres = IHTMLButtonElement_get_type(button, &str);
+    ok_(__FILE__,line)(hres == S_OK, "get_type failed: %08x\n", hres);
+    ok_(__FILE__,line)(!strcmp_wa(str, extype), "type = %s, expected %s\n", wine_dbgstr_w(str), extype);
+    SysFreeString(str);
+
+    IHTMLButtonElement_Release(button);
+}
+
 static void test_button_elem(IHTMLElement *elem)
 {
     test_button_name(elem, NULL);
     set_button_name(elem, "button name");
+    test_button_type(elem, "submit");
 
     test_elem_istextedit(elem, VARIANT_TRUE);
 }

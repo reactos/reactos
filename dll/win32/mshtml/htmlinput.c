@@ -1625,8 +1625,14 @@ static HRESULT WINAPI HTMLButtonElement_Invoke(IHTMLButtonElement *iface, DISPID
 static HRESULT WINAPI HTMLButtonElement_get_type(IHTMLButtonElement *iface, BSTR *p)
 {
     HTMLButtonElement *This = impl_from_IHTMLButtonElement(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsAString type_str;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsAString_Init(&type_str, NULL);
+    nsres = nsIDOMHTMLButtonElement_GetType(This->nsbutton, &type_str);
+    return return_nsstr(nsres, &type_str, p);
 }
 
 static HRESULT WINAPI HTMLButtonElement_put_value(IHTMLButtonElement *iface, BSTR v)
