@@ -24,7 +24,7 @@ function nav_parent_test() {
 
     subframe.onload = function() {
         var doc = subframe.contentWindow.document;
-        doc.body.innerHTML = '<a href="http://winetest.org/blank2.html" id="aid" target="_parent">test</a>';
+        doc.body.innerHTML = '<a href="blank2.html" id="aid" target="_parent">test</a>';
         doc.getElementById("aid").click();
     }
 
