@@ -969,7 +969,7 @@ static HRESULT nsnode_to_nsstring_rec(nsIContentSerializer *serializer, nsIDOMNo
         nsIContentSerializer_AppendText(serializer, nscontent, 0, -1, str);
         break;
     case COMMENT_NODE:
-        nsres = nsIContentSerializer_AppendComment(serializer, nscontent, 0, -1, str);
+        nsIContentSerializer_AppendComment(serializer, nscontent, 0, -1, str);
         break;
     case DOCUMENT_NODE: {
         nsIDocument *nsdoc;
