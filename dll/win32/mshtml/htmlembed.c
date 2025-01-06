@@ -110,7 +110,7 @@ static HRESULT WINAPI HTMLEmbedElement_get_hidden(IHTMLEmbedElement *iface, BSTR
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLEmbedElement_get_palete(IHTMLEmbedElement *iface, BSTR *p)
+static HRESULT WINAPI HTMLEmbedElement_get_palette(IHTMLEmbedElement *iface, BSTR *p)
 {
     HTMLEmbedElement *This = impl_from_IHTMLEmbedElement(iface);
     FIXME("(%p)->(%p)\n", This, p);
@@ -204,7 +204,7 @@ static const IHTMLEmbedElementVtbl HTMLEmbedElementVtbl = {
     HTMLEmbedElement_Invoke,
     HTMLEmbedElement_put_hidden,
     HTMLEmbedElement_get_hidden,
-    HTMLEmbedElement_get_palete,
+    HTMLEmbedElement_get_palette,
     HTMLEmbedElement_get_pluginspage,
     HTMLEmbedElement_put_src,
     HTMLEmbedElement_get_src,
