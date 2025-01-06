@@ -725,7 +725,7 @@ static nsresult NSAPI nsChannel_GetURI(nsIHttpChannel *iface, nsIURI **aURI)
     TRACE("(%p)->(%p)\n", This, aURI);
 
     nsIFileURL_AddRef(&This->uri->nsIFileURL_iface);
-    *aURI = (nsIURI*)This->uri;
+    *aURI = (nsIURI*)&This->uri->nsIFileURL_iface;
 
     return NS_OK;
 }
