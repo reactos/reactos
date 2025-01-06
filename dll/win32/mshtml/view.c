@@ -250,9 +250,8 @@ static HRESULT activate_window(HTMLDocumentObj *This)
         return hres;
     }
 
-    TRACE("got window context: %p %p {%d %d %d %d} {%d %d %d %d} {%d %x %p %p %d}\n",
-            pIPFrame, This->ip_window, posrect.left, posrect.top, posrect.right, posrect.bottom,
-            cliprect.left, cliprect.top, cliprect.right, cliprect.bottom,
+    TRACE("got window context: %p %p %s %s {%d %x %p %p %d}\n",
+            pIPFrame, This->ip_window, wine_dbgstr_rect(&posrect), wine_dbgstr_rect(&cliprect),
             frameinfo.cb, frameinfo.fMDIApp, frameinfo.hwndFrame, frameinfo.haccel, frameinfo.cAccelEntries);
 
     hres = IOleInPlaceSite_GetWindow(This->ipsite, &parent_hwnd);
