@@ -362,7 +362,7 @@ static int func_name_cmp(const void *p1, const void *p2)
     return strcmpiW((*(func_info_t* const*)p1)->name, (*(func_info_t* const*)p2)->name);
 }
 
-static dispex_data_t *preprocess_dispex_data(const dispex_static_data_t *desc)
+static dispex_data_t *preprocess_dispex_data(const dispex_static_data_t *desc, compat_mode_t compat_mode)
 {
     const tid_t *tid;
     dispex_data_t *data;
@@ -396,7 +396,7 @@ static dispex_data_t *preprocess_dispex_data(const dispex_static_data_t *desc)
     list_add_tail(&dispex_data_list, &data->entry);
 
     if(desc->init_info)
-        desc->init_info(data);
+        desc->init_info(data, compat_mode);
 
     for(tid = desc->iface_tids; *tid; tid++) {
         hres = process_interface(data, *tid, dti);
@@ -1745,17 +1745,19 @@ void release_dispex(DispatchEx *This)
     heap_free(This->dynamic_data);
 }
 
-void init_dispex(DispatchEx *dispex, IUnknown *outer, dispex_static_data_t *data)
+void init_dispex_with_compat_mode(DispatchEx *dispex, IUnknown *outer, dispex_static_data_t *data, compat_mode_t compat_mode)
 {
-    if(!data->data) {
+    assert(compat_mode < COMPAT_MODE_CNT);
+
+    if(!data->info_cache[compat_mode]) {
         EnterCriticalSection(&cs_dispex_static_data);
-        if(!data->data)
-            data->data = preprocess_dispex_data(data);
+        if(!data->info_cache[compat_mode])
+            data->info_cache[compat_mode] = preprocess_dispex_data(data, compat_mode);
         LeaveCriticalSection(&cs_dispex_static_data);
     }
 
     dispex->IDispatchEx_iface.lpVtbl = &DispatchExVtbl;
     dispex->outer = outer;
-    dispex->info = data->data;
+    dispex->info = data->info_cache[compat_mode];
     dispex->dynamic_data = NULL;
 }

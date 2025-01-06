@@ -2936,7 +2936,7 @@ static void HTMLWindow_bind_event(DispatchEx *dispex, int eid)
     dispex_get_vtbl(&This->doc->node.event_target.dispex)->bind_event(&This->doc->node.event_target.dispex, eid);
 }
 
-static void HTMLWindow_init_dispex_info(dispex_data_t *info)
+static void HTMLWindow_init_dispex_info(dispex_data_t *info, compat_mode_t compat_mode)
 {
     dispex_info_add_interface(info, IHTMLWindow5_tid);
 }
