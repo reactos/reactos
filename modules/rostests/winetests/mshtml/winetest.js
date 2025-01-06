@@ -16,15 +16,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-function next_test() {
-    var test = tests.shift();
-    window.setTimeout(function() {
+function guard(f) {
+    return function() {
         try {
-            test();
+            f();
         }catch(e) {
             ok(false, "Got exception " + ("message" in e ? e.message : e));
         }
-    }, 0);
+    };
+}
+
+function next_test() {
+    var test = tests.shift();
+    window.setTimeout(guard(test), 0);
 }
 
 function run_tests() {
