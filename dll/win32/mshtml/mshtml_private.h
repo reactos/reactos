@@ -203,6 +203,7 @@ typedef struct event_target_t event_target_t;
     XIID(IHTMLElement2) \
     XIID(IHTMLElement3) \
     XIID(IHTMLElement4) \
+    XIID(IHTMLElement6) \
     XIID(IHTMLElementCollection) \
     XIID(IHTMLEmbedElement) \
     XIID(IHTMLEventObj) \
@@ -765,6 +766,7 @@ typedef struct {
     IHTMLElement2 IHTMLElement2_iface;
     IHTMLElement3 IHTMLElement3_iface;
     IHTMLElement4 IHTMLElement4_iface;
+    IHTMLElement6 IHTMLElement6_iface;
     IHTMLUniqueName IHTMLUniqueName_iface;
     IElementSelector IElementSelector_iface;
 

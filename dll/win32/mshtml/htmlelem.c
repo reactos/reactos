@@ -3918,6 +3918,669 @@ static const IHTMLElement4Vtbl HTMLElement4Vtbl = {
     HTMLElement4_get_onfocusout
 };
 
+static inline HTMLElement *impl_from_IHTMLElement6(IHTMLElement6 *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLElement, IHTMLElement6_iface);
+}
+
+static HRESULT WINAPI HTMLElement6_QueryInterface(IHTMLElement6 *iface,
+        REFIID riid, void **ppv)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    return IHTMLElement_QueryInterface(&This->IHTMLElement_iface, riid, ppv);
+}
+
+static ULONG WINAPI HTMLElement6_AddRef(IHTMLElement6 *iface)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    return IHTMLElement_AddRef(&This->IHTMLElement_iface);
+}
+
+static ULONG WINAPI HTMLElement6_Release(IHTMLElement6 *iface)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    return IHTMLElement_Release(&This->IHTMLElement_iface);
+}
+
+static HRESULT WINAPI HTMLElement6_GetTypeInfoCount(IHTMLElement6 *iface, UINT *pctinfo)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    return IDispatchEx_GetTypeInfoCount(&This->node.event_target.dispex.IDispatchEx_iface, pctinfo);
+}
+
+static HRESULT WINAPI HTMLElement6_GetTypeInfo(IHTMLElement6 *iface, UINT iTInfo,
+        LCID lcid, ITypeInfo **ppTInfo)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    return IDispatchEx_GetTypeInfo(&This->node.event_target.dispex.IDispatchEx_iface, iTInfo, lcid, ppTInfo);
+}
+
+static HRESULT WINAPI HTMLElement6_GetIDsOfNames(IHTMLElement6 *iface, REFIID riid,
+        LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    return IDispatchEx_GetIDsOfNames(&This->node.event_target.dispex.IDispatchEx_iface, riid, rgszNames, cNames,
+            lcid, rgDispId);
+}
+
+static HRESULT WINAPI HTMLElement6_Invoke(IHTMLElement6 *iface, DISPID dispIdMember, REFIID riid,
+        LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    return IDispatchEx_Invoke(&This->node.event_target.dispex.IDispatchEx_iface, dispIdMember, riid, lcid,
+            wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+}
+
+static HRESULT WINAPI HTMLElement6_getAttributeNS(IHTMLElement6 *iface, VARIANT *pvarNS, BSTR strAttributeName, VARIANT *AttributeValue)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s %s %p)\n", This, debugstr_variant(pvarNS), debugstr_w(strAttributeName), AttributeValue);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_setAttributeNS(IHTMLElement6 *iface, VARIANT *pvarNS, BSTR strAttributeName, VARIANT *pvarAttributeValue)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s %s %s)\n", This, debugstr_variant(pvarNS), debugstr_w(strAttributeName), debugstr_variant(pvarAttributeValue));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_removeAttributeNS(IHTMLElement6 *iface, VARIANT *pvarNS, BSTR strAttributeName)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s %s)\n", This, debugstr_variant(pvarNS), debugstr_w(strAttributeName));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_getAttributeNodeNS(IHTMLElement6 *iface, VARIANT *pvarNS, BSTR name, IHTMLDOMAttribute2 **ppretAttribute)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s %s %p)\n", This, debugstr_variant(pvarNS), debugstr_w(name), ppretAttribute);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_setAttributeNodeNS(IHTMLElement6 *iface, IHTMLDOMAttribute2 *pattr, IHTMLDOMAttribute2 **ppretAttribute)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p %p)\n", This, pattr, ppretAttribute);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_hasAttributeNS(IHTMLElement6 *iface, VARIANT *pvarNS, BSTR name, VARIANT_BOOL *pfHasAttribute)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s %s %p)\n", This, debugstr_variant(pvarNS), debugstr_w(name), pfHasAttribute);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_getAttribute(IHTMLElement6 *iface, BSTR strAttributeName, VARIANT *AttributeValue)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s %p)\n", This, debugstr_w(strAttributeName), AttributeValue);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_setAttribute(IHTMLElement6 *iface, BSTR strAttributeName, VARIANT *pvarAttributeValue)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s %p)\n", This, debugstr_w(strAttributeName), pvarAttributeValue);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_removeAttribute(IHTMLElement6 *iface, BSTR strAttributeName)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_w(strAttributeName));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_getAttributeNode(IHTMLElement6 *iface, BSTR strAttributeName, IHTMLDOMAttribute2 **ppretAttribute)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s %p)\n", This, debugstr_w(strAttributeName), ppretAttribute);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_setAttributeNode(IHTMLElement6 *iface, IHTMLDOMAttribute2 *pattr, IHTMLDOMAttribute2 **ppretAttribute)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p %p)\n", This, pattr, ppretAttribute);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_removeAttributeNode(IHTMLElement6 *iface, IHTMLDOMAttribute2 *pattr, IHTMLDOMAttribute2 **ppretAttribute)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->()\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_hasAttribute(IHTMLElement6 *iface, BSTR name, VARIANT_BOOL *pfHasAttribute)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s %p)\n", This, debugstr_w(name), pfHasAttribute);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_getElementsByTagNameNS(IHTMLElement6 *iface, VARIANT *varNS, BSTR bstrLocalName, IHTMLElementCollection **pelColl)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s %s %p)\n", This, debugstr_variant(varNS), debugstr_w(bstrLocalName), pelColl);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_tagName(IHTMLElement6 *iface, BSTR *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_nodeName(IHTMLElement6 *iface, BSTR *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_getElementsByClassName(IHTMLElement6 *iface, BSTR v, IHTMLElementCollection **pel)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s %p)\n", This, debugstr_w(v), pel);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_msMatchesSelector(IHTMLElement6 *iface, BSTR v, VARIANT_BOOL *pfMatches)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s %p)\n", This, debugstr_w(v), pfMatches);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onabort(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onabort(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_oncanplay(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_oncanplay(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_oncanplaythrough(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_oncanplaythrough(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onchange(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onchange(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_ondurationchange(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_ondurationchange(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onemptied(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onemptied(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onended(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onended(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onerror(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onerror(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_oninput(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_oninput(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onload(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onload(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onloadeddata(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onloadeddata(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onloadedmetadata(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onloadedmetadata(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onloadstart(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onloadstart(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onpause(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onpause(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onplay(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onplay(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onplaying(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onplaying(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onprogress(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onprogress(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onratechange(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onratechange(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onreset(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onreset(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onseeked(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onseeked(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onseeking(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onseeking(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onselect(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onselect(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onstalled(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onstalled(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onsubmit(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onsubmit(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onsuspend(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onsuspend(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_ontimeupdate(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_ontimeupdate(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onvolumechange(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onvolumechange(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_put_onwaiting(IHTMLElement6 *iface, VARIANT v)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_get_onwaiting(IHTMLElement6 *iface, VARIANT *p)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLElement6_hasAttributes(IHTMLElement6 *iface, VARIANT_BOOL *pfHasAttributes)
+{
+    HTMLElement *This = impl_from_IHTMLElement6(iface);
+    FIXME("(%p)->(%p)\n", This, pfHasAttributes);
+    return E_NOTIMPL;
+}
+
+static const IHTMLElement6Vtbl HTMLElement6Vtbl = {
+    HTMLElement6_QueryInterface,
+    HTMLElement6_AddRef,
+    HTMLElement6_Release,
+    HTMLElement6_GetTypeInfoCount,
+    HTMLElement6_GetTypeInfo,
+    HTMLElement6_GetIDsOfNames,
+    HTMLElement6_Invoke,
+    HTMLElement6_getAttributeNS,
+    HTMLElement6_setAttributeNS,
+    HTMLElement6_removeAttributeNS,
+    HTMLElement6_getAttributeNodeNS,
+    HTMLElement6_setAttributeNodeNS,
+    HTMLElement6_hasAttributeNS,
+    HTMLElement6_getAttribute,
+    HTMLElement6_setAttribute,
+    HTMLElement6_removeAttribute,
+    HTMLElement6_getAttributeNode,
+    HTMLElement6_setAttributeNode,
+    HTMLElement6_removeAttributeNode,
+    HTMLElement6_hasAttribute,
+    HTMLElement6_getElementsByTagNameNS,
+    HTMLElement6_get_tagName,
+    HTMLElement6_get_nodeName,
+    HTMLElement6_getElementsByClassName,
+    HTMLElement6_msMatchesSelector,
+    HTMLElement6_put_onabort,
+    HTMLElement6_get_onabort,
+    HTMLElement6_put_oncanplay,
+    HTMLElement6_get_oncanplay,
+    HTMLElement6_put_oncanplaythrough,
+    HTMLElement6_get_oncanplaythrough,
+    HTMLElement6_put_onchange,
+    HTMLElement6_get_onchange,
+    HTMLElement6_put_ondurationchange,
+    HTMLElement6_get_ondurationchange,
+    HTMLElement6_put_onemptied,
+    HTMLElement6_get_onemptied,
+    HTMLElement6_put_onended,
+    HTMLElement6_get_onended,
+    HTMLElement6_put_onerror,
+    HTMLElement6_get_onerror,
+    HTMLElement6_put_oninput,
+    HTMLElement6_get_oninput,
+    HTMLElement6_put_onload,
+    HTMLElement6_get_onload,
+    HTMLElement6_put_onloadeddata,
+    HTMLElement6_get_onloadeddata,
+    HTMLElement6_put_onloadedmetadata,
+    HTMLElement6_get_onloadedmetadata,
+    HTMLElement6_put_onloadstart,
+    HTMLElement6_get_onloadstart,
+    HTMLElement6_put_onpause,
+    HTMLElement6_get_onpause,
+    HTMLElement6_put_onplay,
+    HTMLElement6_get_onplay,
+    HTMLElement6_put_onplaying,
+    HTMLElement6_get_onplaying,
+    HTMLElement6_put_onprogress,
+    HTMLElement6_get_onprogress,
+    HTMLElement6_put_onratechange,
+    HTMLElement6_get_onratechange,
+    HTMLElement6_put_onreset,
+    HTMLElement6_get_onreset,
+    HTMLElement6_put_onseeked,
+    HTMLElement6_get_onseeked,
+    HTMLElement6_put_onseeking,
+    HTMLElement6_get_onseeking,
+    HTMLElement6_put_onselect,
+    HTMLElement6_get_onselect,
+    HTMLElement6_put_onstalled,
+    HTMLElement6_get_onstalled,
+    HTMLElement6_put_onsubmit,
+    HTMLElement6_get_onsubmit,
+    HTMLElement6_put_onsuspend,
+    HTMLElement6_get_onsuspend,
+    HTMLElement6_put_ontimeupdate,
+    HTMLElement6_get_ontimeupdate,
+    HTMLElement6_put_onvolumechange,
+    HTMLElement6_get_onvolumechange,
+    HTMLElement6_put_onwaiting,
+    HTMLElement6_get_onwaiting,
+    HTMLElement6_hasAttributes
+};
+
 static inline HTMLElement *impl_from_IHTMLUniqueName(IHTMLUniqueName *iface)
 {
     return CONTAINING_RECORD(iface, HTMLElement, IHTMLUniqueName_iface);
@@ -4133,6 +4796,8 @@ HRESULT HTMLElement_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
         *ppv = &This->IHTMLElement3_iface;
     }else if(IsEqualGUID(&IID_IHTMLElement4, riid)) {
         *ppv = &This->IHTMLElement4_iface;
+    }else if(IsEqualGUID(&IID_IHTMLElement6, riid)) {
+        *ppv = &This->IHTMLElement6_iface;
     }else if(IsEqualGUID(&IID_IHTMLUniqueName, riid)) {
         *ppv = &This->IHTMLUniqueName_iface;
     }else if(IsEqualGUID(&IID_IElementSelector, riid)) {
@@ -4406,6 +5071,7 @@ void HTMLElement_Init(HTMLElement *This, HTMLDocumentNode *doc, nsIDOMHTMLElemen
     This->IHTMLElement2_iface.lpVtbl = &HTMLElement2Vtbl;
     This->IHTMLElement3_iface.lpVtbl = &HTMLElement3Vtbl;
     This->IHTMLElement4_iface.lpVtbl = &HTMLElement4Vtbl;
+    This->IHTMLElement6_iface.lpVtbl = &HTMLElement6Vtbl;
     This->IHTMLUniqueName_iface.lpVtbl = &HTMLUniqueNameVtbl;
     This->IElementSelector_iface.lpVtbl = &ElementSelectorVtbl;
 
