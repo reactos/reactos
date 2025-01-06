@@ -169,7 +169,7 @@ static void HTMLCommentElement_destructor(HTMLDOMNode *iface)
     HTMLElement_destructor(&This->element.node);
 }
 
-HRESULT HTMLCommentElement_clone(HTMLDOMNode *iface, nsIDOMNode *nsnode, HTMLDOMNode **ret)
+static HRESULT HTMLCommentElement_clone(HTMLDOMNode *iface, nsIDOMNode *nsnode, HTMLDOMNode **ret)
 {
     HTMLCommentElement *This = impl_from_HTMLDOMNode(iface);
     HTMLElement *new_elem;

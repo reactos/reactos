@@ -396,7 +396,7 @@ static LPWSTR fix_url_value(LPCWSTR val)
     return ret;
 }
 
-HRESULT set_nsstyle_attr(nsIDOMCSSStyleDeclaration *nsstyle, styleid_t sid, const WCHAR *value, DWORD flags)
+static HRESULT set_nsstyle_attr(nsIDOMCSSStyleDeclaration *nsstyle, styleid_t sid, const WCHAR *value, DWORD flags)
 {
     nsAString str_name, str_value, str_empty;
     LPWSTR val = NULL;
@@ -461,7 +461,7 @@ static HRESULT var_to_styleval(const VARIANT *v, WCHAR *buf, DWORD flags, const 
     }
 }
 
-HRESULT set_nsstyle_attr_var(nsIDOMCSSStyleDeclaration *nsstyle, styleid_t sid, VARIANT *value, DWORD flags)
+static HRESULT set_nsstyle_attr_var(nsIDOMCSSStyleDeclaration *nsstyle, styleid_t sid, VARIANT *value, DWORD flags)
 {
     const WCHAR *val;
     WCHAR buf[14];
