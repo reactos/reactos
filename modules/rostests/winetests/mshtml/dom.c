@@ -6244,12 +6244,10 @@ static void test_unique_id(IHTMLDocument2 *doc, IHTMLElement *elem)
 
     hres = IHTMLUniqueName_get_uniqueID(unique_name, &id);
     ok(hres == S_OK, "get_uniqueName failed: %08x\n", hres);
-    trace("id %s\n", wine_dbgstr_w(id));
 
     hres = IHTMLUniqueName_get_uniqueID(unique_name, &id2);
     ok(hres == S_OK, "get_uniqueName failed: %08x\n", hres);
     ok(!lstrcmpW(id, id2), "unique names differ\n");
-    trace("id %s\n", wine_dbgstr_w(id2));
 
     hres = IHTMLUniqueName_get_uniqueNumber(unique_name, &num);
     ok(hres == S_OK, "get_uniqueName failed: %08x\n", hres);
@@ -6257,7 +6255,6 @@ static void test_unique_id(IHTMLDocument2 *doc, IHTMLElement *elem)
 
     sprintf(buf, "ms__id%u", num);
     ok(!strcmp_wa(id, buf), "unexpected id %s\n", wine_dbgstr_w(id));
-    trace("num %d\n", num);
 
     SysFreeString(id);
     SysFreeString(id2);
@@ -8906,6 +8903,10 @@ static void test_create_elems(IHTMLDocument2 *doc)
             test_comment_text((IUnknown*)comment, "<!--testing-->");
             test_elem_outerhtml((IUnknown*)comment, "<!--testing-->");
             test_comment_attrs((IUnknown*)comment);
+
+            node2 = clone_node((IUnknown*)comment, VARIANT_TRUE);
+            test_comment_text((IUnknown*)node2, "<!--testing-->");
+            IHTMLDOMNode_Release(node2);
 
             IHTMLDOMNode_Release(comment);
         }

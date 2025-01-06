@@ -169,11 +169,25 @@ static void HTMLCommentElement_destructor(HTMLDOMNode *iface)
     HTMLElement_destructor(&This->element.node);
 }
 
+HRESULT HTMLCommentElement_clone(HTMLDOMNode *iface, nsIDOMNode *nsnode, HTMLDOMNode **ret)
+{
+    HTMLCommentElement *This = impl_from_HTMLDOMNode(iface);
+    HTMLElement *new_elem;
+    HRESULT hres;
+
+    hres = HTMLCommentElement_Create(This->element.node.doc, nsnode, &new_elem);
+    if(FAILED(hres))
+        return hres;
+
+    *ret = &new_elem->node;
+    return S_OK;
+}
+
 static const NodeImplVtbl HTMLCommentElementImplVtbl = {
     HTMLCommentElement_QI,
     HTMLCommentElement_destructor,
     HTMLElement_cpc,
-    HTMLElement_clone,
+    HTMLCommentElement_clone,
     HTMLElement_handle_event,
     HTMLElement_get_attr_col
 };
