@@ -1024,7 +1024,7 @@ void call_event_handlers(HTMLDocumentNode *doc, HTMLEventObj *event_obj, EventTa
         int i;
 
         V_VT(&arg) = VT_DISPATCH;
-        V_DISPATCH(&arg) = (IDispatch*)event_obj;
+        V_DISPATCH(&arg) = (IDispatch*)&event_obj->dispex.IDispatchEx_iface;
 
         i = data->event_table[eid]->handler_cnt;
         while(i--) {
