@@ -9382,7 +9382,7 @@ methods:
 
     [propget, id(DISPID_IHTMLAREAELEMENT2_IE8_HREF)]
     BSTR ie8_href();
-};
+}
 
 /*****************************************************************************
  *    IHTMLLabelElement interface
@@ -18824,6 +18824,34 @@ interface IDOMEvent : IDispatch
 
     [propget, id(DISPID_IDOMEVENT_SRCELEMENT)]
     HRESULT srcElement([out, retval] IHTMLElement **p);
+}
+
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(30510720-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IDOMMessageEvent : IDispatch
+{
+    [propget, id(DISPID_IDOMMESSAGEEVENT_DATA)]
+    HRESULT data([out, retval] BSTR *p);
+
+    [propget, id(DISPID_IDOMMESSAGEEVENT_ORIGIN)]
+    HRESULT origin([out, retval] BSTR *p);
+
+    [propget, id(DISPID_IDOMMESSAGEEVENT_SOURCE)]
+    HRESULT source([out, retval] IHTMLWindow2 **p);
+
+    [id(DISPID_IDOMMESSAGEEVENT_INITMESSAGEEVENT)]
+    HRESULT initMessageEvent(
+            [in] BSTR eventType,
+            [in] VARIANT_BOOL canBubble,
+            [in] VARIANT_BOOL cancelable,
+            [in] BSTR data,
+            [in] BSTR origin,
+            [in] BSTR lastEventId,
+            [in] IHTMLWindow2 *source);
 }
 
 /*****************************************************************************
