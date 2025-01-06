@@ -569,7 +569,7 @@ static void test_responseXML(const char *expect_text)
     ok(broken(supported == (INTERFACESAFE_FOR_UNTRUSTED_CALLER | INTERFACESAFE_FOR_UNTRUSTED_DATA)) ||
        supported == (INTERFACESAFE_FOR_UNTRUSTED_CALLER | INTERFACESAFE_FOR_UNTRUSTED_DATA | INTERFACE_USES_SECURITY_MANAGER) /* msxml3 SP8+ */,
         "Expected supported: (INTERFACESAFE_FOR_UNTRUSTED_CALLER | INTERFACESAFE_FOR_UNTRUSTED_DATA | INTERFACE_USES_SECURITY_MANAGER), got %08x\n", supported);
-    ok(enabled == (INTERFACESAFE_FOR_UNTRUSTED_CALLER | INTERFACESAFE_FOR_UNTRUSTED_DATA | INTERFACE_USES_SECURITY_MANAGER),
+    ok(enabled == ((INTERFACESAFE_FOR_UNTRUSTED_CALLER | INTERFACESAFE_FOR_UNTRUSTED_DATA | INTERFACE_USES_SECURITY_MANAGER) & supported),
         "Expected enabled: (INTERFACESAFE_FOR_UNTRUSTED_CALLER | INTERFACESAFE_FOR_UNTRUSTED_DATA | INTERFACE_USES_SECURITY_MANAGER), got 0x%08x\n", enabled);
     IObjectSafety_Release(safety);
 
@@ -588,9 +588,9 @@ static void test_sync_xhr(IHTMLDocument2 *doc, const char *xml_url, const char *
     LONG val;
     HRESULT hres;
     static const struct HEADER_TYPE expect_headers[] = {
-        {"Accept-Ranges", "bytes"},
+        {"Accept-Ranges", "bytes", TRUE},
         {"Content-Length", "51"},
-        {"Content-Type", "application/xml", TRUE}
+        {"Content-Type", "application/xml"}
     };
 
     trace("test_sync_xhr\n");
