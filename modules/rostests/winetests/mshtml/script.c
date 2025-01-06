@@ -2505,7 +2505,7 @@ static HRESULT WINAPI ActiveScript_SetScriptSite(IActiveScript *iface, IActiveSc
 
     hres = IActiveScriptSite_QueryInterface(pass, &IID_IActiveScriptSiteInterruptPoll, (void**)&poll);
     ok(hres == S_OK, "Could not get IActiveScriptSiteInterruptPoll interface: %08x\n", hres);
-    if(FAILED(hres))
+    if(SUCCEEDED(hres))
         IActiveScriptSiteInterruptPoll_Release(poll);
 
     hres = IActiveScriptSite_GetLCID(pass, &lcid);
