@@ -1559,8 +1559,11 @@ static HRESULT WINAPI HTMLElement_put_outerText(IHTMLElement *iface, BSTR v)
 static HRESULT WINAPI HTMLElement_get_outerText(IHTMLElement *iface, BSTR *p)
 {
     HTMLElement *This = impl_from_IHTMLElement(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    /* getter is the same as innerText */
+    return IHTMLElement_get_innerText(&This->IHTMLElement_iface, p);
 }
 
 static HRESULT insert_adjacent_node(HTMLElement *This, const WCHAR *where, nsIDOMNode *nsnode, HTMLDOMNode **ret_node)
