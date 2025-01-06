@@ -4267,7 +4267,16 @@ static event_target_t **HTMLElement_get_event_target_ptr(DispatchEx *dispex)
 static void HTMLElement_bind_event(DispatchEx *dispex, int eid)
 {
     HTMLElement *This = impl_from_DispatchEx(dispex);
-    This->node.doc->node.event_target.dispex.data->vtbl->bind_event(&This->node.doc->node.event_target.dispex, eid);
+
+    static const WCHAR loadW[] = {'l','o','a','d',0};
+
+    switch(eid) {
+    case EVENTID_LOAD:
+        add_nsevent_listener(This->node.doc, This->node.nsnode, loadW);
+        return;
+    default:
+        This->node.doc->node.event_target.dispex.data->vtbl->bind_event(&This->node.doc->node.event_target.dispex, eid);
+    }
 }
 
 static const tid_t HTMLElement_iface_tids[] = {
