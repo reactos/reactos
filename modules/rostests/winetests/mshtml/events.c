@@ -75,6 +75,8 @@ DEFINE_EXPECT(img_onload);
 DEFINE_EXPECT(img_onerror);
 DEFINE_EXPECT(input_onfocus);
 DEFINE_EXPECT(input_onblur);
+DEFINE_EXPECT(div_onfocusin);
+DEFINE_EXPECT(div_onfocusout);
 DEFINE_EXPECT(form_onsubmit);
 DEFINE_EXPECT(form_onclick);
 DEFINE_EXPECT(submit_onclick);
@@ -114,7 +116,7 @@ static const char img_doc_str[] =
     "<html><body><img id=\"imgid\"></img></body></html>";
 
 static const char input_doc_str[] =
-    "<html><body><input id=\"inputid\"></input></body></html>";    
+    "<html><body><div id=\"divid\"><input id=\"inputid\"></input></div></body></html>";
 
 static const char iframe_doc_str[] =
     "<html><body><iframe id=\"ifr\">Testing</iframe></body></html>";
@@ -241,6 +243,18 @@ static IHTMLElement3 *_get_elem3_iface(unsigned line, IUnknown *unk)
     ok_(__FILE__,line) (hres == S_OK, "Could not get IHTMLElement3 iface: %08x\n", hres);
 
     return elem3;
+}
+
+#define get_elem4_iface(u) _get_elem4_iface(__LINE__,u)
+static IHTMLElement4 *_get_elem4_iface(unsigned line, IUnknown *unk)
+{
+    IHTMLElement4 *elem4;
+    HRESULT hres;
+
+    hres = IUnknown_QueryInterface(unk, &IID_IHTMLElement4, (void**)&elem4);
+    ok_(__FILE__,line) (hres == S_OK, "Could not get IHTMLElement4 iface: %08x\n", hres);
+
+    return elem4;
 }
 
 #define get_iframe_iface(u) _get_iframe_iface(__LINE__,u)
@@ -954,6 +968,28 @@ static HRESULT WINAPI input_onfocus(IDispatchEx *iface, DISPID id, LCID lcid, WO
 }
 
 EVENT_HANDLER_FUNC_OBJ(input_onfocus);
+
+static HRESULT WINAPI div_onfocusin(IDispatchEx *iface, DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp,
+        VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller)
+{
+    CHECK_EXPECT(div_onfocusin);
+    test_event_args(NULL /* FIXME: &DIID_DispHTMLDivElement */, id, wFlags, pdp, pvarRes, pei, pspCaller);
+    test_event_src("INPUT");
+    return S_OK;
+}
+
+EVENT_HANDLER_FUNC_OBJ(div_onfocusin);
+
+static HRESULT WINAPI div_onfocusout(IDispatchEx *iface, DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp,
+        VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller)
+{
+    CHECK_EXPECT(div_onfocusout);
+    test_event_args(NULL /* FIXME: &DIID_DispHTMLDivElement */, id, wFlags, pdp, pvarRes, pei, pspCaller);
+    test_event_src("INPUT");
+    return S_OK;
+}
+
+EVENT_HANDLER_FUNC_OBJ(div_onfocusout);
 
 static HRESULT WINAPI input_onblur(IDispatchEx *iface, DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp,
         VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller)
@@ -1880,12 +1916,17 @@ static void test_imgload(IHTMLDocument2 *doc)
 static void test_focus(IHTMLDocument2 *doc)
 {
     IHTMLElement2 *elem2;
+    IHTMLElement4 *div;
     IHTMLElement *elem;
     VARIANT v;
     HRESULT hres;
 
     elem = get_elem_id(doc, "inputid");
     elem2 = get_elem2_iface((IUnknown*)elem);
+    IHTMLElement_Release(elem);
+
+    elem = get_elem_id(doc, "divid");
+    div = get_elem4_iface((IUnknown*)elem);
     IHTMLElement_Release(elem);
 
     V_VT(&v) = VT_EMPTY;
@@ -1897,6 +1938,25 @@ static void test_focus(IHTMLDocument2 *doc)
     V_DISPATCH(&v) = (IDispatch*)&input_onfocus_obj;
     hres = IHTMLElement2_put_onfocus(elem2, v);
     ok(hres == S_OK, "put_onfocus failed: %08x\n", hres);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = IHTMLElement2_get_onfocus(elem2, &v);
+    ok(hres == S_OK, "get_onfocus failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(onfocus) = %d\n", V_VT(&v));
+    ok(V_DISPATCH(&v) == (IDispatch*)&input_onfocus_obj, "V_DISPATCH(onfocus) != onfocusFunc\n");
+    VariantClear(&v);
+
+    V_VT(&v) = VT_DISPATCH;
+    V_DISPATCH(&v) = (IDispatch*)&div_onfocusin_obj;
+    hres = IHTMLElement4_put_onfocusin(div, v);
+    ok(hres == S_OK, "put_onfocusin failed: %08x\n", hres);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = IHTMLElement4_get_onfocusin(div, &v);
+    ok(hres == S_OK, "get_onfocusin failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(onfocusin) = %d\n", V_VT(&v));
+    ok(V_DISPATCH(&v) == (IDispatch*)&div_onfocusin_obj, "V_DISPATCH(onfocus) != onfocusFunc\n");
+    VariantClear(&v);
 
     V_VT(&v) = VT_EMPTY;
     hres = IHTMLElement2_get_onfocus(elem2, &v);
@@ -1917,27 +1977,42 @@ static void test_focus(IHTMLDocument2 *doc)
     ok(IsChild(container_hwnd, GetFocus()), "focus does not belong to document window\n");
     pump_msgs(NULL);
 
+    SET_EXPECT(div_onfocusin);
     SET_EXPECT(input_onfocus);
     hres = IHTMLElement2_focus(elem2);
-    pump_msgs(NULL);
-    CHECK_CALLED(input_onfocus);
     ok(hres == S_OK, "focus failed: %08x\n", hres);
+    pump_msgs(NULL);
+    CHECK_CALLED(div_onfocusin);
+    CHECK_CALLED(input_onfocus);
+
+    SET_EXPECT(div_onfocusin);
+    V_VT(&v) = VT_EMPTY;
+    elem_fire_event((IUnknown*)elem2, "onfocusin", &v);
+    CHECK_CALLED(div_onfocusin);
 
     V_VT(&v) = VT_DISPATCH;
     V_DISPATCH(&v) = (IDispatch*)&input_onblur_obj;
     hres = IHTMLElement2_put_onblur(elem2, v);
     ok(hres == S_OK, "put_onblur failed: %08x\n", hres);
 
+    V_VT(&v) = VT_DISPATCH;
+    V_DISPATCH(&v) = (IDispatch*)&div_onfocusout_obj;
+    hres = IHTMLElement4_put_onfocusout(div, v);
+    ok(hres == S_OK, "put_onfocusout failed: %08x\n", hres);
+
+    SET_EXPECT(div_onfocusout);
     SET_EXPECT(input_onblur);
     hres = IHTMLElement2_blur(elem2);
     pump_msgs(NULL);
     CHECK_CALLED(input_onblur);
+    CHECK_CALLED(div_onfocusout);
     ok(hres == S_OK, "blur failed: %08x\n", hres);
 
     if(!winetest_interactive)
         ShowWindow(container_hwnd, SW_HIDE);
 
     IHTMLElement2_Release(elem2);
+    IHTMLElement4_Release(div);
 }
 
 static void test_submit(IHTMLDocument2 *doc)
