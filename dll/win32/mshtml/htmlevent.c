@@ -84,6 +84,9 @@ static const WCHAR onfocusW[] = {'o','n','f','o','c','u','s',0};
 static const WCHAR focusinW[] = {'f','o','c','u','s','i','n',0};
 static const WCHAR onfocusinW[] = {'o','n','f','o','c','u','s','i','n',0};
 
+static const WCHAR focusoutW[] = {'f','o','c','u','s','o','u','t',0};
+static const WCHAR onfocusoutW[] = {'o','n','f','o','c','u','s','o','u','t',0};
+
 static const WCHAR helpW[] = {'h','e','l','p',0};
 static const WCHAR onhelpW[] = {'o','n','h','e','l','p',0};
 
@@ -194,6 +197,8 @@ static const event_info_t event_info[] = {
     {focusW,             onfocusW,             EVENTT_HTML,   DISPID_EVMETH_ONFOCUS,
         EVENT_DEFAULTLISTENER},
     {focusinW,           onfocusinW,           EVENTT_HTML,   DISPID_EVMETH_ONFOCUSIN,
+        EVENT_BUBBLE},
+    {focusoutW,          onfocusoutW,          EVENTT_HTML,   DISPID_EVMETH_ONFOCUSOUT,
         EVENT_BUBBLE},
     {helpW,              onhelpW,              EVENTT_KEY,    DISPID_EVMETH_ONHELP,
         EVENT_BUBBLE|EVENT_CANCELABLE},
@@ -1335,6 +1340,10 @@ HRESULT ensure_doc_nsevent_handler(HTMLDocumentNode *doc, eventid_t eid)
     case EVENTID_FOCUSIN:
         doc->event_vector[eid] = TRUE;
         eid = EVENTID_FOCUS;
+        break;
+    case EVENTID_FOCUSOUT:
+        doc->event_vector[eid] = TRUE;
+        eid = EVENTID_BLUR;
         break;
     default:
         break;

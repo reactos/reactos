@@ -343,6 +343,10 @@ static nsresult NSAPI handle_htmlevent(nsIDOMEventListener *iface, nsIDOMEvent *
         if(doc->event_vector[EVENTID_FOCUSIN])
             fire_event(doc, EVENTID_FOCUSIN, TRUE, node, NULL, NULL);
         break;
+    case EVENTID_BLUR:
+        if(doc->event_vector[EVENTID_FOCUSOUT])
+            fire_event(doc, EVENTID_FOCUSOUT, TRUE, node, NULL, NULL);
+        break;
     default:
         break;
     }
