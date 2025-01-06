@@ -4762,6 +4762,20 @@ static void _put_attr_node_value(unsigned line, IHTMLDOMAttribute *attr, VARIANT
     ok_(__FILE__,line) (hres == S_OK, "put_nodeValue failed: %08x\n", hres);
 }
 
+#define put_attr_value(a,b) _put_attr_value(__LINE__,a,b)
+static void _put_attr_value(unsigned line, IHTMLDOMAttribute *attr, const char *value)
+{
+    IHTMLDOMAttribute2 *attr2 = _get_attr2_iface(line, (IUnknown*)attr);
+    BSTR str = a2bstr(value);
+    HRESULT hres;
+
+    hres = IHTMLDOMAttribute2_put_value(attr2, str);
+    ok_(__FILE__,line) (hres == S_OK, "put_nodeValue failed: %08x\n", hres);
+
+    IHTMLDOMAttribute2_Release(attr2);
+    SysFreeString(str);
+}
+
 #define get_window_doc(e) _get_window_doc(__LINE__,e)
 static IHTMLDocument2 *_get_window_doc(unsigned line, IHTMLWindow2 *window)
 {
@@ -8385,6 +8399,12 @@ static void test_attr(IHTMLElement *elem)
     ok(!strcmp_wa(V_BSTR(&v), "divid2"), "V_BSTR(v) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
     VariantClear(&v);
 
+    put_attr_value(attr, "divid3");
+
+    get_attr_node_value(attr, &v, VT_BSTR);
+    ok(!strcmp_wa(V_BSTR(&v), "divid3"), "V_BSTR(v) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+
     IHTMLDOMAttribute_Release(attr);
 
     attr = get_elem_attr_node((IUnknown*)elem, "emptyattr", TRUE);
@@ -8419,6 +8439,11 @@ static void test_attr(IHTMLElement *elem)
 
     get_attr_node_value(attr, &v, VT_I4);
     ok(V_I4(&v) == 150, "V_I4(v) = %d\n", V_I4(&v));
+
+    put_attr_value(attr, "160");
+    get_attr_node_value(attr, &v, VT_BSTR);
+    ok(!strcmp_wa(V_BSTR(&v), "160"), "V_BSTR(v) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
 
     IHTMLDOMAttribute_Release(attr);
 
