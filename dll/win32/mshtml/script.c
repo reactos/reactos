@@ -140,7 +140,7 @@ static BOOL init_script_engine(ScriptHost *script_host)
 
     hres = IActiveScript_QueryInterface(script_host->script, &IID_IActiveScriptParse, (void**)&script_host->parse);
     if(FAILED(hres)) {
-        WARN("Could not get IActiveScriptHost: %08x\n", hres);
+        WARN("Could not get IActiveScriptParse: %08x\n", hres);
         return FALSE;
     }
 
