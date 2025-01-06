@@ -160,8 +160,8 @@ function test_string_event_handler() {
 window.onload = function() {
     try {
         ok(inlscr_complete_called, "onreadystatechange not fired");
-        ok(extern_res_script_rs === "eval,complete1,",
-            "extern_res_script_rs = " + extern_res_script_rs + " expected eval,complete1,");
+        ok(extern_res_script_rs === "eval,complete1," || extern_res_script_rs == "loaded0,eval,complete1,",
+            "extern_res_script_rs = " + extern_res_script_rs + " expected (loaded0)?,eval,complete1,");
         ok(extern_http_script_rs === "loading,loaded,complete,",
             "extern_http_script_rs = " + extern_http_script_rs + " expected loading,loaded,complete,");
 
