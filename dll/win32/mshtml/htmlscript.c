@@ -96,19 +96,11 @@ static HRESULT WINAPI HTMLScriptElement_Invoke(IHTMLScriptElement *iface, DISPID
 static HRESULT WINAPI HTMLScriptElement_put_src(IHTMLScriptElement *iface, BSTR v)
 {
     HTMLScriptElement *This = impl_from_IHTMLScriptElement(iface);
-    HTMLInnerWindow *window;
-    nsIDOMNode *parent;
     nsAString src_str;
     nsresult nsres;
+    HRESULT hres;
 
     TRACE("(%p)->(%s)\n", This, debugstr_w(v));
-
-    if(!This->element.node.doc || !This->element.node.doc->window) {
-        WARN("no windoow\n");
-        return E_UNEXPECTED;
-    }
-
-    window = This->element.node.doc->window;
 
     nsAString_InitDepend(&src_str, v);
     nsres = nsIDOMHTMLScriptElement_SetSrc(This->nsscript, &src_str);
@@ -123,30 +115,18 @@ static HRESULT WINAPI HTMLScriptElement_put_src(IHTMLScriptElement *iface, BSTR 
         return S_OK;
     }
 
-    if(window->parser_callback_cnt) {
-        script_queue_entry_t *queue;
-
-        queue = heap_alloc(sizeof(*queue));
-        if(!queue)
-            return E_OUTOFMEMORY;
-
-        IHTMLScriptElement_AddRef(&This->IHTMLScriptElement_iface);
-        queue->script = This;
-
-        list_add_tail(&window->script_queue, &queue->entry);
-        return S_OK;
+    nsAString_Init(&src_str, NULL);
+    nsres = nsIDOMHTMLScriptElement_GetSrc(This->nsscript, &src_str);
+    if(NS_SUCCEEDED(nsres)) {
+        const PRUnichar *src;
+        nsAString_GetData(&src_str, &src);
+        hres = load_script(This, src);
+    }else {
+        ERR("SetSrc failed: %08x\n", nsres);
+        hres = E_FAIL;
     }
-
-    nsres = nsIDOMHTMLElement_GetParentNode(This->element.nselem, &parent);
-    if(NS_FAILED(nsres) || !parent) {
-        TRACE("No parent, not executing\n");
-        This->parse_on_bind = TRUE;
-        return S_OK;
-    }
-
-    nsIDOMNode_Release(parent);
-    doc_insert_script(window, This);
-    return S_OK;
+    nsAString_Finish(&src_str);
+    return hres;
 }
 
 static HRESULT WINAPI HTMLScriptElement_get_src(IHTMLScriptElement *iface, BSTR *p)

@@ -866,6 +866,8 @@ static void script_file_available(ScriptBSC *bsc)
     HTMLScriptElement *script_elem = bsc->script_elem;
     HTMLInnerWindow *window = bsc->bsc.window;
     ScriptHost *script_host;
+    nsIDOMNode *parent;
+    nsresult nsres;
     HRESULT hres;
 
     assert(window != NULL);
@@ -878,8 +880,38 @@ static void script_file_available(ScriptBSC *bsc)
     if(!script_host)
         return;
 
+    if(window->parser_callback_cnt) {
+        script_queue_entry_t *queue;
+
+        TRACE("Adding to queue\n");
+
+        queue = heap_alloc(sizeof(*queue));
+        if(!queue)
+            return;
+
+        IHTMLScriptElement_AddRef(&script_elem->IHTMLScriptElement_iface);
+        queue->script = script_elem;
+
+        list_add_tail(&window->script_queue, &queue->entry);
+        return;
+    }
+
+    nsres = nsIDOMHTMLElement_GetParentNode(script_elem->element.nselem, &parent);
+    if(NS_FAILED(nsres) || !parent) {
+        TRACE("No parent, not executing\n");
+        script_elem->parse_on_bind = TRUE;
+        return;
+    }
+
+    nsIDOMNode_Release(parent);
+
+    script_host = get_elem_script_host(window, script_elem);
+    if(!script_host)
+        return;
+
     script_elem->parsed = TRUE;
-    parse_elem_text(script_host, script_elem, script_elem->src_text);
+    if(script_host->parse)
+        parse_elem_text(script_host, script_elem, script_elem->src_text);
 }
 
 static inline ScriptBSC *impl_from_BSCallback(BSCallback *iface)
@@ -997,7 +1029,7 @@ static const BSCallbackVtbl ScriptBSCVtbl = {
 };
 
 
-static HRESULT load_script(HTMLScriptElement *script_elem, const WCHAR *src)
+HRESULT load_script(HTMLScriptElement *script_elem, const WCHAR *src)
 {
     HTMLInnerWindow *window;
     ScriptBSC *bsc;
@@ -1066,9 +1098,10 @@ static void parse_inline_script(ScriptHost *script_host, HTMLScriptElement *scri
     nsAString_Finish(&text_str);
 }
 
-static void parse_script_elem(ScriptHost *script_host, HTMLScriptElement *script_elem)
+static BOOL parse_script_elem(ScriptHost *script_host, HTMLScriptElement *script_elem)
 {
     nsAString src_str, event_str;
+    BOOL is_complete = FALSE;
     const PRUnichar *src;
     nsresult nsres;
 
@@ -1081,7 +1114,7 @@ static void parse_script_elem(ScriptHost *script_host, HTMLScriptElement *script
         if(*event) {
             TRACE("deferring event %s script evaluation\n", debugstr_w(event));
             nsAString_Finish(&event_str);
-            return;
+            return FALSE;
         }
     }else {
         ERR("GetEvent failed: %08x\n", nsres);
@@ -1096,13 +1129,15 @@ static void parse_script_elem(ScriptHost *script_host, HTMLScriptElement *script
         ERR("GetSrc failed: %08x\n", nsres);
     }else if(*src) {
         load_script(script_elem, src);
+        is_complete = script_elem->parsed;
     }else {
         parse_inline_script(script_host, script_elem);
+        is_complete = TRUE;
     }
 
     nsAString_Finish(&src_str);
 
-    set_script_elem_readystate(script_elem, READYSTATE_COMPLETE);
+    return is_complete;
 }
 
 static GUID get_default_script_guid(HTMLInnerWindow *window)
@@ -1225,13 +1260,24 @@ static ScriptHost *get_elem_script_host(HTMLInnerWindow *window, HTMLScriptEleme
 void doc_insert_script(HTMLInnerWindow *window, HTMLScriptElement *script_elem)
 {
     ScriptHost *script_host;
+    BOOL is_complete = FALSE;
 
     script_host = get_elem_script_host(window, script_elem);
     if(!script_host)
         return;
 
-    if(script_host->parse)
-        parse_script_elem(script_host, script_elem);
+    if(script_host->parse) {
+        if(script_elem->src_text) {
+            script_elem->parsed = TRUE;
+            parse_elem_text(script_host, script_elem, script_elem->src_text);
+            is_complete = TRUE;
+        }else {
+            is_complete = parse_script_elem(script_host, script_elem);
+        }
+    }
+
+    if(is_complete)
+        set_script_elem_readystate(script_elem, READYSTATE_COMPLETE);
 }
 
 IDispatch *script_parse_event(HTMLInnerWindow *window, LPCWSTR text)
