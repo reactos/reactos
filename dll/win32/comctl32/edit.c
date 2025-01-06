@@ -2591,15 +2591,8 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, const WCHAR *lpsz_r
 		EDIT_CalcLineWidth_SL(es);
 		/* remove chars that don't fit */
 		if (honor_limit && !(es->style & ES_AUTOHSCROLL) && (es->text_width > fw)) {
-			while ((es->text_width > fw) && s + strl >= s) {
-				int len = wcslen(es->text);
-                for (int i = s + strl - 1; i < len; i++) 
-                {
-                    if (i >= 0)
-                    {
-                        es->text[i] = es->text[i + 1];
-                    }
-                }
+			while ((es->text_width > fw) && s + strl > 0) {
+                lstrcpyW(es->text + s + strl - 1, es->text + s + strl);
 				strl--;
 				es->text_length = -1;
 				EDIT_InvalidateUniscribeData(es);
