@@ -25,6 +25,7 @@
 #include "winbase.h"
 #include "winuser.h"
 #include "ole2.h"
+#include "mshtmdid.h"
 
 #include "wine/debug.h"
 
@@ -838,6 +839,16 @@ static BOOL HTMLBodyElement_is_text_edit(HTMLDOMNode *iface)
     return TRUE;
 }
 
+static BOOL HTMLBodyElement_is_settable(HTMLDOMNode *iface, DISPID dispid)
+{
+    switch(dispid) {
+    case DISPID_IHTMLELEMENT_OUTERTEXT:
+        return FALSE;
+    default:
+        return TRUE;
+    }
+}
+
 static const cpc_entry_t HTMLBodyElement_cpc[] = {
     {&DIID_HTMLTextContainerEvents},
     {&IID_IPropertyNotifySink},
@@ -863,7 +874,8 @@ static const NodeImplVtbl HTMLBodyElementImplVtbl = {
     NULL,
     HTMLBodyElement_traverse,
     HTMLBodyElement_unlink,
-    HTMLBodyElement_is_text_edit
+    HTMLBodyElement_is_text_edit,
+    HTMLBodyElement_is_settable
 };
 
 static const tid_t HTMLBodyElement_iface_tids[] = {

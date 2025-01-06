@@ -1552,8 +1552,51 @@ static HRESULT WINAPI HTMLElement_get_outerHTML(IHTMLElement *iface, BSTR *p)
 static HRESULT WINAPI HTMLElement_put_outerText(IHTMLElement *iface, BSTR v)
 {
     HTMLElement *This = impl_from_IHTMLElement(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    nsIDOMText *text_node;
+    nsIDOMRange *range;
+    nsAString nsstr;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    if(This->node.vtbl->is_settable && !This->node.vtbl->is_settable(&This->node, DISPID_IHTMLELEMENT_OUTERTEXT)) {
+        WARN("Called on element that does not support setting the property.\n");
+        return 0x800a0258; /* undocumented error code */
+    }
+
+    if(!This->node.doc->nsdoc) {
+        FIXME("NULL nsdoc\n");
+        return E_FAIL;
+    }
+
+    nsAString_InitDepend(&nsstr, v);
+    nsres = nsIDOMHTMLDocument_CreateTextNode(This->node.doc->nsdoc, &nsstr, &text_node);
+    nsAString_Finish(&nsstr);
+    if(NS_FAILED(nsres)) {
+        ERR("CreateTextNode failed\n");
+        return E_FAIL;
+    }
+
+    nsres = nsIDOMHTMLDocument_CreateRange(This->node.doc->nsdoc, &range);
+    if(NS_SUCCEEDED(nsres)) {
+        nsres = nsIDOMRange_SelectNode(range, This->node.nsnode);
+        if(NS_SUCCEEDED(nsres))
+            nsres = nsIDOMRange_DeleteContents(range);
+        if(NS_SUCCEEDED(nsres))
+            nsres = nsIDOMRange_InsertNode(range, (nsIDOMNode*)text_node);
+        if(NS_SUCCEEDED(nsres))
+            nsres = nsIDOMRange_SelectNodeContents(range, This->node.nsnode);
+        if(NS_SUCCEEDED(nsres))
+            nsres = nsIDOMRange_DeleteContents(range);
+        nsIDOMRange_Release(range);
+    }
+    nsIDOMText_Release(text_node);
+    if(NS_FAILED(nsres)) {
+        ERR("failed to set text: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLElement_get_outerText(IHTMLElement *iface, BSTR *p)
