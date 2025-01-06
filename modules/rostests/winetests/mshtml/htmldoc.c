@@ -5832,9 +5832,7 @@ static void test_download(DWORD flags)
         if(!(flags & DWL_FROM_HISTORY))
             todo_wine CHECK_CALLED(OnChanged_1012);
         todo_wine CHECK_CALLED(Exec_HTTPEQUIV);
-        if(!(flags & DWL_REFRESH))
-            todo_wine CHECK_CALLED(Exec_SETTITLE);
-        else
+        todo_wine_if(!(flags & DWL_REFRESH))
             CHECK_CALLED(Exec_SETTITLE);
     }
     if(!is_js) {
