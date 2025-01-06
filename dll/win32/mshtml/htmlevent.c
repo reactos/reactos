@@ -173,6 +173,7 @@ typedef struct {
 #define EVENT_BIND_TO_BODY       0x0008
 #define EVENT_CANCELABLE         0x0010
 #define EVENT_HASDEFAULTHANDLERS 0x0020
+#define EVENT_FIXME              0x0040
 
 static const event_info_t event_info[] = {
     {abortW,             onabortW,             EVENTT_NONE,   DISPID_EVMETH_ONABORT,
@@ -226,7 +227,7 @@ static const event_info_t event_info[] = {
     {mouseupW,           onmouseupW,           EVENTT_MOUSE,  DISPID_EVMETH_ONMOUSEUP,
         EVENT_DEFAULTLISTENER|EVENT_BUBBLE},
     {mousewheelW,        onmousewheelW,        EVENTT_MOUSE,  DISPID_EVMETH_ONMOUSEWHEEL,
-        0},
+        EVENT_FIXME},
     {pasteW,             onpasteW,             EVENTT_NONE,   DISPID_EVMETH_ONPASTE,
         EVENT_CANCELABLE},
     {readystatechangeW,  onreadystatechangeW,  EVENTT_NONE,   DISPID_EVMETH_ONREADYSTATECHANGE,
@@ -1416,6 +1417,9 @@ static HRESULT set_event_handler_disp(EventTarget *event_target, eventid_t eid, 
 {
     event_target_t *data;
 
+    if(event_info[eid].flags & EVENT_FIXME)
+        FIXME("unimplemented event %s\n", debugstr_w(event_info[eid].name));
+
     remove_event_handler(event_target, eid);
     if(!disp)
         return S_OK;
@@ -1517,6 +1521,9 @@ HRESULT attach_event(EventTarget *event_target, BSTR name, IDispatch *disp, VARI
         *res = VARIANT_TRUE;
         return S_OK;
     }
+
+    if(event_info[eid].flags & EVENT_FIXME)
+        FIXME("unimplemented event %s\n", debugstr_w(event_info[eid].name));
 
     data = get_event_target_data(event_target, TRUE);
     if(!data)
