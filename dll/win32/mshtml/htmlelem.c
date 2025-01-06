@@ -902,15 +902,19 @@ static HRESULT WINAPI HTMLElement_get_style(IHTMLElement *iface, IHTMLStyle **p)
 static HRESULT WINAPI HTMLElement_put_onhelp(IHTMLElement *iface, VARIANT v)
 {
     HTMLElement *This = impl_from_IHTMLElement(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    return set_node_event(&This->node, EVENTID_HELP, &v);
 }
 
 static HRESULT WINAPI HTMLElement_get_onhelp(IHTMLElement *iface, VARIANT *p)
 {
     HTMLElement *This = impl_from_IHTMLElement(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_node_event(&This->node, EVENTID_HELP, p);
 }
 
 static HRESULT WINAPI HTMLElement_put_onclick(IHTMLElement *iface, VARIANT v)
@@ -1804,15 +1808,19 @@ static HRESULT WINAPI HTMLElement_get_filters(IHTMLElement *iface,
 static HRESULT WINAPI HTMLElement_put_ondragstart(IHTMLElement *iface, VARIANT v)
 {
     HTMLElement *This = impl_from_IHTMLElement(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    return set_node_event(&This->node, EVENTID_DRAGSTART, &v);
 }
 
 static HRESULT WINAPI HTMLElement_get_ondragstart(IHTMLElement *iface, VARIANT *p)
 {
     HTMLElement *This = impl_from_IHTMLElement(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_node_event(&This->node, EVENTID_DRAGSTART, p);
 }
 
 static HRESULT WINAPI HTMLElement_toString(IHTMLElement *iface, BSTR *String)
