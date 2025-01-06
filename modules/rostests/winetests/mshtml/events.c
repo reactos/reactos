@@ -948,6 +948,24 @@ static HRESULT WINAPI img_onload(IDispatchEx *iface, DISPID id, LCID lcid, WORD 
 
 EVENT_HANDLER_FUNC_OBJ(img_onload);
 
+static HRESULT WINAPI unattached_img_onload(IDispatchEx *iface, DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp,
+        VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller)
+{
+    IHTMLElement *event_src;
+
+    CHECK_EXPECT(img_onload);
+
+    test_event_args(&DIID_DispHTMLImg, id, wFlags, pdp, pvarRes, pei, pspCaller);
+    event_src = get_event_src();
+    todo_wine
+        ok(!event_src, "event_src != NULL\n");
+    if(event_src)
+        IHTMLElement_Release(event_src);
+    return S_OK;
+}
+
+EVENT_HANDLER_FUNC_OBJ(unattached_img_onload);
+
 static HRESULT WINAPI img_onerror(IDispatchEx *iface, DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp,
         VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller)
 {
@@ -1910,6 +1928,43 @@ static void test_imgload(IHTMLDocument2 *doc)
     pump_msgs(&called_img_onerror); /* FIXME: should not be needed */
 
     CHECK_CALLED(img_onerror);
+
+    IHTMLImgElement_Release(img);
+
+    /* test onload on unattached image */
+    hres = IHTMLDocument2_createElement(doc, (str = a2bstr("img")), &elem);
+    SysFreeString(str);
+    ok(hres == S_OK, "createElement(img) failed: %08x\n", hres);
+
+    hres = IHTMLElement_QueryInterface(elem, &IID_IHTMLImgElement, (void**)&img);
+    IHTMLElement_Release(elem);
+    ok(hres == S_OK, "Could not get IHTMLImgElement iface: %08x\n", hres);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = IHTMLImgElement_get_onload(img, &v);
+    ok(hres == S_OK, "get_onload failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_NULL, "V_VT(onload) = %d\n", V_VT(&v));
+
+    V_VT(&v) = VT_DISPATCH;
+    V_DISPATCH(&v) = (IDispatch*)&unattached_img_onload_obj;
+    hres = IHTMLImgElement_put_onload(img, v);
+    ok(hres == S_OK, "put_onload failed: %08x\n", hres);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = IHTMLImgElement_get_onload(img, &v);
+    ok(hres == S_OK, "get_onload failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(onload) = %d\n", V_VT(&v));
+    ok(V_DISPATCH(&v) == (IDispatch*)&unattached_img_onload_obj, "incorrect V_DISPATCH(onload)\n");
+    VariantClear(&v);
+
+    str = a2bstr("http://test.winehq.org/tests/winehq_snapshot/index_files/winehq_logo_text.png?v=1");
+    hres = IHTMLImgElement_put_src(img, str);
+    ok(hres == S_OK, "put_src failed: %08x\n", hres);
+    SysFreeString(str);
+
+    SET_EXPECT(img_onload);
+    pump_msgs(&called_img_onload);
+    CHECK_CALLED(img_onload);
 
     IHTMLImgElement_Release(img);
 }
