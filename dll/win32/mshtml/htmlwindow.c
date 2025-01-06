@@ -2933,7 +2933,7 @@ static event_target_t **HTMLWindow_get_event_target_ptr(DispatchEx *dispex)
 static void HTMLWindow_bind_event(DispatchEx *dispex, int eid)
 {
     HTMLInnerWindow *This = impl_from_DispatchEx(dispex);
-    This->doc->node.event_target.dispex.data->vtbl->bind_event(&This->doc->node.event_target.dispex, eid);
+    dispex_get_vtbl(&This->doc->node.event_target.dispex)->bind_event(&This->doc->node.event_target.dispex, eid);
 }
 
 static const dispex_static_data_vtbl_t HTMLWindow_dispex_vtbl = {

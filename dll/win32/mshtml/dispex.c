@@ -1736,6 +1736,11 @@ void dispex_unlink(DispatchEx *This)
     }
 }
 
+const dispex_static_data_vtbl_t *dispex_get_vtbl(DispatchEx *dispex)
+{
+    return dispex->data->vtbl;
+}
+
 void release_dispex(DispatchEx *This)
 {
     dynamic_prop_t *prop;

@@ -901,10 +901,11 @@ HRESULT create_event_obj(IHTMLEventObj **ret)
 
 static inline event_target_t *get_event_target_data(EventTarget *event_target, BOOL alloc)
 {
+    const dispex_static_data_vtbl_t *vtbl = dispex_get_vtbl(&event_target->dispex);
     event_target_t **ptr;
 
-    ptr = event_target->dispex.data->vtbl && event_target->dispex.data->vtbl->get_event_target_ptr
-        ? event_target->dispex.data->vtbl->get_event_target_ptr(&event_target->dispex)
+    ptr = vtbl && vtbl->get_event_target_ptr
+        ? vtbl->get_event_target_ptr(&event_target->dispex)
         : &event_target->ptr;
     if(*ptr || !alloc)
         return *ptr;
@@ -1394,8 +1395,9 @@ void detach_events(HTMLDocumentNode *doc)
 /* Caller should ensure that it's called only once for given event in the target. */
 static void bind_event(EventTarget *event_target, eventid_t eid)
 {
-    if(event_target->dispex.data->vtbl->bind_event)
-        event_target->dispex.data->vtbl->bind_event(&event_target->dispex, eid);
+    const dispex_static_data_vtbl_t *vtbl = dispex_get_vtbl(&event_target->dispex);
+    if(vtbl->bind_event)
+        vtbl->bind_event(&event_target->dispex, eid);
     else
         FIXME("Unsupported event binding on target %p\n", event_target);
 }

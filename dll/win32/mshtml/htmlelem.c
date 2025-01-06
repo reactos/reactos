@@ -5093,7 +5093,7 @@ static void HTMLElement_bind_event(DispatchEx *dispex, int eid)
         add_nsevent_listener(This->node.doc, This->node.nsnode, loadW);
         return;
     default:
-        This->node.doc->node.event_target.dispex.data->vtbl->bind_event(&This->node.doc->node.event_target.dispex, eid);
+        dispex_get_vtbl(&This->node.doc->node.event_target.dispex)->bind_event(&This->node.doc->node.event_target.dispex, eid);
     }
 }
 
