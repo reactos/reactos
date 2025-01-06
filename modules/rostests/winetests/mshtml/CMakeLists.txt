@@ -39,6 +39,7 @@ list(APPEND mshtml_winetest_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/externscr.js
     ${CMAKE_CURRENT_SOURCE_DIR}/winetest.js
     ${CMAKE_CURRENT_SOURCE_DIR}/xhr.js
+    ${CMAKE_CURRENT_SOURCE_DIR}/navigation.js
 )
 
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS "${mshtml_winetest_rc_deps}")

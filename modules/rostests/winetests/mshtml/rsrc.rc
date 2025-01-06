@@ -34,8 +34,8 @@ events.html HTML "events.html"
 /* @makedep: externscr.js */
 externscr.js HTML "externscr.js"
 
-/* @makedep: nav_test.html */
-nav_test.html HTML "nav_test.html"
+/* @makedep: navigation.js */
+navigation.js HTML "navigation.js"
 
 /* @makedep: xhr.js */
 xhr.js HTML "xhr.js"
