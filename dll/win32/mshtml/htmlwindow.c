@@ -524,7 +524,7 @@ static HRESULT WINAPI HTMLWindow2_get_frames(IHTMLWindow2 *iface, IHTMLFramesCol
 
     /* FIXME: Should return a separate Window object */
     *p = (IHTMLFramesCollection2*)&This->IHTMLWindow2_iface;
-    HTMLWindow2_AddRef(iface);
+    IHTMLWindow2_AddRef(iface);
     return S_OK;
 }
 
