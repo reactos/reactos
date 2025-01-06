@@ -1903,7 +1903,6 @@ static void _test_comment_text(unsigned line, IUnknown *unk, const char *extext)
     BSTR text;
     HRESULT hres;
 
-    text = a2bstr(extext);
     hres = IHTMLCommentElement_get_text(comment, &text);
     ok_(__FILE__,line)(hres == S_OK, "get_text failed: %08x\n", hres);
     ok_(__FILE__,line)(!strcmp_wa(text, extext), "text = \"%s\", expected \"%s\"\n", wine_dbgstr_w(text), extext);
@@ -3747,6 +3746,7 @@ static void test_contenteditable(IUnknown *unk)
     hres = IHTMLElement3_get_contentEditable(elem3, &str);
     ok(hres == S_OK, "get_contentEditable failed: 0x%08x\n", hres);
     ok(!strcmp_wa(str, "true"), "Got %s, expected %s\n", wine_dbgstr_w(str), "true");
+    SysFreeString(str);
 
     /* Restore origin contentEditable */
     hres = IHTMLElement3_put_contentEditable(elem3, strDefault);
@@ -4708,6 +4708,7 @@ static void _test_link_rel(unsigned line, IHTMLElement *elem, const char *v)
         ok_(__FILE__,line)(!strcmp_wa(rel, v), "rel = %s, expected %s\n", wine_dbgstr_w(rel), v);
     else
         ok_(__FILE__,line)(!rel, "rel = %s, expected NULL\n", wine_dbgstr_w(rel));
+    SysFreeString(rel);
 
     IHTMLLinkElement_Release(link);
 }
@@ -4739,6 +4740,7 @@ static void _test_link_rev(unsigned line, IHTMLElement *elem, const char *v)
         ok_(__FILE__,line)(!strcmp_wa(rev, v), "rev = %s, expected %s\n", wine_dbgstr_w(rev), v);
     else
         ok_(__FILE__,line)(!rev, "rev = %s, expected NULL\n", wine_dbgstr_w(rev));
+    SysFreeString(rev);
 
     IHTMLLinkElement_Release(link);
 }
@@ -4770,6 +4772,7 @@ static void _test_link_type(unsigned line, IHTMLElement *elem, const char *v)
         ok_(__FILE__,line)(!strcmp_wa(type, v), "type = %s, expected %s\n", wine_dbgstr_w(type), v);
     else
         ok_(__FILE__,line)(!type, "type = %s, expected NULL\n", wine_dbgstr_w(type));
+    SysFreeString(type);
 
     IHTMLLinkElement_Release(link);
 }
@@ -4814,6 +4817,7 @@ static void _test_link_href(unsigned line, IHTMLElement *elem, const char *v)
         ok_(__FILE__,line)(!strcmp_wa(href, v), "href = %s, expected %s\n", wine_dbgstr_w(href), v);
     else
         ok_(__FILE__,line)(!href, "href = %s, expected NULL\n", wine_dbgstr_w(href));
+    SysFreeString(href);
 
     IHTMLLinkElement_Release(link);
 }
@@ -5743,6 +5747,7 @@ static void _test_compatmode(unsigned  line, IHTMLDocument2 *doc2, const char *e
     hres = IHTMLDocument5_get_compatMode(doc, &str);
     ok_(__FILE__,line)(hres == S_OK, "get_compatMode failed: %08x\n", hres);
     ok_(__FILE__,line)(!strcmp_wa(str, excompat), "compatMode = %s, expected %s\n", wine_dbgstr_w(str), excompat);
+    SysFreeString(str);
 
     IHTMLDocument5_Release(doc);
 }
@@ -6026,6 +6031,7 @@ static void test_framebase(IUnknown *unk)
     hres = IHTMLFrameBase_get_frameBorder(fbase, &str);
     ok(hres == S_OK, "get_frameBorder failed: %08x\n", hres);
     ok(!strcmp_wa(str, "1"), "frameBorder = %s, expected \"1\"\n", wine_dbgstr_w(str));
+    SysFreeString(str);
 
     test_framebase_marginheight(fbase, NULL);
     set_framebase_marginheight(fbase, "1px");
@@ -6978,6 +6984,7 @@ static void _set_button_value(unsigned line, IHTMLElement *elem, const char *val
     hres = IHTMLButtonElement_put_value(button, str);
     ok_(__FILE__,line)(hres == S_OK, "put_value failed: %08x\n", hres);
     IHTMLButtonElement_Release(button);
+    SysFreeString(str);
 
     _test_button_value(line, elem, value);
 }
@@ -7252,6 +7259,7 @@ static void test_label_elem(IHTMLElement *elem)
     hres = IHTMLLabelElement_get_htmlFor(label, &str);
     ok(hres == S_OK, "get_htmlFor failed: %08x\n", hres);
     ok(!strcmp_wa(str, ""), "htmlFor = %s\n", wine_dbgstr_w(str));
+    SysFreeString(str);
 
     str = a2bstr("abc");
     hres = IHTMLLabelElement_put_htmlFor(label, str);
@@ -8005,6 +8013,7 @@ static void test_selectors(IHTMLDocument2 *doc, IHTMLElement *div)
     ok(collection != NULL, "collection == NULL\n");
     test_children_collection_length(collection, 0);
     IHTMLDOMChildrenCollection_Release(collection);
+    SysFreeString(str);
 
     collection = NULL;
     str = a2bstr(".cl1");
@@ -8013,6 +8022,7 @@ static void test_selectors(IHTMLDocument2 *doc, IHTMLElement *div)
     ok(collection != NULL, "collection == NULL\n");
     test_children_collection_length(collection, 2);
     IHTMLDOMChildrenCollection_Release(collection);
+    SysFreeString(str);
 
     IDocumentSelector_Release(doc_selector);
 
@@ -8026,6 +8036,7 @@ static void test_selectors(IHTMLDocument2 *doc, IHTMLElement *div)
     ok(collection != NULL, "collection == NULL\n");
     test_children_collection_length(collection, 0);
     IHTMLDOMChildrenCollection_Release(collection);
+    SysFreeString(str);
 
     collection = NULL;
     str = a2bstr(".cl1");
@@ -8034,6 +8045,7 @@ static void test_selectors(IHTMLDocument2 *doc, IHTMLElement *div)
     ok(collection != NULL, "collection == NULL\n");
     test_children_collection_length(collection, 2);
     IHTMLDOMChildrenCollection_Release(collection);
+    SysFreeString(str);
 
     IElementSelector_Release(elem_selector);
 }
@@ -8063,6 +8075,7 @@ static void test_elemsbyclass(IHTMLElement *div)
     ok(collection != NULL, "collection == NULL\n");
     test_elem_collection((IUnknown*)collection, NULL, 0);
     IHTMLElementCollection_Release(collection);
+    SysFreeString(str);
 
     collection = NULL;
     str = a2bstr("cl1");
@@ -8071,6 +8084,7 @@ static void test_elemsbyclass(IHTMLElement *div)
     ok(collection != NULL, "collection == NULL\n");
     test_elem_collection((IUnknown*)collection, types, sizeof(types)/sizeof(*types));
     IHTMLElementCollection_Release(collection);
+    SysFreeString(str);
 
     IHTMLElement6_Release(elem);
 }
@@ -8778,6 +8792,7 @@ static void test_attr(IHTMLDocument2 *doc, IHTMLElement *elem)
     V_VT(&v) = VT_BSTR;
     V_BSTR(&v) = a2bstr("divid2");
     put_attr_node_value(attr, v);
+    VariantClear(&v);
 
     get_attr_node_value(attr, &v, VT_BSTR);
     ok(!strcmp_wa(V_BSTR(&v), "divid2"), "V_BSTR(v) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
