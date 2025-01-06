@@ -20,11 +20,13 @@
 
 #include <wine/test.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #include "windef.h"
 #include "winbase.h"
 #include "ole2.h"
 #include "mshtml.h"
+#include "objsafe.h"
 
 static BSTR a2bstr(const char *str)
 {
@@ -457,6 +459,109 @@ static void test_header(const struct HEADER_TYPE expect[], int num)
     }
 }
 
+static const char *debugstr_variant(const VARIANT *var)
+{
+    static char buf[400];
+
+    if (!var)
+        return "(null)";
+
+    switch (V_VT(var))
+    {
+    case VT_EMPTY:
+        return "{VT_EMPTY}";
+    case VT_BSTR:
+        sprintf(buf, "{VT_BSTR: %s}", wine_dbgstr_w(V_BSTR(var)));
+        break;
+    case VT_BOOL:
+        sprintf(buf, "{VT_BOOL: %x}", V_BOOL(var));
+        break;
+    case VT_UI4:
+        sprintf(buf, "{VT_UI4: %u}", V_UI4(var));
+        break;
+    default:
+        sprintf(buf, "{vt %d}", V_VT(var));
+        break;
+    }
+
+    return buf;
+}
+
+static void test_illegal_xml(IXMLDOMDocument *xmldom)
+{
+    IXMLDOMNode *first, *last;
+    VARIANT variant;
+    HRESULT hres;
+    BSTR bstr;
+
+    hres = IXMLDOMDocument_get_baseName(xmldom, NULL);
+    ok(hres == E_INVALIDARG, "Expect E_INVALIDARG, got %08x\n", hres);
+    hres = IXMLDOMDocument_get_baseName(xmldom, &bstr);
+    ok(hres == S_FALSE, "get_baseName failed: %08x\n", hres);
+    ok(bstr == NULL, "bstr(%p): %s\n", bstr, wine_dbgstr_w(bstr));
+    SysFreeString(bstr);
+
+    hres = IXMLDOMDocument_get_dataType(xmldom, NULL);
+    ok(hres == E_INVALIDARG, "Expect E_INVALIDARG, got %08x\n", hres);
+    hres = IXMLDOMDocument_get_dataType(xmldom, &variant);
+    ok(hres == S_FALSE, "get_dataType failed: %08x\n", hres);
+    ok(V_VT(&variant) == VT_NULL, "got %s\n", debugstr_variant(&variant));
+    VariantClear(&variant);
+
+    hres = IXMLDOMDocument_get_text(xmldom, &bstr);
+    ok(!strcmp_wa(bstr, ""), "text = %s\n", wine_dbgstr_w(bstr));
+    SysFreeString(bstr);
+
+    hres = IXMLDOMDocument_get_firstChild(xmldom, NULL);
+    ok(hres == E_INVALIDARG, "Expect E_INVALIDARG, got %08x\n", hres);
+
+    first = (void*)0xdeadbeef;
+    hres = IXMLDOMDocument_get_firstChild(xmldom, &first);
+    ok(hres == S_FALSE, "get_firstChild failed: %08x\n", hres);
+    ok(first == NULL, "first != NULL\n");
+
+    last = (void*)0xdeadbeef;
+    hres = IXMLDOMDocument_get_lastChild(xmldom, &last);
+    ok(hres == S_FALSE, "get_lastChild failed: %08x\n", hres);
+    ok(last == NULL, "last != NULL\n");
+}
+
+static void test_responseXML(const char *expect_text)
+{
+    IDispatch *disp;
+    IXMLDOMDocument *xmldom;
+    IObjectSafety *safety;
+    DWORD enabled = 0, supported = 0;
+    HRESULT hres;
+
+    disp = NULL;
+    hres = IHTMLXMLHttpRequest_get_responseXML(xhr, &disp);
+    ok(hres == S_OK, "get_responseXML failed: %08x\n", hres);
+    ok(disp != NULL, "disp == NULL\n");
+
+    xmldom = NULL;
+    hres = IDispatch_QueryInterface(disp, &IID_IXMLDOMDocument, (void**)&xmldom);
+    ok(hres == S_OK, "QueryInterface(IXMLDOMDocument) failed: %08x\n", hres);
+    ok(xmldom != NULL, "xmldom == NULL\n");
+
+    hres = IXMLDOMDocument_QueryInterface(xmldom, &IID_IObjectSafety, (void**)&safety);
+    ok(hres == S_OK, "QueryInterface IObjectSafety failed: %08x\n", hres);
+    hres = IObjectSafety_GetInterfaceSafetyOptions(safety, NULL, &supported, &enabled);
+    ok(hres == S_OK, "GetInterfaceSafetyOptions failed: %08x\n", hres);
+    ok(broken(supported == (INTERFACESAFE_FOR_UNTRUSTED_CALLER | INTERFACESAFE_FOR_UNTRUSTED_DATA)) ||
+       supported == (INTERFACESAFE_FOR_UNTRUSTED_CALLER | INTERFACESAFE_FOR_UNTRUSTED_DATA | INTERFACE_USES_SECURITY_MANAGER) /* msxml3 SP8+ */,
+        "Expected supported: (INTERFACESAFE_FOR_UNTRUSTED_CALLER | INTERFACESAFE_FOR_UNTRUSTED_DATA | INTERFACE_USES_SECURITY_MANAGER), got %08x\n", supported);
+    ok(enabled == (INTERFACESAFE_FOR_UNTRUSTED_CALLER | INTERFACESAFE_FOR_UNTRUSTED_DATA | INTERFACE_USES_SECURITY_MANAGER),
+        "Expected enabled: (INTERFACESAFE_FOR_UNTRUSTED_CALLER | INTERFACESAFE_FOR_UNTRUSTED_DATA | INTERFACE_USES_SECURITY_MANAGER), got 0x%08x\n", enabled);
+    IObjectSafety_Release(safety);
+
+    if(!expect_text)
+        test_illegal_xml(xmldom);
+
+    IXMLDOMDocument_Release(xmldom);
+    IDispatch_Release(disp);
+}
+
 static void test_sync_xhr(IHTMLDocument2 *doc, const char *xml_url, const char *expect_text)
 {
     VARIANT vbool, vempty, var;
@@ -470,6 +575,8 @@ static void test_sync_xhr(IHTMLDocument2 *doc, const char *xml_url, const char *
         {"Content-Length", "51"},
         {"Content-Type", "application/xml"}
     };
+
+    trace("test_sync_xhr\n");
 
     create_xmlhttprequest(doc);
     if(!xhr)
@@ -614,6 +721,8 @@ static void test_sync_xhr(IHTMLDocument2 *doc, const char *xml_url, const char *
         ok(!strcmp_wa(text, expect_text), "expect %s, got %s\n",
             expect_text, wine_dbgstr_w(text));
     SysFreeString(text);
+
+    test_responseXML(expect_text);
 
     IHTMLXMLHttpRequest_Release(xhr);
     xhr = NULL;
@@ -788,6 +897,8 @@ static void test_async_xhr(IHTMLDocument2 *doc, const char *xml_url, const char 
         ok(!strcmp_wa(text, expect_text), "expect %s, got %s\n",
             expect_text, wine_dbgstr_w(text));
     SysFreeString(text);
+
+    test_responseXML(expect_text);
 
     IHTMLXMLHttpRequest_Release(xhr);
     xhr = NULL;
