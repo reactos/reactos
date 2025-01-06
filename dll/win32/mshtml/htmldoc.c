@@ -831,7 +831,7 @@ static HRESULT WINAPI HTMLDocument_get_domain(IHTMLDocument2 *iface, BSTR *p)
 
         nsAString_GetData(&nsstr, &str);
         if(!*str) {
-            TRACE("Gecko returned emptry string, fallback to loaded URL.\n");
+            TRACE("Gecko returned empty string, fallback to loaded URL.\n");
             nsAString_Finish(&nsstr);
             hres = IUri_GetHost(This->window->uri, p);
             return FAILED(hres) ? hres : S_OK;
