@@ -997,11 +997,29 @@ static const BSCallbackVtbl ScriptBSCVtbl = {
 };
 
 
-static HRESULT bind_script(HTMLInnerWindow *window, IUri *uri, HTMLScriptElement *script_elem)
+static HRESULT load_script(HTMLScriptElement *script_elem, const WCHAR *src)
 {
+    HTMLInnerWindow *window;
     ScriptBSC *bsc;
     IMoniker *mon;
+    IUri *uri;
     HRESULT hres;
+
+    static const WCHAR wine_schemaW[] = {'w','i','n','e',':'};
+
+    if(strlenW(src) > sizeof(wine_schemaW)/sizeof(WCHAR) && !memcmp(src, wine_schemaW, sizeof(wine_schemaW)))
+        src += sizeof(wine_schemaW)/sizeof(WCHAR);
+
+    TRACE("(%p %s)\n", script_elem, debugstr_w(src));
+
+    if(!script_elem->element.node.doc || !(window = script_elem->element.node.doc->window)) {
+        ERR("no window\n");
+        return E_UNEXPECTED;
+    }
+
+    hres = create_uri(src, 0, &uri);
+    if(FAILED(hres))
+        return hres;
 
     hres = CreateURLMonikerEx2(NULL, uri, &mon, URL_MK_UNIFORM);
     if(FAILED(hres))
@@ -1027,24 +1045,6 @@ static HRESULT bind_script(HTMLInnerWindow *window, IUri *uri, HTMLScriptElement
 
     IBindStatusCallback_Release(&bsc->bsc.IBindStatusCallback_iface);
     return hres;
-}
-
-static void parse_extern_script(ScriptHost *script_host, HTMLScriptElement *script_elem, LPCWSTR src)
-{
-    IUri *uri;
-    HRESULT hres;
-
-    static const WCHAR wine_schemaW[] = {'w','i','n','e',':'};
-
-    if(strlenW(src) > sizeof(wine_schemaW)/sizeof(WCHAR) && !memcmp(src, wine_schemaW, sizeof(wine_schemaW)))
-        src += sizeof(wine_schemaW)/sizeof(WCHAR);
-
-    hres = create_uri(src, 0, &uri);
-    if(FAILED(hres))
-        return;
-
-    hres = bind_script(script_host->window, uri, script_elem);
-    IUri_Release(uri);
 }
 
 static void parse_inline_script(ScriptHost *script_host, HTMLScriptElement *script_elem)
@@ -1095,7 +1095,7 @@ static void parse_script_elem(ScriptHost *script_host, HTMLScriptElement *script
     if(NS_FAILED(nsres)) {
         ERR("GetSrc failed: %08x\n", nsres);
     }else if(*src) {
-        parse_extern_script(script_host, script_elem, src);
+        load_script(script_elem, src);
     }else {
         parse_inline_script(script_host, script_elem);
     }
