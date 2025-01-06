@@ -1411,8 +1411,19 @@ static void test_get_set_attr(IHTMLDocument2 *doc)
     ok(V_VT(&val) == VT_BOOL, "variant type should have been VT_BOOL (0x%x), was: 0x%x\n", VT_BOOL, V_VT(&val));
     ok(V_BOOL(&val) == VARIANT_TRUE, "variant value should have been VARIANT_TRUE (0x%x), was %d\n", VARIANT_TRUE, V_BOOL(&val));
     VariantClear(&val);
-    SysFreeString(bstr);
 
+    /* overwrite the attribute with null */
+    V_VT(&val) = VT_NULL;
+    hres = IHTMLElement_setAttribute(elem, bstr, val, 0);
+    ok(hres == S_OK, "setAttribute failed: %08x\n", hres);
+
+    hres = IHTMLElement_getAttribute(elem, bstr, 2, &val);
+    ok(hres == S_OK, "getAttribute failed: %08x\n", hres);
+    ok(V_VT(&val) == VT_BSTR, "V_VT(val) = %u, expected VT_BSTR", V_VT(&val));
+    ok(!strcmp_wa(V_BSTR(&val), "null"), "V_BSTR(val) = %s, expected \"null\"\n", wine_dbgstr_w(V_BSTR(&val)));
+    VariantClear(&val);
+
+    SysFreeString(bstr);
     IHTMLElement_Release(elem);
 }
 

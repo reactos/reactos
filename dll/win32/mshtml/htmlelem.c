@@ -644,6 +644,8 @@ HRESULT get_elem_attr_value_by_dispid(HTMLElement *elem, DISPID dispid, DWORD fl
     EXCEPINFO excep;
     HRESULT hres;
 
+    static const WCHAR nullW[] = {'n','u','l','l',0};
+
     hres = IDispatchEx_InvokeEx(&elem->node.event_target.dispex.IDispatchEx_iface, dispid, LOCALE_SYSTEM_DEFAULT,
             DISPATCH_PROPERTYGET, &dispParams, ret, &excep, NULL);
     if(FAILED(hres))
@@ -652,6 +654,12 @@ HRESULT get_elem_attr_value_by_dispid(HTMLElement *elem, DISPID dispid, DWORD fl
     if(flags & ATTRFLAG_ASSTRING) {
         switch(V_VT(ret)) {
         case VT_BSTR:
+            break;
+        case VT_NULL:
+            V_BSTR(ret) = SysAllocString(nullW);
+            if(!V_BSTR(ret))
+                return E_OUTOFMEMORY;
+            V_VT(ret) = VT_BSTR;
             break;
         case VT_DISPATCH:
             IDispatch_Release(V_DISPATCH(ret));
