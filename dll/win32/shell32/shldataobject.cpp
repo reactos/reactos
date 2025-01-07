@@ -111,3 +111,22 @@ PIDLIST_ABSOLUTE SHELL_DataObject_ILCloneFullItem(_In_ IDataObject *pDO, _In_ UI
     CDataObjectHIDA cida(pDO);
     return SUCCEEDED(cida.hr()) ? SHELL_CIDA_ILCloneFull(cida, Index) : NULL;
 }
+
+HRESULT SHELL_CloneDataObject(_In_ IDataObject *pDO, _Out_ IDataObject **ppDO)
+{
+    *ppDO = NULL;
+    CDataObjectHIDA cida(pDO);
+    HRESULT hr = cida.hr();
+    if (SUCCEEDED(hr))
+    {
+        PCUITEMID_CHILD items = HIDA_GetPIDLItem(cida, 0);
+        hr = SHCreateFileDataObject(HIDA_GetPIDLFolder(cida), cida->cidl, &items, NULL, ppDO);
+        if (SUCCEEDED(hr))
+        {
+            POINT pt;
+            if (SUCCEEDED(DataObject_GetOffset(pDO, &pt)))
+                DataObject_SetOffset(*ppDO, &pt);
+        }
+    }
+    return hr;
+}
