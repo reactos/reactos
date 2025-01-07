@@ -98,7 +98,7 @@ int wprintit(LPCWSTR it)
     else
     {
         // calculate the number of bytes needed to store the UTF-8 string
-        int cbMultibyte = WideCharToMultiByte(GetACP(), 0, it, -1, NULL, 0, NULL, NULL);
+        int cbMultibyte = WideCharToMultiByte(CP_UTF8, 0, it, -1, NULL, 0, NULL, NULL);
         if (cbMultibyte == 0)
             return 0;
         if (cbMultibyte < 0)
@@ -109,7 +109,7 @@ int wprintit(LPCWSTR it)
         if (szBuffer == nullptr)
             return -1;
 
-        if (WideCharToMultiByte(GetACP(), 0, it, -1, szBuffer, cbMultibyte, NULL, NULL) == 0)
+        if (WideCharToMultiByte(CP_UTF8, 0, it, -1, szBuffer, cbMultibyte, NULL, NULL) == 0)
         {
             delete[] szBuffer;
             return -1;
