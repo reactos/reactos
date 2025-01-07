@@ -41,6 +41,7 @@
 #include <winwlx.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/exfuncs.h>
+#include <ndk/kefuncs.h>
 #include <strsafe.h>
 
 /* PSEH for SEH Support */
@@ -233,7 +234,7 @@ typedef struct _WLSESSION
     HANDLE hProfileInfo;
     LOGON_STATE LogonState;
     DWORD DialogTimeout; /* Timeout for dialog boxes, in seconds */
-    SYSTEMTIME LastLogon;
+    LARGE_INTEGER LastLogon;
 
     /* Screen-saver informations */
 #ifndef USE_GETLASTINPUTINFO
@@ -291,7 +292,7 @@ VOID
 SetLogonTimestamp(
     _Inout_ PWLSESSION Session)
 {
-    GetSystemTime(&Session->LastLogon);
+    NtQuerySystemTime(&Session->LastLogon);
 }
 
 FORCEINLINE
@@ -299,9 +300,8 @@ BOOL
 IsFirstLogon(
     _In_ PWLSESSION Session)
 {
-    /* The WLSESSION::LastLogon is initialized to 0 and the day value returned
-     * by GetSystemTime can't be 0 so this is OK */
-    return (Session->LastLogon.wDay == 0);
+    /* The WLSESSION::LastLogon is initialized to 0 so this is OK */
+    return (Session->LastLogon.QuadPart == 0);
 }
 
 /* environment.c */
