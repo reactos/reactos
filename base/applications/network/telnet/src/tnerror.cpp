@@ -54,7 +54,7 @@
 // int Telnet_Redir = 0;
 // Telnet_Redir is set to the value of the environment variable TELNET_REDIR
 // in main.
-
+#define __REACTOS__
 int printit(const char * it){
 	DWORD numwritten;
 	if (!ini.get_output_redir()) {
@@ -97,13 +97,37 @@ int wprintit(LPCWSTR it)
     }
     else
     {
+        // calculate the number of bytes needed to store the UTF-8 string
+        int cbMultibyte = WideCharToMultiByte(GetACP(), 0, it, -1, NULL, 0, NULL, NULL);
+        if (cbMultibyte == 0)
+            return 0;
+        if (cbMultibyte < 0)
+            return -1;
+        
+        // allocate the buffer for the UTF-8 string
+        char* szBuffer = new char[cbMultibyte];
+        if (szBuffer == nullptr)
+            return -1;
+
+        if (WideCharToMultiByte(GetACP(), 0, it, -1, szBuffer, cbMultibyte, NULL, NULL) == 0)
+        {
+            delete[] szBuffer;
+            return -1;
+        }
+
         if (!WriteFile(
             GetStdHandle(STD_OUTPUT_HANDLE),
-            it,
-            wcslen(it) * sizeof(*it),
+            szBuffer,
+            cbMultibyte,
             &numwritten,
             NULL
-        )) return -1;
+        )) 
+        {
+            delete[] szBuffer;
+            return -1;
+        }
+        
+        delete[] szBuffer;
     }
     return 0;
 }
