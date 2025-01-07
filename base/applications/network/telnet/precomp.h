@@ -9,6 +9,7 @@
 #include <winbase.h>
 #include <winuser.h>
 #include <wincon.h>
+#include <stringapiset.h>
 #define _INC_WINDOWS
 #include <winsock.h>
 
