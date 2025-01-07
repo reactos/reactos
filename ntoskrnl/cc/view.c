@@ -368,14 +368,16 @@ CcRosFlushDirtyPages (
 
         ASSERT(current->Dirty);
 
-        /* Do not lazy-write the same file concurrently. Fastfat ASSERTS on that */
-        if (SharedCacheMap->Flags & SHARED_CACHE_MAP_IN_LAZYWRITE)
+        /* Don't flush the same file concurrently (CORE-19664) */
+        if (BooleanFlagOn(SharedCacheMap->Flags, SHARED_CACHE_MAP_IN_FLUSH))
         {
             CcRosVacbDecRefCount(current);
             continue;
         }
 
-        SharedCacheMap->Flags |= SHARED_CACHE_MAP_IN_LAZYWRITE;
+        /* Block other flush requests on this file. We're going to flush now */
+        KeClearEvent(&SharedCacheMap->FlushDoneEvent);
+        SetFlag(SharedCacheMap->Flags, SHARED_CACHE_MAP_IN_FLUSH);
 
         /* Keep a ref on the shared cache map */
         SharedCacheMap->OpenCount++;
@@ -389,8 +391,12 @@ CcRosFlushDirtyPages (
             ASSERT(!Wait);
             CcRosVacbDecRefCount(current);
             OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
-            SharedCacheMap->Flags &= ~SHARED_CACHE_MAP_IN_LAZYWRITE;
 
+            /* Flushing done. Allow other requests to continue */
+            ClearFlag(SharedCacheMap->Flags, SHARED_CACHE_MAP_IN_FLUSH);
+            KeSetEvent(&SharedCacheMap->FlushDoneEvent, IO_NO_INCREMENT, FALSE);
+
+            /* Release the shared cache map */
             if (--SharedCacheMap->OpenCount == 0)
                 CcRosDeleteFileCache(SharedCacheMap->FileObject, SharedCacheMap, &OldIrql);
 
@@ -409,8 +415,11 @@ CcRosFlushDirtyPages (
         CcRosVacbDecRefCount(current);
         OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
 
-        SharedCacheMap->Flags &= ~SHARED_CACHE_MAP_IN_LAZYWRITE;
+        /* Flushing done. Allow other requests to continue */
+        ClearFlag(SharedCacheMap->Flags, SHARED_CACHE_MAP_IN_FLUSH);
+        KeSetEvent(&SharedCacheMap->FlushDoneEvent, IO_NO_INCREMENT, FALSE);
 
+        /* Release the shared cache map */
         if (--SharedCacheMap->OpenCount == 0)
             CcRosDeleteFileCache(SharedCacheMap->FileObject, SharedCacheMap, &OldIrql);
 
@@ -1093,6 +1102,65 @@ CcRosInternalFreeVacb (
     return STATUS_SUCCESS;
 }
 
+static
+VOID
+CcRosAcquireFileCacheForFlush(
+    _In_ PROS_SHARED_CACHE_MAP SharedCacheMap)
+{
+    KIRQL OldIrql;
+    BOOLEAN IsFlushing;
+
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+
+    /* Keep a ref on the shared cache map */
+    SharedCacheMap->OpenCount++;
+
+    do
+    {
+        IsFlushing = BooleanFlagOn(SharedCacheMap->Flags, SHARED_CACHE_MAP_IN_FLUSH);
+        if (IsFlushing)
+        {
+            KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+
+            /* Wait for the ongoing flush to complete */
+            KeWaitForSingleObject(&SharedCacheMap->FlushDoneEvent,
+                                  Executive,
+                                  KernelMode,
+                                  FALSE,
+                                  NULL);
+
+            OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+        }
+
+    } while (IsFlushing);
+
+    /* Block other flush requests on this file. We're going to flush now */
+    KeClearEvent(&SharedCacheMap->FlushDoneEvent);
+    SetFlag(SharedCacheMap->Flags, SHARED_CACHE_MAP_IN_FLUSH);
+
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+}
+
+static
+VOID
+CcRosReleaseFileCacheFromFlush(
+    _In_ PROS_SHARED_CACHE_MAP SharedCacheMap)
+{
+    KIRQL OldIrql;
+
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+
+    /* Flushing done. Allow other requests to continue */
+    ClearFlag(SharedCacheMap->Flags, SHARED_CACHE_MAP_IN_FLUSH);
+    KeSetEvent(&SharedCacheMap->FlushDoneEvent, IO_NO_INCREMENT, FALSE);
+
+    /* Release the shared cache map */
+    if (--SharedCacheMap->OpenCount == 0)
+        CcRosDeleteFileCache(SharedCacheMap->FileObject, SharedCacheMap, &OldIrql);
+
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+}
+
 /*
  * @implemented
  */
@@ -1145,7 +1213,8 @@ CcFlushCache (
         IoStatus->Information = 0;
     }
 
-    KeAcquireGuardedMutex(&SharedCacheMap->FlushCacheLock);
+    /* Don't flush the same file concurrently (CORE-19664) */
+    CcRosAcquireFileCacheForFlush(SharedCacheMap);
 
     /*
      * We flush the VACBs that we find here.
@@ -1216,7 +1285,7 @@ CcFlushCache (
         FlushStart -= FlushStart % VACB_MAPPING_GRANULARITY;
     }
 
-    KeReleaseGuardedMutex(&SharedCacheMap->FlushCacheLock);
+    CcRosReleaseFileCacheFromFlush(SharedCacheMap);
 
 quit:
     if (IoStatus)
@@ -1326,7 +1395,7 @@ CcRosInitializeFileCache (
         KeInitializeSpinLock(&SharedCacheMap->CacheMapLock);
         InitializeListHead(&SharedCacheMap->CacheMapVacbListHead);
         InitializeListHead(&SharedCacheMap->BcbList);
-        KeInitializeGuardedMutex(&SharedCacheMap->FlushCacheLock);
+        KeInitializeEvent(&SharedCacheMap->FlushDoneEvent, NotificationEvent, FALSE);
 
         SharedCacheMap->Flags = SHARED_CACHE_MAP_IN_CREATION;
 
