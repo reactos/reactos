@@ -53,8 +53,7 @@
 // This has been moved to tnconfig.cpp
 // int Telnet_Redir = 0;
 // Telnet_Redir is set to the value of the environment variable TELNET_REDIR
-// in main.
-#define __REACTOS__
+// in main.s
 int printit(const char * it){
 	DWORD numwritten;
 	if (!ini.get_output_redir()) {
