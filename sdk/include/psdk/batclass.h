@@ -65,7 +65,7 @@ DEFINE_GUID(BATTERY_TAG_CHANGE_WMI_GUID,
 #define BATTERY_UNKNOWN_CAPACITY          0xFFFFFFFF
 
 /* BatteryEstimatedTime constant */
-#define BATTERY_UNKNOWN_TIME              0x80000000
+#define BATTERY_UNKNOWN_TIME              0xFFFFFFFF
 
 #define MAX_BATTERY_STRING_SIZE           128
 
