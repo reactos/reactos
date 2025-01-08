@@ -54,6 +54,7 @@
 // int Telnet_Redir = 0;
 // Telnet_Redir is set to the value of the environment variable TELNET_REDIR
 // in main.
+
 int printit(const char * it){
 	DWORD numwritten;
 	if (!ini.get_output_redir()) {
