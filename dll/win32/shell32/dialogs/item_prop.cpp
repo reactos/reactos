@@ -27,7 +27,7 @@ struct ShellPropSheetDialog
                                           HKEY *hKeys, UINT *cKeys);
 
     static HRESULT Show(const CLSID *pClsidDefault, IDataObject *pDO,
-                        PFNINITIALIZE InitFunc, LPCWSTR InitString, HANDLE hEvent = NULL)
+                        PFNINITIALIZE InitFunc, LPCWSTR InitString)
     {
         HRESULT hr;
         CRegKeyHandleArray keys;
@@ -36,8 +36,6 @@ struct ShellPropSheetDialog
         WCHAR szCaption[MAX_PATH], *pszCaption = NULL;
         if (SUCCEEDED(SHELL_GetCaptionFromDataObject(pDO, szCaption, _countof(szCaption))))
             pszCaption = szCaption;
-        if (hEvent)
-            SetEvent(hEvent);
         hr = SHOpenPropSheetW(pszCaption, keys, keys, pClsidDefault, pDO, NULL, NULL) ? S_OK : E_FAIL;
         return hr;
     }
@@ -96,7 +94,8 @@ struct ShellPropSheetDialog
             if (hEvent)
             {
                 DWORD index;
-                // Pump COM messages until InitFunc is done (for CORE-19933)
+                // Pump COM messages until the thread can create its own IDataObject (for CORE-19933).
+                // SHOpenPropSheetW is modal and we cannot wait for it to complete.
                 CoWaitForMultipleHandles(COWAIT_DEFAULT, INFINITE, 1, &hEvent, &index);
                 CloseHandle(hEvent);
             }
@@ -111,10 +110,14 @@ struct ShellPropSheetDialog
     static DWORD CALLBACK ShowPropertiesThread(LPVOID Param)
     {
         DATA *pData = (DATA*)Param;
-        CComPtr<IDataObject> pDO;
+        CComPtr<IDataObject> pDO, pLocalDO;
         if (pData->pObjStream)
             CoGetInterfaceAndReleaseStream(pData->pObjStream, IID_PPV_ARG(IDataObject, &pDO));
-        Show(pData->pClsidDefault, pDO, pData->InitFunc, pData->InitString, pData->hEvent);
+        if (pDO && SUCCEEDED(SHELL_CloneDataObject(pDO, &pLocalDO)))
+            pDO = pLocalDO;
+        if (pData->hEvent)
+            SetEvent(pData->hEvent);
+        Show(pData->pClsidDefault, pDO, pData->InitFunc, pData->InitString);
         FreeData(pData);
         return 0;
     }
