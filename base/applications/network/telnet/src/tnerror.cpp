@@ -88,7 +88,7 @@ int wprintit(LPCWSTR it)
     if (!ini.get_output_redir())
     {
         if (!WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE),
-                           it, wcslen(it), &numwritten, 0))
+                           it, wcslen(it), &numwritten, NULL))
         {
             return -1;
         }
