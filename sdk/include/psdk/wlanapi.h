@@ -32,6 +32,16 @@ extern "C" {
 /* Enumerations */
 
 #if defined(__midl) || defined(__WIDL__)
+typedef [v1_enum] enum _DOT11_RADIO_STATE {
+#else
+typedef enum _DOT11_RADIO_STATE {
+#endif
+    dot11_radio_state_unknown = 0,
+    dot11_radio_state_on,
+    dot11_radio_state_off
+} DOT11_RADIO_STATE; /* HACK: WIDL is broken, *PDOT11_RADIO_STATE; */
+
+#if defined(__midl) || defined(__WIDL__)
 typedef [v1_enum] enum _WLAN_OPCODE_VALUE_TYPE {
 #else
 typedef enum _WLAN_OPCODE_VALUE_TYPE {
@@ -174,6 +184,17 @@ typedef struct _WLAN_INTERFACE_CAPABILITY {
     DWORD dwNumberOfSupportedPhys;
     /* enum32 */ long dot11PhyTypes[WLAN_MAX_PHY_INDEX];
 } WLAN_INTERFACE_CAPABILITY, *PWLAN_INTERFACE_CAPABILITY;
+
+typedef struct _WLAN_PHY_RADIO_STATE {
+    DWORD dwPhyIndex;
+    DOT11_RADIO_STATE dot11SoftwareRadioState;
+    DOT11_RADIO_STATE dot11HardwareRadioState;
+} WLAN_PHY_RADIO_STATE, *PWLAN_PHY_RADIO_STATE;
+
+typedef struct _WLAN_RADIO_STATE {
+    DWORD dwNumberOfPhys;
+    WLAN_PHY_RADIO_STATE PhyRadioState[WLAN_MAX_PHY_INDEX];
+} WLAN_RADIO_STATE, *PWLAN_RADIO_STATE;
 
 typedef struct _WLAN_RAW_DATA {
     DWORD dwDataSize;
