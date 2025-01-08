@@ -86,13 +86,11 @@ int wprintit(LPCWSTR it)
     DWORD numwritten;
     if (!ini.get_output_redir())
     {
-        if (!WriteConsoleW(
-            GetStdHandle(STD_OUTPUT_HANDLE),
-            it,
-            wcslen(it),
-            &numwritten,
-            0
-        )) return -1;
+        if (!WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE),
+                           it, wcslen(it), &numwritten, 0))
+        {
+            return -1;
+        }
     }
     else
     {
@@ -102,31 +100,22 @@ int wprintit(LPCWSTR it)
             return 0;
         if (cbMultibyte < 0)
             return -1;
-        
         // allocate the buffer for the UTF-8 string
         char* szBuffer = new char[cbMultibyte];
-        if (szBuffer == nullptr)
+        if (!szBuffer)
             return -1;
 
-        if (WideCharToMultiByte(CP_UTF8, 0, it, -1, szBuffer, cbMultibyte, NULL, NULL) == 0)
+        bool bSuccess = false;
+        if (WideCharToMultiByte(CP_UTF8, 0, it, -1, szBuffer, cbMultibyte, NULL, NULL) &&
+            WriteFile(GetStdHandle(STD_OUTPUT_HANDLE),
+                      szBuffer, cbMultibyte, &numwritten, NULL))
         {
-            delete[] szBuffer;
-            return -1;
+            bSuccess = true;
         }
 
-        if (!WriteFile(
-            GetStdHandle(STD_OUTPUT_HANDLE),
-            szBuffer,
-            cbMultibyte,
-            &numwritten,
-            NULL
-        )) 
-        {
-            delete[] szBuffer;
-            return -1;
-        }
-        
         delete[] szBuffer;
+        if (!bSuccess)
+            return -1;
     }
     return 0;
 }
@@ -143,7 +132,7 @@ int printm(LPTSTR szModule, BOOL fSystem, DWORD dwMessageId, ...)
 	va_list Ellipsis;
 	va_start(Ellipsis, dwMessageId);
 #ifdef __REACTOS__
-	LPWSTR wszMessage = 0;
+	LPWSTR wszMessage = NULL;
 	DWORD dwMessage = 0;
 
 	if(fSystem) {
@@ -159,7 +148,7 @@ int printm(LPTSTR szModule, BOOL fSystem, DWORD dwMessageId, ...)
 				LANG_USER_DEFAULT, (LPWSTR)&wszMessage, sizeof(wszString) / sizeof(*wszString), &Ellipsis);
 	}
 #else
-    LPTSTR pszMessage = 0;
+	LPTSTR pszMessage = 0;
 	DWORD dwMessage = 0;
 	if(fSystem) {
 		dwMessage = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
@@ -185,7 +174,7 @@ int printm(LPTSTR szModule, BOOL fSystem, DWORD dwMessageId, ...)
 		Result = wprintit(wszMessage);
 		LocalFree(wszMessage);
 #else
-        Result = printit(pszMessage);
+		Result = printit(pszMessage);
 		LocalFree(pszMessage);
 #endif
 	}
