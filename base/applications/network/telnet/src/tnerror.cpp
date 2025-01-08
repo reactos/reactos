@@ -133,20 +133,20 @@ int printm(LPTSTR szModule, BOOL fSystem, DWORD dwMessageId, ...)
 	va_list Ellipsis;
 	va_start(Ellipsis, dwMessageId);
 #ifdef __REACTOS__
-	LPWSTR wszMessage = NULL;
+	LPWSTR pszMessage = NULL;
 	DWORD dwMessage = 0;
 
 	if(fSystem) {
 		dwMessage = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
 			FORMAT_MESSAGE_FROM_SYSTEM, hModule, dwMessageId,
-			LANG_USER_DEFAULT, (LPWSTR)&wszMessage, 128, &Ellipsis);
+			LANG_USER_DEFAULT, (LPWSTR)&pszMessage, 128, &Ellipsis);
 	} else {
 		// we will use a string table.
 		WCHAR wszString[256];
 		if(LoadStringW(0, dwMessageId, wszString, sizeof(wszString) / sizeof(*wszString)))
 			dwMessage = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
 				FORMAT_MESSAGE_FROM_STRING, wszString, dwMessageId,
-				LANG_USER_DEFAULT, (LPWSTR)&wszMessage, sizeof(wszString) / sizeof(*wszString), &Ellipsis);
+				LANG_USER_DEFAULT, (LPWSTR)&pszMessage, sizeof(wszString) / sizeof(*wszString), &Ellipsis);
 	}
 #else
 	LPTSTR pszMessage = 0;
@@ -172,13 +172,12 @@ int printm(LPTSTR szModule, BOOL fSystem, DWORD dwMessageId, ...)
 
 	if (dwMessage) {
 #ifdef __REACTOS__
-		Result = wprintit(wszMessage);
-		LocalFree(wszMessage);
+		Result = wprintit(pszMessage);
 #else
 		Result = printit(pszMessage);
-		LocalFree(pszMessage);
 #endif
-	}
+		LocalFree(pszMessage);
+    }
 
 	return Result;
 }
