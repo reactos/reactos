@@ -46,6 +46,12 @@ static BOOL ExitReactOSInProgress = FALSE;
 
 LUID LuidNone = {0, 0};
 
+typedef struct tagLOGON_SOUND_DATA
+{
+    HANDLE UserToken;
+    BOOL IsStartup;
+} LOGON_SOUND_DATA, *PLOGON_SOUND_DATA;
+
 /* FUNCTIONS ****************************************************************/
 
 static BOOL
@@ -286,26 +292,12 @@ PlaySoundRoutine(
 }
 
 static
-BOOL
-IsFirstLogon(VOID)
-{
-    /* FIXME: All of this is a HACK, designed specifically for PlayLogonSoundThread.
-     * Don't call IsFirstLogon multiple times inside the same function. And please
-     * note that this function is not thread-safe. */
-    static BOOL bFirstLogon = TRUE;
-    if (bFirstLogon)
-    {
-        bFirstLogon = FALSE;
-        return TRUE;
-    }
-    return FALSE;
-}
-
 DWORD
 WINAPI
 PlayLogonSoundThread(
-    IN LPVOID lpParameter)
+    _In_ LPVOID lpParameter)
 {
+    PLOGON_SOUND_DATA SoundData = (PLOGON_SOUND_DATA)lpParameter;
     SERVICE_STATUS_PROCESS Info;
     DWORD dwSize;
     ULONG Index = 0;
@@ -316,7 +308,7 @@ PlayLogonSoundThread(
     if (!hSCManager)
     {
         ERR("OpenSCManager failed (%x)\n", GetLastError());
-        return 0;
+        goto Cleanup;
     }
 
     /* Open the wdmaud service */
@@ -326,7 +318,7 @@ PlayLogonSoundThread(
         /* The service is not installed */
         TRACE("Failed to open wdmaud service (%x)\n", GetLastError());
         CloseServiceHandle(hSCManager);
-        return 0;
+        goto Cleanup;
     }
 
     /* Wait for wdmaud to start */
@@ -352,35 +344,50 @@ PlayLogonSoundThread(
     if (Info.dwCurrentState != SERVICE_RUNNING)
     {
         WARN("wdmaud has not started!\n");
-        return 0;
+        goto Cleanup;
     }
 
     /* Sound subsystem is running. Play logon sound. */
-    TRACE("Playing logon sound\n");
-    if (!ImpersonateLoggedOnUser((HANDLE)lpParameter))
+    TRACE("Playing %s sound\n", SoundData->IsStartup ? "startup" : "logon");
+    if (!ImpersonateLoggedOnUser(SoundData->UserToken))
     {
         ERR("ImpersonateLoggedOnUser failed (%x)\n", GetLastError());
     }
     else
     {
-        PlaySoundRoutine(IsFirstLogon() ? L"SystemStart" : L"WindowsLogon",
+        PlaySoundRoutine(SoundData->IsStartup ? L"SystemStart" : L"WindowsLogon",
                          TRUE,
                          SND_ALIAS | SND_NODEFAULT);
         RevertToSelf();
     }
+
+Cleanup:
+    HeapFree(GetProcessHeap(), 0, SoundData);
     return 0;
 }
 
 static
 VOID
 PlayLogonSound(
-    IN OUT PWLSESSION Session)
+    _In_ PWLSESSION Session)
 {
+    PLOGON_SOUND_DATA SoundData;
     HANDLE hThread;
 
-    hThread = CreateThread(NULL, 0, PlayLogonSoundThread, (PVOID)Session->UserToken, 0, NULL);
-    if (hThread)
-        CloseHandle(hThread);
+    SoundData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGON_SOUND_DATA));
+    if (!SoundData)
+        return;
+
+    SoundData->UserToken = Session->UserToken;
+    SoundData->IsStartup = IsFirstLogon(Session);
+
+    hThread = CreateThread(NULL, 0, PlayLogonSoundThread, SoundData, 0, NULL);
+    if (!hThread)
+    {
+        HeapFree(GetProcessHeap(), 0, SoundData);
+        return;
+    }
+    CloseHandle(hThread);
 }
 
 static
@@ -571,6 +578,9 @@ HandleLogon(
     /* Logon has succeeded. Play sound. */
     PlayLogonSound(Session);
 
+    /* NOTE: The logon timestamp has to be set after calling PlayLogonSound
+     * to correctly detect the startup event (first logon) */
+    SetLogonTimestamp(Session);
     ret = TRUE;
 
 cleanup:
