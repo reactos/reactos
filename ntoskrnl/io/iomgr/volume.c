@@ -1328,7 +1328,7 @@ IoVolumeDeviceToDosName(
         return Status;
     }
 
-    /* Now, query the MountMgr for the DOS path */
+    /* Retrieve the MountMgr controlling device */
     RtlInitUnicodeString(&MountMgrDevice, MOUNTMGR_DEVICE_NAME);
     Status = IoGetDeviceObjectPointer(&MountMgrDevice, FILE_READ_ATTRIBUTES,
                                       &FileObject, &DeviceObject);
@@ -1337,6 +1337,7 @@ IoVolumeDeviceToDosName(
         return Status;
     }
 
+    /* Now, query the MountMgr for the DOS path */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
     Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTMGR_QUERY_DOS_VOLUME_PATH,
                                         DeviceObject,
@@ -1362,7 +1363,7 @@ IoVolumeDeviceToDosName(
         goto Quit;
     }
 
-    /* Compute the needed size to store the DOS name.
+    /* Compute the needed size to store the DOS path.
      * Even if MOUNTMGR_VOLUME_PATHS allows bigger name lengths
      * than MAXUSHORT, we can't use them, because we have to return
      * this in an UNICODE_STRING that stores length in a USHORT. */
@@ -1373,8 +1374,8 @@ IoVolumeDeviceToDosName(
         goto Quit;
     }
 
-    /* Reallocate the memory, even in case of success, because
-     * that's the buffer that will be returned to the caller */
+    /* Allocate the buffer, even in case of success,
+     * because it is returned to the caller */
     VolumePathPtr = ExAllocatePoolWithTag(PagedPool, Length, TAG_DEV2DOS);
     if (!VolumePathPtr)
     {
