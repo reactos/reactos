@@ -1085,6 +1085,7 @@ CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
 {
     ULONG PsrData = 0;
     NTSTATUS Status;
+    BOOLEAN WasDischarging;
     ULONG BstState;
     ULONG PowerUnit;
     ULONG DesignVoltage, PresentRate, RemainingCapacity;
@@ -1113,6 +1114,9 @@ CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
         return Status;
     }
 
+    /* Remember if the battery was discharging at the time of querying new status */
+    WasDischarging = !!(DeviceExtension->State & BATTERY_DISCHARGING);
+
     /* Clear current BST information */
     DeviceExtension->State = 0;
     DeviceExtension->RemainingCapacity = 0;
@@ -1135,9 +1139,9 @@ CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
     {
         /* Set power state and check if it just started discharging now */
         DeviceExtension->State |= BATTERY_DISCHARGING;
-        if (!(DeviceExtension->State & ACPI_BATT_STAT_DISCHARG))
+        if (!WasDischarging)
         {
-            /* Remember the time when the state changed */
+            /* The battery is discharging now and not before, remember the time when the state changed */
             DeviceExtension->InterruptTime = KeQueryInterruptTime();
         }
     }
@@ -1363,8 +1367,8 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
 
         case BatteryEstimatedTime:
 
-            /* Check if it's been more than 2 1/2 minutes since the last change */
-            if ((KeQueryInterruptTime() - 150000000) > (FdoExtension->InterruptTime))
+            /* Check if it's been more than 15 seconds since the last change */
+            if (KeQueryInterruptTime() > (FdoExtension->InterruptTime + CMBATT_DISCHARGE_TIME))
             {
                 /* Get new battery status */
                 CmBattGetBatteryStatus(FdoExtension, FdoExtension->Tag);
@@ -1378,6 +1382,9 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
 
                 /* Grab the remaining capacity */
                 RemainingCapacity = FdoExtension->RemainingCapacity;
+
+                /* Default time to unknown if we fail the request later */
+                RemainingTime = BATTERY_UNKNOWN_TIME;
 
                 /* See if we don't know one or the other */
                 if ((Rate == BATTERY_UNKNOWN_RATE) ||
@@ -1410,7 +1417,7 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
                 else
                 {
                     /* We have data, but is it valid? */
-                    if (RemainingCapacity > 0x123456)
+                    if (RemainingCapacity > CMBATT_CAPACITY_BOGUS)
                     {
                         /* The capacity seems bogus, so don't use it */
                         if (CmBattDebug & CMBATT_ACPI_WARNING)
@@ -1422,6 +1429,10 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
                         RemainingTime = (RemainingCapacity * 3600) / -Rate;
                     }
                 }
+            }
+            else
+            {
+                RemainingTime = BATTERY_UNKNOWN_TIME;
             }
 
             /* Return the remaining time */

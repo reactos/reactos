@@ -42,6 +42,18 @@
 #define CMBATT_PNP_ENTRY_EXIT   0x200
 #define CMBATT_ACPI_ASSERT      0x400
 
+//
+// Constant used to determine if the battery was discharging
+// for over 15 seconds since last time the AC adapter got unplugged.
+//
+#define CMBATT_DISCHARGE_TIME   150000000
+
+//
+// Bogus constant used to determine if the remaining battery capacity
+// overflows which is returned by the hardware.
+//
+#define CMBATT_CAPACITY_BOGUS   0x100000
+
 typedef enum _CMBATT_EXTENSION_TYPE
 {
     CmBattAcAdapter,
