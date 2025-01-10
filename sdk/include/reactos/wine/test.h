@@ -747,7 +747,7 @@ const char *wine_dbgstr_wn( const WCHAR *str, intptr_t n )
     }
     *dst = 0;
 
-    res = get_temp_buffer(strlen(buffer + 1));
+    res = get_temp_buffer(strlen(buffer) + 1);
     strcpy(res, buffer);
     return res;
 }
