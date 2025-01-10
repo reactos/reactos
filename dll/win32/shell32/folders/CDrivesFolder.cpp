@@ -557,7 +557,7 @@ static const DWORD dwControlPanelAttributes =
     SFGAO_HASSUBFOLDER | SFGAO_FOLDER | SFGAO_CANLINK;
 static const DWORD dwDriveAttributes =
     SFGAO_HASSUBFOLDER | SFGAO_FILESYSTEM | SFGAO_FOLDER | SFGAO_FILESYSANCESTOR |
-    SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANRENAME | SFGAO_CANLINK;
+    SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANRENAME | SFGAO_CANLINK | SFGAO_CANCOPY;
 
 CDrivesFolder::CDrivesFolder()
 {
@@ -611,10 +611,9 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
                                              pdwAttributes);
     }
 
-    if (lpszDisplayName[0] &&
-        ((L'A' <= lpszDisplayName[0] && lpszDisplayName[0] <= L'Z') ||
+    if (((L'A' <= lpszDisplayName[0] && lpszDisplayName[0] <= L'Z') ||
          (L'a' <= lpszDisplayName[0] && lpszDisplayName[0] <= L'z')) &&
-        lpszDisplayName[1] == L':' && lpszDisplayName[2] == L'\\')
+        lpszDisplayName[1] == L':' && (lpszDisplayName[2] == L'\\' || !lpszDisplayName[2]))
     {
         // "C:\..."
         WCHAR szRoot[8];
@@ -630,7 +629,7 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
         if (!pidlTemp)
             return E_OUTOFMEMORY;
 
-        if (lpszDisplayName[3])
+        if (lpszDisplayName[2] && lpszDisplayName[3])
         {
             CComPtr<IShellFolder> pChildFolder;
             hr = BindToObject(pidlTemp, pbc, IID_PPV_ARG(IShellFolder, &pChildFolder));

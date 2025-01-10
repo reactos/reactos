@@ -35,6 +35,7 @@ class CFSDropTarget :
         HWND m_hwndSite;
         DWORD m_grfKeyState;
         DWORD m_dwDefaultEffect;
+        DWORD m_AllowedEffects;
         CComPtr<IUnknown> m_site;
 
         BOOL _QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
