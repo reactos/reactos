@@ -197,11 +197,9 @@ static void ParseTildeEffect(PWSTR &res, LPCWSTR &args, DWORD &len, DWORD &used,
 
 static BOOL SHELL_ArgifyW(WCHAR* out, DWORD len, const WCHAR* fmt, const WCHAR* lpFile, LPITEMIDLIST pidl, LPCWSTR args, DWORD* out_len, const WCHAR* lpDir)
 {
-    WCHAR   xlpFile[1024];
     BOOL    done = FALSE;
     BOOL    found_p1 = FALSE;
     PWSTR   res = out;
-    PCWSTR  cmd;
     DWORD   used = 0;
     bool    tildeEffect = false;
 
@@ -279,20 +277,14 @@ static BOOL SHELL_ArgifyW(WCHAR* out, DWORD len, const WCHAR* fmt, const WCHAR* 
                 break;
 
                 case '1':
-                    if (!done || (*fmt == '1'))
+                    if ((!done || (*fmt == '1')) && lpFile)
                     {
-                        /*FIXME Is the call to SearchPathW() really needed? We already have separated out the parameter string in args. */
-                        if (SearchPathW(lpDir, lpFile, L".exe", ARRAY_SIZE(xlpFile), xlpFile, NULL))
-                            cmd = xlpFile;
-                        else
-                            cmd = lpFile;
-
-                        SIZE_T cmdlen = wcslen(cmd);
-                        used += cmdlen;
+                        SIZE_T filelen = wcslen(lpFile);
+                        used += filelen;
                         if (used < len)
                         {
-                            wcscpy(res, cmd);
-                            res += cmdlen;
+                            wcscpy(res, lpFile);
+                            res += filelen;
                         }
                     }
                     found_p1 = TRUE;
