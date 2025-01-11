@@ -17,4 +17,13 @@ extern LONG g_Busy;
 
 #define WM_NOTIFY_OPERATIONCOMPLETED (WM_APP + 0)
 
+#define MAINWINDOWCLASSNAME L"ROSAPPMGR2"
+#define MAINWINDOWMUTEX szWindowClass
+#define UPDATEDBMUTEX ( MAINWINDOWCLASSNAME L":UpDB" )
+
+struct CUpdateDatabaseMutex : public CScopedMutex
+{
+    CUpdateDatabaseMutex() : CScopedMutex(UPDATEDBMUTEX, 1000 * 60 * 10, FALSE) { };
+};
+
 #endif /* _RAPPS_H */
