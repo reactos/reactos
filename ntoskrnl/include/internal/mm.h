@@ -131,8 +131,7 @@ typedef ULONG_PTR SWAPENTRY;
 #define MM_ROUND_DOWN(x,s)                  \
     ((PVOID)(((ULONG_PTR)(x)) & ~((ULONG_PTR)(s)-1)))
 
-/* PAGE_ROUND_UP and PAGE_ROUND_DOWN equivalent for always 64-bit values.
- * For example: file offset */
+/* PAGE_ROUND_UP and PAGE_ROUND_DOWN equivalent for 64-bit-only data types */
 #define PAGE_ROUND_UP_64(x) \
     (((x) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))
 
