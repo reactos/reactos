@@ -36,7 +36,7 @@ HRESULT WINAPI SHGetAttributesFromDataObject(IDataObject* pDataObject, DWORD dwA
 {
     DWORD dwAttributes = 0;
     DWORD cItems = 0;
-    HRESULT hr = S_OK, hr2;
+    HRESULT hr = S_OK;
 
     TRACE("(%p, 0x%x, %p, %p)\n", pDataObject, dwAttributeMask, pdwAttributes, pcItems);
 
@@ -77,6 +77,7 @@ HRESULT WINAPI SHGetAttributesFromDataObject(IDataObject* pDataObject, DWORD dwA
                     data.dwAttributes = rgfInOut & dwQueryAttributes;
                     data.cItems = apidl.GetSize();
 
+                    HRESULT hr2;
                     hr2 = DataObject_SetData(pDataObject, g_DataObjectAttributes, &data, sizeof(data));
                     FAILED_UNEXPECTEDLY(hr2); // Report cache failure but don't fail the function
                 }

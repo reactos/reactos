@@ -337,7 +337,7 @@ HRESULT WINAPI CFSDropTarget::DragEnter(IDataObject *pDataObject,
 {
     TRACE("(%p)->(DataObject=%p)\n", this, pDataObject);
 
-    const bool bAnyKeyMod = dwKeyState & (MK_SHIFT | MK_CONTROL);
+    const BOOL bAnyKeyMod = dwKeyState & (MK_SHIFT | MK_CONTROL);
     m_AllowedEffects = *pdwEffect;
 
     if (*pdwEffect == DROPEFFECT_NONE)
