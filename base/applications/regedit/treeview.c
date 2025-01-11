@@ -669,6 +669,7 @@ BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
         {
             LPNMTVDISPINFO ptvdi = (LPNMTVDISPINFO)lParam;
             HWND hWndFocus = GetFocus();
+
             /* cancel label edit for rootkeys */
             if (!TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem) ||
                 !TreeView_GetParent(g_pChildWnd->hTreeWnd, TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem)))
