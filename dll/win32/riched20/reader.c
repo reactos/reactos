@@ -2519,7 +2519,7 @@ static void SpecialChar (RTF_Info *info)
 	case rtfSect:
 	case rtfPar:
                 RTFFlushOutputBuffer(info);
-                ME_SetSelectionParaFormat(info->editor, &info->fmt);
+                editor_set_selection_para_fmt( info->editor, &info->fmt );
                 memset(&info->fmt, 0, sizeof(info->fmt));
                 info->fmt.cbSize = sizeof(info->fmt);
 		RTFPutUnicodeChar (info, '\r');
