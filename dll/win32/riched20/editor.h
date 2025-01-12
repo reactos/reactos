@@ -18,6 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef RICHED20_EDITOR_H
+#define RICHED20_EDITOR_H
+
 #include "editstr.h"
 
 struct _RTF_Info;
@@ -46,6 +49,43 @@ static inline const char *debugstr_run( const ME_Run *run )
 {
     return debugstr_wn( get_text( run, 0 ), run->len );
 }
+
+#define CP_UNICODE 1200
+
+/* smart helpers for A<->W conversions, they reserve/free memory and call MultiByte<->WideChar functions */
+LPWSTR ME_ToUnicode(LONG codepage, LPVOID psz, INT *len) DECLSPEC_HIDDEN;
+void ME_EndToUnicode(LONG codepage, LPVOID psz) DECLSPEC_HIDDEN;
+
+static inline int ME_IsWSpace(WCHAR ch)
+{
+  return ch > '\0' && ch <= ' ';
+}
+
+static inline int ME_CharCompare(WCHAR a, WCHAR b, int caseSensitive)
+{
+  return caseSensitive ? (a == b) : (towupper(a) == towupper(b));
+}
+
+static inline ME_DisplayItem *row_get_di( ME_Row *row )
+{
+    return (ME_DisplayItem *)((ptrdiff_t)row - offsetof(ME_DisplayItem, member));
+}
+
+static inline ME_DisplayItem *run_get_di( ME_Run *run )
+{
+    return (ME_DisplayItem *)((ptrdiff_t)run - offsetof(ME_DisplayItem, member));
+}
+
+static inline ME_DisplayItem *para_get_di(ME_Paragraph *para)
+{
+    return (ME_DisplayItem *)((ptrdiff_t)para - offsetof(ME_DisplayItem, member));
+}
+static inline ME_DisplayItem *cell_get_di(ME_Cell *cell)
+{
+    return (ME_DisplayItem *)((ptrdiff_t)cell - offsetof(ME_DisplayItem, member));
+}
+
+#endif
 
 /* style.c */
 ME_Style *style_get_insert_style( ME_TextEditor *editor, ME_Cursor *cursor ) DECLSPEC_HIDDEN;
@@ -88,21 +128,7 @@ int ME_CallWordBreakProc(ME_TextEditor *editor, WCHAR *str, INT len, INT start, 
 void ME_StrDeleteV(ME_String *s, int nVChar, int nChars) DECLSPEC_HIDDEN;
 BOOL ME_InsertString(ME_String *s, int ofs, const WCHAR *insert, int len) DECLSPEC_HIDDEN;
 
-#define CP_UNICODE 1200
 
-/* smart helpers for A<->W conversions, they reserve/free memory and call MultiByte<->WideChar functions */
-LPWSTR ME_ToUnicode(LONG codepage, LPVOID psz, INT *len) DECLSPEC_HIDDEN;
-void ME_EndToUnicode(LONG codepage, LPVOID psz) DECLSPEC_HIDDEN;
-
-static inline int ME_IsWSpace(WCHAR ch)
-{
-  return ch > '\0' && ch <= ' ';
-}
-
-static inline int ME_CharCompare(WCHAR a, WCHAR b, int caseSensitive)
-{
-  return caseSensitive ? (a == b) : (towupper(a) == towupper(b));
-}
 
 /* note: those two really return the first matching offset (starting from EOS)+1 
  * in other words, an offset of the first trailing white/black */
@@ -121,10 +147,7 @@ ME_Run *row_next_run( ME_Row *row, ME_Run *run ) DECLSPEC_HIDDEN;
 int row_number_from_char_ofs( ME_TextEditor *editor, int ofs ) DECLSPEC_HIDDEN;
 ME_Paragraph *row_para( ME_Row *row ) DECLSPEC_HIDDEN;
 ME_Row *row_prev_all_paras( ME_Row *row ) DECLSPEC_HIDDEN;
-static inline ME_DisplayItem *row_get_di( ME_Row *row )
-{
-    return (ME_DisplayItem *)((ptrdiff_t)row - offsetof(ME_DisplayItem, member));
-}
+
 
 /* run.c */
 void cursor_from_char_ofs( ME_TextEditor *editor, int char_ofs, ME_Cursor *cursor ) DECLSPEC_HIDDEN;
@@ -158,10 +181,7 @@ void ME_GetCharFormat(ME_TextEditor *editor, const ME_Cursor *from,
 void ME_GetSelectionCharFormat(ME_TextEditor *editor, CHARFORMAT2W *pFmt) DECLSPEC_HIDDEN;
 void ME_GetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *pFmt) DECLSPEC_HIDDEN;
 void ME_SetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *mod) DECLSPEC_HIDDEN;
-static inline ME_DisplayItem *run_get_di( ME_Run *run )
-{
-    return (ME_DisplayItem *)((ptrdiff_t)run - offsetof(ME_DisplayItem, member));
-}
+
 
 /* caret.c */
 void cursor_coords( ME_TextEditor *editor, ME_Cursor *cursor, int *x, int *y, int *height ) DECLSPEC_HIDDEN;
@@ -232,10 +252,7 @@ ME_Paragraph *para_prev( ME_Paragraph *para ) DECLSPEC_HIDDEN;
 ME_Paragraph *para_split( ME_TextEditor *editor, ME_Run *run, ME_Style *style,
                           const WCHAR *eol_str, int eol_len, int paraFlags ) DECLSPEC_HIDDEN;
 
-static inline ME_DisplayItem *para_get_di(ME_Paragraph *para)
-{
-    return (ME_DisplayItem *)((ptrdiff_t)para - offsetof(ME_DisplayItem, member));
-}
+
 
 /* paint.c */
 void editor_draw( ME_TextEditor *editor, HDC hDC, const RECT *update ) DECLSPEC_HIDDEN;
@@ -314,10 +331,6 @@ ME_Cell *table_row_first_cell( ME_Paragraph *para ) DECLSPEC_HIDDEN;
 ME_Paragraph *table_row_start( ME_Paragraph *para ) DECLSPEC_HIDDEN;
 struct RTFTable *ME_MakeTableDef(ME_TextEditor *editor) DECLSPEC_HIDDEN;
 void ME_InitTableDef(ME_TextEditor *editor, struct RTFTable *tableDef) DECLSPEC_HIDDEN;
-static inline ME_DisplayItem *cell_get_di(ME_Cell *cell)
-{
-    return (ME_DisplayItem *)((ptrdiff_t)cell - offsetof(ME_DisplayItem, member));
-}
 
 
 /* txthost.c */
@@ -430,3 +443,4 @@ LRESULT ME_StreamOut(ME_TextEditor *editor, DWORD dwFormat, EDITSTREAM *stream) 
 HRESULT ME_GetDataObject(ME_TextEditor *editor, const ME_Cursor *start, int nChars, LPDATAOBJECT *lplpdataobj) DECLSPEC_HIDDEN;
 
 void release_typelib(void) DECLSPEC_HIDDEN;
+
