@@ -7,7 +7,6 @@
 
 #include "shelltest.h"
 #include <undocshell.h>
-#include <secext.h>
 
 START_TEST(SHGetUserDisplayName)
 {
