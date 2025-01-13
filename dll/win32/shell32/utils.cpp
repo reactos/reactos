@@ -6,6 +6,10 @@
  */
 
 #include "precomp.h"
+#include <lmcons.h>
+#include <lmapibuf.h>
+#include <lmaccess.h>
+#include <secext.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -1522,4 +1526,66 @@ SHELL_CreateShell32DefaultExtractIcon(int IconIndex, REFIID riid, LPVOID *ppvOut
         return hr;
     initIcon->SetNormalIcon(swShell32Name, IconIndex);
     return initIcon->QueryInterface(riid, ppvOut);
+}
+
+/*************************************************************************
+ *  SHGetUserDisplayName [SHELL32.241]
+ *
+ * @see https://undoc.airesoft.co.uk/shell32.dll/SHGetUserDisplayName.php
+ */
+EXTERN_C
+HRESULT WINAPI
+SHGetUserDisplayName(
+    _In_z_ LPWSTR lpName,
+    _Inout_ PULONG puSize)
+{
+    if (!lpName || !puSize)
+        return E_INVALIDARG;
+
+    if (GetUserNameExW(NameDisplay, lpName, puSize))
+        return S_OK;
+
+    LONG error = GetLastError(); // for ERROR_NONE_MAPPED
+
+    WCHAR UserName[MAX_PATH];
+    DWORD cchUserName = _countof(UserName);
+    if (!GetUserNameW(UserName, &cchUserName))
+        return HRESULT_FROM_WIN32(GetLastError());
+
+    HRESULT hr = HRESULT_FROM_WIN32(error);
+
+    // Was the user name not available in the specified format (NameDisplay)?
+    if (error == ERROR_NONE_MAPPED)
+    {
+        // Try to get the user name by using Network API
+        USER_INFO_2 *UserInfo;
+        DWORD NetError = NetUserGetInfo(NULL, UserName, 2, (LPBYTE *)&UserInfo);
+        if (NetError)
+        {
+            hr = HRESULT_FROM_WIN32(NetError);
+        }
+        else
+        {
+            if (UserInfo->usri2_full_name)
+            {
+                hr = StringCchCopyW(lpName, *puSize, UserInfo->usri2_full_name);
+                if (SUCCEEDED(hr))
+                {
+                    // Including the terminating null character
+                    *puSize = lstrlenW(UserInfo->usri2_full_name) + 1;
+                }
+            }
+
+            NetApiBufferFree(UserInfo); // Clean up
+        }
+    }
+
+    if (FAILED(hr))
+    {
+        hr = StringCchCopyW(lpName, *puSize, UserName);
+        if (SUCCEEDED(hr))
+            *puSize = cchUserName;
+    }
+
+    return hr;
 }

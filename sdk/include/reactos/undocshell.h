@@ -211,6 +211,11 @@ DWORD WINAPI SHNetConnectionDialog(
 
 BOOL WINAPI SHIsTempDisplayMode(VOID);
 
+HRESULT WINAPI
+SHGetUserDisplayName(
+    _In_z_ LPWSTR lpName,
+    _Inout_ PULONG puSize);
+
 /****************************************************************************
  * Cabinet Window Messages
  */

@@ -925,18 +925,6 @@ PathIsSlowW(
  */
 EXTERN_C DWORD
 WINAPI
-SHGetUserDisplayName(LPWSTR lpName, PULONG puSize)
-{
-    FIXME("SHGetUserDisplayName() stub\n");
-    wcscpy(lpName, L"UserName");
-    return ERROR_SUCCESS;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C DWORD
-WINAPI
 SHGetProcessDword(DWORD dwUnknown1, DWORD dwUnknown2)
 {
     /* Unimplemented in WinXP SP3 */
