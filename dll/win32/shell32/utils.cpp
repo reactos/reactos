@@ -1558,7 +1558,7 @@ SHGetUserDisplayName(
     if (error == ERROR_NONE_MAPPED)
     {
         // Try to get the user name by using Network API
-        USER_INFO_2 *UserInfo;
+        PUSER_INFO_2 UserInfo;
         DWORD NetError = NetUserGetInfo(NULL, UserName, 2, (LPBYTE *)&UserInfo);
         if (NetError)
         {
