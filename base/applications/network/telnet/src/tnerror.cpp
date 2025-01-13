@@ -177,7 +177,7 @@ int printm(LPTSTR szModule, BOOL fSystem, DWORD dwMessageId, ...)
 		Result = printit(pszMessage);
 #endif
 		LocalFree(pszMessage);
-    }
+	}
 
 	return Result;
 }
