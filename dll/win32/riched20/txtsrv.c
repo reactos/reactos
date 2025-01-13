@@ -29,6 +29,7 @@
 #include "textserv.h"
 #include "wine/debug.h"
 #include "editstr.h"
+#include "riched20.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
@@ -116,6 +117,7 @@ static ULONG WINAPI fnTextSrv_Release(ITextServices *iface)
     return IUnknown_Release( services->outer_unk );
 }
 
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxSendMessage,20)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxSendMessage( ITextServices *iface, UINT msg, WPARAM wparam,
                                                             LPARAM lparam, LRESULT *result )
 {
@@ -127,7 +129,6 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxSendMessage( ITextServices *iface
     if (result) *result = res;
     return hr;
 }
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxSendMessage,20)
 
 static HRESULT update_client_rect( struct text_services *services, const RECT *client )
 {
@@ -149,6 +150,7 @@ static HRESULT update_client_rect( struct text_services *services, const RECT *c
     return S_OK;
 }
 
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxDraw,52)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxDraw( ITextServices *iface, DWORD aspect, LONG index, void *aspect_info,
                                                      DVTARGETDEVICE *td, HDC draw, HDC target,
                                                      const RECTL *bounds, const RECTL *mf_bounds, RECT *update,
@@ -190,8 +192,7 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxDraw( ITextServices *iface, DWORD
     return S_OK;
 }
 
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxDraw,52)
-
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetHScroll,24)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetHScroll( ITextServices *iface, LONG *min_pos, LONG *max_pos, LONG *pos,
                                                            LONG *page, BOOL *enabled )
 {
@@ -204,8 +205,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetHScroll( ITextServices *iface,
     if (enabled) *enabled = services->editor->horz_sb_enabled;
     return S_OK;
 }
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetHScroll,24)
 
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetVScroll,24)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetVScroll( ITextServices *iface, LONG *min_pos, LONG *max_pos, LONG *pos,
                                                            LONG *page, BOOL *enabled )
 {
@@ -218,8 +219,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetVScroll( ITextServices *iface,
     if (enabled) *enabled = services->editor->vert_sb_enabled;
     return S_OK;
 }
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetVScroll,24)
 
+DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxSetCursor,40)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxSetCursor( ITextServices *iface, DWORD aspect, LONG index,
                                                             void *aspect_info, DVTARGETDEVICE *td, HDC draw,
                                                             HDC target, const RECT *client, INT x, INT y )
@@ -236,8 +237,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxSetCursor( ITextServices *iface
     editor_set_cursor( services->editor, x, y );
     return S_OK;
 }
-DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxSetCursor,40)
 
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxQueryHitPoint,44)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxQueryHitPoint(ITextServices *iface, DWORD dwDrawAspect, LONG lindex,
                                                              void *pvAspect, DVTARGETDEVICE *ptd, HDC hdcDraw,
                                                              HDC hicTargetDev, LPCRECT lprcClient, INT x, INT y,
@@ -248,8 +249,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxQueryHitPoint(ITextServices *ifac
     FIXME( "%p: STUB\n", services );
     return E_NOTIMPL;
 }
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxQueryHitPoint,44)
 
+DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxInPlaceActivate,8)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxInPlaceActivate( ITextServices *iface, const RECT *client )
 {
     struct text_services *services = impl_from_ITextServices( iface );
@@ -268,8 +269,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxInPlaceActivate( ITextServices 
     ME_RewrapRepaint( services->editor );
     return S_OK;
 }
-DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxInPlaceActivate,8)
 
+DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxInPlaceDeactivate,4)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxInPlaceDeactivate(ITextServices *iface)
 {
     struct text_services *services = impl_from_ITextServices( iface );
@@ -278,8 +279,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxInPlaceDeactivate(ITextServices
     services->editor->in_place_active = FALSE;
     return S_OK;
 }
-DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxInPlaceDeactivate,4)
 
+DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxUIActivate,4)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxUIActivate(ITextServices *iface)
 {
     struct text_services *services = impl_from_ITextServices( iface );
@@ -287,8 +288,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxUIActivate(ITextServices *iface
     FIXME( "%p: STUB\n", services );
     return E_NOTIMPL;
 }
-DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxUIActivate,4)
 
+DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxUIDeactivate,4)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxUIDeactivate(ITextServices *iface)
 {
     struct text_services *services = impl_from_ITextServices( iface );
@@ -296,8 +297,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxUIDeactivate(ITextServices *ifa
     FIXME( "%p: STUB\n", services );
     return E_NOTIMPL;
 }
-DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxUIDeactivate,4)
 
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetText,8)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetText( ITextServices *iface, BSTR *text )
 {
     struct text_services *services = impl_from_ITextServices( iface );
@@ -319,8 +320,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetText( ITextServices *iface, BS
 
     return S_OK;
 }
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetText,8)
 
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxSetText,8)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxSetText( ITextServices *iface, const WCHAR *text )
 {
     struct text_services *services = impl_from_ITextServices( iface );
@@ -337,8 +338,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxSetText( ITextServices *iface, co
 
     return S_OK;
 }
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxSetText,8)
 
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetCurTargetX,8)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetCurTargetX(ITextServices *iface, LONG *x)
 {
     struct text_services *services = impl_from_ITextServices( iface );
@@ -346,8 +347,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetCurTargetX(ITextServices *ifac
     FIXME( "%p: STUB\n", services );
     return E_NOTIMPL;
 }
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetCurTargetX,8)
 
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetBaseLinePos,8)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetBaseLinePos(ITextServices *iface, LONG *x)
 {
     struct text_services *services = impl_from_ITextServices( iface );
@@ -355,8 +356,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetBaseLinePos(ITextServices *ifa
     FIXME( "%p: STUB\n", services );
     return E_NOTIMPL;
 }
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetBaseLinePos,8)
 
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetNaturalSize,36)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetNaturalSize( ITextServices *iface, DWORD aspect, HDC draw,
                                                                HDC target, DVTARGETDEVICE *td, DWORD mode,
                                                                const SIZEL *extent, LONG *width, LONG *height )
@@ -395,8 +396,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetNaturalSize( ITextServices *if
     if (!draw) ITextHost_TxReleaseDC( services->editor->texthost, dc );
     return S_OK;
 }
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetNaturalSize,36)
 
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetDropTarget,8)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetDropTarget(ITextServices *iface, IDropTarget **ppDropTarget)
 {
     struct text_services *services = impl_from_ITextServices( iface );
@@ -404,8 +405,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetDropTarget(ITextServices *ifac
     FIXME( "%p: STUB\n", services );
     return E_NOTIMPL;
 }
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetDropTarget,8)
 
+DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxPropertyBitsChange,12)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxPropertyBitsChange( ITextServices *iface, DWORD mask, DWORD bits )
 {
     struct text_services *services = impl_from_ITextServices( iface );
@@ -468,8 +469,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxPropertyBitsChange( ITextServic
 
     return S_OK;
 }
-DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxPropertyBitsChange,12)
 
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetCachedSize,12)
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetCachedSize(ITextServices *iface, DWORD *pdwWidth, DWORD *pdwHeight)
 {
     struct text_services *services = impl_from_ITextServices( iface );
@@ -477,7 +478,6 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetCachedSize(ITextServices *ifac
     FIXME( "%p: STUB\n", services );
     return E_NOTIMPL;
 }
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetCachedSize,12)
 
 #ifdef __ASM_USE_THISCALL_WRAPPER
 
