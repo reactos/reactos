@@ -1536,13 +1536,13 @@ SHELL_CreateShell32DefaultExtractIcon(int IconIndex, REFIID riid, LPVOID *ppvOut
 EXTERN_C
 HRESULT WINAPI
 SHGetUserDisplayName(
-    _In_z_ LPWSTR lpName,
+    _Out_writes_to_(*puSize, *puSize) PWSTR pName,
     _Inout_ PULONG puSize)
 {
-    if (!lpName || !puSize)
+    if (!pName || !puSize)
         return E_INVALIDARG;
 
-    if (GetUserNameExW(NameDisplay, lpName, puSize))
+    if (GetUserNameExW(NameDisplay, pName, puSize))
         return S_OK;
 
     LONG error = GetLastError(); // for ERROR_NONE_MAPPED
@@ -1568,7 +1568,7 @@ SHGetUserDisplayName(
         {
             if (UserInfo->usri2_full_name)
             {
-                hr = StringCchCopyW(lpName, *puSize, UserInfo->usri2_full_name);
+                hr = StringCchCopyW(pName, *puSize, UserInfo->usri2_full_name);
                 if (SUCCEEDED(hr))
                 {
                     // Including the terminating null character
@@ -1582,7 +1582,7 @@ SHGetUserDisplayName(
 
     if (FAILED(hr))
     {
-        hr = StringCchCopyW(lpName, *puSize, UserName);
+        hr = StringCchCopyW(pName, *puSize, UserName);
         if (SUCCEEDED(hr))
             *puSize = cchUserName;
     }

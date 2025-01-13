@@ -1,8 +1,13 @@
 #ifndef _SECEXT_H
 #define _SECEXT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef RC_INVOKED
 #if (_WIN32_WINNT >= 0x0500)
+
 typedef enum
 {
   NameUnknown = 0,
