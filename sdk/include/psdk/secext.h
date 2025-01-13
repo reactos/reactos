@@ -36,4 +36,9 @@ BOOLEAN WINAPI TranslateNameW(LPCWSTR,EXTENDED_NAME_FORMAT,EXTENDED_NAME_FORMAT,
 
 #endif /* ! RC_INVOKED */
 #endif /* _WIN32_WINNT >= 0x0500 */
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
 #endif /* ! _SECEXT_H */
