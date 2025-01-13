@@ -41,6 +41,7 @@ list(APPEND SOURCE
     ShellInfo.cpp
     ShellState.cpp
     SHGetAttributesFromDataObject.cpp
+    SHGetUserDisplayName.cpp
     SHLimitInputEdit.cpp
     menu.cpp
     shelltest.cpp)
