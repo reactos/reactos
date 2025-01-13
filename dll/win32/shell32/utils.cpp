@@ -1559,7 +1559,7 @@ SHGetUserDisplayName(
     {
         // Try to get the user name by using Network API
         PUSER_INFO_2 UserInfo;
-        DWORD NetError = NetUserGetInfo(NULL, UserName, 2, (LPBYTE *)&UserInfo);
+        DWORD NetError = NetUserGetInfo(NULL, UserName, 2, (PBYTE*)&UserInfo);
         if (NetError)
         {
             hr = HRESULT_FROM_WIN32(NetError);
