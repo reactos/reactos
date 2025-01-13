@@ -33,9 +33,7 @@ CConfiguration::CConfiguration()
         FATAL("GetWindowsDirectoryW failed\n");
 
     m_IsReactOS = !_wcsnicmp(&WindowsDirectory[3], L"reactos", 7);
-#ifdef __REACTOS__
     m_IsReactOS = m_IsReactOS || IsReactOS();
-#endif
 
     if(GetEnvironmentVariableW(L"WINETEST_INTERACTIVE", Interactive, _countof(Interactive)))
         m_IsInteractive = _wtoi(Interactive);
