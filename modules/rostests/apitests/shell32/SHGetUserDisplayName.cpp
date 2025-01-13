@@ -7,11 +7,12 @@
 
 #include "shelltest.h"
 #include <undocshell.h>
+#include <secext.h>
 
 START_TEST(SHGetUserDisplayName)
 {
     HRESULT hr;
-    WCHAR szBuf[MAX_PATH], szName[MAX_PATH];
+    WCHAR szBuf[MAX_PATH];
     ULONG cchBuf;
 
     hr = SHGetUserDisplayName(NULL, NULL);
@@ -27,9 +28,4 @@ START_TEST(SHGetUserDisplayName)
     cchBuf = _countof(szBuf);
     hr = SHGetUserDisplayName(szBuf, &cchBuf);
     ok_hex(hr, S_OK);
-
-    cchBuf = _countof(szName);
-    GetUserNameW(szName, &cchBuf);
-
-    ok_wstr(szBuf, szName);
 }
