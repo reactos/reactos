@@ -213,7 +213,7 @@ BOOL WINAPI SHIsTempDisplayMode(VOID);
 
 HRESULT WINAPI
 SHGetUserDisplayName(
-    _In_z_ LPWSTR lpName,
+    _Out_writes_to_(*puSize, *puSize) PWSTR pName,
     _Inout_ PULONG puSize);
 
 /****************************************************************************
