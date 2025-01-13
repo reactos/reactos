@@ -3,11 +3,6 @@
 
 #ifndef RC_INVOKED
 #if (_WIN32_WINNT >= 0x0500)
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef enum
 {
   NameUnknown = 0,
