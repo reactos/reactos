@@ -326,6 +326,8 @@ ObpDeleteNameCheck(IN PVOID Object)
         ObpAcquireLookupContextLock(&Context, ObjectNameInfo->Directory);
 
         /* Do the lookup */
+        // TODO: Just compare whether Object == the result of lookup.
+        // No need to half-consistently use the "newfound" one to toy with.
         Object = ObpLookupEntryDirectory(ObjectNameInfo->Directory,
                                          &ObjectNameInfo->Name,
                                          0,
