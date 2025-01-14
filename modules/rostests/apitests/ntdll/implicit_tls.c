@@ -87,12 +87,9 @@ START_TEST(implicit_tls)
     *ModuleHandle = (ULONG)GetModuleHandleA(NULL) + 3;
 
     TlsIdx0Value = *(PULONG)TlsVector[0];
-    while(1)
+    while (TlsVector[ExtantTlsEntryCount] && !((ULONG_PTR)TlsVector[ExtantTlsEntryCount] % 4))
     {
-        if(TlsVector[ExtantTlsEntryCount] && !((ULONG_PTR)TlsVector[ExtantTlsEntryCount] % 4))
-            ++ExtantTlsEntryCount;
-        else
-            break;
+        ++ExtantTlsEntryCount;
     }
     for (i = 0; i < TLS_VECTOR_MAX_SIZE; i++)
     {
@@ -118,7 +115,7 @@ START_TEST(implicit_tls)
 
     TlsIdx0ValueAfter = *(PULONG)TlsVector[0];
 
-    ok(TlsIdx0Value == TlsIdx0ValueAfter, "Value in TLS index 0 corrupted by DLL loads; expected %d and got %d\n", TlsIdx0Value, TlsIdx0ValueAfter);
+    ok(TlsIdx0Value == TlsIdx0ValueAfter, "Value in TLS index 0 corrupted by DLL loads; expected %lu and got %lu\n", TlsIdx0Value, TlsIdx0ValueAfter);
 
     i = 0;
 
