@@ -28,7 +28,7 @@ extern "C" {
 
 #define REGPATH_UNINSTALL L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
 
-#define DB_NONE L"!"
+#define DB_NONE L"!" // Skip/Ignore
 #define DB_GENINST_FILES L"Files"
 #define DB_GENINST_DIR L"Dir"
 #define DB_GENINST_ICON L"Icon"
