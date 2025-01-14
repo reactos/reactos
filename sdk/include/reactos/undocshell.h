@@ -775,12 +775,12 @@ DWORD WINAPI
 SheFullPathA(
     _In_opt_ PCSTR pszPath,
     _In_ DWORD cchFullPathLength,
-    _Out_ PSTR pszFullPath);
+    _Out_writes_(cchFullPathLength) PSTR pszFullPath);
 DWORD WINAPI
 SheFullPathW(
     _In_opt_ PCWSTR pszPath,
     _In_ DWORD cchFullPathLength,
-    _Out_ PWSTR pszFullPath);
+    _Out_writes_(cchFullPathLength) PWSTR pszFullPath);
 
 /* Flags for Int64ToString and LargeIntegerToString */
 #define FMT_USE_NUMDIGITS 0x01
