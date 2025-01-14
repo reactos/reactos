@@ -402,28 +402,6 @@ SheGetCurDrive(VOID)
 /*
  * Unimplemented
  */
-EXTERN_C INT
-WINAPI
-SheFullPathW(LPWSTR lpFullName, DWORD dwPathSize, LPWSTR lpBuffer)
-{
-    FIXME("SheFullPathW() stub\n");
-    return 0;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C INT
-WINAPI
-SheFullPathA(LPSTR lpFullName, DWORD dwPathSize, LPSTR lpBuffer)
-{
-    FIXME("SheFullPathA() stub\n");
-    return 0;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C BOOL
 WINAPI
 SheConvertPathW(LPWSTR lpCmd, LPWSTR lpFileName, UINT uCmdLen)

@@ -811,6 +811,110 @@ SheRemoveQuotesW(LPWSTR psz)
 }
 
 /*************************************************************************
+ *  SheFullPathA [SHELL32.343]
+ *
+ * @return 0 if successful
+ */
+EXTERN_C
+DWORD WINAPI
+SheFullPathA(
+    _In_opt_ PCSTR pszPath,
+    _In_ DWORD cchFullPathLength,
+    _Out_ PSTR pszFullPath)
+{
+    if (!*pszPath) // pszPath was empty?
+    {
+        SheGetDirA(0, pszFullPath);
+
+        SIZE_T cch = strlen(pszFullPath);
+        if (cch >= MAX_PATH - 1)
+            return 1; // Failed
+
+        if (cch != 3)
+        {
+            pszFullPath[cch] = '\\';
+            pszFullPath[cch + 1] = ANSI_NULL;
+        }
+
+        return 0; // Successful
+    }
+
+    if (strlen(pszPath) != 2 || pszPath[1] != ':')
+    {
+        LPSTR pchPart;
+        if (!GetFullPathNameA(pszPath, cchFullPathLength, pszFullPath, &pchPart))
+            return 1; // Failed
+        return 0; // Successful
+    }
+
+    // A drive path?
+    CHAR ch = *pszPath;
+    CharUpperBuffA(&ch, 1);
+    SheGetDirA(ch - 'A', pszFullPath);
+
+    SIZE_T cch = strlen(pszFullPath);
+    if (cch > 3)
+    {
+        pszFullPath[cch] = '\\';
+        pszFullPath[cch + 1] = ANSI_NULL;
+    }
+
+    return 0; // Successful
+}
+
+/*************************************************************************
+ *  SheFullPathW [SHELL32.344]
+ *
+ * @return 0 if successful
+ */
+EXTERN_C
+DWORD WINAPI
+SheFullPathW(
+    _In_opt_ PCWSTR pszPath,
+    _In_ DWORD cchFullPathLength,
+    _Out_ PWSTR pszFullPath)
+{
+    if (!*pszPath) // pszPath was empty?
+    {
+        SheGetDirW(0, pszFullPath);
+
+        SIZE_T cch = wcslen(pszFullPath);
+        if (cch >= MAX_PATH - 1)
+            return 1; // Failed
+
+        if (cch != 3)
+        {
+            pszFullPath[cch] = L'\\';
+            pszFullPath[cch + 1] = UNICODE_NULL;
+        }
+
+        return 0; // Successful
+    }
+
+    if (wcslen(pszPath) != 2 || pszPath[1] != L':')
+    {
+        LPWSTR pchPart;
+        if (!GetFullPathNameW(pszPath, cchFullPathLength, pszFullPath, &pchPart))
+            return 1; // Failed
+        return 0; // Successful
+    }
+
+    // A drive path?
+    WCHAR ch = *pszPath;
+    CharUpperBuffW(&ch, 1);
+    SheGetDirW(ch - L'A', pszFullPath);
+
+    SIZE_T cch = wcslen(pszFullPath);
+    if (cch > 3)
+    {
+        pszFullPath[cch] = L'\\';
+        pszFullPath[cch + 1] = UNICODE_NULL;
+    }
+
+    return 0; // Successful
+}
+
+/*************************************************************************
  *  SHFindComputer [SHELL32.91]
  *
  * Invokes the shell search in My Computer. Used in SHFindFiles.

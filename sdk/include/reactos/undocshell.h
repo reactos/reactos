@@ -768,6 +768,19 @@ BOOL WINAPI GUIDFromStringW(
 
 LPSTR WINAPI SheRemoveQuotesA(LPSTR psz);
 LPWSTR WINAPI SheRemoveQuotesW(LPWSTR psz);
+DWORD WINAPI SheGetDirA(DWORD drive, LPSTR buffer);
+DWORD WINAPI SheGetDirW(DWORD drive, LPWSTR buffer);
+
+DWORD WINAPI
+SheFullPathA(
+    _In_opt_ PCSTR pszPath,
+    _In_ DWORD cchFullPathLength,
+    _Out_ PSTR pszFullPath);
+DWORD WINAPI
+SheFullPathW(
+    _In_opt_ PCWSTR pszPath,
+    _In_ DWORD cchFullPathLength,
+    _Out_ PWSTR pszFullPath);
 
 /* Flags for Int64ToString and LargeIntegerToString */
 #define FMT_USE_NUMDIGITS 0x01
