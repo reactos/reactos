@@ -2986,3 +2986,90 @@ RealShellExecuteW(
                                lphProcess,
                                0);
 }
+
+/*************************************************************************
+ *  ShellExec_RunDLL [SHELL32.357]
+ *
+ * @see https://www.hexacorn.com/blog/2024/11/30/1-little-known-secret-of-shellexec_rundll/
+ */
+EXTERN_C
+VOID WINAPI
+ShellExec_RunDLL(
+    _In_opt_ HWND hwnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ PCWSTR pszCmdLine,
+    _In_ INT nCmdShow)
+{
+    TRACE("(%p, %p, %s, 0x%X)\n", hwnd, hInstance, wine_dbgstr_w(pszCmdLine), nCmdShow);
+
+    if (!pszCmdLine || !*pszCmdLine)
+        return;
+
+    // '?' enables us to specify the additional mask value
+    ULONG fNewMask = SEE_MASK_NOASYNC;
+    if (*pszCmdLine == L'?') // 1st question
+    {
+        INT MaskValue;
+        if (StrToIntExW(pszCmdLine + 1, STIF_SUPPORT_HEX, &MaskValue))
+            fNewMask |= MaskValue;
+
+        PCWSTR pch2ndQuestion = StrChrW(pszCmdLine + 1, L'?'); // 2nd question
+        if (pch2ndQuestion)
+            pszCmdLine = pch2ndQuestion + 1;
+    }
+
+    WCHAR szPath[2 * MAX_PATH];
+    if (PathProcessCommandAW(pszCmdLine, szPath, _countof(szPath), L'C') == -1)
+        StrCpyNW(szPath, pszCmdLine, _countof(szPath));
+
+    // Split arguments from the path
+    LPWSTR Args = PathGetArgsW(szPath);
+    if (*Args)
+        *(Args - 1) = UNICODE_NULL;
+
+    PathUnquoteSpacesW(szPath);
+
+    // Execute
+    SHELLEXECUTEINFOW execInfo = { sizeof(execInfo) };
+    execInfo.fMask = fNewMask;
+    execInfo.hwnd = hwnd;
+    execInfo.lpFile = szPath;
+    execInfo.lpParameters = Args;
+    execInfo.nShow = nCmdShow;
+    if (!ShellExecuteExW(&execInfo))
+    {
+        DWORD dwError = GetLastError();
+        if (SHELL_InRunDllProcess()) // Is it a RUNDLL process?
+            ExitProcess(dwError); // Terminate it now
+    }
+}
+
+/*************************************************************************
+ *  ShellExec_RunDLLA [SHELL32.358]
+ */
+EXTERN_C
+VOID WINAPI
+ShellExec_RunDLLA(
+    _In_opt_ HWND hwnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ PCSTR pszCmdLine,
+    _In_ INT nCmdShow)
+{
+    CStringW strCmdLine = pszCmdLine; // Keep
+    ShellExec_RunDLL(hwnd, hInstance, strCmdLine, nCmdShow);
+}
+
+/*************************************************************************
+ *  ShellExec_RunDLLW [SHELL32.359]
+ */
+EXTERN_C
+VOID WINAPI
+ShellExec_RunDLLW(
+    _In_opt_ HWND hwnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ PCWSTR pszCmdLine,
+    _In_ INT nCmdShow)
+{
+    CStringW strCmdLine = pszCmdLine; // Keep
+    ShellExec_RunDLL(hwnd, hInstance, strCmdLine, nCmdShow);
+}

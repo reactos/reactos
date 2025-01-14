@@ -300,36 +300,6 @@ ShellHookProc(INT iCode, WPARAM wParam, LPARAM lParam)
 /*
  * Unimplemented
  */
-EXTERN_C VOID
-WINAPI
-ShellExec_RunDLL(HWND hwnd, HINSTANCE hInstance, LPWSTR pszCmdLine, int nCmdShow)
-{
-    FIXME("ShellExec_RunDLL() stub\n");
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C VOID
-WINAPI
-ShellExec_RunDLLA(HWND hwnd, HINSTANCE hInstance, LPSTR pszCmdLine, int nCmdShow)
-{
-    FIXME("ShellExec_RunDLLA() stub\n");
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C VOID
-WINAPI
-ShellExec_RunDLLW(HWND hwnd, HINSTANCE hInstance, LPWSTR pszCmdLine, int nCmdShow)
-{
-    FIXME("ShellExec_RunDLLW() stub\n");
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C BOOL
 WINAPI
 SheShortenPathW(LPWSTR lpPath, BOOL bShorten)
