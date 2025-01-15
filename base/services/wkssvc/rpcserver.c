@@ -757,7 +757,8 @@ NetrWkstaUserGetInfo(
             ZeroMemory(pUserInfo, sizeof(WKSTA_USER_INFO_0));
 
             /* User Name */
-            pUserInfo->UserInfo0.wkui0_username = midl_user_allocate(UserInfoResponseBuffer->UserName.Length + sizeof(WCHAR));
+            pUserInfo->UserInfo0.wkui0_username =
+                midl_user_allocate(UserInfoResponseBuffer->UserName.Length + sizeof(WCHAR));
             if (pUserInfo->UserInfo0.wkui0_username == NULL)
             {
                 ERR("\n");
@@ -765,8 +766,11 @@ NetrWkstaUserGetInfo(
                 break;
             }
 
-            ZeroMemory(pUserInfo->UserInfo0.wkui0_username, UserInfoResponseBuffer->UserName.Length + sizeof(WCHAR));
-            CopyMemory(pUserInfo->UserInfo0.wkui0_username, UserInfoResponseBuffer->UserName.Buffer, UserInfoResponseBuffer->UserName.Length);
+            ZeroMemory(pUserInfo->UserInfo0.wkui0_username,
+                       UserInfoResponseBuffer->UserName.Length + sizeof(WCHAR));
+            CopyMemory(pUserInfo->UserInfo0.wkui0_username,
+                       UserInfoResponseBuffer->UserName.Buffer,
+                       UserInfoResponseBuffer->UserName.Length);
 
             *UserInfo = pUserInfo;
             break;
@@ -783,7 +787,8 @@ NetrWkstaUserGetInfo(
             ZeroMemory(pUserInfo, sizeof(WKSTA_USER_INFO_1));
 
             /* User Name */
-            pUserInfo->UserInfo1.wkui1_username = midl_user_allocate(UserInfoResponseBuffer->UserName.Length + sizeof(WCHAR));
+            pUserInfo->UserInfo1.wkui1_username =
+                midl_user_allocate(UserInfoResponseBuffer->UserName.Length + sizeof(WCHAR));
             if (pUserInfo->UserInfo1.wkui1_username == NULL)
             {
                 ERR("\n");
@@ -791,11 +796,15 @@ NetrWkstaUserGetInfo(
                 break;
             }
 
-            ZeroMemory(pUserInfo->UserInfo1.wkui1_username, UserInfoResponseBuffer->UserName.Length + sizeof(WCHAR));
-            CopyMemory(pUserInfo->UserInfo1.wkui1_username, UserInfoResponseBuffer->UserName.Buffer, UserInfoResponseBuffer->UserName.Length);
+            ZeroMemory(pUserInfo->UserInfo1.wkui1_username,
+                       UserInfoResponseBuffer->UserName.Length + sizeof(WCHAR));
+            CopyMemory(pUserInfo->UserInfo1.wkui1_username,
+                       UserInfoResponseBuffer->UserName.Buffer,
+                       UserInfoResponseBuffer->UserName.Length);
 
             /* Logon Domain Name */
-            pUserInfo->UserInfo1.wkui1_logon_domain = midl_user_allocate(UserInfoResponseBuffer->LogonDomainName.Length + sizeof(WCHAR));
+            pUserInfo->UserInfo1.wkui1_logon_domain =
+                midl_user_allocate(UserInfoResponseBuffer->LogonDomainName.Length + sizeof(WCHAR));
             if (pUserInfo->UserInfo1.wkui1_logon_domain == NULL)
             {
                 ERR("\n");
@@ -803,13 +812,17 @@ NetrWkstaUserGetInfo(
                 break;
             }
 
-            ZeroMemory(pUserInfo->UserInfo1.wkui1_logon_domain, UserInfoResponseBuffer->LogonDomainName.Length + sizeof(WCHAR));
-            CopyMemory(pUserInfo->UserInfo1.wkui1_logon_domain, UserInfoResponseBuffer->LogonDomainName.Buffer, UserInfoResponseBuffer->LogonDomainName.Length);
+            ZeroMemory(pUserInfo->UserInfo1.wkui1_logon_domain,
+                       UserInfoResponseBuffer->LogonDomainName.Length + sizeof(WCHAR));
+            CopyMemory(pUserInfo->UserInfo1.wkui1_logon_domain,
+                       UserInfoResponseBuffer->LogonDomainName.Buffer,
+                       UserInfoResponseBuffer->LogonDomainName.Length);
 
             /* FIXME: wkui1_oth_domains */
 
             /* Logon Server */
-            pUserInfo->UserInfo1.wkui1_logon_server = midl_user_allocate(UserInfoResponseBuffer->LogonServer.Length + sizeof(WCHAR));
+            pUserInfo->UserInfo1.wkui1_logon_server =
+                midl_user_allocate(UserInfoResponseBuffer->LogonServer.Length + sizeof(WCHAR));
             if (pUserInfo->UserInfo1.wkui1_logon_server == NULL)
             {
                 ERR("\n");
@@ -817,8 +830,11 @@ NetrWkstaUserGetInfo(
                 break;
             }
 
-            ZeroMemory(pUserInfo->UserInfo1.wkui1_logon_server, UserInfoResponseBuffer->LogonServer.Length + sizeof(WCHAR));
-            CopyMemory(pUserInfo->UserInfo1.wkui1_logon_server, UserInfoResponseBuffer->LogonServer.Buffer, UserInfoResponseBuffer->LogonServer.Length);
+            ZeroMemory(pUserInfo->UserInfo1.wkui1_logon_server,
+                       UserInfoResponseBuffer->LogonServer.Length + sizeof(WCHAR));
+            CopyMemory(pUserInfo->UserInfo1.wkui1_logon_server,
+                       UserInfoResponseBuffer->LogonServer.Buffer,
+                       UserInfoResponseBuffer->LogonServer.Length);
 
             *UserInfo = pUserInfo;
             break;
