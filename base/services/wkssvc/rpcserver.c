@@ -847,7 +847,19 @@ NetrWkstaUserGetInfo(
             break;
 
         case 1101:
+            pUserInfo = midl_user_allocate(sizeof(WKSTA_USER_INFO_1101));
+            if (pUserInfo == NULL)
+            {
+                ERR("Failed to allocate WKSTA_USER_INFO_1101\n");
+                dwResult = ERROR_NOT_ENOUGH_MEMORY;
+                break;
+            }
+
+            ZeroMemory(pUserInfo, sizeof(WKSTA_USER_INFO_1101));
+
             /* FIXME: wkui1101_oth_domains */
+
+            *UserInfo = pUserInfo;
             break;
 
         default:
