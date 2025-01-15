@@ -2,40 +2,40 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Compares two files or sets of files and displays the differences between\n\
-them.\n\
+    IDS_USAGE "Compare deux fichiers ou un ensemble de fichiers et affiche les différences\n\
+entre eux.\n\
 \n\
 FC [/A] [/C] [/L] [/LBn] [/N] [/OFF[LINE]] [/T] [/U] [/W] [/nnnn]\n\
    [drive1:][path1]filename1 [drive2:][path2]filename2\n\
 FC /B [drive1:][path1]filename1 [drive2:][path2]filename2\n\
 \n\
-  /A         Displays only first and last lines for each set of differences.\n\
-  /B         Performs a binary comparison.\n\
-  /C         Disregards the case of letters.\n\
-  /L         Compares files as ASCII text.\n\
-  /LBn       Sets the maximum consecutive mismatches to the specified\n\
-             number of lines (default: 100).\n\
-  /N         Displays the line numbers on an ASCII comparison.\n\
-  /OFF[LINE] Doesn't skip files with offline attribute set.\n\
-  /T         Doesn't expand tabs to spaces (default: expand).\n\
-  /U         Compare files as UNICODE text files.\n\
-  /W         Compresses white space (tabs and spaces) for comparison.\n\
-  /nnnn      Specifies the number of consecutive lines that must match\n\
-             after a mismatch (default: 2).\n\
+  /A         Affiche uniquement la première et la dernière ligne pour chaque ensemble de différences.\n\
+  /B         Effectue une comparaison binaire.\n\
+  /C         Ne tient pas compte de la casse des lettres.\n\
+  /L         Compare les fichiers sous forme de texte ASCII.\n\
+  /LBn       Définit le nombre maximal de différences consécutives\n\
+             au nombre de lignes spécifié (par défaut : 100).\n\
+  /N         Affiche les numéros de ligne sur une comparaison ASCII.\n\
+  /OFF[LINE] N'ignore pas les fichiers ayant l'attribut hors-ligne.\n\
+  /T         Ne transforme pas les tabulations en espaces (par défaut : transformer).\n\
+  /U         Compare les fichiers en tant que fichiers texte UNICODE.\n\
+  /W         Compresse les espaces blancs (tabulations et espaces) pour la comparaison.\n\
+  /nnnn      Spécifie le nombre de lignes consécutives qui doivent correspondre\n\
+             après une différence (par défaut : 2).\n\
   [drive1:][path1]filename1\n\
-             Specifies the first file or set of files to compare.\n\
+             Spécifie le premier fichier ou ensemble de fichiers à comparer.\n\
   [drive2:][path2]filename2\n\
-             Specifies the second file or set of files to compare.\n"
-    IDS_NO_DIFFERENCE "FC: no differences encountered\n"
-    IDS_LONGER_THAN "FC: %ls longer than %ls\n"
-    IDS_COMPARING "Comparing files %ls and %ls\n"
-    IDS_OUT_OF_MEMORY "FC: Out of memory\n"
-    IDS_CANNOT_READ "FC: cannot read from %ls\n"
-    IDS_INVALID_SWITCH "FC: Invalid Switch\n"
-    IDS_CANNOT_OPEN "FC: cannot open %ls - No such file or folder\n"
-    IDS_NEEDS_FILES "FC: Insufficient number of file specifications\n"
-    IDS_CANT_USE_WILDCARD "Wildcard ('*' and '?') are not supported yet\n"
-    IDS_DIFFERENT "FC: File %ls and %ls are different\n"
-    IDS_TOO_LARGE "FC: File %ls too large\n"
-    IDS_RESYNC_FAILED "Resync failed.  Files are too different.\n"
+             Spécifie le second fichier ou ensemble de fichiers à comparer.\n"
+    IDS_NO_DIFFERENCE "FC: Aucune différence constatée\n"
+    IDS_LONGER_THAN "FC: %ls plus grand que %ls\n"
+    IDS_COMPARING "Compare les fichiers %ls et %ls\n"
+    IDS_OUT_OF_MEMORY "FC: Dépassement de mémoire\n"
+    IDS_CANNOT_READ "FC: Ne peut pas lire depuis %ls\n"
+    IDS_INVALID_SWITCH "FC: Option invalide\n"
+    IDS_CANNOT_OPEN "FC: Ne peut pas ouvrir %ls - Fichier ou répertoire inexistant\n"
+    IDS_NEEDS_FILES "FC: Nombre insuffisant de fichiers spécifiés\n"
+    IDS_CANT_USE_WILDCARD "Les caractères joker ('*' et '?') ne sont pas encore supportés\n"
+    IDS_DIFFERENT "FC: Les fichiers %ls et %ls sont différents\n"
+    IDS_TOO_LARGE "FC: Fichier %ls trop grand\n"
+    IDS_RESYNC_FAILED "La resynchronisation a échoué. Les fichiers sont trop différents.\n"
 END
