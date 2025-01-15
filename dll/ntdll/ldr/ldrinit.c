@@ -51,6 +51,7 @@ RTL_BITMAP TlsExpansionBitMap;
 RTL_BITMAP FlsBitMap;
 BOOLEAN LdrpImageHasTls;
 LIST_ENTRY LdrpTlsList;
+LIST_ENTRY LdrpActiveTebList;
 ULONG LdrpNumberOfTlsEntries;
 ULONG LdrpNumberOfProcessors;
 PVOID NtDllBase;
@@ -506,6 +507,7 @@ NTAPI
 LdrpInitializeThread(IN PCONTEXT Context)
 {
     PPEB Peb = NtCurrentPeb();
+    PLDRP_TEB_LIST_ENTRY TebEntry;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PLIST_ENTRY NextEntry, ListHead;
     RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED ActCtx;
@@ -529,7 +531,13 @@ LdrpInitializeThread(IN PCONTEXT Context)
     if (LdrpShutdownInProgress) return;
 
     /* Allocate TLS */
-    LdrpAllocateTls();
+    LdrpAllocateTls(NtCurrentTeb());
+
+    /* Add thread to active TEB list */
+    ListHead = &LdrpActiveTebList;
+    TebEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LDRP_TEB_LIST_ENTRY));
+    TebEntry->Teb = NtCurrentTeb();
+    InsertTailList(&LdrpActiveTebList, &TebEntry->TebLinks);
 
     /* Start at the beginning */
     ListHead = &Peb->Ldr->InMemoryOrderModuleList;
@@ -1083,6 +1091,7 @@ LdrShutdownThread(VOID)
 {
     PPEB Peb = NtCurrentPeb();
     PTEB Teb = NtCurrentTeb();
+    PLDRP_TEB_LIST_ENTRY TebEntry;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PLIST_ENTRY NextEntry, ListHead;
     RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED ActCtx;
@@ -1101,6 +1110,19 @@ LdrShutdownThread(VOID)
     /* Get the Ldr Lock */
     RtlEnterCriticalSection(&LdrpLoaderLock);
 
+    /* Remove thread from active TEB list */
+    ListHead = &LdrpActiveTebList;
+    NextEntry = ListHead->Blink;
+    while (NextEntry != ListHead)
+    {
+        TebEntry = CONTAINING_RECORD(NextEntry, LDRP_TEB_LIST_ENTRY, TebLinks);
+        if (TebEntry->Teb == Teb)
+        {
+            RemoveEntryList(NextEntry);
+            break;
+        }
+        NextEntry = NextEntry->Blink;
+    }
     /* Start at the end */
     ListHead = &Peb->Ldr->InInitializationOrderModuleList;
     NextEntry = ListHead->Blink;
@@ -1259,9 +1281,11 @@ LdrpInitializeTls(VOID)
 {
     PLIST_ENTRY NextEntry, ListHead;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
+    PLDRP_TEB_LIST_ENTRY TebEntry;
     PIMAGE_TLS_DIRECTORY TlsDirectory;
     PLDRP_TLS_DATA TlsData;
     ULONG Size;
+    NTSTATUS Status;
     BOOL AllocateTls = FALSE;
 
     /* Initialize the TLS List */
@@ -1317,18 +1341,35 @@ LdrpInitializeTls(VOID)
         TlsData->TlsDirectory.Characteristics = LdrpNumberOfTlsEntries++;
     }
 
+    ListHead = &LdrpActiveTebList;
+    NextEntry = ListHead->Blink;
     /* Done setting up TLS, allocate entries */
     if (AllocateTls)
-        return LdrpAllocateTls();
-    else
-        return STATUS_SUCCESS;
+    {
+        Status = LdrpAllocateTls(NtCurrentTeb());
+        if (Status != STATUS_SUCCESS)
+            return Status;
+
+        while (NextEntry != ListHead)
+        {
+            TebEntry = CONTAINING_RECORD(NextEntry, LDRP_TEB_LIST_ENTRY, TebLinks);
+            if (TebEntry->Teb != NtCurrentTeb())
+            {
+                Status = LdrpAllocateTls(TebEntry->Teb);
+                if (Status != STATUS_SUCCESS)
+                    return Status;
+            }
+            NextEntry = NextEntry->Blink;
+        }
+	}
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
-LdrpAllocateTls(VOID)
+LdrpAllocateTls(PTEB Teb)
 {
-    PTEB Teb = NtCurrentTeb();
     PLIST_ENTRY NextEntry, ListHead;
     PLDRP_TLS_DATA TlsData;
     SIZE_T TlsDataSize;
@@ -1340,7 +1381,7 @@ LdrpAllocateTls(VOID)
     if (!LdrpNumberOfTlsEntries)
         return STATUS_SUCCESS;
     /* Check if there are new entries to add to the vector */
-    if (LdrpNumberOfTlsEntries == (ULONG)Teb->UserReserved[0])
+    if (LdrpNumberOfTlsEntries == Teb->UserReserved[0])
         return STATUS_SUCCESS;
 
     /* Allocate the vector array */
@@ -1363,7 +1404,7 @@ LdrpAllocateTls(VOID)
         /* Allocate this vector */
         TlsDataSize = TlsData->TlsDirectory.EndAddressOfRawData -
                       TlsData->TlsDirectory.StartAddressOfRawData;
-        TlsDataSize += TlsDataSize % sizeof(PVOID);
+
         if (!OldTlsVector || ((TlsData->TlsDirectory.Characteristics + 1) > (ULONG)Teb->UserReserved[0]))
         {
             TlsVector[TlsData->TlsDirectory.Characteristics] = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -2490,6 +2531,8 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Initialize the keyed event for condition variables */
     RtlpInitializeKeyedEvent();
 #endif
+    /* Initialize Active TEB List */
+    InitializeListHead(&LdrpActiveTebList);
 
     /* Initialize TLS */
     Status = LdrpInitializeTls();
