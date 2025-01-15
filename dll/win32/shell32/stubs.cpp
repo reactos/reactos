@@ -19,14 +19,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
  */
 EXTERN_C HRESULT
 WINAPI
-SHGetUnreadMailCountW(HKEY hKeyUser,
-                      LPCWSTR pszMailAddress,
-                      DWORD *pdwCount,
-                      FILETIME *pFileTime,
-                      LPWSTR pszShellExecuteCommand,
-                      int cchShellExecuteCommand)
+SHSetUnreadMailCountW(LPCWSTR pszMailAddress,
+                      DWORD dwCount,
+                      LPCWSTR pszShellExecuteCommand)
 {
-    FIXME("SHGetUnreadMailCountW() stub\n");
+    FIXME("SHSetUnreadMailCountW() stub\n");
     return E_FAIL;
 }
 
