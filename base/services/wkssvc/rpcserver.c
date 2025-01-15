@@ -762,6 +762,7 @@ NetrWkstaUserGetInfo(
             if (pUserInfo->UserInfo0.wkui0_username == NULL)
             {
                 ERR("\n");
+                midl_user_free(pUserInfo);
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
@@ -792,6 +793,7 @@ NetrWkstaUserGetInfo(
             if (pUserInfo->UserInfo1.wkui1_username == NULL)
             {
                 ERR("\n");
+                midl_user_free(pUserInfo);
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
@@ -808,6 +810,8 @@ NetrWkstaUserGetInfo(
             if (pUserInfo->UserInfo1.wkui1_logon_domain == NULL)
             {
                 ERR("\n");
+                midl_user_free(pUserInfo->UserInfo1.wkui1_username);
+                midl_user_free(pUserInfo);
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
@@ -826,6 +830,9 @@ NetrWkstaUserGetInfo(
             if (pUserInfo->UserInfo1.wkui1_logon_server == NULL)
             {
                 ERR("\n");
+                midl_user_free(pUserInfo->UserInfo1.wkui1_username);
+                midl_user_free(pUserInfo->UserInfo1.wkui1_logon_domain);
+                midl_user_free(pUserInfo);
                 dwResult = ERROR_NOT_ENOUGH_MEMORY;
                 break;
             }
