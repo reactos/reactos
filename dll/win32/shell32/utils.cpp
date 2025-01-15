@@ -903,6 +903,41 @@ SheRemoveQuotesW(LPWSTR psz)
 }
 
 /*************************************************************************
+ *  SHEnumerateUnreadMailAccountsW [SHELL32.287]
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shenumerateunreadmailaccountsw
+ */
+EXTERN_C
+HRESULT WINAPI
+SHEnumerateUnreadMailAccountsW(
+    _In_opt_ HKEY hKeyUser,
+    _In_ DWORD dwIndex,
+    _Out_writes_(cchMailAddress) LPWSTR pszMailAddress,
+    _In_ INT cchMailAddress)
+{
+    if (!hKeyUser)
+        hKeyUser = HKEY_CURRENT_USER;
+
+    HKEY hKey;
+    LSTATUS error = RegOpenKeyExW(hKeyUser,
+                                  L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail",
+                                  0,
+                                  KEY_ENUMERATE_SUB_KEYS,
+                                  &hKey);
+    if (error)
+        return HRESULT_FROM_WIN32(error);
+
+    FILETIME FileTime;
+    error = RegEnumKeyExW(hKey, dwIndex, pszMailAddress, (PDWORD)&cchMailAddress, NULL, NULL,
+                          NULL, &FileTime);
+    if (error)
+        *pszMailAddress = UNICODE_NULL;
+
+    RegCloseKey(hKey);
+    return error ? HRESULT_FROM_WIN32(error) : S_OK;
+}
+
+/*************************************************************************
  *  SHFindComputer [SHELL32.91]
  *
  * Invokes the shell search in My Computer. Used in SHFindFiles.

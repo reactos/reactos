@@ -35,14 +35,12 @@ SHGetUnreadMailCountW(HKEY hKeyUser,
  */
 EXTERN_C HRESULT
 WINAPI
-SHEnumerateUnreadMailAccountsW(HKEY user,
-                               DWORD idx,
-                               LPWSTR mailaddress,
-                               INT mailaddresslen)
+SHSetUnreadMailCountW(LPCWSTR pszMailAddress,
+                      DWORD dwCount,
+                      LPCWSTR pszShellExecuteCommand)
 {
-    FIXME("SHEnumerateUnreadMailAccountsW(%p %d %p %d) stub\n",
-        user, idx, mailaddress, mailaddresslen);
-    return E_NOTIMPL;
+    FIXME("SHSetUnreadMailCountW() stub\n");
+    return E_FAIL;
 }
 
 /*
