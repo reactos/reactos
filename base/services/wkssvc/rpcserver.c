@@ -845,6 +845,7 @@ NetrWkstaUserGetInfo(
 
         default:
             ERR("\n");
+            dwResult = ERROR_INVALID_LEVEL;
             break;
     }
 
