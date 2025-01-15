@@ -13,6 +13,90 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+static PCSTR StrEndNA(_In_ LPCSTR psz, _In_ INT_PTR cch)
+{
+    PCSTR pch, pchEnd = &psz[cch];
+    for (pch = psz; *pch && pch < pchEnd; pch = CharNextA(pch))
+        ;
+    if (pchEnd < pch)
+        pch -= 2;
+    return pch;
+}
+
+static PCWSTR StrEndNW(_In_ PCWSTR psz, _In_ INT_PTR cch)
+{
+    PCWSTR pch, pchEnd = &psz[cch];
+    for (pch = psz; *pch && pch < pchEnd; ++pch)
+        ;
+    if (pchEnd < pch)
+        pch -= 2;
+    return pch;
+}
+
+/*************************************************************************
+ *  StrRStrA [SHELL32.389]
+ */
+EXTERN_C
+PSTR WINAPI
+StrRStrA(
+    _In_ PCSTR pszSrc,
+    _In_opt_ LPCSTR pszLast,
+    _In_ LPCSTR pszSearch)
+{
+    INT cchSearch = lstrlenA(pszSearch);
+
+    PCSTR pchEnd = pszLast ? pszLast : &pszSrc[lstrlenA(pszSrc)];
+    if (pchEnd == pszSrc)
+        return NULL;
+
+    INT_PTR cchEnd = pchEnd - pszSrc;
+    for (;;)
+    {
+        --pchEnd;
+        --cchEnd;
+        if (!pchEnd)
+            break;
+        if (!StrCmpNA(pchEnd, pszSearch, cchSearch) && pchEnd == StrEndNA(pszSrc, cchEnd))
+            break;
+        if (pchEnd == pszSrc)
+            return NULL;
+    }
+
+    return const_cast<PSTR>(pchEnd);
+}
+
+/*************************************************************************
+ *  StrRStrW [SHELL32.392]
+ */
+EXTERN_C
+PWSTR WINAPI
+StrRStrW(
+    _In_ PCWSTR pszSrc,
+    _In_opt_ PCWSTR pszLast,
+    _In_ PCWSTR pszSearch)
+{
+    INT cchSearch = lstrlenW(pszSearch);
+
+    PCWSTR pchEnd = pszLast ? pszLast : &pszSrc[lstrlenW(pszSrc)];
+    if (pchEnd == pszSrc)
+        return NULL;
+
+    INT_PTR cchEnd = pchEnd - pszSrc;
+    for (;;)
+    {
+        --pchEnd;
+        --cchEnd;
+        if (!pchEnd)
+            break;
+        if (!StrCmpNW(pchEnd, pszSearch, cchSearch) && pchEnd == StrEndNW(pszSrc, cchEnd))
+            break;
+        if (pchEnd == pszSrc)
+            return NULL;
+    }
+
+    return const_cast<PWSTR>(pchEnd);
+}
+
 HWND
 CStubWindow32::FindStubWindow(UINT Type, LPCWSTR Path)
 {

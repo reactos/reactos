@@ -253,28 +253,6 @@ RealDriveTypeFlags(INT iDrive, BOOL bUnknown)
 /*
  * Unimplemented
  */
-EXTERN_C LPWSTR
-WINAPI
-StrRStrW(LPWSTR lpSrc, LPWSTR lpLast, LPWSTR lpSearch)
-{
-    FIXME("StrRStrW() stub\n");
-    return NULL;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C LPWSTR
-WINAPI
-StrRStrA(LPSTR lpSrc, LPSTR lpLast, LPSTR lpSearch)
-{
-    FIXME("StrRStrA() stub\n");
-    return NULL;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C LONG
 WINAPI
 ShellHookProc(INT iCode, WPARAM wParam, LPARAM lParam)
