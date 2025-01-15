@@ -797,6 +797,66 @@ SHCreatePropertyBag(_In_ REFIID riid, _Out_ void **ppvObj)
 }
 
 /*************************************************************************
+ *  SHSetUnreadMailCountW [SHELL32.336]
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shsetunreadmailcountw
+ */
+EXTERN_C
+HRESULT WINAPI
+SHSetUnreadMailCountW(
+    _In_ LPCWSTR pszMailAddress,
+    _In_ DWORD dwCount,
+    _In_ LPCWSTR pszShellExecuteCommand)
+{
+    WCHAR szBuff[2 * MAX_PATH];
+    HRESULT hr = StringCchPrintfW(szBuff, _countof(szBuff), L"%s\\%s",
+                                  L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail",
+                                  pszMailAddress);
+    if (FAILED(hr))
+        return hr;
+
+    HKEY hKey;
+    DWORD dwDisposition;
+    LSTATUS error = RegCreateKeyExW(HKEY_CURRENT_USER, szBuff, 0, NULL, 0, KEY_SET_VALUE, NULL,
+                                    &hKey, &dwDisposition);
+    if (error)
+        return HRESULT_FROM_WIN32(error);
+
+    error = RegSetValueExW(hKey, L"MessageCount", 0, REG_DWORD, (PBYTE)&dwCount, sizeof(dwCount));
+    if (error)
+    {
+        RegCloseKey(hKey);
+        return HRESULT_FROM_WIN32(error);
+    }
+
+    FILETIME FileTime;
+    GetSystemTimeAsFileTime(&FileTime);
+
+    error = RegSetValueExW(hKey, L"TimeStamp", 0, REG_BINARY, (PBYTE)&FileTime, sizeof(FileTime));
+    if (error)
+    {
+        RegCloseKey(hKey);
+        return HRESULT_FROM_WIN32(error);
+    }
+
+    if (!PathUnExpandEnvStringsW(pszShellExecuteCommand, szBuff, _countof(szBuff)))
+    {
+        hr = StringCchCopyW(szBuff, _countof(szBuff), pszShellExecuteCommand);
+        if (FAILED(hr))
+        {
+            RegCloseKey(hKey);
+            return hr;
+        }
+    }
+
+    DWORD cbValue = (lstrlenW(szBuff) + 1) * sizeof(WCHAR);
+    error = RegSetValueExW(hKey, L"Application", 0, REG_SZ, (PBYTE)szBuff, cbValue);
+
+    RegCloseKey(hKey);
+    return (error ? HRESULT_FROM_WIN32(error) : S_OK);
+}
+
+/*************************************************************************
  *                SheRemoveQuotesA (SHELL32.@)
  */
 EXTERN_C LPSTR
