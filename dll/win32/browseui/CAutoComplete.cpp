@@ -1584,9 +1584,9 @@ LRESULT CAutoComplete::OnNCDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
     m_hwndSizeBox.m_pDropDown = NULL;
 
     // destroy controls
-    m_hwndList.DestroyWindow();
-    m_hwndScrollBar.DestroyWindow();
-    m_hwndSizeBox.DestroyWindow();
+    if (m_hwndList) m_hwndList.DestroyWindow();
+    if (m_hwndScrollBar) m_hwndScrollBar.DestroyWindow();
+    if (m_hwndSizeBox) m_hwndSizeBox.DestroyWindow();
 
     // clean up
     m_hwndCombo = NULL;
