@@ -71,11 +71,22 @@ static VOID TEST_StrRStrW(VOID)
     ok_wstr(ret, L"BC");
 }
 
+static BOOL IsWindowsServer2003SP2OrGreater(VOID)
+{
+    return IsWindowsVersionOrGreater(5, 2, 2);
+}
+
 START_TEST(StrRStr)
 {
     if (IsWindowsVistaOrGreater())
     {
         skip("Vista+\n");
+        return;
+    }
+
+    if (!IsWindowsServer2003SP2OrGreater())
+    {
+        skip("Before 2K3 SP3\n");
         return;
     }
 
