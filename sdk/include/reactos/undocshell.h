@@ -787,13 +787,6 @@ HRESULT WINAPI SHCreatePropertyBag(_In_ REFIID riid, _Out_ void **ppvObj);
 HRESULT WINAPI SHLimitInputCombo(HWND hWnd, IShellFolder *psf);
 HRESULT WINAPI SHGetImageList(int iImageList, REFIID riid, void **ppv);
 
-HRESULT WINAPI
-SHEnumerateUnreadMailAccountsW(
-    _In_opt_ HKEY hKeyUser,
-    _In_ DWORD dwIndex,
-    _Out_writes_(cchMailAddress) LPWSTR pszMailAddress,
-    _In_ INT cchMailAddress);
-
 BOOL WINAPI GUIDFromStringA(
     _In_   PCSTR psz,
     _Out_  LPGUID pguid);

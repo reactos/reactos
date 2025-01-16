@@ -652,6 +652,13 @@ SHTestTokenMembership(
     _In_ ULONG ulRID);
 #endif
 
+HRESULT WINAPI
+SHEnumerateUnreadMailAccountsW(
+    _In_opt_ HKEY hKeyUser,
+    _In_ DWORD dwIndex,
+    _Out_writes_(cchMailAddress) LPWSTR pszMailAddress,
+    _In_ INT cchMailAddress);
+
 #ifdef UNICODE
 #define NOTIFYICONDATA_V1_SIZE NOTIFYICONDATAW_V1_SIZE
 #define NOTIFYICONDATA_V2_SIZE NOTIFYICONDATAW_V2_SIZE
