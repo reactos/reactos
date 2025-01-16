@@ -887,24 +887,24 @@ SHELL_ReadSingleUnreadMailCount(
     _Out_writes_opt_(cchShellExecuteCommand) LPWSTR pszShellExecuteCommand,
     _In_ INT cchShellExecuteCommand)
 {
-    DWORD dwType, dwCount, cbCount = sizeof(dwCount);
-    DWORD error = SHQueryValueExW(hKey, L"MessageCount", 0, &dwType, &dwCount, &cbCount);
+    DWORD dwType, dwCount, cbSize = sizeof(dwCount);
+    DWORD error = SHQueryValueExW(hKey, L"MessageCount", 0, &dwType, &dwCount, &cbSize);
     if (error)
         return error;
     if (pdwCount && dwType == REG_DWORD)
         *pdwCount = dwCount;
 
     FILETIME FileTime;
-    DWORD cbFileTime = sizeof(FileTime);
-    error = SHQueryValueExW(hKey, L"TimeStamp", 0, &dwType, &FileTime, &cbFileTime);
+    cbSize = sizeof(FileTime);
+    error = SHQueryValueExW(hKey, L"TimeStamp", 0, &dwType, &FileTime, &cbSize);
     if (error)
         return error;
     if (pFileTime && dwType == REG_BINARY)
         *pFileTime = FileTime;
 
     WCHAR szName[2 * MAX_PATH];
-    DWORD cbName = sizeof(szName);
-    error = SHQueryValueExW(hKey, L"Application", 0, &dwType, szName, &cbName);
+    cbSize = sizeof(szName);
+    error = SHQueryValueExW(hKey, L"Application", 0, &dwType, szName, &cbSize);
     if (error)
         return error;
 
