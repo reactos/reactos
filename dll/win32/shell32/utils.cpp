@@ -13,7 +13,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-static PCSTR StrEndNA(_In_ LPCSTR psz, _In_ INT_PTR cch)
+static PCSTR StrEndNA(_In_ PCSTR psz, _In_ INT_PTR cch)
 {
     PCSTR pch, pchEnd = &psz[cch];
     for (pch = psz; *pch && pch < pchEnd; pch = CharNextA(pch))
