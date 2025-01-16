@@ -638,6 +638,12 @@ DoEnvironmentSubstW(
     _Inout_updates_(cchSrc) LPWSTR pszSrc,
     UINT cchSrc);
 
+HRESULT WINAPI
+SHSetUnreadMailCountW(
+    _In_ LPCWSTR pszMailAddress,
+    _In_ DWORD dwCount,
+    _In_ LPCWSTR pszShellExecuteCommand);
+
 #if (_WIN32_IE >= 0x0601)
 BOOL
 WINAPI
