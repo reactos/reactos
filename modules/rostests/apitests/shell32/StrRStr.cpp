@@ -23,8 +23,9 @@ static VOID TEST_StrRStrA(VOID)
         return;
     }
 
-    ret = StrRStrA("ABCBC", NULL, "BC");
-    ok_str(ret, "BC");
+    psz = "ABCBC";
+    ret = StrRStrA(psz, NULL, "BC");
+    ok_ptr(ret, psz + 3);
 
     psz = "ABCBC";
     pch = &psz[2];
