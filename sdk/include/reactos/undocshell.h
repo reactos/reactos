@@ -864,15 +864,6 @@ Activate_RunDLL(
 
 BOOL WINAPI SHSettingsChanged(LPCVOID unused, LPCWSTR pszKey);
 
-HRESULT WINAPI
-SHGetUnreadMailCountW(
-    _In_opt_ HKEY hKeyUser,
-    _In_opt_ LPCWSTR pszMailAddress,
-    _In_opt_ PDWORD pdwCount,
-    _In_opt_ PFILETIME pFileTime,
-    _Out_writes_opt_(cchShellExecuteCommand) LPWSTR pszShellExecuteCommand,
-    _In_opt_ INT cchShellExecuteCommand);
-
 /*****************************************************************************
  * Shell32 resources
  */
