@@ -44,6 +44,7 @@ extern void func_SHGetAttributesFromDataObject(void);
 extern void func_SHGetFileInfo(void);
 extern void func_SHLimitInputEdit(void);
 extern void func_SHParseDisplayName(void);
+extern void func_SHShouldShowWizards(void);
 extern void func_SHSimpleIDListFromPath(void);
 extern void func_SHRestricted(void);
 
@@ -90,6 +91,7 @@ const struct test winetest_testlist[] =
     { "SHGetFileInfo", func_SHGetFileInfo },
     { "SHLimitInputEdit", func_SHLimitInputEdit },
     { "SHParseDisplayName", func_SHParseDisplayName },
+    { "SHShouldShowWizards", func_SHShouldShowWizards },
     { "SHSimpleIDListFromPath", func_SHSimpleIDListFromPath },
     { "SHRestricted", func_SHRestricted },
 
