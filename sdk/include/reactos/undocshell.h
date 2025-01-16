@@ -776,6 +776,7 @@ SheFullPathA(
     _In_opt_ PCSTR pszPath,
     _In_ DWORD cchFullPathLength,
     _Out_writes_(cchFullPathLength) PSTR pszFullPath);
+
 DWORD WINAPI
 SheFullPathW(
     _In_opt_ PCWSTR pszPath,
