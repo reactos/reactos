@@ -885,7 +885,7 @@ SHELL_ReadSingleUnreadMailCount(
     _Out_opt_ PDWORD pdwCount,
     _Out_opt_ PFILETIME pFileTime,
     _Out_writes_opt_(cchShellExecuteCommand) LPWSTR pszShellExecuteCommand,
-    _In_opt_ INT cchShellExecuteCommand)
+    _In_ INT cchShellExecuteCommand)
 {
     DWORD dwType, dwCount, cbCount = sizeof(dwCount);
     LSTATUS error = RegQueryValueExW(hKey, L"MessageCount", 0, &dwType, (PBYTE)&dwCount, &cbCount);
