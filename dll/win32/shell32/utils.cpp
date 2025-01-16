@@ -938,17 +938,14 @@ SHGetUnreadMailCountW(
 
     if (pszMailAddress)
     {
-        WCHAR Name[2 * MAX_PATH];
-        hr = StringCchPrintfW(Name, _countof(Name), L"%s\\%s",
-                              L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail",
-                              pszMailAddress);
-        if (FAILED(hr))
-            return hr;
+        CStringW strName = L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail";
+        strName += L'\\'
+        strName += pszMailAddress;
 
         if (!hKeyUser)
             hKeyUser = HKEY_CURRENT_USER;
 
-        error = RegOpenKeyExW(hKeyUser, Name, 0, KEY_QUERY_VALUE, &hKey);
+        error = RegOpenKeyExW(hKeyUser, strName, 0, KEY_QUERY_VALUE, &hKey);
         if (error)
             return HRESULT_FROM_WIN32(error);
 
