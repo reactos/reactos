@@ -15,26 +15,27 @@ START_TEST(SHSetUnreadMailCountW)
     error = RegCreateKeyExW(HKEY_CURRENT_USER,
                             L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail\\example.com",
                             0, NULL, 0, KEY_WRITE, NULL, &hKey, &dwDisposition);
-    ok_hex(error, ERROR_SUCCESS);
+    ok_long(error, ERROR_SUCCESS);
     RegCloseKey(hKey);
 
-    SHSetUnreadMailCountW(L"example.com", 0, L"ThisIsMyMailerApp");
+    HRESULT hr = SHSetUnreadMailCountW(L"example.com", 0, L"ThisIsMyMailerApp");
+    ok_hex(hr, S_OK);
 
     error = RegOpenKeyExW(HKEY_CURRENT_USER,
                           L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail\\example.com",
                           0,
                           KEY_READ,
                           &hKey);
-    ok_hex(error, ERROR_SUCCESS);
+    ok_long(error, ERROR_SUCCESS);
 
     DWORD dwValue, cbValue = sizeof(dwValue);
     error = RegQueryValueExW(hKey, L"MessageCount", NULL, NULL, (PBYTE)&dwValue, &cbValue);
-    ok_hex(error, ERROR_SUCCESS);
+    ok_long(error, ERROR_SUCCESS);
 
     WCHAR szValue[MAX_PATH];
     cbValue = sizeof(szValue);
     error = RegQueryValueExW(hKey, L"Application", NULL, NULL, (PBYTE)szValue, &cbValue);
-    ok_hex(error, ERROR_SUCCESS);
+    ok_long(error, ERROR_SUCCESS);
 
     RegCloseKey(hKey);
 
