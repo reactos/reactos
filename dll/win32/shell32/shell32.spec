@@ -317,7 +317,7 @@
 317 stdcall SHGetSpecialFolderLocation(long long ptr)
 318 stdcall SHGetSpecialFolderPathA(long ptr long long)
 319 stdcall SHGetSpecialFolderPathW(long ptr long long)
-320 stdcall SHGetUnreadMailCountW (long wstr long ptr wstr long)
+320 stdcall SHGetUnreadMailCountW(ptr wstr ptr ptr ptr long)
 321 stdcall SHHelpShortcuts_RunDLL(long long long long) SHHelpShortcuts_RunDLLA
 322 stdcall SHHelpShortcuts_RunDLLA(long long long long)
 323 stdcall SHHelpShortcuts_RunDLLW(long long long long)
