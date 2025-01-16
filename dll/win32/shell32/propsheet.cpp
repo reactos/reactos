@@ -179,9 +179,6 @@ SHOpenPropSheetA(
     CStringW strStartPageW, strCaptionW;
     LPCWSTR pszCaptionW = NULL, pszStartPageW = NULL;
 
-    TRACE("(%s, %p, %u, %p, %p, %p, %s)", debugstr_a(pszCaption), ahKeys, cKeys, pclsidDefault,
-          pDataObject, pShellBrowser, debugstr_a(pszStartPage));
-
     if (pszCaption)
     {
         strStartPageW = pszCaption;
