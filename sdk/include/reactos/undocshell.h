@@ -717,6 +717,7 @@ ShellExec_RunDLLA(
     _In_opt_ HINSTANCE hInstance,
     _In_ PCSTR pszCmdLine,
     _In_ INT nCmdShow);
+
 VOID WINAPI
 ShellExec_RunDLLW(
     _In_opt_ HWND hwnd,
