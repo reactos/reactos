@@ -1571,7 +1571,7 @@ SHGetUserDisplayName(
                 hr = StringCchCopyW(pName, *puSize, UserInfo->usri2_full_name);
                 if (SUCCEEDED(hr))
                 {
-                    // Including the terminating null character
+                    // Include the NUL-terminator
                     *puSize = lstrlenW(UserInfo->usri2_full_name) + 1;
                 }
             }
