@@ -1,0 +1,84 @@
+/*
+ * PROJECT:     ReactOS API tests
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Test for StrRStrA/W
+ * COPYRIGHT:   Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ */
+
+#include "shelltest.h"
+#include <versionhelpers.h>
+
+typedef PSTR (WINAPI *FN_StrRStrA)(PCSTR, PCSTR, PCSTR pszSearch);
+typedef PWSTR (WINAPI *FN_StrRStrW)(PCWSTR, PCWSTR, PCWSTR pszSearch);
+
+static VOID TEST_StrRStrA(VOID)
+{
+    PCSTR psz, pch;
+    PSTR ret;
+    FN_StrRStrA StrRStrA = (FN_StrRStrA)GetProcAddress(GetModuleHandleW(L"shell32"), MAKEINTRESOURCEA(389));
+
+    if (!StrRStrA)
+    {
+        skip("StrRStrA not found\n");
+        return;
+    }
+
+    ret = StrRStrA("ABCBC", NULL, "BC");
+    ok_str(ret, "BC");
+
+    psz = "ABCBC";
+    pch = &psz[2];
+    ret = StrRStrA(psz, pch, "BC");
+    ok_str(ret, "BCBC");
+
+    psz = "ABCBC";
+    ret = StrRStrA(psz, psz, "BC");
+    ok(ret == NULL, "ret was '%s'\n", ret);
+
+    psz = "ABCBC";
+    pch = &psz[lstrlenA(psz)];
+    ret = StrRStrA(psz, pch, "BC");
+    ok_str(ret, "BC");
+}
+
+static VOID TEST_StrRStrW(VOID)
+{
+    PCWSTR psz, pch;
+    PWSTR ret;
+    FN_StrRStrW StrRStrW = (FN_StrRStrW)GetProcAddress(GetModuleHandleW(L"shell32"), MAKEINTRESOURCEA(392));
+
+    if (!StrRStrW)
+    {
+        skip("StrRStrW not found\n");
+        return;
+    }
+
+    ret = StrRStrW(L"ABCBC", NULL, L"BC");
+    ok_wstr(ret, L"BC");
+
+    psz = L"ABCBC";
+    pch = &psz[2];
+    ret = StrRStrW(psz, pch, L"BC");
+    ok_wstr(ret, L"BCBC");
+
+    psz = L"ABCBC";
+    ret = StrRStrW(psz, psz, L"BC");
+    ok(ret == NULL, "ret was '%S'\n", ret);
+
+    psz = L"ABCBC";
+    pch = &psz[lstrlenW(psz)];
+    ret = StrRStrW(psz, pch, L"BC");
+    ok_wstr(ret, L"BC");
+}
+
+START_TEST(StrRStr)
+{
+    if (IsWindowsVistaOrGreater())
+    {
+        skip("Vista+\n");
+        return;
+    }
+
+    TEST_StrRStrA();
+    TEST_StrRStrW();
+}
