@@ -1546,13 +1546,12 @@ SHGetUserDisplayName(
         return S_OK;
 
     LONG error = GetLastError(); // for ERROR_NONE_MAPPED
+    HRESULT hr = HRESULT_FROM_WIN32(error);
 
     WCHAR UserName[MAX_PATH];
     DWORD cchUserName = _countof(UserName);
     if (!GetUserNameW(UserName, &cchUserName))
         return HRESULT_FROM_WIN32(GetLastError());
-
-    HRESULT hr = HRESULT_FROM_WIN32(error);
 
     // Was the user name not available in the specified format (NameDisplay)?
     if (error == ERROR_NONE_MAPPED)
