@@ -799,6 +799,7 @@ StrRStrA(
     _In_ PCSTR pszSrc,
     _In_opt_ LPCSTR pszLast,
     _In_ LPCSTR pszSearch);
+
 PWSTR WINAPI
 StrRStrW(
     _In_ PCWSTR pszSrc,
