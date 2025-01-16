@@ -3065,6 +3065,5 @@ ShellExec_RunDLLW(
     _In_ PCWSTR pszCmdLine,
     _In_ INT nCmdShow)
 {
-    CStringW strCmdLine = pszCmdLine; // Keep
-    ShellExec_RunDLL_Helper(hwnd, hInstance, strCmdLine, nCmdShow);
+    ShellExec_RunDLL_Helper(hwnd, hInstance, pszCmdLine, nCmdShow);
 }
