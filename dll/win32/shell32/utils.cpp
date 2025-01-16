@@ -1576,7 +1576,7 @@ SHGetUserDisplayName(
                 }
             }
 
-            NetApiBufferFree(UserInfo); // Clean up
+            NetApiBufferFree(UserInfo);
         }
     }
 
