@@ -34,6 +34,7 @@ list(APPEND SOURCE
     SHParseDisplayName.cpp
     SHRestricted.cpp
     She.cpp
+    ShellExec_RunDLL.cpp
     ShellExecCmdLine.cpp
     ShellExecuteEx.cpp
     ShellExecuteW.cpp
