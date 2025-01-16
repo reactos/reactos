@@ -354,7 +354,7 @@
 354 stdcall SheShortenPathW(wstr long)
 355 stdcall ShellAboutA(long str str long)
 356 stdcall ShellAboutW(long wstr wstr long)
-357 stdcall ShellExec_RunDLL(ptr ptr wstr long)
+357 stdcall ShellExec_RunDLL(ptr ptr str long) ShellExec_RunDLLA
 358 stdcall ShellExec_RunDLLA(ptr ptr str long)
 359 stdcall ShellExec_RunDLLW(ptr ptr wstr long)
 360 stdcall ShellExecuteA(long str str str str long)

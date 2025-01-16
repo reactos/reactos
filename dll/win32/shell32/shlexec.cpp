@@ -2987,14 +2987,9 @@ RealShellExecuteW(
                                0);
 }
 
-/*************************************************************************
- *  ShellExec_RunDLL [SHELL32.357]
- *
- * @see https://www.hexacorn.com/blog/2024/11/30/1-little-known-secret-of-shellexec_rundll/
- */
-EXTERN_C
-VOID WINAPI
-ShellExec_RunDLL(
+// The common helper of ShellExec_RunDLLA and ShellExec_RunDLLW
+static VOID
+ShellExec_RunDLL_Helper(
     _In_opt_ HWND hwnd,
     _In_opt_ HINSTANCE hInstance,
     _In_ PCWSTR pszCmdLine,
@@ -3056,7 +3051,7 @@ ShellExec_RunDLLA(
     _In_ INT nCmdShow)
 {
     CStringW strCmdLine = pszCmdLine; // Keep
-    ShellExec_RunDLL(hwnd, hInstance, strCmdLine, nCmdShow);
+    ShellExec_RunDLL_Helper(hwnd, hInstance, strCmdLine, nCmdShow);
 }
 
 /*************************************************************************
@@ -3071,5 +3066,5 @@ ShellExec_RunDLLW(
     _In_ INT nCmdShow)
 {
     CStringW strCmdLine = pszCmdLine; // Keep
-    ShellExec_RunDLL(hwnd, hInstance, strCmdLine, nCmdShow);
+    ShellExec_RunDLL_Helper(hwnd, hInstance, strCmdLine, nCmdShow);
 }

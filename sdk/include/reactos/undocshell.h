@@ -709,7 +709,7 @@ VOID WINAPI
 ShellExec_RunDLL(
     _In_opt_ HWND hwnd,
     _In_opt_ HINSTANCE hInstance,
-    _In_ PCWSTR pszCmdLine,
+    _In_ PCSTR pszCmdLine,
     _In_ INT nCmdShow);
 
 VOID WINAPI
