@@ -31,6 +31,7 @@ list(APPEND SOURCE
     SHCreateDataObject.cpp
     SHCreateFileDataObject.cpp
     SHCreateFileExtractIconW.cpp
+    SHGetUnreadMailCountW.cpp
     SHParseDisplayName.cpp
     SHRestricted.cpp
     SHShouldShowWizards.cpp
