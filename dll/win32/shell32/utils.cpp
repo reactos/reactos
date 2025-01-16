@@ -1117,44 +1117,6 @@ CopyStreamUI(
 }
 
 /*************************************************************************
- *  SHOpenPropSheetA [SHELL32.707]
- *
- * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj/nf-shlobj-shopenpropsheeta
- */
-EXTERN_C
-BOOL WINAPI
-SHOpenPropSheetA(
-    _In_opt_ LPCSTR pszCaption,
-    _In_opt_ HKEY *ahKeys,
-    _In_ UINT cKeys,
-    _In_ const CLSID *pclsidDefault,
-    _In_ IDataObject *pDataObject,
-    _In_opt_ IShellBrowser *pShellBrowser,
-    _In_opt_ LPCSTR pszStartPage)
-{
-    CStringW strStartPageW, strCaptionW;
-    LPCWSTR pszCaptionW = NULL, pszStartPageW = NULL;
-
-    TRACE("(%s, %p, %u, %p, %p, %p, %s)", debugstr_a(pszCaption), ahKeys, cKeys, pclsidDefault,
-          pDataObject, pShellBrowser, debugstr_a(pszStartPage));
-
-    if (pszCaption)
-    {
-        strStartPageW = pszCaption;
-        pszCaptionW = strCaptionW;
-    }
-
-    if (pszStartPage)
-    {
-        strStartPageW = pszStartPage;
-        pszStartPageW = strStartPageW;
-    }
-
-    return SHOpenPropSheetW(pszCaptionW, ahKeys, cKeys, pclsidDefault,
-                            pDataObject, pShellBrowser, pszStartPageW);
-}
-
-/*************************************************************************
  *  Activate_RunDLL [SHELL32.105]
  *
  * Unlocks the foreground window and allows the shell window to become the
