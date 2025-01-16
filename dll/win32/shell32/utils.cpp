@@ -879,7 +879,7 @@ SHCreatePropertyBag(_In_ REFIID riid, _Out_ void **ppvObj)
 }
 
 // The helper function for SHGetUnreadMailCountW
-static LSTATUS
+static DWORD
 SHELL_ReadSingleUnreadMailCount(
     _In_ HKEY hKey,
     _Out_opt_ PDWORD pdwCount,
@@ -888,7 +888,7 @@ SHELL_ReadSingleUnreadMailCount(
     _In_ INT cchShellExecuteCommand)
 {
     DWORD dwType, dwCount, cbCount = sizeof(dwCount);
-    LSTATUS error = RegQueryValueExW(hKey, L"MessageCount", 0, &dwType, (PBYTE)&dwCount, &cbCount);
+    DWORD error = SHQueryValueExW(hKey, L"MessageCount", 0, &dwType, &dwCount, &cbCount);
     if (error)
         return error;
     if (pdwCount && dwType == REG_DWORD)
@@ -896,7 +896,7 @@ SHELL_ReadSingleUnreadMailCount(
 
     FILETIME FileTime;
     DWORD cbFileTime = sizeof(FileTime);
-    error = RegQueryValueExW(hKey, L"TimeStamp", 0, &dwType, (PBYTE)&FileTime, &cbFileTime);
+    error = SHQueryValueExW(hKey, L"TimeStamp", 0, &dwType, &FileTime, &cbFileTime);
     if (error)
         return error;
     if (pFileTime && dwType == REG_BINARY)
@@ -930,7 +930,7 @@ SHGetUnreadMailCountW(
     _In_opt_ PDWORD pdwCount,
     _In_opt_ PFILETIME pFileTime,
     _Out_writes_opt_(cchShellExecuteCommand) LPWSTR pszShellExecuteCommand,
-    _In_opt_ INT cchShellExecuteCommand)
+    _In_ INT cchShellExecuteCommand)
 {
     HRESULT hr;
     LSTATUS error;
