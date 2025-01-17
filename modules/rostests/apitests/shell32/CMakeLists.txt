@@ -35,6 +35,7 @@ list(APPEND SOURCE
     SHRestricted.cpp
     SHShouldShowWizards.cpp
     She.cpp
+    ShellExec_RunDLL.cpp
     ShellExecCmdLine.cpp
     ShellExecuteEx.cpp
     ShellExecuteW.cpp

@@ -712,6 +712,27 @@ RealShellExecuteExW(
     _Out_opt_ PHANDLE lphProcess,
     _In_ DWORD dwFlags);
 
+VOID WINAPI
+ShellExec_RunDLL(
+    _In_opt_ HWND hwnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ PCSTR pszCmdLine,
+    _In_ INT nCmdShow);
+
+VOID WINAPI
+ShellExec_RunDLLA(
+    _In_opt_ HWND hwnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ PCSTR pszCmdLine,
+    _In_ INT nCmdShow);
+
+VOID WINAPI
+ShellExec_RunDLLW(
+    _In_opt_ HWND hwnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ PCWSTR pszCmdLine,
+    _In_ INT nCmdShow);
+
 /* RegisterShellHook types */
 #define RSH_DEREGISTER        0
 #define RSH_REGISTER          1

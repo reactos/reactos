@@ -35,6 +35,7 @@ extern void func_SHCreateDataObject(void);
 extern void func_SHCreateFileDataObject(void);
 extern void func_SHCreateFileExtractIconW(void);
 extern void func_She(void);
+extern void func_ShellExec_RunDLL(void);
 extern void func_ShellExecCmdLine(void);
 extern void func_ShellExecuteEx(void);
 extern void func_ShellExecuteW(void);
@@ -83,6 +84,7 @@ const struct test winetest_testlist[] =
     { "SHCreateFileDataObject", func_SHCreateFileDataObject },
     { "SHCreateFileExtractIconW", func_SHCreateFileExtractIconW },
     { "She", func_She },
+    { "ShellExec_RunDLL", func_ShellExec_RunDLL },
     { "ShellExecCmdLine", func_ShellExecCmdLine },
     { "ShellExecuteEx", func_ShellExecuteEx },
     { "ShellExecuteW", func_ShellExecuteW },
