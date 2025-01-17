@@ -908,7 +908,7 @@ ApplyParameterStringsToMessage(
 {
     /*
      * This code is heavily adapted from the MSDN example:
-     * https://msdn.microsoft.com/en-us/library/windows/desktop/bb427356.aspx
+     * https://learn.microsoft.com/en-us/windows/win32/eventlog/querying-for-event-source-messages
      * with bugs removed.
      */
 
