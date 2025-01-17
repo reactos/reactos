@@ -82,8 +82,6 @@ static VOID SetShowWizardsTEST(BOOL bValue)
 
 START_TEST(SHShouldShowWizards)
 {
-    const BOOL bVistaPlus = IsWindowsVistaOrGreater();
-
     // Save old values
     SHELLSTATE state;
     SHGetSetSettings(&state, SSF_WEBVIEW, FALSE);
@@ -96,6 +94,7 @@ START_TEST(SHShouldShowWizards)
 
     CDummyClass dummy;
     HRESULT hr;
+    const BOOL bVistaPlus = IsWindowsVistaOrGreater();
 
     state.fWebView = FALSE;
     SHGetSetSettings(&state, SSF_WEBVIEW, TRUE);
