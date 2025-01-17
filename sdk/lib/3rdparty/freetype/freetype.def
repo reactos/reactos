@@ -23,7 +23,6 @@ EXPORTS
   FT_Attach_File
   FT_Attach_Stream
   FT_Bitmap_Convert
-  FT_Bitmap_Convert_ReactOS_Hack
   FT_Bitmap_Copy
   FT_Bitmap_Done
   FT_Bitmap_Embolden
