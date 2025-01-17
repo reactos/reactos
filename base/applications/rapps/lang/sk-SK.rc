@@ -2,7 +2,8 @@
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Slovak resource file
- * TRANSLATOR:  Copyright 2009-2010 Mário Kačmár <kario@szm.sk>
+ * TRANSLATORS: Copyright 2009-2010 Mário Kačmár <kario@szm.sk>
+ *              Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -25,12 +26,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Obnoviť\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Data&base\tCtrl+F5", ID_RESETDB
+        MENUITEM "Aktualizovať data&bázu\tCtrl+F5", ID_RESETDB
     END
     POPUP "Pomocník"
     BEGIN
         MENUITEM "Pomocník\tF1", ID_HELP, GRAYED
-        MENUITEM "Čo je", ID_ABOUT
+        MENUITEM "O programe", ID_ABOUT
     END
 END
 
@@ -38,8 +39,8 @@ IDR_LINKMENU MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Otvoriť linku v prehliadači", ID_OPEN_LINK
-        MENUITEM "&Kopírovať linku do schránky", ID_COPY_LINK
+        MENUITEM "&Otvoriť odkaz v prehliadači", ID_OPEN_LINK
+        MENUITEM "&Kopírovať odkaz do schránky", ID_COPY_LINK
     END
 END
 
@@ -57,16 +58,16 @@ BEGIN
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "&Vybrať", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Zmazať inštalačné programy po nainštalovaní", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    GROUPBOX "Software source", -1, 4, 118, 240, 46
-    AUTORADIOBUTTON "Use default", IDC_SOURCE_DEFAULT, 15, 132, 74, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Specified source", IDC_USE_SOURCE, 15, 147, 74, 10
+    GROUPBOX "Zdroj softvéru", -1, 4, 118, 240, 46
+    AUTORADIOBUTTON "Použiť predvolené", IDC_SOURCE_DEFAULT, 15, 132, 74, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Vlastný zdroj", IDC_USE_SOURCE, 15, 147, 74, 10
     EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
     GROUPBOX "Proxy", -1, 4, 166, 240, 76
-    AUTORADIOBUTTON "System proxy settings", IDC_PROXY_DEFAULT, 15, 180, 210, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Direct (No proxy)", IDC_NO_PROXY, 15, 195, 210, 10
+    AUTORADIOBUTTON "Systémové nastavenia proxy", IDC_PROXY_DEFAULT, 15, 180, 210, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Bez proxy servera", IDC_NO_PROXY, 15, 195, 210, 10
     AUTORADIOBUTTON "Proxy", IDC_USE_PROXY, 15, 210, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "No proxy for", -1, 26, 226, 64, 10
+    LTEXT "Žiadna proxy pre", -1, 26, 226, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "Predvolené", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 116, 245, 60, 14
@@ -100,10 +101,10 @@ BEGIN
     IDS_TOOLTIP_INSTALL "Inštalovať"
     IDS_TOOLTIP_UNINSTALL "Odinštalovať"
     IDS_TOOLTIP_MODIFY "Zmeniť"
-    IDS_TOOLTIP_SELECT_ALL "Select/Deselect All"
+    IDS_TOOLTIP_SELECT_ALL "Vybrať všetky/Zrušiť výber"
     IDS_TOOLTIP_SETTINGS "Nastavenia"
     IDS_TOOLTIP_REFRESH "Obnoviť"
-    IDS_TOOLTIP_UPDATE_DB "Update Database"
+    IDS_TOOLTIP_UPDATE_DB "Aktualizovať databázu"
     IDS_TOOLTIP_EXIT "Skončiť"
 END
 
@@ -119,53 +120,53 @@ BEGIN
     IDS_INFO_VERSION "\nVerzia: "
     IDS_INFO_DESCRIPTION "\nPopis: "
     IDS_INFO_PUBLISHER "\nVydavateľ: "
-    IDS_INFO_HELPLINK "\nHelp Link: "
-    IDS_INFO_HELPPHONE "\nHelp Telephone: "
-    IDS_INFO_README "\nČítajMa: "
+    IDS_INFO_HELPLINK "\nInternetová pomoc: "
+    IDS_INFO_HELPPHONE "\nTelefonická pomoc: "
+    IDS_INFO_README "\nReadme: "
     IDS_INFO_REGOWNER "\nRegistrovaný vlastník: "
     IDS_INFO_PRODUCTID "\nID Produktu: "
     IDS_INFO_CONTACT "\nKontakt: "
-    IDS_INFO_UPDATEINFO "\nUpdate Information: "
-    IDS_INFO_INFOABOUT "\nInformation About: "
-    IDS_INFO_COMMENTS "\nComments: "
-    IDS_INFO_INSTLOCATION "\nInstall Location: "
-    IDS_INFO_INSTALLSRC "\nInstall Source: "
-    IDS_INFO_UNINSTALLSTR "\nUninstall String: "
+    IDS_INFO_UPDATEINFO "\nInformácie o aktualizáciach: "
+    IDS_INFO_INFOABOUT "\nInformácie o programe: "
+    IDS_INFO_COMMENTS "\nKomentáre: "
+    IDS_INFO_INSTLOCATION "\nUmiestnenie inštalácie: "
+    IDS_INFO_INSTALLSRC "\nZdroj inštalácie: "
+    IDS_INFO_UNINSTALLSTR "\nOdinstalačný reťazec: "
     IDS_INFO_MODIFYPATH "\nModify Path: "
     IDS_INFO_INSTALLDATE "\nDátum inštalácie: "
-    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
+    IDS_AINFO_PACKAGE_NAME "\nNázov balíčka: "
 END
 
 STRINGTABLE
 BEGIN
     IDS_AINFO_VERSION "\nVerzia: "
-    IDS_AINFO_AVAILABLEVERSION "\nAvailable Version: "
+    IDS_AINFO_AVAILABLEVERSION "\nDostupná verzia: "
     IDS_AINFO_DESCRIPTION "\nPopis: "
     IDS_AINFO_SIZE "\nVeľkosť: "
     IDS_AINFO_URLSITE "\nDomovská stránka: "
     IDS_AINFO_LICENSE "\nLicencia: "
     IDS_AINFO_URLDOWNLOAD "\nStiahnuť: "
-    IDS_AINFO_LANGUAGES "\nLanguages: "
+    IDS_AINFO_LANGUAGES "\nJazyky: "
 END
 
 STRINGTABLE
 BEGIN
     IDS_CAT_AUDIO "Audio"
-    IDS_CAT_DEVEL "Vývojárske"
+    IDS_CAT_DEVEL "Vývoj"
     IDS_CAT_DRIVERS "Ovládače"
-    IDS_CAT_EDU "Vzdelávacie"
-    IDS_CAT_ENGINEER "Inžinierske"
-    IDS_CAT_FINANCE "Finančné"
+    IDS_CAT_EDU "Vzdelávanie"
+    IDS_CAT_ENGINEER "Strojírenstvo"
+    IDS_CAT_FINANCE "Financie"
     IDS_CAT_GAMES "Hry & zábava"
-    IDS_CAT_GRAPHICS "Grafické"
-    IDS_CAT_INTERNET "Internet & sieť"
+    IDS_CAT_GRAPHICS "Grafika"
+    IDS_CAT_INTERNET "Internet a siete"
     IDS_CAT_LIBS "Knižnice"
-    IDS_CAT_OFFICE "Kancelárske"
-    IDS_CAT_OTHER "Iné"
-    IDS_CAT_SCIENCE "Vedecké"
+    IDS_CAT_OFFICE "Kancelária"
+    IDS_CAT_OTHER "Ostatné"
+    IDS_CAT_SCIENCE "Veda"
     IDS_CAT_TOOLS "Nástroje"
     IDS_CAT_VIDEO "Video"
-    IDS_CAT_THEMES "Themes"
+    IDS_CAT_THEMES "Vzhľad"
 END
 
 STRINGTABLE
@@ -176,54 +177,54 @@ BEGIN
     IDS_WELCOME_TEXT "Vyberte si kategóriu na ľavej strane, potom vyberte aplikáciu, ktorú chcete nainštalovať alebo odinštalovať.\nWebstránka projektu ReactOS: "
     IDS_WELCOME_URL "https://reactos.org"
 
-    IDS_APPWIZ_TITLE "Add/Remove Programs"
-    IDS_APPWIZ_TEXT1 "Choose ""Applications"" or ""Updates"" to view the list of applications or updates installed on your system."
-    IDS_APPWIZ_TEXT2 "To remove a program or to modify its installed components, select it from the list and click on ""Uninstall"" or ""Modify""."
+    IDS_APPWIZ_TITLE "Pridať/Odobrať programy"
+    IDS_APPWIZ_TEXT1 "Vyberte ""Aplikácie"" alebo ""Aktualizácie"" pre zobrazenie zoznamu aplikácií alebo aktualizácií nainštalovaných vo vašom systéme."
+    IDS_APPWIZ_TEXT2 "Pre odobranie programu alebo pre zmenu jeho inštalovaných komponentov, ho vyberte zo zoznamu a kliknite na ""Odinštalovať"" alebo ""Upraviť""."
 END
 
 STRINGTABLE
 BEGIN
     IDS_SEARCH_TEXT "Hľadať…"
     IDS_APPS_COUNT "Počet programov: %d"
-    IDS_APPS_SELECT_COUNT "; Selected: %d"
+    IDS_APPS_SELECT_COUNT "; Vybrané: %d"
     IDS_INSTALLED "Nainštalované"
     IDS_AVAILABLEFORINST "Dostupné pre nainštalovanie"
     IDS_UPDATES "Aktualizácie"
     IDS_APPLICATIONS "Aplikácie"
     IDS_CHOOSE_FOLDER_TEXT "Vyberte priečinok, ktorý sa použije pre sťahovanie programov:"
     IDS_CHOOSE_FOLDER_ERROR "Zvolili ste si neexistujúci priečinok!"
-    IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
+    IDS_URL_INVALID "Vami zadaná URL adresa nie je platná alebo nie je podporovaná. Prosím, opravte ju!"
     IDS_APP_REG_REMOVE "Naozaj chcete vymazať údaje o nainštalovanom programe z registrov?"
     IDS_INFORMATION "Informácie"
-    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
-    IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
+    IDS_UNABLE_TO_DOWNLOAD "Súbor sa nepodarilo stiahnuť! Adresa nebola nájdená!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Balíček sa nepodarilo stiahnuť! Skontrolujte pripojenie k Internetu"
     IDS_UNABLE_TO_REMOVE "Nie je možné odstrániť z registrov údaje o programe!"
-    IDS_UNABLE_TO_INSTALL "Unable to open installer!"
-    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
-    IDS_INTEG_CHECK_TITLE "Verifying package integrity…"
-    IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
-    IDS_INTERRUPTED_DOWNLOAD "The download was interrupted. Check connection to Internet."
-    IDS_UNABLE_TO_WRITE "Unable to write to disk. Disk may be at capacity."
-    IDS_INSTALL_SELECTED "Install Selected"
-    IDS_SELECTEDFORINST "Selected for installation"
-    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
+    IDS_UNABLE_TO_INSTALL "Nepodarilo sa otvoriť inštalátor!"
+    IDS_UNABLE_TO_QUERY_CERT "Nepodarilo sa získať informácie o certifikáte.\n\nChcete napriek tomu pokračovať?"
+    IDS_INTEG_CHECK_TITLE "Overujem integritu balíčka…"
+    IDS_INTEG_CHECK_FAIL "Balíček neprešiel kontrolou integrity, mohol byť poškodený alebo zmenený počas sťahovania. Spustenie tohto programu sa neodporúča."
+    IDS_INTERRUPTED_DOWNLOAD "Sťahovanie bolo prerušené. Skontrolujte pripojenie k Internetu."
+    IDS_UNABLE_TO_WRITE "Ukladanie na disk sa nepodarilo. Disk môže byť plný."
+    IDS_INSTALL_SELECTED "Nainštalovať vybrané"
+    IDS_SELECTEDFORINST "Vybrané pre inštaláciu"
+    IDS_MISMATCH_CERT_INFO "Neznámy certifikát:\nSubjekt: %s\nVydávateľ: %s\nChcete napriek tomu pokračovať?"
     IDS_UNABLE_PATH "Incorrect path format."
-    IDS_APP_DISPLAY_DETAILS "Details"
-    IDS_APP_DISPLAY_LIST "List"
-    IDS_APP_DISPLAY_TILE "Tile"
-    IDS_NO_SEARCH_RESULTS "No search results"
+    IDS_APP_DISPLAY_DETAILS "Podrobnosti"
+    IDS_APP_DISPLAY_LIST "Zoznam"
+    IDS_APP_DISPLAY_TILE "Dlaždice"
+    IDS_NO_SEARCH_RESULTS "Žiadne výsledky"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALLED "Installed"
-    IDS_STATUS_NOTINSTALLED "Not installed"
-    IDS_STATUS_DOWNLOADED "Downloaded"
-    IDS_STATUS_UPDATE_AVAILABLE "Update available"
-    IDS_STATUS_DOWNLOADING "Downloading…"
-    IDS_STATUS_INSTALLING "Installing…"
-    IDS_STATUS_WAITING "Waiting to install…"
-    IDS_STATUS_FINISHED "Finished"
+    IDS_STATUS_INSTALLED "Nainstalované"
+    IDS_STATUS_NOTINSTALLED "Nenainstalované"
+    IDS_STATUS_DOWNLOADED "Stiahnuté"
+    IDS_STATUS_UPDATE_AVAILABLE "Aktualizovateľné"
+    IDS_STATUS_DOWNLOADING "Sťahujem…"
+    IDS_STATUS_INSTALLING "Inštalujem…"
+    IDS_STATUS_WAITING "Čakám na inštaláciu…"
+    IDS_STATUS_FINISHED "Dokončené"
 END
 
 STRINGTABLE
@@ -235,34 +236,34 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Supports your language"
-    IDS_LANGUAGE_NO_TRANSLATION "Supports other languages"
-    IDS_LANGUAGE_ENGLISH_TRANSLATION "Supports English"
-    IDS_LANGUAGE_SINGLE "Single language"
-    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d more)"
-    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d available)"
+    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Podporuje váš jazyk"
+    IDS_LANGUAGE_NO_TRANSLATION "Podporuje iné jazyky"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "Podporuje angličtinu"
+    IDS_LANGUAGE_SINGLE "Jediný jazyk"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d ďalších)"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d dostupných)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DL_DIALOG_DB_DISP "Applications Database"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Updating Database…"
-    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Updating Database… (Unofficial source)"
+    IDS_DL_DIALOG_DB_DISP "Databáza aplikácií"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Aktualizujem databázu…"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Aktualizujem databázu… (Neoficiálny zdroj)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CMD_USAGE "Usage: "
-    IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name.\n"
-    IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name.\n"
-    IDS_CMD_NEED_PARAMS "Error: option %1 expects one or more parameters.\n"
-    IDS_CMD_INVALID_OPTION "Error: Unknown or invalid command line option specified.\n"
-    IDS_CMD_FIND_RESULT_FOR "Find result for %1:\n"
-    IDS_CMD_PACKAGE_NOT_FOUND "Failed to find package %1.\n"
-    IDS_CMD_PACKAGE_INFO "Information about package %1:\n"
+    IDS_CMD_USAGE "Použitie: "
+    IDS_CMD_NEED_PACKAGE_NAME "Chyba: prepínač %1 očakáva jeden alebo viac názvov balíčkov.\n"
+    IDS_CMD_NEED_FILE_NAME "Chyba: prepínač %1 očakáva názov súboru.\n"
+    IDS_CMD_NEED_PARAMS "Chyba: prepínač %1 očakáva jeden alebo viac parametrov.\n"
+    IDS_CMD_INVALID_OPTION "Chyba: Neznámy alebo neplatný prepínač príkazového riadka.\n"
+    IDS_CMD_FIND_RESULT_FOR "Nájdi výsledok pre %1:\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "Nepodarilo sa nájsť balíček %1.\n"
+    IDS_CMD_PACKAGE_INFO "Informácie o balíčku %1:\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+    IDS_INSTGEN_CONFIRMUNINST "Ste si istí, že chcete odinštalovať %s?"
 END
