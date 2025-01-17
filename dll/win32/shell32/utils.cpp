@@ -808,16 +808,13 @@ SHSetUnreadMailCountW(
     _In_ DWORD dwCount,
     _In_ LPCWSTR pszShellExecuteCommand)
 {
-    WCHAR szBuff[2 * MAX_PATH];
-    HRESULT hr = StringCchPrintfW(szBuff, _countof(szBuff), L"%s\\%s",
-                                  L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail",
-                                  pszMailAddress);
-    if (FAILED(hr))
-        return hr;
+    CString strKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail";
+    strKey += L'\\';
+    strKey += pszMailAddress;
 
     HKEY hKey;
     DWORD dwDisposition;
-    LSTATUS error = RegCreateKeyExW(HKEY_CURRENT_USER, szBuff, 0, NULL, 0, KEY_SET_VALUE, NULL,
+    LSTATUS error = RegCreateKeyExW(HKEY_CURRENT_USER, strKey, 0, NULL, 0, KEY_SET_VALUE, NULL,
                                     &hKey, &dwDisposition);
     if (error)
         return HRESULT_FROM_WIN32(error);
@@ -839,10 +836,11 @@ SHSetUnreadMailCountW(
         return HRESULT_FROM_WIN32(error);
     }
 
+    WCHAR szBuff[2 * MAX_PATH];
     if (!PathUnExpandEnvStringsW(pszShellExecuteCommand, szBuff, _countof(szBuff)))
     {
-        hr = StringCchCopyW(szBuff, _countof(szBuff), pszShellExecuteCommand);
-        if (FAILED(hr))
+        HRESULT hr = StringCchCopyW(szBuff, _countof(szBuff), pszShellExecuteCommand);
+        if (FAILED_UNEXPECTEDLY(hr))
         {
             RegCloseKey(hKey);
             return hr;
