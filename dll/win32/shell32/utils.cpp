@@ -18,8 +18,8 @@ static PCSTR StrEndNA(_In_ PCSTR psz, _In_ INT_PTR cch)
     PCSTR pch, pchEnd = &psz[cch];
     for (pch = psz; *pch && pch < pchEnd; pch = CharNextA(pch))
         ;
-    if (pchEnd < pch)
-        pch -= 2;
+    if (pchEnd < pch) // A double-byte character detected at last?
+        pch -= 2; // The width of a double-byte character is 2
     return pch;
 }
 
@@ -28,8 +28,6 @@ static PCWSTR StrEndNW(_In_ PCWSTR psz, _In_ INT_PTR cch)
     PCWSTR pch, pchEnd = &psz[cch];
     for (pch = psz; *pch && pch < pchEnd; ++pch)
         ;
-    if (pchEnd < pch)
-        pch -= 2;
     return pch;
 }
 
