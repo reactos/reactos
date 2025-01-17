@@ -1336,7 +1336,7 @@ MessageBeep(
 /*
  * @implemented
  *
- * See: https://msdn.microsoft.com/en-us/library/windows/desktop/dn910915(v=vs.85).aspx
+ * See: https://learn.microsoft.com/en-us/windows/win32/dlgbox/mb-getstring
  * and: http://undoc.airesoft.co.uk/user32.dll/MB_GetString.php
  * for more information.
  */
