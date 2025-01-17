@@ -181,6 +181,36 @@ FT_BEGIN_HEADER
                      FT_Bitmap        *target,
                      FT_Int            alignment );
 
+#ifdef __REACTOS__
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
+  /*    FT_Bitmap_Convert_ReactOS_Hack                                     */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Mainly same as @FT_Bitmap_Convert, but the bitmap will be          */
+  /*    ReactOS compatible.                                                */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    library   :: A handle to a library object.                         */
+  /*                                                                       */
+  /*    source    :: The source bitmap.                                    */
+  /*                                                                       */
+  /*    alignment :: The pitch of the bitmap is a multiple of this         */
+  /*                 parameter.  Common values are 1, 2, or 4.             */
+  /*                                                                       */
+  /* <Output>                                                              */
+  /*    target    :: The target bitmap.                                    */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0~means success.                             */
+  /*                                                                       */
+  FT_EXPORT( FT_Error )
+  FT_Bitmap_Convert_ReactOS_Hack( FT_Library        library,
+                                  const FT_Bitmap  *source,
+                                  FT_Bitmap        *target,
+                                  FT_Int            alignment );
+#endif
 
   /*************************************************************************/
   /*                                                                       */
