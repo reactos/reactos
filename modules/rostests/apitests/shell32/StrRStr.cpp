@@ -30,16 +30,16 @@ static VOID TEST_StrRStrA(VOID)
     psz = "ABCBC";
     pch = &psz[2];
     ret = StrRStrA(psz, pch, "BC");
-    ok_str(ret, "BCBC");
+    ok_ptr(ret, &psz[1]);
 
     psz = "ABCBC";
     ret = StrRStrA(psz, psz, "BC");
-    ok(ret == NULL, "ret was '%s'\n", ret);
+    ok(!ret, "ret was '%s'\n", ret);
 
     psz = "ABCBC";
     pch = &psz[lstrlenA(psz)];
     ret = StrRStrA(psz, pch, "BC");
-    ok_str(ret, "BC");
+    ok_ptr(ret, psz + 3);
 }
 
 static VOID TEST_StrRStrW(VOID)
@@ -54,22 +54,23 @@ static VOID TEST_StrRStrW(VOID)
         return;
     }
 
-    ret = StrRStrW(L"ABCBC", NULL, L"BC");
-    ok_wstr(ret, L"BC");
+    psz = L"ABCBC";
+    ret = StrRStrW(psz, NULL, L"BC");
+    ok_ptr(ret, psz + 3);
 
     psz = L"ABCBC";
     pch = &psz[2];
     ret = StrRStrW(psz, pch, L"BC");
-    ok_wstr(ret, L"BCBC");
+    ok_ptr(ret, &psz[1]);
 
     psz = L"ABCBC";
     ret = StrRStrW(psz, psz, L"BC");
-    ok(ret == NULL, "ret was '%S'\n", ret);
+    ok(!ret, "ret was '%S'\n", ret);
 
     psz = L"ABCBC";
     pch = &psz[lstrlenW(psz)];
     ret = StrRStrW(psz, pch, L"BC");
-    ok_wstr(ret, L"BC");
+    ok_ptr(ret, psz + 3);
 }
 
 static BOOL IsWindowsServer2003SP2OrGreater(VOID)
