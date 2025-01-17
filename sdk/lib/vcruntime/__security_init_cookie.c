@@ -8,9 +8,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-#include <stdlib.h>
-#include <intrin.h>
-#include <corecrt_internal.h>
+#include <internal_shared.h>
 
 #ifdef _WIN64
 #define DEFAULT_SECURITY_COOKIE 0x00002B992DDFA232ull
