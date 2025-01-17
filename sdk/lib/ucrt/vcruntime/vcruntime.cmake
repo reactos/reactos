@@ -1,5 +1,6 @@
 
 list(APPEND UCRT_VCRUNTIME_SOURCES
+    vcruntime/__report_gsfailure.c
     vcruntime/__security_init_cookie.c
 )
 
