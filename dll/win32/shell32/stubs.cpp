@@ -901,17 +901,6 @@ SHSetUserPicturePathW(LPCWSTR lpPath, int csidl, LPVOID lpUnknown)
  */
 EXTERN_C BOOL
 WINAPI
-SHShouldShowWizards(LPVOID lpUnknown)
-{
-    FIXME("SHShouldShowWizards() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C BOOL
-WINAPI
 PathIsSlowW(
     _In_ LPCWSTR pszFile,
     _In_ DWORD dwAttr)

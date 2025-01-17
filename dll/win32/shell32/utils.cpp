@@ -122,6 +122,36 @@ HRESULT SHILAppend(_Inout_ LPITEMIDLIST pidl, _Inout_ LPITEMIDLIST *ppidl)
     return hr;
 }
 
+/*************************************************************************
+ *  SHShouldShowWizards [SHELL32.237]
+ *
+ * Used by printer and network features.
+ * @see https://undoc.airesoft.co.uk/shell32.dll/SHShouldShowWizards.php
+ */
+EXTERN_C
+HRESULT WINAPI
+SHShouldShowWizards(_In_ IUnknown *pUnknown)
+{
+    HRESULT hr;
+    IShellBrowser *pBrowser;
+
+    hr = IUnknown_QueryService(pUnknown, SID_STopWindow, IID_PPV_ARG(IShellBrowser, &pBrowser));
+    if (FAILED(hr))
+        return hr;
+
+    SHELLSTATE state;
+    SHGetSetSettings(&state, SSF_WEBVIEW, FALSE);
+    if (state.fWebView &&
+        !SHRegGetBoolUSValueW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                              L"ShowWizardsTEST", FALSE, FALSE))
+    {
+        hr = S_FALSE;
+    }
+
+    pBrowser->Release();
+    return hr;
+}
+
 static BOOL
 OpenEffectiveToken(
     _In_ DWORD DesiredAccess,
