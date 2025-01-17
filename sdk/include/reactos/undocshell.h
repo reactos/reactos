@@ -797,8 +797,8 @@ BOOL WINAPI GUIDFromStringW(
 PSTR WINAPI
 StrRStrA(
     _In_ PCSTR pszSrc,
-    _In_opt_ LPCSTR pszLast,
-    _In_ LPCSTR pszSearch);
+    _In_opt_ PCSTR pszLast,
+    _In_ PCSTR pszSearch);
 
 PWSTR WINAPI
 StrRStrW(
