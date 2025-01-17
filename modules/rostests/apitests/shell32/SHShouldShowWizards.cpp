@@ -16,7 +16,7 @@ class CDummyClass
 public:
     CDummyClass() { }
 
-    IUnknown *get_unknown()
+    IUnknown *GetUnknown()
     {
         return static_cast<IServiceProvider *>(this);
     }
@@ -82,11 +82,7 @@ static VOID SetShowWizardsTEST(BOOL bValue)
 
 START_TEST(SHShouldShowWizards)
 {
-    if (IsWindowsVistaOrGreater())
-    {
-        skip("Vista+\n");
-        return;
-    }
+    const BOOL bVistaPlus = IsWindowsVistaOrGreater();
 
     // Save old values
     SHELLSTATE state;
@@ -104,22 +100,22 @@ START_TEST(SHShouldShowWizards)
     state.fWebView = FALSE;
     SHGetSetSettings(&state, SSF_WEBVIEW, TRUE);
     SetShowWizardsTEST(FALSE);
-    hr = SHShouldShowWizards(dummy.get_unknown());
-    ok_hex(hr, S_OK);
+    hr = SHShouldShowWizards(dummy.GetUnknown());
+    ok_hex(hr, bVistaPlus ? S_FALSE : S_OK);
 
     SetShowWizardsTEST(TRUE);
-    hr = SHShouldShowWizards(dummy.get_unknown());
-    ok_hex(hr, S_OK);
+    hr = SHShouldShowWizards(dummy.GetUnknown());
+    ok_hex(hr, bVistaPlus ? S_FALSE : S_OK);
 
     state.fWebView = TRUE;
     SHGetSetSettings(&state, SSF_WEBVIEW, TRUE);
     SetShowWizardsTEST(FALSE);
-    hr = SHShouldShowWizards(dummy.get_unknown());
+    hr = SHShouldShowWizards(dummy.GetUnknown());
     ok_hex(hr, S_FALSE);
 
     SetShowWizardsTEST(TRUE);
-    hr = SHShouldShowWizards(dummy.get_unknown());
-    ok_hex(hr, S_OK);
+    hr = SHShouldShowWizards(dummy.GetUnknown());
+    ok_hex(hr, bVistaPlus ? S_FALSE : S_OK);
 
     // Restore old values
     state.fWebView = bOldWebView;
