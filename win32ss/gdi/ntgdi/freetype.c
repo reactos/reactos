@@ -3231,7 +3231,7 @@ skip_os2:
     return Cache->OutlineRequiredSize;
 }
 
-/* See https://msdn.microsoft.com/en-us/library/bb165625(v=vs.90).aspx */
+/* See https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2008/bb165625(v=vs.90) */
 static BYTE
 CharSetFromLangID(LANGID LangID)
 {
@@ -5401,7 +5401,7 @@ ftGdiGetFontData(
 
 #define GOT_PENALTY(name, value) Penalty += (value)
 
-// NOTE: See Table 1. of https://msdn.microsoft.com/en-us/library/ms969909.aspx
+// NOTE: See Table 1. of https://learn.microsoft.com/en-us/previous-versions/ms969909(v=msdn.10)
 static UINT
 GetFontPenalty(const LOGFONTW *               LogFont,
                const OUTLINETEXTMETRICW *     Otm,
