@@ -3041,6 +3041,8 @@ ShellExec_RunDLL_Helper(
 
 /*************************************************************************
  *  ShellExec_RunDLLA [SHELL32.358]
+ *
+ * @see https://www.hexacorn.com/blog/2024/11/30/1-little-known-secret-of-shellexec_rundll/
  */
 EXTERN_C
 VOID WINAPI
@@ -3056,6 +3058,8 @@ ShellExec_RunDLLA(
 
 /*************************************************************************
  *  ShellExec_RunDLLW [SHELL32.359]
+ *
+ * @see https://www.hexacorn.com/blog/2024/11/30/1-little-known-secret-of-shellexec_rundll/
  */
 EXTERN_C
 VOID WINAPI
