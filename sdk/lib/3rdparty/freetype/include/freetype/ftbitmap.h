@@ -189,7 +189,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    Mainly same as @FT_Bitmap_Convert, but the bitmap will be          */
-  /*    ReactOS compatible.                                                */
+  /*    ReactOS compatible when hack parameter is true.                    */
   /*                                                                       */
   /* <Input>                                                               */
   /*    library   :: A handle to a library object.                         */
@@ -198,6 +198,10 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    alignment :: The pitch of the bitmap is a multiple of this         */
   /*                 parameter.  Common values are 1, 2, or 4.             */
+  /*                                                                       */
+  /*    hack      :: If true, the bitmap will be ReactOS compatible.       */
+  /*                 If false, the bitmap will be same as                  */
+  /*                 FT_Bitmap_Convert returns.                            */
   /*                                                                       */
   /* <Output>                                                              */
   /*    target    :: The target bitmap.                                    */
@@ -209,7 +213,8 @@ FT_BEGIN_HEADER
   FT_Bitmap_Convert_ReactOS_Hack( FT_Library        library,
                                   const FT_Bitmap  *source,
                                   FT_Bitmap        *target,
-                                  FT_Int            alignment );
+                                  FT_Int            alignment,
+                                  FT_Bool           hack);
 #endif
 
   /*************************************************************************/
