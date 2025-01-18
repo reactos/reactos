@@ -811,7 +811,7 @@
     return error;
   }
 
-#ifndef __REACTOS__
+#ifdef __REACTOS__
   /* documentation is in ftbitmap.h */
 
   FT_EXPORT_DEF( FT_Error )
@@ -820,7 +820,7 @@
                      FT_Bitmap        *target,
                      FT_Int            alignment )
   {
-    return FT_Bitmap_Convert_ReactOS_Hack(library, source, target, alignment, 0);
+    return FT_Bitmap_Convert_ReactOS_Hack(library, source, target, alignment, FALSE);
   }
 #endif
 
