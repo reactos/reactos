@@ -199,8 +199,8 @@ FT_BEGIN_HEADER
   /*    alignment :: The pitch of the bitmap is a multiple of this         */
   /*                 parameter.  Common values are 1, 2, or 4.             */
   /*                                                                       */
-  /*    hack      :: If true, the bitmap will be ReactOS compatible.       */
-  /*                 If false, the bitmap will be same as                  */
+  /*    hack      :: If TRUE, the bitmap will be ReactOS compatible.       */
+  /*                 If FALSE, the bitmap will be same as                  */
   /*                 FT_Bitmap_Convert returns.                            */
   /*                                                                       */
   /* <Output>                                                              */
