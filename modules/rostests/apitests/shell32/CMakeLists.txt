@@ -47,6 +47,7 @@ list(APPEND SOURCE
     SHGetUserDisplayName.cpp
     SHLimitInputEdit.cpp
     SHSetUnreadMailCountW.cpp
+    StrRStr.cpp
     menu.cpp
     shelltest.cpp)
 
