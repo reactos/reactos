@@ -921,9 +921,7 @@ SHEnumerateUnreadMailAccountsW(
     HKEY hKey;
     LSTATUS error = RegOpenKeyExW(hKeyUser,
                                   L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail",
-                                  0,
-                                  KEY_ENUMERATE_SUB_KEYS,
-                                  &hKey);
+                                  0, KEY_ENUMERATE_SUB_KEYS, &hKey);
     if (error)
         return HRESULT_FROM_WIN32(error);
 
