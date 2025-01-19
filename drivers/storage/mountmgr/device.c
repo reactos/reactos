@@ -637,7 +637,8 @@ MountMgrNextDriveLetter(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     DriveLetterTarget = (PMOUNTMGR_DRIVE_LETTER_TARGET)Irp->AssociatedIrp.SystemBuffer;
-    if (DriveLetterTarget->DeviceNameLength + sizeof(USHORT) > Stack->Parameters.DeviceIoControl.InputBufferLength)
+    if (FIELD_OFFSET(MOUNTMGR_DRIVE_LETTER_TARGET, DeviceName) + DriveLetterTarget->DeviceNameLength >
+        Stack->Parameters.DeviceIoControl.InputBufferLength)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -842,14 +843,14 @@ MountMgrQueryDosVolumePath(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* Validate the entry structure size */
-    if ((FIELD_OFFSET(MOUNTMGR_TARGET_NAME, DeviceNameLength) + Target->DeviceNameLength) >
+    if (FIELD_OFFSET(MOUNTMGR_TARGET_NAME, DeviceName) + Target->DeviceNameLength >
         Stack->Parameters.DeviceIoControl.InputBufferLength)
     {
         return STATUS_INVALID_PARAMETER;
     }
 
     /* Ensure we can at least return needed size */
-    if (Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(ULONG))
+    if (Stack->Parameters.DeviceIoControl.OutputBufferLength < FIELD_OFFSET(MOUNTMGR_VOLUME_PATHS, MultiSz))
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -1007,11 +1008,10 @@ TryWithVolumeName:
 
     /* At least, we will return our length */
     Output->MultiSzLength = DeviceLength;
-    /* MOUNTMGR_VOLUME_PATHS is a string + a ULONG */
-    Irp->IoStatus.Information = DeviceLength + sizeof(ULONG);
+    Irp->IoStatus.Information = FIELD_OFFSET(MOUNTMGR_VOLUME_PATHS, MultiSz) + DeviceLength;
 
     /* If we have enough room for copying the string */
-    if (sizeof(ULONG) + DeviceLength <= Stack->Parameters.DeviceIoControl.OutputBufferLength)
+    if (Irp->IoStatus.Information <= Stack->Parameters.DeviceIoControl.OutputBufferLength)
     {
         /* Copy it */
         if (DeviceLength)
@@ -1031,7 +1031,7 @@ TryWithVolumeName:
     {
         /* Just return the size needed and leave */
         FreePool(DeviceString);
-        Irp->IoStatus.Information = sizeof(ULONG);
+        Irp->IoStatus.Information = FIELD_OFFSET(MOUNTMGR_VOLUME_PATHS, MultiSz);
         return STATUS_BUFFER_OVERFLOW;
     }
 }
@@ -1469,13 +1469,14 @@ MountMgrQueryDosVolumePaths(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* Validate the entry structure size */
-    if (Target->DeviceNameLength + FIELD_OFFSET(MOUNTMGR_TARGET_NAME, DeviceName) > Stack->Parameters.DeviceIoControl.InputBufferLength)
+    if (FIELD_OFFSET(MOUNTMGR_TARGET_NAME, DeviceName) + Target->DeviceNameLength >
+        Stack->Parameters.DeviceIoControl.InputBufferLength)
     {
         return STATUS_INVALID_PARAMETER;
     }
 
     /* Ensure we can at least return needed size */
-    if (Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(ULONG))
+    if (Stack->Parameters.DeviceIoControl.OutputBufferLength < FIELD_OFFSET(MOUNTMGR_VOLUME_PATHS, MultiSz))
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -1566,12 +1567,12 @@ MountMgrQueryDosVolumePaths(IN PDEVICE_EXTENSION DeviceExtension,
     Output->MultiSzLength = Paths->MultiSzLength;
 
     /* Compute total length */
-    OutputLength = Output->MultiSzLength + sizeof(ULONG);
+    OutputLength = FIELD_OFFSET(MOUNTMGR_VOLUME_PATHS, MultiSz) + Output->MultiSzLength;
 
     /* If it cannot fit, just return the size needed and leave */
     if (OutputLength > Stack->Parameters.DeviceIoControl.OutputBufferLength)
     {
-        Irp->IoStatus.Information = sizeof(ULONG);
+        Irp->IoStatus.Information = FIELD_OFFSET(MOUNTMGR_VOLUME_PATHS, MultiSz);
         FreePool(Paths);
         return STATUS_BUFFER_OVERFLOW;
     }
@@ -1605,7 +1606,8 @@ MountMgrKeepLinksWhenOffline(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     Target = (PMOUNTMGR_TARGET_NAME)Irp->AssociatedIrp.SystemBuffer;
-    if (Target->DeviceNameLength + sizeof(USHORT) > Stack->Parameters.DeviceIoControl.InputBufferLength)
+    if (FIELD_OFFSET(MOUNTMGR_TARGET_NAME, DeviceName) + Target->DeviceNameLength >
+        Stack->Parameters.DeviceIoControl.InputBufferLength)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -1649,7 +1651,8 @@ MountMgrVolumeArrivalNotification(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     Target = (PMOUNTMGR_TARGET_NAME)Irp->AssociatedIrp.SystemBuffer;
-    if (Target->DeviceNameLength + sizeof(USHORT) > Stack->Parameters.DeviceIoControl.InputBufferLength)
+    if (FIELD_OFFSET(MOUNTMGR_TARGET_NAME, DeviceName) + Target->DeviceNameLength >
+        Stack->Parameters.DeviceIoControl.InputBufferLength)
     {
         return STATUS_INVALID_PARAMETER;
     }
