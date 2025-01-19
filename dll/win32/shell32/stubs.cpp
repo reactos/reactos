@@ -33,19 +33,6 @@ SHGetUnreadMailCountW(HKEY hKeyUser,
 /*
  * Unimplemented
  */
-EXTERN_C HRESULT
-WINAPI
-SHSetUnreadMailCountW(LPCWSTR pszMailAddress,
-                      DWORD dwCount,
-                      LPCWSTR pszShellExecuteCommand)
-{
-    FIXME("SHSetUnreadMailCountW() stub\n");
-    return E_FAIL;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C VOID
 WINAPI
 CheckDiskSpace(VOID)
