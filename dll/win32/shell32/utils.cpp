@@ -932,14 +932,13 @@ SHGetUnreadMailCountW(
     _Out_writes_opt_(cchShellExecuteCommand) LPWSTR pszShellExecuteCommand,
     _In_ INT cchShellExecuteCommand)
 {
-    HRESULT hr;
     LSTATUS error;
     HKEY hKey;
 
     if (pszMailAddress)
     {
         CStringW strName = L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail";
-        strName += L'\\'
+        strName += L'\\';
         strName += pszMailAddress;
 
         if (!hKeyUser)
