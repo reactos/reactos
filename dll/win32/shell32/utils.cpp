@@ -804,7 +804,7 @@ SHCreatePropertyBag(_In_ REFIID riid, _Out_ void **ppvObj)
 EXTERN_C
 HRESULT WINAPI
 SHSetUnreadMailCountW(
-    _In_ LPCWSTR pszMailAddress,
+    _In_ PCWSTR pszMailAddress,
     _In_ DWORD dwCount,
     _In_ LPCWSTR pszShellExecuteCommand)
 {
