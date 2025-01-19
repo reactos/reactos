@@ -819,6 +819,7 @@ MountMgrQueryDosVolumePath(IN PDEVICE_EXTENSION DeviceExtension,
     PLIST_ENTRY SymlinksEntry;
     UNICODE_STRING SymbolicName;
     PMOUNTMGR_TARGET_NAME Target;
+    PMOUNTMGR_VOLUME_PATHS Output;
     PWSTR DeviceString, OldBuffer;
     USHORT DeviceLength, OldLength;
     PDEVICE_INFORMATION DeviceInformation;
@@ -992,46 +993,47 @@ TryWithVolumeName:
             }
 
             RtlCopyMemory(DeviceString, SymlinkInformation->Name.Buffer, DeviceLength);
-            /* Ensure we are in the right namespace; [1] can be ? */
+            /* Ensure we are in the Win32 namespace; [1] can be '?' */
             DeviceString[1] = L'\\';
         }
     }
 
-    /* If we found something */
-    if (DeviceString)
+    /* If we didn't find something, fail */
+    if (!DeviceString)
+        return STATUS_NOT_FOUND;
+
+    /* Get the output buffer */
+    Output = (PMOUNTMGR_VOLUME_PATHS)Irp->AssociatedIrp.SystemBuffer;
+
+    /* At least, we will return our length */
+    Output->MultiSzLength = DeviceLength;
+    /* MOUNTMGR_VOLUME_PATHS is a string + a ULONG */
+    Irp->IoStatus.Information = DeviceLength + sizeof(ULONG);
+
+    /* If we have enough room for copying the string */
+    if (sizeof(ULONG) + DeviceLength <= Stack->Parameters.DeviceIoControl.OutputBufferLength)
     {
-        /* At least, we will return our length */
-        ((PMOUNTMGR_VOLUME_PATHS)Irp->AssociatedIrp.SystemBuffer)->MultiSzLength = DeviceLength;
-        /* MOUNTMGR_VOLUME_PATHS is a string + a ULONG */
-        Irp->IoStatus.Information = DeviceLength + sizeof(ULONG);
-
-        /* If we have enough room for copying the string */
-        if (sizeof(ULONG) + DeviceLength <= Stack->Parameters.DeviceIoControl.OutputBufferLength)
+        /* Copy it */
+        if (DeviceLength)
         {
-            /* Copy it */
-            if (DeviceLength)
-            {
-                RtlCopyMemory(((PMOUNTMGR_VOLUME_PATHS)Irp->AssociatedIrp.SystemBuffer)->MultiSz, DeviceString, DeviceLength);
-            }
-
-            /* And double zero at its end - this is needed in case of multiple paths which are separated by a single 0 */
-            FreePool(DeviceString);
-            ((PMOUNTMGR_VOLUME_PATHS)Irp->AssociatedIrp.SystemBuffer)->MultiSz[DeviceLength / sizeof(WCHAR)] = 0;
-            ((PMOUNTMGR_VOLUME_PATHS)Irp->AssociatedIrp.SystemBuffer)->MultiSz[DeviceLength / sizeof(WCHAR) + 1] = 0;
-
-            return STATUS_SUCCESS;
+            RtlCopyMemory(Output->MultiSz, DeviceString, DeviceLength);
         }
-        else
-        {
-            /* Just return appropriate size and leave */
-            FreePool(DeviceString);
-            Irp->IoStatus.Information = sizeof(ULONG);
-            return STATUS_BUFFER_OVERFLOW;
-        }
+
+        /* And double-NUL at its end - this is needed in case of
+         * multiple paths which are separated by a single NUL */
+        FreePool(DeviceString);
+        Output->MultiSz[DeviceLength / sizeof(WCHAR)] = UNICODE_NULL;
+        Output->MultiSz[DeviceLength / sizeof(WCHAR) + 1] = UNICODE_NULL;
+
+        return STATUS_SUCCESS;
     }
-
-    /* Fail */
-    return STATUS_NOT_FOUND;
+    else
+    {
+        /* Just return the size needed and leave */
+        FreePool(DeviceString);
+        Irp->IoStatus.Information = sizeof(ULONG);
+        return STATUS_BUFFER_OVERFLOW;
+    }
 }
 
 /*
@@ -1557,7 +1559,7 @@ MountMgrQueryDosVolumePaths(IN PDEVICE_EXTENSION DeviceExtension,
         MountMgrNotifyNameChange(DeviceExtension, &SymbolicName, FALSE);
     }
 
-    /* Get output buffer */
+    /* Get the output buffer */
     Output = (PMOUNTMGR_VOLUME_PATHS)Irp->AssociatedIrp.SystemBuffer;
 
     /* Set required size */
@@ -1566,7 +1568,7 @@ MountMgrQueryDosVolumePaths(IN PDEVICE_EXTENSION DeviceExtension,
     /* Compute total length */
     OutputLength = Output->MultiSzLength + sizeof(ULONG);
 
-    /* If it cannot fit, just return need size and quit */
+    /* If it cannot fit, just return the size needed and leave */
     if (OutputLength > Stack->Parameters.DeviceIoControl.OutputBufferLength)
     {
         Irp->IoStatus.Information = sizeof(ULONG);
