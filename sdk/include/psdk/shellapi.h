@@ -640,7 +640,7 @@ DoEnvironmentSubstW(
 
 HRESULT WINAPI
 SHSetUnreadMailCountW(
-    _In_ LPCWSTR pszMailAddress,
+    _In_ PCWSTR pszMailAddress,
     _In_ DWORD dwCount,
     _In_ LPCWSTR pszShellExecuteCommand);
 
