@@ -86,7 +86,7 @@
 #include <peloader.h>
 
 /* File system headers */
-#include <fs/ext2.h>
+#include <fs/ext.h>
 #include <fs/fat.h>
 #include <fs/ntfs.h>
 #include <fs/iso.h>
