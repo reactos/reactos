@@ -43,16 +43,35 @@ START_TEST(SHGetUnreadMailCountW)
     ok_hex(hr, S_OK);
 
     FILETIME FileTime;
-    hr = SHGetUnreadMailCountW(NULL, L"example.com", NULL, &FileTime, NULL, 0);
+    ZeroMemory(&FileTime, sizeof(FileTime));
+    hr = SHGetUnreadMailCountW(HKEY_CURRENT_USER, L"example.com", NULL, &FileTime, NULL, 0);
     ok_hex(hr, S_OK);
+    ok(FileTime.dwHighDateTime != 0, "FileTime.dwHighDateTime was zero\n");
 
     DWORD dwCount = 0;
+    ZeroMemory(&FileTime, sizeof(FileTime));
+    hr = SHGetUnreadMailCountW(NULL, NULL, &dwCount, &FileTime, NULL, 0);
+    ok_hex(hr, S_OK);
+    ok_long(dwCount, 1);
+    ok_long(FileTime.dwHighDateTime, 0);
+
+    dwCount = 0;
     hr = SHGetUnreadMailCountW(NULL, L"example.com", &dwCount, NULL, NULL, 0);
     ok_hex(hr, S_OK);
     ok_long(dwCount, 1);
 
     hr = SHGetUnreadMailCountW(NULL, NULL, &dwCount, NULL, NULL, 0);
     ok_hex(hr, S_OK);
+
+    WCHAR szAppName[MAX_PATH];
+    dwCount = 0;
+    hr = SHGetUnreadMailCountW(NULL, NULL, &dwCount, NULL, szAppName, _countof(szAppName));
+    ok_hex(hr, E_INVALIDARG);
+    ok_long(dwCount, 0);
+
+    hr = SHGetUnreadMailCountW(NULL, L"example.com", NULL, NULL, szAppName, _countof(szAppName));
+    ok_hex(hr, S_OK);
+    ok_wstr(szAppName, L"MyMailerApp");
 
     if (dwDisposition == REG_CREATED_NEW_KEY)
     {
