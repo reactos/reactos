@@ -856,7 +856,7 @@ MountMgrQueryDosVolumePath(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* Construct string for query */
-    SymbolicName.Length = Target->DeviceNameLength;
+    SymbolicName.Length =
     SymbolicName.MaximumLength = Target->DeviceNameLength;
     SymbolicName.Buffer = Target->DeviceName;
 
@@ -1482,8 +1482,8 @@ MountMgrQueryDosVolumePaths(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* Construct string for query */
-    SymbolicName.Length = Target->DeviceNameLength;
-    SymbolicName.MaximumLength = Target->DeviceNameLength + sizeof(UNICODE_NULL);
+    SymbolicName.Length =
+    SymbolicName.MaximumLength = Target->DeviceNameLength;
     SymbolicName.Buffer = Target->DeviceName;
 
     /* Find device with our info */
