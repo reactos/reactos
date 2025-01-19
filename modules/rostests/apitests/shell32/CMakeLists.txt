@@ -34,6 +34,7 @@ list(APPEND SOURCE
     SHParseDisplayName.cpp
     SHRestricted.cpp
     SHShouldShowWizards.cpp
+    SHEnumerateUnreadMailAccountsW.cpp
     She.cpp
     ShellExec_RunDLL.cpp
     ShellExecCmdLine.cpp
