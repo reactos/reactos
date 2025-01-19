@@ -887,20 +887,16 @@ MountMgrQueryDosVolumePath(IN PDEVICE_EXTENSION DeviceExtension,
             }
         }
 
-        /* We didn't find, break */
-        if (SymlinksEntry == &(DeviceInformation->SymbolicLinksListHead))
-        {
-            return STATUS_NOT_FOUND;
-        }
+        /* If we've found a device via drive letter, do default processing */
+        if (SymlinksEntry != &(DeviceInformation->SymbolicLinksListHead))
+            break;
 
-        /* It doesn't have associated device, go to fallback method */
+        /* If it doesn't have an associated device, go to fallback method */
         if (IsListEmpty(&DeviceInformation->AssociatedDevicesHead))
-        {
             goto TryWithVolumeName;
-        }
 
         /* Create a string with the information about the device */
-        AssociatedDevice = CONTAINING_RECORD(&(DeviceInformation->SymbolicLinksListHead), ASSOCIATED_DEVICE_ENTRY, AssociatedDevicesEntry);
+        AssociatedDevice = CONTAINING_RECORD(&(DeviceInformation->AssociatedDevicesHead), ASSOCIATED_DEVICE_ENTRY, AssociatedDevicesEntry);
         OldLength = DeviceLength;
         OldBuffer = DeviceString;
         DeviceLength += AssociatedDevice->String.Length;
@@ -967,6 +963,7 @@ TryWithVolumeName:
         if (DeviceString)
         {
             FreePool(DeviceString);
+            DeviceString = NULL;
             DeviceLength = 0;
         }
 
