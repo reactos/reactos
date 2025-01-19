@@ -49,6 +49,7 @@ extern void func_SHParseDisplayName(void);
 extern void func_SHShouldShowWizards(void);
 extern void func_SHSimpleIDListFromPath(void);
 extern void func_SHRestricted(void);
+extern void func_SHSetUnreadMailCountW(void);
 
 const struct test winetest_testlist[] =
 {
@@ -98,6 +99,7 @@ const struct test winetest_testlist[] =
     { "SHShouldShowWizards", func_SHShouldShowWizards },
     { "SHSimpleIDListFromPath", func_SHSimpleIDListFromPath },
     { "SHRestricted", func_SHRestricted },
+    { "SHSetUnreadMailCountW", func_SHSetUnreadMailCountW },
 
     { 0, 0 }
 };
