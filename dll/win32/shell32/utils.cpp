@@ -935,14 +935,14 @@ SHGetUnreadMailCountW(
     LSTATUS error;
     HKEY hKey;
 
+    if (!hKeyUser)
+        hKeyUser = HKEY_CURRENT_USER;
+
     if (pszMailAddress)
     {
         CStringW strName = L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail";
         strName += L'\\';
         strName += pszMailAddress;
-
-        if (!hKeyUser)
-            hKeyUser = HKEY_CURRENT_USER;
 
         error = RegOpenKeyExW(hKeyUser, strName, 0, KEY_QUERY_VALUE, &hKey);
         if (error)
@@ -957,9 +957,6 @@ SHGetUnreadMailCountW(
             return E_INVALIDARG;
 
         *pdwCount = 0;
-
-        if (!hKeyUser)
-            hKeyUser = HKEY_CURRENT_USER;
 
         error = RegOpenKeyExW(hKeyUser, L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail",
                               0, KEY_ENUMERATE_SUB_KEYS, &hKey);
