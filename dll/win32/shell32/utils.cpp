@@ -806,7 +806,7 @@ HRESULT WINAPI
 SHSetUnreadMailCountW(
     _In_ PCWSTR pszMailAddress,
     _In_ DWORD dwCount,
-    _In_ LPCWSTR pszShellExecuteCommand)
+    _In_ PCWSTR pszShellExecuteCommand)
 {
     CString strKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail";
     strKey += L'\\';
