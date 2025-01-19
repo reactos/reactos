@@ -642,7 +642,7 @@ HRESULT WINAPI
 SHSetUnreadMailCountW(
     _In_ PCWSTR pszMailAddress,
     _In_ DWORD dwCount,
-    _In_ LPCWSTR pszShellExecuteCommand);
+    _In_ PCWSTR pszShellExecuteCommand);
 
 #if (_WIN32_IE >= 0x0601)
 BOOL
