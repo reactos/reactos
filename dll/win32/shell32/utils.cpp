@@ -940,11 +940,11 @@ SHGetUnreadMailCountW(
 
     if (pszMailAddress)
     {
-        CStringW strName = L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail";
-        strName += L'\\';
-        strName += pszMailAddress;
+        CStringW strKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail";
+        strKey += L'\\';
+        strKey += pszMailAddress;
 
-        error = RegOpenKeyExW(hKeyUser, strName, 0, KEY_QUERY_VALUE, &hKey);
+        error = RegOpenKeyExW(hKeyUser, strKey, 0, KEY_QUERY_VALUE, &hKey);
         if (error)
             return HRESULT_FROM_WIN32(error);
 
