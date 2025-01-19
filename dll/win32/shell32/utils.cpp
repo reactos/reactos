@@ -961,11 +961,8 @@ SHGetUnreadMailCountW(
         if (!hKeyUser)
             hKeyUser = HKEY_CURRENT_USER;
 
-        error = RegOpenKeyExW(hKeyUser,
-                              L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail",
-                              0,
-                              KEY_ENUMERATE_SUB_KEYS,
-                              &hKey);
+        error = RegOpenKeyExW(hKeyUser, L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail",
+                              0, KEY_ENUMERATE_SUB_KEYS, &hKey);
         if (error)
             return HRESULT_FROM_WIN32(error);
 
