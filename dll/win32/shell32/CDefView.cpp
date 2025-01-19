@@ -828,7 +828,9 @@ BOOL CDefView::CreateList()
     {
         dwStyle |= LVS_SHOWSELALWAYS; // MSDN says FWF_SHOWSELALWAYS is deprecated, always turn on for folders
         dwStyle |= (m_FolderSettings.fFlags & FWF_ALIGNLEFT) ? LVS_ALIGNLEFT : LVS_ALIGNTOP;
+#if 0 // FIXME: Temporarily disabled until ListView is fixed (CORE-19624, CORE-19818)
         ListExStyle |= LVS_EX_DOUBLEBUFFER;
+#endif
     }
 
     ViewMode = m_FolderSettings.ViewMode;
