@@ -17,19 +17,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 /*
  * Unimplemented
  */
-EXTERN_C HRESULT
-WINAPI
-SHSetUnreadMailCountW(LPCWSTR pszMailAddress,
-                      DWORD dwCount,
-                      LPCWSTR pszShellExecuteCommand)
-{
-    FIXME("SHSetUnreadMailCountW() stub\n");
-    return E_FAIL;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C VOID
 WINAPI
 CheckDiskSpace(VOID)
