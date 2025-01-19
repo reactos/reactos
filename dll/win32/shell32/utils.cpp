@@ -808,8 +808,7 @@ SHSetUnreadMailCountW(
     _In_ DWORD dwCount,
     _In_ PCWSTR pszShellExecuteCommand)
 {
-    CString strKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail";
-    strKey += L'\\';
+    CString strKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail\\";
     strKey += pszMailAddress;
 
     HKEY hKey;
