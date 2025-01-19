@@ -1004,8 +1004,8 @@ TryWithVolumeName:
     Output = (PMOUNTMGR_VOLUME_PATHS)Irp->AssociatedIrp.SystemBuffer;
 
     /* At least, we will return our length */
-    Output->MultiSzLength = DeviceLength;
-    Irp->IoStatus.Information = FIELD_OFFSET(MOUNTMGR_VOLUME_PATHS, MultiSz) + DeviceLength;
+    Output->MultiSzLength = DeviceLength + 2 * sizeof(UNICODE_NULL);
+    Irp->IoStatus.Information = FIELD_OFFSET(MOUNTMGR_VOLUME_PATHS, MultiSz) + Output->MultiSzLength;
 
     /* If we have enough room for copying the string */
     if (Irp->IoStatus.Information <= Stack->Parameters.DeviceIoControl.OutputBufferLength)
