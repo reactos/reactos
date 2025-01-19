@@ -912,7 +912,7 @@ HRESULT WINAPI
 SHEnumerateUnreadMailAccountsW(
     _In_opt_ HKEY hKeyUser,
     _In_ DWORD dwIndex,
-    _Out_writes_(cchMailAddress) LPWSTR pszMailAddress,
+    _Out_writes_(cchMailAddress) PWSTR pszMailAddress,
     _In_ INT cchMailAddress)
 {
     if (!hKeyUser)
