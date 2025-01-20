@@ -664,21 +664,21 @@ CDownloadManager::RealDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
             break;
 
         case WM_ISCANCELLED:
-            return SetDlgRet(hDlg, m_bCancelled);
+            return SetDlgMsgResult(hDlg, uMsg, m_bCancelled);
 
         case WM_SETSTATUS:
             m_ListView.SetDownloadStatus(m_Index - 1, (DownloadStatus)wParam);
             break;
 
         case WM_GETINSTANCE:
-            return SetDlgRet(hDlg, (INT_PTR)this);
+            return SetDlgMsgResult(hDlg, uMsg, (INT_PTR)this);
 
         case WM_GETNEXT:
         {
             DownloadInfo *pItem = NULL;
             if (!m_bCancelled && m_Index < (SIZE_T)m_List.GetSize())
                 pItem = &m_List[m_Index++];
-            return SetDlgRet(hDlg, (INT_PTR)pItem);
+            return SetDlgMsgResult(hDlg, uMsg, (INT_PTR)pItem);
         }
     }
     return FALSE;
