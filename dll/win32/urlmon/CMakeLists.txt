@@ -4,7 +4,8 @@ add_definitions(
     -D_URLMON_
     -DENTRY_PREFIX=URLMON_
     -DPROXY_DELEGATION
-    -DWINE_REGISTER_DLL)
+    -DWINE_REGISTER_DLL
+    -DPROXY_CLSID_IS={0x79EAC9F1,0xBAF9,0x11CE,{0x8C,0x82,0x00,0xAA,0x00,0x4B,0xA9,0x0B}})
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(urlmon.dll urlmon.spec ADD_IMPORTLIB)
