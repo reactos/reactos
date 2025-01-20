@@ -1981,7 +1981,8 @@ public:
 
     // *** IOleWindow methods ***
 
-    STDMETHODIMP GetWindow(HWND* phwnd) override
+    STDMETHODIMP
+    GetWindow(HWND* phwnd) override
     {
         if (!phwnd)
             return E_INVALIDARG;
@@ -1989,7 +1990,8 @@ public:
         return S_OK;
     }
 
-    STDMETHODIMP ContextSensitiveHelp(BOOL fEnterMode) override
+    STDMETHODIMP
+    ContextSensitiveHelp(BOOL fEnterMode) override
     {
         return E_NOTIMPL;
     }

@@ -52,7 +52,8 @@ public:
 
     /*****************************************************************************/
 
-    STDMETHODIMP GetWindow(OUT HWND *phwnd) override
+    STDMETHODIMP
+    GetWindow(OUT HWND *phwnd) override
     {
         if (!m_hWnd)
             return E_FAIL;
@@ -62,25 +63,29 @@ public:
         return S_OK;
     }
 
-    STDMETHODIMP ContextSensitiveHelp(IN BOOL fEnterMode) override
+    STDMETHODIMP
+    ContextSensitiveHelp(IN BOOL fEnterMode) override
     {
         /* FIXME: Implement */
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP ShowDW(IN BOOL bShow) override
+    STDMETHODIMP
+    ShowDW(IN BOOL bShow) override
     {
         /* We don't do anything... */
         return S_OK;
     }
 
-    STDMETHODIMP CloseDW(IN DWORD dwReserved) override
+    STDMETHODIMP
+    CloseDW(IN DWORD dwReserved) override
     {
         /* We don't do anything... */
         return S_OK;
     }
 
-    STDMETHODIMP ResizeBorderDW(
+    STDMETHODIMP
+    ResizeBorderDW(
         LPCRECT prcBorder,
         IUnknown *punkToolbarSite,
         BOOL fReserved) override
@@ -89,7 +94,8 @@ public:
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP GetBandInfo(
+    STDMETHODIMP
+    GetBandInfo(
         IN DWORD dwBandID,
         IN DWORD dwViewMode,
         IN OUT DESKBANDINFO *pdbi) override
@@ -160,12 +166,13 @@ public:
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP Exec(
+    STDMETHODIMP
+    Exec(
         const GUID *pguidCmdGroup,
         DWORD nCmdID,
         DWORD nCmdexecopt,
         VARIANT *pvaIn,
-        VARIANT *pvaOut)
+        VARIANT *pvaOut) override
     {
         if (IsEqualIID(*pguidCmdGroup, IID_IBandSite))
         {
@@ -183,19 +190,22 @@ public:
 
     /*****************************************************************************/
 
-    STDMETHODIMP SetClient(IN IUnknown *punkClient) override
+    STDMETHODIMP
+    SetClient(IN IUnknown *punkClient) override
     {
         TRACE("IDeskBar::SetClient(0x%p)\n", punkClient);
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP GetClient(OUT IUnknown **ppunkClient) override
+    STDMETHODIMP
+    GetClient(OUT IUnknown **ppunkClient) override
     {
         TRACE("IDeskBar::GetClient(0x%p)\n", ppunkClient);
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP OnPosRectChangeDB(IN RECT *prc) override
+    STDMETHODIMP
+    OnPosRectChangeDB(IN RECT *prc) override
     {
         TRACE("IDeskBar::OnPosRectChangeDB(0x%p=(%d,%d,%d,%d))\n", prc, prc->left, prc->top, prc->right, prc->bottom);
         if (prc->bottom - prc->top == 0)
@@ -206,7 +216,8 @@ public:
 
     /*****************************************************************************/
 
-    STDMETHODIMP GetClassID(OUT CLSID *pClassID) override
+    STDMETHODIMP
+    GetClassID(OUT CLSID *pClassID) override
     {
         TRACE("CTaskBand::GetClassID(0x%p)\n", pClassID);
         /* We're going to return the (internal!) CLSID of the task band interface */
@@ -214,20 +225,23 @@ public:
         return S_OK;
     }
 
-    STDMETHODIMP IsDirty() override
+    STDMETHODIMP
+    IsDirty() override
     {
         /* The object hasn't changed since the last save! */
         return S_FALSE;
     }
 
-    STDMETHODIMP Load(IN IStream *pStm) override
+    STDMETHODIMP
+    Load(IN IStream *pStm) override
     {
         TRACE("CTaskBand::Load called\n");
         /* Nothing to do */
         return S_OK;
     }
 
-    STDMETHODIMP Save(
+    STDMETHODIMP
+    Save(
         IN IStream *pStm,
         IN BOOL fClearDirty) override
     {
@@ -235,7 +249,8 @@ public:
         return S_OK;
     }
 
-    STDMETHODIMP GetSizeMax(OUT ULARGE_INTEGER *pcbSize) override
+    STDMETHODIMP
+    GetSizeMax(OUT ULARGE_INTEGER *pcbSize) override
     {
         TRACE("CTaskBand::GetSizeMax called\n");
         /* We don't need any space for the task band */
@@ -245,7 +260,8 @@ public:
 
     /*****************************************************************************/
 
-    STDMETHODIMP SetSite(IUnknown *pUnkSite) override
+    STDMETHODIMP
+    SetSite(IUnknown *pUnkSite) override
     {
         HRESULT hRet;
         HWND hwndSite;
@@ -271,7 +287,8 @@ public:
         return S_OK;
     }
 
-    STDMETHODIMP GetSite(
+    STDMETHODIMP
+    GetSite(
         IN REFIID riid,
         OUT VOID **ppvSite) override
     {
@@ -288,7 +305,8 @@ public:
 
     /*****************************************************************************/
 
-    STDMETHODIMP OnWinEvent(
+    STDMETHODIMP
+    OnWinEvent(
         HWND hWnd,
         UINT uMsg,
         WPARAM wParam,
@@ -299,7 +317,8 @@ public:
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP IsWindowOwner(HWND hWnd) override
+    STDMETHODIMP
+    IsWindowOwner(HWND hWnd) override
     {
         return (hWnd == m_hWnd) ? S_OK : S_FALSE;
     }

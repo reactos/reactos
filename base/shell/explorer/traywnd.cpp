@@ -3490,21 +3490,24 @@ HandleTrayContextMenu:
      *       with it (especially positioning of desktop icons)
      */
 
-    STDMETHODIMP_(ULONG) GetState() override
+    STDMETHODIMP_(ULONG)
+    GetState() override
     {
         /* FIXME: Return ABS_ flags? */
         TRACE("IShellDesktopTray::GetState() unimplemented!\n");
         return 0;
     }
 
-    STDMETHODIMP GetTrayWindow(OUT HWND *phWndTray) override
+    STDMETHODIMP
+    GetTrayWindow(OUT HWND *phWndTray) override
     {
         TRACE("IShellDesktopTray::GetTrayWindow(0x%p)\n", phWndTray);
         *phWndTray = m_hWnd;
         return S_OK;
     }
 
-    STDMETHODIMP RegisterDesktopWindow(IN HWND hWndDesktop) override
+    STDMETHODIMP
+    RegisterDesktopWindow(IN HWND hWndDesktop) override
     {
         TRACE("IShellDesktopTray::RegisterDesktopWindow(0x%p)\n", hWndDesktop);
 
@@ -3512,7 +3515,8 @@ HandleTrayContextMenu:
         return S_OK;
     }
 
-    STDMETHODIMP Unknown(IN DWORD dwUnknown1, IN DWORD dwUnknown2) override
+    STDMETHODIMP
+    Unknown(IN DWORD dwUnknown1, IN DWORD dwUnknown2) override
     {
         TRACE("IShellDesktopTray::Unknown(%u,%u) unimplemented!\n", dwUnknown1, dwUnknown2);
         return S_OK;
@@ -3526,7 +3530,8 @@ HandleTrayContextMenu:
 
     // *** IOleWindow methods ***
 
-    STDMETHODIMP GetWindow(HWND* phwnd) override
+    STDMETHODIMP
+    GetWindow(HWND* phwnd) override
     {
         if (!phwnd)
             return E_INVALIDARG;
@@ -3534,7 +3539,8 @@ HandleTrayContextMenu:
         return S_OK;
     }
 
-    STDMETHODIMP ContextSensitiveHelp(BOOL fEnterMode) override
+    STDMETHODIMP
+    ContextSensitiveHelp(BOOL fEnterMode) override
     {
         return E_NOTIMPL;
     }
@@ -3634,7 +3640,8 @@ public:
         return S_OK;
     }
 
-    STDMETHODIMP InvokeCommand(LPCMINVOKECOMMANDINFO lpici) override
+    STDMETHODIMP
+    InvokeCommand(LPCMINVOKECOMMANDINFO lpici) override
     {
         UINT uiCmdId = PtrToUlong(lpici->lpVerb);
         if (uiCmdId != 0)

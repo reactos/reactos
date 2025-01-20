@@ -56,12 +56,14 @@ class CTrayBandSite :
     };
 
 public:
-    STDMETHODIMP_(ULONG) AddRef() override
+    STDMETHODIMP_(ULONG)
+    AddRef() override
     {
         return InterlockedIncrement(&m_RefCount);
     }
 
-    STDMETHODIMP_(ULONG) Release() override
+    STDMETHODIMP_(ULONG)
+    Release() override
     {
         ULONG Ret = InterlockedDecrement(&m_RefCount);
 
@@ -71,7 +73,8 @@ public:
         return Ret;
     }
 
-    STDMETHODIMP QueryInterface(IN REFIID riid, OUT LPVOID *ppvObj) override
+    STDMETHODIMP
+    QueryInterface(IN REFIID riid, OUT LPVOID *ppvObj) override
     {
         if (ppvObj == NULL)
             return E_POINTER;
@@ -114,7 +117,8 @@ public:
 
     virtual ~CTrayBandSite() { }
 
-    STDMETHODIMP OnLoad(
+    STDMETHODIMP
+    OnLoad(
         IN OUT IStream *pStm,
         IN REFIID riid,
         OUT PVOID *pvObj) override
@@ -186,7 +190,8 @@ public:
         return hRet;
     }
 
-    STDMETHODIMP OnSave(
+    STDMETHODIMP
+    OnSave(
         IN OUT IUnknown *pUnk,
         IN OUT IStream *pStm) override
     {
@@ -198,12 +203,14 @@ public:
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP IsTaskBand(IN IUnknown *punk) override
+    STDMETHODIMP
+    IsTaskBand(IN IUnknown *punk) override
     {
         return IsSameObject(m_BandSite, punk);
     }
 
-    STDMETHODIMP ProcessMessage(
+    STDMETHODIMP
+    ProcessMessage(
         IN HWND hWnd,
         IN UINT uMsg,
         IN WPARAM wParam,
@@ -276,7 +283,8 @@ public:
         return hRet;
     }
 
-    STDMETHODIMP AddContextMenus(
+    STDMETHODIMP
+    AddContextMenus(
         IN HMENU hmenu,
         IN UINT indexMenu,
         IN UINT idCmdFirst,
@@ -312,7 +320,8 @@ public:
         return S_OK;
     }
 
-    STDMETHODIMP Lock(IN BOOL bLock) override
+    STDMETHODIMP
+    Lock(IN BOOL bLock) override
     {
         BOOL bPrevLocked = Locked;
         BANDSITEINFO bsi;
@@ -341,7 +350,8 @@ public:
 
     /*******************************************************************/
 
-    STDMETHODIMP AddBand(IN IUnknown *punk) override
+    STDMETHODIMP
+    AddBand(IN IUnknown *punk) override
     {
         /* Send the DBID_DELAYINIT command to initialize the band to be added */
         /* FIXME: Should be delayed */
@@ -366,14 +376,16 @@ public:
         return S_OK;
     }
 
-    STDMETHODIMP EnumBands(
+    STDMETHODIMP
+    EnumBands(
         IN UINT uBand,
         OUT DWORD *pdwBandID) override
     {
         return m_BandSite->EnumBands(uBand, pdwBandID);
     }
 
-    STDMETHODIMP QueryBand(
+    STDMETHODIMP
+    QueryBand(
         IN DWORD dwBandID,
         OUT IDeskBand **ppstb,
         OUT DWORD *pdwState,
@@ -414,7 +426,8 @@ public:
         return hRet;
     }
 
-    STDMETHODIMP SetBandState(
+    STDMETHODIMP
+    SetBandState(
         IN DWORD dwBandID,
         IN DWORD dwMask,
         IN DWORD dwState) override
@@ -422,12 +435,14 @@ public:
         return m_BandSite->SetBandState(dwBandID, dwMask, dwState);
     }
 
-    STDMETHODIMP RemoveBand(IN DWORD dwBandID) override
+    STDMETHODIMP
+    RemoveBand(IN DWORD dwBandID) override
     {
         return m_BandSite->RemoveBand(dwBandID);
     }
 
-    STDMETHODIMP GetBandObject(
+    STDMETHODIMP
+    GetBandObject(
         IN DWORD dwBandID,
         IN REFIID riid,
         OUT VOID **ppv) override
@@ -435,12 +450,14 @@ public:
         return m_BandSite->GetBandObject(dwBandID, riid, ppv);
     }
 
-    STDMETHODIMP SetBandSiteInfo(IN const BANDSITEINFO *pbsinfo) override
+    STDMETHODIMP
+    SetBandSiteInfo(IN const BANDSITEINFO *pbsinfo) override
     {
         return m_BandSite->SetBandSiteInfo(pbsinfo);
     }
 
-    STDMETHODIMP GetBandSiteInfo(IN OUT BANDSITEINFO *pbsinfo) override
+    STDMETHODIMP
+    GetBandSiteInfo(IN OUT BANDSITEINFO *pbsinfo) override
     {
         return m_BandSite->GetBandSiteInfo(pbsinfo);
     }

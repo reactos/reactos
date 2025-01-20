@@ -39,7 +39,8 @@ public:
 
     // *** IServiceProvider methods ***
 
-    STDMETHODIMP QueryService(
+    STDMETHODIMP
+    QueryService(
         IN REFGUID guidService,
         IN REFIID riid,
         OUT PVOID *ppvObject) override
@@ -54,7 +55,8 @@ public:
 
     // *** IOleWindow methods ***
 
-    STDMETHODIMP GetWindow(OUT HWND *phwnd) override
+    STDMETHODIMP
+    GetWindow(OUT HWND *phwnd) override
     {
         TRACE("ITrayPriv::GetWindow\n");
 
@@ -65,13 +67,15 @@ public:
         return E_FAIL;
     }
 
-    STDMETHODIMP ContextSensitiveHelp(IN BOOL fEnterMode) override
+    STDMETHODIMP
+    ContextSensitiveHelp(IN BOOL fEnterMode) override
     {
         TRACE("ITrayPriv::ContextSensitiveHelp\n");
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP Execute(
+    STDMETHODIMP
+    Execute(
         IN IShellFolder *pShellFolder,
         IN LPCITEMIDLIST pidl) override
     {
@@ -84,7 +88,8 @@ public:
         return ret;
     }
 
-    STDMETHODIMP Unknown(
+    STDMETHODIMP
+    Unknown(
         IN PVOID Unknown1,
         IN PVOID Unknown2,
         IN PVOID Unknown3,
@@ -110,7 +115,8 @@ public:
         return FALSE;
     }
 
-    STDMETHODIMP AppendMenu(OUT HMENU* phMenu) override
+    STDMETHODIMP
+    AppendMenu(OUT HMENU* phMenu) override
     {
         HMENU hMenu, hSettingsMenu;
         DWORD dwLogoff;
@@ -276,7 +282,8 @@ public:
 
     /*******************************************************************/
 
-    STDMETHODIMP QueryStatus(
+    STDMETHODIMP
+    QueryStatus(
         IN const GUID *pguidCmdGroup  OPTIONAL,
         IN ULONG cCmds,
         IN OUT OLECMD *prgCmds,
@@ -285,7 +292,8 @@ public:
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP Exec(
+    STDMETHODIMP
+    Exec(
         IN const GUID *pguidCmdGroup  OPTIONAL,
         IN DWORD nCmdID,
         IN DWORD nCmdExecOpt,
@@ -297,34 +305,40 @@ public:
 
     /*******************************************************************/
 
-    STDMETHODIMP SetClient(IUnknown *punkClient) override
+    STDMETHODIMP
+    SetClient(IUnknown *punkClient) override
     {
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP GetClient(IUnknown ** ppunkClient) override
+    STDMETHODIMP
+    GetClient(IUnknown ** ppunkClient) override
     {
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP OnPosRectChangeDB(RECT *prc) override
+    STDMETHODIMP
+    OnPosRectChangeDB(RECT *prc) override
     {
         return E_NOTIMPL;
     }
 
     // *** IMenuPopup methods ***
 
-    STDMETHODIMP Popup(POINTL *ppt, RECTL *prcExclude, MP_POPUPFLAGS dwFlags) override
+    STDMETHODIMP
+    Popup(POINTL *ppt, RECTL *prcExclude, MP_POPUPFLAGS dwFlags) override
     {
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP OnSelect(DWORD dwSelectType) override
+    STDMETHODIMP
+    OnSelect(DWORD dwSelectType) override
     {
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP SetSubMenu(IMenuPopup *pmp, BOOL fSet) override
+    STDMETHODIMP
+    SetSubMenu(IMenuPopup *pmp, BOOL fSet) override
     {
         if (!fSet)
         {

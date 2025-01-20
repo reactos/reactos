@@ -189,7 +189,8 @@ public:
         return hRet;
     }
 
-    STDMETHODIMP InvokeCommand(LPCMINVOKECOMMANDINFO lpici) override
+    STDMETHODIMP
+    InvokeCommand(LPCMINVOKECOMMANDINFO lpici) override
     {
         UINT uiCmdId = PtrToUlong(lpici->lpVerb);
         if (!IsShellCmdId((UINT_PTR)lpici->lpVerb))
