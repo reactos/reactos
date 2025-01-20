@@ -878,6 +878,123 @@ SHCreatePropertyBag(_In_ REFIID riid, _Out_ void **ppvObj)
     return SHCreatePropertyBagOnMemory(STGM_READWRITE, riid, ppvObj);
 }
 
+// The helper function for SHGetUnreadMailCountW
+static DWORD
+SHELL_ReadSingleUnreadMailCount(
+    _In_ HKEY hKey,
+    _Out_opt_ PDWORD pdwCount,
+    _Out_opt_ PFILETIME pFileTime,
+    _Out_writes_opt_(cchShellExecuteCommand) LPWSTR pszShellExecuteCommand,
+    _In_ INT cchShellExecuteCommand)
+{
+    DWORD dwType, dwCount, cbSize = sizeof(dwCount);
+    DWORD error = SHQueryValueExW(hKey, L"MessageCount", 0, &dwType, &dwCount, &cbSize);
+    if (error)
+        return error;
+    if (pdwCount && dwType == REG_DWORD)
+        *pdwCount = dwCount;
+
+    FILETIME FileTime;
+    cbSize = sizeof(FileTime);
+    error = SHQueryValueExW(hKey, L"TimeStamp", 0, &dwType, &FileTime, &cbSize);
+    if (error)
+        return error;
+    if (pFileTime && dwType == REG_BINARY)
+        *pFileTime = FileTime;
+
+    WCHAR szName[2 * MAX_PATH];
+    cbSize = sizeof(szName);
+    error = SHQueryValueExW(hKey, L"Application", 0, &dwType, szName, &cbSize);
+    if (error)
+        return error;
+
+    if (pszShellExecuteCommand && dwType == REG_SZ &&
+        FAILED(StringCchCopyW(pszShellExecuteCommand, cchShellExecuteCommand, szName)))
+    {
+        return ERROR_INSUFFICIENT_BUFFER;
+    }
+
+    return ERROR_SUCCESS;
+}
+
+/*************************************************************************
+ *  SHGetUnreadMailCountW [SHELL32.320]
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shgetunreadmailcountw
+ */
+EXTERN_C
+HRESULT WINAPI
+SHGetUnreadMailCountW(
+    _In_opt_ HKEY hKeyUser,
+    _In_opt_ LPCWSTR pszMailAddress,
+    _Out_opt_ PDWORD pdwCount,
+    _Inout_opt_ PFILETIME pFileTime,
+    _Out_writes_opt_(cchShellExecuteCommand) LPWSTR pszShellExecuteCommand,
+    _In_ INT cchShellExecuteCommand)
+{
+    LSTATUS error;
+    HKEY hKey;
+
+    if (!hKeyUser)
+        hKeyUser = HKEY_CURRENT_USER;
+
+    if (pszMailAddress)
+    {
+        CStringW strKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail";
+        strKey += L'\\';
+        strKey += pszMailAddress;
+
+        error = RegOpenKeyExW(hKeyUser, strKey, 0, KEY_QUERY_VALUE, &hKey);
+        if (error)
+            return HRESULT_FROM_WIN32(error);
+
+        error = SHELL_ReadSingleUnreadMailCount(hKey, pdwCount, pFileTime,
+                                                pszShellExecuteCommand, cchShellExecuteCommand);
+    }
+    else
+    {
+        if (pszShellExecuteCommand || cchShellExecuteCommand)
+            return E_INVALIDARG;
+
+        *pdwCount = 0;
+
+        error = RegOpenKeyExW(hKeyUser, L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail",
+                              0, KEY_ENUMERATE_SUB_KEYS, &hKey);
+        if (error)
+            return HRESULT_FROM_WIN32(error);
+
+        for (DWORD dwIndex = 0; !error; ++dwIndex)
+        {
+            WCHAR Name[2 * MAX_PATH];
+            DWORD cchName = _countof(Name);
+            FILETIME LastWritten;
+            error = RegEnumKeyExW(hKey, dwIndex, Name, &cchName, NULL, NULL, NULL, &LastWritten);
+            if (error)
+                break;
+
+            HKEY hSubKey;
+            error = RegOpenKeyExW(hKey, Name, 0, KEY_QUERY_VALUE, &hSubKey);
+            if (error)
+                break;
+
+            FILETIME FileTime;
+            DWORD dwCount;
+            error = SHELL_ReadSingleUnreadMailCount(hSubKey, &dwCount, &FileTime, NULL, 0);
+            if (!error && (!pFileTime || CompareFileTime(&FileTime, pFileTime) >= 0))
+                *pdwCount += dwCount;
+
+            RegCloseKey(hSubKey);
+        }
+
+        if (error == ERROR_NO_MORE_ITEMS)
+            error = ERROR_SUCCESS;
+    }
+
+    RegCloseKey(hKey);
+
+    return error ? HRESULT_FROM_WIN32(error) : S_OK;
+}
+
 /*************************************************************************
  *  SHSetUnreadMailCountW [SHELL32.336]
  *

@@ -659,6 +659,15 @@ SHEnumerateUnreadMailAccountsW(
     _Out_writes_(cchMailAddress) PWSTR pszMailAddress,
     _In_ INT cchMailAddress);
 
+HRESULT WINAPI
+SHGetUnreadMailCountW(
+    _In_opt_ HKEY hKeyUser,
+    _In_opt_ LPCWSTR pszMailAddress,
+    _Out_opt_ PDWORD pdwCount,
+    _Inout_opt_ PFILETIME pFileTime,
+    _Out_writes_opt_(cchShellExecuteCommand) LPWSTR pszShellExecuteCommand,
+    _In_ INT cchShellExecuteCommand);
+
 #ifdef UNICODE
 #define NOTIFYICONDATA_V1_SIZE NOTIFYICONDATAW_V1_SIZE
 #define NOTIFYICONDATA_V2_SIZE NOTIFYICONDATAW_V2_SIZE
