@@ -65,7 +65,7 @@ PFS_MOUNT FileSystems[] =
     BtrFsMount,
 #ifndef _M_ARM
     NtfsMount,
-    Ext2Mount,
+    ExtMount,
 #endif
 #if defined(_M_IX86) || defined(_M_AMD64)
 #ifndef UEFIBOOT
