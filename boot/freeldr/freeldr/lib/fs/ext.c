@@ -1,6 +1,7 @@
 /*
  *  FreeLoader
  *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 2024-2025  Daniel Victor <ilauncherdeveloper@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -54,6 +55,8 @@ typedef struct _EXT_VOLUME_INFO
     ULONG BlockSizeInSectors;       // Block size in sectors
     ULONG FragmentSizeInBytes;      // Fragment size in bytes
     ULONG FragmentSizeInSectors;    // Fragment size in sectors
+    ULONG InodeSizeInBytes;         // Inode size in bytes
+    ULONG GroupDescSizeInBytes;     // Group descriptor size in bytes
     ULONG GroupCount;               // Number of groups in this file system
     ULONG InodesPerBlock;           // Number of inodes in one block
     ULONG GroupDescPerBlock;        // Number of group descriptors in one block
@@ -104,11 +107,11 @@ PEXT_FILE_INFO ExtOpenFile(PEXT_VOLUME_INFO Volume, PCSTR FileName)
 {
     EXT_FILE_INFO        TempExtFileInfo;
     PEXT_FILE_INFO        FileHandle;
-    CHAR            SymLinkPath[EXT_NAME_LEN];
-    CHAR            FullPath[EXT_NAME_LEN * 2];
+    CHAR            SymLinkPath[EXT_DIR_ENTRY_MAX_NAME_LENGTH];
+    CHAR            FullPath[EXT_DIR_ENTRY_MAX_NAME_LENGTH * 2];
     ULONG_PTR        Index;
 
-    TRACE("ExtOpenFile() FileName = %s\n", FileName);
+    TRACE("ExtOpenFile() FileName = \"%s\"\n", FileName);
 
     RtlZeroMemory(SymLinkPath, sizeof(SymLinkPath));
 
@@ -120,7 +123,7 @@ PEXT_FILE_INFO ExtOpenFile(PEXT_VOLUME_INFO Volume, PCSTR FileName)
 
     // If we got a symbolic link then fix up the path
     // and re-call this function
-    if ((TempExtFileInfo.Inode.mode & EXT_S_IFMT) == EXT_S_IFLNK)
+    if ((TempExtFileInfo.Inode.Mode & EXT_S_IFMT) == EXT_S_IFLNK)
     {
         TRACE("File is a symbolic link\n");
 
@@ -135,14 +138,14 @@ PEXT_FILE_INFO ExtOpenFile(PEXT_VOLUME_INFO Volume, PCSTR FileName)
             return NULL;
         }
 
-        TRACE("Symbolic link path = %s\n", SymLinkPath);
+        TRACE("Symbolic link path = \"%s\"\n", SymLinkPath);
 
         // Get the full path
         if (SymLinkPath[0] == '/' || SymLinkPath[0] == '\\')
         {
             // Symbolic link is an absolute path
             // So copy it to FullPath, but skip over
-            // the '/' char at the beginning
+            // the '/' character at the beginning
             strcpy(FullPath, &SymLinkPath[1]);
         }
         else
@@ -167,7 +170,7 @@ PEXT_FILE_INFO ExtOpenFile(PEXT_VOLUME_INFO Volume, PCSTR FileName)
             strcat(FullPath, SymLinkPath);
         }
 
-        TRACE("Full file path = %s\n", FullPath);
+        TRACE("Full file path = \"%s\"\n", FullPath);
 
         if (TempExtFileInfo.FileBlockList != NULL)
         {
@@ -208,11 +211,11 @@ BOOLEAN ExtLookupFile(PEXT_VOLUME_INFO Volume, PCSTR FileName, PEXT_FILE_INFO Ex
     ULONG        NumberOfPathParts;
     CHAR        PathPart[261];
     PVOID        DirectoryBuffer;
-    ULONG        DirectoryInode = EXT_ROOT_INO;
+    ULONG        DirectoryInode = EXT_ROOT_INODE;
     EXT_INODE    InodeData;
     EXT_DIR_ENTRY    DirectoryEntry;
 
-    TRACE("ExtLookupFile() FileName = %s\n", FileName);
+    TRACE("ExtLookupFile() FileName = \"%s\"\n", FileName);
 
     RtlZeroMemory(ExtFileInfo, sizeof(EXT_FILE_INFO));
 
@@ -261,7 +264,7 @@ BOOLEAN ExtLookupFile(PEXT_VOLUME_INFO Volume, PCSTR FileName, PEXT_FILE_INFO Ex
 
         FrLdrTempFree(DirectoryBuffer, TAG_EXT_BUFFER);
 
-        DirectoryInode = DirectoryEntry.inode;
+        DirectoryInode = DirectoryEntry.Inode;
     }
 
     if (!ExtReadInode(Volume, DirectoryInode, &InodeData))
@@ -269,8 +272,8 @@ BOOLEAN ExtLookupFile(PEXT_VOLUME_INFO Volume, PCSTR FileName, PEXT_FILE_INFO Ex
         return FALSE;
     }
 
-    if (((InodeData.mode & EXT_S_IFMT) != EXT_S_IFREG) &&
-        ((InodeData.mode & EXT_S_IFMT) != EXT_S_IFLNK))
+    if (((InodeData.Mode & EXT_S_IFMT) != EXT_S_IFREG) &&
+        ((InodeData.Mode & EXT_S_IFMT) != EXT_S_IFLNK))
     {
         FileSystemError("Inode is not a regular file or symbolic link.");
         return FALSE;
@@ -282,8 +285,8 @@ BOOLEAN ExtLookupFile(PEXT_VOLUME_INFO Volume, PCSTR FileName, PEXT_FILE_INFO Ex
     // If it's a regular file or a regular symbolic link
     // then get the block pointer list otherwise it must
     // be a fast symbolic link which doesn't have a block list
-    if (((InodeData.mode & EXT_S_IFMT) == EXT_S_IFREG) ||
-        ((InodeData.mode & EXT_S_IFMT) == EXT_S_IFLNK && InodeData.size > FAST_SYMLINK_MAX_NAME_SIZE))
+    if (((InodeData.Mode & EXT_S_IFMT) == EXT_S_IFREG) ||
+        ((InodeData.Mode & EXT_S_IFMT) == EXT_S_IFLNK && InodeData.Size > FAST_SYMLINK_MAX_NAME_SIZE))
     {
         ExtFileInfo->FileBlockList = ExtReadBlockPointerList(Volume, &InodeData);
         if (ExtFileInfo->FileBlockList == NULL)
@@ -305,50 +308,49 @@ BOOLEAN ExtLookupFile(PEXT_VOLUME_INFO Volume, PCSTR FileName, PEXT_FILE_INFO Ex
 
 BOOLEAN ExtSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PEXT_DIR_ENTRY DirectoryEntry)
 {
-    ULONG        CurrentOffset;
-    PEXT_DIR_ENTRY    CurrentDirectoryEntry;
+    ULONG           CurrentOffset = 0;
+    PEXT_DIR_ENTRY  CurrentDirectoryEntry;
 
-    TRACE("ExtSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectorySize = %d FileName = %s\n", DirectoryBuffer, DirectorySize, FileName);
+    TRACE("ExtSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectorySize = %d FileName = \"%s\"\n", DirectoryBuffer, DirectorySize, FileName);
 
-    for (CurrentOffset=0; CurrentOffset<DirectorySize; )
+    while (CurrentOffset < DirectorySize)
     {
         CurrentDirectoryEntry = (PEXT_DIR_ENTRY)((ULONG_PTR)DirectoryBuffer + CurrentOffset);
 
-        if (CurrentDirectoryEntry->direntlen == 0)
-        {
+        if (!CurrentDirectoryEntry->EntryLen)
             break;
-        }
 
-        if ((CurrentDirectoryEntry->direntlen + CurrentOffset) > DirectorySize)
+        if ((CurrentDirectoryEntry->EntryLen + CurrentOffset) > DirectorySize)
         {
             FileSystemError("Directory entry extends past end of directory file.");
             return FALSE;
         }
 
-        TRACE("Dumping directory entry at offset %d:\n", CurrentOffset);
-        DbgDumpBuffer(DPRINT_FILESYSTEM, CurrentDirectoryEntry, CurrentDirectoryEntry->direntlen);
+        if (!CurrentDirectoryEntry->Inode)
+            goto NextDirectoryEntry;
 
-        if ((_strnicmp(FileName, CurrentDirectoryEntry->name, CurrentDirectoryEntry->namelen) == 0) &&
-            (strlen(FileName) == CurrentDirectoryEntry->namelen))
+        TRACE("EXT Directory Entry:\n");
+        TRACE("Inode = %d\n", CurrentDirectoryEntry->Inode);
+        TRACE("EntryLen = %d\n", CurrentDirectoryEntry->EntryLen);
+        TRACE("NameLen = %d\n", CurrentDirectoryEntry->NameLen);
+        TRACE("FileType = %d\n", CurrentDirectoryEntry->FileType);
+        TRACE("Name = \"");
+        for (ULONG NameOffset = 0; NameOffset < CurrentDirectoryEntry->NameLen; NameOffset++)
+        {
+            TRACE("%c", CurrentDirectoryEntry->Name[NameOffset]);
+        }
+        TRACE("\"\n\n");
+
+        if (strlen(FileName) == CurrentDirectoryEntry->NameLen &&
+            !_strnicmp(FileName, CurrentDirectoryEntry->Name, CurrentDirectoryEntry->NameLen))
         {
             RtlCopyMemory(DirectoryEntry, CurrentDirectoryEntry, sizeof(EXT_DIR_ENTRY));
-
-            TRACE("EXT Directory Entry:\n");
-            TRACE("inode = %d\n", DirectoryEntry->inode);
-            TRACE("direntlen = %d\n", DirectoryEntry->direntlen);
-            TRACE("namelen = %d\n", DirectoryEntry->namelen);
-            TRACE("filetype = %d\n", DirectoryEntry->filetype);
-            TRACE("name = ");
-            for (CurrentOffset=0; CurrentOffset<DirectoryEntry->namelen; CurrentOffset++)
-            {
-                TRACE("%c", DirectoryEntry->name[CurrentOffset]);
-            }
-            TRACE("\n");
 
             return TRUE;
         }
 
-        CurrentOffset += CurrentDirectoryEntry->direntlen;
+NextDirectoryEntry:
+        CurrentOffset += CurrentDirectoryEntry->EntryLen;
     }
 
     return FALSE;
@@ -380,7 +382,7 @@ BOOLEAN ExtReadFileBig(PEXT_FILE_INFO ExtFileInfo, ULONGLONG BytesToRead, ULONGL
     {
         // Block pointer list is NULL
         // so this better be a fast symbolic link or else
-        if (((ExtFileInfo->Inode.mode & EXT_S_IFMT) != EXT_S_IFLNK) ||
+        if (((ExtFileInfo->Inode.Mode & EXT_S_IFMT) != EXT_S_IFLNK) ||
             (ExtFileInfo->FileSize > FAST_SYMLINK_MAX_NAME_SIZE))
         {
             FileSystemError("Block pointer list is NULL and file is not a fast symbolic link.");
@@ -408,13 +410,13 @@ BOOLEAN ExtReadFileBig(PEXT_FILE_INFO ExtFileInfo, ULONGLONG BytesToRead, ULONGL
 
     // Check if this is a fast symbolic link
     // if so then the read is easy
-    if (((ExtFileInfo->Inode.mode & EXT_S_IFMT) == EXT_S_IFLNK) &&
+    if (((ExtFileInfo->Inode.Mode & EXT_S_IFMT) == EXT_S_IFLNK) &&
         (ExtFileInfo->FileSize <= FAST_SYMLINK_MAX_NAME_SIZE))
     {
         TRACE("Reading fast symbolic link data\n");
 
         // Copy the data from the link
-        RtlCopyMemory(Buffer, (PVOID)((ULONG_PTR)ExtFileInfo->FilePointer + ExtFileInfo->Inode.symlink), (ULONG)BytesToRead);
+        RtlCopyMemory(Buffer, (PVOID)((ULONG_PTR)ExtFileInfo->FilePointer + ExtFileInfo->Inode.SymLink), (ULONG)BytesToRead);
 
         if (BytesRead != NULL)
         {
@@ -615,94 +617,96 @@ BOOLEAN ExtReadSuperBlock(PEXT_VOLUME_INFO Volume)
         return FALSE;
 
     TRACE("Dumping super block:\n");
-    TRACE("total_inodes: %d\n", SuperBlock->total_inodes);
-    TRACE("total_blocks: %d\n", SuperBlock->total_blocks);
-    TRACE("reserved_blocks: %d\n", SuperBlock->reserved_blocks);
-    TRACE("free_blocks: %d\n", SuperBlock->free_blocks);
-    TRACE("free_inodes: %d\n", SuperBlock->free_inodes);
-    TRACE("first_data_block: %d\n", SuperBlock->first_data_block);
-    TRACE("log2_block_size: %d\n", SuperBlock->log2_block_size);
-    TRACE("log2_fragment_size: %d\n", SuperBlock->log2_fragment_size);
-    TRACE("blocks_per_group: %d\n", SuperBlock->blocks_per_group);
-    TRACE("fragments_per_group: %d\n", SuperBlock->fragments_per_group);
-    TRACE("inodes_per_group: %d\n", SuperBlock->inodes_per_group);
-    TRACE("mtime: %d\n", SuperBlock->mtime);
-    TRACE("utime: %d\n", SuperBlock->utime);
-    TRACE("mnt_count: %d\n", SuperBlock->mnt_count);
-    TRACE("max_mnt_count: %d\n", SuperBlock->max_mnt_count);
-    TRACE("magic: 0x%x\n", SuperBlock->magic);
-    TRACE("fs_state: %d\n", SuperBlock->fs_state);
-    TRACE("error_handling: %d\n", SuperBlock->error_handling);
-    TRACE("minor_revision_level: %d\n", SuperBlock->minor_revision_level);
-    TRACE("lastcheck: %d\n", SuperBlock->lastcheck);
-    TRACE("checkinterval: %d\n", SuperBlock->checkinterval);
-    TRACE("creator_os: %d\n", SuperBlock->creator_os);
-    TRACE("revision_level: %d\n", SuperBlock->revision_level);
-    TRACE("uid_reserved: %d\n", SuperBlock->uid_reserved);
-    TRACE("gid_reserved: %d\n", SuperBlock->gid_reserved);
-    TRACE("first_inode: %d\n", SuperBlock->first_inode);
-    TRACE("inode_size: %d\n", SuperBlock->inode_size);
-    TRACE("block_group_number: %d\n", SuperBlock->block_group_number);
-    TRACE("feature_compatibility: 0x%x\n", SuperBlock->feature_compatibility);
-    TRACE("feature_incompat: 0x%x\n", SuperBlock->feature_incompat);
-    TRACE("feature_ro_compat: 0x%x\n", SuperBlock->feature_ro_compat);
-    TRACE("unique_id = { 0x%x, 0x%x, 0x%x, 0x%x }\n",
-        SuperBlock->unique_id[0], SuperBlock->unique_id[1],
-        SuperBlock->unique_id[2], SuperBlock->unique_id[3]);
-    TRACE("volume_name = '%.16s'\n", SuperBlock->volume_name);
-    TRACE("last_mounted_on = '%.64s'\n", SuperBlock->last_mounted_on);
-    TRACE("compression_info = 0x%x\n", SuperBlock->compression_info);
+    TRACE("InodesCount: %d\n", SuperBlock->InodesCount);
+    TRACE("BlocksCountLo: %d\n", SuperBlock->BlocksCountLo);
+    TRACE("RBlocksCountLo: %d\n", SuperBlock->RBlocksCountLo);
+    TRACE("FreeBlocksCountLo: %d\n", SuperBlock->FreeBlocksCountLo);
+    TRACE("FreeInodesCount: %d\n", SuperBlock->FreeInodesCount);
+    TRACE("FirstDataBlock: %d\n", SuperBlock->FirstDataBlock);
+    TRACE("LogBlockSize: %d\n", SuperBlock->LogBlockSize);
+    TRACE("LogFragSize: %d\n", SuperBlock->LogFragSize);
+    TRACE("BlocksPerGroup: %d\n", SuperBlock->BlocksPerGroup);
+    TRACE("FragsPerGroup: %d\n", SuperBlock->FragsPerGroup);
+    TRACE("InodesPerGroup: %d\n", SuperBlock->InodesPerGroup);
+    TRACE("MTime: %d\n", SuperBlock->MTime);
+    TRACE("WTime: %d\n", SuperBlock->WTime);
+    TRACE("MntCount: %d\n", SuperBlock->MntCount);
+    TRACE("MaxMntCount: %d\n", SuperBlock->MaxMntCount);
+    TRACE("Magic: 0x%x\n", SuperBlock->Magic);
+    TRACE("State: 0x%x\n", SuperBlock->State);
+    TRACE("Errors: 0x%x\n", SuperBlock->Errors);
+    TRACE("MinorRevisionLevel: %d\n", SuperBlock->MinorRevisionLevel);
+    TRACE("LastCheck: %d\n", SuperBlock->LastCheck);
+    TRACE("CheckInterval: %d\n", SuperBlock->CheckInterval);
+    TRACE("CreatorOS: %d\n", SuperBlock->CreatorOS);
+    TRACE("RevisionLevel: %d\n", SuperBlock->RevisionLevel);
+    TRACE("DefResUID: %d\n", SuperBlock->DefResUID);
+    TRACE("DefResGID: %d\n", SuperBlock->DefResGID);
+    TRACE("FirstInode: %d\n", SuperBlock->FirstInode);
+    TRACE("InodeSize: %d\n", SuperBlock->InodeSize);
+    TRACE("BlockGroupNr: %d\n", SuperBlock->BlockGroupNr);
+    TRACE("FeatureCompat: 0x%x\n", SuperBlock->FeatureCompat);
+    TRACE("FeatureIncompat: 0x%x\n", SuperBlock->FeatureIncompat);
+    TRACE("FeatureROCompat: 0x%x\n", SuperBlock->FeatureROCompat);
+    TRACE("UUID: { ");
+    for (ULONG i = 0; i < sizeof(SuperBlock->UUID); i++)
+    {
+        TRACE("0x%02x", SuperBlock->UUID[i]);
+        if (i < sizeof(SuperBlock->UUID) - 1)
+            TRACE(", ");
+    }
+    TRACE(" }\n");
+    TRACE("VolumeName: \"%s\"\n", SuperBlock->VolumeName);
+    TRACE("LastMounted: \"%s\"\n", SuperBlock->LastMounted);
+    TRACE("AlgorithmUsageBitmap: 0x%x\n", SuperBlock->AlgorithmUsageBitmap);
+    TRACE("PreallocBlocks: %d\n", SuperBlock->PreallocBlocks);
+    TRACE("PreallocDirBlocks: %d\n", SuperBlock->PreallocDirBlocks);
+    TRACE("ReservedGdtBlocks: %d\n", SuperBlock->ReservedGdtBlocks);
+    TRACE("JournalUUID: { ");
+    for (ULONG i = 0; i < sizeof(SuperBlock->JournalUUID); i++)
+    {
+        TRACE("0x%02x", SuperBlock->JournalUUID[i]);
+        if (i < sizeof(SuperBlock->JournalUUID) - 1)
+            TRACE(", ");
+    }
+    TRACE(" }\n");
+    TRACE("JournalInum: %d\n", SuperBlock->JournalInum);
+    TRACE("JournalDev: %d\n", SuperBlock->JournalDev);
+    TRACE("LastOrphan: %d\n", SuperBlock->LastOrphan);
+    TRACE("HashSeed: { 0x%02x, 0x%02x, 0x%02x, 0x%02x }\n",
+        SuperBlock->HashSeed[0], SuperBlock->HashSeed[1],
+        SuperBlock->HashSeed[2], SuperBlock->HashSeed[3]);
+    TRACE("DefHashVersion: %d\n", SuperBlock->DefHashVersion);
+    TRACE("JournalBackupType: %d\n", SuperBlock->JournalBackupType);
+    TRACE("GroupDescSize: %d\n", SuperBlock->GroupDescSize);
 
     //
     // Check the super block magic
     //
-    if (SuperBlock->magic != EXT_MAGIC)
+    if (SuperBlock->Magic != EXT_SUPERBLOCK_MAGIC)
     {
         FileSystemError("Invalid super block magic (0xef53)");
         return FALSE;
     }
 
-    //
-    // Check the revision level
-    //
-    if (SuperBlock->revision_level > EXT_DYNAMIC_REVISION)
-    {
-        FileSystemError("FreeLoader does not understand the revision of this EXT/EXT3 filesystem.\nPlease update FreeLoader.");
-        return FALSE;
-    }
-
-    //
-    // Check the feature set
-    // Don't need to check the compatible or read-only compatible features
-    // because we only mount the filesystem as read-only
-    //
-    if ((SuperBlock->revision_level >= EXT_DYNAMIC_REVISION) &&
-        (/*((SuperBlock->s_feature_compat & ~EXT3_FEATURE_COMPAT_SUPP) != 0) ||*/
-         /*((SuperBlock->s_feature_ro_compat & ~EXT3_FEATURE_RO_COMPAT_SUPP) != 0) ||*/
-         ((SuperBlock->feature_incompat & ~EXT3_FEATURE_INCOMPAT_SUPP) != 0)))
-    {
-        FileSystemError("FreeLoader does not understand features of this EXT/EXT3 filesystem.\nPlease update FreeLoader.");
-        return FALSE;
-    }
-
     // Calculate the group count
-    Volume->GroupCount = (SuperBlock->total_blocks - SuperBlock->first_data_block + SuperBlock->blocks_per_group - 1) / SuperBlock->blocks_per_group;
+    Volume->GroupCount = (SuperBlock->BlocksCountLo - SuperBlock->FirstDataBlock + SuperBlock->BlocksPerGroup - 1) / SuperBlock->BlocksPerGroup;
     TRACE("ExtGroupCount: %d\n", Volume->GroupCount);
 
     // Calculate the block size
-    Volume->BlockSizeInBytes = 1024 << SuperBlock->log2_block_size;
+    Volume->BlockSizeInBytes = 1024 << SuperBlock->LogBlockSize;
     Volume->BlockSizeInSectors = Volume->BlockSizeInBytes / Volume->BytesPerSector;
     TRACE("ExtBlockSizeInBytes: %d\n", Volume->BlockSizeInBytes);
     TRACE("ExtBlockSizeInSectors: %d\n", Volume->BlockSizeInSectors);
 
     // Calculate the fragment size
-    if (SuperBlock->log2_fragment_size >= 0)
+    if (SuperBlock->LogFragSize >= 0)
     {
-        Volume->FragmentSizeInBytes = 1024 << SuperBlock->log2_fragment_size;
+        Volume->FragmentSizeInBytes = 1024 << SuperBlock->LogFragSize;
     }
     else
     {
-        Volume->FragmentSizeInBytes = 1024 >> -(SuperBlock->log2_fragment_size);
+        Volume->FragmentSizeInBytes = 1024 >> -(SuperBlock->LogFragSize);
     }
     Volume->FragmentSizeInSectors = Volume->FragmentSizeInBytes / Volume->BytesPerSector;
     TRACE("ExtFragmentSizeInBytes: %d\n", Volume->FragmentSizeInBytes);
@@ -715,12 +719,20 @@ BOOLEAN ExtReadSuperBlock(PEXT_VOLUME_INFO Volume)
         return FALSE;
     }
 
+    // Set the volume inode size in bytes
+    Volume->InodeSizeInBytes = EXT_INODE_SIZE(SuperBlock);
+    TRACE("InodeSizeInBytes: %d\n", Volume->InodeSizeInBytes);
+
+    // Set the volume group descriptor size in bytes
+    Volume->GroupDescSizeInBytes = EXT_GROUP_DESC_SIZE(SuperBlock);
+    TRACE("GroupDescSizeInBytes: %d\n", Volume->GroupDescSizeInBytes);
+
     // Calculate the number of inodes in one block
-    Volume->InodesPerBlock = Volume->BlockSizeInBytes / EXT_INODE_SIZE(SuperBlock);
+    Volume->InodesPerBlock = Volume->BlockSizeInBytes / Volume->InodeSizeInBytes;
     TRACE("ExtInodesPerBlock: %d\n", Volume->InodesPerBlock);
 
     // Calculate the number of group descriptors in one block
-    Volume->GroupDescPerBlock = EXT_DESC_PER_BLOCK(SuperBlock);
+    Volume->GroupDescPerBlock = Volume->BlockSizeInBytes / Volume->GroupDescSizeInBytes;
     TRACE("ExtGroupDescPerBlock: %d\n", Volume->GroupDescPerBlock);
 
     return TRUE;
@@ -752,7 +764,7 @@ BOOLEAN ExtReadGroupDescriptors(PEXT_VOLUME_INFO Volume)
 
     // Now read the group descriptors
     CurrentGroupDescBlock = (PUCHAR)Volume->GroupDescriptors;
-    BlockNumber = Volume->SuperBlock->first_data_block + 1;
+    BlockNumber = Volume->SuperBlock->FirstDataBlock + 1;
 
     while (GroupDescBlockCount--)
     {
@@ -781,7 +793,7 @@ BOOLEAN ExtReadDirectory(PEXT_VOLUME_INFO Volume, ULONG Inode, PVOID* DirectoryB
     }
 
     // Make sure it is a directory inode
-    if ((InodePointer->mode & EXT_S_IFMT) != EXT_S_IFDIR)
+    if ((InodePointer->Mode & EXT_S_IFMT) != EXT_S_IFDIR)
     {
         FileSystemError("Inode is not a directory.");
         return FALSE;
@@ -835,7 +847,7 @@ BOOLEAN ExtReadBlock(PEXT_VOLUME_INFO Volume, ULONG BlockNumber, PVOID Buffer)
     TRACE("ExtReadBlock() BlockNumber = %d Buffer = 0x%x\n", BlockNumber, Buffer);
 
     // Make sure its a valid block
-    if (BlockNumber > Volume->SuperBlock->total_blocks)
+    if (BlockNumber > Volume->SuperBlock->BlocksCountLo)
     {
         sprintf(ErrorString, "Error reading block %d - block out of range.", (int) BlockNumber);
         FileSystemError(ErrorString);
@@ -880,31 +892,19 @@ BOOLEAN ExtReadPartialBlock(PEXT_VOLUME_INFO Volume, ULONG BlockNumber, ULONG St
     return TRUE;
 }
 
-#if 0
-ULONG ExtGetGroupDescBlockNumber(PEXT_VOLUME_INFO Volume, ULONG Group)
-{
-    return (((Group * sizeof(EXT_GROUP_DESC)) / Volume->GroupDescPerBlock) + Volume->SuperBlock->first_data_block + 1);
-}
-
-ULONG ExtGetGroupDescOffsetInBlock(PEXT_VOLUME_INFO Volume, ULONG Group)
-{
-    return ((Group * sizeof(EXT_GROUP_DESC)) % Volume->GroupDescPerBlock);
-}
-#endif
-
 ULONG ExtGetInodeGroupNumber(PEXT_VOLUME_INFO Volume, ULONG Inode)
 {
-    return ((Inode - 1) / Volume->SuperBlock->inodes_per_group);
+    return ((Inode - 1) / Volume->SuperBlock->InodesPerGroup);
 }
 
 ULONG ExtGetInodeBlockNumber(PEXT_VOLUME_INFO Volume, ULONG Inode)
 {
-    return (((Inode - 1) % Volume->SuperBlock->inodes_per_group) / Volume->InodesPerBlock);
+    return (((Inode - 1) % Volume->SuperBlock->InodesPerGroup) / Volume->InodesPerBlock);
 }
 
 ULONG ExtGetInodeOffsetInBlock(PEXT_VOLUME_INFO Volume, ULONG Inode)
 {
-    return (((Inode - 1) % Volume->SuperBlock->inodes_per_group) % Volume->InodesPerBlock);
+    return (((Inode - 1) % Volume->SuperBlock->InodesPerGroup) % Volume->InodesPerBlock);
 }
 
 BOOLEAN ExtReadInode(PEXT_VOLUME_INFO Volume, ULONG Inode, PEXT_INODE InodeBuffer)
@@ -918,7 +918,7 @@ BOOLEAN ExtReadInode(PEXT_VOLUME_INFO Volume, ULONG Inode, PEXT_INODE InodeBuffe
     TRACE("ExtReadInode() Inode = %d\n", Inode);
 
     // Make sure its a valid inode
-    if ((Inode < 1) || (Inode > Volume->SuperBlock->total_inodes))
+    if ((Inode < 1) || (Inode > Volume->SuperBlock->InodesCount))
     {
         sprintf(ErrorString, "Error reading inode %ld - inode out of range.", Inode);
         FileSystemError(ErrorString);
@@ -940,13 +940,13 @@ BOOLEAN ExtReadInode(PEXT_VOLUME_INFO Volume, ULONG Inode, PEXT_INODE InodeBuffe
     }
 
     // Add the start block of the inode table to the inode block number
-    InodeBlockNumber += GroupDescriptor.inode_table_id;
+    InodeBlockNumber += GroupDescriptor.InodeTable;
     TRACE("InodeBlockNumber (after group desc correction) = %d\n", InodeBlockNumber);
 
     // Read the block
     if (!ExtReadPartialBlock(Volume,
                               InodeBlockNumber,
-                              (InodeOffsetInBlock * EXT_INODE_SIZE(Volume->SuperBlock)),
+                              (InodeOffsetInBlock * Volume->InodeSizeInBytes),
                               sizeof(EXT_INODE),
                               InodeBuffer))
     {
@@ -954,31 +954,31 @@ BOOLEAN ExtReadInode(PEXT_VOLUME_INFO Volume, ULONG Inode, PEXT_INODE InodeBuffe
     }
 
     TRACE("Dumping inode information:\n");
-    TRACE("mode = 0x%x\n", InodeBuffer->mode);
-    TRACE("uid = %d\n", InodeBuffer->uid);
-    TRACE("size = %d\n", InodeBuffer->size);
-    TRACE("atime = %d\n", InodeBuffer->atime);
-    TRACE("ctime = %d\n", InodeBuffer->ctime);
-    TRACE("mtime = %d\n", InodeBuffer->mtime);
-    TRACE("dtime = %d\n", InodeBuffer->dtime);
-    TRACE("gid = %d\n", InodeBuffer->gid);
-    TRACE("nlinks = %d\n", InodeBuffer->nlinks);
-    TRACE("blockcnt = %d\n", InodeBuffer->blockcnt);
-    TRACE("flags = 0x%x\n", InodeBuffer->flags);
-    TRACE("osd1 = 0x%x\n", InodeBuffer->osd1);
-    TRACE("dir_blocks = { %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u }\n",
-        InodeBuffer->blocks.dir_blocks[0], InodeBuffer->blocks.dir_blocks[1], InodeBuffer->blocks.dir_blocks[ 2], InodeBuffer->blocks.dir_blocks[ 3],
-        InodeBuffer->blocks.dir_blocks[4], InodeBuffer->blocks.dir_blocks[5], InodeBuffer->blocks.dir_blocks[ 6], InodeBuffer->blocks.dir_blocks[ 7],
-        InodeBuffer->blocks.dir_blocks[8], InodeBuffer->blocks.dir_blocks[9], InodeBuffer->blocks.dir_blocks[10], InodeBuffer->blocks.dir_blocks[11]);
-    TRACE("indir_block = %u\n", InodeBuffer->blocks.indir_block);
-    TRACE("double_indir_block = %u\n", InodeBuffer->blocks.double_indir_block);
-    TRACE("tripple_indir_block = %u\n", InodeBuffer->blocks.tripple_indir_block);
-    TRACE("version = %d\n", InodeBuffer->version);
-    TRACE("acl = %d\n", InodeBuffer->acl);
-    TRACE("dir_acl = %d\n", InodeBuffer->dir_acl);
-    TRACE("fragment_addr = %d\n", InodeBuffer->fragment_addr);
-    TRACE("osd2 = { %d, %d, %d }\n",
-        InodeBuffer->osd2[0], InodeBuffer->osd2[1], InodeBuffer->osd2[2]);
+    TRACE("Mode = 0x%x\n", InodeBuffer->Mode);
+    TRACE("UID = %d\n", InodeBuffer->UID);
+    TRACE("Size = %d\n", InodeBuffer->Size);
+    TRACE("Atime = %d\n", InodeBuffer->Atime);
+    TRACE("Ctime = %d\n", InodeBuffer->Ctime);
+    TRACE("Mtime = %d\n", InodeBuffer->Mtime);
+    TRACE("Dtime = %d\n", InodeBuffer->Dtime);
+    TRACE("GID = %d\n", InodeBuffer->GID);
+    TRACE("LinksCount = %d\n", InodeBuffer->LinksCount);
+    TRACE("Blocks = %d\n", InodeBuffer->Blocks);
+    TRACE("Flags = 0x%x\n", InodeBuffer->Flags);
+    TRACE("OSD1 = 0x%x\n", InodeBuffer->OSD1);
+    TRACE("DirectBlocks = { %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u, %u }\n",
+        InodeBuffer->Blocks.DirectBlocks[0], InodeBuffer->Blocks.DirectBlocks[1], InodeBuffer->Blocks.DirectBlocks[2], InodeBuffer->Blocks.DirectBlocks[3],
+        InodeBuffer->Blocks.DirectBlocks[4], InodeBuffer->Blocks.DirectBlocks[5], InodeBuffer->Blocks.DirectBlocks[6], InodeBuffer->Blocks.DirectBlocks[7],
+        InodeBuffer->Blocks.DirectBlocks[8], InodeBuffer->Blocks.DirectBlocks[9], InodeBuffer->Blocks.DirectBlocks[10], InodeBuffer->Blocks.DirectBlocks[11]);
+    TRACE("IndirectBlock = %u\n", InodeBuffer->Blocks.IndirectBlock);
+    TRACE("DoubleIndirectBlock = %u\n", InodeBuffer->Blocks.DoubleIndirectBlock);
+    TRACE("TripleIndirectBlock = %u\n", InodeBuffer->Blocks.TripleIndirectBlock);
+    TRACE("Generation = %d\n", InodeBuffer->Generation);
+    TRACE("FileACL = %d\n", InodeBuffer->FileACL);
+    TRACE("DirACL = %d\n", InodeBuffer->DirACL);
+    TRACE("FragAddress = %d\n", InodeBuffer->FragAddress);
+    TRACE("OSD2 = { %d, %d, %d }\n",
+        InodeBuffer->OSD2[0], InodeBuffer->OSD2[1], InodeBuffer->OSD2[2]);
 
     return TRUE;
 }
@@ -995,15 +995,15 @@ BOOLEAN ExtReadGroupDescriptor(PEXT_VOLUME_INFO Volume, ULONG Group, PEXT_GROUP_
     RtlCopyMemory(GroupBuffer, (PVOID)(FILESYSBUFFER + ExtGetGroupDescOffsetInBlock(Volume, Group)), sizeof(EXT_GROUP_DESC));
 #endif
 
-    RtlCopyMemory(GroupBuffer, &Volume->GroupDescriptors[Group], sizeof(EXT_GROUP_DESC));
+    RtlCopyMemory(GroupBuffer, &((PUCHAR)Volume->GroupDescriptors)[Volume->GroupDescSizeInBytes * Group], sizeof(EXT_GROUP_DESC));
 
     TRACE("Dumping group descriptor:\n");
-    TRACE("block_id = %d\n", GroupBuffer->block_id);
-    TRACE("inode_id = %d\n", GroupBuffer->inode_id);
-    TRACE("inode_table_id = %d\n", GroupBuffer->inode_table_id);
-    TRACE("free_blocks = %d\n", GroupBuffer->free_blocks);
-    TRACE("free_inodes = %d\n", GroupBuffer->free_inodes);
-    TRACE("used_dirs = %d\n", GroupBuffer->used_dirs);
+    TRACE("BlockBitmap = %d\n", GroupBuffer->BlockBitmap);
+    TRACE("InodeBitmap = %d\n", GroupBuffer->InodeBitmap);
+    TRACE("InodeTable = %d\n", GroupBuffer->InodeTable);
+    TRACE("FreeBlocksCount = %d\n", GroupBuffer->FreeBlocksCount);
+    TRACE("FreeInodesCount = %d\n", GroupBuffer->FreeInodesCount);
+    TRACE("UsedDirsCount = %d\n", GroupBuffer->UsedDirsCount);
 
     return TRUE;
 }
@@ -1039,16 +1039,16 @@ ULONG* ExtReadBlockPointerList(PEXT_VOLUME_INFO Volume, PEXT_INODE Inode)
 
     // Copy the direct block pointers
     for (CurrentBlockInList = CurrentBlock = 0;
-         CurrentBlockInList < BlockCount && CurrentBlock < INDIRECT_BLOCKS;
+         CurrentBlockInList < BlockCount && CurrentBlock < sizeof(Inode->Blocks.DirectBlocks) / sizeof(*Inode->Blocks.DirectBlocks);
          CurrentBlock++, CurrentBlockInList++)
     {
-        BlockList[CurrentBlockInList] = Inode->blocks.dir_blocks[CurrentBlock];
+        BlockList[CurrentBlockInList] = Inode->Blocks.DirectBlocks[CurrentBlock];
     }
 
     // Copy the indirect block pointers
     if (CurrentBlockInList < BlockCount)
     {
-        if (!ExtCopyIndirectBlockPointers(Volume, BlockList, &CurrentBlockInList, BlockCount, Inode->blocks.indir_block))
+        if (!ExtCopyIndirectBlockPointers(Volume, BlockList, &CurrentBlockInList, BlockCount, Inode->Blocks.IndirectBlock))
         {
             FrLdrTempFree(BlockList, TAG_EXT_BLOCK_LIST);
             return NULL;
@@ -1058,7 +1058,7 @@ ULONG* ExtReadBlockPointerList(PEXT_VOLUME_INFO Volume, PEXT_INODE Inode)
     // Copy the double indirect block pointers
     if (CurrentBlockInList < BlockCount)
     {
-        if (!ExtCopyDoubleIndirectBlockPointers(Volume, BlockList, &CurrentBlockInList, BlockCount, Inode->blocks.double_indir_block))
+        if (!ExtCopyDoubleIndirectBlockPointers(Volume, BlockList, &CurrentBlockInList, BlockCount, Inode->Blocks.DoubleIndirectBlock))
         {
             FrLdrTempFree(BlockList, TAG_EXT_BLOCK_LIST);
             return NULL;
@@ -1068,7 +1068,7 @@ ULONG* ExtReadBlockPointerList(PEXT_VOLUME_INFO Volume, PEXT_INODE Inode)
     // Copy the triple indirect block pointers
     if (CurrentBlockInList < BlockCount)
     {
-        if (!ExtCopyTripleIndirectBlockPointers(Volume, BlockList, &CurrentBlockInList, BlockCount, Inode->blocks.tripple_indir_block))
+        if (!ExtCopyTripleIndirectBlockPointers(Volume, BlockList, &CurrentBlockInList, BlockCount, Inode->Blocks.TripleIndirectBlock))
         {
             FrLdrTempFree(BlockList, TAG_EXT_BLOCK_LIST);
             return NULL;
@@ -1080,13 +1080,13 @@ ULONG* ExtReadBlockPointerList(PEXT_VOLUME_INFO Volume, PEXT_INODE Inode)
 
 ULONGLONG ExtGetInodeFileSize(PEXT_INODE Inode)
 {
-    if ((Inode->mode & EXT_S_IFMT) == EXT_S_IFDIR)
+    if ((Inode->Mode & EXT_S_IFMT) == EXT_S_IFDIR)
     {
-        return (ULONGLONG)(Inode->size);
+        return (ULONGLONG)(Inode->Size);
     }
     else
     {
-        return ((ULONGLONG)(Inode->size) | ((ULONGLONG)(Inode->dir_acl) << 32));
+        return ((ULONGLONG)(Inode->Size) | ((ULONGLONG)(Inode->DirACL) << 32));
     }
 }
 
@@ -1227,7 +1227,7 @@ ARC_STATUS ExtOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     DeviceId = FsGetDeviceId(*FileId);
     Volume = ExtVolumes[DeviceId];
 
-    TRACE("ExtOpen() FileName = %s\n", Path);
+    TRACE("ExtOpen() FileName = \"%s\"\n", Path);
 
     /* Call the internal open method */
     // Status = ExtOpenFile(Volume, Path, &FileHandle);
@@ -1327,7 +1327,7 @@ const DEVVTBL* ExtMount(ULONG DeviceId)
     }
 
     /* Check if SuperBlock is valid. If yes, return Ext function table. */
-    if (SuperBlock.magic != EXT_MAGIC)
+    if (SuperBlock.Magic != EXT_SUPERBLOCK_MAGIC)
     {
         FrLdrTempFree(Volume, TAG_EXT_VOLUME);
         return NULL;
@@ -1350,4 +1350,4 @@ const DEVVTBL* ExtMount(ULONG DeviceId)
     return &ExtFuncTable;
 }
 
-#endif
+#endif // _M_ARM
