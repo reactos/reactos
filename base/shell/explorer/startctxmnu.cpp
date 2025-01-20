@@ -223,7 +223,7 @@ public:
                 cmici.lpDirectoryW = szDirW;
             }
 
-            return m_Inner->InvokeCommand((CMINVOKECOMMANDINFO *)&cmici);
+            return m_Inner->InvokeCommand((LPCMINVOKECOMMANDINFO)&cmici);
         }
         m_TrayWnd->ExecContextMenuCmd(uiCmdId);
         return S_OK;
