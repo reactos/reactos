@@ -218,7 +218,8 @@ public:
         return S_OK;
     }
 
-    STDMETHODIMP GetCommandString(
+    STDMETHODIMP
+    GetCommandString(
         UINT_PTR idCmd,
         UINT uType,
         UINT *pwReserved,
