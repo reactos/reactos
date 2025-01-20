@@ -29,11 +29,19 @@ Startup:
     mov byte ptr ds:[BSS_BootPartition], dh
 
     /* Setup a real mode stack */
-    mov sp, word ptr ds:[stack16]
+    mov sp, word ptr cs:[stack16]
+
+    /* Prepare ds for writestr */
+    mov ax, cs
+    mov ds, ax
 
     /* Output first status */
     mov si, offset Msg_Starting
     call writestr
+
+    /* Restore ds */
+    xor ax, ax
+    mov ds, ax
 
     /* Enable A20 address line */
     call EnableA20
@@ -43,9 +51,17 @@ Startup:
     test al, al
     jnz .LongModeSupported
 
+    /* Prepare ds for writestr */
+    mov ax, cs
+    mov ds, ax
+
     /* Output failure message */
     mov si, offset Msg_Unsupported
     call writestr
+
+    /* Restore ds */
+    xor ax, ax
+    mov ds, ax
 
     /* Wait for a keypress */
     int HEX(16)
@@ -58,29 +74,19 @@ Msg_Unsupported:
 Msg_Starting:
     .ascii "Starting FreeLoader...", CR, LF, NUL
 
-Msg_LongModeSupported:
-    .ascii "Long mode support detected.", CR, LF, NUL
-
 .LongModeSupported:
-    /* Output status */
-    mov si, offset Msg_LongModeSupported
-    call writestr
-
     /* Load the GDT */
-#ifdef _USE_ML
-    lgdt fword ptr [gdtptr]
-#else
-    lgdt cs:[gdtptr]
-#endif
+    lgdt lXdtPrefix cs:[gdtptr]
 
     /* Build the startup page tables */
     call BuildPageTables
 
     /* Store real mode entry point in shared memory */
-    mov dword ptr ds:[BSS_RealModeEntry], offset RealModeEntryPoint
+    mov dword ptr ds:[BSS_RealModeEntry], offset RealModeEntryPoint + FREELDR_BASE
 
     /* Address the image with es segment */
-    mov ax, FREELDR_PE_BASE / 16
+    mov ax, cs
+    add ax, (FREELDR_PE_BASE - FREELDR_BASE) / 16
     mov es, ax
 
     /* Get address of optional header */
@@ -92,20 +98,13 @@ Msg_LongModeSupported:
     add eax, FREELDR_PE_BASE
 
     /* Save entry point */
-    mov dword ptr ds:[LongModeEntryPoint], eax
+    mov dword ptr cs:[LongModeEntryPoint], eax
 
     /* Restore es */
     xor ax, ax
     mov es, ax
 
-    /* Output status */
-    mov si, offset Msg_SwitchToLongMode
-    call writestr
-
     jmp ExitToLongMode
-
-Msg_SwitchToLongMode:
-    .ascii "Switching to long mode....", CR, LF, NUL
 
 .align 8
 gdt:
@@ -113,17 +112,17 @@ gdt:
     .word HEX(0000), HEX(0000), HEX(0000), HEX(0000) /* 08:  */
     .word HEX(0000), HEX(0000), HEX(9800), HEX(0020) /* 10: long mode CS */
     .word HEX(FFFF), HEX(0000), HEX(F300), HEX(00CF) /* 18: long mode DS */
-    .word HEX(FFFF), HEX(0000), HEX(9E00), HEX(0000) /* 20: 16-bit real mode CS */
+    .word HEX(FFFF), HEX(0000), HEX(9B00), HEX(008F) /* 20: 16-bit flat CS (!) */
     .word HEX(FFFF), HEX(0000), HEX(9200), HEX(0000) /* 28: 16-bit real mode DS */
     .word HEX(FFFF), HEX(0000), HEX(9B00), HEX(00CF) /* 30: compat mode CS */
 
 /* GDT table pointer */
 gdtptr:
-    .word HEX(37)       /* Limit */
+    .word HEX(37)                   /* Limit */
 #ifdef _USE_ML
-    .long offset gdt    /* Base Address */
+    .long offset gdt + FREELDR_BASE /* Base Address */
 #else
-    .long gdt           /* Base Address */
+    .long gdt + FREELDR_BASE        /* Base Address */
 #endif
 
 
@@ -141,14 +140,9 @@ CheckFor64BitSupport:
     cmp eax, ebx
     jnz .CheckForPAE
 
-    mov si, offset .Msg_NoCpuidSupport
-    call writestr
     popad
     xor al, al
     ret
-
-.Msg_NoCpuidSupport:
-    .ascii "The system doesn't support CPUID.", CR, LF, NUL
 
 .CheckForPAE:
     /* CPUID support detected - getting the PAE/PGE */
@@ -158,14 +152,9 @@ CheckFor64BitSupport:
     cmp edx, HEX(00A0)
     je .CheckForLongMode
 
-    mov si, offset .Msg_NoPAE
-    call writestr
     popad
     xor al, al
     ret
-
-.Msg_NoPAE:
-    .ascii "PAE or PGE not set.", CR, LF, NUL
 
 .CheckForLongMode:
     /* Check whether extended functions are supported */
@@ -182,14 +171,9 @@ CheckFor64BitSupport:
     jnz .Success
 
 .NoLongMode:
-    mov si, offset .Msg_NoLongMode
-    call writestr
     popad
     xor al, al
     ret
-
-.Msg_NoLongMode:
-    .ascii "Long mode is not supported.", CR, LF, NUL
 
 .Success:
     popad
@@ -251,7 +235,6 @@ BuildPageTables:
 /******************************************************************************/
 
 #define MSR_EFER HEX(C0000080)
-#define LMODE_CS HEX(10)
 
 /* This is the entry point from long mode */
 RealModeEntryPoint:
@@ -273,7 +256,7 @@ RealModeEntryPoint:
     mov cr0, eax
 
     /* Clear prefetch queue & correct CS */
-    ljmp16 0, InRealMode
+    ljmp16 FREELDR_BASE / 16, InRealMode
 
 InRealMode:
 
@@ -298,28 +281,44 @@ InRealMode:
     xor esp, esp
 
     /* Restore real mode stack */
-    mov sp, word ptr ds:[stack16]
+    mov sp, word ptr cs:[stack16]
 
     // sti /* These are ok now */
 
     /* Do the callback, specified by bx */
     shl bx, 1
-    call word ptr ds:CallbackTable[bx]
+    call word ptr cs:CallbackTable[bx]
 
 ExitToLongMode:
     /* Disable interrupts */
     cli
 
     /* Set correct segment registers */
-    xor ax,ax
-    mov ds,ax
-    mov es,ax
-    mov fs,ax
-    mov gs,ax
-    mov ss,ax
+    xor ax, ax
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
 
     /* Save current stack pointer */
-    mov word ptr ds:[stack16], sp
+    mov word ptr cs:[stack16], sp
+
+    /* Set ds to cs segment */
+    mov ax, cs
+    mov ds, ax
+
+    /* Copy the protected mode code to a low address */
+    mov cx, offset LongModeEntryPointEnd - InLongMode
+    mov si, offset InLongMode
+    mov di, TEMPCODE16_BASE
+
+    /* Start the copy */
+    rep movsb
+
+    /* Clear ds */
+    xor ax, ax
+    mov ds, ax
 
     /* Set PAE and PGE: 10100000b */
     mov eax, cr4
@@ -343,7 +342,7 @@ ExitToLongMode:
     mov cr0, eax
 
     /* Clear prefetch queue & correct CS */
-    ljmp16 LMODE_CS, InLongMode
+    ljmp16 LMODE_CS, TEMPCODE16_BASE
 InLongMode:
     //DB 66h, 0B8h, 18h, 00h // mov ax, LMODE_DS
     //DB 66h, 8Eh, 0D8h // mov ds, ax
@@ -355,9 +354,7 @@ InLongMode:
     nop
 LongModeEntryPoint:
     .long 0, 0
-
-    int HEX(16)
-    jmp Reboot
+LongModeEntryPointEnd:
 
 /* FNID_* functions */
 CallbackTable:

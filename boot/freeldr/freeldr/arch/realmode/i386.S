@@ -25,16 +25,29 @@ RealModeEntryPoint:
     mov ss, ax
 
     /* Setup the stack */
-    mov sp, word ptr ds:[stack16]
+    mov sp, word ptr cs:[stack16]
+
+    /* Prepare ds for writestr */
+    mov ax, cs
+    mov ds, ax
+
+    /* Output first status */
+    mov si, offset Msg_Starting
+    call writestr
+
+    /* Restore ds */
+    xor ax, ax
+    mov ds, ax
 
     /* Enable A20 address line */
     call EnableA20
 
     /* Save real mode entry point in shared memory */
-    mov dword ptr ds:[BSS_RealModeEntry], offset switch_to_real16
+    mov dword ptr ds:[BSS_RealModeEntry], offset switch_to_real16 + FREELDR_BASE
 
     /* Address the image with es segment */
-    mov ax, FREELDR_PE_BASE / 16
+    mov ax, cs
+    add ax, (FREELDR_PE_BASE - FREELDR_BASE) / 16
     mov es, ax
 
     /* Get address of optional header */
@@ -46,7 +59,7 @@ RealModeEntryPoint:
     add eax, FREELDR_PE_BASE
 
     /* Save entry point */
-    mov dword ptr ds:[pm_entrypoint], eax
+    mov dword ptr cs:[pm_entrypoint], eax
 
     /* Restore es */
     xor ax, ax
@@ -54,25 +67,18 @@ RealModeEntryPoint:
 
     jmp exit_to_protected
 
+Msg_Starting:
+    .ascii "Starting FreeLoader...", CR, LF, NUL
 
 /* This is the entry point from protected mode */
 switch_to_real16:
-
-    /* Restore segment registers to correct limit */
-    mov ax, RMODE_DS
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-    mov ss, ax
-
     /* Disable Protected Mode */
     mov eax, cr0
     and eax, CR0_PE_CLR
     mov cr0, eax
 
     /* Clear prefetch queue & correct CS */
-    ljmp16 0, inrmode
+    ljmp16 FREELDR_BASE / 16, inrmode
 
 inrmode:
     /* Set real mode segments */
@@ -92,20 +98,16 @@ inrmode:
     xor esp, esp
 
     /* Restore real mode stack */
-    mov sp, word ptr ds:[stack16]
+    mov sp, word ptr cs:[stack16]
 
     /* Load IDTR with real mode value */
-#ifdef _USE_ML
-    lidt fword ptr rmode_idtptr
-#else
-    lidt rmode_idtptr
-#endif
+    lidt lXdtPrefix cs:[rmode_idtptr]
 
     sti /* These are ok now */
 
     /* Do the callback, specified by bx */
     shl bx, 1
-    call word ptr ds:CallbackTable[bx]
+    call word ptr cs:CallbackTable[bx]
 
 
 /*
@@ -117,14 +119,26 @@ exit_to_protected:
     cli
 
     /* Save current stack pointer */
-    mov word ptr ds:[stack16], sp
+    mov word ptr cs:[stack16], sp
 
     /* Load the GDT */
-#ifdef _USE_ML
-    lgdt fword ptr gdtptr
-#else
-    lgdt gdtptr
-#endif
+    lgdt lXdtPrefix cs:[gdtptr]
+
+    /* Set ds to cs segment */
+    mov ax, cs
+    mov ds, ax
+
+    /* Copy the protected mode code to a low address */
+    mov cx, offset pm_entrypoint_end - inpmode
+    mov si, offset inpmode
+    mov di, TEMPCODE16_BASE
+
+    /* Start the copy */
+    rep movsb
+
+    /* Clear ds */
+    xor ax, ax
+    mov ds, ax
 
     /* Enable Protected Mode */
     mov eax, cr0
@@ -132,13 +146,17 @@ exit_to_protected:
     mov cr0, eax
 
     /* Clear prefetch queue & correct CS */
-    ljmp16 PMODE_CS, inpmode
+    ljmp16 PMODE_CS, TEMPCODE16_BASE
 inpmode:
     .byte HEX(0ff), HEX(25) // opcode of indirect jump
-    .word pm_entrypoint, 0
+#ifdef _USE_ML
+    .long (offset pm_entrypoint - inpmode) + TEMPCODE16_BASE
+#else
+    .long (pm_entrypoint - inpmode) + TEMPCODE16_BASE
+#endif
 pm_entrypoint:
     .long 0 // receives address of PE entry point
-    nop
+pm_entrypoint_end:
 
 /* FNID_* functions */
 CallbackTable:
@@ -176,27 +194,31 @@ gdt:
     .word HEX(9200)
     .word HEX(00CF)
 
-    /* 16-bit real mode CS */
+    /* 16-bit flat CS (!) */
     .word HEX(FFFF)
     .word HEX(0000)
-    .word HEX(9E00)
-    .word HEX(0000)
+    .word HEX(9B00)
+    .word HEX(008F)
 
     /* 16-bit real mode DS */
     .word HEX(FFFF)
     .word HEX(0000)
-    .word HEX(9200)
+    .word HEX(9300)
     .word HEX(0000)
 
 /* GDT table pointer */
 gdtptr:
-    .word HEX(27)       /* Limit */
-    .word gdt, 0        /* Base Address */
+    .word HEX(27)                   /* Limit */
+#ifdef _USE_ML
+    .long offset gdt + FREELDR_BASE /* Base Address */
+#else
+    .long gdt + FREELDR_BASE        /* Base Address */
+#endif
 
 /* Real-mode IDT pointer */
 rmode_idtptr:
-    .word HEX(3FF)      /* Limit */
-    .long 0             /* Base Address */
+    .word HEX(3FF)                  /* Limit */
+    .long 0                         /* Base Address */
 
 #include "int386.inc"
 #if defined(SARCH_PC98)

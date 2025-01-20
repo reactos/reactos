@@ -214,16 +214,16 @@ i386CallRealMode_return:
  * bx must be set to the ID of the realmode function to call. */
 PUBLIC SwitchToReal
 SwitchToReal:
+    /* Save 32-bit stack pointer */
+    mov dword ptr ds:[stack32], esp
+
     /* Set sane segments */
-    mov ax, PMODE_DS
+    mov ax, RMODE_DS
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
     mov ss, ax
-
-    /* Save 32-bit stack pointer */
-    mov dword ptr ds:[stack32], esp
 
     /* jmp to 16-bit segment to set the limit correctly */
     .byte HEX(0ea) // jmp far RMODE_CS:switch_to_real16

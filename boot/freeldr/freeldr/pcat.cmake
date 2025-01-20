@@ -9,16 +9,18 @@
 ##              Copyright 2023 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
 ##
 
+set(FRLDR16_BASE 0000)
+
 if(ARCH STREQUAL "i386")
     CreateBootSectorTarget(frldr16
         ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/i386.S
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
-        F800)
+        ${FRLDR16_BASE})
 elseif(ARCH STREQUAL "amd64")
     CreateBootSectorTarget(frldr16
         ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/amd64.S
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
-        F800)
+        ${FRLDR16_BASE})
 endif()
 
 
@@ -157,13 +159,16 @@ add_library(freeldr_common
     ${PCATLDR_BOOTMGR_SOURCE}
     ${FREELDR_NTLDR_SOURCE})
 
-if(MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if(MSVC)
     # We need to reduce the binary size
     target_compile_options(freeldr_common PRIVATE "/Os")
 endif()
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Prevent using SSE (no support in freeldr)
     target_compile_options(freeldr_common PUBLIC -mno-sse)
+
+    # We need to reduce the binary size
+    target_compile_options(freeldr_common PUBLIC -Os)
 endif()
 
 set(PCH_SOURCE
@@ -197,7 +202,7 @@ if(MSVC)
     if(ARCH STREQUAL "arm")
         target_link_options(freeldr_pe PRIVATE /ignore:4078 /ignore:4254 /DRIVER)
     else()
-        target_link_options(freeldr_pe PRIVATE /ignore:4078 /ignore:4254 /DYNAMICBASE:NO /FIXED /FILEALIGN:512 /ALIGN:512)
+        target_link_options(freeldr_pe PRIVATE /ignore:4078 /ignore:4254 /DRIVER /FIXED /FILEALIGN:512 /ALIGN:512)
         add_linker_script(freeldr_pe freeldr_i386.msvc.lds)
     endif()
     # We don't need hotpatching
@@ -213,7 +218,7 @@ else()
                     COMMAND ${CMAKE_STRIP} --strip-all $<TARGET_FILE:freeldr_pe>)
 endif()
 
-set_image_base(freeldr_pe 0x10000)
+set_image_base(freeldr_pe 0x30000)
 set_subsystem(freeldr_pe native)
 set_entrypoint(freeldr_pe RealEntryPoint)
 

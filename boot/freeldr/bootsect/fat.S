@@ -29,7 +29,7 @@
 // of the PutChars function in the boot sector.
 //
 // When it locates freeldr.sys on the disk it will
-// load the first sector of the file to 0000:F800
+// load the first sector of the file to FREELDR_BASE
 // With the help of this sector we should be able
 // to load the entire file off the disk, no matter
 // how fragmented it is.
@@ -207,12 +207,12 @@ SearchRootDirSector:
 FoundFreeLoader:
     // We found freeldr.sys on the disk
     // so we need to load the first 512
-    // bytes of it to 0000:F800
+    // bytes of it to FREELDR_BASE
     // ES:DI has dir entry (ES:DI == 07E0:XXXX)
     mov ax, word ptr es:[di + HEX(1a)]      // Get start cluster
     push ax                                 // Save start cluster
     push FREELDR_BASE / 16                  // Put load segment on the stack and load it
-    pop es                                  // Into ES so that we load the cluster at 0000:F800
+    pop es                                  // Into ES so that we load the cluster at FREELDR_BASE
     call ReadCluster                        // Read the cluster
     pop ax                                  // Restore start cluster of FreeLoader
 
@@ -224,11 +224,11 @@ FoundFreeLoader:
 
     // Now AX has start cluster of FreeLoader and we
     // have loaded the helper code in the first 512 bytes
-    // of FreeLoader to 0000:F800. Now transfer control
+    // of FreeLoader to FREELDR_BASE. Now transfer control
     // to the helper code. Skip the first three bytes
     // because they contain a jump instruction to skip
     // over the helper code in the FreeLoader image.
-    ljmp16 0, FREELDR_BASE + 3
+    ljmp16 FREELDR_BASE / 16, 3
 
 
 

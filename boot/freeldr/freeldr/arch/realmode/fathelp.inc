@@ -49,8 +49,8 @@
 
 PUBLIC start
 start:
-    // This code is loaded at 0000:F800 so we have to
-    // encode a jmp instruction to jump to 0000:FA00
+    // This code is loaded at FREELDR_BASE so we have to
+    // encode a jmp instruction to jump to FREELDR_BASE + 0x200
     .byte HEX(e9), HEX(fd), HEX(01)
 
 // Now starts the extra boot code that we will store
@@ -64,9 +64,19 @@ FatHelperEntryPoint:
     /* First save AX - the start cluster of freeldr.sys */
     push ax
 
+    /* Save ds */
+    push ds
+
+    /* Prepare ds for output message */
+    mov bx, cs
+    mov ds, bx
+
     /* Display "Loading FreeLoader..." message */
     mov si, offset msgLoading
     call word ptr [bp-PutCharsOffset]
+
+    /* Restore ds */
+    pop ds
 
     call ReadFatIntoMemory
 
