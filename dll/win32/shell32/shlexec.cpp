@@ -806,7 +806,7 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpVerb,
     for (SIZE_T i = wcslen(xlpFile); i > 0; i--)
     {
         if (i > 0 && xlpFile[i - 1] == '.')
-            xlpFile[i - 1] = 0;
+            xlpFile[i - 1] = '\0';
         else
             break;
     }
