@@ -5,6 +5,7 @@ if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
 
     CreateBootSectorTarget(dosmbr ${CMAKE_CURRENT_SOURCE_DIR}/dosmbr.S ${CMAKE_CURRENT_BINARY_DIR}/dosmbr.bin 7c00)
     CreateBootSectorTarget(ext ${CMAKE_CURRENT_SOURCE_DIR}/ext.S ${CMAKE_CURRENT_BINARY_DIR}/ext.bin 7c00)
+    CreateBootSectorTarget(extldr ${CMAKE_CURRENT_SOURCE_DIR}/extldr.S ${CMAKE_CURRENT_BINARY_DIR}/extldr.sys 8000)
 
     CreateBootSectorTarget(fat ${CMAKE_CURRENT_SOURCE_DIR}/fat.S ${CMAKE_CURRENT_BINARY_DIR}/fat.bin 7c00)
     CreateBootSectorTarget(fat32 ${CMAKE_CURRENT_SOURCE_DIR}/fat32.S ${CMAKE_CURRENT_BINARY_DIR}/fat32.bin 7c00)
@@ -32,6 +33,7 @@ if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
 
     add_cd_file(TARGET dosmbr DESTINATION loader NO_CAB FILE ${CMAKE_CURRENT_BINARY_DIR}/dosmbr.bin FOR bootcd regtest)
     add_cd_file(TARGET ext DESTINATION loader NO_CAB FILE ${CMAKE_CURRENT_BINARY_DIR}/ext.bin FOR bootcd regtest)
+    add_cd_file(TARGET extldr DESTINATION loader NO_CAB FILE ${CMAKE_CURRENT_BINARY_DIR}/extldr.sys FOR bootcd regtest)
     add_cd_file(TARGET btrfsvbr DESTINATION loader NO_CAB FILE ${CMAKE_CURRENT_BINARY_DIR}/btrfs.bin FOR bootcd regtest)
     add_cd_file(TARGET fat DESTINATION loader NO_CAB FILE ${CMAKE_CURRENT_BINARY_DIR}/fat.bin FOR bootcd regtest)
     add_cd_file(TARGET fat32 DESTINATION loader NO_CAB FILE ${CMAKE_CURRENT_BINARY_DIR}/fat32.bin FOR bootcd regtest)
