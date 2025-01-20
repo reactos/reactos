@@ -26,6 +26,13 @@ ErrorFromHResult(HRESULT hr)
         return hr >= 0 ? ERROR_SUCCESS : hr;
 }
 
+static inline BOOL
+SetDlgRet(HWND hDlg, UINT_PTR Ret)
+{
+    SetWindowLongPtrW(hDlg, DWLP_MSGRESULT, Ret);
+    return TRUE;
+}
+
 VOID
 CopyTextToClipboard(LPCWSTR lpszText);
 VOID

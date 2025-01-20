@@ -816,7 +816,7 @@ CMainWindow::InstallApplication(CAppInfo *Info)
     {
         if (DownloadApplication(Info))
         {
-            UpdateApplicationsList(SelectedEnumType);
+            //FIXME: Delay UpdateApplicationsList(SelectedEnumType); until install completes
             return TRUE;
         }
     }
