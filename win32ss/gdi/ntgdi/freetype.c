@@ -1986,17 +1986,10 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
 
     if (FontIndex == -1)
     {
-        if (FT_IS_SFNT(Face))
+        FT_Long iFace, num_faces = Face->num_faces;
+        for (iFace = 1; iFace < num_faces; ++iFace)
         {
-            TT_Face TrueType = (TT_Face)Face;
-            if (TrueType->ttc_header.count > 1)
-            {
-                FT_Long i;
-                for (i = 1; i < TrueType->ttc_header.count; ++i)
-                {
-                    FaceCount += IntGdiLoadFontsFromMemory(pLoadFont, NULL, i, -1);
-                }
-            }
+            FaceCount += IntGdiLoadFontsFromMemory(pLoadFont, NULL, iFace, -1);
         }
         FontIndex = 0;
     }
