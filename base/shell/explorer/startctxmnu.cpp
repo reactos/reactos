@@ -193,27 +193,29 @@ public:
         InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     {
         UINT uiCmdId = PtrToUlong(lpici->lpVerb);
-        if (!IsShellCmdId((UINT_PTR)lpici->lpVerb))
+        if (!IsShellCmdId(uiCmdId))
         {
-            CMINVOKECOMMANDINFO cmici = { 0 };
-            CHAR szDir[MAX_PATH];
+            CMINVOKECOMMANDINFOEX cmici = { sizeof(cmici) };
+            WCHAR szDir[MAX_PATH], szVerb[MAX_PATH];
 
             /* Setup and invoke the shell command */
-            cmici.cbSize = sizeof(cmici);
             cmici.hwnd = m_Owner;
-            if (IS_INTRESOURCE(lpici->lpVerb))
-                cmici.lpVerb = MAKEINTRESOURCEA(uiCmdId - INNERIDOFFSET);
-            else
-                cmici.lpVerb = lpici->lpVerb;
             cmici.nShow = SW_NORMAL;
-
-            /* FIXME: Support Unicode!!! */
-            if (SHGetPathFromIDListA(m_FolderPidl, szDir))
+            cmici.fMask = CMIC_MASK_UNICODE;
+            if (IS_INTRESOURCE(lpici->lpVerb))
             {
-                cmici.lpDirectory = szDir;
+                cmici.lpVerbW = MAKEINTRESOURCEW(uiCmdId - INNERIDOFFSET);
+            }
+            else
+            {
+                SHAnsiToUnicode(lpici->lpVerb, szVerb, _countof(szVerb));
+                cmici.lpVerbW = szVerb;
             }
 
-            return m_Inner->InvokeCommand(&cmici);
+            if (SHGetPathFromIDListW(m_FolderPidl, szDir))
+                cmici.lpDirectoryW = szDir;
+
+            return m_Inner->InvokeCommand((CMINVOKECOMMANDINFO *)&cmici);
         }
         m_TrayWnd->ExecContextMenuCmd(uiCmdId);
         return S_OK;
