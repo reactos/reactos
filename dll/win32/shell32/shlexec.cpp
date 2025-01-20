@@ -802,14 +802,14 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpVerb,
         xlpFile[0] = '\0';
     }
 
-  /* Clear any trailing periods */
-  for (SIZE_T i = wcslen(xlpFile);i > 0; i--)
-  {
-      if (i > 0 && xlpFile[i - 1] == '.')
-          xlpFile[i - 1] = 0;
-      else
-          break;
-   }
+    /* Clear any trailing periods */
+    for (SIZE_T i = wcslen(xlpFile); i > 0; i--)
+    {
+        if (i > 0 && xlpFile[i - 1] == '.')
+            xlpFile[i - 1] = 0;
+        else
+            break;
+    }
 
     attribs = GetFileAttributesW(lpFile);
     if (attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY))
