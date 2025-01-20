@@ -794,21 +794,22 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpVerb,
         TRACE("PathResolveW returned non-zero\n");
         lpFile = xlpFile;
         PathRemoveBlanksW(xlpFile);
+
+        /* Clear any trailing periods */
+        for (SIZE_T i = wcslen(xlpFile); i > 0; i--)
+        {
+            if (i > 0 && xlpFile[i - 1] == '.')
+                xlpFile[i - 1] = '\0';
+            else
+                break;
+        }
+
         lstrcpyW(lpResult, xlpFile);
         /* The file was found in lpPath or one of the directories in the system-wide search path */
     }
     else
     {
         xlpFile[0] = '\0';
-    }
-
-    /* Clear any trailing periods */
-    for (SIZE_T i = wcslen(xlpFile); i > 0; i--)
-    {
-        if (i > 0 && xlpFile[i - 1] == '.')
-            xlpFile[i - 1] = '\0';
-        else
-            break;
     }
 
     attribs = GetFileAttributesW(lpFile);
