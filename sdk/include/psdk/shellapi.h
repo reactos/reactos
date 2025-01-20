@@ -662,10 +662,10 @@ SHEnumerateUnreadMailAccountsW(
 HRESULT WINAPI
 SHGetUnreadMailCountW(
     _In_opt_ HKEY hKeyUser,
-    _In_opt_ LPCWSTR pszMailAddress,
+    _In_opt_ PCWSTR pszMailAddress,
     _Out_opt_ PDWORD pdwCount,
     _Inout_opt_ PFILETIME pFileTime,
-    _Out_writes_opt_(cchShellExecuteCommand) LPWSTR pszShellExecuteCommand,
+    _Out_writes_opt_(cchShellExecuteCommand) PWSTR pszShellExecuteCommand,
     _In_ INT cchShellExecuteCommand);
 
 #ifdef UNICODE
