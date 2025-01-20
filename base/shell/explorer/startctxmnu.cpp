@@ -196,13 +196,12 @@ public:
         if (!IsShellCmdId(uiCmdId))
         {
             CMINVOKECOMMANDINFOEX cmici = { sizeof(cmici) };
-            CHAR szDirA[MAX_PATH];
-            WCHAR szDirW[MAX_PATH], szVerbW[MAX_PATH];
 
             /* Setup and invoke the shell command */
             cmici.hwnd = m_Owner;
             cmici.nShow = SW_NORMAL;
             cmici.fMask = CMIC_MASK_UNICODE;
+            WCHAR szVerbW[MAX_PATH];
             if (IS_INTRESOURCE(lpici->lpVerb))
             {
                 cmici.lpVerb = MAKEINTRESOURCEA(uiCmdId - INNERIDOFFSET);
@@ -215,11 +214,13 @@ public:
                 cmici.lpVerbW = szVerbW;
             }
 
+            CHAR szDirA[MAX_PATH];
+            WCHAR szDirW[MAX_PATH];
             if (SHGetPathFromIDListW(m_FolderPidl, szDirW))
             {
-                cmici.lpDirectoryW = szDirW;
                 SHUnicodeToAnsi(szDirW, szDirA, _countof(szDirA));
                 cmici.lpDirectory = szDirA;
+                cmici.lpDirectoryW = szDirW;
             }
 
             return m_Inner->InvokeCommand((CMINVOKECOMMANDINFO *)&cmici);
