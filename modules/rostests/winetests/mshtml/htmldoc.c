@@ -17,15 +17,34 @@
  */
 
 #include "precomp.h"
-
-#include <idispids.h>
 #include <shlguid.h>
-#include <shdeprecated.h>
-#include <perhist.h>
-#include <exdispid.h>
 
-#include <initguid.h>
-#include <docobjectservice.h>
+#include <wine/test.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "initguid.h"
+#include "ole2.h"
+#include "mshtml.h"
+#include "docobj.h"
+#include "docobjectservice.h"
+#include "wininet.h"
+#include "mshtmhst.h"
+#include "mshtmdid.h"
+#include "mshtmcid.h"
+#include "hlink.h"
+#include "dispex.h"
+#include "idispids.h"
+#include "shlguid.h"
+#include "shdeprecated.h"
+#include "perhist.h"
+#include "shobjidl.h"
+#include "htiface.h"
+#include "tlogstg.h"
+#include "exdispid.h"
+#include "mshtml_test.h"
 
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 DEFINE_GUID(IID_IProxyManager,0x00000008,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
@@ -6162,7 +6181,7 @@ static void test_load_history(IHTMLDocument2 *doc)
     ok(hres == S_OK, "Could not get IPersistHistory iface: %08x\n", hres);
 
     prev_url = nav_url;
-    nav_url = "http://test.winehq.org/tests/winehq_snapshot/#hash_test";
+    nav_url = "http://test.winehq.org/tests/winehq_snapshot/#test";
     nav_serv_url = "http://test.winehq.org/tests/winehq_snapshot/";
 
     SET_EXPECT(Exec_ShellDocView_138);
@@ -8582,7 +8601,6 @@ START_TEST(htmldoc)
     test_editing_mode(TRUE, TRUE);
     test_HTMLDocument_http(FALSE);
     test_HTMLDocument_http(TRUE);
-
     test_submit();
     test_UIActivate(FALSE, FALSE, FALSE);
     test_UIActivate(FALSE, TRUE, FALSE);
