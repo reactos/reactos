@@ -1737,44 +1737,13 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     FT_ULong            os2_ulCodePageRange1;
     FT_UShort           os2_usWeightClass;
 
-    if (SharedFace == NULL && CharSetIndex == -1)
-    {
-        /* load a face from memory */
-        IntLockFreeType();
-        Error = FT_New_Memory_Face(
-                    g_FreeTypeLibrary,
-                    pLoadFont->Memory->Buffer,
-                    pLoadFont->Memory->BufferSize,
-                    ((FontIndex != -1) ? FontIndex : 0),
-                    &Face);
+    ASSERT(SharedFace != NULL);
+    ASSERT(FontIndex != -1);
 
-        if (!Error)
-            SharedFace = SharedFace_Create(Face, pLoadFont->Memory);
-
-        IntUnLockFreeType();
-
-        if (!Error && FT_IS_SFNT(Face))
-            pLoadFont->IsTrueType = TRUE;
-
-        if (Error || SharedFace == NULL)
-        {
-            if (SharedFace)
-                SharedFace_Release(SharedFace);
-
-            if (Error == FT_Err_Unknown_File_Format)
-                DPRINT1("Unknown font file format\n");
-            else
-                DPRINT1("Error reading font (error code: %d)\n", Error);
-            return 0;   /* failure */
-        }
-    }
-    else
-    {
-        Face = SharedFace->Face;
-        IntLockFreeType();
-        SharedFace_AddRef(SharedFace);
-        IntUnLockFreeType();
-    }
+    IntLockFreeType();
+    Face = SharedFace->Face;
+    SharedFace_AddRef(SharedFace);
+    IntUnLockFreeType();
 
     /* allocate a FONT_ENTRY */
     Entry = ExAllocatePoolWithTag(PagedPool, sizeof(FONT_ENTRY), TAG_FONT);
@@ -1984,16 +1953,6 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     }
     IntUnLockFreeType();
 
-    if (FontIndex == -1)
-    {
-        FT_Long iFace, num_faces = Face->num_faces;
-        for (iFace = 1; iFace < num_faces; ++iFace)
-        {
-            FaceCount += IntGdiLoadFontsFromMemory(pLoadFont, NULL, iFace, -1);
-        }
-        FontIndex = 0;
-    }
-
     if (CharSetIndex == -1)
     {
         INT i;
@@ -2044,6 +2003,55 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     }
 
     return FaceCount;   /* number of loaded faces */
+}
+
+static INT FASTCALL
+IntGdiLoadFontByIndexFromMemory(PGDI_LOAD_FONT pLoadFont, FT_Long FontIndex)
+{
+    FT_Error Error;
+    PSHARED_FACE SharedFace;
+    FT_Face Face;
+    INT FaceCount = 0;
+    FT_Long iFace, num_faces;
+
+    IntLockFreeType();
+
+    /* Load a face from memory */
+    Error = FT_New_Memory_Face(g_FreeTypeLibrary,
+                               pLoadFont->Memory->Buffer,
+                               pLoadFont->Memory->BufferSize,
+                               ((FontIndex == -1) ? 0 : FontIndex),
+                               &Face);
+    if (Error)
+    {
+        if (Error == FT_Err_Unknown_File_Format)
+            DPRINT1("Unknown font file format\n");
+        else
+            DPRINT1("Error reading font (error code: %d)\n", Error);
+        return 0;   /* Failure */
+    }
+
+    SharedFace = SharedFace_Create(Face, pLoadFont->Memory);
+
+    if (FT_IS_SFNT(Face))
+        pLoadFont->IsTrueType = TRUE;
+
+    num_faces = Face->num_faces;
+
+    IntUnLockFreeType();
+
+    if (FontIndex == -1)
+    {
+        for (iFace = 1; iFace < num_faces; ++iFace)
+        {
+            FaceCount += IntGdiLoadFontByIndexFromMemory(pLoadFont, iFace);
+        }
+
+        FontIndex = 0;
+    }
+
+    FaceCount += IntGdiLoadFontsFromMemory(pLoadFont, SharedFace, FontIndex, -1);
+    return FaceCount;
 }
 
 static LPCWSTR FASTCALL
@@ -2179,7 +2187,7 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
     LoadFont.IsTrueType         = FALSE;
     LoadFont.CharSet            = DEFAULT_CHARSET;
     LoadFont.PrivateEntry       = NULL;
-    FontCount = IntGdiLoadFontsFromMemory(&LoadFont, NULL, -1, -1);
+    FontCount = IntGdiLoadFontByIndexFromMemory(&LoadFont, -1);
 
     /* Release our copy */
     IntLockFreeType();
@@ -2469,7 +2477,7 @@ IntGdiAddFontMemResource(PVOID Buffer, DWORD dwSize, PDWORD pNumAdded)
     RtlInitUnicodeString(&LoadFont.RegValueName, NULL);
     LoadFont.IsTrueType         = FALSE;
     LoadFont.PrivateEntry       = NULL;
-    FaceCount = IntGdiLoadFontsFromMemory(&LoadFont, NULL, -1, -1);
+    FaceCount = IntGdiLoadFontByIndexFromMemory(&LoadFont, -1);
 
     RtlFreeUnicodeString(&LoadFont.RegValueName);
 
