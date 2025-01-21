@@ -2009,36 +2009,38 @@ static INT FASTCALL
 IntGdiLoadFontByIndexFromMemory(PGDI_LOAD_FONT pLoadFont, FT_Long FontIndex)
 {
     FT_Error Error;
-    PSHARED_FACE SharedFace;
     FT_Face Face;
-    INT FaceCount = 0;
     FT_Long iFace, num_faces;
+    PSHARED_FACE SharedFace;
+    INT FaceCount = 0;
 
     IntLockFreeType();
 
     /* Load a face from memory */
     Error = FT_New_Memory_Face(g_FreeTypeLibrary,
-                               pLoadFont->Memory->Buffer,
-                               pLoadFont->Memory->BufferSize,
-                               ((FontIndex == -1) ? 0 : FontIndex),
-                               &Face);
+                               pLoadFont->Memory->Buffer, pLoadFont->Memory->BufferSize,
+                               ((FontIndex == -1) ? 0 : FontIndex), &Face);
     if (Error)
     {
         if (Error == FT_Err_Unknown_File_Format)
             DPRINT1("Unknown font file format\n");
         else
             DPRINT1("Error reading font (error code: %d)\n", Error);
+        IntUnLockFreeType();
         return 0;   /* Failure */
     }
 
-    SharedFace = SharedFace_Create(Face, pLoadFont->Memory);
-
-    if (FT_IS_SFNT(Face))
-        pLoadFont->IsTrueType = TRUE;
-
+    pLoadFont->IsTrueType = FT_IS_SFNT(Face);
     num_faces = Face->num_faces;
 
     IntUnLockFreeType();
+
+    SharedFace = SharedFace_Create(Face, pLoadFont->Memory);
+    if (!SharedFace)
+    {
+        DPRINT1("SharedFace_Create failed\n");
+        return 0;
+    }
 
     if (FontIndex == -1)
     {
@@ -2046,7 +2048,6 @@ IntGdiLoadFontByIndexFromMemory(PGDI_LOAD_FONT pLoadFont, FT_Long FontIndex)
         {
             FaceCount += IntGdiLoadFontByIndexFromMemory(pLoadFont, iFace);
         }
-
         FontIndex = 0;
     }
 
@@ -2180,13 +2181,12 @@ IntGdiAddFontResourceEx(PUNICODE_STRING FileName, DWORD Characteristics,
         return 0;
     }
 
+    RtlZeroMemory(&LoadFont, sizeof(LoadFont));
     LoadFont.pFileName          = &PathName;
     LoadFont.Memory             = SharedMem_Create(Buffer, ViewSize, TRUE);
     LoadFont.Characteristics    = Characteristics;
     RtlInitUnicodeString(&LoadFont.RegValueName, NULL);
-    LoadFont.IsTrueType         = FALSE;
     LoadFont.CharSet            = DEFAULT_CHARSET;
-    LoadFont.PrivateEntry       = NULL;
     FontCount = IntGdiLoadFontByIndexFromMemory(&LoadFont, -1);
 
     /* Release our copy */
@@ -2471,12 +2471,10 @@ IntGdiAddFontMemResource(PVOID Buffer, DWORD dwSize, PDWORD pNumAdded)
     }
     RtlCopyMemory(BufferCopy, Buffer, dwSize);
 
-    LoadFont.pFileName          = NULL;
+    RtlZeroMemory(&LoadFont, sizeof(LoadFont));
     LoadFont.Memory             = SharedMem_Create(BufferCopy, dwSize, FALSE);
     LoadFont.Characteristics    = FR_PRIVATE | FR_NOT_ENUM;
     RtlInitUnicodeString(&LoadFont.RegValueName, NULL);
-    LoadFont.IsTrueType         = FALSE;
-    LoadFont.PrivateEntry       = NULL;
     FaceCount = IntGdiLoadFontByIndexFromMemory(&LoadFont, -1);
 
     RtlFreeUnicodeString(&LoadFont.RegValueName);
