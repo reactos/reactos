@@ -37,12 +37,13 @@ public:
 
     virtual ~CStartMenuSite() {}
 
-    /*******************************************************************/
+    // *** IServiceProvider methods ***
 
-    virtual HRESULT STDMETHODCALLTYPE QueryService(
+    STDMETHODIMP
+    QueryService(
         IN REFGUID guidService,
         IN REFIID riid,
-        OUT PVOID *ppvObject)
+        OUT PVOID *ppvObject) override
     {
         if (IsEqualGUID(guidService, SID_SMenuPopup))
         {
@@ -52,10 +53,10 @@ public:
         return E_NOINTERFACE;
     }
 
-    /*******************************************************************/
+    // *** IOleWindow methods ***
 
-    virtual HRESULT STDMETHODCALLTYPE GetWindow(
-        OUT HWND *phwnd)
+    STDMETHODIMP
+    GetWindow(OUT HWND *phwnd) override
     {
         TRACE("ITrayPriv::GetWindow\n");
 
@@ -66,16 +67,17 @@ public:
         return E_FAIL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(
-        IN BOOL fEnterMode)
+    STDMETHODIMP
+    ContextSensitiveHelp(IN BOOL fEnterMode) override
     {
         TRACE("ITrayPriv::ContextSensitiveHelp\n");
         return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE Execute(
+    STDMETHODIMP
+    Execute(
         IN IShellFolder *pShellFolder,
-        IN LPCITEMIDLIST pidl)
+        IN LPCITEMIDLIST pidl) override
     {
         HRESULT ret = S_FALSE;
 
@@ -86,11 +88,12 @@ public:
         return ret;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE Unknown(
+    STDMETHODIMP
+    Unknown(
         IN PVOID Unknown1,
         IN PVOID Unknown2,
         IN PVOID Unknown3,
-        IN PVOID Unknown4)
+        IN PVOID Unknown4) override
     {
         TRACE("ITrayPriv::Unknown(0x%p,0x%p,0x%p,0x%p)\n", Unknown1, Unknown2, Unknown3, Unknown4);
         return E_NOTIMPL;
@@ -112,8 +115,8 @@ public:
         return FALSE;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE AppendMenu(
-        OUT HMENU* phMenu)
+    STDMETHODIMP
+    AppendMenu(OUT HMENU* phMenu) override
     {
         HMENU hMenu, hSettingsMenu;
         DWORD dwLogoff;
@@ -279,53 +282,63 @@ public:
 
     /*******************************************************************/
 
-    virtual HRESULT STDMETHODCALLTYPE QueryStatus(
+    STDMETHODIMP
+    QueryStatus(
         IN const GUID *pguidCmdGroup  OPTIONAL,
         IN ULONG cCmds,
         IN OUT OLECMD *prgCmds,
-        IN OUT OLECMDTEXT *pCmdText  OPTIONAL)
+        IN OUT OLECMDTEXT *pCmdText  OPTIONAL) override
     {
         return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE Exec(
+    STDMETHODIMP
+    Exec(
         IN const GUID *pguidCmdGroup  OPTIONAL,
         IN DWORD nCmdID,
         IN DWORD nCmdExecOpt,
         IN VARIANTARG *pvaIn  OPTIONAL,
-        IN VARIANTARG *pvaOut  OPTIONAL)
+        IN VARIANTARG *pvaOut  OPTIONAL) override
     {
         return E_NOTIMPL;
     }
 
     /*******************************************************************/
 
-    virtual HRESULT STDMETHODCALLTYPE SetClient(IUnknown *punkClient)
+    STDMETHODIMP
+    SetClient(IUnknown *punkClient) override
     {
         return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE GetClient(IUnknown ** ppunkClient)
+    STDMETHODIMP
+    GetClient(IUnknown ** ppunkClient) override
     {
         return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE OnPosRectChangeDB(RECT *prc)
+    STDMETHODIMP
+    OnPosRectChangeDB(RECT *prc) override
     {
         return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE Popup(POINTL *ppt, RECTL *prcExclude, MP_POPUPFLAGS dwFlags)
+    // *** IMenuPopup methods ***
+
+    STDMETHODIMP
+    Popup(POINTL *ppt, RECTL *prcExclude, MP_POPUPFLAGS dwFlags) override
     {
         return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE OnSelect(DWORD dwSelectType)
+    STDMETHODIMP
+    OnSelect(DWORD dwSelectType) override
     {
         return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE SetSubMenu(IMenuPopup *pmp, BOOL fSet)
+    STDMETHODIMP
+    SetSubMenu(IMenuPopup *pmp, BOOL fSet) override
     {
         if (!fSet)
         {

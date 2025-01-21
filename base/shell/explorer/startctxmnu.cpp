@@ -145,12 +145,12 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE
-        QueryContextMenu(HMENU hPopup,
-                         UINT indexMenu,
-                         UINT idCmdFirst,
-                         UINT idCmdLast,
-                         UINT uFlags)
+    STDMETHODIMP
+    QueryContextMenu(HMENU hPopup,
+                     UINT indexMenu,
+                     UINT idCmdFirst,
+                     UINT idCmdLast,
+                     UINT uFlags) override
     {
         LPITEMIDLIST pidlStart;
         CComPtr<IShellFolder> psfDesktop;
@@ -189,8 +189,8 @@ public:
         return hRet;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE
-        InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
+    STDMETHODIMP
+    InvokeCommand(LPCMINVOKECOMMANDINFO lpici) override
     {
         UINT uiCmdId = PtrToUlong(lpici->lpVerb);
         if (!IsShellCmdId(uiCmdId))
@@ -229,12 +229,13 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE
-        GetCommandString(UINT_PTR idCmd,
-                         UINT uType,
-                         UINT *pwReserved,
-                         LPSTR pszName,
-                         UINT cchMax)
+    STDMETHODIMP
+    GetCommandString(
+        UINT_PTR idCmd,
+        UINT uType,
+        UINT *pwReserved,
+        LPSTR pszName,
+        UINT cchMax) override
     {
         if (!IsShellCmdId(idCmd) && m_Inner)
             return m_Inner->GetCommandString(idCmd, uType, pwReserved, pszName, cchMax);
