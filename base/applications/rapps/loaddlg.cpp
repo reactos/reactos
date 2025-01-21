@@ -52,10 +52,23 @@
 #include "unattended.h"
 
 #ifdef USE_CERT_PINNING
+#define CERT_ISSUER_INFO_PREFIX "US\r\nLet's Encrypt\r\nR"
 #define CERT_ISSUER_INFO_OLD "US\r\nLet's Encrypt\r\nR3"
 #define CERT_ISSUER_INFO_NEW "US\r\nLet's Encrypt\r\nR11"
 #define CERT_SUBJECT_INFO "rapps.reactos.org"
+
+static bool
+IsTrustedPinnedCert(LPCSTR Subject, LPCSTR Issuer)
+{
+    if (strcmp(Subject, CERT_SUBJECT_INFO))
+        return false;
+#ifdef CERT_ISSUER_INFO_PREFIX
+    return Issuer == StrStrA(Issuer, CERT_ISSUER_INFO_PREFIX);
+#else
+    return !strcmp(Issuer, CERT_ISSUER_INFO_OLD) || !strcmp(Issuer, CERT_ISSUER_INFO_NEW);
 #endif
+}
+#endif // USE_CERT_PINNING
 
 enum DownloadType
 {
@@ -917,14 +930,10 @@ CDownloadManager::ThreadFunc(LPVOID param)
                 szMsgText.LoadStringW(IDS_UNABLE_TO_QUERY_CERT);
                 bAskQuestion = true;
             }
-            else
+            else if (!IsTrustedPinnedCert(subjectName, issuerName))
             {
-                if (strcmp(subjectName, CERT_SUBJECT_INFO) ||
-                    (strcmp(issuerName, CERT_ISSUER_INFO_OLD) && strcmp(issuerName, CERT_ISSUER_INFO_NEW)))
-                {
-                    szMsgText.Format(IDS_MISMATCH_CERT_INFO, (char *)subjectName, (const char *)issuerName);
-                    bAskQuestion = true;
-                }
+                szMsgText.Format(IDS_MISMATCH_CERT_INFO, (LPCSTR)subjectName, (LPCSTR)issuerName);
+                bAskQuestion = true;
             }
 
             if (bAskQuestion)
