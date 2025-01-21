@@ -1727,15 +1727,12 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     FT_Face             Face;
     ANSI_STRING         AnsiString;
     FT_WinFNT_HeaderRec WinFNT;
-    INT                 FaceCount = 0, CharSetCount = 0;
-    PUNICODE_STRING     pFileName       = pLoadFont->pFileName;
+    INT                 BitIndex, FaceCount = 0, CharSetCount = 0;
+    PUNICODE_STRING     pFileName = pLoadFont->pFileName, pValueName = &pLoadFont->RegValueName;
     DWORD               Characteristics = pLoadFont->Characteristics;
-    PUNICODE_STRING     pValueName = &pLoadFont->RegValueName;
     TT_OS2 *            pOS2;
-    INT                 BitIndex;
-    FT_UShort           os2_version;
+    FT_UShort           os2_version, os2_usWeightClass;
     FT_ULong            os2_ulCodePageRange1;
-    FT_UShort           os2_usWeightClass;
 
     ASSERT(SharedFace != NULL);
     ASSERT(FontIndex != -1);
@@ -2027,7 +2024,7 @@ IntGdiLoadFontByIndexFromMemory(PGDI_LOAD_FONT pLoadFont, FT_Long FontIndex)
         else
             DPRINT1("Error reading font (error code: %d)\n", Error);
         IntUnLockFreeType();
-        return 0;   /* Failure */
+        return 0; /* Failure */
     }
 
     pLoadFont->IsTrueType = FT_IS_SFNT(Face);
@@ -2039,7 +2036,8 @@ IntGdiLoadFontByIndexFromMemory(PGDI_LOAD_FONT pLoadFont, FT_Long FontIndex)
     if (!SharedFace)
     {
         DPRINT1("SharedFace_Create failed\n");
-        return 0;
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0; /* Failure */
     }
 
     if (FontIndex == -1)
