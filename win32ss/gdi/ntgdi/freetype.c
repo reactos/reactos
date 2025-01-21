@@ -1727,12 +1727,15 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     FT_Face             Face;
     ANSI_STRING         AnsiString;
     FT_WinFNT_HeaderRec WinFNT;
-    INT                 BitIndex, FaceCount = 0, CharSetCount = 0;
-    PUNICODE_STRING     pFileName = pLoadFont->pFileName, pValueName = &pLoadFont->RegValueName;
+    INT                 FaceCount = 0, CharSetCount = 0;
+    PUNICODE_STRING     pFileName       = pLoadFont->pFileName;
     DWORD               Characteristics = pLoadFont->Characteristics;
+    PUNICODE_STRING     pValueName = &pLoadFont->RegValueName;
     TT_OS2 *            pOS2;
-    FT_UShort           os2_version, os2_usWeightClass;
+    INT                 BitIndex;
+    FT_UShort           os2_version;
     FT_ULong            os2_ulCodePageRange1;
+    FT_UShort           os2_usWeightClass;
 
     ASSERT(SharedFace != NULL);
     ASSERT(FontIndex != -1);
