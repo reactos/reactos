@@ -645,8 +645,9 @@ UINT TCPAllocatePort(const UINT HintPort)
             return (UINT)-1;
         }
     }
-    else
-        return AllocatePortFromRange( &TCPPorts, 1024, 5000 );
+
+    // TODO: Support MaxUserPort registry key.
+    return AllocatePortFromRange(&TCPPorts, 49152, 65535);
 }
 
 VOID TCPFreePort(const UINT Port)
