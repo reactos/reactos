@@ -2326,6 +2326,9 @@ SetupDiGetINFClassW(
     TRACE("%s %p %p %ld %p\n", debugstr_w(InfName), ClassGuid,
         ClassName, ClassNameSize, RequiredSize);
 
+    if (!InfName)
+        return ret;
+
     /* Open .inf file */
     hInf = SetupOpenInfFileW(InfName, NULL, INF_STYLE_WIN4, NULL);
     if (hInf == INVALID_HANDLE_VALUE)
