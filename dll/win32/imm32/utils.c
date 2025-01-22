@@ -355,7 +355,7 @@ LPVOID FASTCALL ValidateHandleNoErr(HANDLE hObject, UINT uType)
     ASSERT(gSharedInfo.ulSharedDelta != 0);
     he = (PUSER_HANDLE_ENTRY)((ULONG_PTR)ht->handles - gSharedInfo.ulSharedDelta);
 
-    index = (LOWORD(hObject) - FIRST_USER_HANDLE) >> 1;
+    index = LOWORD(hObject);
     if ((INT)index < 0 || ht->nb_handles <= index || he[index].type != uType)
         return NULL;
 
