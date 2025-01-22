@@ -181,6 +181,41 @@ FT_BEGIN_HEADER
                      FT_Bitmap        *target,
                      FT_Int            alignment );
 
+#ifdef __REACTOS__
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
+  /*    FT_Bitmap_Convert_ReactOS_Hack                                     */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Mainly same as @FT_Bitmap_Convert, but the bitmap will be          */
+  /*    ReactOS compatible when hack parameter is true.                    */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    library   :: A handle to a library object.                         */
+  /*                                                                       */
+  /*    source    :: The source bitmap.                                    */
+  /*                                                                       */
+  /*    alignment :: The pitch of the bitmap is a multiple of this         */
+  /*                 parameter.  Common values are 1, 2, or 4.             */
+  /*                                                                       */
+  /*    hack      :: If TRUE, the bitmap will be ReactOS compatible.       */
+  /*                 If FALSE, the bitmap will be same as                  */
+  /*                 FT_Bitmap_Convert returns.                            */
+  /*                                                                       */
+  /* <Output>                                                              */
+  /*    target    :: The target bitmap.                                    */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0~means success.                             */
+  /*                                                                       */
+  FT_EXPORT( FT_Error )
+  FT_Bitmap_Convert_ReactOS_Hack( FT_Library        library,
+                                  const FT_Bitmap  *source,
+                                  FT_Bitmap        *target,
+                                  FT_Int            alignment,
+                                  FT_Bool           hack);
+#endif
 
   /*************************************************************************/
   /*                                                                       */

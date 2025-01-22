@@ -6,6 +6,7 @@
   @ cdecl FT_Attach_File ()
   @ cdecl FT_Attach_Stream ()
   @ cdecl FT_Bitmap_Convert ()
+  @ cdecl FT_Bitmap_Convert_ReactOS_Hack ()
   @ cdecl FT_Bitmap_Copy ()
   @ cdecl FT_Bitmap_Done ()
   @ cdecl FT_Bitmap_Embolden ()
