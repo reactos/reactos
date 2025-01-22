@@ -24,7 +24,6 @@ BOOLEAN AcpiPresent = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
-static
 PRSDP_DESCRIPTOR
 FindAcpiBios(VOID)
 {
@@ -88,16 +87,17 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         /* Fill the table */
         AcpiBiosData = (PACPI_BIOS_DATA)&PartialResourceList->PartialDescriptors[1];
 
-        if (Rsdp->revision > 0)
-        {
-            TRACE("ACPI >1.0, using XSDT address\n");
+        /* NOTE: Use XSDT table only if it is available and the environment is 64-bit */
+#ifdef _WIN64
+        TRACE("ACPI %s1.0, using %cSDT address\n", Rsdp->revision > 1 ? ">" : "", Rsdp->revision > 1 ? 'X' : 'R');
+        if (Rsdp->revision > 1 && Rsdp->xsdt_physical_address)
             AcpiBiosData->RSDTAddress.QuadPart = Rsdp->xsdt_physical_address;
-        }
         else
-        {
-            TRACE("ACPI 1.0, using RSDT address\n");
             AcpiBiosData->RSDTAddress.LowPart = Rsdp->rsdt_physical_address;
-        }
+#else
+        TRACE("ACPI %s1.0, using RSDT address\n", Rsdp->revision > 1 ? ">" : "");
+        AcpiBiosData->RSDTAddress.LowPart = Rsdp->rsdt_physical_address;
+#endif
 
         AcpiBiosData->Count = FreeldrDescCount;
         memcpy(AcpiBiosData->MemoryMap, EfiMemoryMap,

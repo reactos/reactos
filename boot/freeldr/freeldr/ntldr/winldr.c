@@ -74,6 +74,25 @@ NtLdrOutputLoadMsg(
     }
 }
 
+static PVOID
+FindAcpiTable(VOID)
+{
+    PRSDP_DESCRIPTOR Rsdp = FindAcpiBios();
+    if (!Rsdp)
+        return NULL;
+
+#ifdef _WIN64
+    PVOID OutputPointer = (Rsdp->revision > 1 && Rsdp->xsdt_physical_address) ?
+            (PVOID)((ULONG_PTR)Rsdp->xsdt_physical_address) : 
+            (PVOID)((ULONG_PTR)Rsdp->rsdt_physical_address);
+#else
+    PVOID OutputPointer = (PVOID)((ULONG_PTR)Rsdp->rsdt_physical_address);
+#endif
+
+    TRACE("ACPI table at 0x%p\n", OutputPointer);
+    return OutputPointer;
+}
+
 // Init "phase 0"
 VOID
 AllocateAndInitLPB(
@@ -247,12 +266,11 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     /* FIXME! HACK value for docking profile */
     Extension->Profile.Status = 2;
 
-    /* Check if FreeLdr detected a ACPI table */
-    if (AcpiPresent)
+    PDESCRIPTION_HEADER AcpiTable = FindAcpiTable();
+    if (AcpiTable)
     {
-        /* Set the pointer to something for compatibility */
-        Extension->AcpiTable = (PVOID)1;
-        // FIXME: Extension->AcpiTableSize;
+        Extension->AcpiTable = AcpiTable;
+        Extension->AcpiTableSize = AcpiTable->Length;
     }
 
     if (VersionToBoot >= _WIN32_WINNT_VISTA)

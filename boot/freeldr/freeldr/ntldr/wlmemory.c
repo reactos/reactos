@@ -180,6 +180,7 @@ MempSetupPagingForRegion(
 BOOLEAN
 WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    PLOADER_PARAMETER_EXTENSION Extension = VaToPa(LoaderBlock->Extension);
     PFN_NUMBER i, PagesCount, MemoryMapSizeInPages, NoEntries;
     PFN_NUMBER LastPageIndex, MemoryMapStartPage;
     PPAGE_LOOKUP_TABLE_ITEM MemoryMap;
@@ -236,6 +237,65 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
     {
         ERR("Error during MempSetupPaging of first page\n");
         return FALSE;
+    }
+
+    // Always map the ACPI table if present, otherwise Windows will crash.
+    if (Extension->AcpiTable)
+    {
+        PVOID AcpiTableClone = MmAllocateMemoryWithType(Extension->AcpiTableSize, LoaderFirmwarePermanent);
+        if (!AcpiTableClone)
+        {
+            ERR("Cannot allocate ACPI table\n");
+            return FALSE;
+        }
+
+        RtlCopyMemory(AcpiTableClone, Extension->AcpiTable, Extension->AcpiTableSize);
+        Extension->AcpiTable = AcpiTableClone;
+
+        union
+        {
+            PDESCRIPTION_HEADER Header;
+            PRSDT_DESCRIPTOR Rsdt;
+            PXSDT_DESCRIPTOR Xsdt;
+        } AcpiTable = {.Header = Extension->AcpiTable};
+
+        BOOLEAN is64BitsTable = _strnicmp(AcpiTable.Header->Signature, "XSDT", 4) == 0;
+        ULONG Entries = (AcpiTable.Header->Length - sizeof(DESCRIPTION_HEADER)) / (is64BitsTable ? 8 : 4);
+        ULONG EntryOffset = 0;
+
+        for (ULONG i = 0; i < Entries; i++)
+        {
+            PDESCRIPTION_HEADER Entry = is64BitsTable ? 
+                    (PVOID)((ULONG_PTR)AcpiTable.Xsdt->PointerToOtherSDT[i]) :
+                    (PVOID)((ULONG_PTR)AcpiTable.Rsdt->PointerToOtherSDT[i]);
+
+            EntryOffset += Entry->Length;
+        }
+
+        PCHAR EntriesClone = MmAllocateMemoryWithType(EntryOffset, LoaderFirmwarePermanent);
+        if (!EntriesClone)
+        {
+            ERR("Cannot allocate ACPI table entries\n");
+            return FALSE;
+        }
+        EntryOffset = 0;
+
+        for (ULONG i = 0; i < Entries; i++)
+        {
+            PDESCRIPTION_HEADER Entry = is64BitsTable ? 
+                    (PVOID)((ULONG_PTR)AcpiTable.Xsdt->PointerToOtherSDT[i]) :
+                    (PVOID)((ULONG_PTR)AcpiTable.Rsdt->PointerToOtherSDT[i]);
+
+            PDESCRIPTION_HEADER EntryClone = (PDESCRIPTION_HEADER)(EntriesClone + EntryOffset);
+            RtlCopyMemory(EntryClone, Entry, Entry->Length);
+
+            if (is64BitsTable)
+                AcpiTable.Xsdt->PointerToOtherSDT[i] = (ULONGLONG)((ULONG_PTR)EntryClone);
+            else
+                AcpiTable.Rsdt->PointerToOtherSDT[i] = (ULONG)((ULONG_PTR)EntryClone);
+
+            EntryOffset += Entry->Length;
+        }
     }
 
     /* Before creating the map, we need to map pages to kernel mode */
