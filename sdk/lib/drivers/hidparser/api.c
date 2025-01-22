@@ -1,14 +1,13 @@
 /*
  * PROJECT:     ReactOS HID Parser Library
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/drivers/hidparser/api.c
- * PURPOSE:     HID Parser
- * PROGRAMMERS:
- *              Michael Martin (michael.martin@reactos.org)
- *              Johannes Anderwald (johannes.anderwald@reactos.org)
+ * LICENSE:     GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later)
+ * PURPOSE:     HID Parser usages helpers
+ * COPYRIGHT:   Copyright  Michael Martin <michael.martin@reactos.org>
+ *              Copyright  Johannes Anderwald <johannes.anderwald@reactos.org>
  */
 
-#include "parser.h"
+#include "hidparser.h"
+#include "hidpmem.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -61,714 +60,17 @@ static struct
 
 #define NTOHS(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
 
-NTSTATUS
-HidParser_GetCollectionUsagePage(
-    IN PVOID CollectionContext,
-    OUT PUSHORT Usage,
-    OUT PUSHORT UsagePage)
-{
-    PHID_COLLECTION Collection;
-
-    //
-    // find collection
-    //
-    Collection = HidParser_GetCollectionFromContext(CollectionContext);
-    if (!Collection)
-    {
-        //
-        // collection not found
-        //
-        return HIDP_STATUS_USAGE_NOT_FOUND;
-    }
-
-    //
-    // store result
-    //
-    *UsagePage = (Collection->Usage >> 16);
-    *Usage = (Collection->Usage & 0xFFFF);
-    return HIDP_STATUS_SUCCESS;
-}
-
-ULONG
-HidParser_GetReportLength(
-    IN PVOID CollectionContext,
-    IN UCHAR ReportType)
-{
-    PHID_REPORT Report;
-    ULONG ReportLength;
-
-    //
-    // get first report
-    //
-    Report = HidParser_GetReportInCollection(CollectionContext, ReportType);
-    if (!Report)
-    {
-        //
-        // no report found
-        //
-        return 0;
-    }
-
-    //
-    // get report length
-    //
-    ReportLength = Report->ReportSize;
-
-    //
-    // done
-    //
-    if (ReportLength)
-    {
-        //
-        // byte aligned length
-        //
-        ASSERT(ReportLength % 8 == 0);
-        return ReportLength / 8;
-    }
-    return ReportLength;
-}
-
-ULONG
-HidParser_GetReportItemCountFromReportType(
-    IN PVOID CollectionContext,
-    IN UCHAR ReportType)
-{
-    PHID_REPORT Report;
-
-    //
-    // get report
-    //
-    Report = HidParser_GetReportInCollection(CollectionContext, ReportType);
-    if (!Report)
-    {
-        //
-        // no such report
-        //
-        return 0;
-    }
-
-    //
-    // return report item count
-    //
-    return Report->ItemCount;
-}
-
-
-ULONG
-HidParser_GetReportItemTypeCountFromReportType(
-    IN PVOID CollectionContext,
-    IN UCHAR ReportType,
-    IN ULONG bData)
-{
-    ULONG Index;
-    PHID_REPORT Report;
-    ULONG ItemCount = 0;
-
-    //
-    // get report
-    //
-    Report = HidParser_GetReportInCollection(CollectionContext, ReportType);
-    if (!Report)
-    {
-        //
-        // no such report
-        //
-        return 0;
-    }
-
-    //
-    // enumerate all items
-    //
-    for(Index = 0; Index < Report->ItemCount; Index++)
-    {
-        //
-        // check item type
-        //
-        if (Report->Items[Index].HasData && bData)
-        {
-            //
-            // found data item
-            //
-            ItemCount++;
-        }
-        else if (Report->Items[Index].HasData == FALSE && bData == FALSE)
-        {
-            //
-            // found value item
-            //
-            ItemCount++;
-        }
-    }
-
-    //
-    // no report items
-    //
-    return ItemCount;
-}
-
-ULONG
-HidParser_GetMaxUsageListLengthWithReportAndPage(
-    IN PVOID CollectionContext,
-    IN UCHAR ReportType,
-    IN USAGE  UsagePage  OPTIONAL)
-{
-    ULONG Index;
-    PHID_REPORT Report;
-    ULONG ItemCount = 0;
-    USHORT CurrentUsagePage;
-
-    //
-    // get report
-    //
-    Report = HidParser_GetReportInCollection(CollectionContext, ReportType);
-    if (!Report)
-    {
-        //
-        // no such report
-        //
-        return 0;
-    }
-
-    for(Index = 0; Index < Report->ItemCount; Index++)
-    {
-        //
-        // check usage page
-        //
-        CurrentUsagePage = (Report->Items[Index].UsageMinimum >> 16);
-        if (CurrentUsagePage == UsagePage && Report->Items[Index].HasData)
-        {
-            //
-            // found item
-            //
-            ItemCount++;
-        }
-    }
-
-    //
-    // done
-    //
-    return ItemCount;
-}
-
-NTSTATUS
-HidParser_GetSpecificValueCapsWithReport(
-    IN PVOID CollectionContext,
-    IN UCHAR ReportType,
-    IN USHORT UsagePage,
-    IN USHORT Usage,
-    OUT PHIDP_VALUE_CAPS  ValueCaps,
-    IN OUT PUSHORT  ValueCapsLength)
-{
-    ULONG Index;
-    PHID_REPORT Report;
-    USHORT ItemCount = 0;
-    USHORT CurrentUsagePage;
-    USHORT CurrentUsage;
-
-    //
-    // get report
-    //
-    Report = HidParser_GetReportInCollection(CollectionContext, ReportType);
-    if (!Report)
-    {
-        //
-        // no such report
-        //
-        return HIDP_STATUS_REPORT_DOES_NOT_EXIST;
-    }
-
-    for(Index = 0; Index < Report->ItemCount; Index++)
-    {
-        //
-        // check usage page
-        //
-        CurrentUsagePage = (Report->Items[Index].UsageMinimum >> 16);
-        CurrentUsage = (Report->Items[Index].UsageMinimum & 0xFFFF);
-
-        if ((Usage == CurrentUsage && UsagePage == CurrentUsagePage) || (Usage == 0 && UsagePage == CurrentUsagePage) || (Usage == CurrentUsage && UsagePage == 0) || (Usage == 0 && UsagePage == 0))
-        {
-            //
-            // check if there is enough place for the caps
-            //
-            if (ItemCount < *ValueCapsLength)
-            {
-                //
-                // zero caps
-                //
-                ZeroFunction(&ValueCaps[ItemCount], sizeof(HIDP_VALUE_CAPS));
-
-                //
-                // init caps
-                //
-                ValueCaps[ItemCount].UsagePage = CurrentUsagePage;
-                ValueCaps[ItemCount].ReportID = Report->ReportID;
-                ValueCaps[ItemCount].LogicalMin = Report->Items[Index].Minimum;
-                ValueCaps[ItemCount].LogicalMax = Report->Items[Index].Maximum;
-                ValueCaps[ItemCount].IsAbsolute = !Report->Items[Index].Relative;
-                ValueCaps[ItemCount].BitSize = Report->Items[Index].BitCount;
-
-                //
-                // FIXME: FILLMEIN
-                //
-            }
-
-
-            //
-            // found item
-            //
-            ItemCount++;
-        }
-    }
-
-    //
-    // store result
-    //
-    *ValueCapsLength = ItemCount;
-
-    if (ItemCount)
-    {
-        //
-        // success
-        //
-        return HIDP_STATUS_SUCCESS;
-    }
-
-    //
-    // item not found
-    //
-    return HIDP_STATUS_USAGE_NOT_FOUND;
-}
-
-NTSTATUS
-HidParser_GetUsagesWithReport(
-    IN PVOID CollectionContext,
-    IN UCHAR  ReportType,
-    IN USAGE  UsagePage,
-    OUT USAGE  *UsageList,
-    IN OUT PULONG UsageLength,
-    IN PCHAR  ReportDescriptor,
-    IN ULONG  ReportDescriptorLength)
-{
-    ULONG Index;
-    PHID_REPORT Report;
-    ULONG ItemCount = 0;
-    USHORT CurrentUsagePage;
-    PHID_REPORT_ITEM ReportItem;
-    UCHAR Activated;
-    ULONG Data;
-    PUSAGE_AND_PAGE UsageAndPage = NULL;
-
-    //
-    // get report
-    //
-    Report = HidParser_GetReportInCollection(CollectionContext, ReportType);
-    if (!Report)
-    {
-        //
-        // no such report
-        //
-        return HIDP_STATUS_REPORT_DOES_NOT_EXIST;
-    }
-
-    if (Report->ReportSize / 8 != (ReportDescriptorLength - 1))
-    {
-        //
-        // invalid report descriptor length
-        //
-        return HIDP_STATUS_INVALID_REPORT_LENGTH;
-    }
-
-    //
-    // cast to usage and page
-    //
-    if (UsagePage == HID_USAGE_PAGE_UNDEFINED)
-    {
-        //
-        // the caller requested any set usages
-        //
-        UsageAndPage = (PUSAGE_AND_PAGE)UsageList;
-    }
-
-    for(Index = 0; Index < Report->ItemCount; Index++)
-    {
-        //
-        // get report item
-        //
-        ReportItem = &Report->Items[Index];
-
-        //
-        // does it have data
-        //
-        if (!ReportItem->HasData)
-            continue;
-
-        //
-        // check usage page
-        //
-        CurrentUsagePage = (ReportItem->UsageMinimum >> 16);
-
-        if (UsagePage != HID_USAGE_PAGE_UNDEFINED)
-        {
-            //
-            // does usage match
-            //
-            if (UsagePage != CurrentUsagePage)
-                continue;
-        }
-
-        //
-        // check if the specified usage is activated
-        //
-        ASSERT(ReportItem->ByteOffset < ReportDescriptorLength);
-        ASSERT(ReportItem->BitCount <= 8);
-
-        //
-        // one extra shift for skipping the prepended report id
-        //
-        Data = ReportDescriptor[ReportItem->ByteOffset + 1];
-
-        //
-        // shift data
-        //
-        Data >>= ReportItem->Shift;
-
-        //
-        // clear unwanted bits
-        //
-        Data &= ReportItem->Mask;
-
-        //
-        // is it activated
-        //
-        Activated = (Data != 0);
-
-        if (!Activated)
-            continue;
-
-        //
-        // is there enough space for the usage
-        //
-        if (ItemCount >= *UsageLength)
-        {
-            ItemCount++;
-            continue;
-        }
-
-        if (UsagePage != HID_USAGE_PAGE_UNDEFINED)
-        {
-            //
-            // store item
-            //
-            UsageList[ItemCount] = (ReportItem->UsageMinimum & 0xFFFF);
-        }
-        else
-        {
-            //
-            // store usage and page
-            //
-            if (ReportItem->BitCount == 1)
-            {
-                //
-                // use usage minimum
-                //
-                UsageAndPage[ItemCount].Usage =(ReportItem->UsageMinimum & 0xFFFF);
-            }
-            else
-            {
-                //
-                // use value from control
-                //
-                UsageAndPage[ItemCount].Usage = (USHORT)Data;
-            }
-            UsageAndPage[ItemCount].UsagePage = CurrentUsagePage;
-        }
-        ItemCount++;
-    }
-
-    if (ItemCount > *UsageLength)
-    {
-        //
-        // list too small
-        //
-        return HIDP_STATUS_BUFFER_TOO_SMALL;
-    }
-
-    if (UsagePage == HID_USAGE_PAGE_UNDEFINED)
-    {
-        //
-        // success, clear rest of array
-        //
-        ZeroFunction(&UsageAndPage[ItemCount], (*UsageLength - ItemCount) * sizeof(USAGE_AND_PAGE));
-    }
-    else
-    {
-        //
-        // success, clear rest of array
-        //
-        ZeroFunction(&UsageList[ItemCount], (*UsageLength - ItemCount) * sizeof(USAGE));
-    }
-
-
-    //
-    // store result size
-    //
-    *UsageLength = ItemCount;
-
-    //
-    // done
-    //
-    return HIDP_STATUS_SUCCESS;
-}
-
-ULONG
-HidParser_UsesReportId(
-    IN PVOID CollectionContext,
-    IN UCHAR  ReportType)
-{
-    PHID_REPORT Report;
-
-    //
-    // get report
-    //
-    Report = HidParser_GetReportInCollection(CollectionContext, ReportType);
-    if (!Report)
-    {
-        //
-        // no such report
-        //
-        return 0;
-    }
-
-    //
-    // returns true when report id != 0
-    //
-    return (Report->ReportID != 0);
-
-}
-
-NTSTATUS
-HidParser_GetUsageValueWithReport(
-    IN PVOID CollectionContext,
-    IN UCHAR ReportType,
-    IN USAGE UsagePage,
-    IN USAGE  Usage,
-    OUT PULONG UsageValue,
-    IN PCHAR ReportDescriptor,
-    IN ULONG ReportDescriptorLength)
-{
-    ULONG Index;
-    PHID_REPORT Report;
-    USHORT CurrentUsagePage;
-    PHID_REPORT_ITEM ReportItem;
-    ULONG Data;
-
-    //
-    // get report
-    //
-    Report = HidParser_GetReportInCollection(CollectionContext, ReportType);
-    if (!Report)
-    {
-        //
-        // no such report
-        //
-        return HIDP_STATUS_REPORT_DOES_NOT_EXIST;
-    }
-
-    if (Report->ReportSize / 8 != (ReportDescriptorLength - 1))
-    {
-        //
-        // invalid report descriptor length
-        //
-        return HIDP_STATUS_INVALID_REPORT_LENGTH;
-    }
-
-    for (Index = 0; Index < Report->ItemCount; Index++)
-    {
-        //
-        // get report item
-        //
-        ReportItem = &Report->Items[Index];
-
-        //
-        // check usage page
-        //
-        CurrentUsagePage = (ReportItem->UsageMinimum >> 16);
-
-        //
-        // does usage page match
-        //
-        if (UsagePage != CurrentUsagePage)
-            continue;
-
-        //
-        // does the usage match
-        //
-        if (Usage != (ReportItem->UsageMinimum & 0xFFFF))
-            continue;
-
-        //
-        // check if the specified usage is activated
-        //
-        ASSERT(ReportItem->ByteOffset < ReportDescriptorLength);
-
-        //
-        // one extra shift for skipping the prepended report id
-        //
-        Data = 0;
-        CopyFunction(&Data, &ReportDescriptor[ReportItem->ByteOffset + 1], min(sizeof(ULONG), ReportDescriptorLength - (ReportItem->ByteOffset + 1)));
-
-        //
-        // shift data
-        //
-        Data >>= ReportItem->Shift;
-
-        //
-        // clear unwanted bits
-        //
-        Data &= ReportItem->Mask;
-
-        //
-        // store result
-        //
-        *UsageValue = Data;
-        return HIDP_STATUS_SUCCESS;
-    }
-
-    //
-    // usage not found
-    //
-    return HIDP_STATUS_USAGE_NOT_FOUND;
-}
-
-
-
-NTSTATUS
-HidParser_GetScaledUsageValueWithReport(
-    IN PVOID CollectionContext,
-    IN UCHAR ReportType,
-    IN USAGE UsagePage,
-    IN USAGE  Usage,
-    OUT PLONG UsageValue,
-    IN PCHAR ReportDescriptor,
-    IN ULONG ReportDescriptorLength)
-{
-    ULONG Index;
-    PHID_REPORT Report;
-    USHORT CurrentUsagePage;
-    PHID_REPORT_ITEM ReportItem;
-    ULONG Data;
-
-    //
-    // get report
-    //
-    Report = HidParser_GetReportInCollection(CollectionContext, ReportType);
-    if (!Report)
-    {
-        //
-        // no such report
-        //
-        return HIDP_STATUS_REPORT_DOES_NOT_EXIST;
-    }
-
-    if (Report->ReportSize / 8 != (ReportDescriptorLength - 1))
-    {
-        //
-        // invalid report descriptor length
-        //
-        return HIDP_STATUS_INVALID_REPORT_LENGTH;
-    }
-
-    for (Index = 0; Index < Report->ItemCount; Index++)
-    {
-        //
-        // get report item
-        //
-        ReportItem = &Report->Items[Index];
-
-        //
-        // check usage page
-        //
-        CurrentUsagePage = (ReportItem->UsageMinimum >> 16);
-
-        //
-        // does usage page match
-        //
-        if (UsagePage != CurrentUsagePage)
-            continue;
-
-        //
-        // does the usage match
-        //
-        if (Usage != (ReportItem->UsageMinimum & 0xFFFF))
-            continue;
-
-        //
-        // check if the specified usage is activated
-        //
-        ASSERT(ReportItem->ByteOffset < ReportDescriptorLength);
-
-        //
-        // one extra shift for skipping the prepended report id
-        //
-        Data = 0;
-        CopyFunction(&Data, &ReportDescriptor[ReportItem->ByteOffset + 1], min(sizeof(ULONG), ReportDescriptorLength - (ReportItem->ByteOffset + 1)));
-
-        //
-        // shift data
-        //
-        Data >>= ReportItem->Shift;
-
-        //
-        // clear unwanted bits
-        //
-        Data &= ReportItem->Mask;
-
-        if (ReportItem->Minimum > ReportItem->Maximum)
-        {
-            //
-            // logical boundaries are signed values
-            //
-
-            // FIXME: scale with physical min/max
-            if ((Data & ~(ReportItem->Mask >> 1)) != 0)
-            {
-                Data |= ~ReportItem->Mask;
-            }
-        }
-        else
-        {
-            // logical boundaries are absolute values
-            return HIDP_STATUS_BAD_LOG_PHY_VALUES;
-        }
-
-        //
-        // store result
-        //
-        *UsageValue = Data;
-        return HIDP_STATUS_SUCCESS;
-    }
-
-    //
-    // usage not found
-    //
-    return HIDP_STATUS_USAGE_NOT_FOUND;
-}
-
 ULONG
 HidParser_GetScanCodeFromKbdUsage(
     IN USAGE Usage)
 {
     if (Usage < sizeof(KeyboardScanCodes) / sizeof(KeyboardScanCodes[0]))
     {
-        //
         // valid usage
-        //
         return KeyboardScanCodes[Usage];
     }
 
-    //
     // invalid usage
-    //
     return 0;
 }
 
@@ -778,23 +80,17 @@ HidParser_GetScanCodeFromCustUsage(
 {
     ULONG i;
 
-    //
     // find usage in array
-    //
     for (i = 0; i < sizeof(CustomerScanCodes) / sizeof(CustomerScanCodes[0]); ++i)
     {
         if (CustomerScanCodes[i].Usage == Usage)
         {
-            //
             // valid usage
-            //
             return CustomerScanCodes[i].ScanCode;
         }
     }
 
-    //
     // invalid usage
-    //
     return 0;
 }
 
@@ -805,45 +101,33 @@ HidParser_DispatchKey(
     IN PHIDP_INSERT_SCANCODES InsertCodesProcedure,
     IN PVOID InsertCodesContext)
 {
-    ULONG Index;
-    ULONG Length = 0;
+    ULONG index;
+    ULONG length = 0;
 
-    //
     // count code length
-    //
-    for(Index = 0; Index < sizeof(ULONG); Index++)
+    for(index = 0; index < sizeof(ULONG); index++)
     {
-        if (ScanCodes[Index] == 0)
+        if (ScanCodes[index] == 0)
         {
-            //
             // last scan code
-            //
             break;
         }
 
-        //
         // is this a key break
-        //
         if (KeyAction == HidP_Keyboard_Break)
         {
-            //
             // add break - see USB HID to PS/2 Scan Code Translation Table
-            //
-            ScanCodes[Index] |= 0x80;
+            ScanCodes[index] |= 0x80;
         }
 
-        //
         // more scan counts
-        //
-        Length++;
+        length++;
     }
 
-    if (Length > 0)
+    if (length > 0)
     {
-         //
          // dispatch scan codes
-         //
-         InsertCodesProcedure(InsertCodesContext, ScanCodes, Length);
+         InsertCodesProcedure(InsertCodesContext, ScanCodes, length);
     }
 }
 
@@ -855,57 +139,46 @@ HidParser_TranslateKbdUsage(
     IN PHIDP_INSERT_SCANCODES  InsertCodesProcedure,
     IN PVOID  InsertCodesContext)
 {
-    ULONG ScanCode;
-    CHAR FakeShift[] = {0xE0, 0x2A, 0x00};
-    CHAR FakeCtrl[] = {0xE1, 0x1D, 0x00};
+    ULONG scanCode;
+    CHAR fakeShift[] = {0xE0, 0x2A, 0x00};
+    CHAR fakeCtrl[] = {0xE1, 0x1D, 0x00};
 
-    //
     // get scan code
-    //
-    ScanCode = HidParser_GetScanCodeFromKbdUsage(Usage);
-    if (!ScanCode)
+    scanCode = HidParser_GetScanCodeFromKbdUsage(Usage);
+    if (!scanCode)
     {
-        //
         // invalid lookup or no scan code available
-        //
-        DPRINT1("No Scan code for Usage %x\n", Usage);
+        DPRINT("No Scan code for Usage %x\n", Usage);
         return HIDP_STATUS_I8042_TRANS_UNKNOWN;
     }
 
-    if (ScanCode & 0xFF00)
+    if (scanCode & 0xFF00)
     {
-        //
         // swap scan code
-        //
-        ScanCode = NTOHS(ScanCode);
+        scanCode = NTOHS(scanCode);
     }
 
     if (Usage == 0x46 && KeyAction == HidP_Keyboard_Make)
     {
         // Print Screen generates additional FakeShift
-        HidParser_DispatchKey(FakeShift, KeyAction, InsertCodesProcedure, InsertCodesContext);
+        HidParser_DispatchKey(fakeShift, KeyAction, InsertCodesProcedure, InsertCodesContext);
     }
 
     if (Usage == 0x48)
     {
         // Pause/Break generates additional FakeCtrl. Note: it's always before key press/release.
-        HidParser_DispatchKey(FakeCtrl, KeyAction, InsertCodesProcedure, InsertCodesContext);
+        HidParser_DispatchKey(fakeCtrl, KeyAction, InsertCodesProcedure, InsertCodesContext);
     }
 
-    //
     // FIXME: translate modifier states
-    //
-    HidParser_DispatchKey((PCHAR)&ScanCode, KeyAction, InsertCodesProcedure, InsertCodesContext);
+    HidParser_DispatchKey((PCHAR)&scanCode, KeyAction, InsertCodesProcedure, InsertCodesContext);
 
     if (Usage == 0x46 && KeyAction == HidP_Keyboard_Break)
     {
         // Print Screen generates additional FakeShift
-        HidParser_DispatchKey(FakeShift, KeyAction, InsertCodesProcedure, InsertCodesContext);
+        HidParser_DispatchKey(fakeShift, KeyAction, InsertCodesProcedure, InsertCodesContext);
     }
 
-    //
-    // done
-    //
     return HIDP_STATUS_SUCCESS;
 }
 
@@ -917,36 +190,178 @@ HidParser_TranslateCustUsage(
     IN PHIDP_INSERT_SCANCODES  InsertCodesProcedure,
     IN PVOID  InsertCodesContext)
 {
-    ULONG ScanCode;
+    ULONG scanCode;
 
-    //
     // get scan code
-    //
-    ScanCode = HidParser_GetScanCodeFromCustUsage(Usage);
-    if (!ScanCode)
+    scanCode = HidParser_GetScanCodeFromCustUsage(Usage);
+    if (!scanCode)
     {
-        //
         // invalid lookup or no scan code available
-        //
-        DPRINT1("No Scan code for Usage %x\n", Usage);
+        DPRINT("No Scan code for Usage %x\n", Usage);
         return HIDP_STATUS_I8042_TRANS_UNKNOWN;
     }
 
-    if (ScanCode & 0xFF00)
+    if (scanCode & 0xFF00)
     {
-        //
         // swap scan code
-        //
-        ScanCode = NTOHS(ScanCode);
+        scanCode = NTOHS(scanCode);
     }
 
-    //
     // FIXME: translate modifier states
-    //
-    HidParser_DispatchKey((PCHAR)&ScanCode, KeyAction, InsertCodesProcedure, InsertCodesContext);
+    HidParser_DispatchKey((PCHAR)&scanCode, KeyAction, InsertCodesProcedure, InsertCodesContext);
 
-    //
-    // done
-    //
     return HIDP_STATUS_SUCCESS;
+}
+
+HIDAPI
+NTSTATUS
+NTAPI
+HidParser_UsageListDifference(
+    IN PUSAGE PreviousUsageList,
+    IN PUSAGE CurrentUsageList,
+    OUT PUSAGE BreakUsageList,
+    OUT PUSAGE MakeUsageList,
+    IN ULONG UsageListLength)
+{
+    ULONG index;
+    ULONG subIndex;
+    ULONG bFound;
+    ULONG breakUsageIndex = 0;
+    ULONG makeUsageIndex = 0;
+    USAGE currentUsage, usage;
+
+    if (UsageListLength)
+    {
+        index = 0;
+        do
+        {
+            /* get current usage */
+            currentUsage = PreviousUsageList[index];
+
+            /* is the end of list reached? */
+            if (!currentUsage)
+                break;
+
+            /* start searching in current usage list */
+            subIndex = 0;
+            bFound = FALSE;
+            do
+            {
+                /* get usage of current list */
+                usage = CurrentUsageList[subIndex];
+
+                /* end of list reached? */
+                if (!usage)
+                    break;
+
+                /* check if it matches the current one */
+                if (currentUsage == usage)
+                {
+                    /* it does */
+                    bFound = TRUE;
+                    break;
+                }
+
+                /* move to next usage */
+                subIndex++;
+            }
+            while (subIndex < UsageListLength);
+
+            /* was the usage found ?*/
+            if (!bFound)
+            {
+                /* store it in the break usage list */
+                BreakUsageList[breakUsageIndex] = currentUsage;
+                breakUsageIndex++;
+            }
+
+            /* move to next usage */
+            index++;
+
+        }
+        while (index < UsageListLength);
+
+        /* now process the new items */
+        index = 0;
+        do
+        {
+            /* get current usage */
+            currentUsage = CurrentUsageList[index];
+
+            /* is the end of list reached? */
+            if (!currentUsage)
+                break;
+
+            /* start searching in current usage list */
+            subIndex = 0;
+            bFound = FALSE;
+            do
+            {
+                /* get usage of previous list */
+                usage = PreviousUsageList[subIndex];
+
+                /* end of list reached? */
+                if (!usage)
+                    break;
+
+                /* check if it matches the current one */
+                if (currentUsage == usage)
+                {
+                    /* it does */
+                    bFound = TRUE;
+                    break;
+                }
+
+                /* move to next usage */
+                subIndex++;
+            }
+            while (subIndex < UsageListLength);
+
+            /* was the usage found ?*/
+            if (!bFound)
+            {
+                /* store it in the make usage list */
+                MakeUsageList[makeUsageIndex] = currentUsage;
+                makeUsageIndex++;
+            }
+
+            /* move to next usage */
+            index++;
+
+        }
+        while (index < UsageListLength);
+    }
+
+    /* does the break list contain empty entries */
+    if (breakUsageIndex < UsageListLength)
+    {
+        /* zeroize entries */
+        ZeroFunction(&BreakUsageList[breakUsageIndex], sizeof(USAGE) * (UsageListLength - breakUsageIndex));
+    }
+
+    /* does the make usage list contain empty entries */
+    if (makeUsageIndex < UsageListLength)
+    {
+        /* zeroize entries */
+        ZeroFunction(&MakeUsageList[makeUsageIndex], sizeof(USAGE) * (UsageListLength - makeUsageIndex));
+    }
+
+    /* done */
+    return HIDP_STATUS_SUCCESS;
+}
+
+HIDAPI
+NTSTATUS
+NTAPI
+HidParser_TranslateUsagesToI8042ScanCodes(
+    IN PUSAGE  ChangedUsageList,
+    IN ULONG  UsageListLength,
+    IN HIDP_KEYBOARD_DIRECTION  KeyAction,
+    IN OUT PHIDP_KEYBOARD_MODIFIER_STATE  ModifierState,
+    IN PHIDP_INSERT_SCANCODES  InsertCodesProcedure,
+    IN PVOID  InsertCodesContext)
+{
+    UNIMPLEMENTED;
+    ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
 }
