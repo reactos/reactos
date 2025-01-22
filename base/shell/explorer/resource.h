@@ -55,6 +55,7 @@
 
 #define IDM_STARTMENU 204
 #define IDM_TRAYWND   205
+#define IDM_TASKGRP   210
 
 /* NOTE: The following constants may *NOT* be changed because
          they're hardcoded and need to be the exact values
@@ -217,3 +218,5 @@
 #define ID_SHELL_CMD_RESTORE_ALL        (413)
 #define ID_SHELL_CMD_FIRST              ID_SHELL_CMD_PROPERTIES
 #define ID_SHELL_CMD_LAST               ID_SHELL_CMD_RESTORE_ALL
+#define ID_SHELL_CMD_MINIMIZE_GRP       (414)
+#define ID_SHELL_CMD_CLOSE_GRP          (415)
