@@ -23,7 +23,7 @@ list(APPEND SOURCE
     opengl32.h
     ${CMAKE_CURRENT_BINARY_DIR}/opengl32_stubs.c)
 
-# set_source_files_properties(gcrt0.o libgmon.a PROPERTIES EXTERNAL_OBJECT TRUE)
+set_source_files_properties(gcrt0.o libgmon.a PROPERTIES EXTERNAL_OBJECT TRUE)
 
 if(ARCH STREQUAL "i386")
     # Optimisation: use asm trampolines to ICD provided functions
@@ -40,8 +40,18 @@ add_library(opengl32 MODULE
 target_link_libraries(opengl32
     wine
     ${PSEH_LIB}
-    mesa
+    mesa_drv_common
+    mesa_swrast
+    mesa_swrast_setup
+    mesa_tnl
+    mesa_main
+    mesa_vbo
+    mesa_math
 )
+
+if((ARCH STREQUAL "i386") AND (NOT MSVC))
+    target_link_libraries(opengl32 mesa_x86)
+endif()
 
 set_module_type(opengl32 win32dll)
 add_importlibs(opengl32 gdi32 user32 advapi32 msvcrt kernel32 ntdll)
