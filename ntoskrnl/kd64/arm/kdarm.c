@@ -35,8 +35,9 @@ KdpSetContextState(IN PDBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange,
 
 NTSTATUS
 NTAPI
-KdpSysReadMsr(IN ULONG Msr,
-              OUT PLARGE_INTEGER MsrValue)
+KdpSysReadMsr(
+    _In_ ULONG Msr,
+    _Out_ PULONGLONG MsrValue)
 {
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
@@ -44,8 +45,9 @@ KdpSysReadMsr(IN ULONG Msr,
 
 NTSTATUS
 NTAPI
-KdpSysWriteMsr(IN ULONG Msr,
-               IN PLARGE_INTEGER MsrValue)
+KdpSysWriteMsr(
+    _In_ ULONG Msr,
+    _In_ PULONGLONG MsrValue)
 {
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
@@ -53,13 +55,14 @@ KdpSysWriteMsr(IN ULONG Msr,
 
 NTSTATUS
 NTAPI
-KdpSysReadBusData(IN ULONG BusDataType,
-                  IN ULONG BusNumber,
-                  IN ULONG SlotNumber,
-                  IN ULONG Offset,
-                  IN PVOID Buffer,
-                  IN ULONG Length,
-                  OUT PULONG ActualLength)
+KdpSysReadBusData(
+    _In_ BUS_DATA_TYPE BusDataType,
+    _In_ ULONG BusNumber,
+    _In_ ULONG SlotNumber,
+    _In_ ULONG Offset,
+    _Out_writes_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Length,
+    _Out_ PULONG ActualLength)
 {
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
@@ -67,13 +70,14 @@ KdpSysReadBusData(IN ULONG BusDataType,
 
 NTSTATUS
 NTAPI
-KdpSysWriteBusData(IN ULONG BusDataType,
-                   IN ULONG BusNumber,
-                   IN ULONG SlotNumber,
-                   IN ULONG Offset,
-                   IN PVOID Buffer,
-                   IN ULONG Length,
-                   OUT PULONG ActualLength)
+KdpSysWriteBusData(
+    _In_ BUS_DATA_TYPE BusDataType,
+    _In_ ULONG BusNumber,
+    _In_ ULONG SlotNumber,
+    _In_ ULONG Offset,
+    _In_reads_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Length,
+    _Out_ PULONG ActualLength)
 {
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
@@ -81,11 +85,12 @@ KdpSysWriteBusData(IN ULONG BusDataType,
 
 NTSTATUS
 NTAPI
-KdpSysReadControlSpace(IN ULONG Processor,
-                       IN ULONG64 BaseAddress,
-                       IN PVOID Buffer,
-                       IN ULONG Length,
-                       OUT PULONG ActualLength)
+KdpSysReadControlSpace(
+    _In_ ULONG Processor,
+    _In_ ULONG64 BaseAddress,
+    _Out_writes_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Length,
+    _Out_ PULONG ActualLength)
 {
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
@@ -93,11 +98,12 @@ KdpSysReadControlSpace(IN ULONG Processor,
 
 NTSTATUS
 NTAPI
-KdpSysWriteControlSpace(IN ULONG Processor,
-                        IN ULONG64 BaseAddress,
-                        IN PVOID Buffer,
-                        IN ULONG Length,
-                        OUT PULONG ActualLength)
+KdpSysWriteControlSpace(
+    _In_ ULONG Processor,
+    _In_ ULONG64 BaseAddress,
+    _In_reads_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Length,
+    _Out_ PULONG ActualLength)
 {
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
@@ -105,13 +111,14 @@ KdpSysWriteControlSpace(IN ULONG Processor,
 
 NTSTATUS
 NTAPI
-KdpSysReadIoSpace(IN ULONG InterfaceType,
-                  IN ULONG BusNumber,
-                  IN ULONG AddressSpace,
-                  IN ULONG64 IoAddress,
-                  IN PVOID DataValue,
-                  IN ULONG DataSize,
-                  OUT PULONG ActualDataSize)
+KdpSysReadIoSpace(
+    _In_ INTERFACE_TYPE InterfaceType,
+    _In_ ULONG BusNumber,
+    _In_ ULONG AddressSpace,
+    _In_ ULONG64 IoAddress,
+    _Out_writes_bytes_(DataSize) PVOID DataValue,
+    _In_ ULONG DataSize,
+    _Out_ PULONG ActualDataSize)
 {
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
@@ -119,13 +126,14 @@ KdpSysReadIoSpace(IN ULONG InterfaceType,
 
 NTSTATUS
 NTAPI
-KdpSysWriteIoSpace(IN ULONG InterfaceType,
-                   IN ULONG BusNumber,
-                   IN ULONG AddressSpace,
-                   IN ULONG64 IoAddress,
-                   IN PVOID DataValue,
-                   IN ULONG DataSize,
-                   OUT PULONG ActualDataSize)
+KdpSysWriteIoSpace(
+    _In_ INTERFACE_TYPE InterfaceType,
+    _In_ ULONG BusNumber,
+    _In_ ULONG AddressSpace,
+    _In_ ULONG64 IoAddress,
+    _In_reads_bytes_(DataSize) PVOID DataValue,
+    _In_ ULONG DataSize,
+    _Out_ PULONG ActualDataSize)
 {
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
