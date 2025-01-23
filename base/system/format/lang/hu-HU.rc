@@ -32,7 +32,7 @@ BEGIN
     STRING_FMIFS_FAIL "Az FMIFS belépési pontok nem találhatók.\n\n"
     STRING_UNKNOW_ARG "Érvénytelen paraméter: %s\n"
     STRING_DRIVE_PARM "Hiányzik a meghajtó meghatározás.\n\n"
-    STRING_ERROR_DRIVE_TYPE "Nem sikerült lekérdezni a meghajtó típusát"
+    STRING_ERROR_DRIVE_TYPE "Nem sikerült lekérdezni a meghajtó típusát.\n"
     STRING_INSERT_DISK "Helyezzen be új lemezt a következő meghajtóba: %C:\nHa készen áll, nyomja meg az ENTER billentyűt..."
     STRING_NO_VOLUME "Nem sikerült megállapítani címkét"
     STRING_NO_VOLUME_SIZE "Nem sikerült megállapítani a kötet méretét"

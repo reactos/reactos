@@ -28,7 +28,7 @@ BEGIN
     STRING_FMIFS_FAIL "Nepavyko rasti FMIFS įėjimo taškų.\n\n"
     STRING_UNKNOW_ARG "Nežinomas parametras: %s\n"
     STRING_DRIVE_PARM "Trūksta reikiamo disko parametro.\n\n"
-    STRING_ERROR_DRIVE_TYPE "Nepavyko nustatyti disko tipo"
+    STRING_ERROR_DRIVE_TYPE "Nepavyko nustatyti disko tipo.\n"
     STRING_INSERT_DISK "Į įrenginį %C:\nįdėkite naują diskelį ir paspaukite Enter..."
     STRING_NO_VOLUME "Nepavyko kreiptis į tomą"
     STRING_NO_VOLUME_SIZE "Nepavyko nustatyti tomo dydžio"

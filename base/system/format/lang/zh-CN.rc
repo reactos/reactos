@@ -26,7 +26,7 @@ BEGIN
     STRING_FMIFS_FAIL "不能定位 FMIFS 入口点。\n\n"
     STRING_UNKNOW_ARG "未知参数：%s\n"
     STRING_DRIVE_PARM "必要的驱动器参数缺失。\n\n"
-    STRING_ERROR_DRIVE_TYPE "无法获得驱动器类型"
+    STRING_ERROR_DRIVE_TYPE "无法获得驱动器类型。\n"
     STRING_INSERT_DISK "在驱动器 %C: 中插入一张新的软盘\n就绪时按 Enter..."
     STRING_NO_VOLUME "无法查询卷"
     STRING_NO_VOLUME_SIZE "无法查询卷大小"

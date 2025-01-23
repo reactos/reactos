@@ -367,9 +367,9 @@ int wmain(int argc, WCHAR *argv[])
     WCHAR volumeName[1024] = {0};
     WCHAR input[1024];
     DWORD serialNumber;
-    DWORD flags, maxComponent;
-    ULARGE_INTEGER freeBytesAvailableToCaller, totalNumberOfBytes, totalNumberOfFreeBytes;
+    ULARGE_INTEGER totalNumberOfBytes, totalNumberOfFreeBytes;
     WCHAR szMsg[RC_STRING_MAX_SIZE];
+    DWORD dwError;
 
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
@@ -424,19 +424,14 @@ int wmain(int argc, WCHAR *argv[])
     driveType = GetDriveTypeW(RootDirectory);
     switch (driveType)
     {
-        case DRIVE_UNKNOWN :
-            K32LoadStringW(GetModuleHandle(NULL), STRING_ERROR_DRIVE_TYPE, szMsg, ARRAYSIZE(szMsg));
-            PrintWin32Error(szMsg, GetLastError());
+        case DRIVE_UNKNOWN:
+        case DRIVE_NO_ROOT_DIR: // This case used to report STRING_NO_VOLUME, which has no ".\n".
+            ConResPuts(StdErr, STRING_ERROR_DRIVE_TYPE);
             return -1;
 
         case DRIVE_REMOTE:
         case DRIVE_CDROM:
             ConResPuts(StdOut, STRING_NO_SUPPORT);
-            return -1;
-
-        case DRIVE_NO_ROOT_DIR:
-            K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME, szMsg, ARRAYSIZE(szMsg));
-            PrintWin32Error(szMsg, GetLastError());
             return -1;
 
         case DRIVE_REMOVABLE:
@@ -468,24 +463,27 @@ int wmain(int argc, WCHAR *argv[])
     }
 
     //
-    // Determine the drive's file system format
+    // Get the existing name and file system, and print out the latter
     //
     if (!GetVolumeInformationW(RootDirectory,
                                volumeName, ARRAYSIZE(volumeName),
-                               &serialNumber, &maxComponent, &flags,
+                               NULL, NULL, NULL,
                                fileSystem, ARRAYSIZE(fileSystem)))
     {
-        if (GetLastError() == ERROR_UNRECOGNIZED_VOLUME)
+        dwError = GetLastError();
+        if (dwError == ERROR_UNRECOGNIZED_VOLUME)
         {
             wcscpy(fileSystem, L"RAW");
         }
         else
         {
             K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME, szMsg, ARRAYSIZE(szMsg));
-            PrintWin32Error(szMsg, GetLastError());
+            PrintWin32Error(szMsg, dwError);
             return -1;
         }
     }
+
+    ConResPrintf(StdOut, STRING_FILESYSTEM, fileSystem);
 
     if (QueryDeviceInformation(RootDirectory,
                                &DeviceInformation,
@@ -500,15 +498,15 @@ int wmain(int argc, WCHAR *argv[])
      * Fallback to GetFreeDiskSpaceExW if we did not get any volume length. */
     if (totalNumberOfBytes.QuadPart == 0 &&
         !GetDiskFreeSpaceExW(RootDirectory,
-                             &freeBytesAvailableToCaller,
+                             NULL,
                              &totalNumberOfBytes,
-                             &totalNumberOfFreeBytes))
+                             NULL))
     {
+        dwError = GetLastError();
         K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME_SIZE, szMsg, ARRAYSIZE(szMsg));
-        PrintWin32Error(szMsg, GetLastError());
+        PrintWin32Error(szMsg, dwError);
         return -1;
     }
-    ConResPrintf(StdOut, STRING_FILESYSTEM, fileSystem);
 
     //
     // Make sure they want to do this
@@ -605,32 +603,24 @@ int wmain(int argc, WCHAR *argv[])
         input[wcslen(input) - 1] = 0;
         if (!SetVolumeLabelW(RootDirectory, input))
         {
+            dwError = GetLastError();
             K32LoadStringW(GetModuleHandle(NULL), STRING_NO_LABEL, szMsg, ARRAYSIZE(szMsg));
-            PrintWin32Error(szMsg, GetLastError());
+            PrintWin32Error(szMsg, dwError);
             return -1;
         }
     }
 
-    if (!GetVolumeInformationW(RootDirectory,
-                               volumeName, ARRAYSIZE(volumeName),
-                               &serialNumber, &maxComponent, &flags,
-                               fileSystem, ARRAYSIZE(fileSystem)))
-    {
-        K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME, szMsg, ARRAYSIZE(szMsg));
-        PrintWin32Error(szMsg, GetLastError());
-        return -1;
-    }
-
     //
-    // Print out some stuff including the formatted size
+    // Get and print out some stuff including the formatted size
     //
     if (!GetDiskFreeSpaceExW(RootDirectory,
-                             &freeBytesAvailableToCaller,
+                             NULL,
                              &totalNumberOfBytes,
                              &totalNumberOfFreeBytes))
     {
+        dwError = GetLastError();
         K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME_SIZE, szMsg, ARRAYSIZE(szMsg));
-        PrintWin32Error(szMsg, GetLastError());
+        PrintWin32Error(szMsg, dwError);
         return -1;
     }
 
@@ -638,17 +628,19 @@ int wmain(int argc, WCHAR *argv[])
                                             totalNumberOfFreeBytes.QuadPart);
 
     //
-    // Get the drive's serial number
+    // Get and print out the new serial number
     //
     if (!GetVolumeInformationW(RootDirectory,
-                               volumeName, ARRAYSIZE(volumeName),
-                               &serialNumber, &maxComponent, &flags,
-                               fileSystem, ARRAYSIZE(fileSystem)))
+                               NULL, 0,
+                               &serialNumber, NULL, NULL,
+                               NULL, 0))
     {
+        dwError = GetLastError();
         K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME, szMsg, ARRAYSIZE(szMsg));
-        PrintWin32Error(szMsg, GetLastError());
+        PrintWin32Error(szMsg, dwError);
         return -1;
     }
+
     ConResPrintf(StdOut, STRING_SERIAL_NUMBER,
                          (unsigned int)(serialNumber >> 16),
                          (unsigned int)(serialNumber & 0xFFFF));
