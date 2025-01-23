@@ -119,6 +119,7 @@
 @ cdecl Relocator16Boot()
 @ stdcall RtlAssert(ptr ptr long ptr)
 @ cdecl StallExecutionProcessor()
+@ cdecl MachGetBootSectorLoadAddress()
 
 # Additional stuff for scsiport
 @ stdcall CpDoesPortExist(ptr)
