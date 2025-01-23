@@ -34,7 +34,7 @@
 
 #define NDEBUG
 #include <debug.h>
-DBG_DEFAULT_CHANNEL(GdiFont);
+// DBG_DEFAULT_CHANNEL(GdiFont); // TODO: Re-enable when using TRACE/ERR...
 
 typedef struct _FONTLINK
 {
