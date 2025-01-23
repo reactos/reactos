@@ -39,6 +39,18 @@ extern "C" {
 //
 // List Functions
 //
+
+DECLSPEC_NORETURN
+FORCEINLINE
+VOID
+RtlFailFast(
+    _In_ ULONG Code)
+{
+    __fastfail(Code);
+}
+
+#define RTL_STATIC_LIST_HEAD(x) LIST_ENTRY x = { &x, &x }
+
 FORCEINLINE
 VOID
 InitializeListHead(
