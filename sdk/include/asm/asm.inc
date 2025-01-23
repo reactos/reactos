@@ -319,7 +319,6 @@ ENDM
 .macro align x
     .align x
 .endm
-#define ALIGN align
 
 /* MASM compatible REPEAT, additional ENDR */
 #define REPEAT .rept
@@ -353,8 +352,8 @@ ENDM
 .endm
 
 /* MASM needs an END tag */
-#define END
-#define end
+.macro END
+.endm
 
 .macro .MODEL model
 .endm
@@ -362,7 +361,6 @@ ENDM
 .macro .code
     .text
 .endm
-#define CODESEG .code
 
 .macro .const
     .section .rdata
