@@ -34,6 +34,7 @@
 
 #define NDEBUG
 #include <debug.h>
+DBG_DEFAULT_CHANNEL(GdiFont);
 
 typedef struct _FONTLINK
 {
