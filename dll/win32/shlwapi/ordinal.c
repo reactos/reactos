@@ -6350,3 +6350,47 @@ DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid)
 
     return ret;
 }
+
+#ifdef __REACTOS__
+/**************************************************************************
+ *  SHBoolSystemParametersInfo (SHLWAPI.537)
+ *
+ * Specialized SPI values from https://undoc.airesoft.co.uk/shlwapi.dll/SHBoolSystemParametersInfo.php
+ */
+EXTERN_C BOOL WINAPI SHBoolSystemParametersInfo(UINT uiAction, PVOID pvParam)
+{
+    BOOL retval;
+    PVOID pvOrgParam = pvParam;
+    UINT uiParam = 0;
+    ANIMATIONINFO animinfo;
+
+    switch (uiAction)
+    {
+        case SPI_GETANIMATION:
+        case SPI_SETANIMATION:
+            uiParam = animinfo.cbSize = sizeof(animinfo);
+            animinfo.iMinAnimate = *(BOOL*)pvParam; /* SPI_SET */
+            pvParam = &animinfo;
+            break;
+        case SPI_SETDRAGFULLWINDOWS:
+        case SPI_SETFONTSMOOTHING:
+            uiParam = *(BOOL*)pvParam;
+            break;
+        case SPI_GETDRAGFULLWINDOWS:
+        case SPI_GETFONTSMOOTHING:
+            /* pvParam already correct */
+            break;
+        default:
+            if (uiAction < 0x1000)
+                return FALSE;
+            else if (uiAction & 1) /* SPI_SET */
+                pvParam = (PVOID)(SIZE_T)(*(BOOL*)pvParam);
+            break;
+    }
+
+    retval = SystemParametersInfoW(uiAction, uiParam, pvParam, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+    if (uiAction == SPI_GETANIMATION)
+        *(BOOL*)pvOrgParam = animinfo.iMinAnimate;
+    return retval;
+}
+#endif

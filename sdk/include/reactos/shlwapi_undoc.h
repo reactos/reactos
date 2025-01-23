@@ -106,6 +106,7 @@ HRESULT WINAPI IsQSForward(REFGUID pguidCmdGroup,ULONG cCmds, OLECMD *prgCmds);
 BOOL WINAPI SHIsChildOrSelf(HWND hParent, HWND hChild);
 HRESULT WINAPI SHForwardContextMenuMsg(IUnknown* pUnk, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT* pResult, BOOL useIContextMenu2);
 VOID WINAPI SHSetDefaultDialogFont(HWND hWnd, INT id);
+EXTERN_C BOOL WINAPI SHBoolSystemParametersInfo(UINT uiAction, PVOID pvParam);
 
 HRESULT WINAPI SHRegGetCLSIDKeyW(REFGUID guid, LPCWSTR lpszValue, BOOL bUseHKCU, BOOL bCreate, PHKEY phKey);
 
