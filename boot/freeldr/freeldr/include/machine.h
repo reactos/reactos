@@ -130,6 +130,7 @@ VOID MachInit(const char *CmdLine);
 #define MachHwIdle() \
     MachVtbl.HwIdle()
 
+
 /* ARC FUNCTIONS **************************************************************/
 
 TIMEINFO* ArcGetTime(VOID);
@@ -139,5 +140,6 @@ PCONFIGURATION_COMPONENT_DATA MachHwDetect(_In_opt_ PCSTR Options);
 VOID MachPrepareForReactOS(VOID);
 VOID MachGetExtendedBIOSData(PULONG ExtendedBIOSDataArea, PULONG ExtendedBIOSDataSize);
 VOID MachVideoGetFontsFromFirmware(PULONG RomFontPointers);
+ULONG MachGetBootSectorLoadAddress(IN UCHAR DriveNumber);
 
 /* EOF */
