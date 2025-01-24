@@ -1,4 +1,9 @@
 
+# We need to define this here, because the target definitions are not
+# passed to CL, when preprocessing the asm files on MSVC builds.
+# See CORE-19847
+add_definitions(-D_MINIHAL_)
+
 list(APPEND MINI_HAL_SOURCE
     ../generic/portio.c
     ../legacy/bus/bushndlr.c
@@ -39,6 +44,6 @@ endif()
 
 add_asm_files(mini_hal_asm ../generic/systimer.S)
 add_library(mini_hal ${MINI_HAL_SOURCE} ${mini_hal_asm})
-target_compile_definitions(mini_hal PRIVATE _MINIHAL_ _BLDR_ _NTSYSTEM_)
+target_compile_definitions(mini_hal PRIVATE _BLDR_ _NTSYSTEM_)
 add_dependencies(mini_hal psdk bugcodes asm)
 add_pch(mini_hal ../include/hal.h MINI_HAL_SOURCE)

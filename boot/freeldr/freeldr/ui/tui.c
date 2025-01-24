@@ -275,7 +275,7 @@ VOID TuiDrawBackdrop(VOID)
     TuiFillArea(0,
                 TUI_TITLE_BOX_CHAR_HEIGHT,
                 UiScreenWidth - 1,
-                UiScreenHeight - 2,
+                UiScreenHeight - 3,
                 UiBackdropFillStyle,
                 ATTR(UiBackdropFgColor, UiBackdropBgColor));
 

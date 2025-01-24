@@ -43,13 +43,20 @@ else()
     #TBD
 endif()
 
+list(APPEND UEFILDR_BOOTMGR_SOURCE
+    ${FREELDR_BOOTMGR_SOURCE}
+    custom.c
+    options.c
+    oslist.c
+)
+
 add_asm_files(uefifreeldr_common_asm ${FREELDR_COMMON_ASM_SOURCE} ${UEFILDR_COMMON_ASM_SOURCE})
 
 add_library(uefifreeldr_common
     ${uefifreeldr_common_asm}
     ${UEFILDR_ARC_SOURCE}
     ${FREELDR_BOOTLIB_SOURCE}
-    ${FREELDR_BOOTMGR_SOURCE}
+    ${UEFILDR_BOOTMGR_SOURCE}
     ${FREELDR_NTLDR_SOURCE})
 
 target_compile_definitions(uefifreeldr_common PRIVATE UEFIBOOT)
@@ -62,7 +69,7 @@ endif()
 set(PCH_SOURCE
     ${UEFILDR_ARC_SOURCE}
     ${FREELDR_BOOTLIB_SOURCE}
-    ${FREELDR_BOOTMGR_SOURCE}
+    ${UEFILDR_BOOTMGR_SOURCE}
     ${FREELDR_NTLDR_SOURCE})
 
 add_pch(uefifreeldr_common include/arch/uefi/uefildr.h PCH_SOURCE)
@@ -79,6 +86,9 @@ spec2def(uefildr.exe freeldr.spec)
 list(APPEND UEFILDR_BASE_SOURCE
     include/arch/uefi/uefildr.h
     arch/uefi/uefildr.c
+    bootmgr.c
+    ntldr/setupldr.c
+    ntldr/inffile.c
     ${FREELDR_BASE_SOURCE})
 
 if(ARCH STREQUAL "i386")

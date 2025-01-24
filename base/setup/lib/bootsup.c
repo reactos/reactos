@@ -880,7 +880,6 @@ InstallMbrBootCodeToDisk(
                                  InstallMbrBootCode);
 }
 
-
 static
 NTSTATUS
 InstallBootloaderFiles(
@@ -895,7 +894,19 @@ InstallBootloaderFiles(
     CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\freeldr.sys");
     CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"freeldr.sys");
 
-    DPRINT1("Copy: %S ==> %S\n", SrcPath, DstPath);
+    DPRINT("Copy: %S ==> %S\n", SrcPath, DstPath);
+    Status = SetupCopyFile(SrcPath, DstPath, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SetupCopyFile() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Copy rosload to the system partition, always overwriting the older version */
+    CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\rosload.exe");
+    CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"rosload.exe");
+
+    DPRINT("Copy: %S ==> %S\n", SrcPath, DstPath);
     Status = SetupCopyFile(SrcPath, DstPath, FALSE);
     if (!NT_SUCCESS(Status))
     {

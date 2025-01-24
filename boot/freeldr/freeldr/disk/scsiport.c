@@ -1647,7 +1647,7 @@ LoadBootDeviceDriver(VOID)
 #endif
 
     /* Create full ntbootdd.sys path */
-    strcpy(NtBootDdPath, FrLdrBootPath);
+    strcpy(NtBootDdPath, FrLdrGetBootPath());
     strcat(NtBootDdPath, "\\NTBOOTDD.SYS");
 
     /* Load ntbootdd.sys */

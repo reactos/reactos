@@ -424,10 +424,44 @@ DbgParseDebugChannels(PCHAR Value)
 
 #else
 
+#undef DebugInit
+VOID
+DebugInit(
+    _In_ PCSTR DebugString)
+{
+    UNREFERENCED_PARAMETER(DebugString);
+}
+
 ULONG
 DbgPrint(PCCH Format, ...)
 {
+    UNREFERENCED_PARAMETER(Format);
     return 0;
+}
+
+VOID
+DbgPrint2(ULONG Mask, ULONG Level, const char *File, ULONG Line, char *Format, ...)
+{
+    UNREFERENCED_PARAMETER(Mask);
+    UNREFERENCED_PARAMETER(Level);
+    UNREFERENCED_PARAMETER(File);
+    UNREFERENCED_PARAMETER(Line);
+    UNREFERENCED_PARAMETER(Format);
+}
+
+VOID
+DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
+{
+    UNREFERENCED_PARAMETER(Mask);
+    UNREFERENCED_PARAMETER(Buffer);
+    UNREFERENCED_PARAMETER(Length);
+}
+
+#undef DbgParseDebugChannels
+VOID
+DbgParseDebugChannels(PCHAR Value)
+{
+    UNREFERENCED_PARAMETER(Value);
 }
 
 #endif // DBG

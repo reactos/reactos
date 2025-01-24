@@ -56,7 +56,7 @@ BOOLEAN MiniTuiInitialize(VOID)
 VOID MiniTuiDrawBackdrop(VOID)
 {
     /* Fill in a black background */
-    TuiFillArea(0, 0, UiScreenWidth - 1, UiScreenHeight - 1,
+    TuiFillArea(0, 0, UiScreenWidth - 1, UiScreenHeight - 3,
                 UiBackdropFillStyle,
                 ATTR(UiBackdropFgColor, UiBackdropBgColor));
 
@@ -223,12 +223,6 @@ MiniTuiDrawMenu(
                         UiScreenHeight - 4,
                         MenuInfo->MenuFooter,
                         ATTR(UiMenuFgColor, UiMenuBgColor));
-    }
-
-    /* Display the boot options if needed */
-    if (MenuInfo->ShowBootOptions)
-    {
-        DisplayBootTimeOptions();
     }
 
     VideoCopyOffScreenBufferToVRAM();

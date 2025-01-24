@@ -605,7 +605,6 @@ BOOLEAN
 UiDisplayMenu(
     IN PCSTR MenuHeader,
     IN PCSTR MenuFooter OPTIONAL,
-    IN BOOLEAN ShowBootOptions,
     IN PCSTR MenuItemList[],
     IN ULONG MenuItemCount,
     IN ULONG DefaultMenuItem,
@@ -615,7 +614,7 @@ UiDisplayMenu(
     IN UiMenuKeyPressFilterCallback KeyPressFilter OPTIONAL,
     IN PVOID Context OPTIONAL)
 {
-    return UiVtbl.DisplayMenu(MenuHeader, MenuFooter, ShowBootOptions,
+    return UiVtbl.DisplayMenu(MenuHeader, MenuFooter,
                               MenuItemList, MenuItemCount, DefaultMenuItem,
                               MenuTimeOut, SelectedMenuItem, CanEscape,
                               KeyPressFilter, Context);
@@ -634,6 +633,34 @@ VOID UiFadeOut(VOID)
 BOOLEAN UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 {
     return UiVtbl.EditBox(MessageText, EditTextBuffer, Length);
+}
+
+VOID
+UiResetForSOS(VOID)
+{
+#ifdef _M_ARM
+    /* Re-initialize the UI */
+    UiInitialize(TRUE);
+#else
+    /* Reset the UI and switch to MiniTui */
+    UiVtbl.UnInitialize();
+    UiVtbl = MiniTuiVtbl;
+    UiVtbl.Initialize();
+#endif
+    /* Disable the progress bar */
+    UiProgressBar.Show = FALSE;
+}
+
+ULONG
+UiGetScreenHeight(VOID)
+{
+    return UiScreenHeight;
+}
+
+UCHAR
+UiGetMenuBgColor(VOID)
+{
+    return UiMenuBgColor;
 }
 
 /* EOF */

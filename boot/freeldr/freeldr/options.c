@@ -95,7 +95,6 @@ VOID DoOptionsMenu(IN OperatingSystemItem* OperatingSystem)
     CHAR  DebugChannelString[100];
 
     if (!UiDisplayMenu("Select an option:", NULL,
-                       TRUE,
                        OptionsMenuList,
                        sizeof(OptionsMenuList) / sizeof(OptionsMenuList[0]),
                        11, // Use "Start ReactOS normally" as default; see the switch below.
@@ -244,9 +243,9 @@ VOID DisplayBootTimeOptions(VOID)
 
     /* Display the chosen boot options */
     UiDrawText(0,
-               UiScreenHeight - 2,
+               UiGetScreenHeight() - 2,
                BootOptions,
-               ATTR(COLOR_LIGHTBLUE, UiMenuBgColor));
+               ATTR(COLOR_LIGHTBLUE, UiGetMenuBgColor()));
 }
 
 VOID AppendBootTimeOptions(PCHAR BootOptions)
