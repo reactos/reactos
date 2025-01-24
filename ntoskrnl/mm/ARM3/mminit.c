@@ -91,7 +91,7 @@ ULONG MmMaxAdditionNonPagedPoolPerMb = 400 * 1024;
 // The following URLs, valid as of April 23rd, 2008, support this evidence:
 //
 // http://www.cs.miami.edu/~burt/journal/NT/memory.html
-// http://www.ditii.com/2007/09/28/windows-memory-management-x86-virtual-address-space/ (DEAD_LINK)
+// https://web.archive.org/web/20130412053421/http://www.ditii.com/2007/09/28/windows-memory-management-x86-virtual-address-space/
 //
 PVOID MmNonPagedSystemStart;
 PVOID MmNonPagedPoolStart;

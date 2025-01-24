@@ -33,7 +33,7 @@
 /*
  * BIOS Data Area at 0040:XXXX
  *
- * See: http://webpages.charter.net/danrollins/techhelp/0093.HTM (DEAD_LINK)
+ * See: https://web.archive.org/web/20160813211745/http://webpages.charter.net/danrollins/techhelp/0093.HTM
  * and: http://www.bioscentral.com/misc/bda.htm (DEAD_LINK)
  * for more information.
  */

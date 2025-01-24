@@ -20,7 +20,7 @@ DBG_DEFAULT_CHANNEL(UserHotkey);
 
 /*
  * Hardcoded hotkeys. See http://ivanlef0u.fr/repo/windoz/VI20051005.html (DEAD_LINK)
- * or http://repo.meh.or.id/Windows/VI20051005.html (DEAD_LINK).
+ * or https://web.archive.org/web/20170826161432/http://repo.meh.or.id/Windows/VI20051005.html .
  *
  * NOTE: The (Shift-)F12 keys are used only for the "UserDebuggerHotKey" setting
  * which enables setting a key shortcut which, when pressed, establishes a

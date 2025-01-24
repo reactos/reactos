@@ -9,8 +9,8 @@
  *
  *                  Some helpful resources:
  *                    http://support.microsoft.com/default.aspx?scid=kb;%5BLN%5D;815320 (DEAD_LINK)
- *                    http://www.jsiinc.com/SUBO/tip7400/rh7482.htm (DEAD_LINK)
- *                    http://www.jsiinc.com/SUBM/tip6400/rh6490.htm (DEAD_LINK)
+ *                    https://web.archive.org/web/20050321020634/http://www.jsifaq.com/SUBO/tip7400/rh7482.htm
+ *                    https://web.archive.org/web/20050909185602/http://www.jsifaq.com/SUBM/tip6400/rh6490.htm
  *
  * UPDATE HISTORY:
  *      04-04-2004  Created

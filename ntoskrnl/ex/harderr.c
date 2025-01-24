@@ -296,7 +296,7 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
  * handling to throw a driver-determined exception for a memory access
  * violation that occurs when a driver processes I/O requests.
  * See: http://msdn.microsoft.com/library/en-us/Kernel_r/hh/Kernel_r/k102_71b4c053-599c-4a6d-8a59-08aae6bdc534.xml.asp?frame=true (DEAD_LINK)
- *      http://www.osronline.com/ddkx/kmarch/k102_814i.htm (DEAD_LINK)
+ *      https://web.archive.org/web/20081231000748/http://www.osronline.com/ddkx/kmarch/k102_814i.htm
  *
  * @return None
  *
@@ -318,7 +318,7 @@ ExRaiseAccessViolation(VOID)
  * ExRaiseDatatypeMisalignment raises an exception with the exception
  * code set to STATUS_DATATYPE_MISALIGNMENT
  * See: MSDN / DDK
- *      http://www.osronline.com/ddkx/kmarch/k102_814i.htm (DEAD_LINK)
+ *      https://web.archive.org/web/20081231000748/http://www.osronline.com/ddkx/kmarch/k102_814i.htm
  *
  * @return None
  *

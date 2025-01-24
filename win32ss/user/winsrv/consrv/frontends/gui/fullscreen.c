@@ -57,8 +57,8 @@ SwitchFullScreen(PGUI_CONSOLE_DATA GuiData, BOOL FullScreen)
      * https://devblogs.microsoft.com/oldnewthing/20100412-00/?p=14353
      * https://devblogs.microsoft.com/oldnewthing/20050505-04/?p=35703
      * http://stackoverflow.com/questions/1400654/how-do-i-put-my-opengl-app-into-fullscreen-mode
-     * http://nehe.gamedev.net/tutorial/creating_an_opengl_window_win32/13001/ (DEAD_LINK)
-     * http://www.reocities.com/pcgpe/dibs.html (DEAD_LINK)
+     * https://web.archive.org/web/20180210071518/http://nehe.gamedev.net/tutorial/creating_an_opengl_window_win32/13001/
+     * https://web.archive.org/web/20121001015230/http://www.reocities.com/pcgpe/dibs.html
      */
 
     /* If we are already in the given state, just bail out */

@@ -36,7 +36,7 @@
  * and provide UMBs.
  *
  * For more details, see:
- * http://www.freedos.org/technotes/technote/txt/169.txt (DEAD_LINK)
+ * https://web.archive.org/web/20150326075136/http://www.freedos.org/technotes/technote/txt/169.txt
  * http://www.freedos.org/technotes/technote/txt/202.txt (DEAD_LINK)
  * http://www.uncreativelabs.net/textfiles/system/UMB.TXT
  *

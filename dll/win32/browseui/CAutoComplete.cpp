@@ -121,7 +121,7 @@ static LRESULT CALLBACK MouseProc(INT nCode, WPARAM wParam, LPARAM lParam)
 
 //////////////////////////////////////////////////////////////////////////////
 // sorting algorithm
-// http://www.ics.kagoshima-u.ac.jp/~fuchida/edu/algorithm/sort-algorithm/ (DEAD_LINK)
+// https://web.archive.org/web/20210228194050/http://www.ics.kagoshima-u.ac.jp/~fuchida/edu/algorithm/sort-algorithm/
 
 typedef CSimpleArray<CStringW> list_t;
 

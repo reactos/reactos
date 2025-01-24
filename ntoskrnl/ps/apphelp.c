@@ -13,7 +13,7 @@ https://github.com/mandiant/ShimCacheParser/blob/master/ShimCacheParser.py
 https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-7/dd837644(v=ws.10)
 https://learn.microsoft.com/en-us/windows/win32/devnotes/application-compatibility-database
 https://www.alex-ionescu.com/secrets-of-the-application-compatilibity-database-sdb-part-4/
-http://recxltd.blogspot.nl/2012/04/windows-appcompat-research-notes-part-1.html (DEAD_LINK)
+https://web.archive.org/web/20170101173150/http://recxltd.blogspot.nl/2012/04/windows-appcompat-research-notes-part-1.html
 http://journeyintoir.blogspot.com/2013/12/revealing-recentfilecachebcf-file.html
 https://dl.mandiant.com/EE/library/Whitepaper_ShimCacheParser.pdf (DEAD_LINK)
 */

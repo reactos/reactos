@@ -2347,14 +2347,14 @@ static VOID VidBiosSetCursorShape(WORD CursorStartEnd)
      * WARNING!!
      * =========
      * Contrary to what is mentioned in lots of literature out there, e.g. in:
-     * http://webpages.charter.net/danrollins/techhelp/0072.HTM (DEAD_LINK)
+     * https://web.archive.org/web/20180507104824/http://webpages.charter.net/danrollins/techhelp/0072.HTM
      * http://www.bioscentral.com/misc/bda.htm (DEAD_LINK)
      * and in other various places, bit 0 of Bda->VGAOptions is 0 when
      * cursor emulation is ENABLED, and is 1 when it is DISABLED.
      *
      * The following documentation is right about this fact:
-     * http://www.cs.nyu.edu/~mwalfish/classes/ut/s12-cs372h/ref/hardware/vgadoc/VGABIOS.TXT (DEAD_LINK)
-     * https://sites.google.com/site/pcdosretro/biosdata (DEAD_LINK)
+     * https://web.archive.org/web/20200304211132/https://cs.nyu.edu/~mwalfish/classes/ut/s12-cs372h/ref/hardware/vgadoc/VGABIOS.TXT
+     * https://web.archive.org/web/20220118094149/https://sites.google.com/site/pcdosretro/biosdata
      *
      * A proof that it is OK is that in the following code samples it is
      * explicitly mentioned that setting bit 0 disables cursor emulation:

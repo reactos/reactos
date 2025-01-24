@@ -59,7 +59,7 @@ Support for multiple screen sizes.
                               ----------------
 
 Since version 2.0, Console Telnet's new home page is
-http://www.musc.edu/~brannanp/telnet/ (DEAD_LINK).  You can get the latest version from
+https://web.archive.org/web/20010126035900/http://www.musc.edu/~brannanp/telnet/ .  You can get the latest version from
 ftp://argeas.cs-net.gr/Telnet-Win32 (DEAD_LINK) or from the web page.  Telnet is
 available as full project (sources included) or as binaries only.  If you
 would like to help to the development check the /devel directory on the ftp
@@ -172,7 +172,7 @@ included to the next version.
 
 Telnet compiles with a variety of compilers.  You will need at least
 Borland 4.x or newer compiler, or MSVC 2.0 or newer, or download a version
-of gcc for Win32 (see http://www.musc.edu/~brannanp/telnet/gccwin32.html (DEAD_LINK)).
+of gcc for Win32 (see https://web.archive.org/web/20010126054500/http://www.musc.edu/~brannanp/telnet/gccwin32.html).
 Copy the files from the directories BORLAND or MSVC to the main directory,
 change them to fit to your system, and recompile.  The project comes with
 IDE files and makefiles.
