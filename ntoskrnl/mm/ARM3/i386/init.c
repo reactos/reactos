@@ -562,7 +562,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     {
         /* Mark the 1st IDT page as Write-Through to prevent a lockup
            on a F00F instruction.
-           See http://www.rcollins.org/Errata/Dec97/F00FBug.html */
+           See https://www.rcollins.org/Errata/Dec97/F00FBug.html */
         PointerPte = MiAddressToPte(KeGetPcr()->IDT);
         PointerPte->u.Hard.WriteThrough = 1;
     }

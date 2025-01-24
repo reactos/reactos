@@ -2638,7 +2638,7 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         /*
          * Undocumented message sent by Windows' console.dll for applying console info.
-         * See http://www.catch22.net/sites/default/source/files/setconsoleinfo.c
+         * See http://www.catch22.net/sites/default/source/files/setconsoleinfo.c (DEAD_LINK)
          * and http://www.scn.rain.com/~neighorn/PDF/MSBugPaper.pdf
          * for more information.
          */

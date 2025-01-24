@@ -50,7 +50,7 @@
 /* patented for another couple of years.    */
 
 /* more information is available in         */
-/* http://www.ietf.org/ietf/IPR/hifn-ipr-draft-friend-tls-lzs-compression.txt */
+/* http://www.ietf.org/ietf/IPR/hifn-ipr-draft-friend-tls-lzs-compression.txt (DEAD_LINK) */
 
 int
 mppc_expand(RDPCLIENT * This, uint8 * data, uint32 clen, uint8 ctype, uint32 * roff, uint32 * rlen)

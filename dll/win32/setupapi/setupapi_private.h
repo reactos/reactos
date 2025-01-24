@@ -249,7 +249,7 @@ extern HINSTANCE hInstance;
 extern OSVERSIONINFOEXW OsVersionInfo;
 
 /*
- * See: https://msdn.microsoft.com/en-us/library/bb432397(v=vs.85).aspx
+ * See: https://learn.microsoft.com/en-us/windows/win32/devnotes/psetupsetglobalflags
  * for more information.
  */
 extern DWORD GlobalSetupFlags;

@@ -1910,7 +1910,7 @@ HRESULT WINAPI SetAppStartingCursor(HWND u, DWORD v)
  * The SHLoadOLE was called when OLE32.DLL was being loaded to transfer all the
  * information from the shell32 "mini-COM" to ole32.dll.
  *
- * See http://blogs.msdn.com/oldnewthing/archive/2004/07/05/173226.aspx for a
+ * See http://blogs.msdn.com/oldnewthing/archive/2004/07/05/173226.aspx (DEAD_LINK) for a
  * detailed description.
  *
  * Under wine ole32.dll is always loaded as it is imported by shlwapi.dll which is

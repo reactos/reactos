@@ -2603,7 +2603,7 @@ Exit:
 }
 
 /* ValidateRect gets redirected to NtUserValidateRect:
-   http://blog.csdn.net/ntdll/archive/2005/10/19/509299.aspx */
+   https://blog.csdn.net/ntdll/article/details/509299 */
 BOOL
 APIENTRY
 NtUserValidateRect(

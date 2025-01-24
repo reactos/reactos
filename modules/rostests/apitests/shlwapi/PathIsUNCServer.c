@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* Documentation: https://msdn.microsoft.com/en-us/library/windows/desktop/bb773722(v=vs.85).aspx */
+/* Documentation: https://learn.microsoft.com/en-us/windows/win32/api/shlwapi/nf-shlwapi-pathisuncservera */
 
 #include <apitest.h>
 #include <shlwapi.h>

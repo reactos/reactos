@@ -4,7 +4,7 @@
  * PURPOSE:           BRUSH class implementation
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@reactos.org)
  *
- * REFERENCES:        http://support.microsoft.com/kb/kbview/108497
+ * REFERENCES:        http://support.microsoft.com/kb/kbview/108497 (DEAD_LINK)
  */
 
 #include "brush.hpp"

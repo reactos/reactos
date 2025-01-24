@@ -145,7 +145,7 @@ format_float(
             val32 = exponent >= 0 ? exponent : -exponent;
 
             // FIXME: handle length of exponent field:
-            // http://msdn.microsoft.com/de-de/library/0fatw238%28VS.80%29.aspx
+            // http://msdn.microsoft.com/de-de/library/0fatw238%28VS.80%29.aspx (DEAD_LINK)
             num_digits = 3;
             while (num_digits--)
             {

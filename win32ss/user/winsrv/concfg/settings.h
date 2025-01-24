@@ -14,8 +14,8 @@
 /*
  * Undocumented message and structure used by Windows' console.dll
  * for setting console info.
- * See http://www.catch22.net/sites/default/source/files/setconsoleinfo.c
- * and http://www.scn.rain.com/~neighorn/PDF/MSBugPaper.pdf
+ * See http://www.catch22.net/sites/default/source/files/setconsoleinfo.c (DEAD_LINK)
+ * and http://www.scn.rain.com/~neighorn/PDF/MSBugPaper.pdf (DEAD_LINK)
  * for more information.
  */
 #define WM_SETCONSOLEINFO   (WM_USER + 201)

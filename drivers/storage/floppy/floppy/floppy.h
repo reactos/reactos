@@ -107,7 +107,7 @@ StopMotor(PCONTROLLER_INFO ControllerInfo);
 /*
  * MEDIA TYPES
  *
- * This table was found at http://www.nondot.org/sabre/os/files/Disk/FloppyMediaIDs.txt.
+ * This table was found at http://www.nondot.org/sabre/os/files/Disk/FloppyMediaIDs.txt (DEAD_LINK).
  * Thanks to raster@indirect.com for this information.
  *
  * Format   Size   Cyls   Heads  Sec/Trk   FATs   Sec/FAT   Sec/Root   Media

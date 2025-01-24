@@ -333,7 +333,7 @@ xmlModulePlatformClose(void *handle)
 
 /*
  * xmlModulePlatformSymbol:
- * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dllproc/base/getprocaddress.asp
+ * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dllproc/base/getprocaddress.asp (DEAD_LINK)
  * returns 0 on success and the loaded symbol in result, and -1 on error.
  */
 

@@ -1859,7 +1859,7 @@ Cleanup:
  * this is certainly NOT true, although I can't say for sure that EffectiveOnly
  * is correct either. -Gunnar
  * This is true. EffectiveOnly overrides SQOS.EffectiveOnly. - IAI
- * NOTE for readers: http://hex.pp.ua/nt/NtDuplicateToken.php is therefore
+ * NOTE for readers: https://hex.pp.ua/nt/NtDuplicateToken.php is therefore
  * wrong in that regard, while MSDN documentation is correct.
  */
 _Must_inspect_result_

@@ -213,7 +213,7 @@ static HWND GetNiceRootOwner(HWND hwnd)
     return hwnd;
 }
 
-// c.f. http://blogs.msdn.com/b/oldnewthing/archive/2007/10/08/5351207.aspx
+// c.f. http://blogs.msdn.com/b/oldnewthing/archive/2007/10/08/5351207.aspx (DEAD_LINK)
 BOOL IsAltTabWindow(HWND hwnd)
 {
     DWORD ExStyle;

@@ -35,7 +35,7 @@
 /*
  *  The SHA-1 standard was published by NIST in 1993.
  *
- *  http://www.itl.nist.gov/fipspubs/fip180-1.htm
+ *  http://www.itl.nist.gov/fipspubs/fip180-1.htm (DEAD_LINK)
  */
 
 #include "netif/ppp/ppp_opts.h"

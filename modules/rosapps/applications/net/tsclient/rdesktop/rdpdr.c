@@ -20,13 +20,13 @@
 /*
   Here are some resources, for your IRP hacking pleasure:
 
-  http://cvs.sourceforge.net/viewcvs.py/mingw/w32api/include/ddk/winddk.h?view=markup
+  http://cvs.sourceforge.net/viewcvs.py/mingw/w32api/include/ddk/winddk.h?view=markup (DEAD_LINK)
 
-  http://win32.mvps.org/ntfs/streams.cpp
+  http://win32.mvps.org/ntfs/streams.cpp (DEAD_LINK)
 
   http://www.acc.umu.se/~bosse/ntifs.h
 
-  http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/NT%20Objects/File/
+  http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/NT%20Objects/File/ (DEAD_LINK)
 
   http://us1.samba.org/samba/ftp/specs/smb-nt01.txt
 

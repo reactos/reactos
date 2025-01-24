@@ -187,7 +187,7 @@ int compat_fclose(FILE* stream);
  * @param[out] buflen Optional parameter for length of allocated buffer.
  * @return status of WideCharToMultiByte conversion.
  *
- * WideCharToMultiByte - http://msdn.microsoft.com/en-us/library/dd374130(VS.85).aspx
+ * WideCharToMultiByte - https://learn.microsoft.com/en-us/windows/win32/api/stringapiset/nf-stringapiset-widechartomultibyte
  */
 int win32_wide_utf8(const wchar_t * const wptr, char **mbptr, size_t * buflen);
 
@@ -200,7 +200,7 @@ int win32_wide_utf8(const wchar_t * const wptr, char **mbptr, size_t * buflen);
  * @param[out] buflen Optional parameter for length of allocated buffer.
  * @return status of WideCharToMultiByte conversion.
  *
- * MultiByteToWideChar - http://msdn.microsoft.com/en-us/library/dd319072(VS.85).aspx
+ * MultiByteToWideChar - https://learn.microsoft.com/en-us/windows/win32/api/stringapiset/nf-stringapiset-multibytetowidechar
  */
 
 int win32_utf8_wide(const char *const mbptr, wchar_t **wptr, size_t *buflen);

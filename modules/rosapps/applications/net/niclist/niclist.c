@@ -9,7 +9,7 @@
  */
 /*
  For this program and for win32 ethernet, the winpcap library is required.
- Download it from http://netgroup-serv.polito.it/winpcap.
+ Download it from http://netgroup-serv.polito.it/winpcap (DEAD_LINK).
  */
 #ifdef MSC_VER
 #define WIN32_LEAN_AND_MEAN

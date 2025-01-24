@@ -722,8 +722,7 @@ KiSetAffinityThread(IN PKTHREAD Thread,
 // that could happen, Windows seems to define this as a macro that directly acceses
 // the ready summary through a single fs: read by going through the KPCR's PrcbData.
 //
-// See http://research.microsoft.com/en-us/collaboration/global/asia-pacific/
-//     programs/trk_case4_process-thread_management.pdf
+// See http://research.microsoft.com/en-us/collaboration/global/asia-pacific/programs/trk_case4_process-thread_management.pdf (DEAD_LINK)
 //
 // We need this per-arch because sometimes it's Prcb and sometimes PrcbData, and
 // because on x86 it's FS, and on x64 it's GS (not sure what it is on ARM/PPC).

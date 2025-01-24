@@ -1085,7 +1085,7 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
     NodeCount &= 0xFF; // needed since some fscked up BIOSes return
     // wrong info (e.g. Mac Virtual PC)
-    // e.g. look: http://my.execpc.com/~geezer/osd/pnp/pnp16.c
+    // e.g. look: http://my.execpc.com/~geezer/osd/pnp/pnp16.c (DEAD_LINK)
     if (x != 0 || NodeSize == 0 || NodeCount == 0)
     {
         ERR("PnP-BIOS failed to enumerate device nodes\n");

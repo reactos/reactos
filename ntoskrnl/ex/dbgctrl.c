@@ -155,9 +155,9 @@ ExpDebuggerWorker(
  * abilities (if needed to at all)
  *
  * See: http://www.osronline.com/showthread.cfm?link=93915
- *      http://void.ru/files/Ntexapi.h
- *      http://www.codeguru.com/code/legacy/system/ntexapi.zip
- *      http://www.securityfocus.com/bid/9694
+ *      http://void.ru/files/Ntexapi.h (DEAD_LINK)
+ *      http://www.codeguru.com/code/legacy/system/ntexapi.zip (DEAD_LINK)
+ *      http://www.securityfocus.com/bid/9694 (DEAD_LINK)
  *
  * @param ControlCode
  *        Description of the parameter. Wrapped to more lines on ~70th

@@ -86,7 +86,7 @@ __p__tzname(void)
  * \brief Initializes the variables _daylight, _timezone, and _tzname from the
  *        "TZ" environment variable if available or else by calling
  *        GetTimeZoneInformation.
- * \sa http://msdn.microsoft.com/en-us/library/90s5c885.aspx
+ * \sa https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/tzset?view=msvc-170
  */
 void
 _tzset(void)

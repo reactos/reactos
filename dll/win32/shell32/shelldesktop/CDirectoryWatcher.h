@@ -9,7 +9,7 @@
 #include "CDirectoryList.h"
 
 // NOTE: Regard to asynchronous procedure call (APC), please see:
-// https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-sleepex
+// https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-sleepex
 
 class CDirectoryWatcher
 {

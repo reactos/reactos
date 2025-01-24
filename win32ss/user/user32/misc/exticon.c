@@ -73,7 +73,7 @@ typedef struct
 
 #ifdef __REACTOS__
 //  From: James Houghtaling
-//  https://www.moon-soft.com/program/FORMAT/windows/ani.htm
+//  https://www.moon-soft.com/program/FORMAT/windows/ani.htm (DEAD_LINK)
 typedef struct taganiheader
 {
     DWORD cbsizeof;  // num bytes in aniheader (36 bytes)

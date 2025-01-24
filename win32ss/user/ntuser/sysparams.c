@@ -1507,7 +1507,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.iMouseHoverTime, fl);
 
         case SPI_SETMOUSEHOVERTIME:
-           /* See http://msdn2.microsoft.com/en-us/library/ms724947.aspx
+           /* See https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-systemparametersinfoa
             * copy text from it, if some agument why xp and 2003 behovir diffent
             * only if they do not have SP install
             * " Windows Server 2003 and Windows XP: The operating system does not

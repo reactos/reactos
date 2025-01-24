@@ -188,7 +188,7 @@ PFILE_OBJECT CcpFindOtherStreamFileObject(PFILE_OBJECT FileObject)
     return 0;
 }
 
-/* Thanks: http://windowsitpro.com/Windows/Articles/ArticleID/3864/pg/2/2.html */
+/* Thanks: http://windowsitpro.com/Windows/Articles/ArticleID/3864/pg/2/2.html (DEAD_LINK) */
 
 VOID
 NTAPI

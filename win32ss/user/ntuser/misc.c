@@ -106,7 +106,7 @@ UserGetLanguageID(VOID)
 {
   HANDLE KeyHandle;
   OBJECT_ATTRIBUTES ObAttr;
-//  http://support.microsoft.com/kb/324097
+//  https://learn.microsoft.com/en-us/troubleshoot/windows-server/setup-upgrade-and-drivers/use-language-id-identify-language-pack
   ULONG Ret = MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT);
   PKEY_VALUE_PARTIAL_INFORMATION pKeyInfo;
   ULONG Size = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + MAX_PATH*sizeof(WCHAR);

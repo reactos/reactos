@@ -581,9 +581,9 @@ static VOID WINAPI BiosBootstrapLoader(LPWORD Stack)
      * For more information, see:
      * http://www.virtualbox.org/svn/vbox/trunk/src/VBox/Devices/PC/BIOS/orgs.asm
      * http://www.virtualbox.org/svn/vbox/trunk/src/VBox/Devices/PC/BIOS/boot.c
-     * http://bochs.sourceforge.net/cgi-bin/lxr/source/iodev/cmos.cc
+     * http://bochs.sourceforge.net/cgi-bin/lxr/source/iodev/cmos.cc (DEAD_LINK)
      * https://web.archive.org/web/20111209041013/http://www-ivs.cs.uni-magdeburg.de/~zbrog/asm/cmos.html
-     * http://www.bioscentral.com/misc/cmosmap.htm
+     * http://www.bioscentral.com/misc/cmosmap.htm (DEAD_LINK)
      */
     IOWriteB(CMOS_ADDRESS_PORT, CMOS_REG_SYSOP);
     BootOrder = (IOReadB(CMOS_DATA_PORT) & 0x20) >> 5;
@@ -933,7 +933,7 @@ static VOID BiosHwSetup(VOID)
 
     /* Initialize PIT Counter 1 - Mode 2, 8bit binary count */
     IOWriteB(PIT_COMMAND_PORT, 0x54);
-    // DRAM refresh every 15ms: http://www.cs.dartmouth.edu/~spl/Academic/Organization/docs/PC%20Timer%208253.html
+    // DRAM refresh every 15ms: http://www.cs.dartmouth.edu/~spl/Academic/Organization/docs/PC%20Timer%208253.html (DEAD_LINK)
     IOWriteB(PIT_DATA_PORT(1),   18);
 
     /* Initialize PIT Counter 2 - Mode 3, 16bit binary count */

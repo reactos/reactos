@@ -2,7 +2,7 @@
    rdesktop: A Remote Desktop Protocol client.
 
    Support functions for Extended Window Manager Hints,
-   http://www.freedesktop.org/wiki/Standards_2fwm_2dspec
+   http://www.freedesktop.org/wiki/Standards_2fwm_2dspec (DEAD_LINK)
 
    Copyright (C) Peter Astrand <astrand@cendio.se> 2005
 

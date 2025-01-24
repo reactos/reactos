@@ -335,7 +335,7 @@ ExpInitializeCallbacks(VOID)
  * Opens or creates a Callback Object. Creates only if Create is true.
  * Allows multiple Callback Functions to be registered only if
  * AllowMultipleCallbacks is true.
- * See: http://www.osronline.com/ddkx/kmarch/k102_967m.htm
+ * See: http://www.osronline.com/ddkx/kmarch/k102_967m.htm (DEAD_LINK)
  *      http://www.osronline.com/article.cfm?id=24
  *
  * @param CallbackObject
@@ -445,8 +445,8 @@ ExCreateCallback(OUT PCALLBACK_OBJECT *CallbackObject,
  * @implemented
  *
  * Calls a function pointer (a registered callback)
- * See: http://www.osronline.com/ddkx/kmarch/k102_2f5e.htm
- *      http://vmsone.com/~decuslib/vmssig/vmslt99b/nt/wdm-callback.txt
+ * See: http://www.osronline.com/ddkx/kmarch/k102_2f5e.htm (DEAD_LINK)
+ *      http://vmsone.com/~decuslib/vmssig/vmslt99b/nt/wdm-callback.txt (DEAD_LINK)
  *
  * @param CallbackObject
  *        Which callback to call

@@ -3,7 +3,7 @@
  *
  * Added `OSF/JVC Recommended Code Set Conversion Specification
  * between Japanese EUC and Shift-JIS' support: <hirofumi@mail.parknet.co.jp>
- * (http://www.opengroup.or.jp/jvc/cde/sjis-euc-e.html)
+ * (http://www.opengroup.or.jp/jvc/cde/sjis-euc-e.html (DEAD_LINK))
  */
 
 #include <linux/module.h>
