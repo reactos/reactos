@@ -15,7 +15,7 @@ HWND hTabCtrlWnd;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Taken from WinSpy++ 1.7
-// https://www.catch22.net/projects/winspy/
+// http://www.catch22.net/software/winspy
 // Copyright (c) 2002 by J Brown
 //
 
