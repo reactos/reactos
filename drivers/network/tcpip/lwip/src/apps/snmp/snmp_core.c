@@ -74,7 +74,7 @@
  * - Developed on Windows with Visual Studio 2010.
  * - Can be compiled and used on all platforms with http://www.monodevelop.com/.
  * - Based on a heavily modified version of of SharpSnmpLib (a4bd05c6afb4)
- *   (https://sharpsnmplib.codeplex.com/SourceControl/network/forks/Nemo157/MIBParserUpdate).
+ *   (https://sharpsnmplib.codeplex.com/SourceControl/network/forks/Nemo157/MIBParserUpdate (DEAD_LINK)).
  *   This has been the last known revision of that code before being converted to
  *   closed source. The new code on github has completely changed, so we can not
  *   just update :-(

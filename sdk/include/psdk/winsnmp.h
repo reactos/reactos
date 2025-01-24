@@ -14,7 +14,7 @@
     http://www.winsnmp.com/docs/winsnmp3.htm
 
     WinSNMP Reference
-    http://msdn.microsoft.com/library/en-us/snmp/snmp/winsnmp_api_reference.asp
+    https://web.archive.org/web/20041127132734/http://msdn.microsoft.com/library/en-us/snmp/snmp/winsnmp_api_reference.asp
 
   This library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of

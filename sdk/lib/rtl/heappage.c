@@ -7,7 +7,7 @@
  */
 
 /* Useful references:
-    http://msdn.microsoft.com/en-us/library/ms220938(VS.80).aspx
+    https://learn.microsoft.com/en-us/previous-versions/ms220938(v=vs.80)
     http://blogs.msdn.com/b/jiangyue/archive/2010/03/16/windows-heap-overrun-monitoring.aspx
 */
 

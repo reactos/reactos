@@ -10,7 +10,7 @@
 DBG_DEFAULT_CHANNEL(UserMisc);
 
 //
-// Works like BitBlt, http://msdn.microsoft.com/en-us/library/ms532278(VS.85).aspx
+// Works like BitBlt, https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-bitblt
 //
 BOOL
 APIENTRY

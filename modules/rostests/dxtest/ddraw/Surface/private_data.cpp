@@ -42,7 +42,7 @@ BOOL Test_PrivateData (INT* passed, INT* failed)
         printf("ERROR: Failed to draw to surface !");
     TEST(Surface->GetPrivateData(guid, &dummy, &size) == DDERR_EXPIRED);
 
-    // TODO: Test for DDSPD_IUNKNOWNPOINTER (see http://msdn.microsoft.com/archive/default.asp?url=/archive/en-us/ddraw7/directdraw7/ddref_5qyf.asp)
+    // TODO: Test for DDSPD_IUNKNOWNPOINTER (see http://msdn.microsoft.com/archive/default.asp?url=/archive/en-us/ddraw7/directdraw7/ddref_5qyf.asp (DEAD_LINK))
 
     Surface->Release();
     return TRUE;

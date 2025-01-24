@@ -107,7 +107,7 @@ void nfs_to_network_openinfo(
     IN const nfs41_file_info *info,
     OUT PFILE_NETWORK_OPEN_INFORMATION std_out);
 
-/* http://msdn.microsoft.com/en-us/library/ms724290%28VS.85%29.aspx:
+/* https://learn.microsoft.com/en-us/windows/win32/sysinfo/file-times
  * A file time is a 64-bit value that represents the number of
  * 100-nanosecond intervals that have elapsed since 12:00 A.M.
  * January 1, 1601 Coordinated Universal Time (UTC). */

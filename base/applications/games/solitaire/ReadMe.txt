@@ -7,7 +7,7 @@ card-game library.
 Freeware
 Copyright J Brown 2001
 
-Updates at http://www.catch22.net
+Updates at https://www.catch22.net/
 
 ******************************************/
 

@@ -8,14 +8,14 @@
  * References:
  *
  * - ARC Specification v1.2: http://netbsd.org./docs/Hardware/Machines/ARC/riscspec.pdf
- * - "Setup and Startup", MSDN article: https://technet.microsoft.com/en-us/library/cc977184.aspx
- * - Answer for "How do I determine the ARC path for a particular drive letter in Windows?": https://serverfault.com/a/5929
- * - ARC - LinuxMIPS: https://www.linux-mips.org/wiki/ARC
- * - ARCLoad - LinuxMIPS: https://www.linux-mips.org/wiki/ARCLoad
+ * - "Setup and Startup", MSDN article: https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-2000-server/cc977184(v=technet.10)
+ * - Answer for "How do I determine the ARC path for a particular drive letter in Windows?": https://serverfault.com/questions/5910/how-do-i-determine-the-arc-path-for-a-particular-drive-letter-in-windows/5929#5929
+ * - ARC - LinuxMIPS: https://web.archive.org/web/20230922043211/https://www.linux-mips.org/wiki/ARC
+ * - ARCLoad - LinuxMIPS: https://web.archive.org/web/20221002210224/https://www.linux-mips.org/wiki/ARCLoad
  * - Inside Windows 2000 Server: https://books.google.fr/books?id=kYT7gKnwUQ8C&pg=PA71&lpg=PA71&dq=nt+arc+path&source=bl&ots=K8I1F_KQ_u&sig=EJq5t-v2qQk-QB7gNSREFj7pTVo&hl=en&sa=X&redir_esc=y#v=onepage&q=nt%20arc%20path&f=false
  * - Inside Windows Server 2003: https://books.google.fr/books?id=zayrcM9ZYdAC&pg=PA61&lpg=PA61&dq=arc+path+to+nt+path&source=bl&ots=x2JSWfp2MA&sig=g9mufN6TCOrPejDov6Rjp0Jrldo&hl=en&sa=X&redir_esc=y#v=onepage&q=arc%20path%20to%20nt%20path&f=false
  *
- * Stuff to read: http://www.adminxp.com/windows2000/index.php?aid=46 and http://www.trcb.com/Computers-and-Technology/Windows-XP/Windows-XP-ARC-Naming-Conventions-1432.htm
+ * Stuff to read: http://www.adminxp.com/windows2000/index.php?aid=46 and https://web.archive.org/web/20170923151458/http://www.trcb.com/Computers-and-Technology/Windows-XP/Windows-XP-ARC-Naming-Conventions-1432.htm
  * concerning which values of disk() or rdisk() are valid when either scsi() or multi() adapters are specified.
  */
 

@@ -1097,7 +1097,7 @@ IoRegisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
     ExAcquireResourceExclusiveLite(&IopDatabaseResource, TRUE);
 
     /* Check if that driver is already registered (successive calls)
-     * See MSDN note: http://msdn.microsoft.com/en-us/library/ff548499%28v=vs.85%29.aspx
+     * See MSDN note: https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ioregisterfsregistrationchange
      */
     if (!IsListEmpty(&IopFsNotifyChangeQueueHead))
     {

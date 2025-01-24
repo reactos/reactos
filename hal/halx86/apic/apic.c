@@ -5,9 +5,9 @@
  * PURPOSE:         HAL APIC Management and Control Code
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  * REFERENCES:      https://web.archive.org/web/20190407074221/http://www.joseflores.com/docs/ExploringIrql.html
- *                  http://www.codeproject.com/KB/system/soviet_kernel_hack.aspx
- *                  http://bbs.unixmap.net/thread-2022-1-1.html
- *                  https://www.codemachine.com/article_interruptdispatching.html
+ *                  https://www.codeproject.com/KB/system/soviet_kernel_hack.aspx
+ *                  http://bbs.unixmap.net/thread-2022-1-1.html (DEAD_LINK)
+ *                  https://codemachine.com/articles/interrupt_dispatching.html
  *                  https://www.osronline.com/article.cfm%5Earticle=211.htm
  */
 

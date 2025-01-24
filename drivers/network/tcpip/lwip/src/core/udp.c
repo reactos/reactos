@@ -66,7 +66,7 @@
 #include <string.h>
 
 #ifndef UDP_LOCAL_PORT_RANGE_START
-/* From http://www.iana.org/assignments/port-numbers:
+/* From https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml :
    "The Dynamic and/or Private Ports are those from 49152 through 65535" */
 #define UDP_LOCAL_PORT_RANGE_START  0xc000
 #define UDP_LOCAL_PORT_RANGE_END    0xffff

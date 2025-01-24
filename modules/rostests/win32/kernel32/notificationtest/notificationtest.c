@@ -1,7 +1,7 @@
 /*
  * FILE:            notificationtest.c
  * PURPOSE:         Files notifications testing
- * NOTES:           MSDN code from: http://msdn.microsoft.com/en-us/library/windows/desktop/aa365261%28v=vs.85%29.aspx
+ * NOTES:           MSDN code from: https://learn.microsoft.com/en-us/windows/win32/fileio/obtaining-directory-change-notifications
  */
 
 #include <windows.h>

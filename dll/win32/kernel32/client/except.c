@@ -489,8 +489,8 @@ UnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
     //
     // Since Windows XP/2003, we have the ReportFault API available.
     // See http://www.clausbrod.de/twiki/pub/Blog/DefinePrivatePublic20070616/reportfault.cpp
-    // and https://msdn.microsoft.com/en-us/library/windows/desktop/bb513616(v=vs.85).aspx
-    // and the legacy ReportFault API: https://msdn.microsoft.com/en-us/library/windows/desktop/bb513615(v=vs.85).aspx
+    // and https://learn.microsoft.com/en-us/windows/win32/wer/using-wer
+    // and the legacy ReportFault API: https://learn.microsoft.com/en-us/windows/win32/api/errorrep/nf-errorrep-reportfault
     //
     // NOTE: Starting Vista+, the fault API is constituted of the WerXXX functions.
     //
@@ -541,7 +541,7 @@ UnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
      * so that we can give it control over the process being debugged,
      * by passing it the exception.
      *
-     * See https://msdn.microsoft.com/en-us/library/ms809754.aspx
+     * See https://learn.microsoft.com/en-us/previous-versions/ms809754(v=msdn.10)
      * and http://www.debuginfo.com/articles/ntsdwatson.html
      * and https://sourceware.org/ml/gdb-patches/2012-08/msg00893.html
      * for more details.

@@ -70,7 +70,7 @@ Links:
 
 Here's a link describing most of the registry settings:
 
-http://www.microsoft.com/resources/documentation/Windows/2000/server/reskit/en-us/Default.asp?url=/resources/documentation/Windows/2000/server/reskit/en-us/regentry/31493.asp
+http://www.microsoft.com/resources/documentation/Windows/2000/server/reskit/en-us/Default.asp?url=/resources/documentation/Windows/2000/server/reskit/en-us/regentry/31493.asp (DEAD_LINK)
 
 PS/2 protocol documentation:
 

@@ -25,7 +25,7 @@ START_TEST(eventlog)
         /*
          * Tests for the different RPC boundaries on Windows.
          * See also the "ReportEvent" API on MSDN, section "Return value", at:
-         * https://msdn.microsoft.com/en-us/library/windows/desktop/aa363679(v=vs.85).aspx
+         * https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-reporteventa
          * for more details.
          */
         { 0xF000, { {TRUE, ERROR_SUCCESS}, {TRUE , ERROR_SUCCESS} } },

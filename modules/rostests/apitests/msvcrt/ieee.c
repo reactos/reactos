@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Tests for IEEE floatting-point functions
  * PROGRAMMER:      Pierre Schweitzer (pierre@reactos.org)
- * REFERENCES:      http://msdn.microsoft.com/en-US/library/h7zkk1bz%28v=VS.80%29.aspx
+ * REFERENCES:      https://web.archive.org/web/20151223002427/http://msdn.microsoft.com/en-US/library/h7zkk1bz(v=VS.80).aspx
  */
 
 #include <apitest.h>

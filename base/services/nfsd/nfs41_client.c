@@ -233,10 +233,10 @@ void nfs41_client_free(
  * http://tools.ietf.org/html/rfc5661#section-2.4
  *
  * MSDN: GetAdaptersAddresses Function
- * http://msdn.microsoft.com/en-us/library/aa365915%28VS.85%29.aspx
+ * https://learn.microsoft.com/en-us/windows/win32/api/iphlpapi/nf-iphlpapi-getadaptersaddresses
  *
  * MSDN: Example C Program: Creating an MD5 Hash from File Content
- * http://msdn.microsoft.com/en-us/library/aa382380%28VS.85%29.aspx */
+ * https://learn.microsoft.com/en-us/windows/win32/seccrypto/example-c-program--creating-an-md-5-hash-from-file-content */
 
 
 /* use an rbtree to sort mac address entries */

@@ -181,7 +181,7 @@
 #define SNMP_LWIP_ENTERPRISE_OID 26381
 /**
  * IANA assigned enterprise ID for lwIP is 26381
- * @see http://www.iana.org/assignments/enterprise-numbers
+ * @see https://www.iana.org/assignments/enterprise-numbers/
  *
  * @note this enterprise ID is assigned to the lwIP project,
  * all object identifiers living under this ID are assigned
@@ -190,7 +190,7 @@
  *
  * If you need to create your own private MIB you'll need
  * to apply for your own enterprise ID with IANA:
- * http://www.iana.org/numbers.html
+ * https://www.iana.org/protocols
  */
 #define SNMP_DEVICE_ENTERPRISE_OID {1, 3, 6, 1, 4, 1, SNMP_LWIP_ENTERPRISE_OID}
 /**

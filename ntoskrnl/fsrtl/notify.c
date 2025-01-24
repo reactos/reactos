@@ -1415,7 +1415,7 @@ FsRtlNotifyFilterReportChange(IN PNOTIFY_SYNC NotifySync,
 
             /* If asking for old name in case of a rename, notify later on,
              * so that we can wait for new name.
-             * http://msdn.microsoft.com/en-us/library/dn392331.aspx
+             * https://learn.microsoft.com/en-us/openspecs/main/ms-openspeclp/3589baea-5b22-48f2-9d43-f5bea4960ddb
              */
             if (Action == FILE_ACTION_RENAMED_OLD_NAME)
             {

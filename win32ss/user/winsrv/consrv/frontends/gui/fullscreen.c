@@ -54,11 +54,11 @@ SwitchFullScreen(PGUI_CONSOLE_DATA GuiData, BOOL FullScreen)
      * See:
      * http://stackoverflow.com/questions/2382464/win32-full-screen-and-hiding-taskbar
      * http://stackoverflow.com/questions/3549148/fullscreen-management-with-winapi
-     * http://blogs.msdn.com/b/oldnewthing/archive/2010/04/12/9994016.aspx
-     * http://blogs.msdn.com/b/oldnewthing/archive/2005/05/05/414910.aspx
+     * https://devblogs.microsoft.com/oldnewthing/20100412-00/?p=14353
+     * https://devblogs.microsoft.com/oldnewthing/20050505-04/?p=35703
      * http://stackoverflow.com/questions/1400654/how-do-i-put-my-opengl-app-into-fullscreen-mode
-     * http://nehe.gamedev.net/tutorial/creating_an_opengl_window_win32/13001/
-     * http://www.reocities.com/pcgpe/dibs.html
+     * https://web.archive.org/web/20180210071518/http://nehe.gamedev.net/tutorial/creating_an_opengl_window_win32/13001/
+     * https://web.archive.org/web/20121001015230/http://www.reocities.com/pcgpe/dibs.html
      */
 
     /* If we are already in the given state, just bail out */

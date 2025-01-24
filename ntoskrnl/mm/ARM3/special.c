@@ -8,7 +8,7 @@
 
 /*
     References:
-    http://msdn.microsoft.com/en-us/library/ff551832(v=VS.85).aspx
+    https://learn.microsoft.com/en-us/windows-hardware/drivers/devtest/special-pool
 */
 
 /* INCLUDES *******************************************************************/

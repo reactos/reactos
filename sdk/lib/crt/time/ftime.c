@@ -14,7 +14,7 @@
  * \brief Get the current time.
  * \param [out] ptimeb Pointer to a structure of type struct _timeb that
  *        receives the current time.
- * \sa http://msdn.microsoft.com/en-us/library/95e68951.aspx
+ * \sa https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/ftime-s-ftime32-s-ftime64-s?view=msvc-170
  */
 errno_t
 CDECL
@@ -48,7 +48,7 @@ _ftime_s(struct _timeb *ptimeb)
  *        receives the current time.
  * \note This function is for compatability and simply calls the secure
  *       version _ftime_s().
- * \sa http://msdn.microsoft.com/en-us/library/z54t9z5f.aspx
+ * \sa https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/ftime-ftime32-ftime64?view=msvc-170
  */
 void
 CDECL

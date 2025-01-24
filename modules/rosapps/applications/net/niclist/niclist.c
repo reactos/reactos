@@ -9,7 +9,7 @@
  */
 /*
  For this program and for win32 ethernet, the winpcap library is required.
- Download it from http://netgroup-serv.polito.it/winpcap.
+ Download it from https://web.archive.org/web/20040404215544/http://winpcap.polito.it/ .
  */
 #ifdef MSC_VER
 #define WIN32_LEAN_AND_MEAN
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
         PacketGetVersion = (PCHAR (*)(VOID))GetProcAddress(hPacket, "PacketGetVersion");
     } else {
         printf("Could not load WinPCap driver! for more information goto:\n");
-        printf ("http://netgroup-serv.polito.it/winpcap\n");
+        printf ("https://web.archive.org/web/20040404215544/http://winpcap.polito.it/\n");
         return 1;
     }
     if (!(PacketLibraryVersion = PacketGetVersion())) {

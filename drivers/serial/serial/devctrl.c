@@ -302,7 +302,7 @@ SerialDeviceControl(
 	SerialGetUserBuffers(Irp, IoControlCode, &BufferIn, &BufferOut);
 
 	/* FIXME: need to probe buffers */
-	/* FIXME: see http://www.osronline.com/ddkx/serial/serref_61bm.htm */
+	/* FIXME: see https://web.archive.org/web/20101020230420/http://www.osronline.com/ddkx/serial/serref_61bm.htm */
 	switch (IoControlCode)
 	{
 		case IOCTL_SERIAL_CLEAR_STATS:

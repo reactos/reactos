@@ -257,9 +257,9 @@ void SetDIBitsToDeviceFromClipboard(UINT uFormat, PAINTSTRUCT ps, SCROLLSTATE st
          *
          * FIXME: investigate!!
          * ANSWER: this is a Windows bug; part of the answer is there:
-         * https://social.msdn.microsoft.com/Forums/windowsdesktop/en-US/ac7ab3b5-8609-4478-b86a-976dab44c271/bug-clipboard-format-conversions-cfdib-cfdibv5-cfdib
+         * https://social.msdn.microsoft.com/Forums/windowsdesktop/en-US/ac7ab3b5-8609-4478-b86a-976dab44c271/bug-clipboard-format-conversions-cfdib-cfdibv5-cfdib (DEAD_LINK)
          * May be related:
-         * https://blog.talosintelligence.com/2015/10/dangerous-clipboard.html
+         * https://blog.talosintelligence.com/dangerous-clipboard/
          */
 #if 0
         if ((lpInfoHeader->biSize == sizeof(BITMAPINFOHEADER)) &&

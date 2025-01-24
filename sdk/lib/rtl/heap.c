@@ -8,8 +8,8 @@
  */
 
 /* Useful references:
-   http://msdn.microsoft.com/en-us/library/ms810466.aspx
-   http://msdn.microsoft.com/en-us/library/ms810603.aspx
+   https://learn.microsoft.com/en-us/previous-versions/ms810466(v=msdn.10)
+   https://learn.microsoft.com/en-us/previous-versions/ms810603(v=msdn.10)
    http://www.securitylab.ru/analytics/216376.php
    http://binglongx.spaces.live.com/blog/cns!142CBF6D49079DE8!596.entry
    http://www.phreedom.org/research/exploits/asn1-bitstring/

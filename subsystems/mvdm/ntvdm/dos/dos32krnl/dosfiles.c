@@ -201,7 +201,7 @@ WORD DosCreateFileEx(LPWORD Handle,
            FilePath, AccessShareModes, CreateActionFlags, Attributes);
 
     //
-    // The article about OpenFile API: http://msdn.microsoft.com/en-us/library/windows/desktop/aa365430(v=vs.85).aspx
+    // The article about OpenFile API: https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-openfile
     // explains what those AccessShareModes are (see the uStyle flag).
     //
 
@@ -532,7 +532,7 @@ WORD DosOpenFile(LPWORD Handle,
            FilePath, AccessShareModes);
 
     //
-    // The article about OpenFile API: http://msdn.microsoft.com/en-us/library/windows/desktop/aa365430(v=vs.85).aspx
+    // The article about OpenFile API: https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-openfile
     // explains what those AccessShareModes are (see the uStyle flag).
     //
 

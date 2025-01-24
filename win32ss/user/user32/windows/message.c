@@ -2827,7 +2827,7 @@ TranslateMessage(CONST MSG *lpMsg)
 {
     BOOL ret;
 
-    // http://msdn.microsoft.com/en-us/library/aa912145.aspx
+    // https://learn.microsoft.com/en-us/previous-versions/aa912145(v=msdn.10)
     if (LOWORD(lpMsg->wParam) == VK_PROCESSKEY)
     {
         ret = IMM_FN(ImmTranslateMessage)(lpMsg->hwnd,

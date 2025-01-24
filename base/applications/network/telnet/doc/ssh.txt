@@ -19,4 +19,4 @@ Unfortunately, all the ssh clients I've found don't work this way.  You can outp
 3) Get Openssh from http://www.openssh.com
 4) Modify Openssh so it will compile, and get rid of all the termios stuff
 
-Obviously this is a lot of work.  If you need a good ssh client, try PuTTY from http://www.chiark.greenend.org.uk/~sgtatham/putty/.  It may be possible to integrate PuTTY and Telnet, and that would certainly be easier than the above option.  PuTTY is licensed under the MIT license, which seems to be compatible with the GPL.  The primary advantage of integrating the two projects is that PuTTY would gain the key mappings that telnet has, and telnet would gain encryption.
+Obviously this is a lot of work.  If you need a good ssh client, try PuTTY from https://www.chiark.greenend.org.uk/~sgtatham/putty/ .  It may be possible to integrate PuTTY and Telnet, and that would certainly be easier than the above option.  PuTTY is licensed under the MIT license, which seems to be compatible with the GPL.  The primary advantage of integrating the two projects is that PuTTY would gain the key mappings that telnet has, and telnet would gain encryption.

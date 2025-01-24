@@ -103,7 +103,7 @@ ConWrite(
 
         /*
          * This code is inspired from _cputws, in particular from the fact that,
-         * according to MSDN: https://msdn.microsoft.com/en-us/library/ms687401(v=vs.85).aspx
+         * according to MSDN: https://learn.microsoft.com/en-us/windows/console/writeconsole
          * the buffer size must be less than 64 KB.
          *
          * A similar code can be used for implementing _cputs too.

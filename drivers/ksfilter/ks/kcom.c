@@ -14,7 +14,7 @@
 
 const GUID IID_IUnknown = {0x00000000, 0x0000, 0x0000, {0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x46}};
 
-/* http://msdn2.microsoft.com/en-us/library/ms809781.aspx */
+/* http://msdn2.microsoft.com/en-us/library/ms809781.aspx (DEAD_LINK) */
 COMDDKAPI NTSTATUS NTAPI
 KoCreateInstance(
     IN  REFCLSID ClassId,
@@ -52,7 +52,7 @@ KoCreateInstance(
         to the appropriate device.
 
         Useful references:
-            http://www.freelists.org/archives/wdmaudiodev/01-2003/msg00023.html
+            https://www.freelists.org/post/wdmaudiodev/Need-audio-driver-deivce-interface-registration-help
 
         TODO
     */

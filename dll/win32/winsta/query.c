@@ -29,7 +29,7 @@ WINSTAAPI WinStationQueryInformationA(HANDLE hServer,
 }
 
 /*
-http://msdn2.microsoft.com/En-US/library/aa383827.aspx
+https://learn.microsoft.com/en-us/previous-versions//aa383827(v=vs.85)
 */
 BOOLEAN
 WINSTAAPI

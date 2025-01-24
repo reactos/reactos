@@ -542,7 +542,7 @@ sec_out_mcs_data(STREAM s, uint32 selected_protocol)
 	out_uint8s(s, 30 - hostlen);
 
 	/* See
-	   http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wceddk40/html/cxtsksupportingremotedesktopprotocol.asp */
+	   http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wceddk40/html/cxtsksupportingremotedesktopprotocol.asp (DEAD_LINK) */
 	out_uint32_le(s, g_keyboard_type);
 	out_uint32_le(s, g_keyboard_subtype);
 	out_uint32_le(s, g_keyboard_functionkeys);

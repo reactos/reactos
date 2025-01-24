@@ -4,7 +4,7 @@
   Written by Filip Navara <xnavara@volny.cz>
 
   References (2003-08-25):
-    http://msdn.microsoft.com/library/en-us/snmp/snmp/snmp_reference.asp
+    https://web.archive.org/web/20050113043001/http://msdn.microsoft.com/library/en-us/snmp/snmp/snmp_reference.asp
 
   This library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of

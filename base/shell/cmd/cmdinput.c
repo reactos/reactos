@@ -103,8 +103,8 @@
 #include "precomp.h"
 
 /*
- * See https://technet.microsoft.com/en-us/library/cc978715.aspx
- * and https://technet.microsoft.com/en-us/library/cc940805.aspx
+ * See https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-2000-server/cc978715(v=technet.10)
+ * and https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-2000-server/cc940805(v=technet.10)
  * to know the differences between those two settings.
  * Values 0x00, 0x0D (carriage return) and >= 0x20 (space) disable completion.
  */

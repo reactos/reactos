@@ -86,7 +86,7 @@ static BOOL DoesMatch(const CStringW& strTarget, const CStringW& strText)
 }
 
 // mouse hook procedure to watch the mouse click
-// https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms644988(v=vs.85)
+// https://learn.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms644988(v=vs.85)
 static LRESULT CALLBACK MouseProc(INT nCode, WPARAM wParam, LPARAM lParam)
 {
     if (s_hMouseHook == NULL)
@@ -121,7 +121,7 @@ static LRESULT CALLBACK MouseProc(INT nCode, WPARAM wParam, LPARAM lParam)
 
 //////////////////////////////////////////////////////////////////////////////
 // sorting algorithm
-// http://www.ics.kagoshima-u.ac.jp/~fuchida/edu/algorithm/sort-algorithm/
+// https://web.archive.org/web/20210228194050/http://www.ics.kagoshima-u.ac.jp/~fuchida/edu/algorithm/sort-algorithm/
 
 typedef CSimpleArray<CStringW> list_t;
 
@@ -261,7 +261,7 @@ static inline BOOL IsWordBreak(WCHAR ch)
 }
 
 // This function is an application-defined callback function.
-// https://docs.microsoft.com/en-us/windows/win32/api/winuser/nc-winuser-editwordbreakprocw
+// https://learn.microsoft.com/en-us/windows/win32/api/winuser/nc-winuser-editwordbreakprocw
 static INT CALLBACK
 EditWordBreakProcW(LPWSTR lpch, INT index, INT count, INT code)
 {

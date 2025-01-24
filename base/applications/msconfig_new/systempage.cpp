@@ -717,7 +717,7 @@ CommonWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                         /*
                          * Ehh yes, we have to deal with a "dialog proc", which is quite different from a "window proc":
                          *
-                         * (excerpt from: MSDN library http://msdn.microsoft.com/en-us/library/ms645469(VS.85).aspx)
+                         * (excerpt from: MSDN library https://learn.microsoft.com/en-us/windows/win32/api/winuser/nc-winuser-dlgproc)
                          *
                          * Return Value
                          * ============

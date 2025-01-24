@@ -579,7 +579,7 @@ NtUserGetMouseMovePointsEx(
 
     UserEnterShared();
 
-    // http://msdn.microsoft.com/en-us/library/ms646259(v=vs.85).aspx
+    // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmousemovepointsex
     // This explains the math issues in transforming points.
     iRet = gcMouseHistoryOfMoves; // FIFO is forward so retrieve backward.
     //Hit = FALSE;

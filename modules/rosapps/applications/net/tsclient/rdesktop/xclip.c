@@ -29,7 +29,7 @@
     HTML: http://tronche.com/gui/x/icccm/
     PDF:  http://ftp.xfree86.org/pub/XFree86/4.5.0/doc/PDF/icccm.pdf
   - MSDN: Clipboard Formats
-    http://msdn.microsoft.com/library/en-us/winui/winui/windowsuserinterface/dataexchange/clipboard/clipboardformats.asp
+    https://web.archive.org/web/20080103082730/http://msdn2.microsoft.com/en-us/library/ms649013.aspx
 */
 
 #ifdef HAVE_ICONV

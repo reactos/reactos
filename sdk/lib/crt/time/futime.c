@@ -49,7 +49,7 @@ void release_ioinfo(ioinfo *info);
  * \brief Set a file's modification time.
  * \param [out] ptimeb Pointer to a structure of type struct _timeb that
  *        receives the current time.
- * \sa http://msdn.microsoft.com/en-us/library/95e68951.aspx
+ * \sa https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/futime-futime32-futime64?view=msvc-170
  */
 int
 _futime(int fd, struct _utimbuf *filetime)

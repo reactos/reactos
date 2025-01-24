@@ -208,7 +208,7 @@ void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, i
    len = strlen(_acmdln);
    buffer = malloc(sizeof(char) * len);
 
-   // Reference: https://msdn.microsoft.com/en-us/library/a1y7w461.aspx
+   // Reference: https://learn.microsoft.com/en-us/cpp/c-language/parsing-c-command-line-arguments?view=msvc-170
    while (TRUE)
    {
       // Arguments are delimited by white space, which is either a space or a tab.
@@ -355,7 +355,7 @@ void __wgetmainargs(int* argc, wchar_t*** wargv, wchar_t*** wenv,
    len = wcslen(_wcmdln);
    buffer = malloc(sizeof(wchar_t) * len);
 
-   // Reference: https://msdn.microsoft.com/en-us/library/a1y7w461.aspx
+   // Reference: https://learn.microsoft.com/en-us/cpp/c-language/parsing-c-command-line-arguments?view=msvc-170
    while (TRUE)
    {
       // Arguments are delimited by white space, which is either a space or a tab.

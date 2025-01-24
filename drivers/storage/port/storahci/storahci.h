@@ -34,7 +34,7 @@
 // section 3.1.2
 #define AHCI_Global_HBA_CAP_S64A            (1 << 31)
 
-// FIS Types : http://wiki.osdev.org/AHCI
+// FIS Types : https://wiki.osdev.org/AHCI
 #define FIS_TYPE_REG_H2D        0x27 // Register FIS - host to device
 #define FIS_TYPE_REG_D2H        0x34 // Register FIS - device to host
 #define FIS_TYPE_DMA_ACT        0x39 // DMA activate FIS - device to host

@@ -15,7 +15,7 @@
  * - the kernelDisk.c module of the Visopsys Operating System (see license below),
  * - Paragon Hard-Disk Manager,
  * - Haiku OS (Copyright 2003-2011, Haiku, Inc., under the terms of the MIT License)
- *   https://git.haiku-os.org/haiku/tree/src/add-ons/kernel/partitioning_systems/intel/PartitionMap.cpp#n52
+ *   https://git.haiku-os.org/haiku/tree/src/add-ons/kernel/partitioning_systems/intel/PartitionMap.cpp#n52 (DEAD_LINK)
  * - and the following websites:
  *   http://www.win.tue.nl/~aeb/partitions/partition_types-1.html
  *   https://en.wikipedia.org/wiki/Partition_type#List_of_partition_IDs

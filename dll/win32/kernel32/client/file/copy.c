@@ -102,7 +102,7 @@ CopyLoop (
                                      NULL,
                                      NULL);
                 /* With sync read, 0 length + status success mean EOF:
-                 * https://msdn.microsoft.com/en-us/library/windows/desktop/aa365467(v=vs.85).aspx
+                 * https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-readfile
                  */
                 if (NT_SUCCESS(errCode) && IoStatusBlock.Information == 0)
                 {

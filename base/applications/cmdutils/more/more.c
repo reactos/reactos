@@ -487,7 +487,7 @@ Restart:
  * See base/applications/cmdutils/clip/clip.c!IsDataUnicode()
  * and base/applications/notepad/text.c!ReadText() for more details.
  * Also some good code example can be found at:
- * https://github.com/AutoIt/text-encoding-detect
+ * https://github.com/AutoItConsulting/text-encoding-detect
  */
 typedef enum
 {

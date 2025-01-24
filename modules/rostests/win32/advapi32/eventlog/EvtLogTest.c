@@ -302,7 +302,7 @@ VOID TestEventsGeneration(VOID)
 
 /*
  * This code was adapted from the MSDN article "Reporting Events" at:
- * https://msdn.microsoft.com/en-us/library/windows/desktop/aa363680(v=vs.85).aspx
+ * https://learn.microsoft.com/en-us/windows/win32/eventlog/reporting-an-event
  */
 VOID TestMyEventProvider(VOID)
 {

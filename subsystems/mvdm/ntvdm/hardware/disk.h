@@ -11,10 +11,10 @@
 
 /* DEFINES ********************************************************************/
 
-// https://msdn.microsoft.com/en-us/library/windows/desktop/aa363972(v=vs.85).aspx
-// https://msdn.microsoft.com/en-us/library/windows/desktop/aa363976(v=vs.85).aspx
-// https://msdn.microsoft.com/en-us/library/windows/desktop/aa363969(v=vs.85).aspx
-// https://msdn.microsoft.com/en-us/library/windows/desktop/aa365231(v=vs.85).aspx
+// https://learn.microsoft.com/en-us/windows/win32/api/winioctl/ns-winioctl-disk_geometry
+// https://learn.microsoft.com/en-us/windows/win32/api/winioctl/ns-winioctl-disk_int13_info
+// https://learn.microsoft.com/en-us/windows/win32/api/winioctl/ns-winioctl-disk_ex_int13_info
+// https://learn.microsoft.com/en-us/windows/win32/api/winioctl/ne-winioctl-media_type
 
 typedef struct _DISK_INFO
 {

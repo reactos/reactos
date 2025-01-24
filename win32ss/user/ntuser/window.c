@@ -1831,7 +1831,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
       }
       else
       { /*
-         * Note from MSDN <http://msdn.microsoft.com/en-us/library/aa913269.aspx>:
+         * Note from MSDN <https://learn.microsoft.com/en-us/previous-versions/aa913269(v=msdn.10)>:
          *
          * Dialog boxes and message boxes do not inherit layout, so you must
          * set the layout explicitly.

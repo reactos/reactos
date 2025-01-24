@@ -52,13 +52,13 @@ class CMergedFolder :
     public IPersistFolder2,
     public IItemNameLimits,
     public IAugmentedShellFolder3     // -- undocumented
-    //public IShellService,              // DEPRECATED IE4 interface: https://msdn.microsoft.com/en-us/library/windows/desktop/bb774870%28v=vs.85%29.aspx
+    //public IShellService,              // DEPRECATED IE4 interface: https://learn.microsoft.com/en-us/windows/win32/api/shdeprecated/nn-shdeprecated-ishellservice
     //public ITranslateShellChangeNotify,// -- undocumented
     //public IStorage,
     //public IPersistPropertyBag,
     //public IShellIconOverlay,          // -- undocumented
     //public ICompositeFolder,           // -- undocumented
-    //public IItemNameLimits,            // https://msdn.microsoft.com/en-us/library/windows/desktop/bb761776%28v=vs.85%29.aspx
+    //public IItemNameLimits,            // https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nn-shobjidl_core-iitemnamelimits
 {
 private:
     CComPtr<IShellFolder> m_UserLocal;

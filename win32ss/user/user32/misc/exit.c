@@ -190,7 +190,7 @@ ExitWindowsEx(UINT uFlags,
      * FIXME:
      * 1- Calling the Exit worker must be done under certain conditions.
      *    We may also need to warn the user if there are other people logged
-     *    on this computer (see http://pve.proxmox.com/wiki/Windows_2003_guest_best_practices )
+     *    on this computer (see https://pve.proxmox.com/wiki/Windows_2003_guest_best_practices )
      * 2- Call SrvRecordShutdownReason.
      */
 

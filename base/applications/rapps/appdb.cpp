@@ -158,7 +158,7 @@ CAppDB::EnumInstalledRootKey(UINT Index, REGSAM &RegSam)
 {
     // Loop for through all combinations.
     // Note that HKEY_CURRENT_USER\Software does not have a redirect
-    // https://docs.microsoft.com/en-us/windows/win32/winprog64/shared-registry-keys#redirected-shared-and-reflected-keys-under-wow64
+    // https://learn.microsoft.com/en-us/windows/win32/winprog64/shared-registry-keys#redirected-shared-and-reflected-keys-under-wow64
     if (Index < (IsSystem64Bit() ? 3 : 2))
         return GetRootKeyInfo(Index, RegSam);
     else
