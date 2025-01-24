@@ -88,11 +88,13 @@ include(dll/dll.cmake)
 include(env/env.cmake)
 include(exec/exec.cmake)
 include(filesystem/filesystem.cmake)
+include(float/float.cmake)
 include(heap/heap.cmake)
 include(initializers/initializers.cmake)
 include(internal/internal.cmake)
 include(locale/locale.cmake)
 include(lowio/lowio.cmake)
+include(math/math.cmake)
 include(mbstring/mbstring.cmake)
 include(misc/misc.cmake)
 include(startup/startup.cmake)
@@ -100,6 +102,7 @@ include(stdio/stdio.cmake)
 include(stdlib/stdlib.cmake)
 include(string/string.cmake)
 include(time/time.cmake)
+include(vcruntime/vcruntime.cmake)
 
 add_library(ucrt OBJECT
     ${UCRT_CONIO_SOURCES}
@@ -108,11 +111,13 @@ add_library(ucrt OBJECT
     ${UCRT_ENV_SOURCES}
     ${UCRT_EXEC_SOURCES}
     ${UCRT_FILESYSTEM_SOURCES}
+    ${UCRT_FLOAT_SOURCES}
     ${UCRT_HEAP_SOURCES}
     ${UCRT_INITIALIZERS_SOURCES}
     ${UCRT_INTERNAL_SOURCES}
     ${UCRT_LOCALE_SOURCES}
     ${UCRT_LOWIO_SOURCES}
+    ${UCRT_MATH_SOURCES}
     ${UCRT_MBSTRING_SOURCES}
     ${UCRT_MISC_SOURCES}
     ${UCRT_STARTUP_SOURCES}
@@ -120,6 +125,7 @@ add_library(ucrt OBJECT
     ${UCRT_STDLIB_SOURCES}
     ${UCRT_STRING_SOURCES}
     ${UCRT_TIME_SOURCES}
+    ${UCRT_VCRUNTIME_SOURCES}
 )
 
 #target_link_libraries(ucrt pseh)

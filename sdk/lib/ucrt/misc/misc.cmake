@@ -25,7 +25,7 @@ list(APPEND UCRT_MISC_SOURCES
     misc/_strerr.cpp
 )
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(DBG)
     list(APPEND UCRT_MISC_SOURCES
         misc/dbgrpt.cpp
         misc/dbgrptt.cpp

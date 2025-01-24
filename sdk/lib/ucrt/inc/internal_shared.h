@@ -27,6 +27,7 @@ extern "C" {
 #define _CRTALLOC(x) __attribute__((section(x)))
 #endif
 
+#ifdef _MSC_VER
 #pragma section(".CRT$XIC", long, read)
 #pragma section(".CRT$XPX", long, read)
 #pragma section(".CRT$XPXA", long, read)
@@ -39,6 +40,7 @@ extern "C" {
 #pragma section(".CRT$XPZ", long, read)
 #pragma section(".CRT$XTA", long, read)
 #pragma section(".CRT$XTZ", long, read)
+#endif
 
 extern _PIFV __xi_a[];
 extern _PIFV __xi_z[];

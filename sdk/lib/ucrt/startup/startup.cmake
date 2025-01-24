@@ -1,5 +1,6 @@
 
 list(APPEND UCRT_STARTUP_SOURCES
+    startup/__scrt_uninitialize_crt.cpp
     startup/abort.cpp
     startup/argv_data.cpp
     startup/argv_parsing.cpp
