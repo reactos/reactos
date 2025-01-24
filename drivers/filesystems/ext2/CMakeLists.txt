@@ -113,5 +113,5 @@ set_module_type(ext2fs kernelmodedriver)
 add_importlibs(ext2fs ntoskrnl hal)
 add_pch(ext2fs inc/ext2fs.h SOURCE)
 
-add_cd_file(TARGET ext2fs DESTINATION reactos/system32/drivers FOR all)
+add_cd_file(TARGET ext2fs DESTINATION reactos/system32/drivers NO_CAB FOR all)
 add_registry_inf(ext2fs_reg.inf)
