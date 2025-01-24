@@ -19,7 +19,7 @@
 USHORT KeProcessorArchitecture;
 USHORT KeProcessorLevel;
 USHORT KeProcessorRevision;
-ULONG KeFeatureBits;
+ULONG64 KeFeatureBits;
 KAFFINITY KeActiveProcessors = 1;
 
 /* System call count */
