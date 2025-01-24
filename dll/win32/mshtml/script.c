@@ -16,9 +16,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "mshtml_private.h"
+#include "config.h"
 
-#include <activdbg.h>
+#include <stdarg.h>
+#include <assert.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "ole2.h"
+#include "activscp.h"
+#include "activdbg.h"
+#include "shlwapi.h"
+
+#include "wine/debug.h"
+
+#include "mshtml_private.h"
+#include "htmlscript.h"
+#include "pluginhost.h"
+#include "htmlevent.h"
+#include "binding.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 #ifdef _WIN64
 
@@ -89,6 +110,26 @@ static void set_script_prop(ScriptHost *script_host, DWORD property, VARIANT *va
         WARN("SetProperty(%x) failed: %08x\n", property, hres);
 }
 
+static BOOL is_quirks_mode(HTMLDocumentNode *doc)
+{
+    const WCHAR *compat_mode;
+    nsAString nsstr;
+    nsresult nsres;
+    BOOL ret = FALSE;
+
+    static const WCHAR BackCompatW[] = {'B','a','c','k','C','o','m','p','a','t',0};
+
+    nsAString_Init(&nsstr, NULL);
+    nsres = nsIDOMHTMLDocument_GetCompatMode(doc->nsdoc, &nsstr);
+    if(NS_SUCCEEDED(nsres)) {
+        nsAString_GetData(&nsstr, &compat_mode);
+        if(!strcmpW(compat_mode, BackCompatW))
+            ret = TRUE;
+    }
+    nsAString_Finish(&nsstr);
+    return ret;
+}
+
 static BOOL init_script_engine(ScriptHost *script_host)
 {
     IObjectSafety *safety;
@@ -127,7 +168,7 @@ static BOOL init_script_engine(ScriptHost *script_host)
         return FALSE;
 
     V_VT(&var) = VT_I4;
-    V_I4(&var) = 1;
+    V_I4(&var) = is_quirks_mode(script_host->window->doc) ? 1 : 2;
     set_script_prop(script_host, SCRIPTPROP_INVOKEVERSIONING, &var);
 
     V_VT(&var) = VT_BOOL;
@@ -839,10 +880,10 @@ static HRESULT ScriptBSC_read_data(BSCallback *bsc, IStream *stream)
 
     do {
         if(This->bsc.readed >= This->size) {
-            void *new_buf;
-            new_buf = heap_realloc(This->buf, This->size << 1);
-            if(!new_buf)
-                return E_OUTOFMEMORY;
+	  void *new_buf;
+	  new_buf = heap_realloc(This->buf, This->size << 1);
+	  if(!new_buf)
+	    return E_OUTOFMEMORY;
             This->size <<= 1;
             This->buf = new_buf;
         }
