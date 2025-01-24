@@ -434,6 +434,7 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ObjectTypeInitializer.GenericMapping = PspJobMapping;
     ObjectTypeInitializer.InvalidAttributes = 0;
     ObjectTypeInitializer.ValidAccessMask = JOB_OBJECT_ALL_ACCESS;
+    ObjectTypeInitializer.CloseProcedure = PspCloseJob;
     ObjectTypeInitializer.DeleteProcedure = PspDeleteJob;
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsJobType);
 
