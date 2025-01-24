@@ -2591,7 +2591,11 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, const WCHAR *lpsz_r
 		EDIT_CalcLineWidth_SL(es);
 		/* remove chars that don't fit */
 		if (honor_limit && !(es->style & ES_AUTOHSCROLL) && (es->text_width > fw)) {
+#ifdef __REACTOS__
+			while ((es->text_width > fw) && s + strl > 0) {
+#else
 			while ((es->text_width > fw) && s + strl >= s) {
+#endif
 				lstrcpyW(es->text + s + strl - 1, es->text + s + strl);
 				strl--;
 				es->text_length = -1;
