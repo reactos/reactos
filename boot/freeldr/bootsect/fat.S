@@ -48,10 +48,10 @@ DataAreaStartLow        =   4
 BiosCHSDriveSizeHigh    =   6
 BiosCHSDriveSizeLow     =   8
 BiosCHSDriveSize        =   8
-ReadSectorsOffset       =   10
-ReadClusterOffset       =   12
-PutCharsOffset          =   14
-BootSectorStackTop      =   HEX(7c00) - 16
+ReadSectorsOffset       =   12
+ReadClusterOffset       =   16
+PutCharsOffset          =   20
+BootSectorStackTop      =   HEX(7c00) - 22
 
 
 // org 7c00h
@@ -218,9 +218,14 @@ FoundFreeLoader:
 
     // Save the addresses of needed functions so
     // the helper code will know where to call them.
+    xor bx, bx
+    mov word ptr [bp-(ReadSectorsOffset-2)], bx                 // Save the segment of ReadSectors
+    mov word ptr [bp-(ReadClusterOffset-2)], bx                 // Save the segment of ReadCluster
+    mov word ptr [bp-(PutCharsOffset-2)], bx                    // Save the segment of PutChars
     mov word ptr [bp-ReadSectorsOffset], offset ReadSectors     // Save the address of ReadSectors
     mov word ptr [bp-ReadClusterOffset], offset ReadCluster     // Save the address of ReadCluster
     mov word ptr [bp-PutCharsOffset],    offset PutChars        // Save the address of PutChars
+    mov byte ptr [PatchedRet], HEX(CB)                          // Patch 'ret' with 'retf'
 
     // Now AX has start cluster of FreeLoader and we
     // have loaded the helper code in the first 512 bytes
@@ -228,7 +233,7 @@ FoundFreeLoader:
     // to the helper code. Skip the first three bytes
     // because they contain a jump instruction to skip
     // over the helper code in the FreeLoader image.
-    ljmp16 0, FREELDR_BASE + 3
+    ljmp16 FREELDR_BASE / 16, 3
 
 
 
@@ -246,16 +251,15 @@ Reboot:
     int HEX(16)                 // Wait for a keypress
     int HEX(19)                 // Reboot
 
-PutChars:
-    lodsb
-    or al,al
-    jz short Done
-    mov ah, HEX(0e)
+.PutCharsLoop:
+    mov ah, HEX(0E)
     mov bx, 7
     int HEX(10)
-    jmp short PutChars
-Done:
-    ret
+PutChars:
+    lodsb
+    or al, al
+    jnz .PutCharsLoop
+    jmp PatchedRet
 
 // Displays a bad boot message
 // And reboots
@@ -264,7 +268,6 @@ BadBoot:
     call PutChars               // Display it
 
     jmp short Reboot
-
 
 // Reads cluster number in AX into [ES:0000]
 ReadCluster:
@@ -354,7 +357,7 @@ ReadSectorsLBALoop:
 
     loop ReadSectorsLBALoop                 // Read next sector
 
-    ret
+    jmp PatchedRet
 
 
 // Reads logical sectors into [ES:BX]
@@ -403,11 +406,14 @@ NoCarryCHS:
                             // Increment read buffer for next sector
     loop ReadSectorsCHSLoop // Read next sector
 
+PatchedRet:
     ret
 
-
+// Sorry, need the space...
+// msgDiskError:
+//  .ascii "Disk error", CR, LF, NUL
 msgDiskError:
-    .ascii "Disk error", CR, LF, NUL
+    .ascii "ERR", CR, LF, NUL
 msgFreeLdr:
     .ascii "Ldr not found", CR, LF, NUL
 // Sorry, need the space...
