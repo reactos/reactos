@@ -38,7 +38,7 @@
 
 /*
  * This doesn't belong here, but for some functions it is possible to return that value,
- * see https://learn.microsoft.com/en-us/windows/win32/direct3d10/d3d10-graphics-reference-returnvalues
+ * see http://msdn.microsoft.com/en-us/library/bb205278%28v=VS.85%29.aspx
  * The original definition is in D3DX10core.h.
  */
 #define D3DERR_INVALIDCALL 0x8876086c
