@@ -1250,7 +1250,8 @@ VOID COpenWithMenu::AddApp(PVOID pApp)
         m_idCmdLast++;
 }
 
-static const CMVERBMAP g_VerbMap[] = {
+static const CMVERBMAP g_VerbMap[] =
+{
     { "openas", 0 },
     { NULL }
 };
