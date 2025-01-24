@@ -127,9 +127,9 @@ SetFriendlyUrl(HWND hWnd, LPCWSTR pszUrl)
     if (InternetCanonicalizeUrlW(pszUrl, buf.GetBuffer(cch), &cch, ICU_DECODE | ICU_NO_ENCODE))
     {
         buf.ReleaseBuffer();
-        pszUrl = buf.GetString();
+        pszUrl = buf;
     }
-    SetWindowText(hWnd, pszUrl);
+    SetWindowTextW(hWnd, pszUrl);
 }
 
 struct DownloadInfo
@@ -334,7 +334,7 @@ class CDowloadingAppsListView : public CListView
         const INT base = GetItemCount();
         for (INT i = Start; i < arrInfo.GetSize(); ++i)
         {
-            AddRow(base + i - Start, arrInfo[i].szName.GetString(), DLSTATUS_WAITING);
+            AddRow(base + i - Start, arrInfo[i].szName, DLSTATUS_WAITING);
         }
     }
 
@@ -461,10 +461,10 @@ class CDownloadManager :
 {
 public:
     enum {
-        WM_ISCANCELLED = WM_APP,
-        WM_SETSTATUS,
-        WM_GETINSTANCE,
-        WM_GETNEXT,
+        WM_ISCANCELLED = WM_APP, // Return BOOL
+        WM_SETSTATUS, // wParam DownloadStatus
+        WM_GETINSTANCE, // Return CDownloadManager*
+        WM_GETNEXT, // Return DownloadInfo* or NULL
     };
 
     CDownloadManager() : m_hDlg(NULL), m_Threads(0), m_Index(0), m_bCancelled(FALSE) {}
@@ -543,7 +543,7 @@ CDownloadManager::StartWorkerThread()
 {
     AddRef(); // To keep m_List alive in thread
     unsigned int ThreadId;
-    HANDLE Thread = (HANDLE)_beginthreadex(NULL, 0, ThreadFunc, (void*)this, 0, &ThreadId);
+    HANDLE Thread = (HANDLE)_beginthreadex(NULL, 0, ThreadFunc, this, 0, &ThreadId);
     if (Thread)
         CloseHandle(Thread);
     else
@@ -617,7 +617,7 @@ CDownloadManager::RealDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
             CStringW buf;
             buf = m_szCaptionFmt;
             buf.Replace(L"%ls", L"");
-            SetWindowText(hDlg, buf.GetString()); // "Downloading..."
+            SetWindowTextW(hDlg, buf); // "Downloading..."
 
             HWND hItem = GetDlgItem(hDlg, IDC_DOWNLOAD_PROGRESS);
             if (hItem)
@@ -860,7 +860,7 @@ CDownloadManager::PerformDownloadAndInstall(const DownloadInfo &Info)
 
     if (urlComponents.nScheme == INTERNET_SCHEME_HTTP || urlComponents.nScheme == INTERNET_SCHEME_HTTPS)
     {
-        hFile = InternetOpenUrlW(hOpen, Info.szUrl.GetString(), NULL, 0, dwUrlConnectFlags, 0);
+        hFile = InternetOpenUrlW(hOpen, Info.szUrl, NULL, 0, dwUrlConnectFlags, 0);
         if (!hFile)
         {
             if (!ShowLastError(hMainWnd, TRUE, GetLastError()))
@@ -966,7 +966,7 @@ CDownloadManager::PerformDownloadAndInstall(const DownloadInfo &Info)
 
         if (bAskQuestion)
         {
-            if (MessageBoxA(hDlg, szMsgText.GetString(), NULL, MB_YESNO | MB_ICONERROR) != IDYES)
+            if (MessageBoxA(hDlg, szMsgText, NULL, MB_YESNO | MB_ICONERROR) != IDYES)
             {
                 goto end;
             }
@@ -1036,11 +1036,11 @@ CDownloadManager::PerformDownloadAndInstall(const DownloadInfo &Info)
             goto end;
         }
 
-        SetWindowTextW(hDlg, szMsgText.GetString());
+        SetWindowTextW(hDlg, szMsgText);
         SetWindowTextW(hStatus, Path);
 
         // this may take a while, depending on the file size
-        if (!VerifyInteg(Info.szSHA1.GetString(), Path))
+        if (!VerifyInteg(Info.szSHA1, Path))
         {
             if (!szMsgText.LoadStringW(IDS_INTEG_CHECK_FAIL))
             {
@@ -1048,7 +1048,7 @@ CDownloadManager::PerformDownloadAndInstall(const DownloadInfo &Info)
                 goto end;
             }
 
-            MessageBoxW(hDlg, szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
+            MessageBoxW(hDlg, szMsgText, NULL, MB_OK | MB_ICONERROR);
             goto end;
         }
     }
@@ -1087,7 +1087,7 @@ run:
             // reflect installation progress in the titlebar
             // TODO: make a separate string with a placeholder to include app name?
             CStringW szMsgText = LoadStatusString(DLSTATUS_INSTALLING);
-            SetWindowTextW(hDlg, szMsgText.GetString());
+            SetWindowTextW(hDlg, szMsgText);
 
             SendMessageW(hDlg, WM_SETSTATUS, DLSTATUS_INSTALLING, 0);
 
