@@ -69,7 +69,7 @@ UXTHEME_FormatLocalMsg(
             continue;
 
         ++pch;
-        if (*pch == L'1' || *pch == L'2'))
+        if (*pch == L'1' || *pch == L'2')
             *pch = L's';
     }
 
