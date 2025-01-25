@@ -10,35 +10,20 @@
 
 typedef BOOL (WINAPI *FN_SHIsBadInterfacePtr)(LPCVOID, UINT_PTR);
 
-// FIXME: Kill me
-struct CUnknownVtbl
-{
-    HRESULT (STDMETHODCALLTYPE *QueryInterface)(REFIID riid, LPVOID *ppvObj);
-    ULONG (STDMETHODCALLTYPE *AddRef)();
-    ULONG (STDMETHODCALLTYPE *Release)();
-};
-
-// FIXME: Kill me
-struct CUnknown
-{
-    CUnknownVtbl *lpVtbl;
-};
-
-static HRESULT STDMETHODCALLTYPE dummy_QueryInterface(REFIID riid, LPVOID *ppvObj)
-{
-    return S_OK;
-}
-static ULONG STDMETHODCALLTYPE dummy_AddRef()
-{
-    return S_OK;
-}
-static ULONG STDMETHODCALLTYPE dummy_Release()
-{
-    return S_OK;
-}
+static HRESULT STDMETHODCALLTYPE dummy_QueryInterface(REFIID riid, LPVOID *ppvObj) { return S_OK; }
+static ULONG STDMETHODCALLTYPE dummy_AddRef() { return S_OK; }
+static ULONG STDMETHODCALLTYPE dummy_Release() { return S_OK; }
 
 START_TEST(SHIsBadInterfacePtr)
 {
+    struct CUnknownVtbl
+    {
+        HRESULT (STDMETHODCALLTYPE *QueryInterface)(REFIID riid, LPVOID *ppvObj);
+        ULONG (STDMETHODCALLTYPE *AddRef)();
+        ULONG (STDMETHODCALLTYPE *Release)();
+    };
+    struct CUnknown { CUnknownVtbl *lpVtbl; };
+
     BOOL ret;
     FN_SHIsBadInterfacePtr SHIsBadInterfacePtr =
         (FN_SHIsBadInterfacePtr)GetProcAddress(GetModuleHandleW(L"shell32"), MAKEINTRESOURCEA(84));
