@@ -1809,6 +1809,35 @@ SHELL_CreateShell32DefaultExtractIcon(int IconIndex, REFIID riid, LPVOID *ppvOut
     return initIcon->QueryInterface(riid, ppvOut);
 }
 
+// FIXME: Kill me
+struct CUnknownVtbl
+{
+    HRESULT (STDMETHODCALLTYPE *QueryInterface)(REFIID riid, LPVOID *ppvObj);
+    ULONG (STDMETHODCALLTYPE *AddRef)();
+    ULONG (STDMETHODCALLTYPE *Release)();
+};
+
+// FIXME: Kill me
+struct CUnknown
+{
+    CUnknownVtbl *lpVtbl;
+};
+
+/*************************************************************************
+ *  SHIsBadInterfacePtr [SHELL32.84]
+ */
+EXTERN_C
+BOOL WINAPI
+SHIsBadInterfacePtr(
+    _In_ LPCVOID pv,
+    _In_ UINT_PTR ucb)
+{
+    const CUnknown *punk = reinterpret_cast<const CUnknown *>(pv);
+    return !punk || IsBadReadPtr(punk, sizeof(punk->lpVtbl)) ||
+           IsBadReadPtr(punk->lpVtbl, ucb) ||
+           IsBadCodePtr((FARPROC)punk->lpVtbl->Release);
+}
+
 /*************************************************************************
  *  SHGetUserDisplayName [SHELL32.241]
  *
