@@ -137,6 +137,7 @@ UXTHEME_GetThemeParseErrorInfo(_Inout_ PPARSE_ERROR_INFO pInfo)
     return hr;
 }
 
+// Parser should use this function on failure
 HRESULT
 UXTHEME_MakeParseError(
     _In_ UINT nID,
