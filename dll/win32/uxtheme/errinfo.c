@@ -20,7 +20,7 @@ UXTHEME_GetParseErrorInfo(_In_ BOOL bCreate)
 {
     PTMERRINFO pErrInfo;
 
-    if (gdwErrorInfoTlsIndex == -1)
+    if (gdwErrorInfoTlsIndex == TLS_OUT_OF_INDEXES)
         return NULL;
 
     pErrInfo = TlsGetValue(gdwErrorInfoTlsIndex);

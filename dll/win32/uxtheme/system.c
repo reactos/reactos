@@ -24,7 +24,7 @@
 #include <winreg.h>
 #include <uxundoc.h>
 
-DWORD gdwErrorInfoTlsIndex = -1;
+DWORD gdwErrorInfoTlsIndex = TLS_OUT_OF_INDEXES;
 
 /***********************************************************************
  * Defines and global variables
@@ -602,7 +602,7 @@ void UXTHEME_UnInitSystem(HINSTANCE hInst)
     UXTHEME_DeleteParseErrorInfo();
 
     TlsFree(gdwErrorInfoTlsIndex);
-    gdwErrorInfoTlsIndex = -1;
+    gdwErrorInfoTlsIndex = TLS_OUT_OF_INDEXES;
 }
 
 /***********************************************************************
