@@ -1809,20 +1809,6 @@ SHELL_CreateShell32DefaultExtractIcon(int IconIndex, REFIID riid, LPVOID *ppvOut
     return initIcon->QueryInterface(riid, ppvOut);
 }
 
-// FIXME: Kill me
-struct CUnknownVtbl
-{
-    HRESULT (STDMETHODCALLTYPE *QueryInterface)(REFIID riid, LPVOID *ppvObj);
-    ULONG (STDMETHODCALLTYPE *AddRef)();
-    ULONG (STDMETHODCALLTYPE *Release)();
-};
-
-// FIXME: Kill me
-struct CUnknown
-{
-    CUnknownVtbl *lpVtbl;
-};
-
 /*************************************************************************
  *  SHIsBadInterfacePtr [SHELL32.84]
  */
@@ -1832,6 +1818,13 @@ SHIsBadInterfacePtr(
     _In_ LPCVOID pv,
     _In_ UINT_PTR ucb)
 {
+    struct CUnknownVtbl
+    {
+        HRESULT (STDMETHODCALLTYPE *QueryInterface)(REFIID riid, LPVOID *ppvObj);
+        ULONG (STDMETHODCALLTYPE *AddRef)();
+        ULONG (STDMETHODCALLTYPE *Release)();
+    };
+    struct CUnknown { CUnknownVtbl *lpVtbl; };
     const CUnknown *punk = reinterpret_cast<const CUnknown *>(pv);
     return !punk || IsBadReadPtr(punk, sizeof(punk->lpVtbl)) ||
            IsBadReadPtr(punk->lpVtbl, ucb) ||
