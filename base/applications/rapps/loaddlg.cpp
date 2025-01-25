@@ -750,7 +750,7 @@ CDownloadManager::PerformDownloadAndInstall(const DownloadInfo &Info)
             str.LoadStringW(IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP);
             break;
     }
-    SetWindowTextW(hDlg, str.GetString());
+    SetWindowTextW(hDlg, str);
 
     // is this URL an update package for RAPPS? if so store it in a different place
     if (Info.DLType != DLTYPE_APPLICATION)
