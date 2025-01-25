@@ -157,7 +157,10 @@ if(NOT CMAKE_CROSSCOMPILING)
 
     set(NATIVE_TARGETS asmpp bin2c widl gendib cabman fatten hpp isohybrid mkhive mkisofs obj2bin spec2def geninc mkshelllink utf16le xml2sdb)
     if(NOT MSVC)
-        list(APPEND NATIVE_TARGETS rsym pefixup)
+        list(APPEND NATIVE_TARGETS pefixup)
+        if (ARCH STREQUAL "i386")
+            list(APPEND NATIVE_TARGETS rsym)
+        endif()
     endif()
 
     install(TARGETS ${NATIVE_TARGETS})
