@@ -18,22 +18,22 @@ UXTHEME_MakeErrorLast(VOID)
 PTMERRINFO
 UXTHEME_GetParseErrorInfo(_In_ BOOL bCreate)
 {
-    PTMERRINFO ptr;
+    PTMERRINFO pErrInfo;
 
     if (gdwErrorInfoTlsIndex == -1)
         return NULL;
 
-    ptr = TlsGetValue(gdwErrorInfoTlsIndex);
-    if (ptr)
-        return ptr;
+    pErrInfo = TlsGetValue(gdwErrorInfoTlsIndex);
+    if (pErrInfo)
+        return pErrInfo;
 
     if (bCreate)
     {
-        ptr = LocalAlloc(LPTR, sizeof(TMERRINFO));
-        TlsSetValue(gdwErrorInfoTlsIndex, ptr);
+        pErrInfo = LocalAlloc(LPTR, sizeof(TMERRINFO));
+        TlsSetValue(gdwErrorInfoTlsIndex, pErrInfo);
     }
 
-    return ptr;
+    return pErrInfo;
 }
 
 VOID
@@ -62,10 +62,15 @@ UXTHEME_FormatLocalMsg(
     if (!LoadStringW(hInstance, uID, szFormat, _countof(szFormat)))
         return FALSE;
 
+    // Convert "%1" and "%2" to "%s"
     for (pch = szFormat; *pch; ++pch)
     {
-        if (*pch == L'%' && (*++pch == L'1' || *pch == L'2'))
-            *pch = 's';
+        if (*pch != L'%')
+            continue;
+
+        ++pch;
+        if (*pch == L'1' || *pch == L'2'))
+            *pch = L's';
     }
 
     if (!szFormat[0])
@@ -92,7 +97,6 @@ UXTHEME_FormatParseMessage(
         return S_OK;
 
     _wsplitpath(szFullPath, szDrive, szDir, szFileName, szExt);
-
     if (lstrcmpiW(szFileName, L"packthem") == 0)
         return S_OK;
 
