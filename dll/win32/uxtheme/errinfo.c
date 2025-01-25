@@ -56,22 +56,22 @@ UXTHEME_FormatLocalMsg(
     _In_ LPCWSTR pszDrive,
     _In_ PTMERRINFO pErrInfo)
 {
-    WCHAR szText[MAX_PATH];
+    WCHAR szFormat[MAX_PATH];
     LPWSTR pch;
 
-    if (!LoadStringW(hInstance, uID, szText, _countof(szText)))
+    if (!LoadStringW(hInstance, uID, szFormat, _countof(szFormat)))
         return FALSE;
 
-    for (pch = szText; *pch; ++pch)
+    for (pch = szFormat; *pch; ++pch)
     {
         if (*pch == L'%' && (*++pch == L'1' || *pch == L'2'))
             *pch = 's';
     }
 
-    if (!szText[0])
+    if (!szFormat[0])
         return FALSE;
 
-    StringCchPrintfW(pszDest, cchDest, szText, pErrInfo->szPath0, pErrInfo->szPath1);
+    StringCchPrintfW(pszDest, cchDest, szFormat, pErrInfo->szPath0, pErrInfo->szPath1);
     return TRUE;
 }
 
