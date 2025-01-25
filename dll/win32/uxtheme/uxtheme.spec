@@ -45,7 +45,7 @@
 45 stdcall -noname ClassicSystemParametersInfoW(long long ptr long)
 46 stdcall -noname ClassicAdjustWindowRectEx(ptr long long long)
 47 stdcall DrawThemeBackgroundEx(ptr ptr long long ptr ptr)
-48 stub -noname GetThemeParseErrorInfo
+48 stdcall -noname GetThemeParseErrorInfo(ptr)
 49 stdcall GetThemeAppProperties()
 50 stdcall GetThemeBackgroundContentRect(ptr ptr long long ptr ptr)
 51 stdcall GetThemeBackgroundExtent(ptr ptr long long ptr ptr)

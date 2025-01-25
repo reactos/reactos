@@ -276,6 +276,7 @@ extern ATOM atWndContext;
 extern BOOL g_bThemeHooksActive;
 
 void UXTHEME_InitSystem(HINSTANCE hInst);
+void UXTHEME_UnInitSystem(HINSTANCE hInst);
 void UXTHEME_LoadTheme(BOOL bLoad);
 BOOL CALLBACK UXTHEME_broadcast_theme_changed (HWND hWnd, LPARAM enable);
 
@@ -285,5 +286,27 @@ BOOL CALLBACK UXTHEME_broadcast_theme_changed (HWND hWnd, LPARAM enable);
 #define ALPHABLEND_BINARY           1
 /* Full alpha blending */
 #define ALPHABLEND_FULL             2
+
+extern DWORD gdwErrorInfoTlsIndex;
+
+static inline HRESULT
+UXTHEME_MakeError32(_In_ LONG error)
+{
+    if (error < 0)
+        return (HRESULT)error;
+    return HRESULT_FROM_WIN32(error);
+}
+
+HRESULT UXTHEME_MakeErrorLast(VOID);
+VOID UXTHEME_DeleteParseErrorInfo(VOID);
+
+HRESULT
+UXTHEME_MakeParseError(
+    _In_ UINT nID,
+    _In_ LPCWSTR pszPath0,
+    _In_ LPCWSTR pszPath1,
+    _In_ LPCWSTR pszPath2,
+    _In_ LPCWSTR pszPath3,
+    _In_ DWORD dwError);
 
 #endif /* _UXTHEME_PCH_ */

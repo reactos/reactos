@@ -1,6 +1,28 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef HANDLE HTHEMEFILE;
+
+typedef struct tagTMERRINFO
+{
+    UINT nID;
+    WCHAR szPath0[MAX_PATH];
+    WCHAR szPath1[MAX_PATH];
+    WCHAR szPath2[MAX_PATH];
+    WCHAR szPath3[MAX_PATH];
+    DWORD dwError;
+} TMERRINFO, *PTMERRINFO;
+
+typedef struct tagPARSE_ERROR_INFO
+{
+    DWORD cbSize;
+    TMERRINFO ErrInfo;
+} PARSE_ERROR_INFO, *PPARSE_ERROR_INFO;
+
+HRESULT WINAPI GetThemeParseErrorInfo(_Inout_ PPARSE_ERROR_INFO pInfo);
 
 /**********************************************************************
  *              ENUMTHEMEPROC
@@ -118,3 +140,6 @@ BOOL WINAPI ThemeHooksInstall(VOID);
 
 BOOL WINAPI ThemeHooksRemove(VOID);
 
+#ifdef __cplusplus
+} // extern "C"
+#endif
