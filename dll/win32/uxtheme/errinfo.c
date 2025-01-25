@@ -98,11 +98,11 @@ UXTHEME_FormatParseMessage(
 
     _wsplitpath(szFullPath, szDrive, szDir, szFileName, szExt);
     if (lstrcmpiW(szFileName, L"packthem") == 0)
-        return S_OK;
-
-    hMod = GetModuleHandleW(NULL);
-    if (UXTHEME_FormatLocalMsg(hMod, nID, pszDest, cchDest, szDrive, pErrInfo))
-        return S_OK;
+    {
+        hMod = GetModuleHandleW(NULL);
+        if (UXTHEME_FormatLocalMsg(hMod, nID, pszDest, cchDest, szDrive, pErrInfo))
+            return S_OK;
+    }
 
     hUxTheme = LoadLibraryW(L"uxtheme.dll");
     if (!hUxTheme)
