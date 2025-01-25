@@ -23,6 +23,7 @@ START_TEST(GetThemeParseErrorInfo)
     hr = GetThemeParseErrorInfo(&Info);
     ok_hex(hr, E_INVALIDARG);
 
+    ZeroMemory(&Info, sizeof(Info));
     Info.cbSize = sizeof(Info);
     hr = GetThemeParseErrorInfo(&Info);
     ok_hex(hr, HRESULT_FROM_WIN32(ERROR_RESOURCE_NAME_NOT_FOUND));
