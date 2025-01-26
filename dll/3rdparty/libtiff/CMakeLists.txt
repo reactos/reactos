@@ -9,6 +9,8 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libtiff
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
 
+spec2def(libtiff.dll libtiff.spec ADD_IMPORTLIB)
+
 list(APPEND SOURCE
     #mkg3states.c
     tif_aux.c
@@ -54,7 +56,7 @@ list(APPEND SOURCE
     #tif_zstd.c
     precomp.h)
 
-add_library(libtiff MODULE ${SOURCE} libtiff.def)
+add_library(libtiff MODULE ${SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/libtiff.def)
 
 set_module_type(libtiff win32dll)
 target_link_libraries(libtiff zlib getopt)
