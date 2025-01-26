@@ -124,7 +124,7 @@ UXTHEME_GetThemeParseErrorInfo(_Inout_ PPARSE_ERROR_INFO pInfo)
 
     pErrInfo = UXTHEME_GetParseErrorInfo(TRUE);
     if (!pErrInfo)
-        return UXTHEME_MakeError32(E_OUTOFMEMORY);
+        return E_OUTOFMEMORY;
 
     hr = UXTHEME_FormatParseMessage(pErrInfo, pInfo->ErrInfo.szPath0,
                                     _countof(pInfo->ErrInfo.szPath0) +
