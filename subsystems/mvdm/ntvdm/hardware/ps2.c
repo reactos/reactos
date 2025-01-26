@@ -7,7 +7,7 @@
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  *
  * DOCUMENTATION:   IBM Personal System/2 Hardware Interface Technical Reference, May 1988 (Section 10)
- *                  http://wiki.osdev.org/%228042%22_PS/2_Controller
+ *                  https://wiki.osdev.org/%228042%22_PS/2_Controller
  *                  http://www.computer-engineering.org/ps2keyboard/ (DEAD_LINK)
  */
 
