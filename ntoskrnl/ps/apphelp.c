@@ -15,7 +15,7 @@ https://learn.microsoft.com/en-us/windows/win32/devnotes/application-compatibili
 https://www.alex-ionescu.com/secrets-of-the-application-compatilibity-database-sdb-part-4/
 https://web.archive.org/web/20170101173150/http://recxltd.blogspot.nl/2012/04/windows-appcompat-research-notes-part-1.html
 http://journeyintoir.blogspot.com/2013/12/revealing-recentfilecachebcf-file.html
-https://dl.mandiant.com/EE/library/Whitepaper_ShimCacheParser.pdf (DEAD_LINK)
+https://web.archive.org/web/20150926070918/https://dl.mandiant.com/EE/library/Whitepaper_ShimCacheParser.pdf
 */
 
 /* INCLUDES ******************************************************************/
