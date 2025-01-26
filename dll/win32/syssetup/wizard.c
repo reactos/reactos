@@ -27,34 +27,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define PM_REGISTRATION_NOTIFY (WM_APP + 1)
-/* Private Message used to communicate progress from the background
-   registration thread to the main thread.
-   wParam = 0 Registration in progress
-          = 1 Registration completed
-   lParam = Pointer to a REGISTRATIONNOTIFY structure */
-
-#define PM_ITEM_START (WM_APP + 2)
-#define PM_ITEM_END   (WM_APP + 3)
-#define PM_STEP_START (WM_APP + 4)
-#define PM_STEP_END   (WM_APP + 5)
-#define PM_ITEMS_DONE (WM_APP + 6)
-
-typedef struct _REGISTRATIONNOTIFY
-{
-    ULONG Progress;
-    UINT ActivityID;
-    LPCWSTR CurrentItem;
-    LPCWSTR ErrorMessage;
-    UINT MessageID;
-    DWORD LastError;
-} REGISTRATIONNOTIFY, *PREGISTRATIONNOTIFY;
-
-typedef struct _ITEMSDATA
-{
-    HWND hwndDlg;
-} ITEMSDATA, *PITEMSDATA;
-
 typedef struct _REGISTRATIONDATA
 {
     HWND hwndDlg;
@@ -2043,7 +2015,7 @@ RegistrationNotificationProc(PVOID Context,
         {
             DPRINT("Received SPFILENOTIFY_STARTREGISTRATION notification for %S\n",
                    StatusInfo->FileName);
-            RegistrationNotify.ErrorMessage = NULL;
+//            RegistrationNotify.ErrorMessage = NULL;
             RegistrationNotify.Progress = RegistrationData->Registered;
             SendMessage(RegistrationData->hwndDlg, PM_STEP_START, 0, (LPARAM)&RegistrationNotify);
         }
@@ -2193,9 +2165,13 @@ ItemCompletionThread(
     pItemsData = (PITEMSDATA)Parameter;
     hwndDlg = pItemsData->hwndDlg;
 
+    /* Step 0 - Registering components */
     RegisterDlls(pItemsData);
 
     RegisterTypeLibraries(hSysSetupInf, L"TypeLibraries");
+
+    /* Step 1 - Installing start menu items */
+    InstallStartMenuItems(pItemsData);
 
     /* FIXME: Add completion steps here! */
 
@@ -2345,7 +2321,6 @@ ProcessPageDlgProc(HWND hwndDlg,
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_TASKTEXT2), SW_HIDE);
             ShowWindow(GetDlgItem(hwndDlg, IDC_TASKTEXT3), SW_HIDE);
             ShowWindow(GetDlgItem(hwndDlg, IDC_TASKTEXT4), SW_HIDE);
             break;
@@ -2354,12 +2329,15 @@ ProcessPageDlgProc(HWND hwndDlg,
             switch (((LPNMHDR)lParam)->code)
             {
                 case PSN_SETACTIVE:
+                    LogItem(L"BEGIN", L"ProcessPage");
+
                     /* Disable the Back and Next buttons */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
                     RunItemCompletionThread(hwndDlg);
                     break;
 
                 case PSN_WIZNEXT:
+                    LogItem(L"END", L"ProcessPage");
                     break;
 
                 case PSN_WIZBACK:

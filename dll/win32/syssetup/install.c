@@ -180,7 +180,13 @@ CreateShortcut(
 }
 
 
-static BOOL CreateShortcutsFromSection(HINF hinf, LPWSTR pszSection, LPCWSTR pszFolder)
+static BOOL
+CreateShortcutsFromSection(
+    _In_ PITEMSDATA pItemsData,
+    _In_ PREGISTRATIONNOTIFY pNotify,
+    _In_ HINF hinf,
+    _In_ LPWSTR pszSection,
+    _In_ LPCWSTR pszFolder)
 {
     INFCONTEXT Context;
     DWORD dwFieldCount;
@@ -196,6 +202,10 @@ static BOOL CreateShortcutsFromSection(HINF hinf, LPWSTR pszSection, LPCWSTR psz
 
     do
     {
+        pNotify->Progress++;
+
+        SendMessage(pItemsData->hwndDlg, PM_STEP_START, 0, (LPARAM)pNotify);
+
         dwFieldCount = SetupGetFieldCount(&Context);
         if (dwFieldCount < 3)
             continue;
@@ -222,12 +232,19 @@ static BOOL CreateShortcutsFromSection(HINF hinf, LPWSTR pszSection, LPCWSTR psz
 
         CreateShortcut(pszFolder, szName, szCommand, szDescription, iIconNr, szDirectory, szArgs);
 
+        SendMessage(pItemsData->hwndDlg, PM_STEP_END, 0, (LPARAM)pNotify);
+
     } while (SetupFindNextLine(&Context, &Context));
 
     return TRUE;
 }
 
-static BOOL CreateShortcuts(HINF hinf, LPCWSTR szSection)
+static BOOL
+CreateShortcuts(
+    _In_ PITEMSDATA pItemsData,
+    _In_ PREGISTRATIONNOTIFY pNotify,
+    _In_ HINF hinf,
+    _In_ LPCWSTR szSection)
 {
     INFCONTEXT Context;
     WCHAR szPath[MAX_PATH];
@@ -257,13 +274,99 @@ static BOOL CreateShortcuts(HINF hinf, LPCWSTR szSection)
         if (FAILED(SHGetFolderPathAndSubDirW(NULL, csidl|CSIDL_FLAG_CREATE, (HANDLE)-1, SHGFP_TYPE_DEFAULT, szFolder, szPath)))
             continue;
 
-        CreateShortcutsFromSection(hinf, szFolderSection, szPath);
+        CreateShortcutsFromSection(pItemsData, pNotify, hinf, szFolderSection, szPath);
 
     } while (SetupFindNextLine(&Context, &Context));
 
     CoUninitialize();
 
     return TRUE;
+}
+
+static LONG
+CountShortcuts(
+    _In_ HINF hinf,
+    _In_ LPCWSTR szSection)
+{
+    INFCONTEXT Context;
+    WCHAR szFolderSection[MAX_PATH];
+    LONG Steps = 0;
+
+    if (!SetupFindFirstLine(hinf, szSection, NULL, &Context))
+        return FALSE;
+
+    do
+    {
+        if (SetupGetFieldCount(&Context) < 2)
+            continue;
+
+        if (!SetupGetStringFieldW(&Context, 0, szFolderSection, ARRAYSIZE(szFolderSection), NULL))
+            continue;
+
+        Steps += SetupGetLineCountW(hinf, szFolderSection);
+    } while (SetupFindNextLine(&Context, &Context));
+
+    return Steps;
+}
+
+VOID
+InstallStartMenuItems(
+    _In_ PITEMSDATA pItemsData)
+{
+    HINF hShortcutsInf1 = INVALID_HANDLE_VALUE;
+    HINF hShortcutsInf2 = INVALID_HANDLE_VALUE;
+    LONG Steps = 0;
+    DWORD LastError = 0;
+    REGISTRATIONNOTIFY Notify;
+
+    ZeroMemory(&Notify, sizeof(Notify));
+
+    hShortcutsInf1 = SetupOpenInfFileW(L"shortcuts.inf",
+                                      NULL,
+                                      INF_STYLE_WIN4,
+                                      NULL);
+    if (hShortcutsInf1 == INVALID_HANDLE_VALUE)
+    {
+        DPRINT1("Failed to open shortcuts.inf");
+        return;
+    }
+
+    hShortcutsInf2 = SetupOpenInfFileW(L"rosapps_shortcuts.inf",
+                                       NULL,
+                                       INF_STYLE_WIN4,
+                                       NULL);
+
+//    Steps = SetupGetLineCountW(hShortcutsInf1, L"ShortcutFolders");
+    Steps = CountShortcuts(hShortcutsInf1, L"ShortcutFolders");
+    if (hShortcutsInf2 != INVALID_HANDLE_VALUE)
+        Steps += CountShortcuts(hShortcutsInf2, L"ShortcutFolders");
+//        Steps += SetupGetLineCountW(hShortcutsInf2, L"ShortcutFolders");
+
+    SendMessage(pItemsData->hwndDlg, PM_ITEM_START, 1, (LPARAM)Steps);
+
+    if (!CreateShortcuts(pItemsData, &Notify, hShortcutsInf1, L"ShortcutFolders"))
+    {
+        DPRINT1("CreateShortcuts() failed");
+        goto done;
+    }
+
+    if (hShortcutsInf2 != INVALID_HANDLE_VALUE)
+    {
+        if (!CreateShortcuts(pItemsData, &Notify, hShortcutsInf2, L"ShortcutFolders"))
+        {
+            DPRINT1("CreateShortcuts(rosapps) failed");
+            goto done;
+        }
+    }
+
+done:
+    if (hShortcutsInf2 != INVALID_HANDLE_VALUE)
+        SetupCloseInfFile(hShortcutsInf2);
+
+    if (hShortcutsInf1 != INVALID_HANDLE_VALUE)
+        SetupCloseInfFile(hShortcutsInf1);
+
+    SendMessage(pItemsData->hwndDlg, PM_ITEM_END, 1, LastError);
 }
 
 static VOID
@@ -1393,7 +1496,6 @@ InstallReactOS(VOID)
     HANDLE token;
     TOKEN_PRIVILEGES privs;
     HKEY hKey;
-    HINF hShortcutsInf;
     HANDLE hHotkeyThread;
     BOOL ret;
 
@@ -1483,38 +1585,6 @@ InstallReactOS(VOID)
     InstallSecurity();
 
     SetAutoAdminLogon();
-
-    hShortcutsInf = SetupOpenInfFileW(L"shortcuts.inf",
-                                      NULL,
-                                      INF_STYLE_WIN4,
-                                      NULL);
-    if (hShortcutsInf == INVALID_HANDLE_VALUE)
-    {
-        FatalError("Failed to open shortcuts.inf");
-        return 0;
-    }
-
-    if (!CreateShortcuts(hShortcutsInf, L"ShortcutFolders"))
-    {
-        FatalError("CreateShortcuts() failed");
-        return 0;
-    }
-
-    SetupCloseInfFile(hShortcutsInf);
-
-    hShortcutsInf = SetupOpenInfFileW(L"rosapps_shortcuts.inf",
-                                       NULL,
-                                       INF_STYLE_WIN4,
-                                       NULL);
-    if (hShortcutsInf != INVALID_HANDLE_VALUE)
-    {
-        if (!CreateShortcuts(hShortcutsInf, L"ShortcutFolders"))
-        {
-            FatalError("CreateShortcuts(rosapps) failed");
-            return 0;
-        }
-        SetupCloseInfFile(hShortcutsInf);
-    }
 
     SetupCloseInfFile(hSysSetupInf);
     SetSetupType(0);
