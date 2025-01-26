@@ -583,7 +583,7 @@ static VOID WINAPI BiosBootstrapLoader(LPWORD Stack)
      * http://www.virtualbox.org/svn/vbox/trunk/src/VBox/Devices/PC/BIOS/boot.c
      * https://web.archive.org/web/20150813024016/http://bochs.sourceforge.net/cgi-bin/lxr/source/iodev/cmos.cc
      * https://web.archive.org/web/20111209041013/http://www-ivs.cs.uni-magdeburg.de/~zbrog/asm/cmos.html
-     * http://www.bioscentral.com/misc/cmosmap.htm (DEAD_LINK)
+     * https://web.archive.org/web/20240119203005/http://www.bioscentral.com/misc/cmosmap.htm
      */
     IOWriteB(CMOS_ADDRESS_PORT, CMOS_REG_SYSOP);
     BootOrder = (IOReadB(CMOS_DATA_PORT) & 0x20) >> 5;
