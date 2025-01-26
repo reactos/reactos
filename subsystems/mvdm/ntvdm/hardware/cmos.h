@@ -85,7 +85,7 @@ typedef enum _CMOS_REGISTERS
  * http://wiki.osdev.org/CMOS
  * http://www.walshcomptech.com/ohlandl/config/cmos_registers.html
  * http://www.fysnet.net/cmosinfo.htm
- * http://www.bioscentral.com/misc/cmosmap.htm (DEAD_LINK)
+ * https://web.archive.org/web/20240119203005/http://www.bioscentral.com/misc/cmosmap.htm
  */
 #pragma pack(push, 1)
 typedef struct
