@@ -113,32 +113,6 @@ UXTHEME_FormatParseMessage(
     return ret ? S_OK : UXTHEME_MakeErrorLast();
 }
 
-HRESULT
-UXTHEME_GetThemeParseErrorInfo(_Inout_ PPARSE_ERROR_INFO pInfo)
-{
-    PTMERRINFO pErrInfo;
-    HRESULT hr;
-
-    if (pInfo->cbSize != sizeof(*pInfo))
-        return E_INVALIDARG;
-
-    pErrInfo = UXTHEME_GetParseErrorInfo(TRUE);
-    if (!pErrInfo)
-        return E_OUTOFMEMORY;
-
-    hr = UXTHEME_FormatParseMessage(pErrInfo, pInfo->ErrInfo.szPath0,
-                                    _countof(pInfo->ErrInfo.szPath0) +
-                                    _countof(pInfo->ErrInfo.szPath1));
-    if (FAILED(hr))
-        return hr;
-
-    pInfo->ErrInfo.nID = pErrInfo->nID;
-    pInfo->ErrInfo.dwError = pErrInfo->dwError;
-    StringCchCopyW(pInfo->ErrInfo.szPath2, _countof(pInfo->ErrInfo.szPath2), pErrInfo->szPath2);
-    StringCchCopyW(pInfo->ErrInfo.szPath3, _countof(pInfo->ErrInfo.szPath3), pErrInfo->szPath3);
-    return hr;
-}
-
 // Parser should use this function on failure
 HRESULT
 UXTHEME_MakeParseError(
@@ -168,7 +142,28 @@ UXTHEME_MakeParseError(
 HRESULT WINAPI
 GetThemeParseErrorInfo(_Inout_ PPARSE_ERROR_INFO pInfo)
 {
-    if (IsBadWritePtr(pInfo, sizeof(*pInfo)))
+    PTMERRINFO pErrInfo;
+    HRESULT hr;
+
+    if (!pInfo)
         return E_POINTER;
-    return UXTHEME_GetThemeParseErrorInfo(pInfo);
+
+    if (pInfo->cbSize != sizeof(*pInfo))
+        return E_INVALIDARG;
+
+    pErrInfo = UXTHEME_GetParseErrorInfo(TRUE);
+    if (!pErrInfo)
+        return E_OUTOFMEMORY;
+
+    hr = UXTHEME_FormatParseMessage(pErrInfo, pInfo->ErrInfo.szPath0,
+                                    _countof(pInfo->ErrInfo.szPath0) +
+                                    _countof(pInfo->ErrInfo.szPath1));
+    if (FAILED(hr))
+        return hr;
+
+    pInfo->ErrInfo.nID = pErrInfo->nID;
+    pInfo->ErrInfo.dwError = pErrInfo->dwError;
+    StringCchCopyW(pInfo->ErrInfo.szPath2, _countof(pInfo->ErrInfo.szPath2), pErrInfo->szPath2);
+    StringCchCopyW(pInfo->ErrInfo.szPath3, _countof(pInfo->ErrInfo.szPath3), pErrInfo->szPath3);
+    return hr;
 }
