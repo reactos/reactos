@@ -336,7 +336,7 @@ ExpInitializeCallbacks(VOID)
  * Allows multiple Callback Functions to be registered only if
  * AllowMultipleCallbacks is true.
  * See: https://web.archive.org/web/20081230235552/http://www.osronline.com/DDKx/kmarch/k102_967m.htm
- *      http://www.osronline.com/article.cfm?id=24
+ *      https://www.osronline.com/article.cfm%5eid=24.htm
  *
  * @param CallbackObject
  *        Pointer that will receive the Callback Object.
