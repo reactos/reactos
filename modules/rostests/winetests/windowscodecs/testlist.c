@@ -6,6 +6,7 @@
 extern void func_bitmap(void);
 extern void func_bmpformat(void);
 extern void func_converter(void);
+extern void func_ddsformat(void);
 extern void func_gifformat(void);
 extern void func_icoformat(void);
 extern void func_info(void);
@@ -16,12 +17,14 @@ extern void func_pngformat(void);
 extern void func_propertybag(void);
 extern void func_stream(void);
 extern void func_tiffformat(void);
+extern void func_wmpformat(void);
 
 const struct test winetest_testlist[] =
 {
     { "bitmap", func_bitmap },
     { "bmpformat", func_bmpformat },
     { "converter", func_converter },
+    { "ddsformat", func_ddsformat },
     { "gifformat", func_gifformat },
     { "icoformat", func_icoformat },
     { "info", func_info },
@@ -32,5 +35,6 @@ const struct test winetest_testlist[] =
     { "propertybag", func_propertybag },
     { "stream", func_stream },
     { "tiffformat", func_tiffformat },
+    { "wmpformat", func_wmpformat },
     { 0, 0 }
 };

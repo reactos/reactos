@@ -41,36 +41,36 @@ static void test_propertybag_getpropertyinfo(IPropertyBag2 *property, ULONG expe
     /* iProperty: Out of bounce */
     hr = IPropertyBag2_GetPropertyInfo(property, expected_count, 1, pb, &out_count);
     ok(hr == WINCODEC_ERR_VALUEOUTOFRANGE,
-       "GetPropertyInfo handled iProperty out of bounce wrong, hr=%x\n", hr);
+       "GetPropertyInfo handled iProperty out of bounce wrong, hr=%lx\n", hr);
 
     /* cProperty: Out of bounce */
     hr = IPropertyBag2_GetPropertyInfo(property, 0, expected_count+1, pb, &out_count);
     ok(hr == WINCODEC_ERR_VALUEOUTOFRANGE,
-       "GetPropertyInfo handled cProperty out of bounce wrong, hr=%x\n", hr);
+       "GetPropertyInfo handled cProperty out of bounce wrong, hr=%lx\n", hr);
 
     /* GetPropertyInfo can be called for zero items on Windows 8 but not on Windows 7 (wine behaves like Win8) */
     if (expected_count == 0)
         return;
 
     hr = IPropertyBag2_GetPropertyInfo(property, 0, expected_count, pb, &out_count);
-    ok(hr == S_OK, "GetPropertyInfo failed, hr=%x\n", hr);
+    ok(hr == S_OK, "GetPropertyInfo failed, hr=%lx\n", hr);
     if (FAILED(hr))
         return;
 
     ok(expected_count == out_count,
-       "GetPropertyInfo returned unexpected property count, %i != %i)\n",
+       "GetPropertyInfo returned unexpected property count, %li != %li)\n",
        expected_count, out_count);
 
     if(expected_count != 2)
         return;
 
     ok(pb[0].vt == VT_UI1, "Invalid variant type, pb[0].vt=%x\n", pb[0].vt);
-    ok(pb[0].dwType == PROPBAG2_TYPE_DATA, "Invalid variant type, pb[0].dwType=%x\n", pb[0].dwType);
+    ok(pb[0].dwType == PROPBAG2_TYPE_DATA, "Invalid variant type, pb[0].dwType=%lx\n", pb[0].dwType);
     ok(lstrcmpW(pb[0].pstrName, wszTestProperty1) == 0, "Invalid property name, pb[0].pstrName=%s\n", wine_dbgstr_w(pb[0].pstrName));
     CoTaskMemFree(pb[0].pstrName);
 
     ok(pb[1].vt == VT_R4, "Invalid variant type, pb[1].vt=%x\n", pb[1].vt);
-    ok(pb[1].dwType == PROPBAG2_TYPE_DATA, "Invalid variant type, pb[1].dwType=%x\n", pb[1].dwType);
+    ok(pb[1].dwType == PROPBAG2_TYPE_DATA, "Invalid variant type, pb[1].dwType=%lx\n", pb[1].dwType);
     ok(lstrcmpW(pb[1].pstrName, wszTestProperty2) == 0, "Invalid property name, pb[1].pstrName=%s\n", wine_dbgstr_w(pb[1].pstrName));
     CoTaskMemFree(pb[1].pstrName);
 }
@@ -81,15 +81,15 @@ static void test_propertybag_countproperties(IPropertyBag2 *property, ULONG expe
     HRESULT hr;
 
     hr = IPropertyBag2_CountProperties(property, NULL);
-    ok(hr == E_INVALIDARG, "CountProperties returned unexpected result, hr=%x\n", hr);
+    ok(hr == E_INVALIDARG, "CountProperties returned unexpected result, hr=%lx\n", hr);
 
     hr = IPropertyBag2_CountProperties(property, &count);
-    ok(hr == S_OK, "CountProperties failed, hr=%x\n", hr);
+    ok(hr == S_OK, "CountProperties failed, hr=%lx\n", hr);
 
     if (FAILED(hr))
         return;
 
-    ok(count == expected_count, "CountProperties returned invalid value, count=%i\n", count);
+    ok(count == expected_count, "CountProperties returned invalid value, count=%li\n", count);
 }
 
 static void test_propertybag_read(IPropertyBag2 *property)
@@ -103,17 +103,17 @@ static void test_propertybag_read(IPropertyBag2 *property)
     options[0].pstrName = (LPOLESTR)wszTestInvalidProperty;
     hr = IPropertyBag2_Read(property, 1, options, NULL, values, itm_hr);
     ok(hr == E_FAIL,
-       "Read for an unknown property did not fail with expected code, hr=%x\n", hr);
+       "Read for an unknown property did not fail with expected code, hr=%lx\n", hr);
 
     /* 2. One known property */
     options[0].pstrName = (LPOLESTR)wszTestProperty1;
     itm_hr[0] = E_FAIL;
     hr = IPropertyBag2_Read(property, 1, options, NULL, values, itm_hr);
-    ok(hr == S_OK, "Read failed, hr=%x\n", hr);
+    ok(hr == S_OK, "Read failed, hr=%lx\n", hr);
     if (SUCCEEDED(hr))
     {
         ok(itm_hr[0] == S_OK,
-           "Read failed, itm_hr[0]=%x\n", itm_hr[0]);
+           "Read failed, itm_hr[0]=%lx\n", itm_hr[0]);
         ok(V_VT(&values[0]) == VT_UI1,
            "Read failed, V_VT(&values[0])=%x\n", V_VT(&values[0]));
         ok(V_UNION(&values[0], bVal) == 12,
@@ -128,14 +128,14 @@ static void test_propertybag_read(IPropertyBag2 *property)
     itm_hr[0] = E_FAIL;
     itm_hr[1] = E_FAIL;
     hr = IPropertyBag2_Read(property, 2, options, NULL, values, itm_hr);
-    ok(hr == S_OK, "Read failed, hr=%x\n", hr);
+    ok(hr == S_OK, "Read failed, hr=%lx\n", hr);
     if (SUCCEEDED(hr))
     {
-        ok(itm_hr[0] == S_OK, "Read failed, itm_hr[0]=%x\n", itm_hr[0]);
+        ok(itm_hr[0] == S_OK, "Read failed, itm_hr[0]=%lx\n", itm_hr[0]);
         ok(V_VT(&values[0]) == VT_UI1, "Read failed, V_VT(&values[0])=%x\n", V_VT(&values[0]));
         ok(V_UNION(&values[0], bVal) == 12, "Read failed, &values[0]=%i\n", V_UNION(&values[0], bVal));
 
-        ok(itm_hr[1] == S_OK, "Read failed, itm_hr[1]=%x\n", itm_hr[1]);
+        ok(itm_hr[1] == S_OK, "Read failed, itm_hr[1]=%lx\n", itm_hr[1]);
         ok(V_VT(&values[1]) == VT_R4, "Read failed, V_VT(&values[1])=%x\n", V_VT(&values[1]));
         ok(V_UNION(&values[1], fltVal) == (float)3.14, "Read failed, &values[1]=%f\n", V_UNION(&values[1], fltVal));
 
@@ -160,12 +160,12 @@ static void test_propertybag_read(IPropertyBag2 *property)
     options[2].pstrName = (LPOLESTR)wszTestProperty2;
 
     hr = IPropertyBag2_Read(property, 3, options, NULL, values, itm_hr);
-    ok(hr == E_FAIL, "Read failed, hr=%x\n", hr);
+    ok(hr == E_FAIL, "Read failed, hr=%lx\n", hr);
     if (hr == E_FAIL)
     {
-        ok(itm_hr[0] == S_OK, "Read error code has unexpected value, itm_hr[0]=%x\n", itm_hr[0]);
-        ok(itm_hr[1] == -1,   "Read error code has unexpected value, itm_hr[1]=%x\n", itm_hr[1]);
-        ok(itm_hr[2] == -1,   "Read error code has unexpected value, itm_hr[2]=%x\n", itm_hr[2]);
+        ok(itm_hr[0] == S_OK, "Read error code has unexpected value, itm_hr[0]=%lx\n", itm_hr[0]);
+        ok(itm_hr[1] == -1,   "Read error code has unexpected value, itm_hr[1]=%lx\n", itm_hr[1]);
+        ok(itm_hr[2] == -1,   "Read error code has unexpected value, itm_hr[2]=%lx\n", itm_hr[2]);
 
         ok(V_VT(&values[0]) == VT_UI1,  "Read variant has unexpected type, V_VT(&values[0])=%x\n", V_VT(&values[0]));
         ok(V_VT(&values[1]) == VT_NULL, "Read variant has unexpected type, V_VT(&values[1])=%x\n", V_VT(&values[1]));
@@ -189,14 +189,14 @@ static void test_propertybag_write(IPropertyBag2 *property)
     /* 1. One unknown property */
     options[0].pstrName = (LPOLESTR)wszTestInvalidProperty;
     hr = IPropertyBag2_Write(property, 1, options, values);
-    ok(hr == E_FAIL, "Write for an unknown property did not fail with expected code, hr=%x\n", hr);
+    ok(hr == E_FAIL, "Write for an unknown property did not fail with expected code, hr=%lx\n", hr);
 
     /* 2. One property without correct type */
     options[0].pstrName = (LPOLESTR)wszTestProperty1;
     V_VT(&values[0]) = VT_UI1;
     V_UNION(&values[0], bVal) = 1;
     hr = IPropertyBag2_Write(property, 1, options, values);
-    ok(hr == S_OK, "Write for one property failed, hr=%x\n", hr);
+    ok(hr == S_OK, "Write for one property failed, hr=%lx\n", hr);
 
     /* 3. One property with mismatching type */
     options[0].pstrName = (LPOLESTR)wszTestProperty1;
@@ -204,14 +204,14 @@ static void test_propertybag_write(IPropertyBag2 *property)
     V_UNION(&values[0], bVal) = 2;
     hr = IPropertyBag2_Write(property, 1, options, values);
     ok(hr == WINCODEC_ERR_PROPERTYUNEXPECTEDTYPE,
-       "Write with mismatching type did not fail with expected code hr=%x\n", hr);
+       "Write with mismatching type did not fail with expected code hr=%lx\n", hr);
 
     /* 4. Reset one property to empty */
     options[0].pstrName = (LPOLESTR)wszTestProperty1;
     VariantClear(&values[0]);
     hr = IPropertyBag2_Write(property, 1, options, values);
     ok(hr == WINCODEC_ERR_PROPERTYUNEXPECTEDTYPE,
-       "Write to reset to empty value does not fail with expected code, hr=%x\n", hr);
+       "Write to reset to empty value does not fail with expected code, hr=%lx\n", hr);
 
     /* 5. Set two properties */
     options[0].pstrName = (LPOLESTR)wszTestProperty1;
@@ -221,7 +221,7 @@ static void test_propertybag_write(IPropertyBag2 *property)
     V_VT(&values[1]) = VT_R4;
     V_UNION(&values[1], fltVal) = (float)3.14;
     hr = IPropertyBag2_Write(property, 2, options, values);
-    ok(hr == S_OK, "Write for two properties failed, hr=%x\n", hr);
+    ok(hr == S_OK, "Write for two properties failed, hr=%lx\n", hr);
 }
 
 static void test_empty_propertybag(void)
@@ -232,11 +232,11 @@ static void test_empty_propertybag(void)
 
     hr = CoCreateInstance(&CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER,
                           &IID_IWICComponentFactory, (void**)&factory);
-    ok(hr == S_OK, "CoCreateInstance failed, hr=%x\n", hr);
+    ok(hr == S_OK, "CoCreateInstance failed, hr=%lx\n", hr);
 
     hr = IWICComponentFactory_CreateEncoderPropertyBag(factory, NULL, 0, &property);
 
-    ok(hr == S_OK, "Creating EncoderPropertyBag failed, hr=%x\n", hr);
+    ok(hr == S_OK, "Creating EncoderPropertyBag failed, hr=%lx\n", hr);
     if (FAILED(hr)) return;
 
     test_propertybag_countproperties(property, 0);
@@ -260,11 +260,11 @@ static void test_filled_propertybag(void)
 
     hr = CoCreateInstance(&CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER,
                           &IID_IWICComponentFactory, (void**)&factory);
-    ok(hr == S_OK, "CoCreateInstance failed, hr=%x\n", hr);
+    ok(hr == S_OK, "CoCreateInstance failed, hr=%lx\n", hr);
 
     hr = IWICComponentFactory_CreateEncoderPropertyBag(factory, opts, 2, &property);
 
-    ok(hr == S_OK, "Creating EncoderPropertyBag failed, hr=%x\n", hr);
+    ok(hr == S_OK, "Creating EncoderPropertyBag failed, hr=%lx\n", hr);
     if (FAILED(hr)) return;
 
     test_propertybag_countproperties(property, 2);
