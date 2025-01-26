@@ -6,7 +6,6 @@
  */
 
 #include "precomp.h"
-#include "fusion.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(fusion);
 
