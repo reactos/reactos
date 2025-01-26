@@ -31,6 +31,27 @@ static PCWSTR StrEndNW(_In_ PCWSTR psz, _In_ INT_PTR cch)
     return pch;
 }
 
+EXTERN_C BOOL
+SHELL_IsGuimodeSetupRunning(VOID)
+{
+    DWORD dwType, dwValue, cbValue = sizeof(dwValue);
+    LSTATUS error = SHGetValueW(HKEY_LOCAL_MACHINE, L"SYSTEM\\Setup", L"SystemSetupInProgress",
+                                &dwType, &dwValue, &cbValue);
+    if (error != ERROR_SUCCESS || dwType != REG_DWORD || !dwValue)
+        return FALSE;
+
+    cbValue = sizeof(dwValue);
+    error = SHGetValueW(HKEY_LOCAL_MACHINE, L"SYSTEM\\Setup", L"MiniSetupInProgress",
+                        &dwType, &dwValue, &cbValue);
+    return (error == ERROR_SUCCESS && dwType == REG_DWORD && dwValue);
+}
+
+EXTERN_C HMODULE
+SHELL_IsProcessWinlogon(VOID)
+{
+    return GetModuleHandleW(L"winlogon.exe");
+}
+
 /*************************************************************************
  *  StrRStrA [SHELL32.389]
  */

@@ -376,6 +376,10 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
     if (dwReason == DLL_PROCESS_ATTACH)
     {
         shell32_hInstance = hInstance;
+
+        if (!SHELL_IsGuimodeSetupRunning() || !SHELL_IsProcessWinlogon())
+            SHFusionInitializeFromModuleID(hInstance, 124);
+
         gModule.Init(ObjectMap, hInstance, &LIBID_Shell32);
 
         DisableThreadLibraryCalls (hInstance);
@@ -399,6 +403,7 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
         SIC_Destroy();
         FreeChangeNotifications();
         gModule.Term();
+        SHFusionUninitialize();
     }
     return TRUE;
 }

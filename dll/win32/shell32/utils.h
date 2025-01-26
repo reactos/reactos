@@ -81,3 +81,9 @@ SHELL_CreateFallbackExtractIconForNoAssocFile(REFIID riid, LPVOID *ppvOut)
     const int id = IDI_SHELL_DOCUMENT;
     return SHELL_CreateShell32DefaultExtractIcon(id > 1 ? -id : 0, riid, ppvOut);
 }
+
+EXTERN_C BOOL
+SHELL_IsGuimodeSetupRunning(VOID);
+
+EXTERN_C HMODULE
+SHELL_IsProcessWinlogon(VOID);
