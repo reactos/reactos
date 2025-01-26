@@ -706,7 +706,7 @@ PcGetSerialPort(ULONG Index, PULONG Irq)
     /*
      * The BIOS data area 0x400 holds the address of the first valid COM port.
      * Each COM port address is stored in a 2-byte field.
-     * Infos at: http://www.bioscentral.com/misc/bda.htm (DEAD_LINK)
+     * Infos at: https://web.archive.org/web/20240119203029/http://www.bioscentral.com/misc/bda.htm
      */
     BasePtr = (PUSHORT)0x400;
     *Irq = PcIrq[Index];
