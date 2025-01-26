@@ -144,25 +144,8 @@ SHFusionCreateWindow(
     _In_ HINSTANCE hInstance,
     _Inout_opt_ LPVOID lpParam)
 {
-    ULONG_PTR uCookie;
-    if (!SHActivateContext(&uCookie))
-        return NULL;
-
-    HWND hWnd;
-    _SEH2_TRY
-    {
-        SHELL_DelayLoadCC();
-        hWnd = CreateWindowExW(0, lpClassName, lpWindowName, dwStyle,
-                               X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        hWnd = NULL;
-    }
-    _SEH2_END;
-
-    SHDeactivateContext(uCookie);
-    return hWnd;
+    return SHFusionCreateWindowEx(0, lpClassName, lpWindowName, dwStyle,
+                                  X, Y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
 }
 
 EXTERN_C
