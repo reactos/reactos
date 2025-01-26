@@ -62,8 +62,8 @@ START_TEST(GetThemeParseErrorInfo)
     }
 
     FILE *fout = _wfopen(L"invalid.ini", L"wb");
-    fprintf(fout, "[Invalid]\n");
-    fprintf(fout, "Invalid=Invalid\n");
+    fprintf(fout, "[InvalidKey]\n");
+    fprintf(fout, "InvalidValueName=InvalidValue\n");
     fclose(fout);
 
     hr = ParseThemeIniFile(L"invalid.ini", szPath, ParseThemeIniFileProc, NULL);
@@ -83,10 +83,10 @@ START_TEST(GetThemeParseErrorInfo)
 
     ok(Info.ErrInfo.szPath0[0] != UNICODE_NULL, "Info.ErrInfo.szPath0 was empty\n");
     ok(Info.ErrInfo.szPath0[0] != L'@', "Info.ErrInfo.szPath0 had no change\n");
-    trace("Info.ErrInfo.szPath0: %S\n", Info.ErrInfo.szPath0); // "Must be Primitive, enum, or type: Invalid"
+    trace("Info.ErrInfo.szPath0: %S\n", Info.ErrInfo.szPath0); // "Must be Primitive, enum, or type: InvalidValueName"
 
     ok_int(Info.ErrInfo.szPath1[0], L'@');
     ok_wstr(Info.ErrInfo.szPath2, L"invalid.ini");
-    ok_wstr(Info.ErrInfo.szPath3, L"Invalid=Invalid");
+    ok_wstr(Info.ErrInfo.szPath3, L"InvalidValueName=InvalidValue");
     ok_int(Info.ErrInfo.nLineNo, 2);
 }
