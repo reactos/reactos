@@ -295,7 +295,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* Check if we from user mode */
+    /* Check if we came from user mode */
     if (PreviousMode != KernelMode)
     {
         /* Get the access mask */
