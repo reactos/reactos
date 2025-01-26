@@ -81,7 +81,8 @@ START_TEST(GetThemeParseErrorInfo)
     ok_hex(hr, S_OK);
     ok_int(Info.ErrInfo.nID, 160);
 
-    ok(Info.ErrInfo.szPath0[0] != L'@', "Info.ErrInfo.szPath0 was empty\n");
+    ok(Info.ErrInfo.szPath0[0] != UNICODE_NULL, "Info.ErrInfo.szPath0 was empty\n");
+    ok(Info.ErrInfo.szPath0[0] != L'@', "Info.ErrInfo.szPath0 had no change\n");
     trace("Info.ErrInfo.szPath0: %S\n", Info.ErrInfo.szPath0); // "Must be Primitive, enum, or type: Invalid"
 
     ok_int(Info.ErrInfo.szPath1[0], L'@');
