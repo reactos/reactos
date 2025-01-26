@@ -289,15 +289,8 @@ BOOL CALLBACK UXTHEME_broadcast_theme_changed (HWND hWnd, LPARAM enable);
 
 extern DWORD gdwErrorInfoTlsIndex;
 
-static inline HRESULT
-UXTHEME_MakeError32(_In_ LONG error)
-{
-    if (error < 0)
-        return (HRESULT)error;
-    return HRESULT_FROM_WIN32(error);
-}
-
-HRESULT UXTHEME_MakeErrorLast(VOID);
+HRESULT UXTHEME_MakeError32(_In_ LONG error);
+HRESULT UXTHEME_MakeLastError(VOID);
 VOID UXTHEME_DeleteParseErrorInfo(VOID);
 
 HRESULT

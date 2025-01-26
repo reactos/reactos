@@ -10,7 +10,15 @@
 #include <strsafe.h>
 
 HRESULT
-UXTHEME_MakeErrorLast(VOID)
+UXTHEME_MakeError32(_In_ LONG error)
+{
+    if (error < 0)
+        return (HRESULT)error;
+    return HRESULT_FROM_WIN32(error);
+}
+
+HRESULT
+UXTHEME_MakeLastError(VOID)
 {
     return UXTHEME_MakeError32(GetLastError());
 }
@@ -96,7 +104,7 @@ UXTHEME_FormatParseMessage(
     ret = UXTHEME_FormatLocalMsg(hUxTheme, nID, pszDest, cchDest, szDrive, pErrInfo);
     FreeLibrary(hUxTheme);
 
-    return ret ? S_OK : UXTHEME_MakeErrorLast();
+    return ret ? S_OK : UXTHEME_MakeLastError();
 }
 
 // Parser should use this function on failure
