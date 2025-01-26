@@ -884,7 +884,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
     /*
      * The BIOS data area 0x408 holds the address of the first valid LPT port.
      * Each LPT port address is stored in a 2-byte field.
-     * Infos at: http://www.bioscentral.com/misc/bda.htm (DEAD_LINK)
+     * Infos at: https://web.archive.org/web/20240119203029/http://www.bioscentral.com/misc/bda.htm
      */
     BasePtr = (PUSHORT)0x408;
 
