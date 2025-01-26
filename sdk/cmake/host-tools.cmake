@@ -92,7 +92,7 @@ function(setup_host_tools)
     endif()
 
     if(NOT DEFINED HOST_BUILD_TYPE)
-        set(HOST_BUILD_TYPE Release)
+        set(HOST_BUILD_TYPE Debug)
     endif()
 
     ExternalProject_Add(host-tools
