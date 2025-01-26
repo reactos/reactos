@@ -169,6 +169,6 @@ HRESULT WINAPI
 GetThemeParseErrorInfo(_Inout_ PPARSE_ERROR_INFO pInfo)
 {
     if (IsBadWritePtr(pInfo, sizeof(*pInfo)))
-        return UXTHEME_MakeError32(E_POINTER);
+        return E_POINTER;
     return UXTHEME_GetThemeParseErrorInfo(pInfo);
 }
