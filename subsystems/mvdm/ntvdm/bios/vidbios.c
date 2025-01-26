@@ -3148,7 +3148,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                 {
                     BYTE Index = getBL();
 
-                    /* See: http://www.bioscentral.com/misc/bda.htm (DEAD_LINK) */
+                    /* See: https://web.archive.org/web/20240119203029/http://www.bioscentral.com/misc/bda.htm */
                     /* Reset bit 5: foreground colors index (0: green/red/yellow; 1: cyan/magenta/white) */
                     Bda->CrtColorPaletteMask = (Bda->CrtColorPaletteMask & 0xDF) | ((Index & 1) ? 0x20 : 0x00);
 
