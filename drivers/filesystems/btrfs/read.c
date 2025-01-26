@@ -1624,7 +1624,7 @@ NTSTATUS read_data(_In_ device_extension* Vcb, _In_ uint64_t addr, _In_ uint32_t
         if (file_read) {
             // Unfortunately we can't avoid doing at least one memcpy, as Windows can give us an MDL
             // with duplicated dummy PFNs, which confuse check_csum. Ah well.
-            // See https://learn.microsoft.com/en-us/previous-versions/windows/hardware/design/dn614012(v=vs.85) if you're interested.
+            // See https://msdn.microsoft.com/en-us/library/windows/hardware/Dn614012.aspx if you're interested.
 
             context.va = ExAllocatePoolWithTag(NonPagedPool, length, ALLOC_TAG);
 
