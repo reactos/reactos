@@ -1811,6 +1811,8 @@ SHELL_CreateShell32DefaultExtractIcon(int IconIndex, REFIID riid, LPVOID *ppvOut
 
 /*************************************************************************
  *  SHIsBadInterfacePtr [SHELL32.84]
+ *
+ * Retired in 6.0 from Windows Vista and higher.
  */
 EXTERN_C
 BOOL WINAPI
