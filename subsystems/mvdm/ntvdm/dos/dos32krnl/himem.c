@@ -25,7 +25,7 @@
  * which can provide UMBs? It appears that this is not necessarily the case:
  * for example the MS HIMEM versions do not implement the UMB APIs; instead
  * it is the EMS driver (EMM386) which provides them, by hooking into the XMS
- * driver chain (see https://support.microsoft.com/en-us/kb/95555 (DEAD_LINK): "MS-DOS 5.0
+ * driver chain (see https://www.betaarchive.com/wiki/index.php?title=Microsoft_KB_Archive/95555: "MS-DOS 5.0
  * and later EMM386.EXE can also be configured to provide UMBs according to the
  * XMS. This causes EMM386.EXE to be a provider of the UMB portion of the XMS.").
  *
