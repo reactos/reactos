@@ -119,7 +119,7 @@ UXTHEME_GetThemeParseErrorInfo(_Inout_ PPARSE_ERROR_INFO pInfo)
     PTMERRINFO pErrInfo;
     HRESULT hr;
 
-    if (pInfo->cbSize != sizeof(PARSE_ERROR_INFO))
+    if (pInfo->cbSize != sizeof(*pInfo))
         return UXTHEME_MakeError32(E_INVALIDARG);
 
     pErrInfo = UXTHEME_GetParseErrorInfo(TRUE);
