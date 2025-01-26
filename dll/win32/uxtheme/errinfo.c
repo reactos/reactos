@@ -29,7 +29,7 @@ UXTHEME_GetParseErrorInfo(_In_ BOOL bCreate)
 
     if (bCreate)
     {
-        pErrInfo = LocalAlloc(LPTR, sizeof(TMERRINFO));
+        pErrInfo = LocalAlloc(LPTR, sizeof(*pErrInfo));
         TlsSetValue(gdwErrorInfoTlsIndex, pErrInfo);
     }
 
