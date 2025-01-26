@@ -300,6 +300,6 @@ UXTHEME_MakeParseError(
     _In_ LPCWSTR pszPath1,
     _In_ LPCWSTR pszPath2,
     _In_ LPCWSTR pszPath3,
-    _In_ DWORD dwError);
+    _In_ INT nLineNo);
 
 #endif /* _UXTHEME_PCH_ */

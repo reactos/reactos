@@ -13,7 +13,7 @@ typedef struct tagTMERRINFO
     WCHAR szPath1[MAX_PATH];
     WCHAR szPath2[MAX_PATH];
     WCHAR szPath3[MAX_PATH];
-    DWORD dwError;
+    INT nLineNo;
 } TMERRINFO, *PTMERRINFO;
 
 typedef struct tagPARSE_ERROR_INFO

@@ -115,13 +115,13 @@ UXTHEME_MakeParseError(
     _In_ LPCWSTR pszPath1,
     _In_ LPCWSTR pszPath2,
     _In_ LPCWSTR pszPath3,
-    _In_ DWORD dwError)
+    _In_ INT nLineNo)
 {
     PTMERRINFO pErrInfo = UXTHEME_GetParseErrorInfo(TRUE);
     if (pErrInfo)
     {
         pErrInfo->nID = nID;
-        pErrInfo->dwError = dwError;
+        pErrInfo->nLineNo = nLineNo;
         StringCchCopyW(pErrInfo->szPath0, _countof(pErrInfo->szPath0), pszPath0);
         StringCchCopyW(pErrInfo->szPath1, _countof(pErrInfo->szPath1), pszPath1);
         StringCchCopyW(pErrInfo->szPath2, _countof(pErrInfo->szPath2), pszPath2);
@@ -156,7 +156,7 @@ GetThemeParseErrorInfo(_Inout_ PPARSE_ERROR_INFO pInfo)
         return hr;
 
     pInfo->ErrInfo.nID = pErrInfo->nID;
-    pInfo->ErrInfo.dwError = pErrInfo->dwError;
+    pInfo->ErrInfo.nLineNo = pErrInfo->nLineNo;
     StringCchCopyW(pInfo->ErrInfo.szPath2, _countof(pInfo->ErrInfo.szPath2), pErrInfo->szPath2);
     StringCchCopyW(pInfo->ErrInfo.szPath3, _countof(pInfo->ErrInfo.szPath3), pErrInfo->szPath3);
     return hr;
