@@ -32,6 +32,7 @@ list(APPEND SOURCE
     SHCreateFileDataObject.cpp
     SHCreateFileExtractIconW.cpp
     SHGetUnreadMailCountW.cpp
+    SHIsBadInterfacePtr.cpp
     SHParseDisplayName.cpp
     SHRestricted.cpp
     SHShouldShowWizards.cpp

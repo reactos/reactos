@@ -569,17 +569,6 @@ DDECreatePostNotify(LPVOID lpUnknown)
 /*
  * Unimplemented
  */
-EXTERN_C BOOL
-WINAPI
-SHIsBadInterfacePtr(LPVOID pv, UINT ucb)
-{
-    FIXME("SHIsBadInterfacePtr() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C VOID
 WINAPI
 AppCompat_RunDLLW(HWND hwnd, HINSTANCE hInstance, LPWSTR pszCmdLine, int nCmdShow)

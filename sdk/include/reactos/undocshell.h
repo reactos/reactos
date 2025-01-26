@@ -954,6 +954,11 @@ LONG WINAPI SHRegQueryValueExW(
     #define SHRegQueryValueEx SHRegQueryValueExA
 #endif
 
+BOOL WINAPI
+SHIsBadInterfacePtr(
+    _In_ LPCVOID pv,
+    _In_ UINT_PTR ucb);
+
 HRESULT WINAPI
 CopyStreamUI(
     _In_ IStream *pSrc,

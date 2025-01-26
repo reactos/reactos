@@ -1810,6 +1810,30 @@ SHELL_CreateShell32DefaultExtractIcon(int IconIndex, REFIID riid, LPVOID *ppvOut
 }
 
 /*************************************************************************
+ *  SHIsBadInterfacePtr [SHELL32.84]
+ *
+ * Retired in 6.0 from Windows Vista and higher.
+ */
+EXTERN_C
+BOOL WINAPI
+SHIsBadInterfacePtr(
+    _In_ LPCVOID pv,
+    _In_ UINT_PTR ucb)
+{
+    struct CUnknownVtbl
+    {
+        HRESULT (STDMETHODCALLTYPE *QueryInterface)(REFIID riid, LPVOID *ppvObj);
+        ULONG (STDMETHODCALLTYPE *AddRef)();
+        ULONG (STDMETHODCALLTYPE *Release)();
+    };
+    struct CUnknown { CUnknownVtbl *lpVtbl; };
+    const CUnknown *punk = reinterpret_cast<const CUnknown *>(pv);
+    return !punk || IsBadReadPtr(punk, sizeof(punk->lpVtbl)) ||
+           IsBadReadPtr(punk->lpVtbl, ucb) ||
+           IsBadCodePtr((FARPROC)punk->lpVtbl->Release);
+}
+
+/*************************************************************************
  *  SHGetUserDisplayName [SHELL32.241]
  *
  * @see https://undoc.airesoft.co.uk/shell32.dll/SHGetUserDisplayName.php

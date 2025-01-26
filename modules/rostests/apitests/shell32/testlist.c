@@ -46,6 +46,7 @@ extern void func_SHGetAttributesFromDataObject(void);
 extern void func_SHGetFileInfo(void);
 extern void func_SHGetUnreadMailCountW(void);
 extern void func_SHGetUserDisplayName(void);
+extern void func_SHIsBadInterfacePtr(void);
 extern void func_SHLimitInputEdit(void);
 extern void func_SHParseDisplayName(void);
 extern void func_SHShouldShowWizards(void);
@@ -99,6 +100,7 @@ const struct test winetest_testlist[] =
     { "SHGetFileInfo", func_SHGetFileInfo },
     { "SHGetUnreadMailCountW", func_SHGetUnreadMailCountW },
     { "SHGetUserDisplayName", func_SHGetUserDisplayName },
+    { "SHIsBadInterfacePtr", func_SHIsBadInterfacePtr },
     { "SHLimitInputEdit", func_SHLimitInputEdit },
     { "SHParseDisplayName", func_SHParseDisplayName },
     { "SHShouldShowWizards", func_SHShouldShowWizards },
