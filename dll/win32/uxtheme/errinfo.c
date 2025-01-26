@@ -57,27 +57,13 @@ UXTHEME_FormatLocalMsg(
     _In_ PTMERRINFO pErrInfo)
 {
     WCHAR szFormat[MAX_PATH];
-    LPWSTR pch;
+    LPCWSTR args[2] = { pErrInfo->szPath0, pErrInfo->szPath1 };
 
-    if (!LoadStringW(hInstance, uID, szFormat, _countof(szFormat)))
+    if (!LoadStringW(hInstance, uID, szFormat, _countof(szFormat)) || !szFormat[0])
         return FALSE;
 
-    // Convert "%1" and "%2" to "%s"
-    for (pch = szFormat; *pch; ++pch)
-    {
-        if (*pch != L'%')
-            continue;
-
-        ++pch;
-        if (*pch == L'1' || *pch == L'2')
-            *pch = L's';
-    }
-
-    if (!szFormat[0])
-        return FALSE;
-
-    StringCchPrintfW(pszDest, cchDest, szFormat, pErrInfo->szPath0, pErrInfo->szPath1);
-    return TRUE;
+    return FormatMessageW(FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_ARGUMENT_ARRAY,
+                          szFormat, 0, 0, pszDest, cchDest, (va_list *)args) != 0;
 }
 
 static HRESULT
