@@ -2353,7 +2353,7 @@ static VOID VidBiosSetCursorShape(WORD CursorStartEnd)
      * cursor emulation is ENABLED, and is 1 when it is DISABLED.
      *
      * The following documentation is right about this fact:
-     * https://web.archive.org/web/20200304211132/https://cs.nyu.edu/~mwalfish/classes/ut/s12-cs372h/ref/hardware/vgadoc/VGABIOS.TXT
+     * https://cs.nyu.edu/~mwalfish/classes/ut/s12-cs372h/ref/hardware/vgadoc/VGABIOS.TXT
      * https://web.archive.org/web/20220118094149/https://sites.google.com/site/pcdosretro/biosdata
      *
      * A proof that it is OK is that in the following code samples it is
