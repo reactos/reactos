@@ -3113,7 +3113,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
 #ifdef DOSBOX
                     BYTE Index = getBL();
 
-                    /* See: http://www.bioscentral.com/misc/bda.htm (DEAD_LINK) */
+                    /* See: https://web.archive.org/web/20240119203029/http://www.bioscentral.com/misc/bda.htm */
                     Bda->CrtColorPaletteMask = (Bda->CrtColorPaletteMask & 0xE0) | (Index & 0x1F);
 
                     Index = ((Index << 1) & 0x10) | (Index & 0x7);
