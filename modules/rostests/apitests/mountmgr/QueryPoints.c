@@ -36,7 +36,7 @@ START_TEST(QueryPoints)
     MOUNTMGR_MOUNT_POINTS MountPoints;
     PMOUNTMGR_MOUNT_POINTS AllocatedPoints;
 
-    MountMgrHandle = GetMountMgrHandle();
+    MountMgrHandle = GetMountMgrHandle(FILE_READ_ATTRIBUTES);
     if (!MountMgrHandle)
     {
         win_skip("MountMgr unavailable: %lu\n", GetLastError());

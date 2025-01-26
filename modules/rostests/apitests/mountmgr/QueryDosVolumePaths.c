@@ -571,7 +571,7 @@ START_TEST(QueryDosVolumePaths)
     HANDLE hFindVolume;
     WCHAR szVolumeName[MAX_PATH];
 
-    MountMgrHandle = GetMountMgrHandle();
+    MountMgrHandle = GetMountMgrHandle(FILE_READ_ATTRIBUTES);
     if (!MountMgrHandle)
     {
         win_skip("MountMgr unavailable: %lu\n", GetLastError());

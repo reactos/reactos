@@ -19,7 +19,8 @@ LPCSTR wine_dbgstr_us(const UNICODE_STRING *us)
  * The handle should be closed with NtClose() once it is no longer in use.
  **/
 HANDLE
-GetMountMgrHandle(VOID)
+GetMountMgrHandle(
+    _In_ ACCESS_MASK DesiredAccess)
 {
     NTSTATUS Status;
     UNICODE_STRING MountMgrDevice;
@@ -34,7 +35,7 @@ GetMountMgrHandle(VOID)
                                NULL,
                                NULL);
     Status = NtOpenFile(&MountMgrHandle,
-                        FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+                        DesiredAccess | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         FILE_SHARE_READ | FILE_SHARE_WRITE,
