@@ -34,7 +34,7 @@
  * BIOS Data Area at 0040:XXXX
  *
  * See: https://web.archive.org/web/20160813211745/http://webpages.charter.net/danrollins/techhelp/0093.HTM
- * and: http://www.bioscentral.com/misc/bda.htm (DEAD_LINK)
+ * and: https://web.archive.org/web/20240119203029/http://www.bioscentral.com/misc/bda.htm
  * for more information.
  */
 typedef struct
