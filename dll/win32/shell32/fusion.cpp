@@ -15,6 +15,7 @@ EXTERN_C
 VOID
 SHELL_DelayLoadCC(VOID)
 {
+    // It seems like loading comctl32...
     // FIXME: Am I wanted by this module?
 }
 
