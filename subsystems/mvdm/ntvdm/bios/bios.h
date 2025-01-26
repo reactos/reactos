@@ -33,7 +33,7 @@
 /*
  * BIOS Data Area at 0040:XXXX
  *
- * See: https://web.archive.org/web/20160813211745/http://webpages.charter.net/danrollins/techhelp/0093.HTM
+ * See: http://www.techhelpmanual.com/93-rom_bios_variables.html
  * and: https://web.archive.org/web/20240119203029/http://www.bioscentral.com/misc/bda.htm
  * for more information.
  */
