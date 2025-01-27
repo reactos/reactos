@@ -35,12 +35,15 @@ START_TEST(InternalExtractIconListW)
     ICON_AND_ID *pPairs = (ICON_AND_ID *)GlobalLock(hPairs);
     ok(pPairs != NULL, "pPairs was NULL\n");
 
-    ok(pPairs[0].hIcon != NULL, "pPairs[0].hIcon was NULL\n");
-    ok(pPairs[0].nIconID != 0, "pPairs[0].nIconID was zero\n");
+    ok((pPairs && pPairs[0].hIcon != NULL), "pPairs[0].hIcon was NULL\n");
+    ok((pPairs && pPairs[0].nIconID != 0), "pPairs[0].nIconID was zero\n");
 
-    for (SIZE_T iIcon = 0; iIcon < cIcons; ++iIcon)
+    if (pPairs)
     {
-        DestroyIcon(pPairs[iIcon].hIcon);
+        for (SIZE_T iIcon = 0; iIcon < cIcons; ++iIcon)
+        {
+            DestroyIcon(pPairs[iIcon].hIcon);
+        }
     }
 
     GlobalUnlock(hPairs);
