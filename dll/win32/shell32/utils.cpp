@@ -1942,7 +1942,7 @@ SHELL_GetComputerDescription(
     PSERVER_INFO_101 bufptr;
     NET_API_STATUS error = NetServerGetInfo(pszServerName, 101, (PBYTE*)&bufptr);
     HRESULT hr = (error > 0) ? HRESULT_FROM_WIN32(error) : error;
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     PCWSTR comment = bufptr->sv101_comment;
