@@ -83,7 +83,7 @@ START_TEST(GetThemeParseErrorInfo)
 
     ok(Info.szDescription[0] != UNICODE_NULL, "Info.szDescription was empty\n");
     ok(Info.szDescription[0] != L'@', "Info.szDescription had no change\n");
-    trace("szDescription: %S\n", Info.szDescription); // "Must be Primitive, enum, or type: InvalidValueName"
+    trace("szDescription: %s\n", wine_dbgstr_w(Info.szDescription)); // "Must be Primitive, enum, or type: InvalidValueName"
 
     ok_int(Info.szDescription[MAX_PATH], L'@');
     ok_wstr(Info.szFile, L"invalid.ini");
