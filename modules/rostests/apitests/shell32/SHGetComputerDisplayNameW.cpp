@@ -47,9 +47,9 @@ SHELL_CacheComputerDescription(
 
 static HRESULT
 SHELL_GetCachedComputerDescription(
-    _In_ PCWSTR pszServerName,
     _Out_ PWSTR pszDesc,
-    _In_ DWORD cchDescMax)
+    _In_ DWORD cchDescMax,
+    _In_ PCWSTR pszServerName)
 {
     cchDescMax *= sizeof(WCHAR);
 
@@ -60,10 +60,10 @@ SHELL_GetCachedComputerDescription(
 
 static HRESULT
 SHELL_BuildDisplayMachineName(
-    _In_ PCWSTR pszServerName,
-    _In_ PCWSTR pszDescription,
     _Out_ PWSTR pszName,
-    _In_ DWORD cchNameMax)
+    _In_ DWORD cchNameMax,
+    _In_ PCWSTR pszServerName,
+    _In_ PCWSTR pszDescription)
 {
     if (!pszDescription || !*pszDescription)
         return E_FAIL;
@@ -92,7 +92,7 @@ TEST_SHGetComputerDisplayNameW(VOID)
 
     SHELL_CacheComputerDescription(szServerName, L"DummyDescription");
 
-    HRESULT hr = SHELL_GetCachedComputerDescription(szServerName, szDesc, _countof(szDesc));
+    HRESULT hr = SHELL_GetCachedComputerDescription(szDesc, _countof(szDesc), szServerName);
     if (FAILED(hr))
         szDesc[0] = UNICODE_NULL;
     trace("%s\n", wine_dbgstr_w(szDesc));
@@ -109,7 +109,7 @@ TEST_SHGetComputerDisplayNameW(VOID)
     trace("%s\n", wine_dbgstr_w(szServerName));
     ok_wstr(szServerName, L"DummyServerName");
 
-    hr = SHELL_BuildDisplayMachineName(szServerName, szDesc, szName, _countof(szName));
+    hr = SHELL_BuildDisplayMachineName(szName, _countof(szName), szServerName, szDesc);
     ok_hex(hr, S_OK);
 
     trace("%s\n", wine_dbgstr_w(szDisplayName));
