@@ -9,6 +9,7 @@
 #include <lmcons.h>
 #include <lmapibuf.h>
 #include <lmaccess.h>
+#include <lmserver.h>
 #include <secext.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -1892,4 +1893,139 @@ SHGetUserDisplayName(
     }
 
     return hr;
+}
+
+PWSTR
+SHELL_SkipServerSlashes(
+    _In_ PCWSTR pszPath)
+{
+    PCWSTR pch;
+    for (pch = pszPath; *pch == L'\\'; ++pch)
+        ;
+    return const_cast<PWSTR>(pch);
+}
+
+static HRESULT
+SHELL_GetCachedComputerDescription(
+    _In_ PCWSTR pszServerName,
+    _Out_ PWSTR pszDesc,
+    _In_ DWORD cchDescMax)
+{
+    cchDescMax *= sizeof(WCHAR);
+
+    LSTATUS error = SHGetValueW(HKEY_CURRENT_USER,
+                                L"Software\\Microsoft\\Windows\\CurrentVersion\\"
+                                L"Explorer\\ComputerDescriptions",
+                                SHELL_SkipServerSlashes(pszServerName), NULL, pszDesc, &cchDescMax);
+    return HRESULT_FROM_WIN32(error);
+}
+
+VOID
+SHELL_CacheComputerDescription(
+    _In_ PCWSTR pszServerName,
+    _In_ PCWSTR pszDesc)
+{
+    if (!pszDesc)
+        return;
+
+    DWORD cbDesc = (lstrlenW(pszDesc) + 1) * sizeof(WCHAR);
+    SHSetValueW(HKEY_CURRENT_USER,
+                L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComputerDescriptions",
+                SHELL_SkipServerSlashes(pszServerName), REG_SZ, pszDesc, cbDesc);
+}
+
+static HRESULT
+SHELL_GetComputerDescription(
+    _Inout_ PWSTR pszServerName,
+    _Out_ PWSTR pszDesc,
+    _In_ INT cchDescMax)
+{
+    PSERVER_INFO_101 bufptr = NULL;
+    NET_API_STATUS error = NetServerGetInfo(pszServerName, 101, (PBYTE*)&bufptr);
+    HRESULT hr = (error > 0) ? HRESULT_FROM_WIN32(error) : error;
+    if (FAILED(hr))
+        return hr;
+
+    PCWSTR sv101_comment = bufptr->sv101_comment;
+    if (sv101_comment && sv101_comment[0])
+        StringCchCopyW(pszDesc, cchDescMax, sv101_comment);
+    else
+        hr = E_FAIL;
+
+    NetApiBufferFree(bufptr);
+    return hr;
+}
+
+HRESULT
+SHELL_BuildDisplayMachineName(
+    _In_ PCWSTR pszServerName,
+    _In_ PCWSTR pszDescription,
+    _Out_ PWSTR pszName,
+    _In_ DWORD cchNameMax)
+{
+    if (!pszDescription || !*pszDescription)
+        return E_FAIL;
+
+    PCWSTR pszFormat = SHRestricted(REST_ALLOWCOMMENTTOGGLE) ? L"%1 (%2)" : L"%2 (%1)";
+    PCWSTR args[] = { SHELL_SkipServerSlashes(pszServerName), pszDescription };
+    if (!FormatMessageW(FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_FROM_STRING,
+                        pszFormat, 0, 0, pszName, cchNameMax, (va_list *)args))
+    {
+        return E_FAIL;
+    }
+
+    return S_OK;
+}
+
+/*************************************************************************
+ *  SHGetComputerDisplayNameW [SHELL32.752]
+ *
+ * Imported by logonui.exe.
+ */
+EXTERN_C
+HRESULT WINAPI
+SHGetComputerDisplayNameW(
+    _Inout_opt_ LPWSTR pszServerName,
+    _In_ DWORD dwFlags,
+    _Out_ LPWSTR pszName,
+    _In_ DWORD cchNameMax)
+{
+    WCHAR szDesc[256], szCompName[MAX_COMPUTERNAME_LENGTH + 1];
+
+    if (!pszServerName)
+    {
+        DWORD cchCompName = _countof(szCompName);
+        if (!GetComputerNameW(szCompName, &cchCompName))
+            return E_FAIL;
+
+        dwFlags |= SHGCDN_NOCACHE;
+        pszServerName = szCompName;
+    }
+
+    HRESULT hr = E_FAIL;
+    if (!(dwFlags & SHGCDN_NOCACHE))
+        hr = SHELL_GetCachedComputerDescription(pszServerName, szDesc, _countof(szDesc));
+
+    if (FAILED(hr))
+    {
+        hr = SHELL_GetComputerDescription(pszServerName, szDesc, _countof(szDesc));
+        if (FAILED(hr))
+            szDesc[0] = UNICODE_NULL;
+        if (!(dwFlags & SHGCDN_NOCACHE))
+            SHELL_CacheComputerDescription(pszServerName, szDesc);
+    }
+
+    if (SUCCEEDED(hr) && szDesc[0])
+    {
+        if (!(dwFlags & SHGCDN_NOSERVERNAME))
+            return SHELL_BuildDisplayMachineName(pszServerName, szDesc, pszName, cchNameMax);
+        StringCchCopyW(pszName, cchNameMax, szDesc);
+        return S_OK;
+    }
+
+    if (dwFlags & SHGCDN_NOSERVERNAME)
+        return hr;
+
+    StringCchCopyW(pszName, cchNameMax, SHELL_SkipServerSlashes(pszServerName));
+    return S_OK;
 }

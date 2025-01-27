@@ -966,6 +966,17 @@ CopyStreamUI(
     _Inout_opt_ IProgressDialog *pProgress,
     _In_opt_ DWORDLONG dwlSize);
 
+// Flags for SHGetComputerDisplayNameW
+#define SHGCDN_NOCACHE 0x1
+#define SHGCDN_NOSERVERNAME 0x10000
+
+HRESULT WINAPI
+SHGetComputerDisplayNameW(
+    _Inout_opt_ LPWSTR pszServerName,
+    _In_ DWORD dwFlags,
+    _Out_ LPWSTR pszName,
+    _In_ DWORD cchNameMax);
+
 /*****************************************************************************
  * INVALID_FILETITLE_CHARACTERS
  */

@@ -31,6 +31,7 @@ list(APPEND SOURCE
     SHCreateDataObject.cpp
     SHCreateFileDataObject.cpp
     SHCreateFileExtractIconW.cpp
+    SHGetComputerDisplayNameW.cpp
     SHGetUnreadMailCountW.cpp
     SHIsBadInterfacePtr.cpp
     SHParseDisplayName.cpp
