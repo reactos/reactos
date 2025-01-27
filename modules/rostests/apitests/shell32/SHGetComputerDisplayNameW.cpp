@@ -143,17 +143,10 @@ START_TEST(SHGetComputerDisplayNameW)
     }
 
     s_pNetServerGetInfo = (FN_NetServerGetInfo)GetProcAddress(hNetApi32, "NetServerGetInfo");
-    if (!s_pNetServerGetInfo)
-    {
-        skip("NetServerGetInfo not found\n");
-        FreeLibrary(hNetApi32);
-        return;
-    }
-
     s_pNetApiBufferFree = (FN_NetApiBufferFree)GetProcAddress(hNetApi32, "NetApiBufferFree");
-    if (!s_pNetApiBufferFree)
+    if (!s_pNetServerGetInfo || !s_pNetApiBufferFree)
     {
-        skip("NetApiBufferFree not found\n");
+        skip("NetServerGetInfo or NetApiBufferFree not found\n");
         FreeLibrary(hNetApi32);
         return;
     }
