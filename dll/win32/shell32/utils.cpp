@@ -1895,7 +1895,7 @@ SHGetUserDisplayName(
     return hr;
 }
 
-// Skip leading server backslashes
+// Skip leading backslashes
 PWSTR
 SHELL_SkipServerSlashes(
     _In_ PCWSTR pszPath)
@@ -1906,11 +1906,11 @@ SHELL_SkipServerSlashes(
     return const_cast<PWSTR>(pch);
 }
 
-// The registry key for server computer names cache
+// The registry key for server computer descriptions cache
 #define COMPUTER_DESCRIPTIONS_KEY \
     L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComputerDescriptions"
 
-// Get server computer name from cache
+// Get server computer description from cache
 static HRESULT
 SHELL_GetCachedComputerDescription(
     _Out_ PWSTR pszDesc,
@@ -1923,7 +1923,7 @@ SHELL_GetCachedComputerDescription(
     return HRESULT_FROM_WIN32(error);
 }
 
-// Do cache a server computer name
+// Do cache a server computer description
 VOID
 SHELL_CacheComputerDescription(
     _In_ PCWSTR pszServerName,
@@ -1937,7 +1937,7 @@ SHELL_CacheComputerDescription(
                 SHELL_SkipServerSlashes(pszServerName), REG_SZ, pszDesc, (DWORD)cbDesc);
 }
 
-// Get real server computer name
+// Get real server computer description
 static HRESULT
 SHELL_GetComputerDescription(
     _Out_ PWSTR pszDesc,
@@ -1960,9 +1960,9 @@ SHELL_GetComputerDescription(
     return hr;
 }
 
-// Build display machine name
+// Build computer display name
 HRESULT
-SHELL_BuildDisplayMachineName(
+SHELL_BuildComputerDisplayName(
     _Out_ PWSTR pszName,
     _In_ DWORD cchNameMax,
     _In_ PCWSTR pszServerName,
@@ -2033,5 +2033,5 @@ SHGetComputerDisplayNameW(
     }
 
     // Build a string like "Description (SERVERNAME)"
-    return SHELL_BuildDisplayMachineName(pszName, cchNameMax, pszServerName, szDesc);
+    return SHELL_BuildComputerDisplayName(pszName, cchNameMax, pszServerName, szDesc);
 }
