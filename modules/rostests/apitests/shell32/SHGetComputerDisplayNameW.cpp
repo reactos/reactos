@@ -131,7 +131,7 @@ START_TEST(SHGetComputerDisplayNameW)
 {
     if (IsWindowsVistaOrGreater())
     {
-        skip("Vista+\n");
+        skip("Vista+\n"); // Tests on Vista+ will cause exception
         return;
     }
 
