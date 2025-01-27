@@ -19,6 +19,9 @@ static FN_SHGetComputerDisplayNameW s_pSHGetComputerDisplayNameW = NULL;
 static FN_NetServerGetInfo s_pNetServerGetInfo = NULL;
 static FN_NetApiBufferFree s_pNetApiBufferFree = NULL;
 
+#define COMPUTER_DESCRIPTIONS_KEY \
+    L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComputerDescriptions"
+
 static PWSTR
 SHELL_SkipServerSlashes(
     _In_ PCWSTR pszPath)
@@ -38,10 +41,8 @@ SHELL_CacheComputerDescription(
         return;
 
     DWORD cbDesc = (lstrlenW(pszDesc) + 1) * sizeof(WCHAR);
-    SHSetValueW(
-        HKEY_CURRENT_USER,
-        L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComputerDescriptions",
-        SHELL_SkipServerSlashes(pszServerName), REG_SZ, pszDesc, cbDesc);
+    SHSetValueW(HKEY_CURRENT_USER, COMPUTER_DESCRIPTIONS_KEY,
+                SHELL_SkipServerSlashes(pszServerName), REG_SZ, pszDesc, cbDesc);
 }
 
 static HRESULT
@@ -52,9 +53,7 @@ SHELL_GetCachedComputerDescription(
 {
     cchDescMax *= sizeof(WCHAR);
 
-    LSTATUS error = SHGetValueW(HKEY_CURRENT_USER,
-                                L"Software\\Microsoft\\Windows\\CurrentVersion\\"
-                                L"Explorer\\ComputerDescriptions",
+    LSTATUS error = SHGetValueW(HKEY_CURRENT_USER, COMPUTER_DESCRIPTIONS_KEY,
                                 SHELL_SkipServerSlashes(pszServerName), NULL, pszDesc, &cchDescMax);
     return HRESULT_FROM_WIN32(error);
 }
@@ -119,9 +118,7 @@ TEST_SHGetComputerDisplayNameW(VOID)
 
     // Delete registry value
     HKEY hKey;
-    LSTATUS error = RegOpenKeyExW(HKEY_CURRENT_USER,
-                                  L"Software\\Microsoft\\Windows\\CurrentVersion\\"
-                                  L"Explorer\\ComputerDescriptions", 0, KEY_WRITE, &hKey);
+    LSTATUS error = RegOpenKeyExW(HKEY_CURRENT_USER, COMPUTER_DESCRIPTIONS_KEY, 0, KEY_WRITE, &hKey);
     if (error == ERROR_SUCCESS)
     {
         RegDeleteValueW(hKey, L"DummyServerName");

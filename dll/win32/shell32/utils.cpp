@@ -1905,6 +1905,9 @@ SHELL_SkipServerSlashes(
     return const_cast<PWSTR>(pch);
 }
 
+#define COMPUTER_DESCRIPTIONS_KEY \
+    L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComputerDescriptions"
+
 static HRESULT
 SHELL_GetCachedComputerDescription(
     _In_ PCWSTR pszServerName,
@@ -1912,10 +1915,8 @@ SHELL_GetCachedComputerDescription(
     _In_ DWORD cchDescMax)
 {
     cchDescMax *= sizeof(WCHAR);
-    LSTATUS error = SHGetValueW(HKEY_CURRENT_USER,
-                                L"Software\\Microsoft\\Windows\\CurrentVersion\\"
-                                L"Explorer\\ComputerDescriptions",
-                                SHELL_SkipServerSlashes(pszServerName), NULL, pszDesc, &cchDescMax);
+    DWORD error = SHGetValueW(HKEY_CURRENT_USER, COMPUTER_DESCRIPTIONS_KEY,
+                              SHELL_SkipServerSlashes(pszServerName), NULL, pszDesc, &cchDescMax);
     return HRESULT_FROM_WIN32(error);
 }
 
@@ -1927,9 +1928,8 @@ SHELL_CacheComputerDescription(
     if (!pszDesc)
         return;
 
-    DWORD cbDesc = (lstrlenW(pszDesc) + 1) * sizeof(WCHAR);
-    SHSetValueW(HKEY_CURRENT_USER,
-                L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComputerDescriptions",
+    DWORD cbDesc = (wcslen(pszDesc) + 1) * sizeof(WCHAR);
+    SHSetValueW(HKEY_CURRENT_USER, COMPUTER_DESCRIPTIONS_KEY,
                 SHELL_SkipServerSlashes(pszServerName), REG_SZ, pszDesc, cbDesc);
 }
 
