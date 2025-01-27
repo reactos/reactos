@@ -239,8 +239,11 @@ InternalExtractIconListW(
         return NULL;
     }
 
-    INT cxIcon = GetSystemMetrics(SM_CXICON), cyIcon = GetSystemMetrics(SM_CYICON);
-    if (!PrivateExtractIconsW(pszExeFile, 0, cxIcon, cyIcon, phIcons, pIconIDs, (UINT)cIcons, 0))
+    if (!PrivateExtractIconsW(pszExeFile, 0,
+                              GetSystemMetrics(SM_CXICON),
+                              GetSystemMetrics(SM_CYICON),
+                              phIcons, pIconIDs,
+                              (UINT)cIcons, 0))
     {
         GlobalUnlock(hPairs);
         GlobalFree(hPairs);
