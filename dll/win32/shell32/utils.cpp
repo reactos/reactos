@@ -235,7 +235,7 @@ InternalExtractIconListW(
     PICON_AND_ID pPairs = (PICON_AND_ID)GlobalLock(hPairs);
     if (!pPairs)
     {
-        hPairs = GlobalFree(hPairs);
+        GlobalFree(hPairs);
         return NULL;
     }
 
@@ -243,7 +243,7 @@ InternalExtractIconListW(
     if (!PrivateExtractIconsW(pszExeFile, 0, cxIcon, cyIcon, phIcons, pIconIDs, (UINT)cIcons, 0))
     {
         GlobalUnlock(hPairs);
-        hPairs = GlobalFree(hPairs);
+        GlobalFree(hPairs);
         return NULL;
     }
 
