@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS API tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Test for SHShouldShowWizards
+ * PURPOSE:     Tests for InternalExtractIconListW
  * COPYRIGHT:   Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
@@ -13,7 +13,7 @@ START_TEST(InternalExtractIconListW)
 {
     if (IsWindowsVistaOrGreater())
     {
-        skip("Vista+\n"); // InternalExtractIconListW of Vista+ is useless
+        skip("InternalExtractIconListW of Vista+ is useless\n");
         return;
     }
 
