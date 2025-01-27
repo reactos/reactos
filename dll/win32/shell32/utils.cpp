@@ -1962,7 +1962,7 @@ SHELL_GetComputerDescription(
 
 // Build computer display name
 HRESULT
-SHELL_BuildComputerDisplayName(
+SHELL_BuildDisplayMachineName(
     _Out_ PWSTR pszName,
     _In_ DWORD cchNameMax,
     _In_ PCWSTR pszServerName,
@@ -2033,5 +2033,5 @@ SHGetComputerDisplayNameW(
     }
 
     // Build a string like "Description (SERVERNAME)"
-    return SHELL_BuildComputerDisplayName(pszName, cchNameMax, pszServerName, szDesc);
+    return SHELL_BuildDisplayMachineName(pszName, cchNameMax, pszServerName, szDesc);
 }
