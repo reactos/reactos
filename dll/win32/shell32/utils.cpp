@@ -1936,7 +1936,7 @@ SHELL_CacheComputerDescription(
 
 static HRESULT
 SHELL_GetComputerDescription(
-    _Inout_ PWSTR pszServerName,
+    _In_ PWSTR pszServerName,
     _Out_ PWSTR pszDesc,
     _In_ INT cchDescMax)
 {
@@ -1979,13 +1979,11 @@ SHELL_BuildDisplayMachineName(
 
 /*************************************************************************
  *  SHGetComputerDisplayNameW [SHELL32.752]
- *
- * Imported by logonui.exe.
  */
 EXTERN_C
 HRESULT WINAPI
 SHGetComputerDisplayNameW(
-    _Inout_opt_ LPWSTR pszServerName,
+    _In_opt_ LPWSTR pszServerName,
     _In_ DWORD dwFlags,
     _Out_ LPWSTR pszName,
     _In_ DWORD cchNameMax)

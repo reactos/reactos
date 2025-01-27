@@ -972,7 +972,7 @@ CopyStreamUI(
 
 HRESULT WINAPI
 SHGetComputerDisplayNameW(
-    _Inout_opt_ LPWSTR pszServerName,
+    _In_opt_ LPWSTR pszServerName,
     _In_ DWORD dwFlags,
     _Out_ LPWSTR pszName,
     _In_ DWORD cchNameMax);
