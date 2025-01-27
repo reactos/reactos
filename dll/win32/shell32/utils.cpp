@@ -245,7 +245,7 @@ InternalExtractIconListW(
     if (!pPairs)
         goto Finish;
 
-    pPairs = (ICON_AND_ID *)GlobalLock(pPairs);
+    pPairs = (ICON_AND_ID *)GlobalLock(hPairs);
     if (!pPairs)
     {
         hPairs = GlobalFree(hPairs);
@@ -254,7 +254,7 @@ InternalExtractIconListW(
 
     cxIcon = GetSystemMetrics(SM_CXICON);
     cyIcon = GetSystemMetrics(SM_CYICON);
-    if (!PrivateExtractIconsW(pszExeFile, 0, cxIcon, cyIcon, phIcons, pIconIDs, cIcons, 0))
+    if (!PrivateExtractIconsW(pszExeFile, 0, cxIcon, cyIcon, phIcons, pIconIDs, (UINT)cIcons, 0))
     {
         GlobalUnlock(hPairs);
         hPairs = GlobalFree(hPairs);
@@ -268,10 +268,10 @@ InternalExtractIconListW(
     }
 
 Finish:
-    if (hPairs)
-        GlobalUnlock(hPairs);
     GlobalFree(pIconIDs);
     GlobalFree(phIcons);
+    if (hPairs)
+        GlobalUnlock(hPairs);
     return hPairs;
 }
 
