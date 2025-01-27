@@ -289,17 +289,31 @@ BOOL CALLBACK UXTHEME_broadcast_theme_changed (HWND hWnd, LPARAM enable);
 
 extern DWORD gdwErrorInfoTlsIndex;
 
-HRESULT UXTHEME_MakeError32(_In_ LONG error);
-HRESULT UXTHEME_MakeLastError(VOID);
 VOID UXTHEME_DeleteParseErrorInfo(VOID);
+
+static inline
+HRESULT
+UXTHEME_MakeError(_In_ LONG error)
+{
+    if (error < 0)
+        return (HRESULT)error;
+    return HRESULT_FROM_WIN32(error);
+}
+
+static inline
+HRESULT
+UXTHEME_MakeLastError(VOID)
+{
+    return UXTHEME_MakeError(GetLastError());
+}
 
 HRESULT
 UXTHEME_MakeParseError(
     _In_ UINT nID,
-    _In_ LPCWSTR pszPath0,
-    _In_ LPCWSTR pszPath1,
-    _In_ LPCWSTR pszPath2,
-    _In_ LPCWSTR pszPath3,
+    _In_ LPCWSTR pszParam1,
+    _In_ LPCWSTR pszParam2,
+    _In_ LPCWSTR pszFile,
+    _In_ LPCWSTR pszLine,
     _In_ INT nLineNo);
 
 #endif /* _UXTHEME_PCH_ */

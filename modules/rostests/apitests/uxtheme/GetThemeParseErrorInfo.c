@@ -73,20 +73,20 @@ START_TEST(GetThemeParseErrorInfo)
 
     ZeroMemory(&Info, sizeof(Info));
     Info.cbSize = sizeof(Info);
-    Info.ErrInfo.szPath0[0] = L'@';
-    Info.ErrInfo.szPath1[0] = L'@';
-    Info.ErrInfo.szPath2[0] = L'@';
-    Info.ErrInfo.szPath3[0] = L'@';
+    Info.szDescription[0] = L'@';
+    Info.szDescription[MAX_PATH] = L'@';
+    Info.szFile[0] = L'@';
+    Info.szLine[0] = L'@';
     hr = GetThemeParseErrorInfo(&Info);
     ok_hex(hr, S_OK);
-    ok_int(Info.ErrInfo.nID, 160);
+    ok_int(Info.nID, 160);
 
-    ok(Info.ErrInfo.szPath0[0] != UNICODE_NULL, "Info.ErrInfo.szPath0 was empty\n");
-    ok(Info.ErrInfo.szPath0[0] != L'@', "Info.ErrInfo.szPath0 had no change\n");
-    trace("Info.ErrInfo.szPath0: %S\n", Info.ErrInfo.szPath0); // "Must be Primitive, enum, or type: InvalidValueName"
+    ok(Info.szDescription[0] != UNICODE_NULL, "Info.szDescription was empty\n");
+    ok(Info.szDescription[0] != L'@', "Info.szDescription had no change\n");
+    trace("szDescription: %S\n", Info.szDescription); // "Must be Primitive, enum, or type: InvalidValueName"
 
-    ok_int(Info.ErrInfo.szPath1[0], L'@');
-    ok_wstr(Info.ErrInfo.szPath2, L"invalid.ini");
-    ok_wstr(Info.ErrInfo.szPath3, L"InvalidValueName=InvalidValue");
-    ok_int(Info.ErrInfo.nLineNo, 2);
+    ok_int(Info.szDescription[MAX_PATH], L'@');
+    ok_wstr(Info.szFile, L"invalid.ini");
+    ok_wstr(Info.szLine, L"InvalidValueName=InvalidValue");
+    ok_int(Info.nLineNo, 2);
 }

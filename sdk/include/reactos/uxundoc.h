@@ -9,17 +9,21 @@ typedef HANDLE HTHEMEFILE;
 typedef struct tagTMERRINFO
 {
     UINT nID;
-    WCHAR szPath0[MAX_PATH];
-    WCHAR szPath1[MAX_PATH];
-    WCHAR szPath2[MAX_PATH];
-    WCHAR szPath3[MAX_PATH];
+    WCHAR szParam1[MAX_PATH];
+    WCHAR szParam2[MAX_PATH];
+    WCHAR szFile[MAX_PATH];
+    WCHAR szLine[MAX_PATH];
     INT nLineNo;
 } TMERRINFO, *PTMERRINFO;
 
 typedef struct tagPARSE_ERROR_INFO
 {
     DWORD cbSize;
-    TMERRINFO ErrInfo;
+    UINT nID;
+    WCHAR szDescription[2 * MAX_PATH];
+    WCHAR szFile[MAX_PATH];
+    WCHAR szLine[MAX_PATH];
+    INT nLineNo;
 } PARSE_ERROR_INFO, *PPARSE_ERROR_INFO;
 
 HRESULT WINAPI GetThemeParseErrorInfo(_Inout_ PPARSE_ERROR_INFO pInfo);

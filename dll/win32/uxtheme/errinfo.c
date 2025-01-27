@@ -1,27 +1,13 @@
 /*
  * PROJECT:     ReactOS uxtheme.dll
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Error information of UXTHEME
+ * PURPOSE:     UXTHEME error reporting helpers
  * COPYRIGHT:   Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "uxthemep.h"
 #include <stdlib.h>
 #include <strsafe.h>
-
-HRESULT
-UXTHEME_MakeError32(_In_ LONG error)
-{
-    if (error < 0)
-        return (HRESULT)error;
-    return HRESULT_FROM_WIN32(error);
-}
-
-HRESULT
-UXTHEME_MakeLastError(VOID)
-{
-    return UXTHEME_MakeError32(GetLastError());
-}
 
 PTMERRINFO
 UXTHEME_GetParseErrorInfo(_In_ BOOL bCreate)
@@ -65,7 +51,7 @@ UXTHEME_FormatLocalMsg(
     _In_ PTMERRINFO pErrInfo)
 {
     WCHAR szFormat[MAX_PATH];
-    LPCWSTR args[2] = { pErrInfo->szPath0, pErrInfo->szPath1 };
+    LPCWSTR args[2] = { pErrInfo->szParam1, pErrInfo->szParam2 };
 
     if (!LoadStringW(hInstance, uID, szFormat, _countof(szFormat)) || !szFormat[0])
         return FALSE;
@@ -85,6 +71,7 @@ UXTHEME_FormatParseMessage(
     WCHAR szFullPath[_MAX_PATH];
     WCHAR szDrive[_MAX_DRIVE + 1], szDir[_MAX_DIR], szFileName[_MAX_FNAME], szExt[_MAX_EXT];
     BOOL ret;
+    HRESULT hr;
 
     nID = LOWORD(pErrInfo->nID);
     if (!GetModuleFileNameW(NULL, szFullPath, _countof(szFullPath)))
@@ -101,20 +88,22 @@ UXTHEME_FormatParseMessage(
     hUxTheme = LoadLibraryW(L"uxtheme.dll");
     if (!hUxTheme)
         return E_FAIL;
+
     ret = UXTHEME_FormatLocalMsg(hUxTheme, nID, pszDest, cchDest, szDrive, pErrInfo);
+    hr = (ret ? S_OK : UXTHEME_MakeLastError());
     FreeLibrary(hUxTheme);
 
-    return ret ? S_OK : UXTHEME_MakeLastError();
+    return hr;
 }
 
 // Parser should use this function on failure
 HRESULT
 UXTHEME_MakeParseError(
     _In_ UINT nID,
-    _In_ LPCWSTR pszPath0,
-    _In_ LPCWSTR pszPath1,
-    _In_ LPCWSTR pszPath2,
-    _In_ LPCWSTR pszPath3,
+    _In_ LPCWSTR pszParam1,
+    _In_ LPCWSTR pszParam2,
+    _In_ LPCWSTR pszFile,
+    _In_ LPCWSTR pszLine,
     _In_ INT nLineNo)
 {
     PTMERRINFO pErrInfo = UXTHEME_GetParseErrorInfo(TRUE);
@@ -122,10 +111,10 @@ UXTHEME_MakeParseError(
     {
         pErrInfo->nID = nID;
         pErrInfo->nLineNo = nLineNo;
-        StringCchCopyW(pErrInfo->szPath0, _countof(pErrInfo->szPath0), pszPath0);
-        StringCchCopyW(pErrInfo->szPath1, _countof(pErrInfo->szPath1), pszPath1);
-        StringCchCopyW(pErrInfo->szPath2, _countof(pErrInfo->szPath2), pszPath2);
-        StringCchCopyW(pErrInfo->szPath3, _countof(pErrInfo->szPath3), pszPath3);
+        StringCchCopyW(pErrInfo->szParam1, _countof(pErrInfo->szParam1), pszParam1);
+        StringCchCopyW(pErrInfo->szParam2, _countof(pErrInfo->szParam2), pszParam2);
+        StringCchCopyW(pErrInfo->szFile, _countof(pErrInfo->szFile), pszFile);
+        StringCchCopyW(pErrInfo->szLine, _countof(pErrInfo->szLine), pszLine);
     }
     return HRESULT_FROM_WIN32(ERROR_UNKNOWN_PROPERTY);
 }
@@ -149,15 +138,13 @@ GetThemeParseErrorInfo(_Inout_ PPARSE_ERROR_INFO pInfo)
     if (!pErrInfo)
         return E_OUTOFMEMORY;
 
-    hr = UXTHEME_FormatParseMessage(pErrInfo, pInfo->ErrInfo.szPath0,
-                                    _countof(pInfo->ErrInfo.szPath0) +
-                                    _countof(pInfo->ErrInfo.szPath1));
+    hr = UXTHEME_FormatParseMessage(pErrInfo, pInfo->szDescription, _countof(pInfo->szDescription));
     if (FAILED(hr))
         return hr;
 
-    pInfo->ErrInfo.nID = pErrInfo->nID;
-    pInfo->ErrInfo.nLineNo = pErrInfo->nLineNo;
-    StringCchCopyW(pInfo->ErrInfo.szPath2, _countof(pInfo->ErrInfo.szPath2), pErrInfo->szPath2);
-    StringCchCopyW(pInfo->ErrInfo.szPath3, _countof(pInfo->ErrInfo.szPath3), pErrInfo->szPath3);
+    pInfo->nID = pErrInfo->nID;
+    pInfo->nLineNo = pErrInfo->nLineNo;
+    StringCchCopyW(pInfo->szFile, _countof(pInfo->szFile), pErrInfo->szFile);
+    StringCchCopyW(pInfo->szLine, _countof(pInfo->szLine), pErrInfo->szLine);
     return hr;
 }
