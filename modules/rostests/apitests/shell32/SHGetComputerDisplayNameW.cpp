@@ -82,17 +82,16 @@ static VOID
 TEST_SHGetComputerDisplayNameW(VOID)
 {
     WCHAR szCompName[MAX_COMPUTERNAME_LENGTH + 1], szDesc[256], szDisplayName[MAX_PATH];
-    WCHAR szDummyServer[] = L"DummyServerName";
-    WCHAR szName[MAX_PATH];
+    WCHAR szName[MAX_PATH], szServerName[] = L"DummyServerName";
 
     DWORD cchCompName = _countof(szCompName);
     BOOL ret = GetComputerNameW(szCompName, &cchCompName);
     ok_int(ret, TRUE);
     trace("%s\n", wine_dbgstr_w(szCompName));
 
-    SHELL_CacheComputerDescription(szDummyServer, L"DummyDescription");
+    SHELL_CacheComputerDescription(szServerName, L"DummyDescription");
 
-    HRESULT hr = SHELL_GetCachedComputerDescription(szDummyServer, szDesc, _countof(szDesc));
+    HRESULT hr = SHELL_GetCachedComputerDescription(szServerName, szDesc, _countof(szDesc));
     if (FAILED(hr))
         szDesc[0] = UNICODE_NULL;
     trace("%s\n", wine_dbgstr_w(szDesc));
@@ -104,17 +103,17 @@ TEST_SHGetComputerDisplayNameW(VOID)
     ok_wstr(szDisplayName, szCompName);
 
     StringCchCopyW(szDisplayName, _countof(szDisplayName), L"@");
-    hr = SHGetComputerDisplayNameW(szDummyServer, 0, szDisplayName, _countof(szDisplayName));
+    hr = SHGetComputerDisplayNameW(szServerName, 0, szDisplayName, _countof(szDisplayName));
     ok_hex(hr, S_OK);
-    trace("%s\n", wine_dbgstr_w(szDummyServer));
+    trace("%s\n", wine_dbgstr_w(szServerName));
     trace("%s\n", wine_dbgstr_w(szDisplayName));
-    ok_wstr(szDummyServer, L"DummyServerName");
+    ok_wstr(szServerName, L"DummyServerName");
 
-    hr = SHELL_BuildDisplayMachineName(szDummyServer, szDesc, szName, _countof(szName));
+    hr = SHELL_BuildDisplayMachineName(szServerName, szDesc, szName, _countof(szName));
     ok_hex(hr, S_OK);
 
     trace("%s\n", wine_dbgstr_w(szDisplayName));
-    ok_wstr(szName, szDisplayName);
+    ok_wstr(szDisplayName, szName);
 
     // Delete registry value
     HKEY hKey;
