@@ -242,7 +242,7 @@ InternalExtractIconListW(
         goto Finish;
 
     hPairs = GlobalAlloc(GHND, cIcons * sizeof(ICON_AND_ID));
-    if (!pPairs)
+    if (!hPairs)
         goto Finish;
 
     pPairs = (ICON_AND_ID *)GlobalLock(hPairs);
