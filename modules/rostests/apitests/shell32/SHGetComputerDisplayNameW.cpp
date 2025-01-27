@@ -106,13 +106,13 @@ TEST_SHGetComputerDisplayNameW(VOID)
     hr = SHGetComputerDisplayNameW(szServerName, 0, szDisplayName, _countof(szDisplayName));
     ok_hex(hr, S_OK);
     trace("%s\n", wine_dbgstr_w(szServerName));
-    trace("%s\n", wine_dbgstr_w(szDisplayName));
     ok_wstr(szServerName, L"DummyServerName");
 
     hr = SHELL_BuildDisplayMachineName(szServerName, szDesc, szName, _countof(szName));
     ok_hex(hr, S_OK);
 
     trace("%s\n", wine_dbgstr_w(szDisplayName));
+    trace("%s\n", wine_dbgstr_w(szName));
     ok_wstr(szDisplayName, szName);
 
     // Delete registry value
