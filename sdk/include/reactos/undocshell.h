@@ -934,6 +934,12 @@ IStream* WINAPI SHGetViewStream(LPCITEMIDLIST, DWORD, LPCTSTR, LPCTSTR, LPCTSTR)
 
 HRESULT WINAPI SHCreateSessionKey(REGSAM samDesired, PHKEY phKey);
 
+HGLOBAL WINAPI
+InternalExtractIconListW(
+    _In_ HINSTANCE hInst,
+    _In_ PCWSTR pszExeFile,
+    _In_opt_ PUINT pUnused);
+
 LONG WINAPI SHRegQueryValueExA(
     HKEY hkey,
     LPCSTR lpValueName,

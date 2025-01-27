@@ -204,6 +204,75 @@ HRESULT SHILAppend(_Inout_ LPITEMIDLIST pidl, _Inout_ LPITEMIDLIST *ppidl)
     return hr;
 }
 
+struct ICON_AND_ID
+{
+    HICON hIcon;
+    UINT nIconID;
+};
+
+/*************************************************************************
+ *  InternalExtractIconListW [SHELL32.238]
+ */
+EXTERN_C
+HGLOBAL WINAPI
+InternalExtractIconListW(
+    _In_ HINSTANCE hInst,
+    _In_ PCWSTR pszExeFile,
+    _In_opt_ PUINT pUnused)
+{
+    SIZE_T cIcons, iItem;
+    PUINT pIconIDs;
+    HICON *phIcons = NULL;
+    HGLOBAL hPairs = NULL;
+    ICON_AND_ID *pPairs;
+    INT cxIcon, cyIcon;
+
+    UNREFERENCED_PARAMETER(pUnused);
+
+    cIcons = (SIZE_T)ExtractIconW(hInst, pszExeFile, 0xFFFFFFFF);
+    if (!cIcons)
+        return NULL;
+
+    pIconIDs = (PUINT)GlobalAlloc(GPTR, cIcons * sizeof(UINT));
+    if (!pIconIDs)
+        return NULL;
+
+    phIcons = (HICON *)GlobalAlloc(GPTR, cIcons * sizeof(HICON));
+    if (!phIcons)
+        goto Finish;
+
+    hPairs = GlobalAlloc(GHND, cIcons * sizeof(ICON_AND_ID));
+    if (!pPairs)
+        goto Finish;
+
+    pPairs = (ICON_AND_ID *)GlobalLock(pPairs);
+    if (!pPairs)
+    {
+        hPairs = GlobalFree(hPairs);
+        goto Finish;
+    }
+
+    cxIcon = GetSystemMetrics(SM_CXICON);
+    cyIcon = GetSystemMetrics(SM_CYICON);
+    if (!PrivateExtractIconsW(pszExeFile, 0, cxIcon, cyIcon, phIcons, pIconIDs, cIcons, 0))
+    {
+        GlobalUnlock(hPairs);
+        hPairs = GlobalFree(hPairs);
+        goto Finish;
+    }
+
+    for (iItem = 0; iItem < cIcons; ++iItem)
+    {
+        pPairs[iItem].hIcon = phIcons[iItem];
+        pPairs[iItem].nIconID = pIconIDs[iItem];
+    }
+
+Finish:
+    GlobalFree(pIconIDs);
+    GlobalFree(phIcons);
+    return hPairs;
+}
+
 /*************************************************************************
  *  SHShouldShowWizards [SHELL32.237]
  *

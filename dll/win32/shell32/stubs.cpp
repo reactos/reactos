@@ -720,19 +720,6 @@ FindExeDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
  */
 EXTERN_C HANDLE
 WINAPI
-InternalExtractIconListW(HANDLE hHandle,
-                         LPWSTR lpFileName,
-                         LPINT lpCount)
-{
-    FIXME("InternalExtractIconListW() stub\n");
-    return NULL;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C HANDLE
-WINAPI
 InternalExtractIconListA(HANDLE hHandle,
                          LPSTR lpFileName,
                          LPINT lpCount)

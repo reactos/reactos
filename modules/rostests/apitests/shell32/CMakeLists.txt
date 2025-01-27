@@ -19,6 +19,7 @@ list(APPEND SOURCE
     GetDisplayNameOf.cpp
     GUIDFromString.cpp
     Int64ToString.cpp
+    InternalExtractIconListW.cpp
     IShellFolderViewCB.cpp
     ItemIDList.cpp
     OpenAs_RunDLL.cpp
