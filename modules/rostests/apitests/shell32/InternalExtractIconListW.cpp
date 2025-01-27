@@ -13,7 +13,7 @@ START_TEST(InternalExtractIconListW)
 {
     if (IsWindowsVistaOrGreater())
     {
-        skip("InternalExtractIconListW of Vista+ is useless\n");
+        skip("InternalExtractIconListW of Vista+ is useless (returns NULL)\n");
         return;
     }
 
@@ -23,8 +23,8 @@ START_TEST(InternalExtractIconListW)
     HGLOBAL hPairs = InternalExtractIconListW(GetModuleHandleW(NULL), szPath, 0);
     ok(hPairs != NULL, "hPairs was NULL\n");
 
-    SIZE_T cIcons = GlobalSize(hPairs) / sizeof(ICON_AND_ID);
-    ok(cIcons != 0, "cIcons was zero\n");
+    UINT nIcons = (UINT)(GlobalSize(hPairs) / sizeof(ICON_AND_ID));
+    ok(nIcons != 0, "nIcons was zero\n");
 
     PICON_AND_ID pPairs = (PICON_AND_ID)GlobalLock(hPairs);
     ok(pPairs != NULL, "pPairs was NULL\n");
@@ -34,7 +34,7 @@ START_TEST(InternalExtractIconListW)
 
     if (pPairs)
     {
-        for (SIZE_T iIcon = 0; iIcon < cIcons; ++iIcon)
+        for (UINT iIcon = 0; iIcon < nIcons; ++iIcon)
         {
             DestroyIcon(pPairs[iIcon].hIcon);
         }
