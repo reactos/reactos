@@ -934,6 +934,13 @@ IStream* WINAPI SHGetViewStream(LPCITEMIDLIST, DWORD, LPCTSTR, LPCTSTR, LPCTSTR)
 
 HRESULT WINAPI SHCreateSessionKey(REGSAM samDesired, PHKEY phKey);
 
+// InternalExtractIconListW returns a handle to ICON_AND_ID's
+typedef struct tagICON_AND_ID
+{
+    HICON hIcon;
+    UINT nIconID;
+} ICON_AND_ID, *PICON_AND_ID;
+
 HGLOBAL WINAPI
 InternalExtractIconListW(
     _In_ HINSTANCE hInst,

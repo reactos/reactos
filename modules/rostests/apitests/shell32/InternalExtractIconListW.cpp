@@ -9,12 +9,6 @@
 #include <undocshell.h>
 #include <versionhelpers.h>
 
-struct ICON_AND_ID
-{
-    HICON hIcon;
-    UINT nIconID;
-};
-
 START_TEST(InternalExtractIconListW)
 {
     if (IsWindowsVistaOrGreater())
@@ -32,7 +26,7 @@ START_TEST(InternalExtractIconListW)
     SIZE_T cIcons = GlobalSize(hPairs) / sizeof(ICON_AND_ID);
     ok(cIcons != 0, "cIcons was zero\n");
 
-    ICON_AND_ID *pPairs = (ICON_AND_ID *)GlobalLock(hPairs);
+    PICON_AND_ID pPairs = (PICON_AND_ID)GlobalLock(hPairs);
     ok(pPairs != NULL, "pPairs was NULL\n");
 
     ok((pPairs && pPairs[0].hIcon != NULL), "pPairs[0].hIcon was NULL\n");

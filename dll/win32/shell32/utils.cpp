@@ -204,12 +204,6 @@ HRESULT SHILAppend(_Inout_ LPITEMIDLIST pidl, _Inout_ LPITEMIDLIST *ppidl)
     return hr;
 }
 
-struct ICON_AND_ID
-{
-    HICON hIcon;
-    UINT nIconID;
-};
-
 /*************************************************************************
  *  InternalExtractIconListW [SHELL32.238]
  */
@@ -220,60 +214,46 @@ InternalExtractIconListW(
     _In_ PCWSTR pszExeFile,
     _In_opt_ PUINT pUnused)
 {
-    SIZE_T cIcons, iItem;
-    PUINT pIconIDs;
-    HICON *phIcons = NULL;
-    HGLOBAL hPairs = NULL;
-    ICON_AND_ID *pPairs;
-    INT cxIcon, cyIcon;
-
     UNREFERENCED_PARAMETER(pUnused);
 
-    cIcons = (SIZE_T)ExtractIconW(hInst, pszExeFile, 0xFFFFFFFF);
+    SIZE_T cIcons = (SIZE_T)ExtractIconW(hInst, pszExeFile, 0xFFFFFFFF);
     if (!cIcons)
         return NULL;
 
-    pIconIDs = (PUINT)GlobalAlloc(GPTR, cIcons * sizeof(UINT));
-    if (!pIconIDs)
+    CHeapPtr<UINT, CGlobalAllocator> pIconIDs;
+    if (!pIconIDs.Allocate(cIcons))
         return NULL;
 
-    phIcons = (HICON *)GlobalAlloc(GPTR, cIcons * sizeof(HICON));
-    if (!phIcons)
-        goto Finish;
+    CHeapPtr<HICON, CGlobalAllocator> phIcons;
+    if (!phIcons.Allocate(cIcons))
+        return NULL;
 
-    hPairs = GlobalAlloc(GHND, cIcons * sizeof(ICON_AND_ID));
+    HGLOBAL hPairs = GlobalAlloc(GHND, cIcons * sizeof(ICON_AND_ID));
     if (!hPairs)
-        goto Finish;
+        return NULL;
 
-    pPairs = (ICON_AND_ID *)GlobalLock(hPairs);
+    PICON_AND_ID pPairs = (PICON_AND_ID)GlobalLock(hPairs);
     if (!pPairs)
     {
         hPairs = GlobalFree(hPairs);
-        goto Finish;
+        return NULL;
     }
 
-    cxIcon = GetSystemMetrics(SM_CXICON);
-    cyIcon = GetSystemMetrics(SM_CYICON);
+    INT cxIcon = GetSystemMetrics(SM_CXICON), cyIcon = GetSystemMetrics(SM_CYICON);
     if (!PrivateExtractIconsW(pszExeFile, 0, cxIcon, cyIcon, phIcons, pIconIDs, (UINT)cIcons, 0))
     {
         GlobalUnlock(hPairs);
         hPairs = GlobalFree(hPairs);
-        goto Finish;
+        return NULL;
     }
 
-    for (iItem = 0; iItem < cIcons; ++iItem)
+    for (SIZE_T iItem = 0; iItem < cIcons; ++iItem)
     {
         pPairs[iItem].hIcon = phIcons[iItem];
         pPairs[iItem].nIconID = pIconIDs[iItem];
     }
 
-Finish:
-    if (pIconIDs)
-        GlobalFree(pIconIDs);
-    if (phIcons)
-        GlobalFree(phIcons);
-    if (hPairs)
-        GlobalUnlock(hPairs);
+    GlobalUnlock(hPairs);
     return hPairs;
 }
 
