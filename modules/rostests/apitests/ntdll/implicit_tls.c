@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS API Tests
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Test for support of implicit Thread Local Storage (TLS)
- * PROGRAMMER:  Shane Fournier
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Tests for Implicit Thread Local Storage (TLS) support
+ * COPYRIGHT:   Copyright 2025 Shane Fournier <shanefournier@yandex.com>
  */
 
 #include "precomp.h"
@@ -17,7 +17,8 @@ HANDLE ThreadEvent;
 
 ULONG ExtantTlsEntryCount = 0;
 
-DWORD WINAPI AuxThread0Proc(
+DWORD WINAPI
+AuxThread0Proc(
   _In_ LPVOID pParameter
 )
 {
@@ -26,19 +27,17 @@ DWORD WINAPI AuxThread0Proc(
     int i = 0;
     WaitForSingleObject(ThreadEvent, INFINITE);
     TlsVector = Teb->ThreadLocalStoragePointer;
-    while(1)
+    while (TlsVector[i] && !((ULONG_PTR)TlsVector[i] % 4))
     {
-        if(TlsVector[i] && !((ULONG_PTR)TlsVector[i] % 4))
-            ++i;
-        else
-            break;
+        ++i;
     }
     WaitForSingleObject(ThreadEvent, INFINITE);
     ok(i == TLS_VECTOR_MAX_SIZE + ExtantTlsEntryCount, "ThreadLocalStoragePointer length is %d, expected length %lu\n", i, TLS_VECTOR_MAX_SIZE + ExtantTlsEntryCount);
     return 0;
 }
 
-DWORD WINAPI AuxThread1Proc(
+DWORD WINAPI
+AuxThread1Proc(
   _In_ LPVOID pParameter
 )
 {
@@ -54,7 +53,7 @@ START_TEST(implicit_tls)
     PVOID* TlsVector;
     WCHAR workdir[MAX_PATH];
     WCHAR duplicatepath[MAX_PATH];
-	WCHAR basedllname[MAX_PATH];
+    WCHAR basedllname[MAX_PATH];
     HMODULE DllAddr[TLS_VECTOR_MAX_SIZE];
     BOOL IsSuccess;
     DWORD Length;
@@ -118,13 +117,9 @@ START_TEST(implicit_tls)
     ok(TlsIdx0Value == TlsIdx0ValueAfter, "Value in TLS index 0 corrupted by DLL loads; expected %lu and got %lu\n", TlsIdx0Value, TlsIdx0ValueAfter);
 
     i = 0;
-
-    while(1)
+    while (TlsVector[i] && !((ULONG_PTR)TlsVector[i] % 4))
     {
-        if(TlsVector[i] && !((ULONG_PTR)TlsVector[i] % 4))
-             ++i;
-        else
-            break;
+         ++i;
     }
     ok(i == TLS_VECTOR_MAX_SIZE + ExtantTlsEntryCount, "ThreadLocalStoragePointer length is %d, expected length %lu\n", i, TLS_VECTOR_MAX_SIZE + ExtantTlsEntryCount);
 

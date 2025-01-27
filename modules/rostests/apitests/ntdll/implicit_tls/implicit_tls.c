@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS API Tests
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Tests for Implicit Thread Local Storage (TLS) support
+ * COPYRIGHT:   Copyright 2025 Shane Fournier <shanefournier@yandex.com>
+ */
+
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
@@ -15,9 +22,9 @@
 
 
 /* Tls magic stolen from sdk/lib/crt/startup/tlssup.c */
-/* ROS is built with the flag /Zc:threadSafeInit- which prevents the */
-/* compiling of proper TLS code. Instead, hack up a TLS directory to increment the TLS index and */
-/* allow the loader to allocate a sufficient buffer in the TLS vector. */
+/* ROS is built with the flag /Zc:threadSafeInit- which prevents the compilation
+ * of proper TLS code. Instead, hack up a TLS directory to increment the TLS index
+ * and allow the loader to allocate a sufficient buffer in the TLS vector. */
 
 #if defined(_MSC_VER)
 #pragma section(".rdata$T",long,read)

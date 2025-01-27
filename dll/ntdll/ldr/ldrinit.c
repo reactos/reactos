@@ -507,6 +507,7 @@ NTAPI
 LdrpInitializeThread(IN PCONTEXT Context)
 {
     PPEB Peb = NtCurrentPeb();
+    PTEB Teb = NtCurrentTeb();
     PLDRP_TEB_LIST_ENTRY TebEntry;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PLIST_ENTRY NextEntry, ListHead;
@@ -534,11 +535,11 @@ LdrpInitializeThread(IN PCONTEXT Context)
     if (LdrpShutdownInProgress) goto Exit;
 
     /* Allocate TLS */
-    LdrpAllocateTls(NtCurrentTeb());
+    LdrpAllocateTls(Teb);
 
     /* Add thread to active TEB list */
     ListHead = &LdrpActiveTebList;
-    TebEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LDRP_TEB_LIST_ENTRY));
+    TebEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*TebEntry));
     TebEntry->Teb = NtCurrentTeb();
     InsertTailList(&LdrpActiveTebList, &TebEntry->TebLinks);
 
@@ -1118,10 +1119,11 @@ LdrShutdownThread(VOID)
     /* Get the Ldr Lock */
     RtlEnterCriticalSection(&LdrpLoaderLock);
 
-    /* Remove thread from active TEB list */
+    /* Remove the thread from the active TEB list */
     ListHead = &LdrpActiveTebList;
-    NextEntry = ListHead->Blink;
-    while (NextEntry != ListHead)
+    for (NextEntry = ListHead->Blink;
+         NextEntry != ListHead;
+         NextEntry = NextEntry->Blink)
     {
         TebEntry = CONTAINING_RECORD(NextEntry, LDRP_TEB_LIST_ENTRY, TebLinks);
         if (TebEntry->Teb == Teb)
@@ -1129,8 +1131,8 @@ LdrShutdownThread(VOID)
             RemoveEntryList(NextEntry);
             break;
         }
-        NextEntry = NextEntry->Blink;
     }
+
     /* Start at the end */
     ListHead = &Peb->Ldr->InInitializationOrderModuleList;
     NextEntry = ListHead->Blink;
@@ -1294,7 +1296,7 @@ LdrpInitializeTls(VOID)
     PLDRP_TLS_DATA TlsData;
     ULONG Size;
     NTSTATUS Status;
-    BOOL AllocateTls = FALSE;
+    BOOLEAN AllocateTls = FALSE;
 
     /* Initialize the TLS List */
     if (!LdrpImageHasTls)
@@ -1317,7 +1319,9 @@ LdrpInitializeTls(VOID)
 
         /* Check if we have a directory */
         if (!TlsDirectory) continue;
-        if (LdrEntry->Flags & LDRP_TLS_LOADED) continue;
+
+        if (LdrEntry->Flags & LDRP_TLS_LOADED)
+            continue;
 
         /* Check if the image has TLS */
         if (!LdrpImageHasTls) LdrpImageHasTls = TRUE;
@@ -1349,8 +1353,6 @@ LdrpInitializeTls(VOID)
         TlsData->TlsDirectory.Characteristics = LdrpNumberOfTlsEntries++;
     }
 
-    ListHead = &LdrpActiveTebList;
-    NextEntry = ListHead->Blink;
     /* Done setting up TLS, allocate entries */
     if (AllocateTls)
     {
@@ -1358,7 +1360,12 @@ LdrpInitializeTls(VOID)
         if (Status != STATUS_SUCCESS)
             return Status;
 
-        while (NextEntry != ListHead)
+        ListHead = &LdrpActiveTebList;
+        NextEntry = ListHead->Blink;
+
+        for (NextEntry = ListHead->Blink;
+             NextEntry != ListHead;
+             NextEntry = NextEntry->Blink)
         {
             TebEntry = CONTAINING_RECORD(NextEntry, LDRP_TEB_LIST_ENTRY, TebLinks);
             if (TebEntry->Teb != NtCurrentTeb())
@@ -1367,7 +1374,6 @@ LdrpInitializeTls(VOID)
                 if (Status != STATUS_SUCCESS)
                     return Status;
             }
-            NextEntry = NextEntry->Blink;
         }
 	}
 
@@ -1376,7 +1382,7 @@ LdrpInitializeTls(VOID)
 
 NTSTATUS
 NTAPI
-LdrpAllocateTls(PTEB Teb)
+LdrpAllocateTls(_In_ PTEB Teb)
 {
     PLIST_ENTRY NextEntry, ListHead;
     PLDRP_TLS_DATA TlsData;
@@ -1460,7 +1466,7 @@ LdrpAllocateTls(PTEB Teb)
     if (OldTlsVector)
     {
         OldTlsVectorEntry = RtlAllocateHeap(RtlGetProcessHeap(), 0,
-                                            sizeof(LDRP_OLD_TLS_VECTOR_ENTRY));
+                                            sizeof(*OldTlsVectorEntry));
         if (!OldTlsVectorEntry)
         {
             RtlFreeHeap(RtlGetProcessHeap(), 0, TlsVector);
@@ -1477,8 +1483,8 @@ LdrpAllocateTls(PTEB Teb)
             Teb->SystemReserved1[0] = OldTlsVectorEntry;
         }
     }
-    /* Teb->UserReserved[0] -> rename to ThreadNumberOfTlsEntries?
-       SystemReserved1[0] -> rename to OldTlsVectorList?          */
+    // Teb->UserReserved[0] -> rename to ThreadNumberOfTlsEntries?
+    // SystemReserved1[0] -> rename to OldTlsVectorList?
     Teb->ThreadLocalStoragePointer = TlsVector;
     Teb->UserReserved[0] = LdrpNumberOfTlsEntries;
     /* Done */
@@ -1521,7 +1527,7 @@ LdrpFreeTls(VOID)
                 0,
                 TlsVector);
 
-    if(Teb->SystemReserved1[0])
+    if (Teb->SystemReserved1[0])
     {
         /* Loop through it */
         ListHead = Teb->SystemReserved1[0];
@@ -1533,11 +1539,10 @@ LdrpFreeTls(VOID)
                                                       TlsVectorLinks);
             NextEntry = NextEntry->Flink;
 
-            /* Free each old TLS vector. */
+            /* Free each old TLS vector and the entry itself */
             RtlFreeHeap(RtlGetProcessHeap(),
                         0,
                         OldTlsVectorDataEntry->OldTlsVector);
-            /* And the entry itself. */
             RtlFreeHeap(RtlGetProcessHeap(),
                         0,
                         OldTlsVectorDataEntry);

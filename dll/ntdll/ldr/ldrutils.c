@@ -2581,9 +2581,7 @@ LdrpLoadDll(IN BOOLEAN Redirected,
                     /* Failed, unload the DLL */
                     if (ShowSnaps)
                     {
-                        DbgPrint("LDR: Unloading %wZ because dynamic TLS allocation "
-                                 "failed; "
-                                 "status = 0x%08lx\n",
+                        DbgPrint("LDR: Unloading %wZ because dynamic TLS allocation failed; status = 0x%08lx\n",
                                  DllName,
                                  Status);
                     }
