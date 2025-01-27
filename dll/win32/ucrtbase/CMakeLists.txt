@@ -1,5 +1,5 @@
 
-spec2def(ucrtbase.dll ucrtbase.spec ADD_IMPORTLIB)
+spec2def(ucrtbase.dll ucrtbase.spec NO_DBG ADD_IMPORTLIB)
 
 # Hack to replace the old CRT include directory with the UCRT include directory
 get_property(INCLUDE_DIRS DIRECTORY . PROPERTY INCLUDE_DIRECTORIES)

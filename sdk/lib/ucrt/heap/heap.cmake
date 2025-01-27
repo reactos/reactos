@@ -20,9 +20,8 @@ list(APPEND UCRT_HEAP_SOURCES
     heap/recalloc.cpp
 )
 
-if(DBG)
-    list(APPEND UCRT_HEAP_SOURCES
-        heap/debug_heap.cpp
-        heap/debug_heap_hook.cpp
-    )
-endif()
+# Debug sources
+list(APPEND UCRTD_HEAP_SOURCES
+    heap/debug_heap.cpp
+    heap/debug_heap_hook.cpp
+)
