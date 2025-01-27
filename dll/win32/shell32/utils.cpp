@@ -1941,7 +1941,7 @@ SHELL_CacheComputerDescription(
 static HRESULT
 SHELL_GetComputerDescription(
     _Out_ PWSTR pszDesc,
-    _In_ INT cchDescMax,
+    _In_ SIZE_T cchDescMax,
     _In_ PWSTR pszServerName)
 {
     PSERVER_INFO_101 bufptr;
