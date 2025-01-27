@@ -1912,7 +1912,6 @@ SHELL_GetCachedComputerDescription(
     _In_ DWORD cchDescMax)
 {
     cchDescMax *= sizeof(WCHAR);
-
     LSTATUS error = SHGetValueW(HKEY_CURRENT_USER,
                                 L"Software\\Microsoft\\Windows\\CurrentVersion\\"
                                 L"Explorer\\ComputerDescriptions",
@@ -1940,15 +1939,15 @@ SHELL_GetComputerDescription(
     _Out_ PWSTR pszDesc,
     _In_ INT cchDescMax)
 {
-    PSERVER_INFO_101 bufptr = NULL;
+    PSERVER_INFO_101 bufptr;
     NET_API_STATUS error = NetServerGetInfo(pszServerName, 101, (PBYTE*)&bufptr);
     HRESULT hr = (error > 0) ? HRESULT_FROM_WIN32(error) : error;
     if (FAILED(hr))
         return hr;
 
-    PCWSTR sv101_comment = bufptr->sv101_comment;
-    if (sv101_comment && sv101_comment[0])
-        StringCchCopyW(pszDesc, cchDescMax, sv101_comment);
+    PCWSTR comment = bufptr->sv101_comment;
+    if (comment && comment[0])
+        StringCchCopyW(pszDesc, cchDescMax, comment);
     else
         hr = E_FAIL;
 
@@ -1966,15 +1965,10 @@ SHELL_BuildDisplayMachineName(
     if (!pszDescription || !*pszDescription)
         return E_FAIL;
 
-    PCWSTR pszFormat = SHRestricted(REST_ALLOWCOMMENTTOGGLE) ? L"%1 (%2)" : L"%2 (%1)";
-    PCWSTR args[] = { SHELL_SkipServerSlashes(pszServerName), pszDescription };
-    if (!FormatMessageW(FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_FROM_STRING,
-                        pszFormat, 0, 0, pszName, cchNameMax, (va_list *)args))
-    {
-        return E_FAIL;
-    }
-
-    return S_OK;
+    PCWSTR pszFormat = (SHRestricted(REST_ALLOWCOMMENTTOGGLE) ? L"%2 (%1)" : L"%1 (%2)");
+    PCWSTR args[] = { pszDescription , SHELL_SkipServerSlashes(pszServerName) };
+    return (FormatMessageW(FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_FROM_STRING,
+                           pszFormat, 0, 0, pszName, cchNameMax, (va_list *)args) ? S_OK : E_FAIL);
 }
 
 /*************************************************************************
