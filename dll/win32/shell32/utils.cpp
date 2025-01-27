@@ -216,19 +216,16 @@ InternalExtractIconListW(
 {
     UNREFERENCED_PARAMETER(pUnused);
 
-    SIZE_T cIcons = (SIZE_T)ExtractIconW(hInst, pszExeFile, 0xFFFFFFFF);
-    if (!cIcons)
+    UINT nIcons = HandleToUlong(ExtractIconW(hInst, pszExeFile, MAXUINT));
+    if (!nIcons)
         return NULL;
 
     CHeapPtr<UINT, CGlobalAllocator> pIconIDs;
-    if (!pIconIDs.Allocate(cIcons))
-        return NULL;
-
     CHeapPtr<HICON, CGlobalAllocator> phIcons;
-    if (!phIcons.Allocate(cIcons))
+    if (!pIconIDs.Allocate(nIcons) || !phIcons.Allocate(nIcons))
         return NULL;
 
-    HGLOBAL hPairs = GlobalAlloc(GHND, cIcons * sizeof(ICON_AND_ID));
+    HGLOBAL hPairs = GlobalAlloc(GHND, nIcons * sizeof(ICON_AND_ID));
     if (!hPairs)
         return NULL;
 
@@ -243,17 +240,17 @@ InternalExtractIconListW(
                               GetSystemMetrics(SM_CXICON),
                               GetSystemMetrics(SM_CYICON),
                               phIcons, pIconIDs,
-                              (UINT)cIcons, 0))
+                              nIcons, 0))
     {
         GlobalUnlock(hPairs);
         GlobalFree(hPairs);
         return NULL;
     }
 
-    for (SIZE_T iItem = 0; iItem < cIcons; ++iItem)
+    for (UINT iIcon = 0; iIcon < nIcons; ++iIcon)
     {
-        pPairs[iItem].hIcon = phIcons[iItem];
-        pPairs[iItem].nIconID = pIconIDs[iItem];
+        pPairs[iIcon].hIcon = phIcons[iIcon];
+        pPairs[iIcon].nIconID = pIconIDs[iIcon];
     }
 
     GlobalUnlock(hPairs);
