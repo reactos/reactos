@@ -11,9 +11,11 @@
 #include <strsafe.h>
 #include <versionhelpers.h>
 
+typedef HRESULT (WINAPI *FN_SHGetComputerDisplayNameW)(LPWSTR, DWORD, LPWSTR, DWORD);
 typedef NET_API_STATUS (WINAPI *FN_NetServerGetInfo)(LPWSTR, DWORD, PBYTE*);
 typedef NET_API_STATUS (WINAPI *FN_NetApiBufferFree)(PVOID);
 
+static FN_SHGetComputerDisplayNameW s_pSHGetComputerDisplayNameW = NULL;
 static FN_NetServerGetInfo s_pNetServerGetInfo = NULL;
 static FN_NetApiBufferFree s_pNetApiBufferFree = NULL;
 
@@ -97,13 +99,13 @@ TEST_SHGetComputerDisplayNameW(VOID)
     trace("%s\n", wine_dbgstr_w(szDesc));
 
     StringCchCopyW(szDisplayName, _countof(szDisplayName), L"@");
-    hr = SHGetComputerDisplayNameW(NULL, SHGCDN_NOCACHE, szDisplayName, _countof(szDisplayName));
+    hr = s_pSHGetComputerDisplayNameW(NULL, SHGCDN_NOCACHE, szDisplayName, _countof(szDisplayName));
     ok_hex(hr, S_OK);
     trace("%s\n", wine_dbgstr_w(szDisplayName));
     ok_wstr(szDisplayName, szCompName);
 
     StringCchCopyW(szDisplayName, _countof(szDisplayName), L"@");
-    hr = SHGetComputerDisplayNameW(szServerName, 0, szDisplayName, _countof(szDisplayName));
+    hr = s_pSHGetComputerDisplayNameW(szServerName, 0, szDisplayName, _countof(szDisplayName));
     ok_hex(hr, S_OK);
     trace("%s\n", wine_dbgstr_w(szServerName));
     ok_wstr(szServerName, L"DummyServerName");
@@ -132,6 +134,15 @@ START_TEST(SHGetComputerDisplayNameW)
     if (IsWindowsVistaOrGreater())
     {
         skip("Vista+\n"); // Tests on Vista+ will cause exception
+        return;
+    }
+
+    HINSTANCE hShell32 = GetModuleHandleW(L"shell32.dll");
+    s_pSHGetComputerDisplayNameW =
+        (FN_SHGetComputerDisplayNameW)GetProcAddress(hShell32, MAKEINTRESOURCEA(752));
+    if (!s_pSHGetComputerDisplayNameW)
+    {
+        skip("SHGetComputerDisplayNameW not found\n");
         return;
     }
 
