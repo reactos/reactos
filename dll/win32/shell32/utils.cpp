@@ -1913,9 +1913,9 @@ SHELL_SkipServerSlashes(
 // Get server computer name from cache
 static HRESULT
 SHELL_GetCachedComputerDescription(
-    _In_ PCWSTR pszServerName,
     _Out_ PWSTR pszDesc,
-    _In_ DWORD cchDescMax)
+    _In_ DWORD cchDescMax,
+    _In_ PCWSTR pszServerName)
 {
     cchDescMax *= sizeof(WCHAR);
     DWORD error = SHGetValueW(HKEY_CURRENT_USER, COMPUTER_DESCRIPTIONS_KEY,
@@ -1940,9 +1940,9 @@ SHELL_CacheComputerDescription(
 // Get real server computer name
 static HRESULT
 SHELL_GetComputerDescription(
-    _In_ PWSTR pszServerName,
     _Out_ PWSTR pszDesc,
-    _In_ INT cchDescMax)
+    _In_ INT cchDescMax,
+    _In_ PWSTR pszServerName)
 {
     PSERVER_INFO_101 bufptr;
     NET_API_STATUS error = NetServerGetInfo(pszServerName, 101, (PBYTE*)&bufptr);
@@ -1963,10 +1963,10 @@ SHELL_GetComputerDescription(
 // Build display machine name
 HRESULT
 SHELL_BuildDisplayMachineName(
-    _In_ PCWSTR pszServerName,
-    _In_ PCWSTR pszDescription,
     _Out_ PWSTR pszName,
-    _In_ DWORD cchNameMax)
+    _In_ DWORD cchNameMax,
+    _In_ PCWSTR pszServerName,
+    _In_ PCWSTR pszDescription)
 {
     if (!pszDescription || !*pszDescription)
         return E_FAIL;
@@ -2004,11 +2004,11 @@ SHGetComputerDisplayNameW(
     // Get computer description from cache if necessary
     HRESULT hr = E_FAIL;
     if (!(dwFlags & SHGCDN_NOCACHE))
-        hr = SHELL_GetCachedComputerDescription(pszServerName, szDesc, _countof(szDesc));
+        hr = SHELL_GetCachedComputerDescription(szDesc, _countof(szDesc), pszServerName);
 
     if (FAILED(hr)) // No cache?
     {
-        hr = SHELL_GetComputerDescription(pszServerName, szDesc, _countof(szDesc)); // Real get
+        hr = SHELL_GetComputerDescription(szDesc, _countof(szDesc), pszServerName); // Real get
         if (FAILED(hr))
             szDesc[0] = UNICODE_NULL;
 
@@ -2033,5 +2033,5 @@ SHGetComputerDisplayNameW(
     }
 
     // Build a string like "Description (SERVERNAME)"
-    return SHELL_BuildDisplayMachineName(pszServerName, szDesc, pszName, cchNameMax);
+    return SHELL_BuildDisplayMachineName(pszName, cchNameMax, pszServerName, szDesc);
 }
