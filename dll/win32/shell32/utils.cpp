@@ -268,6 +268,8 @@ InternalExtractIconListW(
     }
 
 Finish:
+    if (hPairs)
+        GlobalUnlock(hPairs);
     GlobalFree(pIconIDs);
     GlobalFree(phIcons);
     return hPairs;
