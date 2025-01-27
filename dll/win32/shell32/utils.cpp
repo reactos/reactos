@@ -1895,6 +1895,7 @@ SHGetUserDisplayName(
     return hr;
 }
 
+// Skip leading server backslashes
 PWSTR
 SHELL_SkipServerSlashes(
     _In_ PCWSTR pszPath)
@@ -1905,9 +1906,11 @@ SHELL_SkipServerSlashes(
     return const_cast<PWSTR>(pch);
 }
 
+// The registry key for server computer names cache
 #define COMPUTER_DESCRIPTIONS_KEY \
     L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComputerDescriptions"
 
+// Get server computer name from cache
 static HRESULT
 SHELL_GetCachedComputerDescription(
     _In_ PCWSTR pszServerName,
@@ -1920,6 +1923,7 @@ SHELL_GetCachedComputerDescription(
     return HRESULT_FROM_WIN32(error);
 }
 
+// Do cache a server computer name
 VOID
 SHELL_CacheComputerDescription(
     _In_ PCWSTR pszServerName,
@@ -1933,6 +1937,7 @@ SHELL_CacheComputerDescription(
                 SHELL_SkipServerSlashes(pszServerName), REG_SZ, pszDesc, (DWORD)cbDesc);
 }
 
+// Get real server computer name
 static HRESULT
 SHELL_GetComputerDescription(
     _In_ PWSTR pszServerName,
@@ -1955,6 +1960,7 @@ SHELL_GetComputerDescription(
     return hr;
 }
 
+// Build display machine name
 HRESULT
 SHELL_BuildDisplayMachineName(
     _In_ PCWSTR pszServerName,
@@ -1984,40 +1990,48 @@ SHGetComputerDisplayNameW(
 {
     WCHAR szDesc[256], szCompName[MAX_COMPUTERNAME_LENGTH + 1];
 
-    if (!pszServerName)
+    if (!pszServerName) // Server name not specified?
     {
+        // Get local computer name
         DWORD cchCompName = _countof(szCompName);
         if (!GetComputerNameW(szCompName, &cchCompName))
             return E_FAIL;
 
-        dwFlags |= SHGCDN_NOCACHE;
-        pszServerName = szCompName;
+        dwFlags |= SHGCDN_NOCACHE; // Don't cache
+        pszServerName = szCompName; // Use computer name as server name
     }
 
+    // Get computer description from cache if necessary
     HRESULT hr = E_FAIL;
     if (!(dwFlags & SHGCDN_NOCACHE))
         hr = SHELL_GetCachedComputerDescription(pszServerName, szDesc, _countof(szDesc));
 
-    if (FAILED(hr))
+    if (FAILED(hr)) // No cache?
     {
-        hr = SHELL_GetComputerDescription(pszServerName, szDesc, _countof(szDesc));
+        hr = SHELL_GetComputerDescription(pszServerName, szDesc, _countof(szDesc)); // Real get
         if (FAILED(hr))
             szDesc[0] = UNICODE_NULL;
+
         if (!(dwFlags & SHGCDN_NOCACHE))
-            SHELL_CacheComputerDescription(pszServerName, szDesc);
+            SHELL_CacheComputerDescription(pszServerName, szDesc); // Do cache
+
+        if (FAILED(hr)) // Real get failed?
+        {
+            if (dwFlags & SHGCDN_NOSERVERNAME) // No server name?
+                return hr;
+
+            // Store server name only
+            StringCchCopyW(pszName, cchNameMax, SHELL_SkipServerSlashes(pszServerName));
+            return S_OK;
+        }
     }
 
-    if (SUCCEEDED(hr) && szDesc[0])
+    if (dwFlags & SHGCDN_NOSERVERNAME) // No server name?
     {
-        if (!(dwFlags & SHGCDN_NOSERVERNAME))
-            return SHELL_BuildDisplayMachineName(pszServerName, szDesc, pszName, cchNameMax);
-        StringCchCopyW(pszName, cchNameMax, szDesc);
+        StringCchCopyW(pszName, cchNameMax, szDesc); // Store description only
         return S_OK;
     }
 
-    if (dwFlags & SHGCDN_NOSERVERNAME)
-        return hr;
-
-    StringCchCopyW(pszName, cchNameMax, SHELL_SkipServerSlashes(pszServerName));
-    return S_OK;
+    // Build a string like "Description (SERVERNAME)"
+    return SHELL_BuildDisplayMachineName(pszServerName, szDesc, pszName, cchNameMax);
 }
