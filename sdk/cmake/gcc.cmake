@@ -251,6 +251,9 @@ endif()
 # Fix build with GLIBCXX + our c++ headers
 add_definitions(-D_GLIBCXX_HAVE_BROKEN_VSWPRINTF)
 
+# Fix build with UCRT headers
+add_definitions(-D_CRT_SUPPRESS_RESTRICT)
+
 # Alternative arch name
 if(ARCH STREQUAL "amd64")
     set(ARCH2 x86_64)
