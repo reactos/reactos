@@ -22,14 +22,14 @@ static FN_NetApiBufferFree s_pNetApiBufferFree = NULL;
 #define COMPUTER_DESCRIPTIONS_KEY \
     L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComputerDescriptions"
 
-static PWSTR
+static PCWSTR
 SHELL_SkipServerSlashes(
     _In_ PCWSTR pszPath)
 {
     PCWSTR pch;
     for (pch = pszPath; *pch == L'\\'; ++pch)
         ;
-    return const_cast<PWSTR>(pch);
+    return pch;
 }
 
 static VOID
