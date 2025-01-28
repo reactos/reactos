@@ -205,7 +205,7 @@ HRESULT SHILAppend(_Inout_ LPITEMIDLIST pidl, _Inout_ LPITEMIDLIST *ppidl)
 }
 
 /*************************************************************************
- *  InternalExtractIconListW [SHELL32.238]
+ *  InternalExtractIconListW [SHELL32.@]
  */
 EXTERN_C
 HGLOBAL WINAPI
