@@ -1913,7 +1913,7 @@ SHELL_SkipServerSlashes(
 // Get server computer description from cache
 static HRESULT
 SHELL_GetCachedComputerDescription(
-    _Out_ PWSTR pszDesc,
+    _Out_writes_z_(cchDescMax) PWSTR pszDesc,
     _In_ DWORD cchDescMax,
     _In_ PCWSTR pszServerName)
 {
