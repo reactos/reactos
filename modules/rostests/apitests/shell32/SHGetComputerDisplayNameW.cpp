@@ -40,9 +40,9 @@ SHELL_CacheComputerDescription(
     if (!pszDesc)
         return;
 
-    DWORD cbDesc = (lstrlenW(pszDesc) + 1) * sizeof(WCHAR);
+    SIZE_T cbDesc = (wcslen(pszDesc) + 1) * sizeof(WCHAR);
     SHSetValueW(HKEY_CURRENT_USER, COMPUTER_DESCRIPTIONS_KEY,
-                SHELL_SkipServerSlashes(pszServerName), REG_SZ, pszDesc, cbDesc);
+                SHELL_SkipServerSlashes(pszServerName), REG_SZ, pszDesc, (DWORD)cbDesc);
 }
 
 static HRESULT
@@ -52,8 +52,8 @@ SHELL_GetCachedComputerDescription(
     _In_ PCWSTR pszServerName)
 {
     cchDescMax *= sizeof(WCHAR);
-    LSTATUS error = SHGetValueW(HKEY_CURRENT_USER, COMPUTER_DESCRIPTIONS_KEY,
-                                SHELL_SkipServerSlashes(pszServerName), NULL, pszDesc, &cchDescMax);
+    DWORD error = SHGetValueW(HKEY_CURRENT_USER, COMPUTER_DESCRIPTIONS_KEY,
+                              SHELL_SkipServerSlashes(pszServerName), NULL, pszDesc, &cchDescMax);
     return HRESULT_FROM_WIN32(error);
 }
 
