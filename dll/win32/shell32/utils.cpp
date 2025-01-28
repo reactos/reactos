@@ -1993,7 +1993,7 @@ SHGetComputerDisplayNameW(
     // If no server name is specified, retrieve the local computer name
     if (!pszServerName)
     {
-        // Get local computer name
+        // Use computer name as server name
         DWORD cchCompName = _countof(szCompName);
         if (!GetComputerNameW(szCompName, &cchCompName))
             return E_FAIL;
