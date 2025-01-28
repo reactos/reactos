@@ -69,7 +69,7 @@ START_TEST(GetThemeParseErrorInfo)
     hr = ParseThemeIniFile(L"invalid.ini", szPath, ParseThemeIniFileProc, NULL);
     ok_hex(hr, HRESULT_FROM_WIN32(ERROR_UNKNOWN_PROPERTY));
 
-    DeleteFileW(L"invalid.ini");
+    _wremove(L"invalid.ini");
 
     ZeroMemory(&Info, sizeof(Info));
     Info.cbSize = sizeof(Info);
