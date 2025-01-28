@@ -42,7 +42,7 @@
 @ stub InitPropVariantFromResource
 @ stub InitPropVariantFromStrRet
 @ stub InitPropVariantFromStringAsVector
-@ stub InitPropVariantFromStringVector
+@ stdcall InitPropVariantFromStringVector(ptr long ptr)
 @ stub InitPropVariantFromUInt16Vector
 @ stub InitPropVariantFromUInt32Vector
 @ stub InitPropVariantFromUInt64Vector
@@ -50,7 +50,7 @@
 @ stub InitVariantFromBooleanArray
 @ stdcall InitVariantFromBuffer(ptr long ptr)
 @ stub InitVariantFromDoubleArray
-@ stub InitVariantFromFileTime
+@ stdcall InitVariantFromFileTime(ptr ptr)
 @ stub InitVariantFromFileTimeArray
 @ stdcall InitVariantFromGUIDAsString(ptr ptr)
 @ stub InitVariantFromInt16Array
@@ -69,7 +69,7 @@
 @ stdcall PSCreateMemoryPropertyStore(ptr ptr)
 @ stub PSCreateMultiplexPropertyStore
 @ stub PSCreatePropertyChangeArray
-@ stub PSCreatePropertyStoreFromObject
+@ stdcall PSCreatePropertyStoreFromObject(ptr long ptr ptr)
 @ stub PSCreatePropertyStoreFromPropertySetStorage
 @ stub PSCreateSimplePropertyChange
 @ stub PSEnumeratePropertyDescriptions
@@ -107,7 +107,7 @@
 @ stub PropVariantGetUInt16Elem
 @ stub PropVariantGetUInt32Elem
 @ stub PropVariantGetUInt64Elem
-@ stub PropVariantToBSTR
+@ stdcall PropVariantToBSTR(ptr ptr)
 @ stdcall PropVariantToBoolean(ptr ptr)
 @ stub PropVariantToBooleanVector
 @ stub PropVariantToBooleanVectorAlloc
@@ -146,12 +146,12 @@
 @ stdcall PropVariantToUInt32(ptr ptr)
 @ stub PropVariantToUInt32Vector
 @ stub PropVariantToUInt32VectorAlloc
-@ stub PropVariantToUInt32WithDefault
+@ stdcall PropVariantToUInt32WithDefault(ptr long)
 @ stdcall PropVariantToUInt64(ptr ptr)
 @ stub PropVariantToUInt64Vector
 @ stub PropVariantToUInt64VectorAlloc
 @ stub PropVariantToUInt64WithDefault
-@ stub PropVariantToVariant
+@ stdcall PropVariantToVariant(ptr ptr)
 @ stub StgDeserializePropVariant
 @ stub StgSerializePropVariant
 @ stub VariantCompare
@@ -189,13 +189,13 @@
 @ stub VariantToInt64Array
 @ stub VariantToInt64ArrayAlloc
 @ stub VariantToInt64WithDefault
-@ stub VariantToPropVariant
+@ stdcall VariantToPropVariant(ptr ptr)
 @ stub VariantToStrRet
-@ stub VariantToString
+@ stdcall VariantToString(ptr ptr long)
 @ stub VariantToStringAlloc
 @ stub VariantToStringArray
 @ stub VariantToStringArrayAlloc
-@ stub VariantToStringWithDefault
+@ stdcall VariantToStringWithDefault(ptr wstr)
 @ stub VariantToUInt16
 @ stub VariantToUInt16Array
 @ stub VariantToUInt16ArrayAlloc
