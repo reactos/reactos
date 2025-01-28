@@ -8,6 +8,7 @@
 
 #include "precomp.h"
 #include <ntddscsi.h>
+#include <mountdev.h> // TEMP for mountmgr drive-letter stuff.
 
 #include "partlist.h"
 #include "volutil.h"
@@ -314,6 +315,7 @@ AssignNextDriveLetter(
     return Letter;
 }
 
+#if 0
 /**
  * @brief
  * Assign drive letters to created volumes.
@@ -395,6 +397,118 @@ __debugbreak();
         }
     }
 }
+
+#else
+
+// volutil.c
+extern NTSTATUS
+GetMountMgrHandle(
+    _Out_ PHANDLE MountMgrHandle,
+    _In_ ACCESS_MASK DesiredAccess);
+
+/*
+ * Note that the drive-letter helpers attempt to synchronize with the MountMgr.
+ * Partitions (and volumes) changes have been previously committed, but the
+ * VolumeMgr may not had yet a chance to do its work and notify the MountMgr
+ * of the arrival of new volumes.
+ */
+static
+VOID
+AssignDriveLetters(
+    _In_ PPARTLIST List,
+    _In_ BOOLEAN TempAssign)
+{
+    PLIST_ENTRY Entry;
+    PVOLENTRY Volume;
+
+__debugbreak();
+
+    if (TempAssign)
+    {
+        /* Assign drive letters to new volumes */
+        for (Entry = List->VolumesList.Flink;
+             Entry != &List->VolumesList;
+             Entry = Entry->Flink)
+        {
+            Volume = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
+            AssignNextDriveLetter(List, &Volume->Info, TRUE /*TempAssign*/);
+        }
+    }
+    else
+    {
+        NTSTATUS Status;
+        IO_STATUS_BLOCK IoStatusBlock;
+        HANDLE MountMgrHandle;
+
+        /* Query the MountMgr for the drive letter */
+        Status = GetMountMgrHandle(&MountMgrHandle, FILE_READ_ACCESS | FILE_WRITE_ACCESS);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("MountMgr unavailable: Status 0x%08lx\n", Status);
+            return;
+        }
+
+        /* Remove all temporary volume letters */
+        for (Entry = List->VolumesList.Flink;
+             Entry != &List->VolumesList;
+             Entry = Entry->Flink)
+        {
+            Volume = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
+
+            /* Remove the temporary drive letter from the map */
+            REMOVE_MAP_LETTER(List->DriveMap, Volume->Info.DriveLetter);
+        }
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+        Status = NtDeviceIoControlFile(MountMgrHandle,
+                                       NULL, NULL, NULL,
+                                       &IoStatusBlock,
+                                       IOCTL_MOUNTMGR_BOOT_DL_ASSIGNMENT,
+                                       NULL, 0,
+                                       NULL, 0);
+        if (NT_SUCCESS(Status))
+            DPRINT1("IOCTL_MOUNTMGR_BOOT_DL_ASSIGNMENT returned 0x%08lx\n", Status);
+#endif
+
+        // NOTE: On Win7+ IOCTL_MOUNTMGR_AUTO_DL_ASSIGNMENTS just returns STATUS_SUCCESS.
+        Status = NtDeviceIoControlFile(MountMgrHandle,
+                                       NULL, NULL, NULL,
+                                       &IoStatusBlock,
+                                       IOCTL_MOUNTMGR_AUTO_DL_ASSIGNMENTS,
+                                       NULL, 0,
+                                       NULL, 0);
+        if (NT_SUCCESS(Status))
+            DPRINT1("IOCTL_MOUNTMGR_AUTO_DL_ASSIGNMENTS returned 0x%08lx\n", Status);
+
+        NtClose(MountMgrHandle);
+
+        /* Assign drive letters to new volumes */
+        for (Entry = List->VolumesList.Flink;
+             Entry != &List->VolumesList;
+             Entry = Entry->Flink)
+        {
+            UNICODE_STRING Name;
+            WCHAR Letter;
+
+            Volume = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
+
+            //
+            // AssignNextDriveLetter(List, &Volume->Info, TempAssign);
+            //
+
+            /* Re-assign the drive letter */
+            RtlInitUnicodeString(&Name, Volume->Info.DeviceName);
+            // Status = GetOrAssignNextVolumeDriveLetter(&Name, &Letter);
+            Status = GetVolumeDriveLetter(&Name, &Letter);
+            DBG_UNREFERENCED_PARAMETER(Status);
+
+            /* Reserve the letter and set it */
+            SET_MAP_LETTER(List->DriveMap, Letter);
+            Volume->Info.DriveLetter = Letter;
+        }
+    }
+}
+#endif
 
 static
 VOID
@@ -3533,7 +3647,7 @@ DeletePartition(
     }
 
     UpdateDiskLayout(DiskEntry);
-    AssignDriveLetters(List, TRUE);
+    ///// AssignDriveLetters(List, TRUE);
 
     return TRUE;
 }
@@ -4241,55 +4355,86 @@ SetMBRPartitionType(
 
 #include "registry.h" // For GetRootKeyByPredefKey()
 
-#include <pshpack1.h>
-typedef struct _REG_DISK_MOUNT_INFO
-{
-    ULONG Signature;
-    ULONGLONG StartingOffset;
-} REG_DISK_MOUNT_INFO, *PREG_DISK_MOUNT_INFO;
-#include <poppack.h>
-
 /**
  * @brief
- * Assign a "\DosDevices\#:" mount point drive letter to a disk partition or
- * volume, specified by a given disk signature and starting partition offset.
+ * Assign a "\DosDevices\#:" mount point drive letter to a volume.
+ *
+ * The stored data corresponds to a "unique ID" the partition manager
+ * provides to the mount manager.
  *
  * @note
  * The association is stored in the registry of the **TARGET**
  * NT installation, not of the current running one.
  *
- * We use it to update the mounted devices list
- * // FIXME: This should technically be done by mountmgr (if AutoMount is enabled)!
- *
- * TODO:
- * - Make the function more generic for MBR and GPT.
- *
- * @note
- * The stored data actually corresponds to a "unique ID" the partition manager
- * gives to the mount manager. In this function below, the format is actually
- * the one used for partitions on MBR disks only.
- *
- * @see
- * https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/supporting-mount-manager-requests-in-a-storage-class-driver
- * https://winreg-kb.readthedocs.io/en/latest/sources/system-keys/Mounted-devices.html
+ * // FIXME: This should technically be done by MountMgr (if AutoMount is enabled)!
  **/
 static NTSTATUS
 SetMountedDeviceValue(
     _In_ PVOLENTRY Volume)
 {
-    PPARTENTRY PartEntry = Volume->PartEntry;
-    WCHAR Letter = Volume->Info.DriveLetter;
     NTSTATUS Status;
+    WCHAR Letter = Volume->Info.DriveLetter;
+    HANDLE VolumeHandle;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"SYSTEM\\MountedDevices");
     UNICODE_STRING ValueName;
-    WCHAR Buffer[16];
+    WCHAR Buffer[sizeof("\\DosDevices\\?:")];
     HANDLE KeyHandle;
-    REG_DISK_MOUNT_INFO MountInfo;
+
+    ULONG Size;
+    MOUNTDEV_UNIQUE_ID UniqueId;
+    PMOUNTDEV_UNIQUE_ID UniqueIdPtr = NULL;
 
     /* Ignore no letter */
     if (!Letter)
         return STATUS_SUCCESS;
+
+    /* Try to open the volume */
+    Status = pOpenDevice(Volume->Info.DeviceName, &VolumeHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("pOpenDevice() failed, Status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Query the unique ID length */
+    Status = NtDeviceIoControlFile(VolumeHandle,
+                                   NULL, NULL, NULL,
+                                   &IoStatusBlock,
+                                   IOCTL_MOUNTDEV_QUERY_UNIQUE_ID,
+                                   NULL, 0,
+                                   &UniqueId, sizeof(UniqueId));
+
+    /* The only tolerated failure here is buffer too small, which is expected */
+    if (!NT_SUCCESS(Status) && (Status != STATUS_BUFFER_OVERFLOW))
+    {
+        NtClose(VolumeHandle);
+        return Status;
+    }
+
+    /* Allocate the buffer with appropriate length */
+    Size = FIELD_OFFSET(MOUNTDEV_UNIQUE_ID, UniqueId) + UniqueId.UniqueIdLength;
+    UniqueIdPtr = RtlAllocateHeap(ProcessHeap, 0, Size);
+    if (!UniqueIdPtr)
+    {
+        NtClose(VolumeHandle);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Query the unique ID */
+    Status = NtDeviceIoControlFile(VolumeHandle,
+                                   NULL, NULL, NULL,
+                                   &IoStatusBlock,
+                                   IOCTL_MOUNTDEV_QUERY_UNIQUE_ID,
+                                   NULL, 0,
+                                   UniqueIdPtr, Size);
+
+    NtClose(VolumeHandle);
+
+    if (!NT_SUCCESS(Status))
+        goto Quit;
+
+    /* Save the unique ID in the registry */
 
     RtlStringCchPrintfW(Buffer, _countof(Buffer),
                         L"\\DosDevices\\%c:", Letter);
@@ -4317,32 +4462,24 @@ SetMountedDeviceValue(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
-        return Status;
+        goto Quit;
     }
 
-    //
-    // NOTE: Alternatively, just ask the MountMgr (if we have it)
-    // for the volume unique ID, via IOCTL_MOUNTDEV_QUERY_UNIQUE_ID !!
-    //
-
-    // _In_ ULONG Signature, // DiskSignature
-
-    MountInfo.Signature = PartEntry->DiskEntry->LayoutBuffer->Signature;
-    MountInfo.StartingOffset = GetPartEntryOffsetInBytes(PartEntry);
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,
                            REG_BINARY,
-                           (PVOID)&MountInfo,
-                           sizeof(MountInfo));
-    NtClose(KeyHandle);
+                           (PVOID)&UniqueIdPtr->UniqueId,
+                           UniqueIdPtr->UniqueIdLength);
     if (!NT_SUCCESS(Status))
-    {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-        return Status;
-    }
 
-    return STATUS_SUCCESS;
+    NtClose(KeyHandle);
+
+Quit:
+    if (UniqueIdPtr)
+        RtlFreeHeap(ProcessHeap, 0, UniqueIdPtr);
+    return Status;
 }
 
 /*
@@ -4449,7 +4586,7 @@ ExportMountedDevices(VOID)
         goto Quit;
     }
 
-    DbgPrint("\n**** Importing HKLM\\SYSTEM\\MountedDevices ****\n");
+    DbgPrint("\n**** Exporting HKLM\\SYSTEM\\MountedDevices ****\n");
     while (TRUE)
     {
         Status = NtEnumerateValueKey(SrcKey,
@@ -4506,7 +4643,7 @@ ExportMountedDevices(VOID)
         }
         DbgPrint("\n");
     }
-    DbgPrint("**** End Importing ****\n");
+    DbgPrint("**** End Exporting ****\n");
 
     RtlFreeHeap(ProcessHeap, 0, Buffer);
 

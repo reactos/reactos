@@ -36,6 +36,11 @@ typedef struct _VOLINFO
 
 
 NTSTATUS
+GetVolumeDriveLetter(
+    _In_ PCUNICODE_STRING VolumeName,
+    _Out_ PWCHAR DriveLetter);
+
+NTSTATUS
 GetOrAssignNextVolumeDriveLetter(
     _In_ PCUNICODE_STRING VolumeName,
     _Out_ PWCHAR DriveLetter);
