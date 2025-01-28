@@ -309,6 +309,9 @@ CreateShortcut(const CStringW &Target)
     {
         if (SUCCEEDED(hr = link->SetPath(Target)))
         {
+            SplitFileAndDirectory(Target, &tmp);
+            link->SetWorkingDirectory(tmp);
+
             if (SUCCEEDED(GetCustomIconPath(Info, tmp)))
             {
                 LPWSTR p = tmp.GetBuffer();
