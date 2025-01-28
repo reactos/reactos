@@ -10,12 +10,10 @@
 
 #pragma once
 
-#include <suppress.h>
-#include <intrin.h>
 #include <corecrt_startup.h>
 #include <crtdbg.h>
-#include <windows.h> // for HMODULE
-#include <malloc.h>
+#include <windef.h>
+#include <winbase.h>
 
 #ifdef __cplusplus
 extern "C" {
