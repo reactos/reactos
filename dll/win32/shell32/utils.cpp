@@ -2013,8 +2013,9 @@ SHGetComputerDisplayNameW(
         if (FAILED(hr))
             szDesc[0] = UNICODE_NULL;
 
+        // Cache the description if necessary
         if (!(dwFlags & SHGCDN_NOCACHE))
-            SHELL_CacheComputerDescription(pszServerName, szDesc); // Do cache
+            SHELL_CacheComputerDescription(pszServerName, szDesc);
 
         // If getting the computer description failed, store the server name only
         if (FAILED(hr))
