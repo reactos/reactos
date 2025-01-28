@@ -59,6 +59,75 @@ GetMountMgrHandle(
 
 /**
  * @brief
+ * Waits until the MountMgr acknowledges the arrival of the specified volume.
+ *
+ * This is used as a synchronization method, since volume arrivals and their
+ * registration with the MountMgr is done asynchronously by the VolumeMgr.
+ **/
+NTSTATUS
+WaitSyncMountMgr2(
+    _In_ HANDLE MountMgrHandle,
+    _In_ PMOUNTMGR_TARGET_NAME TargetName)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    IO_STATUS_BLOCK IoStatusBlock;
+    LARGE_INTEGER DelayTime;
+    ULONG DeviceNameLength;
+    ULONG i;
+
+    DeviceNameLength = FIELD_OFFSET(MOUNTMGR_TARGET_NAME, DeviceName) + TargetName->DeviceNameLength;
+
+    /* Retry 20 times waiting 0.5 second each (wait 10 seconds maximum) */
+    for (i = 0; i < 20; ++i)
+    {
+        Status = NtDeviceIoControlFile(MountMgrHandle,
+                                       NULL, NULL, NULL,
+                                       &IoStatusBlock,
+                                       IOCTL_MOUNTMGR_VOLUME_ARRIVAL_NOTIFICATION,
+                                       TargetName, DeviceNameLength,
+                                       NULL, 0);
+        if (NT_SUCCESS(Status))
+            break;
+
+        DPRINT1("IOCTL_MOUNTMGR_VOLUME_ARRIVAL_NOTIFICATION failed: Status 0x%08lx\n", Status);
+
+        /* Wait for 0.5 second and try again */
+        DelayTime.QuadPart = -500 * 1000 * 10;
+        NtDelayExecution(FALSE, &DelayTime);
+    }
+
+    return Status;
+}
+
+NTSTATUS
+WaitSyncMountMgr(
+    _In_ HANDLE MountMgrHandle,
+    _In_ PCUNICODE_STRING VolumeName)
+{
+    ULONG DeviceNameLength;
+    /*
+     * This variable is used to store the device name.
+     * It's based on MOUNTMGR_TARGET_NAME (mountmgr.h).
+     * Doing it this way prevents memory allocation.
+     * The device name won't be longer.
+     */
+    struct
+    {
+        USHORT NameLength;
+        WCHAR DeviceName[256];
+    } DeviceName;
+
+    /* Build the corresponding device name */
+    DeviceName.NameLength = VolumeName->Length;
+    RtlCopyMemory(&DeviceName.DeviceName, VolumeName->Buffer, VolumeName->Length);
+    DeviceNameLength = FIELD_OFFSET(MOUNTMGR_TARGET_NAME, DeviceName) + DeviceName.NameLength;
+
+    /* Call the helper */
+    return WaitSyncMountMgr2(MountMgrHandle, (PMOUNTMGR_TARGET_NAME)&DeviceName);
+}
+
+/**
+ * @brief
  * Requests the MountMgr to retrieve the drive letter,
  * if any, associated to the given volume.
  *
@@ -86,7 +155,7 @@ GetVolumeDriveLetter(
     HANDLE MountMgrHandle;
     ULONG Length;
     MOUNTMGR_VOLUME_PATHS VolumePath;
-    PMOUNTMGR_VOLUME_PATHS VolumePathPtr;
+    PMOUNTMGR_VOLUME_PATHS VolumePathPtr = NULL;
     UNICODE_STRING DosPath;
     ULONG DeviceNameLength;
     /*
@@ -111,14 +180,22 @@ GetVolumeDriveLetter(
     DeviceNameLength = FIELD_OFFSET(MOUNTMGR_TARGET_NAME, DeviceName) + DeviceName.NameLength;
 
     /* Now, query the MountMgr for the DOS path */
-    Status = GetMountMgrHandle(&MountMgrHandle, FILE_READ_ATTRIBUTES);
+    Status = GetMountMgrHandle(&MountMgrHandle, FILE_READ_ACCESS | FILE_WRITE_ACCESS); // FILE_READ_ATTRIBUTES);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("MountMgr unavailable: Status 0x%08lx\n", Status);
         return Status;
     }
 
-    VolumePathPtr = NULL;
+    /* Wait for the volume to possibly be registered with the MountMgr */
+    Status = WaitSyncMountMgr2(MountMgrHandle, (PMOUNTMGR_TARGET_NAME)&DeviceName);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Waiting for the MountMgr failed: Status 0x%08lx\n", Status);
+        goto Quit;
+    }
+
+    // VolumePathPtr = NULL;
     Status = NtDeviceIoControlFile(MountMgrHandle,
                                    NULL, NULL, NULL,
                                    &IoStatusBlock,
@@ -227,6 +304,14 @@ GetOrAssignNextVolumeDriveLetter(
     {
         DPRINT1("MountMgr unavailable: Status 0x%08lx\n", Status);
         return Status;
+    }
+
+    /* Wait for the volume to possibly be registered with the MountMgr */
+    Status = WaitSyncMountMgr2(MountMgrHandle, (PMOUNTMGR_TARGET_NAME)&DeviceName);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Waiting for the MountMgr failed: Status 0x%08lx\n", Status);
+        goto Quit;
     }
 
     Status = NtDeviceIoControlFile(MountMgrHandle,
