@@ -2015,12 +2015,12 @@ SHGetComputerDisplayNameW(
         if (!(dwFlags & SHGCDN_NOCACHE))
             SHELL_CacheComputerDescription(pszServerName, szDesc); // Do cache
 
-        if (FAILED(hr)) // Real get failed?
+        // If getting the computer description failed, store the server name only
+        if (FAILED(hr))
         {
-            if (dwFlags & SHGCDN_NOSERVERNAME) // No server name?
-                return hr;
+            if (dwFlags & SHGCDN_NOSERVERNAME)
+                return hr; // Bail out if no server name is requested
 
-            // Store server name only
             StringCchCopyW(pszName, cchNameMax, SHELL_SkipServerSlashes(pszServerName));
             return S_OK;
         }
