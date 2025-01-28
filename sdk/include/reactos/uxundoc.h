@@ -6,16 +6,6 @@ extern "C" {
 
 typedef HANDLE HTHEMEFILE;
 
-typedef struct tagTMERRINFO
-{
-    UINT nID;
-    WCHAR szParam1[MAX_PATH];
-    WCHAR szParam2[MAX_PATH];
-    WCHAR szFile[MAX_PATH];
-    WCHAR szLine[MAX_PATH];
-    INT nLineNo;
-} TMERRINFO, *PTMERRINFO;
-
 typedef struct tagPARSE_ERROR_INFO
 {
     DWORD cbSize;

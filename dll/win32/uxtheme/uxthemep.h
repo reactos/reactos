@@ -90,6 +90,16 @@ typedef struct _THEME_FILE {
     PTHEME_IMAGE images;
 } THEME_FILE, *PTHEME_FILE;
 
+typedef struct tagTMERRINFO
+{
+    UINT nID;
+    WCHAR szParam1[MAX_PATH];
+    WCHAR szParam2[MAX_PATH];
+    WCHAR szFile[MAX_PATH];
+    WCHAR szLine[MAX_PATH];
+    INT nLineNo;
+} TMERRINFO, *PTMERRINFO;
+
 typedef struct _UXINI_FILE *PUXINI_FILE;
 
 typedef struct _UXTHEME_HANDLE
