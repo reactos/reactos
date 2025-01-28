@@ -1997,6 +1997,7 @@ SHGetComputerDisplayNameW(
         DWORD cchCompName = _countof(szCompName);
         if (!GetComputerNameW(szCompName, &cchCompName))
             return E_FAIL;
+        pszServerName = szCompName;
 
         dwFlags |= SHGCDN_NOCACHE; // Don't cache
         pszServerName = szCompName; // Use computer name as server name
