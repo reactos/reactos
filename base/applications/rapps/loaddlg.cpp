@@ -147,7 +147,7 @@ struct DownloadInfo
 
         CConfigParser *cfg = static_cast<const CAvailableApplicationInfo&>(AppInfo).GetConfigParser();
         if (cfg)
-            cfg->GetString(DB_URLSAVEAS, szUrlFileName);
+            cfg->GetString(DB_SAVEAS, szFileName);
     }
 
     bool Equal(const DownloadInfo &other) const
@@ -161,7 +161,7 @@ struct DownloadInfo
     CStringW szName;
     CStringW szSHA1;
     CStringW szPackageName;
-    CStringW szUrlFileName;
+    CStringW szFileName;
     ULONG SizeInBytes;
 };
 
@@ -799,7 +799,7 @@ CDownloadManager::PerformDownloadAndInstall(const DownloadInfo &Info)
             break;
         case DLTYPE_APPLICATION:
         {
-            CStringW name = Info.szUrlFileName;
+            CStringW name = Info.szFileName;
             if (name.IsEmpty())
                 name = p + 1; // use the filename retrieved from URL
             UrlUnescapeAndMakeFileNameValid(name);
