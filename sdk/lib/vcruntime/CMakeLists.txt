@@ -27,7 +27,7 @@ list(APPEND VCRT_COMMON_SOURCES
 )
 
 list(APPEND VCRT_RUNTIME_SOURCES
-    # TBD
+    __std_terminate.c
 )
 
 list(APPEND VCRT_STARTUP_SOURCES
