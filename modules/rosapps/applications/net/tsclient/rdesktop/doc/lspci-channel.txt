@@ -34,6 +34,6 @@ To enable to lspci virtual channel, run rdesktop with "-r lspci".
 References
 ==========
 
-http://www.microsoft.com/msj/1099/terminal/terminal.aspx
-http://msdn.microsoft.com/library/default.asp?url=/library/en-us/termserv/termserv/terminal_services_virtual_channels.asp
+https://web.archive.org/web/20170905024329/http://www.microsoft.com/msj/1099/terminal/terminal.aspx
+http://msdn.microsoft.com/library/default.asp?url=/library/en-us/termserv/termserv/terminal_services_virtual_channels.asp (DEAD_LINK)
 

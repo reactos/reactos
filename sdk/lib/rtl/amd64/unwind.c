@@ -116,7 +116,7 @@ RtlpLookupDynamicFunctionEntry(
 
 /*! RtlLookupFunctionEntry
  * \brief Locates the RUNTIME_FUNCTION entry corresponding to a code address.
- * \ref http://msdn.microsoft.com/en-us/library/ms680597(VS.85).aspx
+ * \ref https://learn.microsoft.com/en-us/windows/win32/api/winnt/nf-winnt-rtllookupfunctionentry
  * \todo Implement HistoryTable
  */
 PRUNTIME_FUNCTION

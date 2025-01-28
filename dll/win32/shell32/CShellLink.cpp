@@ -40,13 +40,13 @@
  * as well as its interface.
  *
  * General introduction about "Shell Links" (MSDN):
- *   https://msdn.microsoft.com/en-us/library/windows/desktop/bb776891(v=vs.85).aspx
+ *   https://learn.microsoft.com/en-us/windows/win32/shell/links
  *
  *
  * Details of the file format:
  *
  * - Official MSDN documentation "[MS-SHLLINK]: Shell Link (.LNK) Binary File Format":
- *   https://msdn.microsoft.com/en-us/library/dd871305.aspx
+ *   https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/16cb4ca1-9339-4d0c-a68d-bf1d6cc0f943
  *
  * - Forensics:
  *   http://forensicswiki.org/wiki/LNK
@@ -55,8 +55,8 @@
  *   https://github.com/libyal/liblnk/blob/master/documentation/Windows%20Shortcut%20File%20(LNK)%20format.asciidoc
  *
  * - List of possible shell link header flags (SHELL_LINK_DATA_FLAGS enumeration):
- *   https://msdn.microsoft.com/en-us/library/windows/desktop/bb762540(v=vs.85).aspx
- *   https://msdn.microsoft.com/en-us/library/dd891314.aspx
+ *   https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/ne-shlobj_core-shell_link_data_flags
+ *   https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/ae350202-3ba9-4790-9e9e-98935f4ee5af
  *
  *
  * In addition to storing its target by using a PIDL, a shell link file also
@@ -66,12 +66,12 @@
  *
  * - The first and oldest one (from NewShell/WinNT4) is the "LinkInfo" structure,
  *   stored in a serialized manner at the beginning of the shell link file:
- *   https://msdn.microsoft.com/en-us/library/dd871404.aspx
+ *   https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/6813269d-0cc8-4be2-933f-e96e8e3412dc
  *   The official API for manipulating this is located in LINKINFO.DLL .
  *
  * - The second, more recent one, is an extra binary block appended to the
  *   extra-data list of the shell link file: this is the "TrackerDataBlock":
- *   https://msdn.microsoft.com/en-us/library/dd891376.aspx
+ *   https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/df8e3748-fba5-4524-968a-f72be06d71fc
  *   Its purpose is for link tracking, and works in coordination with the
  *   "Distributed Link Tracking" service ('TrkWks' client, 'TrkSvr' server).
  *   See a detailed explanation at:
@@ -84,12 +84,12 @@
  * The philosophy of this approach is explained in detail inside the MSDN article
  * "Application Resiliency: Unlock the Hidden Features of Windows Installer"
  * (by Michael Sanford), here:
- *   https://msdn.microsoft.com/en-us/library/aa302344.aspx
+ *   https://learn.microsoft.com/en-us/previous-versions/dotnet/articles/aa302344(v=msdn.10)
  *
  * This functionality is implemented by adding a binary "Darwin" data block
  * of type "EXP_DARWIN_LINK", signature EXP_DARWIN_ID_SIG == 0xA0000006,
  * to the shell link file:
- *   https://msdn.microsoft.com/en-us/library/dd871369.aspx
+ *   https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink/48f8a4c4-99fe-4787-a39f-b1367103eba8
  * or, this could be done more simply by specifying a special link target path
  * with the IShellLink::SetPath() function. Defining the following GUID:
  *   SHELL32_AdvtShortcutComponent = "::{9db1186e-40df-11d1-aa8c-00c04fb67863}:"
@@ -104,12 +104,12 @@
  * older technology introduced in Internet Explorer 3 (and now obsolete since
  * Internet Explorer 7), called "MS Internet Component Download (MSICD)", see
  * this MSDN introductory article:
- *   https://msdn.microsoft.com/en-us/library/aa741198(v=vs.85).aspx
+ *   https://learn.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/platform-apis/aa741198(v=vs.85)
  * and leveraged in Internet Explorer 4 with "Software Update Channels", see:
- *   https://msdn.microsoft.com/en-us/library/aa740931(v=vs.85).aspx
+ *   https://learn.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/platform-apis/aa740931(v=vs.85)
  * Applications supporting this technology could present shell links having
  * a special target, see subsection "Modifying the Shortcut" in the article:
- *   https://msdn.microsoft.com/en-us/library/aa741201(v=vs.85).aspx#pub_shor
+ *   https://learn.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/platform-apis/aa741201(v=vs.85)#pub_shor
  *
  * Similarly as for the MSI shortcuts, these MSICD shortcuts are created by
  * specifying a special link target path with the IShellLink::SetPath() function,
@@ -129,7 +129,7 @@
  * a different signature EXP_LOGO3_ID_SIG == 0xA0000007 . Such shell links are
  * called "Logo3" shortcuts. They were evoked in this user comment in "The Old
  * New Thing" blog:
- *   https://blogs.msdn.microsoft.com/oldnewthing/20121210-00/?p=5883#comment-1025083
+ *   https://web.archive.org/web/20190110073640/https://blogs.msdn.microsoft.com/oldnewthing/20121210-00/?p=5883#comment-1025083
  *
  * The shell exports the API 'SoftwareUpdateMessageBox' (in shdocvw.dll) that
  * displays a message when an update for an application supporting this

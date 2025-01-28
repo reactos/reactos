@@ -1,6 +1,6 @@
 #include "precomp.h"
 
-// from the PVAX (http://www.ccas.ru/~posp/popov/spawn.htm)
+// from the PVAX (https://web.archive.org/web/20030707153537/http://www.ccas.ru/~posp/popov/spawn.htm)
 // Create a process with pipes to stdin/out/err
 BOOL CreateHiddenConsoleProcess(LPCTSTR szChildName, PROCESS_INFORMATION* ppi,
                                 LPHANDLE phInWrite, LPHANDLE phOutRead,

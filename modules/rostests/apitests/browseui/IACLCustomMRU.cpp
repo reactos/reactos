@@ -39,7 +39,7 @@ static const WCHAR szTestPath[] = L"TESTPATH_BROWSEUI_APITEST";
 #undef INTERFACE
 #define INTERFACE IACLCustomMRU
 
-/* based on https://msdn.microsoft.com/en-gb/library/windows/desktop/bb776380(v=vs.85).aspx */
+/* based on https://learn.microsoft.com/en-us/previous-versions/windows/desktop/legacy/bb776380(v=vs.85) */
 DECLARE_INTERFACE_IID_(IACLCustomMRU, IUnknown, "F729FC5E-8769-4F3E-BDB2-D7B50FD2275B")
 {
     // *** IUnknown methods ***

@@ -19,14 +19,14 @@ DBG_DEFAULT_CHANNEL(UserHotkey);
 /* GLOBALS *******************************************************************/
 
 /*
- * Hardcoded hotkeys. See http://ivanlef0u.fr/repo/windoz/VI20051005.html
- * or http://repo.meh.or.id/Windows/VI20051005.html .
+ * Hardcoded hotkeys. See http://ivanlef0u.fr/repo/windoz/VI20051005.html (DEAD_LINK)
+ * or https://web.archive.org/web/20170826161432/http://repo.meh.or.id/Windows/VI20051005.html .
  *
  * NOTE: The (Shift-)F12 keys are used only for the "UserDebuggerHotKey" setting
  * which enables setting a key shortcut which, when pressed, establishes a
  * breakpoint in the code being debugged:
- * see http://technet.microsoft.com/en-us/library/cc786263(v=ws.10).aspx
- * and http://flylib.com/books/en/4.441.1.33/1/ for more details.
+ * see https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc786263(v=ws.10)
+ * and https://flylib.com/books/en/4.441.1.33/1/ for more details.
  * By default the key is VK-F12 on a 101-key keyboard, and is VK_SUBTRACT
  * (hyphen / substract sign) on a 82-key keyboard.
  */

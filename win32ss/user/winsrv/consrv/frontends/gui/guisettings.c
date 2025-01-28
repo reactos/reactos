@@ -250,8 +250,8 @@ Quit:
 /*
  * Function for dealing with the undocumented message and structure used by
  * Windows' console.dll for setting console info.
- * See http://www.catch22.net/sites/default/source/files/setconsoleinfo.c
- * and http://www.scn.rain.com/~neighorn/PDF/MSBugPaper.pdf
+ * See https://web.archive.org/web/20220808235525/https://www.catch22.net/assets/files/source/files/setconsoleinfo.c
+ * and https://dl.packetstormsecurity.net/papers/win/MSBugPaper.pdf
  * for more information.
  */
 VOID

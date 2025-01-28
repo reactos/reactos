@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* Documentation: https://msdn.microsoft.com/en-us/library/windows/desktop/aa366197%28v=vs.85%29.aspx */
+/* Documentation: https://learn.microsoft.com/en-us/windows/win32/api/netcon/nf-netcon-ncisvalidconnectionname */
 
 #include <apitest.h>
 

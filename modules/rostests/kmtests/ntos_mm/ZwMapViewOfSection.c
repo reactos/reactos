@@ -479,7 +479,7 @@ BehaviorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly)
         {
             //check also the SEC_COMMIT flag
             /* This test proves that MSDN is once again wrong
-             *  msdn.microsoft.com/en-us/library/windows/hardware/aa366537.aspx states that SEC_RESERVE
+             *  https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-createfilemappingw states that SEC_RESERVE
              *  should cause the allocated memory for the view to be reserved but in fact it is always committed.
              *  It fails also on windows.
              */

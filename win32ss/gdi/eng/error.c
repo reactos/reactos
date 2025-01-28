@@ -2,7 +2,7 @@
 
 /*
  * @implemented
- * http://msdn.microsoft.com/en-us/library/ff564940%28VS.85%29.aspx
+ * https://learn.microsoft.com/en-us/windows/win32/api/winddi/nf-winddi-enggetlasterror
  */
 ULONG
 APIENTRY
@@ -14,7 +14,7 @@ EngGetLastError(VOID)
 
 /*
  * @implemented
- * http://msdn.microsoft.com/en-us/library/ff565015%28VS.85%29.aspx
+ * https://learn.microsoft.com/en-us/windows/win32/api/winddi/nf-winddi-engsetlasterror
  * Win: UserSetLastError
  */
 VOID

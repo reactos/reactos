@@ -33,8 +33,8 @@
 //
 // I'm wondering whether this can be computed using MmHighestUserAddress
 // or whether there is already some #define somewhere else...
-// See http://www.drdobbs.com/windows/faster-dll-load-load/184416918
-// and http://www.drdobbs.com/rebasing-win32-dlls/184416272
+// See https://www.drdobbs.com/windows/faster-dll-load-load/184416918
+// and https://www.drdobbs.com/rebasing-win32-dlls/184416272
 // for a tentative explanation.
 //
 #define KD_HIGHEST_USER_BREAKPOINT_ADDRESS  (PVOID)0x60000000  // MmHighestUserAddress

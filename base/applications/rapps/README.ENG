@@ -18,7 +18,7 @@ Also, each [Section] is language-independent and individual, you can override th
 program or any other field by adding a language-specific [Section.], followed by the language code.
 
 NOTE: You can find a complete listing of LCIDs and language names here, includes neutral codes:
-     <https://msdn.microsoft.com/en-us/library/windows/desktop/dd318693%28v=vs.85%29.aspx>
+     <https://learn.microsoft.com/en-us/windows/win32/intl/language-identifier-constants-and-strings>
 
 Now RAPPS also accepts neutral language codes, meaning that you can do things like this:
 

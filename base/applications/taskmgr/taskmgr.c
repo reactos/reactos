@@ -38,7 +38,7 @@ TASKMANAGER_SETTINGS TaskManagerSettings;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Taken from WinSpy++ 1.7
-// http://www.catch22.net/software/winspy
+// https://www.catch22.net/projects/winspy/
 // Copyright (c) 2002 by J Brown
 //
 

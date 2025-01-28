@@ -118,7 +118,7 @@ typedef struct
 
 /*
  * See also:
- * https://support.microsoft.com/en-us/windows/changing-header-and-footer-commands-in-notepad-c1b0e27b-497d-c478-c4c1-0da491cac148
+ * https://support.microsoft.com/en-us/windows/help-in-notepad-4d68c388-2ff2-0e7f-b706-35fb2ab88a8c
  */
 static VOID
 DrawHeaderOrFooter(HDC hDC, LPRECT pRect, LPCTSTR pszFormat, INT nPageNo, const SYSTEMTIME *pstNow)

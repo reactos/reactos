@@ -554,7 +554,7 @@ GetConsoleDisplayMode(LPDWORD lpModeFlags)
 
 /*
  * @implemented (Undocumented)
- * @note See http://cboard.cprogramming.com/windows-programming/102187-console-font-size.html
+ * @note See https://cboard.cprogramming.com/windows-programming/102187-console-font-size.html
  */
 DWORD
 WINAPI
@@ -721,7 +721,7 @@ GetCurrentConsoleFont(IN HANDLE hConsoleOutput,
 
 /*
  * @implemented (Undocumented)
- * @note See http://cboard.cprogramming.com/windows-programming/102187-console-font-size.html
+ * @note See https://cboard.cprogramming.com/windows-programming/102187-console-font-size.html
  */
 DWORD
 WINAPI
@@ -907,7 +907,7 @@ SetConsoleDisplayMode(HANDLE hConsoleOutput,
 
 /*
  * @implemented (Undocumented)
- * @note See http://cboard.cprogramming.com/windows-programming/102187-console-font-size.html
+ * @note See https://cboard.cprogramming.com/windows-programming/102187-console-font-size.html
  */
 BOOL
 WINAPI
@@ -1032,7 +1032,7 @@ SetConsoleMenuClose(BOOL bEnable)
 
 /*
  * @implemented (Undocumented)
- * @note See http://comments.gmane.org/gmane.comp.lang.harbour.devel/27844
+ * @note See http://comments.gmane.org/gmane.comp.lang.harbour.devel/27844 (DEAD_LINK)
  *       Usage example: https://github.com/harbour/core/commit/d79a1b7b812cbde6ddf718ebfd6939a24f633e52
  */
 BOOL

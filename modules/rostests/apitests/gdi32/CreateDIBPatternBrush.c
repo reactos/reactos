@@ -9,7 +9,7 @@
 
 #include "init.h"
 
-/* New color use parameter. See support.microsoft.com/kb/kbview/108497 */
+/* New color use parameter. See https://www.betaarchive.com/wiki/index.php?title=Microsoft_KB_Archive/108497 */
 #define DIB_PAL_INDICES 2
 
 void Test_CreateDIBPatternBrush()

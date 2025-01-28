@@ -425,7 +425,7 @@ sec_out_mcs_data(RDPCLIENT * This, STREAM s, wchar_t * hostname)
 	out_uint8s(s, 30 - hostlen);
 
 	/* See
-	   http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wceddk40/html/cxtsksupportingremotedesktopprotocol.asp */
+	   http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wceddk40/html/cxtsksupportingremotedesktopprotocol.asp (DEAD_LINK) */
 	out_uint32_le(s, This->keyboard_type);
 	out_uint32_le(s, This->keyboard_subtype);
 	out_uint32_le(s, This->keyboard_functionkeys);

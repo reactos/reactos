@@ -1,6 +1,6 @@
 
-// see https://docs.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-scsi-devices
-// and https://docs.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-ide-devices
+// see https://learn.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-scsi-devices
+// and https://learn.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-ide-devices
 
 FORCEINLINE
 PCSTR

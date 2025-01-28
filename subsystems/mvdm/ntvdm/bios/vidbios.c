@@ -1925,7 +1925,7 @@ static CONST UCHAR Font8x16[VGA_FONT_CHARACTERS * 16] =
 /*
  * Table of supported Video Modes.
  *
- * See http://wiki.osdev.org/Drawing_In_Protected_Mode#Locating_Video_Memory
+ * See https://wiki.osdev.org/Drawing_In_Protected_Mode#Locating_Video_Memory
  * Values of PageSize taken from DOSBox.
  */
 
@@ -2347,14 +2347,14 @@ static VOID VidBiosSetCursorShape(WORD CursorStartEnd)
      * WARNING!!
      * =========
      * Contrary to what is mentioned in lots of literature out there, e.g. in:
-     * http://webpages.charter.net/danrollins/techhelp/0072.HTM
-     * http://www.bioscentral.com/misc/bda.htm
+     * http://www.techhelpmanual.com/72-egamiscinforec.html
+     * https://web.archive.org/web/20240119203029/http://www.bioscentral.com/misc/bda.htm
      * and in other various places, bit 0 of Bda->VGAOptions is 0 when
      * cursor emulation is ENABLED, and is 1 when it is DISABLED.
      *
      * The following documentation is right about this fact:
-     * http://www.cs.nyu.edu/~mwalfish/classes/ut/s12-cs372h/ref/hardware/vgadoc/VGABIOS.TXT
-     * https://sites.google.com/site/pcdosretro/biosdata
+     * https://cs.nyu.edu/~mwalfish/classes/ut/s12-cs372h/ref/hardware/vgadoc/VGABIOS.TXT
+     * https://web.archive.org/web/20220118094149/https://sites.google.com/site/pcdosretro/biosdata
      *
      * A proof that it is OK is that in the following code samples it is
      * explicitly mentioned that setting bit 0 disables cursor emulation:
@@ -3113,7 +3113,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
 #ifdef DOSBOX
                     BYTE Index = getBL();
 
-                    /* See: http://www.bioscentral.com/misc/bda.htm */
+                    /* See: https://web.archive.org/web/20240119203029/http://www.bioscentral.com/misc/bda.htm */
                     Bda->CrtColorPaletteMask = (Bda->CrtColorPaletteMask & 0xE0) | (Index & 0x1F);
 
                     Index = ((Index << 1) & 0x10) | (Index & 0x7);
@@ -3148,7 +3148,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                 {
                     BYTE Index = getBL();
 
-                    /* See: http://www.bioscentral.com/misc/bda.htm */
+                    /* See: https://web.archive.org/web/20240119203029/http://www.bioscentral.com/misc/bda.htm */
                     /* Reset bit 5: foreground colors index (0: green/red/yellow; 1: cyan/magenta/white) */
                     Bda->CrtColorPaletteMask = (Bda->CrtColorPaletteMask & 0xDF) | ((Index & 1) ? 0x20 : 0x00);
 

@@ -36,9 +36,9 @@
 
 /**************** HARD DRIVES -- VHD FIXED DISK FORMAT SUPPORT ****************/
 
-// http://citrixblogger.org/2008/12/01/dynamic-vhd-walkthrough/
-// http://www.microsoft.com/en-us/download/details.aspx?id=23850
-// https://projects.honeynet.org/svn/sebek/virtualization/qebek/trunk/block/vpc.c
+// https://web.archive.org/web/20160131080555/http://citrixblogger.org/2008/12/01/dynamic-vhd-walkthrough/
+// https://www.microsoft.com/en-us/download/details.aspx?id=23850
+// https://projects.honeynet.org/svn/sebek/virtualization/qebek/trunk/block/vpc.c (DEAD_LINK)
 // https://git.virtualopensystems.com/trescca/qemu/raw/40645c7bfd7c4d45381927e1e80081fa827c368a/block/vpc.c
 // https://gitweb.gentoo.org/proj/qemu-kvm.git/tree/block/vpc.c?h=qemu-kvm-0.12.4-gentoo&id=827dccd6740639c64732418539bf17e6e4c99d77
 

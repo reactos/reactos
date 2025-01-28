@@ -112,11 +112,11 @@ typedef struct _USETUP_DATA
      *
      * For more information, see:
      * https://en.wikipedia.org/wiki/System_partition_and_boot_partition
-     * http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/boot-and-system-volumes.html
-     * http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/arc-boot-process.html
-     * http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/efi-boot-process.html
-     * http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/determining-system-volume.html
-     * http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/determining-boot-volume.html
+     * https://web.archive.org/web/20160604095323/http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/boot-and-system-volumes.html
+     * https://web.archive.org/web/20160604095238/http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/arc-boot-process.html
+     * https://web.archive.org/web/20160508052211/http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/efi-boot-process.html
+     * https://web.archive.org/web/20160604093304/http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/determining-system-volume.html
+     * https://web.archive.org/web/20160604095540/http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/determining-boot-volume.html
      */
     UNICODE_STRING SystemRootPath;
 

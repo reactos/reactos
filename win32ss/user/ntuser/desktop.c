@@ -2532,7 +2532,7 @@ IntCreateDesktop(
        Tooltip dwExStyle: WS_EX_TOOLWINDOW|WS_EX_TOPMOST
        hWndParent are spwndMessage. Use hModuleWin for server side winproc!
        The rest is same as message window.
-       http://msdn.microsoft.com/en-us/library/bb760250(VS.85).aspx
+       https://learn.microsoft.com/en-us/windows/win32/controls/tooltip-controls
     */
     Status = STATUS_SUCCESS;
 

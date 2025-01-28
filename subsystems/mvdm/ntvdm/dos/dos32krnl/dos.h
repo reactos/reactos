@@ -288,8 +288,8 @@ typedef struct _BIOS_DATA
  *
  * NOTE: For compatibility with some programs (including virii), PrevInt13 should
  * be at 0070:00B4, see for more details:
- * http://repo.hackerzvoice.net/depot_madchat/vxdevl/vdat/tuvd0001.htm
- * http://vxheaven.org/lib/vsm01.html
+ * http://repo.hackerzvoice.net/depot_madchat/vxdevl/vdat/tuvd0001.htm (DEAD_LINK)
+ * https://web.archive.org/web/20150407182047/http://vxheaven.org/lib/vsm01.html
  */
     BYTE Padding0[0xB0 - /*FIELD_OFFSET(BIOS_DATA, StartupCode)*/ 20];
     DWORD RomBiosInt13;                         // 0xb0

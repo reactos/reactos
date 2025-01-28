@@ -751,9 +751,9 @@ InitDetailsDlgCtrl(HWND hDlg, PDETAILDATA pData)
 
     /*
      * Activate automatic URL recognition by the RichEdit control. For more information, see:
-     * https://blogs.msdn.microsoft.com/murrays/2009/08/31/automatic-richedit-hyperlinks/
-     * https://blogs.msdn.microsoft.com/murrays/2009/09/24/richedit-friendly-name-hyperlinks/
-     * https://msdn.microsoft.com/en-us/library/windows/desktop/bb787991(v=vs.85).aspx
+     * https://learn.microsoft.com/en-us/archive/blogs/murrays/automatic-richedit-hyperlinks
+     * https://learn.microsoft.com/en-us/archive/blogs/murrays/richedit-friendly-name-hyperlinks
+     * https://learn.microsoft.com/en-us/windows/win32/controls/em-autourldetect
      */
     SendDlgItemMessageW(hDlg, IDC_EVENTTEXTEDIT, EM_AUTOURLDETECT, AURL_ENABLEURL /* | AURL_ENABLEEAURLS */, 0);
 

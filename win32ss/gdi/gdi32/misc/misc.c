@@ -169,7 +169,7 @@ Escape(
             di.fwType = 0;
             di.lpszDocName = lpvInData;
 
-            /* NOTE : doc for StartDocA/W at msdn http://msdn2.microsoft.com/en-us/library/ms535793(VS.85).aspx */
+            /* NOTE : doc for StartDocA/W at msdn https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-startdoca */
             retValue = StartDocA(hdc, &di);
 
             /* Check if StartDocA failed */
@@ -179,7 +179,7 @@ Escape(
                     retValue = GetLastError();
 
                     /* Translate StartDocA error code to STARTDOC error code
-                     * see msdn http://msdn2.microsoft.com/en-us/library/ms535472.aspx
+                     * see msdn https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-escape
                      */
                     switch(retValue)
                     {

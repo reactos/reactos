@@ -274,7 +274,7 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
     NodeCount &= 0xFF; // needed since some fscked up BIOSes return
     // wrong info (e.g. Mac Virtual PC)
-    // e.g. look: http://my.execpc.com/~geezer/osd/pnp/pnp16.c
+    // e.g. look: https://web.archive.org/web/20080329010332/http://my.execpc.com/~geezer/osd/pnp/pnp16.c
     if (x != 0 || NodeSize == 0 || NodeCount == 0)
     {
         ERR("PnP-BIOS failed to enumerate device nodes\n");
@@ -706,7 +706,7 @@ PcGetSerialPort(ULONG Index, PULONG Irq)
     /*
      * The BIOS data area 0x400 holds the address of the first valid COM port.
      * Each COM port address is stored in a 2-byte field.
-     * Infos at: http://www.bioscentral.com/misc/bda.htm
+     * Infos at: https://web.archive.org/web/20240119203029/http://www.bioscentral.com/misc/bda.htm
      */
     BasePtr = (PUSHORT)0x400;
     *Irq = PcIrq[Index];
@@ -884,7 +884,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
     /*
      * The BIOS data area 0x408 holds the address of the first valid LPT port.
      * Each LPT port address is stored in a 2-byte field.
-     * Infos at: http://www.bioscentral.com/misc/bda.htm
+     * Infos at: https://web.archive.org/web/20240119203029/http://www.bioscentral.com/misc/bda.htm
      */
     BasePtr = (PUSHORT)0x408;
 
