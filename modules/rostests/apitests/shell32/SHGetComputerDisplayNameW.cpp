@@ -11,7 +11,7 @@
 #include <strsafe.h>
 #include <versionhelpers.h>
 
-typedef HRESULT (WINAPI *FN_SHGetComputerDisplayNameW)(LPWSTR, DWORD, LPWSTR, DWORD);
+typedef HRESULT (WINAPI *FN_SHGetComputerDisplayNameW)(PWSTR, DWORD, PWSTR, DWORD);
 typedef NET_API_STATUS (WINAPI *FN_NetServerGetInfo)(LPWSTR, DWORD, PBYTE*);
 typedef NET_API_STATUS (WINAPI *FN_NetApiBufferFree)(PVOID);
 

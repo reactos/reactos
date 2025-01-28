@@ -1983,9 +1983,9 @@ SHELL_BuildDisplayMachineName(
 EXTERN_C
 HRESULT WINAPI
 SHGetComputerDisplayNameW(
-    _In_opt_ LPWSTR pszServerName,
+    _In_opt_ PWSTR pszServerName,
     _In_ DWORD dwFlags,
-    _Out_writes_z_(cchNameMax) LPWSTR pszName,
+    _Out_writes_z_(cchNameMax) PWSTR pszName,
     _In_ DWORD cchNameMax)
 {
     WCHAR szDesc[256], szCompName[MAX_COMPUTERNAME_LENGTH + 1];
