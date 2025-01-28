@@ -2018,16 +2018,16 @@ SHGetComputerDisplayNameW(
         // Cache the description if necessary
         if (!(dwFlags & SHGCDN_NOCACHE))
             SHELL_CacheComputerDescription(pszServerName, szDesc);
+    }
 
-        // If getting the computer description failed, store the server name only
-        if (FAILED(hr))
-        {
-            if (dwFlags & SHGCDN_NOSERVERNAME)
-                return hr; // Bail out if no server name is requested
+    // If getting the computer description failed, store the server name only
+    if (FAILED(hr) || !szDesc[0])
+    {
+        if (dwFlags & SHGCDN_NOSERVERNAME)
+            return hr; // Bail out if no server name is requested
 
-            StringCchCopyW(pszName, cchNameMax, SHELL_SkipServerSlashes(pszServerName));
-            return S_OK;
-        }
+        StringCchCopyW(pszName, cchNameMax, SHELL_SkipServerSlashes(pszServerName));
+        return S_OK;
     }
 
     // If no server name is requested, store the description only
