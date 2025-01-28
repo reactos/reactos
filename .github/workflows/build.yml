@@ -8,7 +8,7 @@ jobs:
         compiler: [gcc]
         arch: [i386, amd64]
         config: [Debug, Release]
-        dllver: ['0x502', '0x600']
+        dllver: ['0x600', '0x601']
       fail-fast: false
     runs-on: ubuntu-22.04
     steps:
