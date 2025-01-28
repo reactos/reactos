@@ -1999,7 +1999,8 @@ SHGetComputerDisplayNameW(
             return E_FAIL;
         pszServerName = szCompName;
 
-        dwFlags |= SHGCDN_NOCACHE; // Don't cache
+        // Don't use the cache for the local machine
+        dwFlags |= SHGCDN_NOCACHE;
     }
 
     // Get computer description from cache if necessary
