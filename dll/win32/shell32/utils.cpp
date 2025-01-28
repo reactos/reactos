@@ -9,6 +9,7 @@
 #include <lmcons.h>
 #include <lmapibuf.h>
 #include <lmaccess.h>
+#include <lmserver.h>
 #include <secext.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -1892,4 +1893,150 @@ SHGetUserDisplayName(
     }
 
     return hr;
+}
+
+// Skip leading backslashes
+static PCWSTR
+SHELL_SkipServerSlashes(
+    _In_ PCWSTR pszPath)
+{
+    PCWSTR pch;
+    for (pch = pszPath; *pch == L'\\'; ++pch)
+        ;
+    return pch;
+}
+
+// The registry key for server computer descriptions cache
+#define COMPUTER_DESCRIPTIONS_KEY \
+    L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComputerDescriptions"
+
+// Get server computer description from cache
+static HRESULT
+SHELL_GetCachedComputerDescription(
+    _Out_writes_z_(cchDescMax) PWSTR pszDesc,
+    _In_ DWORD cchDescMax,
+    _In_ PCWSTR pszServerName)
+{
+    cchDescMax *= sizeof(WCHAR);
+    DWORD error = SHGetValueW(HKEY_CURRENT_USER, COMPUTER_DESCRIPTIONS_KEY,
+                              SHELL_SkipServerSlashes(pszServerName), NULL, pszDesc, &cchDescMax);
+    return HRESULT_FROM_WIN32(error);
+}
+
+// Do cache a server computer description
+static VOID
+SHELL_CacheComputerDescription(
+    _In_ PCWSTR pszServerName,
+    _In_ PCWSTR pszDesc)
+{
+    if (!pszDesc)
+        return;
+
+    SIZE_T cbDesc = (wcslen(pszDesc) + 1) * sizeof(WCHAR);
+    SHSetValueW(HKEY_CURRENT_USER, COMPUTER_DESCRIPTIONS_KEY,
+                SHELL_SkipServerSlashes(pszServerName), REG_SZ, pszDesc, (DWORD)cbDesc);
+}
+
+// Get real server computer description
+static HRESULT
+SHELL_GetComputerDescription(
+    _Out_writes_z_(cchDescMax) PWSTR pszDesc,
+    _In_ SIZE_T cchDescMax,
+    _In_ PWSTR pszServerName)
+{
+    PSERVER_INFO_101 bufptr;
+    NET_API_STATUS error = NetServerGetInfo(pszServerName, 101, (PBYTE*)&bufptr);
+    HRESULT hr = (error > 0) ? HRESULT_FROM_WIN32(error) : error;
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    PCWSTR comment = bufptr->sv101_comment;
+    if (comment && comment[0])
+        StringCchCopyW(pszDesc, cchDescMax, comment);
+    else
+        hr = E_FAIL;
+
+    NetApiBufferFree(bufptr);
+    return hr;
+}
+
+// Build computer display name
+static HRESULT
+SHELL_BuildDisplayMachineName(
+    _Out_writes_z_(cchNameMax) PWSTR pszName,
+    _In_ DWORD cchNameMax,
+    _In_ PCWSTR pszServerName,
+    _In_ PCWSTR pszDescription)
+{
+    if (!pszDescription || !*pszDescription)
+        return E_FAIL;
+
+    PCWSTR pszFormat = (SHRestricted(REST_ALLOWCOMMENTTOGGLE) ? L"%2 (%1)" : L"%1 (%2)");
+    PCWSTR args[] = { pszDescription , SHELL_SkipServerSlashes(pszServerName) };
+    return (FormatMessageW(FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_FROM_STRING,
+                           pszFormat, 0, 0, pszName, cchNameMax, (va_list *)args) ? S_OK : E_FAIL);
+}
+
+/*************************************************************************
+ *  SHGetComputerDisplayNameW [SHELL32.752]
+ */
+EXTERN_C
+HRESULT WINAPI
+SHGetComputerDisplayNameW(
+    _In_opt_ PWSTR pszServerName,
+    _In_ DWORD dwFlags,
+    _Out_writes_z_(cchNameMax) PWSTR pszName,
+    _In_ DWORD cchNameMax)
+{
+    WCHAR szDesc[256], szCompName[MAX_COMPUTERNAME_LENGTH + 1];
+
+    // If no server name is specified, retrieve the local computer name
+    if (!pszServerName)
+    {
+        // Use computer name as server name
+        DWORD cchCompName = _countof(szCompName);
+        if (!GetComputerNameW(szCompName, &cchCompName))
+            return E_FAIL;
+        pszServerName = szCompName;
+
+        // Don't use the cache for the local machine
+        dwFlags |= SHGCDN_NOCACHE;
+    }
+
+    // Get computer description from cache if necessary
+    HRESULT hr = E_FAIL;
+    if (!(dwFlags & SHGCDN_NOCACHE))
+        hr = SHELL_GetCachedComputerDescription(szDesc, _countof(szDesc), pszServerName);
+
+    // Actually retrieve the computer description if it is not in the cache
+    if (FAILED(hr))
+    {
+        hr = SHELL_GetComputerDescription(szDesc, _countof(szDesc), pszServerName);
+        if (FAILED(hr))
+            szDesc[0] = UNICODE_NULL;
+
+        // Cache the description if necessary
+        if (!(dwFlags & SHGCDN_NOCACHE))
+            SHELL_CacheComputerDescription(pszServerName, szDesc);
+    }
+
+    // If getting the computer description failed, store the server name only
+    if (FAILED(hr) || !szDesc[0])
+    {
+        if (dwFlags & SHGCDN_NOSERVERNAME)
+            return hr; // Bail out if no server name is requested
+
+        StringCchCopyW(pszName, cchNameMax, SHELL_SkipServerSlashes(pszServerName));
+        return S_OK;
+    }
+
+    // If no server name is requested, store the description only
+    if (dwFlags & SHGCDN_NOSERVERNAME)
+    {
+        StringCchCopyW(pszName, cchNameMax, szDesc);
+        return S_OK;
+    }
+
+    // Build a string like "Description (SERVERNAME)"
+    return SHELL_BuildDisplayMachineName(pszName, cchNameMax, pszServerName, szDesc);
 }
