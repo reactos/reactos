@@ -2000,7 +2000,6 @@ SHGetComputerDisplayNameW(
         pszServerName = szCompName;
 
         dwFlags |= SHGCDN_NOCACHE; // Don't cache
-        pszServerName = szCompName; // Use computer name as server name
     }
 
     // Get computer description from cache if necessary
