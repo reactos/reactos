@@ -24,7 +24,7 @@ spinlock_t nls_lock;
 
 /*
  * Sample implementation from Unicode home page.
- * http://www.stonehand.com/unicode/standard/fss-utf.html (DEAD_LINK)
+ * http://www.stonehand.com/unicode/standard/fss-utf.html
  */
 struct utf8_table {
     int     cmask;

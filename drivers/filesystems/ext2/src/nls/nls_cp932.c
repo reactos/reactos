@@ -4,7 +4,7 @@
  * Charset cp932 translation tables.
  * This translation table was generated automatically, the
  * original table can be download from the Microsoft website.
- * (https://learn.microsoft.com/en-us/typography/)
+ * (http://www.microsoft.com/typography/unicode/unicodecp.htm)
  */
 
 #include <linux/module.h>

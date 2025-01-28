@@ -967,7 +967,7 @@ snmp_parse_inbound_frame(struct snmp_request *request)
      * 1) securityParameters was correctly serialized if we reach here.
      * 2) securityParameters are already cached.
      * 3) if msgAuthoritativeEngineID is unknown, zero-length or too long:
-         b) https://datatracker.ietf.org/doc/html/rfc3414#section-7
+         b) https://tools.ietf.org/html/rfc3414#section-7
      */
     {
       const char *eid;

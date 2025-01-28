@@ -36,7 +36,7 @@
  *  DES, on which TDES is based, was originally designed by Horst Feistel
  *  at IBM in 1974, and was adopted as a standard by NIST (formerly NBS).
  *
- *  https://csrc.nist.gov/files/pubs/fips/46-3/final/docs/fips46-3.pdf
+ *  http://csrc.nist.gov/publications/fips/fips46-3/fips46-3.pdf
  */
 
 #include "netif/ppp/ppp_opts.h"

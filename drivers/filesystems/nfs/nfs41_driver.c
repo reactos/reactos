@@ -5639,8 +5639,8 @@ NTSTATUS check_nfs41_setattr_args(
         goto out;
     }
 
-    /* https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-fsa/3820daf2-e512-4730-8cce-2d0435ae6ad2
-     * https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-fsa/5555bcb6-bc29-4f8a-900c-e469b792faab
+    /* http://msdn.microsoft.com/en-us/library/ff469355(v=PROT.10).aspx
+     * http://msdn.microsoft.com/en-us/library/ff469424(v=PROT.10).aspx
      * If Open.GrantedAccess does not contain FILE_WRITE_DATA, the operation
      * MUST be failed with STATUS_ACCESS_DENIED.
      */

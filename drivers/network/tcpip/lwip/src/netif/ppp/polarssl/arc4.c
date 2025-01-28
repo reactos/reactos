@@ -35,7 +35,7 @@
 /*
  *  The ARCFOUR algorithm was publicly disclosed on 94/09.
  *
- *  https://groups.google.com/g/sci.crypt/c/TPS_Ix7aTJ4/m/oPwa0skAoxAJ?pli=1
+ *  http://groups.google.com/group/sci.crypt/msg/10a300c9d21afca0
  */
 
 #include "netif/ppp/ppp_opts.h"
