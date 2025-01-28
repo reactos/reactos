@@ -52,7 +52,6 @@ SHELL_GetCachedComputerDescription(
     _In_ PCWSTR pszServerName)
 {
     cchDescMax *= sizeof(WCHAR);
-
     LSTATUS error = SHGetValueW(HKEY_CURRENT_USER, COMPUTER_DESCRIPTIONS_KEY,
                                 SHELL_SkipServerSlashes(pszServerName), NULL, pszDesc, &cchDescMax);
     return HRESULT_FROM_WIN32(error);
