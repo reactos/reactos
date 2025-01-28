@@ -11,17 +11,20 @@
 
 START_TEST(InternalExtractIconListW)
 {
-    if (IsWindowsVistaOrGreater())
-    {
-        skip("InternalExtractIconListW on Vista+ is a stub (returns NULL)\n");
-        return;
-    }
-
     WCHAR szPath[MAX_PATH];
     GetModuleFileNameW(NULL, szPath, _countof(szPath));
 
     HGLOBAL hPairs = InternalExtractIconListW(GetModuleHandleW(NULL), szPath, 0);
-    ok(hPairs != NULL, "hPairs was NULL\n");
+    if (IsWindowsVistaOrGreater())
+    {
+        ok(hPairs == NULL, "hPairs was %p\n", hPairs);
+        skip("InternalExtractIconListW on Vista+ is a stub (returns NULL)\n");
+        return;
+    }
+    else
+    {
+        ok(hPairs != NULL, "hPairs was NULL\n");
+    }
 
     UINT nIcons = (UINT)(GlobalSize(hPairs) / sizeof(ICON_AND_ID));
     ok(nIcons != 0, "nIcons was zero\n");
