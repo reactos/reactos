@@ -1940,7 +1940,7 @@ SHELL_CacheComputerDescription(
 // Get real server computer description
 static HRESULT
 SHELL_GetComputerDescription(
-    _Out_ PWSTR pszDesc,
+    _Out_writes_z_(cchDescMax) PWSTR pszDesc,
     _In_ SIZE_T cchDescMax,
     _In_ PWSTR pszServerName)
 {
