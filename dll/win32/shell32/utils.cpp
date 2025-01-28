@@ -2028,9 +2028,10 @@ SHGetComputerDisplayNameW(
         }
     }
 
-    if (dwFlags & SHGCDN_NOSERVERNAME) // No server name?
+    // If no server name is requested, store the description only
+    if (dwFlags & SHGCDN_NOSERVERNAME)
     {
-        StringCchCopyW(pszName, cchNameMax, szDesc); // Store description only
+        StringCchCopyW(pszName, cchNameMax, szDesc);
         return S_OK;
     }
 
