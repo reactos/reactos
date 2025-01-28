@@ -2006,9 +2006,10 @@ SHGetComputerDisplayNameW(
     if (!(dwFlags & SHGCDN_NOCACHE))
         hr = SHELL_GetCachedComputerDescription(szDesc, _countof(szDesc), pszServerName);
 
-    if (FAILED(hr)) // No cache?
+    // Actually retrieve the computer description if it is not in the cache
+    if (FAILED(hr))
     {
-        hr = SHELL_GetComputerDescription(szDesc, _countof(szDesc), pszServerName); // Real get
+        hr = SHELL_GetComputerDescription(szDesc, _countof(szDesc), pszServerName);
         if (FAILED(hr))
             szDesc[0] = UNICODE_NULL;
 
