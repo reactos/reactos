@@ -13,7 +13,7 @@ START_TEST(InternalExtractIconListW)
 {
     if (IsWindowsVistaOrGreater())
     {
-        skip("InternalExtractIconListW of Vista+ is useless (returns NULL)\n");
+        skip("InternalExtractIconListW on Vista+ is a stub (returns NULL)\n");
         return;
     }
 
