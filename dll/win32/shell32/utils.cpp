@@ -1963,7 +1963,7 @@ SHELL_GetComputerDescription(
 // Build computer display name
 HRESULT
 SHELL_BuildDisplayMachineName(
-    _Out_ PWSTR pszName,
+    _Out_writes_z_(cchNameMax) PWSTR pszName,
     _In_ DWORD cchNameMax,
     _In_ PCWSTR pszServerName,
     _In_ PCWSTR pszDescription)
