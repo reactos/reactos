@@ -24,12 +24,141 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef __REACTOS__
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <windef.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <winbase.h>
+DECLARE_HANDLE(HSYNTHETICPOINTERDEVICE);
+typedef enum
+{
+    POINTER_FEEDBACK_DEFAULT = 1,
+    POINTER_FEEDBACK_INDIRECT = 2,
+    POINTER_FEEDBACK_NONE = 3,
+} POINTER_FEEDBACK_MODE;
+
+typedef enum ORIENTATION_PREFERENCE {
+    ORIENTATION_PREFERENCE_NONE              = 0x0,
+    ORIENTATION_PREFERENCE_LANDSCAPE         = 0x1,
+    ORIENTATION_PREFERENCE_PORTRAIT          = 0x2,
+    ORIENTATION_PREFERENCE_LANDSCAPE_FLIPPED = 0x4,
+    ORIENTATION_PREFERENCE_PORTRAIT_FLIPPED  = 0x8
+} ORIENTATION_PREFERENCE;
+
+/* Touch input definitions */
+DECLARE_HANDLE(HTOUCHINPUT);
+
+
+typedef struct tagTOUCHINPUT {
+    LONG      x;
+    LONG      y;
+    HANDLE    hSource;
+    DWORD     dwID;
+    DWORD     dwFlags;
+    DWORD     dwMask;
+    DWORD     dwTime;
+    ULONG_PTR dwExtraInfo;
+    DWORD     cxContact;
+    DWORD     cyContact;
+} TOUCHINPUT, *PTOUCHINPUT;
+typedef TOUCHINPUT const * PCTOUCHINPUT;
+
+DECLARE_HANDLE(HGESTUREINFO);
+
+#define GF_BEGIN    0x00000001
+#define GF_INERTIA  0x00000002
+#define GF_END      0x00000004
+
+typedef struct tagGESTURECONFIG {
+    DWORD dwID;
+    DWORD dwWant;
+    DWORD dwBlock;
+} GESTURECONFIG, *PGESTURECONFIG;
+
+typedef struct tagGESTUREINFO {
+    UINT      cbSize;
+    DWORD     dwFlags;
+    DWORD     dwID;
+    HWND      hwndTarget;
+    POINTS    ptsLocation;
+    DWORD     dwInstanceID;
+    DWORD     dwSequenceID;
+    ULONGLONG ullArguments;
+    UINT      cbExtraArgs;
+} GESTUREINFO, *PGESTUREINFO;
+typedef GESTUREINFO const * PCGESTUREINFO;
+
+typedef enum tagPOINTER_BUTTON_CHANGE_TYPE
+{
+    POINTER_CHANGE_NONE,
+    POINTER_CHANGE_FIRSTBUTTON_DOWN,
+    POINTER_CHANGE_FIRSTBUTTON_UP,
+    POINTER_CHANGE_SECONDBUTTON_DOWN,
+    POINTER_CHANGE_SECONDBUTTON_UP,
+    POINTER_CHANGE_THIRDBUTTON_DOWN,
+    POINTER_CHANGE_THIRDBUTTON_UP,
+    POINTER_CHANGE_FOURTHBUTTON_DOWN,
+    POINTER_CHANGE_FOURTHBUTTON_UP,
+    POINTER_CHANGE_FIFTHBUTTON_DOWN,
+    POINTER_CHANGE_FIFTHBUTTON_UP,
+} POINTER_BUTTON_CHANGE_TYPE;
+typedef PVOID HPOWERNOTIFY, *PHPOWERNOTIFY;
+typedef UINT32 POINTER_FLAGS;
+typedef DWORD POINTER_INPUT_TYPE;
+typedef struct tagPOINTER_INFO
+{
+    POINTER_INPUT_TYPE pointerType;
+    UINT32 pointerId;
+    UINT32 frameId;
+    POINTER_FLAGS pointerFlags;
+    HANDLE sourceDevice;
+    HWND hwndTarget;
+    POINT ptPixelLocation;
+    POINT ptHimetricLocation;
+    POINT ptPixelLocationRaw;
+    POINT ptHimetricLocationRaw;
+    DWORD dwTime;
+    UINT32 historyCount;
+    INT32 InputData;
+    DWORD dwKeyStates;
+    UINT64 PerformanceCount;
+    POINTER_BUTTON_CHANGE_TYPE ButtonChangeType;
+} POINTER_INFO;
+
+typedef UINT32 TOUCH_FLAGS;
+#define TOUCH_FLAG_NONE  0x00000000
+
+typedef UINT32 TOUCH_MASK;
+#define TOUCH_MASK_NONE         0x00000000
+#define TOUCH_MASK_CONTACTAREA  0x00000001
+#define TOUCH_MASK_ORIENTATION  0x00000002
+#define TOUCH_MASK_PRESSURE     0x00000004
+
+typedef struct tagPOINTER_TOUCH_INFO
+{
+    POINTER_INFO pointerInfo;
+    TOUCH_FLAGS touchFlags;
+    TOUCH_MASK touchMask;
+    RECT rcContact;
+    RECT rcContactRaw;
+    UINT32 orientation;
+    UINT32 pressure;
+} POINTER_TOUCH_INFO;
+
+#else
 #include "user_private.h"
 #include "dbt.h"
+#endif
 #include "wine/debug.h"
+#ifndef __REACTOS__
 #include "wine/plugplay.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(win);
+#ifndef __REACTOS__
 WINE_DECLARE_DEBUG_CHANNEL(keyboard);
 
 /***********************************************************************
@@ -681,6 +810,7 @@ LRESULT WINAPI DefRawInputProc( RAWINPUT **data, INT data_count, UINT header_siz
 
     return header_size == sizeof(RAWINPUTHEADER) ? 0 : -1;
 }
+#endif
 
 /*****************************************************************************
  * CloseTouchInputHandle (USER32.@)
@@ -797,7 +927,7 @@ BOOL WINAPI GetPointerTouchInfoHistory( UINT32 id, UINT32 *count, POINTER_TOUCH_
     return FALSE;
 }
 
-
+#ifndef __REACTOS__
 /*******************************************************************
  *           SetForegroundWindow  (USER32.@)
  */
@@ -880,6 +1010,7 @@ HWND WINAPI GetTaskmanWindow(void)
 {
     return NtUserGetTaskmanWindow();
 }
+#endif
 
 HSYNTHETICPOINTERDEVICE WINAPI CreateSyntheticPointerDevice(POINTER_INPUT_TYPE type, ULONG max_count, POINTER_FEEDBACK_MODE mode)
 {

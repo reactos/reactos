@@ -18,18 +18,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef __REACTOS__
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <windef.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <winbase.h>
+#else
 #include "ntstatus.h"
 #define WIN32_NO_STATUS
 #include "user_private.h"
 #include "controls.h"
 #include "winver.h"
 #include "wine/asm.h"
+#endif
 #include "wine/exception.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(win);
 
-
+#ifndef __REACTOS__
 #ifdef __i386__
 /* Some apps pass a non-stdcall proc to EnumChildWindows,
  * so we need a small assembly wrapper to call the proc.
@@ -1685,6 +1695,8 @@ LONG_PTR WINAPI SetWindowLongPtrA( HWND hwnd, INT offset, LONG_PTR newval )
 }
 
 #endif /* _WIN64 */
+
+#endif
 
 /*****************************************************************************
  *              GetWindowDisplayAffinity (USER32.@)
