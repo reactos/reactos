@@ -180,11 +180,6 @@ START_TEST(NtSystemDebugControl)
      * the next tests are going to change its state */
     WasDebuggerEnabled = SharedUserData->KdDebuggerEnabled;
 
-//
-// FIXME: Re-enable ONCE our KDBG and KDCOM dlls support disabling and re-enabling.
-//
-    DBG_UNREFERENCED_LOCAL_VARIABLE(WasDebuggerEnabled);
-#if 0
     /* Try to disable or enable the debugger, depending on its original state */
     if (WasDebuggerEnabled)
         Command = SysDbgDisableKernelDebugger; // 22
@@ -224,8 +219,6 @@ START_TEST(NtSystemDebugControl)
         ok_eq_hex_test(Command, Status, STATUS_SUCCESS);
     else
         ok_eq_hex_test(Command, Status, STATUS_DEBUGGER_INACTIVE);
-#endif
-// END FIXME
 
 
     /* Supported commands */
