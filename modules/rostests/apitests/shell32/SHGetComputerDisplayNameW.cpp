@@ -67,15 +67,10 @@ SHELL_BuildDisplayMachineName(
     if (!pszDescription || !*pszDescription)
         return E_FAIL;
 
-    PCWSTR pszFormat = SHRestricted(REST_ALLOWCOMMENTTOGGLE) ? L"%1 (%2)" : L"%2 (%1)";
-    PCWSTR args[] = { SHELL_SkipServerSlashes(pszServerName), pszDescription };
-    if (!FormatMessageW(FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_FROM_STRING,
-                        pszFormat, 0, 0, pszName, cchNameMax, (va_list *)args))
-    {
-        return E_FAIL;
-    }
-
-    return S_OK;
+    PCWSTR pszFormat = (SHRestricted(REST_ALLOWCOMMENTTOGGLE) ? L"%2 (%1)" : L"%1 (%2)");
+    PCWSTR args[] = { pszDescription , SHELL_SkipServerSlashes(pszServerName) };
+    return (FormatMessageW(FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_FROM_STRING,
+                           pszFormat, 0, 0, pszName, cchNameMax, (va_list *)args) ? S_OK : E_FAIL);
 }
 
 static VOID
@@ -129,7 +124,7 @@ START_TEST(SHGetComputerDisplayNameW)
 {
     if (IsWindowsVistaOrGreater())
     {
-        skip("Vista+\n"); // Tests on Vista+ will cause exception
+        skip("Tests on Vista+ will cause exception\n");
         return;
     }
 

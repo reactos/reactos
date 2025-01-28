@@ -974,7 +974,7 @@ HRESULT WINAPI
 SHGetComputerDisplayNameW(
     _In_opt_ LPWSTR pszServerName,
     _In_ DWORD dwFlags,
-    _Out_ LPWSTR pszName,
+    _Out_writes_z_(cchNameMax) LPWSTR pszName,
     _In_ DWORD cchNameMax);
 
 /*****************************************************************************

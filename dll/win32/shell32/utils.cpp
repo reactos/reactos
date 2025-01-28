@@ -1896,14 +1896,14 @@ SHGetUserDisplayName(
 }
 
 // Skip leading backslashes
-PWSTR
+static PCWSTR
 SHELL_SkipServerSlashes(
     _In_ PCWSTR pszPath)
 {
     PCWSTR pch;
     for (pch = pszPath; *pch == L'\\'; ++pch)
         ;
-    return const_cast<PWSTR>(pch);
+    return pch;
 }
 
 // The registry key for server computer descriptions cache
@@ -1924,7 +1924,7 @@ SHELL_GetCachedComputerDescription(
 }
 
 // Do cache a server computer description
-VOID
+static VOID
 SHELL_CacheComputerDescription(
     _In_ PCWSTR pszServerName,
     _In_ PCWSTR pszDesc)
@@ -1961,7 +1961,7 @@ SHELL_GetComputerDescription(
 }
 
 // Build computer display name
-HRESULT
+static HRESULT
 SHELL_BuildDisplayMachineName(
     _Out_writes_z_(cchNameMax) PWSTR pszName,
     _In_ DWORD cchNameMax,

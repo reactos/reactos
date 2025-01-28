@@ -57,22 +57,6 @@ SHELL_MapContextMenuVerbToCmdId(LPCMINVOKECOMMANDINFO pICI, const CMVERBMAP *pMa
 HRESULT
 SHELL_GetCommandStringImpl(SIZE_T CmdId, UINT uFlags, LPSTR Buf, UINT cchBuf, const CMVERBMAP *pMap);
 
-PWSTR
-SHELL_SkipServerSlashes(
-    _In_ PCWSTR pszPath);
-
-VOID
-SHELL_CacheComputerDescription(
-    _In_ PCWSTR pszServerName,
-    _In_ PCWSTR pszDesc);
-
-HRESULT
-SHELL_BuildDisplayMachineName(
-    _Out_ PWSTR pszName,
-    _In_ DWORD cchNameMax,
-    _In_ PCWSTR pszServerName,
-    _In_ PCWSTR pszDescription);
-
 // SHExtractIconsW is a forward, use this function instead inside shell32
 inline HICON
 SHELL32_SHExtractIcon(LPCWSTR File, int Index, int cx, int cy)
