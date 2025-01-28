@@ -12,6 +12,9 @@
 #include <wingdi.h>
 #include <winuser.h>
 
+HDC APIENTRY
+NtUserGetDC(HWND hWnd);
+
 #define NDEBUG
 #include <debug.h>
 
@@ -24,7 +27,7 @@ GetDpiForSystem(VOID)
 {
     HDC hDC;
     UINT Dpi;
-    hDC = GetDC(NULL);
+    hDC = NtUserGetDC(NULL);
     Dpi = GetDeviceCaps(hDC, LOGPIXELSY);
     ReleaseDC(NULL, hDC);
     return Dpi;
@@ -42,3 +45,91 @@ GetDpiForWindow(
     UNREFERENCED_PARAMETER(hWnd);
     return GetDpiForSystem();
 }
+
+/*
+ * @stub
+ */
+BOOL
+WINAPI
+IsProcessDPIAware(VOID)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @stub
+ */
+BOOL
+WINAPI
+SetProcessDPIAware(VOID)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @stub
+ */
+BOOL
+WINAPI
+SetProcessDpiAwarenessContext(
+    _In_ DPI_AWARENESS_CONTEXT context)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @stub
+ */
+BOOL
+WINAPI
+GetProcessDpiAwarenessInternal(
+    _In_  HANDLE process,
+    _Out_ DPI_AWARENESS *awareness)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @stub
+ */
+BOOL
+WINAPI
+SetProcessDpiAwarenessInternal(
+    _In_ DPI_AWARENESS awareness)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @stub
+ */
+BOOL
+WINAPI
+GetDpiForMonitorInternal(
+    _In_  HMONITOR monitor,
+    _In_  UINT type,
+    _Out_ UINT *x,
+    _Out_ UINT *y)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @stub
+ */
+BOOL
+WINAPI
+LogicalToPhysicalPoint(
+    _In_ HWND hwnd, 
+    _Inout_ POINT *point )
+{
+    UNIMPLEMENTED;
+    return TRUE;
+}
+

@@ -23,6 +23,98 @@
 
 #include <stdarg.h>
 
+#ifdef __REACTOS__
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <windef.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <winbase.h>
+
+#define POINTER_DEVICE_PRODUCT_STRING_MAX 520
+
+enum tagPOINTER_INPUT_TYPE {
+  PT_POINTER = 1,
+  PT_TOUCH,
+  PT_PEN,
+  PT_MOUSE,
+  PT_TOUCHPAD
+};
+
+typedef PVOID HPOWERNOTIFY, *PHPOWERNOTIFY;
+typedef UINT32 POINTER_FLAGS;
+typedef DWORD POINTER_INPUT_TYPE;
+
+typedef struct tagTOUCH_HIT_TESTING_PROXIMITY_EVALUATION
+{
+    UINT16 score;
+    POINT adjustedPoint;
+} TOUCH_HIT_TESTING_PROXIMITY_EVALUATION, *PTOUCH_HIT_TESTING_PROXIMITY_EVALUATION;
+
+typedef struct tagTOUCH_HIT_TESTING_INPUT
+{
+    UINT32 pointerId;
+    POINT point;
+    RECT boundingBox;
+    RECT nonOccludedBoundingBox;
+    UINT32 orientation;
+} TOUCH_HIT_TESTING_INPUT, *PTOUCH_HIT_TESTING_INPUT;
+
+typedef enum tagPOINTER_DEVICE_TYPE {
+    POINTER_DEVICE_TYPE_INTEGRATED_PEN = 0x00000001,
+    POINTER_DEVICE_TYPE_EXTERNAL_PEN   = 0x00000002,
+    POINTER_DEVICE_TYPE_TOUCH          = 0x00000003,
+    POINTER_DEVICE_TYPE_TOUCH_PAD      = 0x00000004,
+    POINTER_DEVICE_TYPE_MAX            = 0xFFFFFFFF
+} POINTER_DEVICE_TYPE;
+
+typedef struct tagPOINTER_DEVICE_INFO {
+    DWORD displayOrientation;
+    HANDLE device;
+    POINTER_DEVICE_TYPE pointerDeviceType;
+    HMONITOR monitor;
+    ULONG startingCursorId;
+    USHORT maxActiveContacts;
+    WCHAR productString[POINTER_DEVICE_PRODUCT_STRING_MAX];
+} POINTER_DEVICE_INFO;
+
+
+typedef enum tagPOINTER_BUTTON_CHANGE_TYPE {
+    POINTER_CHANGE_NONE,
+    POINTER_CHANGE_FIRSTBUTTON_DOWN,
+    POINTER_CHANGE_FIRSTBUTTON_UP,
+    POINTER_CHANGE_SECONDBUTTON_DOWN,
+    POINTER_CHANGE_SECONDBUTTON_UP,
+    POINTER_CHANGE_THIRDBUTTON_DOWN,
+    POINTER_CHANGE_THIRDBUTTON_UP,
+    POINTER_CHANGE_FOURTHBUTTON_DOWN,
+    POINTER_CHANGE_FOURTHBUTTON_UP,
+    POINTER_CHANGE_FIFTHBUTTON_DOWN,
+    POINTER_CHANGE_FIFTHBUTTON_UP,
+} POINTER_BUTTON_CHANGE_TYPE;
+
+typedef struct tagPOINTER_INFO {
+    POINTER_INPUT_TYPE    pointerType;
+    UINT32          pointerId;
+    UINT32          frameId;
+    POINTER_FLAGS   pointerFlags;
+    HANDLE          sourceDevice;
+    HWND            hwndTarget;
+    POINT           ptPixelLocation;
+    POINT           ptHimetricLocation;
+    POINT           ptPixelLocationRaw;
+    POINT           ptHimetricLocationRaw;
+    DWORD           dwTime;
+    UINT32          historyCount;
+    INT32           InputData;
+    DWORD           dwKeyStates;
+    UINT64          PerformanceCount;
+    POINTER_BUTTON_CHANGE_TYPE ButtonChangeType;
+} POINTER_INFO;
+
+
+#else
 #include "windef.h"
 #include "wine/windef16.h"
 #include "winbase.h"
@@ -30,10 +122,12 @@
 #include "controls.h"
 #include "imm.h"
 #include "user_private.h"
-
+#endif
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(win);
+
+#ifndef __REACTOS__
 
 BOOL WINAPI ImmSetActiveContext(HWND, HIMC, BOOL);
 
@@ -403,6 +497,7 @@ BOOL WINAPI UserHandleGrantAccess(HANDLE handle, HANDLE job, BOOL grant)
     FIXME("(%p,%p,%d): stub\n", handle, job, grant);
     return TRUE;
 }
+#endif
 
 /**********************************************************************
  * RegisterPowerSettingNotification [USER32.@]
@@ -532,6 +627,7 @@ BOOL WINAPI GetPointerInfo(UINT32 id, POINTER_INFO *info)
     return FALSE;
 }
 
+#ifndef __REACTOS__
 LRESULT WINAPI ImeWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
     if (!imm_ime_wnd_proc) return DefWindowProcA(hwnd, msg, wParam, lParam);
@@ -543,3 +639,52 @@ LRESULT WINAPI ImeWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
     if (!imm_ime_wnd_proc) return DefWindowProcW(hwnd, msg, wParam, lParam);
     return imm_ime_wnd_proc( hwnd, msg, wParam, lParam, FALSE );
 }
+#endif
+
+#ifdef __REACTOS__
+//wine/message.c stubs
+typedef struct tagCHANGEFILTERSTRUCT {
+    DWORD cbSize;
+    DWORD ExtStatus;
+} CHANGEFILTERSTRUCT, *PCHANGEFILTERSTRUCT;
+
+/******************************************************************
+ *      ChangeWindowMessageFilter (USER32.@)
+ */
+BOOL WINAPI ChangeWindowMessageFilter( UINT message, DWORD flag )
+{
+    FIXME( "%x %08lx\n", message, flag );
+    return TRUE;
+}
+
+/******************************************************************
+ *      ChangeWindowMessageFilterEx (USER32.@)
+ */
+BOOL WINAPI ChangeWindowMessageFilterEx( HWND hwnd, UINT message, DWORD action, CHANGEFILTERSTRUCT *changefilter )
+{
+    FIXME( "%p %x %ld %p\n", hwnd, message, action, changefilter );
+    return TRUE;
+}
+
+//wine/user_main.c
+/***********************************************************************
+ *		ShutdownBlockReasonDestroy (USER32.@)
+ */
+
+BOOL WINAPI ShutdownBlockReasonDestroy(HWND hwnd)
+{
+    FIXME("(%p): stub\n", hwnd);
+    SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
+    return FALSE;
+}
+
+/***********************************************************************
+ *		ShutdownBlockReasonCreate (USER32.@)
+ */
+BOOL WINAPI ShutdownBlockReasonCreate(HWND hwnd, LPCWSTR reason)
+{
+    FIXME("(%p, %s): stub\n", hwnd, debugstr_w(reason));
+    SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
+    return FALSE;
+}
+#endif

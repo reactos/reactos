@@ -5,11 +5,29 @@ include_directories(
     include
     ${REACTOS_SOURCE_DIR}/win32ss/include)
 
+list(APPEND VISTA_SOURCE 
+     wine/input.c
+     wine/misc.c
+     wine/sysparams.c
+     wine/win.c)
+     
+
 list(APPEND SOURCE
     dpi.c)
 
+# These are just for Vista+ support
+add_library(user32_optional_vista
+            ${VISTA_SOURCE})
+target_link_libraries(user32_optional_vista wine win32ksys)
+add_dependencies(user32_optional_vista wine psdk)
+if(MSVC)
+    # Disable warning C4312: 'type cast': conversion from 'unsigned int' to 'HANDLE' of greater size
+    target_compile_options(user32_optional_vista PRIVATE /wd4312)
+endif()
+
+# These are required for WINE imports
 add_library(user32_vista_static
-    ${SOURCE})
+            ${SOURCE})
 target_link_libraries(user32_vista_static win32ksys)
 add_dependencies(user32_vista_static psdk)
 
