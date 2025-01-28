@@ -1990,7 +1990,8 @@ SHGetComputerDisplayNameW(
 {
     WCHAR szDesc[256], szCompName[MAX_COMPUTERNAME_LENGTH + 1];
 
-    if (!pszServerName) // Server name not specified?
+    // If no server name is specified, retrieve the local computer name
+    if (!pszServerName)
     {
         // Get local computer name
         DWORD cchCompName = _countof(szCompName);
