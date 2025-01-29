@@ -27,6 +27,7 @@ typedef DWORD ASSOCF; // FIXME: Follow "One Definition Rule"
 /*****************************************************************************
  * ASSOCQUERY --- The type flags of association query
  *
+ * @see IAssociationElementOld, IAssociationElement, IAssociationArrayOld, IAssociationArray
  * @see https://www.geoffchappell.com/studies/windows/shell/shell32/api/assocelem/query.htm
  */
 enum
