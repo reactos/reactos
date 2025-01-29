@@ -25,7 +25,7 @@ typedef INT (CALLBACK *SLOTCOMPARE)(LPCVOID pvData1, LPCVOID pvData2, UINT cbDat
 typedef DWORD ASSOCF; // FIXME: Follow "One Definition Rule"
 
 /*****************************************************************************
- * ASSOCQUERY --- The types of association query
+ * ASSOCQUERY --- The type flags of association query
  *
  * @see https://www.geoffchappell.com/studies/windows/shell/shell32/api/assocelem/query.htm
  */
