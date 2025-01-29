@@ -1,6 +1,7 @@
 
 PROJECT(Drivers)
 
+add_subdirectory(acpi)
 add_subdirectory(base)
 add_subdirectory(battery)
 add_subdirectory(bluetooth)
