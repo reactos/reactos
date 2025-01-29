@@ -826,7 +826,7 @@ DECLARE_INTERFACE_(ITrayPriv, IUnknown)
  * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iassociationelement.htm
  */
 #define INTERFACE IAssociationElementOld
-DECLARE_INTERFACE_(IAssociationElementOld, IUnknown)
+DECLARE_INTERFACE_(IAssociationElementOld, IUnknown) // {E58B1ABF-9596-4DBA-8997-89DCDEF46992}
 {
     /*** IUnknown ***/
     STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
@@ -858,7 +858,7 @@ DECLARE_INTERFACE_(IAssociationElementOld, IUnknown)
  * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iassociationelement.htm
  */
 #define INTERFACE IAssociationElement
-DECLARE_INTERFACE_(IAssociationElement, IUnknown)
+DECLARE_INTERFACE_(IAssociationElement, IUnknown) // {D8F6AD5B-B44F-4BCC-88FD-EB3473DB7502}
 {
     /*** IUnknown ***/
     STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
@@ -892,7 +892,7 @@ DECLARE_INTERFACE_(IAssociationElement, IUnknown)
  * @see https://www.geoffchappell.com/studies/windows/shell/shell32/interfaces/ienumassociationelements.htm
  */
 #define INTERFACE IEnumAssociationElements
-DECLARE_INTERFACE_(IEnumAssociationElements, IUnknown)
+DECLARE_INTERFACE_(IEnumAssociationElements, IUnknown) // {A6B0FB57-7523-4439-9425-EBE99823B828}
 {
     /*** IUnknown ***/
     STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
@@ -922,7 +922,7 @@ DECLARE_INTERFACE_(IEnumAssociationElements, IUnknown)
  * @see https://www.geoffchappell.com/studies/windows/shell/shell32/interfaces/iassociationarray.htm
  */
 #define INTERFACE IAssociationArrayOld
-DECLARE_INTERFACE_(IAssociationArrayOld, IUnknown)
+DECLARE_INTERFACE_(IAssociationArrayOld, IUnknown) // {3B877E3C-67DE-4F9A-B29B-17D0A1521C6A}
 {
     /*** IUnknown ***/
     STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
@@ -956,7 +956,7 @@ DECLARE_INTERFACE_(IAssociationArrayOld, IUnknown)
  * @see https://www.geoffchappell.com/studies/windows/shell/shell32/interfaces/iassociationarray.htm
  */
 #define INTERFACE IAssociationArray
-DECLARE_INTERFACE_(IAssociationArray, IUnknown)
+DECLARE_INTERFACE_(IAssociationArray, IUnknown) // {19ADBAFD-1C5F-4FC7-94EE-846702DFB58B}
 {
     /*** IUnknown ***/
     STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
