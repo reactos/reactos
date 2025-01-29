@@ -44,6 +44,7 @@ typedef DWORD ASSOCF; // FIXME: Follow One Definition Rule
  */
 enum tagASSOCQUERY
 {
+    ASSOCQUERY_LOWORD_MASK      = 0x0000FFFF,
     ASSOCQUERY_STRING           = 0x00010000, // Responds to QueryString method
     ASSOCQUERY_EXISTS           = 0x00020000, // Responds to QueryExists method
     ASSOCQUERY_DIRECT           = 0x00040000, // Responds to QueryDirect method
