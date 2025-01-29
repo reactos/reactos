@@ -22,8 +22,6 @@ typedef struct tagSLOTITEMDATA
 
 typedef INT (CALLBACK *SLOTCOMPARE)(LPCVOID pvData1, LPCVOID pvData2, UINT cbData);
 
-typedef DWORD ASSOCF; // FIXME: Follow "One Definition Rule"
-
 /*****************************************************************************
  * ASSOCQUERY --- The type flags of association query
  *
@@ -941,12 +939,12 @@ DECLARE_INTERFACE_(IAssociationArrayOld, IUnknown) // {3B877E3C-67DE-4F9A-B29B-1
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IAssociationArrayOld ***/
-    STDMETHOD(EnumElements)(THIS_ ASSOCF flags, IEnumAssociationElements **ppElement) PURE;
-    STDMETHOD(QueryString)(THIS_ ASSOCF flags, ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue) PURE;
-    STDMETHOD(QueryDword)(THIS_ ASSOCF flags, ASSOCQUERY query, PCWSTR key, DWORD *pdwValue) PURE;
-    STDMETHOD(QueryExists)(THIS_ ASSOCF flags, ASSOCQUERY query, PCWSTR key) PURE;
-    STDMETHOD(QueryDirect)(THIS_ ASSOCF flags, ASSOCQUERY query, PCWSTR key, FLAGGED_BYTE_BLOB **ppBlob) PURE;
-    STDMETHOD(QueryObject)(THIS_ ASSOCF flags, ASSOCQUERY query, PCWSTR key, REFIID riid, PVOID *ppvObj) PURE;
+    STDMETHOD(EnumElements)(THIS_ ULONG flags, IEnumAssociationElements **ppElement) PURE;
+    STDMETHOD(QueryString)(THIS_ ULONG flags, ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue) PURE;
+    STDMETHOD(QueryDword)(THIS_ ULONG flags, ASSOCQUERY query, PCWSTR key, DWORD *pdwValue) PURE;
+    STDMETHOD(QueryExists)(THIS_ ULONG flags, ASSOCQUERY query, PCWSTR key) PURE;
+    STDMETHOD(QueryDirect)(THIS_ ULONG flags, ASSOCQUERY query, PCWSTR key, FLAGGED_BYTE_BLOB **ppBlob) PURE;
+    STDMETHOD(QueryObject)(THIS_ ULONG flags, ASSOCQUERY query, PCWSTR key, REFIID riid, PVOID *ppvObj) PURE;
 };
 #undef INTERFACE
 
