@@ -22,7 +22,7 @@ typedef struct tagSLOTITEMDATA
 
 typedef INT (CALLBACK *SLOTCOMPARE)(LPCVOID pvData1, LPCVOID pvData2, UINT cbData);
 
-typedef DWORD ASSOCF; // FIXME: Follow One Definition Rule
+typedef DWORD ASSOCF; // FIXME: Follow "One Definition Rule"
 
 /*****************************************************************************
  * ASSOCQUERY --- The types of association query
