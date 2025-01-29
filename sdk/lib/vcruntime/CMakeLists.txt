@@ -20,7 +20,6 @@ list(APPEND VCRT_COMMON_SOURCES
     __report_gsfailure.c
     __report_rangecheckfailure.c
     __security_init_cookie.c
-    __vcrt_init.c
     _fltused.c
     initializers.cpp
     isa_available.cpp
@@ -29,11 +28,13 @@ list(APPEND VCRT_COMMON_SOURCES
 
 list(APPEND VCRT_RUNTIME_SOURCES
     __std_terminate.c
+    __vcrt_init.c
 )
 
 list(APPEND VCRT_STARTUP_SOURCES
     __acrt_initialize_stub.cpp
     __scrt_uninitialize_crt.cpp
+    __vcrt_init_stubs.c
     mainCRTStartup.cpp
     wmainCRTStartup.cpp
 )
