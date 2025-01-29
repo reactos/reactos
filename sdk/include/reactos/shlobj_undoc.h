@@ -35,7 +35,27 @@ typedef struct tagSLOTITEMDATA
 
 typedef INT (CALLBACK *SLOTCOMPARE)(LPCVOID pvData1, LPCVOID pvData2, UINT cbData);
 
-typedef DWORD ASSOCF;
+typedef DWORD ASSOCF; // FIXME: Follow One Definition Rule
+
+/*****************************************************************************
+ * ASSOCQUERY
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shell32/api/assocelem/query.htm
+ */
+enum tagASSOCQUERY
+{
+    ASSOCQUERY_STRING           = 0x00010000, // Responds to QueryString method
+    ASSOCQUERY_EXISTS           = 0x00020000, // Responds to QueryExists method
+    ASSOCQUERY_DIRECT           = 0x00040000, // Responds to QueryDirect method
+    ASSOCQUERY_DWORD            = 0x00080000, // Responds to QueryDword method
+    ASSOCQUERY_INDIRECT         = 0x00100000, // Obtains resource string from QueryString
+    ASSOCQUERY_OBJECT           = 0x00200000, // Responds to QueryObject method
+    ASSOCQUERY_GUID             = 0x00400000, // Responds to QueryGuid method
+    ASSOCQUERY_EXTRA_NON_VERB   = 0x01000000, // Expects pszExtra for path or value
+    ASSOCQUERY_EXTRA_VERB       = 0x02000000, // Expects pszExtra for verb
+    ASSOCQUERY_SIGNIFICANCE     = 0x04000000, // Significance unknown
+    ASSOCQUERY_FALLBACK         = 0x80000000, // Fallback to secondary query source
+};
 typedef DWORD ASSOCQUERY;
 
 /*****************************************************************************
