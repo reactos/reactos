@@ -9,6 +9,9 @@
 
 #pragma once
 
+#define SHLWAPI_ISHELLFOLDER_HELPERS
+#include <shlwapi_undoc.h> // For ASSOCQUERY
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -21,29 +24,6 @@ typedef struct tagSLOTITEMDATA
 } SLOTITEMDATA, *PSLOTITEMDATA;
 
 typedef INT (CALLBACK *SLOTCOMPARE)(LPCVOID pvData1, LPCVOID pvData2, UINT cbData);
-
-/*****************************************************************************
- * ASSOCQUERY --- The type flags of association query
- *
- * @see IAssociationElementOld, IAssociationElement, IAssociationArrayOld, IAssociationArray
- * @see https://www.geoffchappell.com/studies/windows/shell/shell32/api/assocelem/query.htm
- */
-enum
-{
-    ASSOCQUERY_LOWORD_MASK      = 0x0000FFFF, // The low-order word of flags
-    ASSOCQUERY_STRING           = 0x00010000, // Responds to QueryString method
-    ASSOCQUERY_EXISTS           = 0x00020000, // Responds to QueryExists method
-    ASSOCQUERY_DIRECT           = 0x00040000, // Responds to QueryDirect method
-    ASSOCQUERY_DWORD            = 0x00080000, // Responds to QueryDword method
-    ASSOCQUERY_INDIRECT         = 0x00100000, // Obtains resource string from QueryString
-    ASSOCQUERY_OBJECT           = 0x00200000, // Responds to QueryObject method
-    ASSOCQUERY_GUID             = 0x00400000, // Responds to QueryGuid method
-    ASSOCQUERY_EXTRA_NON_VERB   = 0x01000000, // Expects pszExtra for path or value
-    ASSOCQUERY_EXTRA_VERB       = 0x02000000, // Expects pszExtra for verb
-    ASSOCQUERY_SIGNIFICANCE     = 0x04000000, // Significance unknown
-    ASSOCQUERY_FALLBACK         = 0x80000000, // Fallback to secondary query source
-};
-typedef DWORD ASSOCQUERY;
 
 /*****************************************************************************
  * New shellstate structure
@@ -825,39 +805,6 @@ DECLARE_INTERFACE_(ITrayPriv, IUnknown)
 #define ITrayPriv_Execute(T,a,b) (T)->lpVtbl->Execute(T,a,b)
 #define ITrayPriv_Unknown(T,a,b,c,d) (T)->lpVtbl->Unknown(T,a,b,c,d)
 #define ITrayPriv_AppendMenu(T,a) (T)->lpVtbl->AppendMenu(T,a)
-#endif
-
-/*****************************************************************************
- * IAssociationElementOld interface
- *
- * @see IAssociationElement
- * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iassociationelement.htm
- */
-#define INTERFACE IAssociationElementOld
-DECLARE_INTERFACE_(IAssociationElementOld, IUnknown) // {E58B1ABF-9596-4DBA-8997-89DCDEF46992}
-{
-    /*** IUnknown ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IAssociationElementOld ***/
-    STDMETHOD(QueryString)(THIS_ ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue) PURE;
-    STDMETHOD(QueryDword)(THIS_ ASSOCQUERY query, PCWSTR key, DWORD *pdwValue) PURE;
-    STDMETHOD(QueryExists)(THIS_ ASSOCQUERY query, PCWSTR key) PURE;
-    STDMETHOD(QueryDirect)(THIS_ ASSOCQUERY query, PCWSTR key, FLAGGED_BYTE_BLOB **ppBlob) PURE;
-    STDMETHOD(QueryObject)(THIS_ ASSOCQUERY query, PCWSTR key, REFIID riid, PVOID *ppvObj) PURE;
-};
-#undef INTERFACE
-
-#ifdef COBJMACROS
-#define IAssociationElementOld_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
-#define IAssociationElementOld_AddRef(T) (T)->lpVtbl->AddRef(T)
-#define IAssociationElementOld_Release(T) (T)->lpVtbl->Release(T)
-#define IAssociationElementOld_QueryString(T,a,b,c) (T)->lpVtbl->QueryString(T,a,b,c)
-#define IAssociationElementOld_QueryDword(T,a,b,c) (T)->lpVtbl->QueryDword(T,a,b,c)
-#define IAssociationElementOld_QueryExists(T,a,b) (T)->lpVtbl->QueryExists(T,a,b)
-#define IAssociationElementOld_QueryDirect(T,a,b,c) (T)->lpVtbl->QueryDirect(T,a,b,c)
-#define IAssociationElementOld_QueryObject(T,a,b,c,d) (T)->lpVtbl->QueryObject(T,a,b,c,d)
 #endif
 
 /*****************************************************************************
