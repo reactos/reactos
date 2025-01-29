@@ -1,26 +1,13 @@
 /*
- * ReactOS undocumented shell interface
- *
- * Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
- * Copyright 2013 Dominik Hornung
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * PROJECT:     ReactOS header
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Undocumented shell interface
+ * COPYRIGHT:   Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
+ *              Copyright 2013 Dominik Hornung
+ *              Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#ifndef __SHLOBJ_UNDOC__H
-#define __SHLOBJ_UNDOC__H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -1012,5 +999,3 @@ HRESULT WINAPI SHCreateFileDataObject(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, P
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
-
-#endif // __SHLOBJ_UNDOC__H
