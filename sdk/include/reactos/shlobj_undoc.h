@@ -29,7 +29,7 @@ typedef DWORD ASSOCF; // FIXME: Follow One Definition Rule
  *
  * @see https://www.geoffchappell.com/studies/windows/shell/shell32/api/assocelem/query.htm
  */
-enum tagASSOCQUERY
+enum
 {
     ASSOCQUERY_LOWORD_MASK      = 0x0000FFFF, // The low-order word of flags
     ASSOCQUERY_STRING           = 0x00010000, // Responds to QueryString method
