@@ -35,6 +35,9 @@ typedef struct tagSLOTITEMDATA
 
 typedef INT (CALLBACK *SLOTCOMPARE)(LPCVOID pvData1, LPCVOID pvData2, UINT cbData);
 
+typedef DWORD ASSOCF;
+typedef DWORD ASSOCQUERY;
+
 /*****************************************************************************
  * New shellstate structure
  */
@@ -815,6 +818,170 @@ DECLARE_INTERFACE_(ITrayPriv, IUnknown)
 #define ITrayPriv_Execute(T,a,b) (T)->lpVtbl->Execute(T,a,b)
 #define ITrayPriv_Unknown(T,a,b,c,d) (T)->lpVtbl->Unknown(T,a,b,c,d)
 #define ITrayPriv_AppendMenu(T,a) (T)->lpVtbl->AppendMenu(T,a)
+#endif
+
+/*****************************************************************************
+ * IAssociationElementOld interface
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iassociationelement.htm
+ */
+#define INTERFACE IAssociationElementOld
+DECLARE_INTERFACE_(IAssociationElementOld, IUnknown)
+{
+    /*** IUnknown ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IAssociationElementOld ***/
+    STDMETHOD(QueryString)(THIS_ ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue) PURE;
+    STDMETHOD(QueryDword)(THIS_ ASSOCQUERY query, PCWSTR key, DWORD *pdwValue) PURE;
+    STDMETHOD(QueryExists)(THIS_ ASSOCQUERY query, PCWSTR key) PURE;
+    STDMETHOD(QueryDirect)(THIS_ ASSOCQUERY query, PCWSTR key, FLAGGED_BYTE_BLOB **ppBlob) PURE;
+    STDMETHOD(QueryObject)(THIS_ ASSOCQUERY query, PCWSTR key, REFIID riid, PVOID *ppvObj) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define IAssociationElementOld_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IAssociationElementOld_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IAssociationElementOld_Release(T) (T)->lpVtbl->Release(T)
+#define IAssociationElementOld_QueryString(T,a,b,c) (T)->lpVtbl->QueryString(T,a,b,c)
+#define IAssociationElementOld_QueryDword(T,a,b,c) (T)->lpVtbl->QueryDword(T,a,b,c)
+#define IAssociationElementOld_QueryExists(T,a,b) (T)->lpVtbl->QueryExists(T,a,b)
+#define IAssociationElementOld_QueryDirect(T,a,b,c) (T)->lpVtbl->QueryDirect(T,a,b,c)
+#define IAssociationElementOld_QueryObject(T,a,b,c,d) (T)->lpVtbl->QueryObject(T,a,b,c,d)
+#endif
+
+/*****************************************************************************
+ * IAssociationElement interface
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iassociationelement.htm
+ */
+#define INTERFACE IAssociationElement
+DECLARE_INTERFACE_(IAssociationElement, IUnknown)
+{
+    /*** IUnknown ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IAssociationElement ***/
+    STDMETHOD(QueryString)(THIS_ ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue) PURE;
+    STDMETHOD(QueryDword)(THIS_ ASSOCQUERY query, PCWSTR key, DWORD *pdwValue) PURE;
+    STDMETHOD(QueryGuid)(THIS_ ASSOCQUERY query, PCWSTR key, GUID *pguid) PURE;
+    STDMETHOD(QueryExists)(THIS_ ASSOCQUERY query, PCWSTR key) PURE;
+    STDMETHOD(QueryDirect)(THIS_ ASSOCQUERY query, PCWSTR key, FLAGGED_BYTE_BLOB **ppBlob) PURE;
+    STDMETHOD(QueryObject)(THIS_ ASSOCQUERY query, PCWSTR key, REFIID riid, PVOID *ppvObj) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define IAssociationElement_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IAssociationElement_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IAssociationElement_Release(T) (T)->lpVtbl->Release(T)
+#define IAssociationElement_QueryString(T,a,b,c) (T)->lpVtbl->QueryString(T,a,b,c)
+#define IAssociationElement_QueryDword(T,a,b,c) (T)->lpVtbl->QueryDword(T,a,b,c)
+#define IAssociationElement_QueryGuid(T,a,b,c) (T)->lpVtbl->QueryGuid(T,a,b,c)
+#define IAssociationElement_QueryExists(T,a,b) (T)->lpVtbl->QueryExists(T,a,b)
+#define IAssociationElement_QueryDirect(T,a,b,c) (T)->lpVtbl->QueryDirect(T,a,b,c)
+#define IAssociationElement_QueryObject(T,a,b,c,d) (T)->lpVtbl->QueryObject(T,a,b,c,d)
+#endif
+
+/*****************************************************************************
+ * IEnumAssociationElements interface
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shell32/interfaces/ienumassociationelements.htm
+ */
+#define INTERFACE IEnumAssociationElements
+DECLARE_INTERFACE_(IEnumAssociationElements, IUnknown)
+{
+    /*** IUnknown ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IEnumAssociationElements ***/
+    STDMETHOD(Next)(THIS_ ULONG celt, IAssociationElement *pElement, ULONG *pceltFetched) PURE;
+    STDMETHOD(Skip)(THIS_ ULONG celt) PURE;
+    STDMETHOD(Reset)(THIS) PURE;
+    STDMETHOD(Clone)(THIS_ IEnumAssociationElements **ppNew) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define IEnumAssociationElements_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IEnumAssociationElements_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IEnumAssociationElements_Release(T) (T)->lpVtbl->Release(T)
+#define IEnumAssociationElements_Next(T,a,b,c) (T)->lpVtbl->Next(T,a,b,c)
+#define IEnumAssociationElements_Skip(T,a) (T)->lpVtbl->Skip(T,a)
+#define IEnumAssociationElements_Reset(T) (T)->lpVtbl->Reset(T)
+#define IEnumAssociationElements_Clone(T,a) (T)->lpVtbl->Clone(T,a)
+#endif
+
+/*****************************************************************************
+ * IAssociationArrayOld interface
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shell32/interfaces/iassociationarray.htm
+ */
+#define INTERFACE IAssociationArrayOld
+DECLARE_INTERFACE_(IAssociationArrayOld, IUnknown)
+{
+    /*** IUnknown ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IAssociationArrayOld ***/
+    STDMETHOD(EnumElements)(THIS_ ASSOCF flags, IEnumAssociationElements **ppElement) PURE;
+    STDMETHOD(QueryString)(THIS_ ASSOCF flags, ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue) PURE;
+    STDMETHOD(QueryDword)(THIS_ ASSOCF flags, ASSOCQUERY query, PCWSTR key, DWORD *pdwValue) PURE;
+    STDMETHOD(QueryExists)(THIS_ ASSOCF flags, ASSOCQUERY query, PCWSTR key) PURE;
+    STDMETHOD(QueryDirect)(THIS_ ASSOCF flags, ASSOCQUERY query, PCWSTR key, FLAGGED_BYTE_BLOB **ppBlob) PURE;
+    STDMETHOD(QueryObject)(THIS_ ASSOCF flags, ASSOCQUERY query, PCWSTR key, REFIID riid, PVOID *ppvObj) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define IAssociationArrayOld_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IAssociationArrayOld_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IAssociationArrayOld_Release(T) (T)->lpVtbl->Release(T)
+#define IAssociationArrayOld_EnumElements(T,a,b) (T)->lpVtbl->EnumElements(T,a,b)
+#define IAssociationArrayOld_QueryString(T,a,b,c,d) (T)->lpVtbl->QueryString(T,a,b,c,d)
+#define IAssociationArrayOld_QueryDword(T,a,b,c,d) (T)->lpVtbl->QueryDword(T,a,b,c,d)
+#define IAssociationArrayOld_QueryExists(T,a,b,c) (T)->lpVtbl->QueryExists(T,a,b,c)
+#define IAssociationArrayOld_QueryDirect(T,a,b,c,d) (T)->lpVtbl->QueryDirect(T,a,b,c,d)
+#define IAssociationArrayOld_QueryObject(T,a,b,c,d,e) (T)->lpVtbl->QueryObject(T,a,b,c,d,e)
+#endif
+
+/*****************************************************************************
+ * IAssociationArray interface
+ *
+ * @see https://www.geoffchappell.com/studies/windows/shell/shell32/interfaces/iassociationarray.htm
+ */
+#define INTERFACE IAssociationArray
+DECLARE_INTERFACE_(IAssociationArray, IUnknown)
+{
+    /*** IUnknown ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IAssociationArray ***/
+    STDMETHOD(QueryString)(THIS_ ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue) PURE;
+    STDMETHOD(QueryDword)(THIS_ ASSOCQUERY query, PCWSTR key, DWORD *pdwValue) PURE;
+    STDMETHOD(QueryGuid)(THIS_ ASSOCQUERY query, PCWSTR key, GUID *pguid) PURE;
+    STDMETHOD(QueryExists)(THIS_ ASSOCQUERY query, PCWSTR key) PURE;
+    STDMETHOD(QueryDirect)(THIS_ ASSOCQUERY query, PCWSTR key, FLAGGED_BYTE_BLOB **ppBlob) PURE;
+    STDMETHOD(QueryObject)(THIS_ ASSOCQUERY query, PCWSTR key, REFIID riid, PVOID *ppvObj) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define IAssociationArray_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IAssociationArray_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IAssociationArray_Release(T) (T)->lpVtbl->Release(T)
+#define IAssociationArray_QueryString(T,a,b,c) (T)->lpVtbl->QueryString(T,a,b,c)
+#define IAssociationArray_QueryDword(T,a,b,c) (T)->lpVtbl->QueryDword(T,a,b,c)
+#define IAssociationArray_QueryGuid(T,a,b,c) (T)->lpVtbl->QueryGuid(T,a,b,c)
+#define IAssociationArray_QueryExists(T,a,b) (T)->lpVtbl->QueryExists(T,a,b)
+#define IAssociationArray_QueryDirect(T,a,b,c) (T)->lpVtbl->QueryDirect(T,a,b,c)
+#define IAssociationArray_QueryObject(T,a,b,c,d) (T)->lpVtbl->QueryObject(T,a,b,c,d)
 #endif
 
 HANDLE WINAPI SHCreateDesktop(IShellDesktopTray*);
