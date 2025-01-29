@@ -11,7 +11,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif /* defined(__cplusplus) */
+#endif
 
 typedef struct tagSLOTITEMDATA
 {
@@ -998,4 +998,4 @@ HRESULT WINAPI SHCreateFileDataObject(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, P
 
 #ifdef __cplusplus
 } /* extern "C" */
-#endif /* defined(__cplusplus) */
+#endif
