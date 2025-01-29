@@ -832,6 +832,7 @@ DECLARE_INTERFACE_(ITrayPriv, IUnknown)
 /*****************************************************************************
  * IAssociationElementOld interface
  *
+ * @see IAssociationElement
  * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iassociationelement.htm
  */
 #define INTERFACE IAssociationElementOld
@@ -864,6 +865,7 @@ DECLARE_INTERFACE_(IAssociationElementOld, IUnknown) // {E58B1ABF-9596-4DBA-8997
 /*****************************************************************************
  * IAssociationElement interface
  *
+ * @see IAssociationElementOld
  * @see https://www.geoffchappell.com/studies/windows/shell/shlwapi/interfaces/iassociationelement.htm
  */
 #define INTERFACE IAssociationElement
@@ -928,6 +930,7 @@ DECLARE_INTERFACE_(IEnumAssociationElements, IUnknown) // {A6B0FB57-7523-4439-94
 /*****************************************************************************
  * IAssociationArrayOld interface
  *
+ * @see IAssociationArray
  * @see https://www.geoffchappell.com/studies/windows/shell/shell32/interfaces/iassociationarray.htm
  */
 #define INTERFACE IAssociationArrayOld
@@ -962,6 +965,7 @@ DECLARE_INTERFACE_(IAssociationArrayOld, IUnknown) // {3B877E3C-67DE-4F9A-B29B-1
 /*****************************************************************************
  * IAssociationArray interface
  *
+ * @see IAssociationArrayOld
  * @see https://www.geoffchappell.com/studies/windows/shell/shell32/interfaces/iassociationarray.htm
  */
 #define INTERFACE IAssociationArray
