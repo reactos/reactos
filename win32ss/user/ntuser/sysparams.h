@@ -157,9 +157,6 @@ typedef struct _SPIVALUES
     DWORD dwForegroundFlashCount;
     DWORD dwCaretWidth;
 
-    INT nIconSize;
-    INT nSmallIconSize;
-
 //    SPI_LANGDRIVER
 //    SPI_SETDESKPATTERN
 //    SPI_SETPENWINDOWS

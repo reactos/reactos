@@ -5,7 +5,6 @@
  * FILE:             win32ss/user/ntuser/metric.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   Timo Kreuzer (timo.kreuzer@reactos.org)
- *                   Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <win32k.h>
@@ -131,10 +130,10 @@ InitMetrics(VOID)
     piSysMet[SM_CXHTHUMB] = gspv.ncm.iScrollHeight;     // 16;
     piSysMet[SM_CYVSCROLL] = gspv.ncm.iScrollHeight;    // 16
     piSysMet[SM_CXHSCROLL] = gspv.ncm.iScrollHeight;    // 16;
-    piSysMet[SM_CXICON] = gspv.nIconSize; // 32
-    piSysMet[SM_CYICON] = gspv.nIconSize; // 32
-    piSysMet[SM_CXSMICON] = gspv.nSmallIconSize; // 16
-    piSysMet[SM_CYSMICON] = gspv.nSmallIconSize; // 16
+    piSysMet[SM_CXICON] = 32;
+    piSysMet[SM_CYICON] = 32;
+    piSysMet[SM_CXSMICON] = 16;
+    piSysMet[SM_CYSMICON] = 16;
     piSysMet[SM_CXICONSPACING] = gspv.im.iHorzSpacing;  // 64;
     piSysMet[SM_CYICONSPACING] = gspv.im.iVertSpacing;  // 64;
     piSysMet[SM_CXCURSOR] = 32;
