@@ -4,6 +4,7 @@
  * PURPOSE:          System parameters functions
  * FILE:             win32ss/user/ntuser/sysparams.c
  * PROGRAMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
+ *                   Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 // TODO:
@@ -205,6 +206,11 @@ SpiFixupValues(VOID)
 //                               gspv.tmMenuFont.tmExternalLeading);
     if (gspv.iDblClickTime == 0) gspv.iDblClickTime = 500;
 
+    if (gspv.nIconSize <= 0)
+        gspv.nIconSize = 32;
+    if (gspv.nSmallIconSize <= 0)
+        gspv.nSmallIconSize = 16;
+
     // FIXME: Hack!!!
     gspv.tmMenuFont.tmHeight = 11;
     gspv.tmMenuFont.tmExternalLeading = 2;
@@ -295,6 +301,10 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.im.iVertSpacing = SpiLoadMetric(VAL_ICONVSPC, 64);
     gspv.im.iTitleWrap = SpiLoadMetric(VAL_ITWRAP, 1);
     SpiLoadFont(&gspv.im.lfFont, L"IconFont", &lf1);
+
+    /* Load icon size */
+    gspv.nIconSize = SpiLoadInt(KEY_METRIC, L"Shell Icon Size", 32);
+    gspv.nSmallIconSize = SpiLoadInt(KEY_METRIC, L"Shell Small Icon Size", 16);
 
     /* Load desktop settings */
     gspv.bDragFullWindows = SpiLoadInt(KEY_DESKTOP, VAL_DRAG, 0);
