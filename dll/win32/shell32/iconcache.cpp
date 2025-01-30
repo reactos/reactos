@@ -3,7 +3,7 @@
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Shell Icon Cache (SIC)
  * COPYRIGHT:   Copyright 1998, 1999 Juergen Schmied
- *              Copyright 2020-2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ *              Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
