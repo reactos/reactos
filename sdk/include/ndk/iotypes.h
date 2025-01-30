@@ -892,6 +892,11 @@ typedef struct _FILE_PIPE_PEEK_BUFFER
     CHAR Data[1];
 } FILE_PIPE_PEEK_BUFFER, *PFILE_PIPE_PEEK_BUFFER;
 
+typedef struct _FILE_MODE_INFORMATION
+{
+    ULONG Mode;
+} FILE_MODE_INFORMATION, *PFILE_MODE_INFORMATION;
+
 //
 // I/O Error Log Structures
 //
