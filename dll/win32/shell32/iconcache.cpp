@@ -62,7 +62,10 @@ static VOID
 SHELL_GetBigIconSize(_Out_ PSIZE pSize)
 {
     // NOTE: Shell icon size is always square
-    INT nIconSize = SHELL_GetMetricsValue(L"Shell Icon Size", GetSystemMetrics(SM_CXICON));
+    INT nDefaultSize = GetSystemMetrics(SM_CXICON);
+    INT nIconSize = SHELL_GetMetricsValue(L"Shell Icon Size", nDefaultSize);
+    if (nIconSize <= 0)
+        nIconSize = nDefaultSize;
     pSize->cx = pSize->cy = nIconSize;
 }
 
@@ -70,8 +73,10 @@ static VOID
 SHELL_GetSmallIconSize(_Out_ PSIZE pSize)
 {
     // NOTE: Shell icon size is always square
-    INT nIconSize = SHELL_GetMetricsValue(L"Shell Small Icon Size",
-                                          GetSystemMetrics(SM_CXICON) / 2);
+    INT nDefaultSize = GetSystemMetrics(SM_CXICON) / 2;
+    INT nIconSize = SHELL_GetMetricsValue(L"Shell Small Icon Size", nDefaultSize);
+    if (nIconSize <= 0)
+        nIconSize = nDefaultSize;
     pSize->cx = pSize->cy = nIconSize;
 }
 
