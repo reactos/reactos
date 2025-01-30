@@ -27,8 +27,9 @@ static HDPA        sic_hdpa = 0;
 
 static HIMAGELIST ShellSmallIconList;
 static HIMAGELIST ShellBigIconList;
-SIZE ShellSmallIconSize;
-SIZE ShellBigIconSize;
+SIZE ShellSmallIconSize = { 0 };
+SIZE ShellBigIconSize = { 0 };
+INT ShellIconBPP = 0; // Bits Per Pixel
 
 namespace
 {
@@ -78,6 +79,14 @@ SIC_GetSmallIconSize(_Out_ PSIZE pSize)
     if (nIconSize <= 0)
         nIconSize = nDefaultSize;
     pSize->cx = pSize->cy = nIconSize;
+}
+
+static INT
+SIC_GetIconBPP(VOID) // Bits Per Pixel
+{
+    INT nDefaultBPP = SHGetCurColorRes();
+    INT nIconBPP = SIC_GetMetricsValue(L"Shell Icon BPP", nDefaultBPP);
+    return (nIconBPP <= 0) ? nDefaultBPP : nIconBPP;
 }
 
 /*****************************************************************************
@@ -511,7 +520,6 @@ INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags )
 BOOL SIC_Initialize(void)
 {
     HICON hSm = NULL, hLg = NULL;
-    HDC hDC;
     INT bpp;
     DWORD ilMask;
     BOOL result = FALSE;
@@ -530,16 +538,10 @@ BOOL SIC_Initialize(void)
         return FALSE;
     }
 
-    hDC = CreateICW(L"DISPLAY", NULL, NULL, NULL);
-    if (!hDC)
-    {
-        ERR("Failed to create information context (error %d)\n", GetLastError());
-        goto end;
-    }
+    SIC_GetSmallIconSize(&ShellSmallIconSize);
+    SIC_GetBigIconSize(&ShellBigIconSize);
 
-    bpp = GetDeviceCaps(hDC, BITSPIXEL);
-    DeleteDC(hDC);
-
+    bpp = ShellIconBPP = SIC_GetIconBPP(); // Bits Per Pixel
     if (bpp <= 4)
         ilMask = ILC_COLOR4;
     else if (bpp <= 8)
@@ -554,9 +556,6 @@ BOOL SIC_Initialize(void)
         ilMask = ILC_COLOR;
 
     ilMask |= ILC_MASK;
-
-    SIC_GetSmallIconSize(&ShellSmallIconSize);
-    SIC_GetBigIconSize(&ShellBigIconSize);
 
     ShellSmallIconList = ImageList_Create(ShellSmallIconSize.cx, ShellSmallIconSize.cy, ilMask,
                                           100, 100);

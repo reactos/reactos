@@ -46,6 +46,7 @@ BOOL PidlToSicIndex (IShellFolder * sh, LPCITEMIDLIST pidl, BOOL bBigIcon, UINT 
 INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags ) DECLSPEC_HIDDEN;
 extern SIZE ShellBigIconSize;
 extern SIZE ShellSmallIconSize;
+extern INT ShellIconBPP;
 
 /* Classes Root */
 HRESULT HCR_GetProgIdKeyOfExtension(PCWSTR szExtension, PHKEY phKey, BOOL AllowFallback);
