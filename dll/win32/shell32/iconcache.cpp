@@ -27,8 +27,8 @@ static HDPA        sic_hdpa = 0;
 
 static HIMAGELIST ShellSmallIconList;
 static HIMAGELIST ShellBigIconList;
-SIZE ShellSmallIconSize = { 0 };
-SIZE ShellBigIconSize = { 0 };
+INT ShellSmallIconSize = 0;
+INT ShellBigIconSize = 0;
 INT ShellIconBPP = 0; // Bits Per Pixel
 
 namespace
@@ -59,26 +59,22 @@ SIC_GetMetricsValue(
     return _wtoi(szValue);
 }
 
-static VOID
-SIC_GetBigIconSize(_Out_ PSIZE pSize)
+static INT
+SIC_GetBigIconSize(VOID)
 {
     // NOTE: Shell icon size is always square
     INT nDefaultSize = GetSystemMetrics(SM_CXICON);
     INT nIconSize = SIC_GetMetricsValue(L"Shell Icon Size", nDefaultSize);
-    if (nIconSize <= 0)
-        nIconSize = nDefaultSize;
-    pSize->cx = pSize->cy = nIconSize;
+    return (nIconSize > 0) ? nIconSize : nDefaultSize;
 }
 
-static VOID
-SIC_GetSmallIconSize(_Out_ PSIZE pSize)
+static INT
+SIC_GetSmallIconSize(VOID)
 {
     // NOTE: Shell icon size is always square
     INT nDefaultSize = GetSystemMetrics(SM_CXICON) / 2;
     INT nIconSize = SIC_GetMetricsValue(L"Shell Small Icon Size", nDefaultSize);
-    if (nIconSize <= 0)
-        nIconSize = nDefaultSize;
-    pSize->cx = pSize->cy = nIconSize;
+    return (nIconSize > 0) ? nIconSize : nDefaultSize;
 }
 
 static INT
@@ -427,9 +423,9 @@ static INT SIC_LoadIcon (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags)
     HICON hiconSmall=0;
     UINT ret;
 
-    PrivateExtractIconsW(sSourceFile, dwSourceIndex, ShellBigIconSize.cx, ShellBigIconSize.cy,
+    PrivateExtractIconsW(sSourceFile, dwSourceIndex, ShellBigIconSize, ShellBigIconSize,
                          &hiconLarge, NULL, 1, LR_COPYFROMRESOURCE);
-    PrivateExtractIconsW(sSourceFile, dwSourceIndex, ShellSmallIconSize.cx, ShellSmallIconSize.cy,
+    PrivateExtractIconsW(sSourceFile, dwSourceIndex, ShellSmallIconSize, ShellSmallIconSize,
                          &hiconSmall, NULL, 1, LR_COPYFROMRESOURCE);
 
     if ( !hiconLarge ||  !hiconSmall)
@@ -538,8 +534,8 @@ BOOL SIC_Initialize(void)
         return FALSE;
     }
 
-    SIC_GetSmallIconSize(&ShellSmallIconSize);
-    SIC_GetBigIconSize(&ShellBigIconSize);
+    ShellSmallIconSize = SIC_GetSmallIconSize();
+    ShellBigIconSize = SIC_GetBigIconSize();
 
     bpp = ShellIconBPP = SIC_GetIconBPP(); // Bits Per Pixel
     if (bpp <= 4)
@@ -557,15 +553,14 @@ BOOL SIC_Initialize(void)
 
     ilMask |= ILC_MASK;
 
-    ShellSmallIconList = ImageList_Create(ShellSmallIconSize.cx, ShellSmallIconSize.cy, ilMask,
-                                          100, 100);
+    ShellSmallIconList = ImageList_Create(ShellSmallIconSize, ShellSmallIconSize, ilMask, 100, 100);
     if (!ShellSmallIconList)
     {
         ERR("Failed to create the small icon list.\n");
         goto end;
     }
 
-    ShellBigIconList = ImageList_Create(ShellBigIconSize.cx, ShellBigIconSize.cy, ilMask, 100, 100);
+    ShellBigIconList = ImageList_Create(ShellBigIconSize, ShellBigIconSize, ilMask, 100, 100);
     if (!ShellBigIconList)
     {
         ERR("Failed to create the big icon list.\n");
@@ -574,7 +569,7 @@ BOOL SIC_Initialize(void)
 
     /* Load the document icon, which is used as the default if an icon isn't found. */
     hSm = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
-                            IMAGE_ICON, ShellSmallIconSize.cx, ShellSmallIconSize.cy,
+                            IMAGE_ICON, ShellSmallIconSize, ShellSmallIconSize,
                             LR_SHARED | LR_DEFAULTCOLOR);
     if (!hSm)
     {
@@ -583,7 +578,7 @@ BOOL SIC_Initialize(void)
     }
 
     hLg = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
-                            IMAGE_ICON, ShellBigIconSize.cx, ShellBigIconSize.cy,
+                            IMAGE_ICON, ShellBigIconSize, ShellBigIconSize,
                             LR_SHARED | LR_DEFAULTCOLOR);
     if (!hLg)
     {

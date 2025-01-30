@@ -697,31 +697,31 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                     else 
                     {
                         UINT ret;
-                        SIZE iconSize;
+                        INT cxIcon, cyIcon;
 
                         /* Get icon size */
                         if (flags & SHGFI_SHELLICONSIZE)
                         {
                             if (flags & SHGFI_SMALLICON)
-                                iconSize = ShellSmallIconSize;
+                                cxIcon = cyIcon = ShellSmallIconSize;
                             else
-                                iconSize = ShellBigIconSize;
+                                cxIcon = cyIcon = ShellBigIconSize;
                         }
                         else
                         {
                             if (flags & SHGFI_SMALLICON)
                             {
-                                iconSize.cx = GetSystemMetrics(SM_CXSMICON);
-                                iconSize.cy = GetSystemMetrics(SM_CYSMICON);
+                                cxIcon = GetSystemMetrics(SM_CXSMICON);
+                                cyIcon = GetSystemMetrics(SM_CYSMICON);
                             }
                             else
                             {
-                                iconSize.cx = GetSystemMetrics(SM_CXICON);
-                                iconSize.cy = GetSystemMetrics(SM_CYICON);
+                                cxIcon = GetSystemMetrics(SM_CXICON);
+                                cyIcon = GetSystemMetrics(SM_CYICON);
                             }
                         }
 
-                        ret = PrivateExtractIconsW(sTemp, icon_idx, iconSize.cx, iconSize.cy,
+                        ret = PrivateExtractIconsW(sTemp, icon_idx, cxIcon, cyIcon,
                                                    &psfi->hIcon, 0, 1, 0);
                         if (ret != 0 && ret != (UINT)-1)
                         {
