@@ -24,6 +24,7 @@ list(APPEND VCRT_COMMON_SOURCES
     _fltused.c
     initializers.cpp
     isa_available.cpp
+    tlssup.c
 )
 
 list(APPEND VCRT_RUNTIME_SOURCES
