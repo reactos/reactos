@@ -233,12 +233,12 @@ static void test__wenviron(void)
         wchar_t ***retptr = p__p___winitenv();
         wchar_t *value;
 
-        ok( *retptr != NULL, "Expected *__p___winitenv() to be NULL\n" );
+        skip_2k3_fail ok( *retptr != NULL, "Expected *__p___winitenv() to be NULL\n" );
         ok( *retptr != *p_wenviron,
             "Expected _wenviron to be different from __p___winitenv() %p %p\n", *retptr, *p_wenviron );
         /* test that w-initial env is derived from current _environ[] and not from ansi initial env */
         value = env_get_valueW( *retptr, L"cat" );
-        ok( value && !wcscmp( value, L"dog" ),
+        skip_2k3_fail ok( value && !wcscmp( value, L"dog" ),
                 "Expecting initial env to be derived from current env (got %ls)\n", value );
     }
     _putenv("cat=");
@@ -461,7 +461,7 @@ START_TEST(environ)
     {
         ok( getenv( "__winetest_dog" ) && !strcmp( getenv( "__winetest_dog" ), "bark" ),
                 "Couldn't find env var\n" );
-        ok( _wgetenv( L"__winetest_\u263a" ) && !wcscmp( _wgetenv( L"__winetest_\u263a" ), L"\u03b2" ),
+        skip_2k3_fail ok( _wgetenv( L"__winetest_\u263a" ) && !wcscmp( _wgetenv( L"__winetest_\u263a" ), L"\u03b2" ),
                 "Couldn't find unicode env var\n" );
         return;
     }

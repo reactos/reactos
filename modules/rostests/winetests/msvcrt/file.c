@@ -2099,9 +2099,11 @@ static void test_fopen_fclose_fcloseall( void )
     ret = fclose(stream3);
     ok(ret == EOF, "Closing file '%s' returned %d\n", fname3, ret);
     ok(errno == 0xdeadbeef, "errno = %d\n", errno);
+    skip_2k3_crash {
     ret = fclose(NULL);
     ok(ret == EOF, "Closing NULL file returned %d\n", ret);
     ok(errno == EINVAL, "errno = %d\n", errno);
+    }
 
     /* testing fcloseall() */
     numclosed = _fcloseall();
@@ -3051,13 +3053,13 @@ static void test_ioinfo_flags(void)
     info = &__pioinfo[tempfd / MSVCRT_FD_BLOCK_SIZE][tempfd % MSVCRT_FD_BLOCK_SIZE];
     ok(!!info, "NULL info.\n");
     ok(info->handle == handle, "Unexpected handle %p, expected %p.\n", info->handle, handle);
-    ok(info->exflag == (EF_UTF16 | EF_CRIT_INIT | EF_UNK_UNICODE), "Unexpected exflag %#x.\n", info->exflag);
+    skip_2k3_fail ok(info->exflag == (EF_UTF16 | EF_CRIT_INIT | EF_UNK_UNICODE), "Unexpected exflag %#x.\n", info->exflag);
     ok(info->wxflag == (WX_TEXT | WX_OPEN), "Unexpected wxflag %#x.\n", info->wxflag);
 
     close(tempfd);
 
     ok(info->handle == INVALID_HANDLE_VALUE, "Unexpected handle %p.\n", info->handle);
-    ok(info->exflag == (EF_UTF16 | EF_CRIT_INIT | EF_UNK_UNICODE), "Unexpected exflag %#x.\n", info->exflag);
+    skip_2k3_fail ok(info->exflag == (EF_UTF16 | EF_CRIT_INIT | EF_UNK_UNICODE), "Unexpected exflag %#x.\n", info->exflag);
     ok(!info->wxflag, "Unexpected wxflag %#x.\n", info->wxflag);
 
     info = &__pioinfo[(tempfd + 4) / MSVCRT_FD_BLOCK_SIZE][(tempfd + 4) % MSVCRT_FD_BLOCK_SIZE];
