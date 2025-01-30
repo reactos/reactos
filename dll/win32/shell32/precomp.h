@@ -42,8 +42,8 @@
 #include <shlguid_undoc.h>
 #include <shlobj_undoc.h>
 
-#define SHLWAPI_ISHELLFOLDER_HELPERS
 #include <shlwapi_undoc.h>
+#include <IShellFolder_helpers.h>
 
 #include <shellapi.h>
 #undef ShellExecute
