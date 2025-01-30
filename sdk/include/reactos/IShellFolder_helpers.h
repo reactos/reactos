@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS header
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Extra undocumented SHLWAPI definitions
+ * PURPOSE:     SHLWAPI IShellFolder helpers
  * COPYRIGHT:   Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
  *              Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
@@ -12,9 +12,7 @@
 extern "C" {
 #endif
 
-/*
- * HACK!
- */
+/* HACK! These function names are conflicting with <shobjidl.h> functions. */
 #undef IShellFolder_GetDisplayNameOf
 #undef IShellFolder_ParseDisplayName
 #undef IShellFolder_CompareIDs
