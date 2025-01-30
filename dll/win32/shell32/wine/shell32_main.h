@@ -44,7 +44,7 @@ BOOL SIC_Initialize(void);
 void SIC_Destroy(void) DECLSPEC_HIDDEN;
 BOOL PidlToSicIndex (IShellFolder * sh, LPCITEMIDLIST pidl, BOOL bBigIcon, UINT uFlags, int * pIndex) DECLSPEC_HIDDEN;
 INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags ) DECLSPEC_HIDDEN;
-extern INT ShellBigIconSize;
+extern INT ShellLargeIconSize;
 extern INT ShellSmallIconSize;
 extern INT ShellIconBPP;
 

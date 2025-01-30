@@ -28,7 +28,7 @@ static HDPA        sic_hdpa = 0;
 static HIMAGELIST ShellSmallIconList;
 static HIMAGELIST ShellBigIconList;
 INT ShellSmallIconSize = 0;
-INT ShellBigIconSize = 0;
+INT ShellLargeIconSize = 0;
 INT ShellIconBPP = 0; // Bits Per Pixel
 
 namespace
@@ -60,7 +60,7 @@ SIC_GetMetricsValue(
 }
 
 static INT
-SIC_GetBigIconSize(VOID)
+SIC_GetLargeIconSize(VOID)
 {
     // NOTE: Shell icon size is always square
     INT nDefaultSize = GetSystemMetrics(SM_CXICON);
@@ -72,7 +72,7 @@ static INT
 SIC_GetSmallIconSize(VOID)
 {
     // NOTE: Shell icon size is always square
-    INT nDefaultSize = GetSystemMetrics(SM_CXICON) / 2;
+    INT nDefaultSize = GetSystemMetrics(SM_CXSMICON);
     INT nIconSize = SIC_GetMetricsValue(L"Shell Small Icon Size", nDefaultSize);
     return (nIconSize > 0) ? nIconSize : nDefaultSize;
 }
@@ -419,16 +419,15 @@ leave:
  */
 static INT SIC_LoadIcon (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags)
 {
-    HICON hiconLarge=0;
-    HICON hiconSmall=0;
+    HICON hiconLarge = NULL, hiconSmall = NULL;
     UINT ret;
 
-    PrivateExtractIconsW(sSourceFile, dwSourceIndex, ShellBigIconSize, ShellBigIconSize,
+    PrivateExtractIconsW(sSourceFile, dwSourceIndex, ShellLargeIconSize, ShellLargeIconSize,
                          &hiconLarge, NULL, 1, LR_COPYFROMRESOURCE);
     PrivateExtractIconsW(sSourceFile, dwSourceIndex, ShellSmallIconSize, ShellSmallIconSize,
                          &hiconSmall, NULL, 1, LR_COPYFROMRESOURCE);
 
-    if ( !hiconLarge ||  !hiconSmall)
+    if (!hiconLarge || !hiconSmall)
     {
         WARN("failure loading icon %i from %s (%p %p)\n", dwSourceIndex, debugstr_w(sSourceFile), hiconLarge, hiconSmall);
         if(hiconLarge) DestroyIcon(hiconLarge);
@@ -535,7 +534,7 @@ BOOL SIC_Initialize(void)
     }
 
     ShellSmallIconSize = SIC_GetSmallIconSize();
-    ShellBigIconSize = SIC_GetBigIconSize();
+    ShellLargeIconSize = SIC_GetLargeIconSize();
 
     bpp = ShellIconBPP = SIC_GetIconBPP(); // Bits Per Pixel
     if (bpp <= 4)
@@ -560,7 +559,7 @@ BOOL SIC_Initialize(void)
         goto end;
     }
 
-    ShellBigIconList = ImageList_Create(ShellBigIconSize, ShellBigIconSize, ilMask, 100, 100);
+    ShellBigIconList = ImageList_Create(ShellLargeIconSize, ShellLargeIconSize, ilMask, 100, 100);
     if (!ShellBigIconList)
     {
         ERR("Failed to create the big icon list.\n");
@@ -578,7 +577,7 @@ BOOL SIC_Initialize(void)
     }
 
     hLg = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
-                            IMAGE_ICON, ShellBigIconSize, ShellBigIconSize,
+                            IMAGE_ICON, ShellLargeIconSize, ShellLargeIconSize,
                             LR_SHARED | LR_DEFAULTCOLOR);
     if (!hLg)
     {

@@ -705,7 +705,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                             if (flags & SHGFI_SMALLICON)
                                 cxIcon = cyIcon = ShellSmallIconSize;
                             else
-                                cxIcon = cyIcon = ShellBigIconSize;
+                                cxIcon = cyIcon = ShellLargeIconSize;
                         }
                         else
                         {
