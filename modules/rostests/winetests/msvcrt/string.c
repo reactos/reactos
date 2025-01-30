@@ -338,7 +338,7 @@ static void test_mbcp(void)
     expect_eq(_ismbstrail(mbsonlylead, &mbsonlylead[5]), FALSE, int, "%d");
 
     /* _mbsbtype */
-    expect_eq(_mbsbtype(NULL, 0), _MBC_ILLEGAL, int, "%d");
+    skip_2k3_crash expect_eq(_mbsbtype(NULL, 0), _MBC_ILLEGAL, int, "%d");
     expect_eq(_mbsbtype(mbstring, 0), _MBC_LEAD, int, "%d");
     expect_eq(_mbsbtype(mbstring, 1), _MBC_TRAIL, int, "%d");
     expect_eq(_mbsbtype(mbstring, 2), _MBC_LEAD, int, "%d");
@@ -465,6 +465,7 @@ static void test_mbcp(void)
         expect_bin(buf, "\x00\xff", 2);
     }
 
+    skip_2k3_crash {
     errno = 0xdeadbeef;
     ret = _mbsncpy(NULL, mbstring, 1);
     ok(ret == NULL, "_mbsncpy returned %p, expected NULL\n", ret);
@@ -476,6 +477,7 @@ static void test_mbcp(void)
     ok(ret == NULL, "_mbsncpy returned %p, expected NULL\n", ret);
     ok(errno == EINVAL, "_mbsncpy returned %d\n", errno);
     expect_bin(buf, "\xff\xff\xff", 3);
+    }
 
     errno = 0xdeadbeef;
     ret = _mbsncpy(NULL, mbstring, 0);
@@ -488,6 +490,7 @@ static void test_mbcp(void)
     ok(ret == buf, "_mbsncpy returned %p, expected %sp\n", ret, buf);
     ok(errno == 0xdeadbeef, "_mbsncpy should not change errno\n");
 
+    skip_2k3_crash {
     memset(buf, 0xff, sizeof(buf));
     errno = 0xdeadbeef;
     ret = _mbsncpy(NULL, mbstring, 1);
@@ -499,6 +502,7 @@ static void test_mbcp(void)
     ret = _mbsncpy(buf, NULL, 1);
     ok(ret == NULL, "_mbsncpy returned %p, expected NULL\n", ret);
     ok(errno == EINVAL, "_mbsncpy returned %d\n", errno);
+    }
 
     memset(buf, 0xff, sizeof(buf));
     ret = _mbsncpy(NULL, mbstring, 0);
@@ -724,6 +728,7 @@ static void test_strcmp(void)
 
     ret = p_strncmp( "abc", "abcd", 3 );
     ok( ret == 0, "wrong ret %d\n", ret );
+    skip_2k3_fail {
 #ifdef _WIN64
     ret = p_strncmp( "", "abc", 3 );
     ok( ret == -1, "wrong ret %d\n", ret );
@@ -739,6 +744,7 @@ static void test_strcmp(void)
     ret = p_strncmp( "ab\xb0", "ab\xa0", 3 );
     ok( ret == 0xb0 - 0xa0, "wrong ret %d\n", ret );
 #endif
+    }
     ret = p_strncmp( "ab\xb0", "ab\xa0", 2 );
     ok( ret == 0, "wrong ret %d\n", ret );
     ret = p_strncmp( "ab\xc2", "ab\xc2", 3 );
@@ -3389,6 +3395,7 @@ static void test_tolower(void)
     ret = p_tolower((unsigned char)0xD0);
     ok(ret == 0xF0, "ret = %x\n", ret);
 
+    skip_2k3_fail {
     ok(setlocale(LC_ALL, "Japanese_Japan.932") != NULL, "setlocale failed.\n");
     errno = 0xdeadbeef;
     ret = p_tolower((signed char)0xd0);
@@ -3428,6 +3435,7 @@ static void test_tolower(void)
     ret = p_tolower(0xd0);
     ok(ret == 0xd0, "Got %#x.\n", ret);
     ok(errno == 0xdeadbeef, "Got errno %d.\n", errno);
+    }
 
     setlocale(LC_ALL, "C");
 }
@@ -3578,7 +3586,7 @@ static void test__stricmp(void)
     ret = _stricmp("abc\xa5\xa1", "abc");
     ok(ret > 0, "_stricmp returned %d\n", ret);
 
-    ok(setlocale(LC_ALL, "Japanese_Japan.932") != NULL, "setlocale failed.\n");
+    skip_2k3_fail ok(setlocale(LC_ALL, "Japanese_Japan.932") != NULL, "setlocale failed.\n");
     ret = _stricmp("test", "test");
     ok(ret == 0, "_stricmp returned %d\n", ret);
     ret = _stricmp("a", "z");
@@ -3647,6 +3655,11 @@ static void test__wcstoi64(void)
 
     for (i = 0; i < ARRAY_SIZE(tests); i++)
     {
+        if ((i == 20) && (_winver < 0x600))
+        {
+            skip("Skipping test with i = 20, because it fails on Windows 2003\n");
+            continue;
+        }
         res = p_wcstoi64( tests[i].str, &endpos, tests[i].base );
         ok( res == tests[i].res, "%u: %s res %s\n",
             i, wine_dbgstr_w(tests[i].str), wine_dbgstr_longlong(res) );
@@ -4867,7 +4880,7 @@ static void test_mbsrev(void)
     strcpy((char *)buf, "\x36\x8c");
     ret = _mbsrev(buf);
     ok(ret == buf, "ret = %p, expected %p\n", ret, buf);
-    ok(!memcmp(buf, "\x36", 2), "buf = %s\n", wine_dbgstr_a((char *)buf));
+    skip_2k3_fail ok(!memcmp(buf, "\x36", 2), "buf = %s\n", wine_dbgstr_a((char *)buf));
 
     _setmbcp(cp);
 }
@@ -4985,7 +4998,7 @@ static void test_toupper(void)
     errno = 0xdeadbeef;
     ret = p_toupper((signed char)0xf0);
     ok(ret == 0xd0, "Got %#x.\n", ret);
-    ok(errno == EILSEQ, "Got errno %d.\n", errno);
+    skip_2k3_fail ok(errno == EILSEQ, "Got errno %d.\n", errno);
     errno = 0xdeadbeef;
     ret = p_toupper(0xf0);
     ok(ret == 0xd0, "Got %#x.\n", ret);
@@ -4995,12 +5008,13 @@ static void test_toupper(void)
     errno = 0xdeadbeef;
     ret = p_toupper((signed char)0xa5);
     ok(ret == 0xa5, "Got %#x.\n", ret);
-    ok(errno == EILSEQ, "Got errno %d.\n", errno);
+    skip_2k3_fail ok(errno == EILSEQ, "Got errno %d.\n", errno);
     errno = 0xdeadbeef;
     ret = p_toupper((signed char)0xb9);
     ok(ret == 0xa5, "Got %#x.\n", ret);
-    ok(errno == EILSEQ, "Got errno %d.\n", errno);
+    skip_2k3_fail ok(errno == EILSEQ, "Got errno %d.\n", errno);
 
+    skip_2k3_fail {
     ok(setlocale(LC_ALL, "Japanese_Japan.932") != NULL, "setlocale failed.\n");
     errno = 0xdeadbeef;
     ret = p_toupper((signed char)0xf0);
@@ -5020,6 +5034,7 @@ static void test_toupper(void)
     ret = p_toupper(0xf0);
     ok(ret == 0xf0, "Got %#x.\n", ret);
     ok(errno == 0xdeadbeef, "Got errno %d.\n", errno);
+    }
 
     setlocale(LC_ALL, "C");
 }
