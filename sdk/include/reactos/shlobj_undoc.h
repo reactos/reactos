@@ -9,7 +9,6 @@
 
 #pragma once
 
-#define SHLWAPI_ISHELLFOLDER_HELPERS
 #include <shlwapi_undoc.h> // For ASSOCQUERY
 
 #ifdef __cplusplus

@@ -10,8 +10,8 @@
 #include <shlwapi.h>
 #include <versionhelpers.h>
 
-#define SHLWAPI_ISHELLFOLDER_HELPERS
 #include <shlwapi_undoc.h>
+#include <ishellfolder_helpers.h>
 
 static INT s_nStep = 0;
 
