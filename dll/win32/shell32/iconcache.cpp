@@ -27,8 +27,8 @@ static HDPA        sic_hdpa = 0;
 
 static HIMAGELIST ShellSmallIconList;
 static HIMAGELIST ShellBigIconList;
-SIZE sic_SmallIconSize;
-SIZE sic_BigIconSize;
+SIZE ShellSmallIconSize;
+SIZE ShellBigIconSize;
 
 namespace
 {
@@ -418,9 +418,9 @@ static INT SIC_LoadIcon (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags)
     HICON hiconSmall=0;
     UINT ret;
 
-    PrivateExtractIconsW(sSourceFile, dwSourceIndex, sic_BigIconSize.cx, sic_BigIconSize.cy,
+    PrivateExtractIconsW(sSourceFile, dwSourceIndex, ShellBigIconSize.cx, ShellBigIconSize.cy,
                          &hiconLarge, NULL, 1, LR_COPYFROMRESOURCE);
-    PrivateExtractIconsW(sSourceFile, dwSourceIndex, sic_SmallIconSize.cx, sic_SmallIconSize.cy,
+    PrivateExtractIconsW(sSourceFile, dwSourceIndex, ShellSmallIconSize.cx, ShellSmallIconSize.cy,
                          &hiconSmall, NULL, 1, LR_COPYFROMRESOURCE);
 
     if ( !hiconLarge ||  !hiconSmall)
@@ -555,10 +555,10 @@ BOOL SIC_Initialize(void)
 
     ilMask |= ILC_MASK;
 
-    SHELL_GetSmallIconSize(&sic_SmallIconSize);
-    SHELL_GetBigIconSize(&sic_BigIconSize);
+    SHELL_GetSmallIconSize(&ShellSmallIconSize);
+    SHELL_GetBigIconSize(&ShellBigIconSize);
 
-    ShellSmallIconList = ImageList_Create(sic_SmallIconSize.cx, sic_SmallIconSize.cy, ilMask,
+    ShellSmallIconList = ImageList_Create(ShellSmallIconSize.cx, ShellSmallIconSize.cy, ilMask,
                                           100, 100);
     if (!ShellSmallIconList)
     {
@@ -566,7 +566,7 @@ BOOL SIC_Initialize(void)
         goto end;
     }
 
-    ShellBigIconList = ImageList_Create(sic_BigIconSize.cx, sic_BigIconSize.cy, ilMask, 100, 100);
+    ShellBigIconList = ImageList_Create(ShellBigIconSize.cx, ShellBigIconSize.cy, ilMask, 100, 100);
     if (!ShellBigIconList)
     {
         ERR("Failed to create the big icon list.\n");
@@ -575,7 +575,7 @@ BOOL SIC_Initialize(void)
 
     /* Load the document icon, which is used as the default if an icon isn't found. */
     hSm = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
-                            IMAGE_ICON, sic_SmallIconSize.cx, sic_SmallIconSize.cy,
+                            IMAGE_ICON, ShellSmallIconSize.cx, ShellSmallIconSize.cy,
                             LR_SHARED | LR_DEFAULTCOLOR);
     if (!hSm)
     {
@@ -584,7 +584,7 @@ BOOL SIC_Initialize(void)
     }
 
     hLg = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
-                            IMAGE_ICON, sic_BigIconSize.cx, sic_BigIconSize.cy,
+                            IMAGE_ICON, ShellBigIconSize.cx, ShellBigIconSize.cy,
                             LR_SHARED | LR_DEFAULTCOLOR);
     if (!hLg)
     {

@@ -703,9 +703,9 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                         if (flags & SHGFI_SHELLICONSIZE)
                         {
                             if (flags & SHGFI_SMALLICON)
-                                iconSize = sic_SmallIconSize;
+                                iconSize = ShellSmallIconSize;
                             else
-                                iconSize = sic_BigIconSize;
+                                iconSize = ShellBigIconSize;
                         }
                         else
                         {
