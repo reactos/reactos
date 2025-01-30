@@ -22,7 +22,7 @@
 #include <atlstr.h>
 
 #include <shlwapi_undoc.h>
-#include <IShellFolder_helpers.h>
+#include <ishellfolder_helpers.h>
 
 #include <strsafe.h>
 

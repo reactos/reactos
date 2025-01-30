@@ -11,7 +11,7 @@
 #include <versionhelpers.h>
 
 #include <shlwapi_undoc.h>
-#include <IShellFolder_helpers.h>
+#include <ishellfolder_helpers.h>
 
 static INT s_nStep = 0;
 
