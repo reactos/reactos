@@ -57,7 +57,21 @@ typedef double double_t;
 #define HUGE_VALD ((double)INFINITY)
 #define HUGE_VALF ((float)INFINITY)
 #define HUGE_VALL ((long double)INFINITY)
-#define NAN       ((float)(INFINITY * 0.0F))
+#ifndef _UCRT_NEGATIVE_NAN
+// This operation creates a negative NAN adding a - to make it positive
+#ifdef _MSC_VER
+#define NAN        (-(float)(INFINITY * 0.0F))
+#else
+#define NAN        (__builtin_nanf(""))
+#endif
+#else
+// Keep this for backwards compatibility
+#ifdef _MSC_VER
+#define NAN        ((float)(INFINITY * 0.0F))
+#else
+#define NAN        (-__builtin_nanf(""))
+#endif
+#endif
 
 #define _DENORM  (-2)
 #define _FINITE  (-1)
