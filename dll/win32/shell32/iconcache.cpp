@@ -44,7 +44,7 @@ CRITICAL_SECTION SHELL32_SicCS = { &critsect_debug, -1, 0, 0, 0, 0 };
 
 // Load metric value from registry
 static INT
-SHELL_GetMetricsValue(
+SIC_GetMetricsValue(
     _In_ PCWSTR pszValueName,
     _In_ INT nDefaultValue)
 {
@@ -59,22 +59,22 @@ SHELL_GetMetricsValue(
 }
 
 static VOID
-SHELL_GetBigIconSize(_Out_ PSIZE pSize)
+SIC_GetBigIconSize(_Out_ PSIZE pSize)
 {
     // NOTE: Shell icon size is always square
     INT nDefaultSize = GetSystemMetrics(SM_CXICON);
-    INT nIconSize = SHELL_GetMetricsValue(L"Shell Icon Size", nDefaultSize);
+    INT nIconSize = SIC_GetMetricsValue(L"Shell Icon Size", nDefaultSize);
     if (nIconSize <= 0)
         nIconSize = nDefaultSize;
     pSize->cx = pSize->cy = nIconSize;
 }
 
 static VOID
-SHELL_GetSmallIconSize(_Out_ PSIZE pSize)
+SIC_GetSmallIconSize(_Out_ PSIZE pSize)
 {
     // NOTE: Shell icon size is always square
     INT nDefaultSize = GetSystemMetrics(SM_CXICON) / 2;
-    INT nIconSize = SHELL_GetMetricsValue(L"Shell Small Icon Size", nDefaultSize);
+    INT nIconSize = SIC_GetMetricsValue(L"Shell Small Icon Size", nDefaultSize);
     if (nIconSize <= 0)
         nIconSize = nDefaultSize;
     pSize->cx = pSize->cy = nIconSize;
@@ -555,8 +555,8 @@ BOOL SIC_Initialize(void)
 
     ilMask |= ILC_MASK;
 
-    SHELL_GetSmallIconSize(&ShellSmallIconSize);
-    SHELL_GetBigIconSize(&ShellBigIconSize);
+    SIC_GetSmallIconSize(&ShellSmallIconSize);
+    SIC_GetBigIconSize(&ShellBigIconSize);
 
     ShellSmallIconList = ImageList_Create(ShellSmallIconSize.cx, ShellSmallIconSize.cy, ilMask,
                                           100, 100);
