@@ -607,9 +607,6 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
     if (flags & SHGFI_SELECTED)
         FIXME("set icon to selected, stub\n");
 
-    if (flags & SHGFI_SHELLICONSIZE)
-        FIXME("set icon to shell size, stub\n");
-
     /* get the iconlocation */
     if (SUCCEEDED(hr) && (flags & SHGFI_ICONLOCATION ))
     {
@@ -700,16 +697,32 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                     else 
                     {
                         UINT ret;
-                        if (flags & SHGFI_SMALLICON)
-                            ret = PrivateExtractIconsW( sTemp,icon_idx,
-                                GetSystemMetrics( SM_CXSMICON ),
-                                GetSystemMetrics( SM_CYSMICON ),
-                                &psfi->hIcon, 0, 1, 0);
+                        SIZE iconSize;
+
+                        // Get icon size
+                        if (flags & SHGFI_SHELLICONSIZE)
+                        {
+                            if (flags & SHGFI_SMALLICON)
+                                iconSize = sic_SmallIconSize;
+                            else
+                                iconSize = sic_BigIconSize;
+                        }
                         else
-                            ret = PrivateExtractIconsW( sTemp, icon_idx,
-                                GetSystemMetrics( SM_CXICON),
-                                GetSystemMetrics( SM_CYICON),
-                                &psfi->hIcon, 0, 1, 0);
+                        {
+                            if (flags & SHGFI_SMALLICON)
+                            {
+                                iconSize.cx = GetSystemMetrics(SM_CXSMICON);
+                                iconSize.cy = GetSystemMetrics(SM_CYSMICON);
+                            }
+                            else
+                            {
+                                iconSize.cx = GetSystemMetrics(SM_CXICON);
+                                iconSize.cy = GetSystemMetrics(SM_CYICON);
+                            }
+                        }
+
+                        ret = PrivateExtractIconsW(sTemp, icon_idx, iconSize.cx, iconSize.cy,
+                                                   &psfi->hIcon, 0, 1, 0);
                         if (ret != 0 && ret != (UINT)-1)
                         {
                             IconNotYetLoaded=FALSE;

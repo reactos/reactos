@@ -1,21 +1,9 @@
 /*
- *    shell icon cache (SIC)
- *
- * Copyright 1998, 1999 Juergen Schmied
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     ReactOS shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Shell Icon Cache (SIC)
+ * COPYRIGHT:   Copyright 1998, 1999 Juergen Schmied
+ *              Copyright 2020-2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
@@ -39,6 +27,8 @@ static HDPA        sic_hdpa = 0;
 
 static HIMAGELIST ShellSmallIconList;
 static HIMAGELIST ShellBigIconList;
+SIZE sic_SmallIconSize;
+SIZE sic_BigIconSize;
 
 namespace
 {
@@ -50,6 +40,39 @@ CRITICAL_SECTION_DEBUG critsect_debug =
       0, 0, { (DWORD_PTR)(__FILE__ ": SHELL32_SicCS") }
 };
 CRITICAL_SECTION SHELL32_SicCS = { &critsect_debug, -1, 0, 0, 0, 0 };
+}
+
+// Load metric value from registry
+static INT
+SHELL_GetMetricsValue(
+    _In_ PCWSTR pszValueName,
+    _In_ INT nDefaultValue)
+{
+    WCHAR szValue[64];
+    DWORD cbValue = sizeof(szValue);
+    DWORD error = SHGetValueW(HKEY_CURRENT_USER, L"Control Panel\\Desktop\\WindowMetrics",
+                              pszValueName, NULL, szValue, &cbValue);
+    if (error)
+        return nDefaultValue;
+    szValue[_countof(szValue) - 1] = UNICODE_NULL; // Avoid buffer overrun
+    return _wtoi(szValue);
+}
+
+static VOID
+SHELL_GetBigIconSize(_Out_ PSIZE pSize)
+{
+    // NOTE: Shell icon size is always square
+    INT nIconSize = SHELL_GetMetricsValue(L"Shell Icon Size", GetSystemMetrics(SM_CXICON));
+    pSize->cx = pSize->cy = nIconSize;
+}
+
+static VOID
+SHELL_GetSmallIconSize(_Out_ PSIZE pSize)
+{
+    // NOTE: Shell icon size is always square
+    INT nIconSize = SHELL_GetMetricsValue(L"Shell Small Icon Size",
+                                          GetSystemMetrics(SM_CXICON) / 2);
+    pSize->cx = pSize->cy = nIconSize;
 }
 
 /*****************************************************************************
@@ -390,8 +413,10 @@ static INT SIC_LoadIcon (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags)
     HICON hiconSmall=0;
     UINT ret;
 
-    PrivateExtractIconsW(sSourceFile, dwSourceIndex, 32, 32, &hiconLarge, NULL, 1, LR_COPYFROMRESOURCE);
-    PrivateExtractIconsW(sSourceFile, dwSourceIndex, 16, 16, &hiconSmall, NULL, 1, LR_COPYFROMRESOURCE);
+    PrivateExtractIconsW(sSourceFile, dwSourceIndex, sic_BigIconSize.cx, sic_BigIconSize.cy,
+                         &hiconLarge, NULL, 1, LR_COPYFROMRESOURCE);
+    PrivateExtractIconsW(sSourceFile, dwSourceIndex, sic_SmallIconSize.cx, sic_SmallIconSize.cy,
+                         &hiconSmall, NULL, 1, LR_COPYFROMRESOURCE);
 
     if ( !hiconLarge ||  !hiconSmall)
     {
@@ -481,8 +506,6 @@ INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags )
 BOOL SIC_Initialize(void)
 {
     HICON hSm = NULL, hLg = NULL;
-    INT cx_small, cy_small;
-    INT cx_large, cy_large;
     HDC hDC;
     INT bpp;
     DWORD ilMask;
@@ -527,27 +550,18 @@ BOOL SIC_Initialize(void)
 
     ilMask |= ILC_MASK;
 
-    cx_small = GetSystemMetrics(SM_CXSMICON);
-    cy_small = GetSystemMetrics(SM_CYSMICON);
-    cx_large = GetSystemMetrics(SM_CXICON);
-    cy_large = GetSystemMetrics(SM_CYICON);
+    SHELL_GetSmallIconSize(&sic_SmallIconSize);
+    SHELL_GetBigIconSize(&sic_BigIconSize);
 
-    ShellSmallIconList = ImageList_Create(cx_small,
-                                          cy_small,
-                                          ilMask,
-                                          100,
-                                          100);
+    ShellSmallIconList = ImageList_Create(sic_SmallIconSize.cx, sic_SmallIconSize.cy, ilMask,
+                                          100, 100);
     if (!ShellSmallIconList)
     {
         ERR("Failed to create the small icon list.\n");
         goto end;
     }
 
-    ShellBigIconList = ImageList_Create(cx_large,
-                                        cy_large,
-                                        ilMask,
-                                        100,
-                                        100);
+    ShellBigIconList = ImageList_Create(sic_BigIconSize.cx, sic_BigIconSize.cy, ilMask, 100, 100);
     if (!ShellBigIconList)
     {
         ERR("Failed to create the big icon list.\n");
@@ -555,11 +569,8 @@ BOOL SIC_Initialize(void)
     }
 
     /* Load the document icon, which is used as the default if an icon isn't found. */
-    hSm = (HICON)LoadImageW(shell32_hInstance,
-                            MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
-                            IMAGE_ICON,
-                            cx_small,
-                            cy_small,
+    hSm = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
+                            IMAGE_ICON, sic_SmallIconSize.cx, sic_SmallIconSize.cy,
                             LR_SHARED | LR_DEFAULTCOLOR);
     if (!hSm)
     {
@@ -567,11 +578,8 @@ BOOL SIC_Initialize(void)
         goto end;
     }
 
-    hLg = (HICON)LoadImageW(shell32_hInstance,
-                            MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
-                            IMAGE_ICON,
-                            cx_large,
-                            cy_large,
+    hLg = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
+                            IMAGE_ICON, sic_BigIconSize.cx, sic_BigIconSize.cy,
                             LR_SHARED | LR_DEFAULTCOLOR);
     if (!hLg)
     {
