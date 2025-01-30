@@ -144,6 +144,10 @@ struct DownloadInfo
         IType = AppInfo.GetInstallerType();
         if (IType == INSTALLER_GENERATE)
             szPackageName = AppInfo.szIdentifier;
+
+        CConfigParser *cfg = static_cast<const CAvailableApplicationInfo&>(AppInfo).GetConfigParser();
+        if (cfg)
+            cfg->GetString(DB_SAVEAS, szFileName);
     }
 
     bool Equal(const DownloadInfo &other) const
@@ -157,6 +161,7 @@ struct DownloadInfo
     CStringW szName;
     CStringW szSHA1;
     CStringW szPackageName;
+    CStringW szFileName;
     ULONG SizeInBytes;
 };
 
@@ -719,7 +724,7 @@ CDownloadManager::PerformDownloadAndInstall(const DownloadInfo &Info)
 
     CStringW str;
     CPathW Path;
-    PCWSTR p, q;
+    PCWSTR p;
 
     ULONG dwContentLen, dwBytesWritten, dwBytesRead, dwStatus, dwStatusLen;
     ULONG dwCurrentBytesRead = 0;
@@ -734,7 +739,7 @@ CDownloadManager::PerformDownloadAndInstall(const DownloadInfo &Info)
     const DWORD dwUrlConnectFlags =
         INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_KEEP_CONNECTION;
     URL_COMPONENTSW urlComponents;
-    size_t urlLength, filenameLength;
+    size_t urlLength;
     unsigned char lpBuffer[4096];
 
     // Change caption to show the currently downloaded app
@@ -768,7 +773,6 @@ CDownloadManager::PerformDownloadAndInstall(const DownloadInfo &Info)
 
     // build the path for the download
     p = wcsrchr(Info.szUrl.GetString(), L'/');
-    q = wcsrchr(Info.szUrl.GetString(), L'?');
 
     // do we have a final slash separator?
     if (!p)
@@ -776,14 +780,6 @@ CDownloadManager::PerformDownloadAndInstall(const DownloadInfo &Info)
         MessageBox_LoadString(hMainWnd, IDS_UNABLE_PATH);
         goto end;
     }
-
-    // prepare the tentative length of the filename, maybe we've to remove part of it later on
-    filenameLength = wcslen(p) * sizeof(WCHAR);
-
-    /* do we have query arguments in the target URL after the filename? account for them
-    (e.g. https://example.org/myfile.exe?no_adware_plz) */
-    if (q && q > p && (q - p) > 0)
-        filenameLength -= wcslen(q - 1) * sizeof(WCHAR);
 
     // is the path valid? can we access it?
     if (GetFileAttributesW(Path) == INVALID_FILE_ATTRIBUTES)
@@ -803,9 +799,11 @@ CDownloadManager::PerformDownloadAndInstall(const DownloadInfo &Info)
             break;
         case DLTYPE_APPLICATION:
         {
-            CStringW str = p + 1; // use the filename retrieved from URL
-            UrlUnescapeAndMakeFileNameValid(str);
-            Path += str;
+            CStringW name = Info.szFileName;
+            if (name.IsEmpty())
+                name = p + 1; // use the filename retrieved from URL
+            UrlUnescapeAndMakeFileNameValid(name);
+            Path += name;
             break;
         }
     }

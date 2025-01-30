@@ -82,6 +82,7 @@ enum InstallerType
 #define DB_REGNAME L"RegName"
 #define DB_INSTALLER L"Installer"
 #define DB_SCOPE L"Scope" // User or Machine
+#define DB_SAVEAS L"SaveAs"
 
 #define DB_GENINSTSECTION L"Generate"
 #define GENERATE_ARPSUBKEY L"RApps" // Our uninstall data is stored here
