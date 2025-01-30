@@ -699,7 +699,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                         UINT ret;
                         SIZE iconSize;
 
-                        // Get icon size
+                        /* Get icon size */
                         if (flags & SHGFI_SHELLICONSIZE)
                         {
                             if (flags & SHGFI_SMALLICON)
