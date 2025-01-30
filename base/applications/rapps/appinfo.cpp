@@ -163,16 +163,16 @@ CAvailableApplicationInfo::LicenseString()
     LicenseType licenseType;
 
     if (IsKnownLicenseType(IntBuffer))
-    {
         licenseType = static_cast<LicenseType>(IntBuffer);
-    }
     else
-    {
         licenseType = LICENSE_NONE;
+
+    if (licenseType == LICENSE_NONE || licenseType == LICENSE_FREEWARE)
+    {
         if (szLicenseString.CompareNoCase(L"Freeware") == 0)
         {
             licenseType = LICENSE_FREEWARE;
-            szLicenseString = L"";
+            szLicenseString = L""; // Don't display as "Freeware (Freeware)"
         }
     }
 
