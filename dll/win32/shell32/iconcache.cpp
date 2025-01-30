@@ -86,7 +86,7 @@ SIC_GetIconBPP(VOID) // Bits Per Pixel
 {
     INT nDefaultBPP = SHGetCurColorRes();
     INT nIconBPP = SIC_GetMetricsValue(L"Shell Icon BPP", nDefaultBPP);
-    return (nIconBPP <= 0) ? nDefaultBPP : nIconBPP;
+    return (nIconBPP > 0) ? nIconBPP : nDefaultBPP;
 }
 
 /*****************************************************************************
