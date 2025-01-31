@@ -35,7 +35,7 @@ WinList_FindFolderWindow(
     _In_ LPCITEMIDLIST pidl,
     _In_ DWORD dwUnused,
     _Out_ PLONG phwnd,
-    _Out_ PVOID *ppvObj);
+    _Out_opt_ PVOID *ppvObj);
 
 HRESULT WINAPI
 WinList_RegisterPending(

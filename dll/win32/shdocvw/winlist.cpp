@@ -149,7 +149,7 @@ WinList_FindFolderWindow(
     _In_ LPCITEMIDLIST pidl,
     _In_ DWORD dwUnused,
     _Out_ PLONG phwnd, // HWND but LONG type
-    _Out_ PVOID *ppvObj)
+    _Out_opt_ PVOID *ppvObj)
 {
     UNREFERENCED_PARAMETER(dwUnused);
 
