@@ -1461,7 +1461,7 @@ static HRESULT shellex_run_context_menu_default(IShellExtInit *obj,
 
     memset(&ici, 0, sizeof ici);
     ici.cbSize = sizeof ici;
-    ici.fMask = CMIC_MASK_UNICODE | (sei->fMask & (SEE_MASK_NO_CONSOLE | SEE_MASK_NOASYNC | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
+    ici.fMask = (sei->fMask & SEE_CMIC_COMMON_BASICFLAGS) | CMIC_MASK_UNICODE;
     ici.nShow = sei->nShow;
     ici.lpVerb = MAKEINTRESOURCEA(def);
     ici.hwnd = sei->hwnd;
@@ -1794,7 +1794,7 @@ SHELL_InvokePidl(
 
     // Invoke a command
     CMINVOKECOMMANDINFO ici = { sizeof(ici) };
-    ici.fMask = (sei->fMask & (SEE_MASK_NO_CONSOLE | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
+    ici.fMask = (sei->fMask & SEE_CMIC_COMMON_BASICFLAGS) & ~CMIC_MASK_UNICODE; // FIXME: Unicode?
     ici.nShow = sei->nShow;
     ici.hwnd = sei->hwnd;
     char szVerb[VERBKEY_CCHMAX];

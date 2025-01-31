@@ -865,6 +865,7 @@ HRESULT CMenuBand::_TrackContextMenu(IContextMenu * contextMenu, INT x, INT y)
             cmi.fMask |= CMIC_MASK_SHIFT_DOWN;
         if (GetKeyState(VK_CONTROL) < 0)
             cmi.fMask |= CMIC_MASK_CONTROL_DOWN;
+        cmi.nShow = SW_SHOW;
         hr = contextMenu->InvokeCommand(&cmi);
         TRACE("InvokeCommand returned hr=%08x\n", hr);
     }
