@@ -172,7 +172,7 @@ WinList_FindFolderWindow(
     }
 
     IDispatch *pDispatch = NULL;
-    INT options = ppvObj ? (SWFO_NEEDDISPATCH | SWFO_INCLUDEPENDING) : SWFO_INCLUDEPENDING;
+    const INT options = SWFO_INCLUDEPENDING | (ppvObj ? SWFO_NEEDDISPATCH : 0);
     hr = pShellWindows->FindWindowSW(&varg, &s_vaEmpty, SWC_BROWSER, pnClass, options, &pDispatch);
     if (pDispatch)
     {
