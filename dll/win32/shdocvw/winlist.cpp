@@ -122,11 +122,14 @@ WinList_NotifyNewLocation(
     TRACE("(%p, %ld, %p)\n", pShellWindows, lCookie, pidl);
 
     if (!pidl)
+    {
+        ERR("!pidl\n");
         return E_UNEXPECTED;
+    }
 
     VARIANTARG varg;
     HRESULT hr = InitVariantFromIDList(&varg, pidl);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     hr = pShellWindows->OnNavigate(lCookie, &varg);
@@ -159,15 +162,21 @@ WinList_FindFolderWindow(
         *phwnd = 0;
 
     if (!pidl)
+    {
+        ERR("!pidl\n");
         return E_UNEXPECTED;
+    }
 
     IShellWindows *pShellWindows = WinList_GetShellWindows(ppvObj != NULL);
     if (!pShellWindows)
+    {
+        ERR("!pShellWindows\n");
         return E_UNEXPECTED;
+    }
 
     VARIANTARG varg;
     HRESULT hr = InitVariantFromIDList(&varg, pidl);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
     {
         pShellWindows->Release();
         return hr;
@@ -205,15 +214,21 @@ WinList_RegisterPending(
     TRACE("(%ld, %p, %ld, %p)\n", dwThreadId, pidl, dwUnused, plCookie);
 
     if (!pidl)
+    {
+        ERR("!pidl\n");
         return E_UNEXPECTED;
+    }
 
     IShellWindows *pShellWindows = WinList_GetShellWindows(FALSE);
     if (!pShellWindows)
+    {
+        ERR("!pShellWindows\n");
         return E_UNEXPECTED;
+    }
 
     VARIANTARG varg;
     HRESULT hr = InitVariantFromIDList(&varg, pidl);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     hr = pShellWindows->RegisterPending(dwThreadId, &varg, &s_vaEmpty, SWC_BROWSER, plCookie);
@@ -236,7 +251,10 @@ WinList_Revoke(
 
     IShellWindows *pShellWindows = WinList_GetShellWindows(TRUE);
     if (!pShellWindows)
+    {
+        ERR("!pShellWindows\n");
         return E_FAIL;
+    }
 
     HRESULT hr = pShellWindows->Revoke(lCookie);
     pShellWindows->Release();
