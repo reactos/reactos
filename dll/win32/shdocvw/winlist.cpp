@@ -11,9 +11,33 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
 static HRESULT
+InitVariantFromBuffer(
+    _Out_ LPVARIANTARG pvarg,
+    _In_ LPCVOID pv,
+    _In_ SIZE_T cb)
+{
+    VariantInit(pvarg);
+    LPSAFEARRAY pArray = SafeArrayCreateVector(VT_UI1, 0, cb);
+    if (!pArray)
+        return E_OUTOFMEMORY;
+    CopyMemory(pArray->pvData, pv, cb);
+    V_ARRAY(pvarg) = pArray;
+    V_VT(pvarg) = VT_ARRAY | VT_UI1;
+    return S_OK;
+}
+
+static HRESULT
+InitVariantFromIDList(
+    _Out_ LPVARIANTARG pvarg,
+    _In_ LPCITEMIDLIST pidl)
+{
+    return InitVariantFromBuffer(pvarg, pidl, ILGetSize(pidl));
+}
+
+static HRESULT
 VariantClearLazy(_Inout_ LPVARIANTARG pvarg)
 {
-    switch (pvarg->vt)
+    switch (V_VT(pvarg))
     {
         case VT_EMPTY:
         case VT_I4:
@@ -21,20 +45,20 @@ VariantClearLazy(_Inout_ LPVARIANTARG pvarg)
         case VT_UI4:
             break;
         case VT_DISPATCH:
-            if (pvarg->pdispVal)
-                pvarg->pdispVal->Release();
+            if (V_DISPATCH(pvarg))
+                V_DISPATCH(pvarg)->Release();
             break;
         case VT_UNKNOWN:
-            if (pvarg->punkVal)
-                pvarg->punkVal->Release();
+            if (V_UNKNOWN(pvarg))
+                V_UNKNOWN(pvarg)->Release();
             break;
         case VT_SAFEARRAY:
-            SafeArrayDestroy(pvarg->parray);
+            SafeArrayDestroy(V_ARRAY(pvarg));
             break;
         default:
             return VariantClear(pvarg);
     }
-    pvarg->vt = VT_EMPTY;
+    V_VT(pvarg) = VT_EMPTY;
     return S_OK;
 }
 
@@ -99,7 +123,7 @@ WinList_NotifyNewLocation(
     if (FAILED(hr))
         return hr;
 
-    hr = pShellWindows->OnNavigate(Cookie, &varg);
+    hr = pShellWindows->OnNavigate(lCookie, &varg);
     VariantClearLazy(&varg);
     return hr;
 }
@@ -135,8 +159,24 @@ WinList_RegisterPending(
     _In_ DWORD dwUnused,
     _Out_ PLONG plCookie)
 {
-    FIXME("(%ld, %p, %ld, %p)\n", dwThreadId, pidl, dwUnused, plCookie);
-    return E_NOTIMPL;
+    TRACE("(%ld, %p, %ld, %p)\n", dwThreadId, pidl, dwUnused, plCookie);
+
+    if (!pidl)
+        return E_UNEXPECTED;
+
+    IShellWindows *pShellWindows = WinList_GetShellWindows(FALSE);
+    if (!pShellWindows)
+        return E_UNEXPECTED;
+
+    VARIANTARG varg;
+    HRESULT hr = InitVariantFromIDList(&varg, pidl);
+    if (FAILED(hr))
+        return hr;
+
+    static VARIANT s_vaEmpty = { VT_EMPTY };
+    hr = pShellWindows->RegisterPending(dwThreadId, &varg, &s_vaEmpty, 1, plCookie);
+    VariantClearLazy(&varg);
+    return hr;
 }
 
 /*************************************************************************
