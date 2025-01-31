@@ -2076,18 +2076,23 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
     if (sei_tmp.fMask & SEE_MASK_IDLIST &&
         (sei_tmp.fMask & SEE_MASK_INVOKEIDLIST) != SEE_MASK_INVOKEIDLIST)
     {
+        LPCITEMIDLIST pidl = (LPCITEMIDLIST)sei_tmp.lpIDList;
         CComPtr<IShellExecuteHookW> pSEH;
-
-        HRESULT hr = SHBindToParent((LPCITEMIDLIST)sei_tmp.lpIDList, IID_PPV_ARG(IShellExecuteHookW, &pSEH), NULL);
-
+        HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellExecuteHookW, &pSEH), NULL);
         if (SUCCEEDED(hr))
         {
             hr = pSEH->Execute(&sei_tmp);
             if (hr == S_OK)
                 return TRUE;
         }
-
-        SHGetPathFromIDListW((LPCITEMIDLIST)sei_tmp.lpIDList, wszApplicationName);
+        hr = SHGetNameAndFlagsW(pidl, SHGDN_FORPARSING, wszApplicationName, dwApplicationNameLen, NULL);
+        if (FAILED(hr))
+        {
+            if (dwApplicationNameLen)
+                *wszApplicationName = UNICODE_NULL;
+            if (!_ILIsDesktop(pidl))
+                TRACE("Unable to get PIDL parsing path\n");
+        }
         appKnownSingular = TRUE;
         TRACE("-- idlist=%p (%s)\n", sei_tmp.lpIDList, debugstr_w(wszApplicationName));
     }
