@@ -22,7 +22,10 @@ InitVariantFromBuffer(
 
     LPSAFEARRAY pArray = SafeArrayCreateVector(VT_UI1, 0, cb);
     if (!pArray)
+    {
+        ERR("!pArray\n");
         return E_OUTOFMEMORY;
+    }
 
     V_ARRAY(pvarg) = pArray;
     V_VT(pvarg) = VT_ARRAY | VT_UI1;
