@@ -96,7 +96,7 @@ WinList_RegisterPending(
     _In_ DWORD dwUnused,
     _Out_ PLONG plCookie)
 {
-    FIXME("(0x%lX, %p, %ld, %p)\n", dwThreadId, pidl, dwUnused, plCookie);
+    FIXME("(%ld, %p, %ld, %p)\n", dwThreadId, pidl, dwUnused, plCookie);
     return E_NOTIMPL;
 }
 
