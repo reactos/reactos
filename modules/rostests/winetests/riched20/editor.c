@@ -9022,6 +9022,38 @@ static void test_EM_SELECTIONTYPE(void)
     DestroyWindow(hwnd);
 }
 
+static void test_window_classes(void)
+{
+    static const struct
+    {
+        const char *class;
+        BOOL success;
+    } test[] =
+    {
+        { "RichEdit", FALSE },
+        { "RichEdit20A", TRUE },
+        { "RichEdit20W", TRUE },
+        { "RichEdit50A", FALSE },
+        { "RichEdit50W", FALSE }
+    };
+    int i;
+    HWND hwnd;
+
+    for (i = 0; i < sizeof(test)/sizeof(test[0]); i++)
+    {
+        SetLastError(0xdeadbeef);
+        hwnd = CreateWindowExA(0, test[i].class, NULL, WS_POPUP, 0, 0, 0, 0, 0, 0, 0, NULL);
+todo_wine_if(!strcmp(test[i].class, "RichEdit50A") || !strcmp(test[i].class, "RichEdit50W"))
+        ok(!hwnd == !test[i].success, "CreateWindow(%s) should %s\n",
+           test[i].class, test[i].success ? "succeed" : "fail");
+        if (!hwnd)
+todo_wine
+            ok(GetLastError() == ERROR_CANNOT_FIND_WND_CLASS, "got %d\n", GetLastError());
+        else
+            DestroyWindow(hwnd);
+    }
+}
+
 START_TEST( editor )
 {
   BOOL ret;
@@ -9031,6 +9063,7 @@ START_TEST( editor )
   ok(hmoduleRichEdit != NULL, "error: %d\n", (int) GetLastError());
   is_lang_japanese = (PRIMARYLANGID(GetSystemDefaultLangID()) == LANG_JAPANESE);
 
+  test_window_classes();
   test_WM_CHAR();
   test_EM_FINDTEXT(FALSE);
   test_EM_FINDTEXT(TRUE);

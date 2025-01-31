@@ -452,4 +452,3 @@ typedef HRESULT (WINAPI *PCreateTextServices)(IUnknown*,ITextHost*,IUnknown**);
 #endif
 
 #endif /* _TEXTSERV_H */
-
