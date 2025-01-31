@@ -170,7 +170,7 @@ WinList_FindFolderWindow(
         return E_UNEXPECTED;
     }
 
-    IShellWindows *pShellWindows = WinList_GetShellWindows(ppvObj != NULL);
+    CComPtr<IShellWindows> pShellWindows(WinList_GetShellWindows(ppvObj != NULL));
     if (!pShellWindows)
     {
         ERR("!pShellWindows\n");
@@ -180,23 +180,15 @@ WinList_FindFolderWindow(
     VARIANTARG varg;
     HRESULT hr = InitVariantFromIDList(&varg, pidl);
     if (FAILED_UNEXPECTEDLY(hr))
-    {
-        pShellWindows->Release();
         return hr;
-    }
 
-    IDispatch *pDispatch = NULL;
+    CComPtr<IDispatch> pDispatch;
     const INT options = SWFO_INCLUDEPENDING | (ppvObj ? SWFO_NEEDDISPATCH : 0);
     hr = pShellWindows->FindWindowSW(&varg, &s_vaEmpty, SWC_BROWSER, phwnd, options, &pDispatch);
-    if (pDispatch)
-    {
-        if (ppvObj)
-            hr = pDispatch->QueryInterface(IID_IWebBrowserApp, ppvObj);
-        pDispatch->Release();
-    }
+    if (pDispatch && ppvObj)
+        hr = pDispatch->QueryInterface(IID_IWebBrowserApp, ppvObj);
 
     VariantClearLazy(&varg);
-    pShellWindows->Release();
     return hr;
 }
 
@@ -252,14 +244,12 @@ WinList_Revoke(
 {
     TRACE("(%ld)\n", lCookie);
 
-    IShellWindows *pShellWindows = WinList_GetShellWindows(TRUE);
+    CComPtr<IShellWindows> pShellWindows(WinList_GetShellWindows(TRUE));
     if (!pShellWindows)
     {
         ERR("!pShellWindows\n");
         return E_FAIL;
     }
 
-    HRESULT hr = pShellWindows->Revoke(lCookie);
-    pShellWindows->Release();
-    return hr;
+    return pShellWindows->Revoke(lCookie);
 }
