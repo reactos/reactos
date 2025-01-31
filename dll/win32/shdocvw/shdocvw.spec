@@ -8,7 +8,7 @@
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
 @ stdcall -private DllGetVersion(ptr)
 110 stdcall -noname WinList_Init()
-111 stub -noname WinList_Terminate
+111 stdcall -noname WinList_Terminate()
 @ stdcall -private DllInstall(long wstr)
 @ stdcall -private DllRegisterServer()
 @ stub DllRegisterWindowClasses
@@ -74,11 +74,11 @@
 174 stub -noname SHIsGlobalOffline
 175 stub -noname DetectAndFixAssociations
 176 stub -noname EnsureWebViewRegSettings
-177 stub -noname WinList_NotifyNewLocation
-178 stub -noname WinList_FindFolderWindow
-179 stub -noname WinList_GetShellWindows
-180 stub -noname WinList_RegisterPending
-181 stub -noname WinList_Revoke
+177 stdcall -noname WinList_NotifyNewLocation(ptr long ptr)
+178 stdcall -noname WinList_FindFolderWindow(ptr long ptr ptr)
+179 stdcall -noname WinList_GetShellWindows(long)
+180 stdcall -noname WinList_RegisterPending(long ptr long ptr)
+181 stdcall -noname WinList_Revoke(long)
 182 stdcall SetQueryNetSessionCount(long)
 183 stub -noname SHMapNbspToSp
 184 stub SetShellOfflineState

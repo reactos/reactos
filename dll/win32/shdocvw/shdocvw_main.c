@@ -236,6 +236,7 @@ static BOOL SHDOCVW_LoadShell32(void)
      return ((SHDOCVW_hshell32 = LoadLibraryA("shell32.dll")) != NULL);
 }
 
+#ifndef __REACTOS__ /* See winlist.cpp */
 /***********************************************************************
  *		@ (SHDOCVW.110)
  *
@@ -247,6 +248,7 @@ DWORD WINAPI WinList_Init(void)
     FIXME("(), stub!\n");
     return 0x0deadfeed;
 }
+#endif /* ndef __REACTOS__ */
 
 /***********************************************************************
  *		@ (SHDOCVW.118)

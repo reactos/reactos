@@ -37,7 +37,8 @@ add_library(shdocvw_sublib OBJECT
     CNSCBand.cpp
     mrulist.cpp
     objects.cpp
-    utility.cpp)
+    utility.cpp
+    winlist.cpp)
 target_link_libraries(shdocvw_sublib PRIVATE atl_classes)
 target_compile_definitions(shdocvw_sublib PRIVATE $<TARGET_PROPERTY:shdocvw,COMPILE_DEFINITIONS>)
 target_compile_options(shdocvw_sublib PRIVATE $<TARGET_PROPERTY:shdocvw,COMPILE_OPTIONS>)

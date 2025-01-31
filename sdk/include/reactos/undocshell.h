@@ -928,7 +928,6 @@ BOOL WINAPI SHSettingsChanged(LPCVOID unused, LPCWSTR pszKey);
 #define TABDMC_LOADINPROC 2
 
 void WINAPI ShellDDEInit(BOOL bInit);
-DWORD WINAPI WinList_Init(void);
 
 IStream* WINAPI SHGetViewStream(LPCITEMIDLIST, DWORD, LPCTSTR, LPCTSTR, LPCTSTR);
 
