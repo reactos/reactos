@@ -152,14 +152,14 @@ WinList_FindFolderWindow(
     _In_ LPCITEMIDLIST pidl,
     _In_ DWORD dwUnused,
     _Out_opt_ PLONG phwnd, // Stores a window handle but LONG type
-    _Out_opt_ PVOID *ppvObj)
+    _Out_opt_ IWebBrowserApp **ppWebBrowserApp)
 {
     UNREFERENCED_PARAMETER(dwUnused);
 
-    TRACE("(%p, %ld, %p, %p)\n", pidl, dwUnused, phwnd, ppvObj);
+    TRACE("(%p, %ld, %p, %p)\n", pidl, dwUnused, phwnd, ppWebBrowserApp);
 
-    if (ppvObj)
-        *ppvObj = NULL;
+    if (ppWebBrowserApp)
+        *ppWebBrowserApp = NULL;
 
     if (phwnd)
         *phwnd = 0;
@@ -170,7 +170,7 @@ WinList_FindFolderWindow(
         return E_UNEXPECTED;
     }
 
-    CComPtr<IShellWindows> pShellWindows(WinList_GetShellWindows(ppvObj != NULL));
+    CComPtr<IShellWindows> pShellWindows(WinList_GetShellWindows(ppWebBrowserApp != NULL));
     if (!pShellWindows)
     {
         ERR("!pShellWindows\n");
@@ -183,10 +183,10 @@ WinList_FindFolderWindow(
         return hr;
 
     CComPtr<IDispatch> pDispatch;
-    const INT options = SWFO_INCLUDEPENDING | (ppvObj ? SWFO_NEEDDISPATCH : 0);
+    const INT options = SWFO_INCLUDEPENDING | (ppWebBrowserApp ? SWFO_NEEDDISPATCH : 0);
     hr = pShellWindows->FindWindowSW(&varg, &s_vaEmpty, SWC_BROWSER, phwnd, options, &pDispatch);
-    if (pDispatch && ppvObj)
-        hr = pDispatch->QueryInterface(IID_IWebBrowserApp, ppvObj);
+    if (pDispatch && ppWebBrowserApp)
+        hr = pDispatch->QueryInterface(IID_PPV_ARG(IWebBrowserApp, ppWebBrowserApp));
 
     VariantClearLazy(&varg);
     return hr;

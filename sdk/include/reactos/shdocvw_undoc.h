@@ -35,7 +35,7 @@ WinList_FindFolderWindow(
     _In_ LPCITEMIDLIST pidl,
     _In_ DWORD dwUnused,
     _Out_opt_ PLONG phwnd,
-    _Out_opt_ PVOID *ppvObj);
+    _Out_opt_ IWebBrowserApp **ppWebBrowserApp);
 
 HRESULT WINAPI
 WinList_RegisterPending(
