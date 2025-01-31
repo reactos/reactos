@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS shdocvw
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     WinList_* functions
+ * PURPOSE:     CLSID_ShellWindows and WinList_* functions
  * COPYRIGHT:   Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
@@ -19,12 +19,15 @@ InitVariantFromBuffer(
     _In_ SIZE_T cb)
 {
     VariantInit(pvarg);
+
     LPSAFEARRAY pArray = SafeArrayCreateVector(VT_UI1, 0, cb);
     if (!pArray)
         return E_OUTOFMEMORY;
+
     CopyMemory(pArray->pvData, pv, cb);
     V_ARRAY(pvarg) = pArray;
     V_VT(pvarg) = VT_ARRAY | VT_UI1;
+
     return S_OK;
 }
 
@@ -43,8 +46,8 @@ VariantClearLazy(_Inout_ LPVARIANTARG pvarg)
     {
         case VT_EMPTY:
         case VT_I4:
-        case VT_BOOL:
         case VT_UI4:
+        case VT_BOOL:
             break;
         case VT_DISPATCH:
             if (V_DISPATCH(pvarg))
