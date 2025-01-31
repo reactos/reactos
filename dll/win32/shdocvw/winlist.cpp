@@ -214,7 +214,7 @@ WinList_RegisterPending(
         return E_UNEXPECTED;
     }
 
-    IShellWindows *pShellWindows = WinList_GetShellWindows(FALSE);
+    CComPtr<IShellWindows> pShellWindows(WinList_GetShellWindows(FALSE));
     if (!pShellWindows)
     {
         ERR("!pShellWindows\n");
