@@ -216,7 +216,7 @@ WinList_RegisterPending(
     if (FAILED(hr))
         return hr;
 
-    hr = pShellWindows->RegisterPending(dwThreadId, &varg, &s_vaEmpty, 1, plCookie);
+    hr = pShellWindows->RegisterPending(dwThreadId, &varg, &s_vaEmpty, SWC_BROWSER, plCookie);
     VariantClearLazy(&varg);
     return hr;
 }
