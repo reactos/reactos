@@ -14,8 +14,11 @@
 #include "configparser.h"
 
 extern LONG g_Busy;
+extern UINT g_PendingInstalledViewRefresh;
+extern HWND g_hLastFocus;
 
 #define WM_NOTIFY_OPERATIONCOMPLETED (WM_APP + 0)
+#define WM_NOTIFY_INSTALLERFINISHED (WM_APP + 1)
 
 #define MAINWINDOWCLASSNAME L"ROSAPPMGR2"
 #define MAINWINDOWMUTEX szWindowClass

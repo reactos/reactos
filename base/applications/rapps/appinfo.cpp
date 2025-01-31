@@ -10,6 +10,14 @@
 #include "rapps.h"
 #include "appview.h"
 
+static inline AppsCategories
+ClampAvailableCategory(AppsCategories Category)
+{
+    if (Category <= ENUM_LASTCATEGORY)
+        return Category;
+    return ENUM_CAT_OTHER; // Treat future categories we don't know as Other
+}
+
 CAppInfo::CAppInfo(const CStringW &Identifier, AppsCategories Category)
     : szIdentifier(Identifier), iCategory(Category)
 {
@@ -24,7 +32,7 @@ CAvailableApplicationInfo::CAvailableApplicationInfo(
     const CStringW &PkgName,
     AppsCategories Category,
     const CPathW &BasePath)
-    : CAppInfo(PkgName, Category), m_Parser(Parser), m_ScrnshotRetrieved(false), m_LanguagesLoaded(false)
+    : CAppInfo(PkgName, ClampAvailableCategory(Category)), m_Parser(Parser), m_ScrnshotRetrieved(false), m_LanguagesLoaded(false)
 {
     m_Parser->GetString(L"Name", szDisplayName);
     m_Parser->GetString(L"Version", szDisplayVersion);
@@ -588,7 +596,7 @@ CInstalledApplicationInfo::GetInstallerType() const
 BOOL
 CInstalledApplicationInfo::UninstallApplication(UninstallCommandFlags Flags)
 {
-    if (GetInstallerType() == INSTALLER_GENERATE)
+    if (GetInstallerType() == INSTALLER_GENERATE && (Flags & UCF_SAMEPROCESS))
     {
         return UninstallGenerated(*this, Flags);
     }

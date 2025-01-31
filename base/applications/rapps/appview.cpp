@@ -1806,6 +1806,22 @@ CApplicationView::SetRedraw(BOOL bRedraw)
 }
 
 void
+CApplicationView::RefreshAvailableItem(PCWSTR PackageName)
+{
+    if (ApplicationViewType != AppViewTypeAvailableApps || !PackageName)
+        return;
+    CAppInfo *pApp;
+    for (UINT i = 0; (pApp = (CAppInfo*)m_ListView->GetItemData(i)) != NULL; ++i)
+    {
+        if (pApp->szIdentifier.CompareNoCase(PackageName) == 0)
+        {
+            ItemGetFocus(pApp);
+            break;
+        }
+    }
+}
+
+void
 CApplicationView::SetFocusOnSearchBar()
 {
     m_SearchBar->SetFocus();

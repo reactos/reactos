@@ -160,7 +160,9 @@ StartProcess(const CStringW &Path, BOOL Wait)
     {
         EnableWindow(hMainWnd, TRUE);
         SetForegroundWindow(hMainWnd);
-        SetFocus(hMainWnd);
+        // We got the real activation message during MsgWaitForMultipleObjects while
+        // we were disabled, we need to set the focus again now.
+        SendMessage(hMainWnd, WM_SETFOCUS, 0, 0);
     }
 
     return TRUE;

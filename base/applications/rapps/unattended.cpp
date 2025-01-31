@@ -191,7 +191,8 @@ HandleUninstallCommand(CAppDB &db, UINT argcLeft, LPWSTR *argvLeft)
 
     if (pInfo)
     {
-        retval = pInfo->UninstallApplication(silent ? UCF_SILENT : UCF_NONE);
+        UINT Flags = (silent ? UCF_SILENT : UCF_NONE) | UCF_SAMEPROCESS;
+        retval = pInfo->UninstallApplication((UninstallCommandFlags)Flags);
     }
     delete pDelete;
     return retval;
@@ -368,7 +369,7 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
             if (hWindow)
             {
                 /* Activate the window in the other instance */
-                ShowWindow(hWindow, SW_SHOW);
+                ShowWindow(hWindow, SW_SHOWNA);
                 SwitchToThisWindow(hWindow, TRUE);
                 if (bAppwizMode)
                     PostMessage(hWindow, WM_COMMAND, ID_ACTIVATE_APPWIZ, 0);
