@@ -34,7 +34,7 @@ HRESULT WINAPI
 WinList_FindFolderWindow(
     _In_ LPCITEMIDLIST pidl,
     _In_ DWORD dwUnused,
-    _Out_ PLONG pnClass,
+    _Out_ PLONG phwnd,
     _Out_ PVOID *ppvObj);
 
 HRESULT WINAPI

@@ -143,18 +143,18 @@ HRESULT WINAPI
 WinList_FindFolderWindow(
     _In_ LPCITEMIDLIST pidl,
     _In_ DWORD dwUnused,
-    _Out_ PLONG pnClass,
+    _Out_ PLONG phwnd, // HWND but LONG type
     _Out_ PVOID *ppvObj)
 {
     UNREFERENCED_PARAMETER(dwUnused);
 
-    TRACE("(%p, %ld, %p, %p)\n", pidl, dwUnused, pnClass, ppvObj);
+    TRACE("(%p, %ld, %p, %p)\n", pidl, dwUnused, phwnd, ppvObj);
 
     if (ppvObj)
         *ppvObj = NULL;
 
-    if (pnClass)
-        *pnClass = 0;
+    if (phwnd)
+        *phwnd = 0;
 
     if (!pidl)
         return E_UNEXPECTED;
@@ -173,7 +173,7 @@ WinList_FindFolderWindow(
 
     IDispatch *pDispatch = NULL;
     const INT options = SWFO_INCLUDEPENDING | (ppvObj ? SWFO_NEEDDISPATCH : 0);
-    hr = pShellWindows->FindWindowSW(&varg, &s_vaEmpty, SWC_BROWSER, pnClass, options, &pDispatch);
+    hr = pShellWindows->FindWindowSW(&varg, &s_vaEmpty, SWC_BROWSER, phwnd, options, &pDispatch);
     if (pDispatch)
     {
         if (ppvObj)
