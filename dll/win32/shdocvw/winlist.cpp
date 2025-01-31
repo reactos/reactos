@@ -10,6 +10,34 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
+static HRESULT
+VariantClearLazy(_Inout_ LPVARIANTARG pvarg)
+{
+    switch (pvarg->vt)
+    {
+        case VT_EMPTY:
+        case VT_I4:
+        case VT_BOOL:
+        case VT_UI4:
+            break;
+        case VT_DISPATCH:
+            if (pvarg->pdispVal)
+                pvarg->pdispVal->Release();
+            break;
+        case VT_UNKNOWN:
+            if (pvarg->punkVal)
+                pvarg->punkVal->Release();
+            break;
+        case VT_SAFEARRAY:
+            SafeArrayDestroy(pvarg->parray);
+            break;
+        default:
+            return VariantClear(pvarg);
+    }
+    pvarg->vt = VT_EMPTY;
+    return S_OK;
+}
+
 /*************************************************************************
  *    WinList_Init (SHDOCVW.110)
  *
@@ -61,8 +89,19 @@ WinList_NotifyNewLocation(
     _In_ LONG lCookie,
     _In_ LPCITEMIDLIST pidl)
 {
-    FIXME("(%p, %ld, %p)\n", pShellWindows, lCookie, pidl);
-    return E_NOTIMPL;
+    TRACE("(%p, %ld, %p)\n", pShellWindows, lCookie, pidl);
+
+    if (!pidl)
+        return E_UNEXPECTED;
+
+    VARIANTARG varg;
+    HRESULT hr = InitVariantFromIDList(&varg, pidl);
+    if (FAILED(hr))
+        return hr;
+
+    hr = pShellWindows->OnNavigate(Cookie, &varg);
+    VariantClearLazy(&varg);
+    return hr;
 }
 
 /*************************************************************************
