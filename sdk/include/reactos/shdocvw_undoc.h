@@ -21,10 +21,8 @@ IEILIsEqual(
 
 BOOL WINAPI WinList_Init(VOID);
 VOID WINAPI WinList_Terminate(VOID);
-
-IShellWindows* WINAPI
-WinList_GetShellWindows(
-    _In_ BOOL bCreate);
+HRESULT WINAPI WinList_Revoke(_In_ LONG lCookie);
+IShellWindows* WINAPI WinList_GetShellWindows(_In_ BOOL bCreate);
 
 HRESULT WINAPI
 WinList_NotifyNewLocation(
@@ -45,10 +43,6 @@ WinList_RegisterPending(
     _In_ LPCITEMIDLIST pidl,
     _In_ DWORD dwUnused,
     _Out_ PLONG plCookie);
-
-HRESULT WINAPI
-WinList_Revoke(
-    _In_ LONG lCookie);
 
 #ifdef __cplusplus
 } /* extern "C" */
