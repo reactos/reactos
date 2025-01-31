@@ -19,7 +19,7 @@ EXTERN_C
 BOOL WINAPI
 WinList_Init(VOID)
 {
-    FIXME("\n");
+    FIXME("()\n");
     return FALSE;
 }
 
@@ -32,7 +32,7 @@ EXTERN_C
 VOID WINAPI
 WinList_Terminate(VOID)
 {
-    FIXME("\n");
+    FIXME("()\n");
 }
 
 /*************************************************************************
@@ -45,7 +45,7 @@ IShellWindows* WINAPI
 WinList_GetShellWindows(
     _In_ BOOL bCreate)
 {
-    FIXME("\n");
+    FIXME("(%d)\n", bCreate);
     return NULL;
 }
 
@@ -61,7 +61,7 @@ WinList_NotifyNewLocation(
     _In_ LONG lCookie,
     _In_ LPCITEMIDLIST pidl)
 {
-    FIXME("\n");
+    FIXME("(%p, %ld, %p)\n", pShellWindows, lCookie, pidl);
     return E_NOTIMPL;
 }
 
@@ -79,7 +79,7 @@ WinList_FindFolderWindow(
     _Out_ PVOID *ppvObj)
 {
     UNREFERENCED_PARAMETER(dwUnused);
-    FIXME("\n");
+    FIXME("(%p, %ld, %p, %p)\n", pidl, dwUnused, pnClass, ppvObj);
     return E_NOTIMPL;
 }
 
@@ -96,7 +96,7 @@ WinList_RegisterPending(
     _In_ DWORD dwUnused,
     _Out_ PLONG plCookie)
 {
-    FIXME("\n");
+    FIXME("(0x%lX, %p, %ld, %p)\n", dwThreadId, pidl, dwUnused, plCookie);
     return E_NOTIMPL;
 }
 
@@ -110,6 +110,13 @@ HRESULT WINAPI
 WinList_Revoke(
     _In_ LONG lCookie)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("(%ld)\n", lCookie);
+
+    IShellWindows *pShellWindows = WinList_GetShellWindows(TRUE);
+    if (!pShellWindows)
+        return E_FAIL;
+
+    HRESULT hr = pShellWindows->Revoke(lCookie);
+    pShellWindows->Release();
+    return hr;
 }
