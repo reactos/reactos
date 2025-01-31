@@ -52,12 +52,6 @@ extern "C"
     HRESULT WINAPI RSHELL_CMergedFolder_CreateInstance(REFIID riid, LPVOID *ppv);
 }
 
-DWORD WINAPI WinList_Init(void)
-{
-    /* do something here (perhaps we may want to add our own implementation fo win8) */
-    return 0;
-}
-
 class CRShellModule : public CComModule
 {
 public:
