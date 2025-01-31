@@ -24,10 +24,9 @@ InitVariantFromBuffer(
     if (!pArray)
         return E_OUTOFMEMORY;
 
-    CopyMemory(pArray->pvData, pv, cb);
     V_ARRAY(pvarg) = pArray;
     V_VT(pvarg) = VT_ARRAY | VT_UI1;
-
+    CopyMemory(pArray->pvData, pv, cb);
     return S_OK;
 }
 
