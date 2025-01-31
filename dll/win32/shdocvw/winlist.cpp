@@ -45,17 +45,17 @@ VariantClearLazy(_Inout_ LPVARIANTARG pvarg)
     switch (V_VT(pvarg))
     {
         case VT_EMPTY:
+        case VT_BOOL:
         case VT_I4:
         case VT_UI4:
-        case VT_BOOL:
-            break;
-        case VT_DISPATCH:
-            if (V_DISPATCH(pvarg))
-                V_DISPATCH(pvarg)->Release();
             break;
         case VT_UNKNOWN:
             if (V_UNKNOWN(pvarg))
                 V_UNKNOWN(pvarg)->Release();
+            break;
+        case VT_DISPATCH:
+            if (V_DISPATCH(pvarg))
+                V_DISPATCH(pvarg)->Release();
             break;
         case VT_SAFEARRAY:
             SafeArrayDestroy(V_ARRAY(pvarg));
@@ -96,6 +96,7 @@ WinList_Terminate(VOID)
  *    WinList_GetShellWindows (SHDOCVW.179)
  *
  * NT 5.0 and higher.
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/exdisp/nn-exdisp-ishellwindows
  */
 EXTERN_C
 IShellWindows* WINAPI
@@ -110,6 +111,7 @@ WinList_GetShellWindows(
  *    WinList_NotifyNewLocation (SHDOCVW.177)
  *
  * NT 5.0 and higher.
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/exdisp/nf-exdisp-ishellwindows-onnavigate
  */
 EXTERN_C
 HRESULT WINAPI
@@ -137,6 +139,7 @@ WinList_NotifyNewLocation(
  *    WinList_FindFolderWindow (SHDOCVW.178)
  *
  * NT 5.0 and higher.
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/exdisp/nf-exdisp-ishellwindows-findwindowsw
  */
 EXTERN_C
 HRESULT WINAPI
@@ -190,6 +193,7 @@ WinList_FindFolderWindow(
  *    WinList_RegisterPending (SHDOCVW.180)
  *
  * NT 5.0 and higher.
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/exdisp/nf-exdisp-ishellwindows-registerpending
  */
 EXTERN_C
 HRESULT WINAPI
@@ -222,6 +226,7 @@ WinList_RegisterPending(
  *    WinList_Revoke (SHDOCVW.181)
  *
  * NT 5.0 and higher.
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/exdisp/nf-exdisp-ishellwindows-revoke
  */
 EXTERN_C
 HRESULT WINAPI
