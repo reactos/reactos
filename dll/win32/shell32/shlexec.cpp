@@ -2077,6 +2077,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         (sei_tmp.fMask & SEE_MASK_INVOKEIDLIST) != SEE_MASK_INVOKEIDLIST)
     {
         LPCITEMIDLIST pidl = (LPCITEMIDLIST)sei_tmp.lpIDList;
+
         CComPtr<IShellExecuteHookW> pSEH;
         HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellExecuteHookW, &pSEH), NULL);
         if (SUCCEEDED(hr))
@@ -2085,6 +2086,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
             if (hr == S_OK)
                 return TRUE;
         }
+
         hr = SHGetNameAndFlagsW(pidl, SHGDN_FORPARSING, wszApplicationName, dwApplicationNameLen, NULL);
         if (FAILED(hr))
         {
