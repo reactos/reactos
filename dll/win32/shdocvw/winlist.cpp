@@ -10,6 +10,8 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
+static VARIANT s_vaEmpty = { VT_EMPTY };
+
 static HRESULT
 InitVariantFromBuffer(
     _Out_ LPVARIANTARG pvarg,
@@ -138,12 +140,47 @@ HRESULT WINAPI
 WinList_FindFolderWindow(
     _In_ LPCITEMIDLIST pidl,
     _In_ DWORD dwUnused,
-    _Out_ PINT pnClass,
+    _Out_ PLONG pnClass,
     _Out_ PVOID *ppvObj)
 {
     UNREFERENCED_PARAMETER(dwUnused);
-    FIXME("(%p, %ld, %p, %p)\n", pidl, dwUnused, pnClass, ppvObj);
-    return E_NOTIMPL;
+
+    TRACE("(%p, %ld, %p, %p)\n", pidl, dwUnused, pnClass, ppvObj);
+
+    if (ppvObj)
+        *ppvObj = NULL;
+
+    if (pnClass)
+        *pnClass = 0;
+
+    if (!pidl)
+        return E_UNEXPECTED;
+
+    IShellWindows *pShellWindows = WinList_GetShellWindows(ppvObj != NULL);
+    if (!pShellWindows)
+        return E_UNEXPECTED;
+
+    VARIANTARG varg;
+    HRESULT hr = InitVariantFromIDList(&varg, pidl);
+    if (FAILED(hr))
+    {
+        pShellWindows->Release();
+        return hr;
+    }
+
+    IDispatch *pDispatch = NULL;
+    INT options = ppvObj ? (SWFO_NEEDDISPATCH | SWFO_INCLUDEPENDING) : SWFO_INCLUDEPENDING;
+    hr = pShellWindows->FindWindowSW(&varg, &s_vaEmpty, 1, pnClass, options, &pDispatch);
+    if (pDispatch)
+    {
+        if (ppvObj)
+            hr = pDispatch->QueryInterface(IID_IWebBrowserApp, ppvObj);
+        pDispatch->Release();
+    }
+
+    VariantClearLazy(&varg);
+    pShellWindows->Release();
+    return hr;
 }
 
 /*************************************************************************
@@ -173,7 +210,6 @@ WinList_RegisterPending(
     if (FAILED(hr))
         return hr;
 
-    static VARIANT s_vaEmpty = { VT_EMPTY };
     hr = pShellWindows->RegisterPending(dwThreadId, &varg, &s_vaEmpty, 1, plCookie);
     VariantClearLazy(&varg);
     return hr;
