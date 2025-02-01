@@ -39,6 +39,9 @@ START_TEST(RtlDosSearchPath_Ustr)
     UNICODE_STRING DynamicString;
     PUNICODE_STRING FullNameOut;
     UNICODE_STRING EmptyString;
+    static const WCHAR* longDirName =  L"C:\\Program Files\\Very_long_test_path_which_can_trigger_heap_overflow_test_1234567890______________________________________________________AB";
+    static const WCHAR* longFileName = L"this_is_long_file_name_for_checking______________________________________________________________________________CD";
+    static const WCHAR* ext = L".txt";
     SIZE_T FilePartSize;
     SIZE_T LengthNeeded;
     INT i;
@@ -210,4 +213,23 @@ START_TEST(RtlDosSearchPath_Ustr)
     ok_eq_pointer(FullNameOut, NULL);
     ok_eq_ulong(FilePartSize, 0UL);
     ok_eq_ulong(LengthNeeded, 0UL);
+
+    /* Bufer overflow test
+       lenof(longDirName) + lenof(longFileName) + lenof(ext) = MAX_PATH
+    */
+    RtlInitUnicodeString(&PathString, longDirName);
+    RtlInitUnicodeString(&FileNameString, longFileName);
+    RtlInitUnicodeString(&ExtensionString, ext);
+    StartSeh()
+        Status = RtlDosSearchPath_Ustr(0,
+                                       &PathString,
+                                       &FileNameString,
+                                       &ExtensionString,
+                                       &CallerBuffer,
+                                       &DynamicString,
+                                       &FullNameOut,
+                                       &FilePartSize,
+                                       &LengthNeeded);
+        ok_eq_hex(Status, STATUS_NO_SUCH_FILE);
+    EndSeh(STATUS_SUCCESS);
 }
