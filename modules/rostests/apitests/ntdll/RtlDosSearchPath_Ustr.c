@@ -214,9 +214,9 @@ START_TEST(RtlDosSearchPath_Ustr)
     ok_eq_ulong(FilePartSize, 0UL);
     ok_eq_ulong(LengthNeeded, 0UL);
 
-    /* Bufer overflow test
-       lenof(longDirName) + lenof(longFileName) + lenof(ext) = MAX_PATH
-    */
+    /* Buffer overflow test
+     * length(longDirName) + length(longFileName) + length(ext) = MAX_PATH
+     */
     RtlInitUnicodeString(&PathString, longDirName);
     RtlInitUnicodeString(&FileNameString, longFileName);
     RtlInitUnicodeString(&ExtensionString, ext);
