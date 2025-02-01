@@ -2428,6 +2428,12 @@ LdrpLoadDll(IN BOOLEAN Redirected,
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     BOOLEAN InInit = LdrpInLdrInit;
 
+    if (DllName->Buffer == NULL)
+    {
+        DPRINT1("DllName->Buffer is NULL!\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
     /* Save the Raw DLL Name */
     if (DllName->Length >= sizeof(NameBuffer)) return STATUS_NAME_TOO_LONG;
     RtlInitEmptyUnicodeString(&RawDllName, NameBuffer, sizeof(NameBuffer));
