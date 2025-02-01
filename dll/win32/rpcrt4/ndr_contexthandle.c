@@ -59,8 +59,20 @@ static struct context_handle_entry *get_context_entry(NDR_CCONTEXT CContext)
 {
     struct context_handle_entry *che = CContext;
 
+#ifdef __REACTOS__
+    __TRY
+    {
+#endif
     if (che->magic != NDR_CONTEXT_HANDLE_MAGIC)
         return NULL;
+#ifdef __REACTOS__
+    }
+    __EXCEPT_ALL
+    {
+        return NULL;
+    }
+    __ENDTRY
+#endif
     return che;
 }
 
