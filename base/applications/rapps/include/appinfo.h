@@ -77,6 +77,7 @@ enum UninstallCommandFlags
     UCF_SILENT = 0x02,
     UCF_SAMEPROCESS = 0x04,
 };
+DEFINE_ENUM_FLAG_OPERATORS(UninstallCommandFlags);
 
 enum InstallerType
 {

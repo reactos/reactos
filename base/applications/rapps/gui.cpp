@@ -344,7 +344,7 @@ CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
             break;
 
         case WM_NOTIFY_INSTALLERFINISHED:
-            g_PendingInstalledViewRefresh |= TRUE; // Something just installed, our uninstall list is probably outdated
+            g_PendingInstalledViewRefresh = TRUE; // Something just installed, our uninstall list is probably outdated
             m_ApplicationView->RefreshAvailableItem((PCWSTR)lParam);
             break;
 
