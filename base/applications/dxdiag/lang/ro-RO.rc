@@ -193,7 +193,7 @@ BEGIN
     LTEXT "Încă nu găsiți informațiile pe care le căutați? Iată câteva lucruri suplimentare pe care le puteți face:", IDC_STATIC, 5, 0, 300, 10
     PUSHBUTTON "Informații de sistem", IDC_BUTTON_SYSINFO, 5, 20, 80, 14, WS_DISABLED
     LTEXT "Afișează informații suplimentare de sistem", IDC_STATIC, 90, 23, 300, 10
-    PUSHBUTTON "Suprascriere a ratei de reîmprospătare", IDC_BUTTON_DDRAW_REFRESH, 5, 40, 80, 14, WS_DISABLED
+    PUSHBUTTON "Ajust. rata de împrosp.", IDC_BUTTON_DDRAW_REFRESH, 5, 40, 80, 14, WS_DISABLED
     LTEXT "Ignoră rata de reîmprospătare pentru DirectDraw", IDC_STATIC, 90, 43, 300, 10
 END
 
