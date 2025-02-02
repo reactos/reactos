@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2024 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2024-2025 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -17,7 +17,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,7,35,50,14
     PUSHBUTTON      "Revocare",IDCANCEL,61,35,50,14
-    CONTROL         "&Rotire a Fluturilor",ROTATE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&Rotește Fluturi",ROTATE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,56,15,70,8
     PUSHBUTTON      "&Despre",IDABOUT,115,35,50,14
 END
