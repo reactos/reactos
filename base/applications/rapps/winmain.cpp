@@ -15,7 +15,6 @@
 
 LPCWSTR szWindowClass = MAINWINDOWCLASSNAME;
 LONG g_Busy = 0;
-bool g_PendingInstalledViewRefresh = 0;
 
 HWND hMainWnd;
 HWND g_hLastFocus = NULL;

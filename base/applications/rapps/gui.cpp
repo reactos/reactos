@@ -81,6 +81,7 @@ CSideTreeView::~CSideTreeView()
 // **** CSideTreeView ****
 
 // **** CMainWindow ****
+bool CMainWindow::m_PendingInstalledViewRefresh = false;
 
 CMainWindow::CMainWindow(CAppDB *db, BOOL bAppwiz) : m_ClientPanel(NULL), m_Db(db), m_bAppwizMode(bAppwiz), SelectedEnumType(ENUM_ALL_INSTALLED)
 {
@@ -344,7 +345,7 @@ CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
             break;
 
         case WM_NOTIFY_INSTALLERFINISHED:
-            g_PendingInstalledViewRefresh = TRUE; // Something just installed, our uninstall list is probably outdated
+            m_PendingInstalledViewRefresh = true; // Something just installed, our uninstall list is probably outdated
             m_ApplicationView->RefreshAvailableItem((PCWSTR)lParam);
             break;
 
@@ -700,9 +701,9 @@ CMainWindow::UpdateApplicationsList(AppsCategories EnumType, BOOL bReload, BOOL 
     if (bCheckAvailable)
         CheckAvailable();
 
-    if (g_PendingInstalledViewRefresh && IsInstalledEnum(EnumType) && !IsInstalledEnum(SelectedEnumType))
+    if (m_PendingInstalledViewRefresh && IsInstalledEnum(EnumType) && !IsInstalledEnum(SelectedEnumType))
     {
-        g_PendingInstalledViewRefresh = FALSE;
+        m_PendingInstalledViewRefresh = FALSE;
         bReload = TRUE; // Reload because we are switching from Available to Installed after something installed
     }
 

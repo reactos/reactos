@@ -192,8 +192,6 @@ HandleUninstallCommand(CAppDB &db, UINT argcLeft, LPWSTR *argvLeft)
     if (pInfo)
     {
         retval = pInfo->UninstallApplication((silent ? UCF_SILENT : UCF_NONE) | UCF_SAMEPROCESS);
-        //UINT Flags = (silent ? UCF_SILENT : UCF_NONE) | UCF_SAMEPROCESS;
-        //retval = pInfo->UninstallApplication((UninstallCommandFlags)Flags);
     }
     delete pDelete;
     return retval;
