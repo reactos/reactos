@@ -955,19 +955,22 @@ CAppInfoDisplay::Create(HWND hwndParent)
 }
 
 VOID
-CAppInfoDisplay::ShowAppInfo(CAppInfo *Info)
+CAppInfoDisplay::ShowAppInfo(CAppInfo &Info, bool OnlyUpdateText)
 {
-    CStringW ScrnshotLocation;
-    if (Info->RetrieveScreenshot(ScrnshotLocation))
+    if (!OnlyUpdateText)
     {
-        ScrnshotPrev->DisplayImage(ScrnshotLocation);
-    }
-    else
-    {
-        ScrnshotPrev->DisplayEmpty();
+        CStringW ScrnshotLocation;
+        if (Info.RetrieveScreenshot(ScrnshotLocation))
+        {
+            ScrnshotPrev->DisplayImage(ScrnshotLocation);
+        }
+        else
+        {
+            ScrnshotPrev->DisplayEmpty();
+        }
     }
     ResizeChildren();
-    Info->ShowAppInfo(RichEdit);
+    Info.ShowAppInfo(RichEdit);
 }
 
 void
@@ -1815,7 +1818,7 @@ CApplicationView::RefreshAvailableItem(PCWSTR PackageName)
     {
         if (pApp->szIdentifier.CompareNoCase(PackageName) == 0)
         {
-            ItemGetFocus(pApp);
+            RefreshDetailsPane(*pApp, true);
             break;
         }
     }
@@ -2150,6 +2153,12 @@ CApplicationView::RestoreListSelection(const RESTORELISTSELECTION &Restore)
     }
 }
 
+VOID
+CApplicationView::RefreshDetailsPane(CAppInfo &Info, bool OnlyUpdateText)
+{
+    m_AppsInfo->ShowAppInfo(Info, OnlyUpdateText);
+}
+
 // this function is called when a item of listview get focus.
 // CallbackParam is the param passed to listview when adding the item (the one getting focus now).
 VOID
@@ -2158,7 +2167,7 @@ CApplicationView::ItemGetFocus(LPVOID CallbackParam)
     if (CallbackParam)
     {
         CAppInfo *Info = static_cast<CAppInfo *>(CallbackParam);
-        m_AppsInfo->ShowAppInfo(Info);
+        RefreshDetailsPane(*Info);
 
         if (ApplicationViewType == AppViewTypeInstalledApps)
         {
