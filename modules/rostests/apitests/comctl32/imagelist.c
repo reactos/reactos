@@ -97,11 +97,12 @@ static void Test_Flags(void)
         ok(!(flagsOut & ILC_SYSTEM), "!ILC_SYSTEM\n");
 
         ok(IL_AddImagesForTest(himl), "Initialize\n");
-        ok(ImageList_SetFlags(himl, flagsIn = IL_CalculateOtherBpp(flagsIn)), "Can change BPP\n");
+        flagsIn = IL_CalculateOtherBpp(flagsIn);
+        ok(ImageList_SetFlags(himl, flagsIn), "Can change BPP\n");
         ok(ImageList_GetImageCount(himl) == 0, "SetFlags deletes all images\n");
 
         ok(IL_AddImagesForTest(himl), "Initialize\n");
-        ok(ImageList_SetFlags(himl, ImageList_GetFlags(himl)) && flagsOut, "Can set same flags\n");
+        ok(ImageList_SetFlags(himl, ImageList_GetFlags(himl)), "Can set same flags\n");
         if (WinVerMajor() >= 6)
         {
             ok(ImageList_GetImageCount(himl) != 0, "SetFlags does not delete with same flags\n");
@@ -124,11 +125,12 @@ static void Test_Flags(void)
 
         ok(IL_AddImagesForTest(himl), "Initialize\n");
 
-        ok(ImageList_SetFlags(himl, flagsIn = IL_CalculateOtherBpp(flagsIn)), "Can change BPP\n");
+        flagsIn = IL_CalculateOtherBpp(flagsIn);
+        ok(ImageList_SetFlags(himl, flagsIn), "Can change BPP\n");
         ok(ImageList_GetImageCount(himl) == 0, "SetFlags deletes all images\n");
 
         ok(IL_AddImagesForTest(himl), "Initialize\n");
-        ok(ImageList_SetFlags(himl, ImageList_GetFlags(himl)) && flagsOut, "Can set same flags\n");
+        ok(ImageList_SetFlags(himl, ImageList_GetFlags(himl)), "Can set same flags\n");
         if (WinVerMajor() >= 6)
         {
             ok(ImageList_SetFlags(himl, flagsIn ^ ILC_SYSTEM), "Can change ILC_SYSTEM\n");
