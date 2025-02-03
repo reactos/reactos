@@ -1141,6 +1141,14 @@ GetWindow(HWND hWnd,
                     FoundWnd = DesktopPtrToUser(FoundWnd->spwndNext);
                 break;
 
+            case GW_ENABLEDPOPUP:
+            {
+                PWND pwndPopup = (PWND)NtUserCallHwnd(hWnd, HWND_ROUTINE_DWP_GETENABLEDPOPUP);
+                if (pwndPopup)
+                    FoundWnd = DesktopPtrToUser(pwndPopup);
+                break;
+            }
+
             default:
                 Wnd = NULL;
                 break;

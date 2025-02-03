@@ -495,6 +495,47 @@ DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
     return (LRESULT)hIconRet;
 }
 
+PWND FASTCALL
+DWP_GetEnabledPopup(PWND pWnd)
+{
+    PWND pwndNode1, pwndNode2;
+    PTHREADINFO pti = pWnd->head.pti, ptiNode;
+    DWORD style;
+    BOOL bFoundNullNode = FALSE;
+
+    for (pwndNode1 = pWnd->spwndNext; pwndNode1 != pWnd; )
+    {
+        if (!pwndNode1)
+        {
+            if (bFoundNullNode)
+                return NULL;
+            bFoundNullNode = TRUE;
+            pwndNode1 = pWnd->spwndParent->spwndChild;
+            continue;
+        }
+
+        ptiNode = pwndNode1->head.pti;
+        if (ptiNode->MessageQueue == pti->MessageQueue) /* Same message queue? */
+        {
+            style = pwndNode1->style;
+            if ((style & WS_VISIBLE) && !(style & WS_DISABLED)) /* Visible and enabled? */
+            {
+                /* Does pwndNode1 have a pWnd as an ancestor? */
+                for (pwndNode2 = pwndNode1->spwndOwner; pwndNode2;
+                     pwndNode2 = pwndNode2->spwndOwner)
+                {
+                    if (pwndNode2 == pWnd)
+                        return pwndNode1; /* Found */
+                }
+            }
+        }
+
+        pwndNode1 = pwndNode1->spwndNext;
+    }
+
+    return NULL;
+}
+
 VOID FASTCALL
 DefWndScreenshot(PWND pWnd)
 {
