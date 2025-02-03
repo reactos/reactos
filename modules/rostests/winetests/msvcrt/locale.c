@@ -627,6 +627,9 @@ static void test_setlocale(void)
     if(IsValidCodePage(atoi(buf))) {
         ret = setlocale(LC_ALL, ".OCP");
         ok(ret != NULL, "ret == NULL\n");
+#ifdef __REACTOS__
+        if (ret == NULL) ptr = NULL; else
+#endif
         ptr = strchr(ret, '.');
         ok(ptr && !strcmp(ptr + 1, buf), "ret %s, buf %s.\n", ret, buf);
     }
@@ -636,6 +639,9 @@ static void test_setlocale(void)
         len = sprintf(buf, "%d", GetACP());
     ret = setlocale(LC_ALL, ".ACP");
     ok(ret != NULL, "ret == NULL\n");
+#ifdef __REACTOS__
+    if (ret == NULL) ptr = NULL; else
+#endif
     ptr = strchr(ret, '.');
     ok(ptr && !strncmp(ptr + 1, buf, len), "ret %s, buf %s.\n", ret, buf);
 

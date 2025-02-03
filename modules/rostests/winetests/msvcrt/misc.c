@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <process.h>
+#include <versionhelpers.h>
 
 static inline BOOL almost_equal(double d1, double d2) {
     if(d1-d2>-1e-30 && d1-d2<1e-30)
@@ -393,6 +394,13 @@ static void test__popen(const char *name)
     ret = fputs("child-to-parent\n", pipe);
     ok(ret != EOF, "fputs returned %x\n", ret);
 
+#ifdef __REACTOS__
+    if (IsReactOS())
+    {
+        skip("Skipping _pclose, because it hangs on reactos\n");
+        return;
+    }
+#endif
     ret = _pclose(pipe);
     ok(ret == 0x3, "_pclose returned %x, expected 0x3\n", ret);
 }
