@@ -526,7 +526,7 @@ DWP_GetEnabledPopup(PWND pWnd)
                      pwndNode2 = pwndNode2->spwndOwner)
                 {
                     if (pwndNode2 == pWnd)
-                        return pwndNode1; /* Found */
+                        return pwndNode1;
                 }
             }
         }
