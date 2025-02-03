@@ -505,11 +505,12 @@ DWP_GetEnabledPopup(PWND pWnd)
 
     for (pwndNode1 = pWnd->spwndNext; pwndNode1 != pWnd; )
     {
-        if (!pwndNode1)
+        if (!pwndNode1) /* NULL detected? */
         {
             if (bFoundNullNode)
                 return NULL;
             bFoundNullNode = TRUE;
+            /* Retry with parent's first child (once only) */
             pwndNode1 = pWnd->spwndParent->spwndChild;
             continue;
         }
