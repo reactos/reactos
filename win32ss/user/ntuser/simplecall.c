@@ -759,7 +759,7 @@ NtUserCallHwnd(
         case HWND_ROUTINE_DWP_GETENABLEDPOPUP:
         {
             PWND pWnd;
-            UserEnterExclusive();
+            UserEnterShared();
             pWnd = UserGetWindowObject(hWnd);
             if (pWnd)
                 pWnd = DWP_GetEnabledPopup(pWnd);
