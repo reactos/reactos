@@ -4,6 +4,7 @@
  * Copyright 2004 Marcelo Duarte
  * Copyright 2006 Américo José Melo
  * Copyright 2010 Gustavo Henrique Milaré
+ * Copyright 2019-2025 Jose Carlos Jesus
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -46,8 +47,8 @@ FONT 8, "MS Shell Dlg"
  LTEXT "", IDS_ERR_USER_MSG2, 15, 5, 28, 20
  LTEXT "", IDS_ERR_USER_MSG, 15, 5, 210, 8
  CHECKBOX "Não &mostrar esta mensagem novamente", IDC_ERR_DONT_SHOW, 5, 20, 210, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&OK", IDOK, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Cancelar", IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "OK", IDOK, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Cancelar", IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Sim", IDYES, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Não", IDNO, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
 }
