@@ -48,6 +48,21 @@ static char *cvt(double arg, int ndigits, int *decpt, int *sign, char *buf, int 
   double fi, fj;
   char *p, *p1;
 
+  if (_isnan(arg))
+  {
+    snprintf(buf, ndigits, "1.#QNAN");
+    *decpt = 0;
+    *sign = 0;
+    return buf;
+  }
+  if (!_finite(arg))
+  {
+    snprintf(buf, ndigits, "1.#INF");
+    *decpt = 0;
+    *sign = 0;
+    return buf;
+  }
+
   if (ndigits >= CVTBUFSIZE - 1) ndigits = CVTBUFSIZE - 2;
   r2 = 0;
   *sign = 0;
