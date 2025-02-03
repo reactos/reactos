@@ -142,8 +142,7 @@ struct DownloadInfo
         AppInfo.GetDownloadInfo(szUrl, szSHA1, SizeInBytes);
         szName = AppInfo.szDisplayName;
         IType = AppInfo.GetInstallerType();
-        if (IType == INSTALLER_GENERATE)
-            szPackageName = AppInfo.szIdentifier;
+        szPackageName = AppInfo.szIdentifier;
 
         CConfigParser *cfg = static_cast<const CAvailableApplicationInfo&>(AppInfo).GetConfigParser();
         if (cfg)
