@@ -514,6 +514,11 @@ DWP_GetEnabledPopup(PWND pWnd)
             continue;
         }
 
+        /*
+         * 1. We want to detect the window that owns the same input target of pWnd.
+         *    The message queue will identify the input target.
+         * 2. 16-bit app has no message queue.
+         */
         ptiNode = pwndNode1->head.pti;
         if ((!(pti->TIF_flags & TIF_16BIT) && ptiNode->MessageQueue == pti->MessageQueue) ||
             ((pti->TIF_flags & TIF_16BIT) && ptiNode == pti))
