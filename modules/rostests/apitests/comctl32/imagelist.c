@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS api tests
- * LICENSE:         GPL - See COPYING in the top level directory
- * PURPOSE:         Test for imagelist
- * PROGRAMMERS:     Whindmar Saksit
+ * PROJECT:     ReactOS API Tests
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Test for imagelist
+ * COPYRIGHT:   Copyright 2024 Whindmar Saksit <whindsaks@proton.me>
  */
 
 #include "wine/test.h"
@@ -13,9 +13,8 @@
 
 #define WinVerMajor() LOBYTE(GetVersion())
 
-#define ILC_CLRMASK (0xff & ~ILC_MASK)
+#define ILC_COLORMASK 0xfe
 #define IL_IMGSIZE 16
-
 
 static BOOL IL_IsValid(HIMAGELIST himl)
 {
@@ -37,10 +36,18 @@ static inline HIMAGELIST IL_Create(UINT flags)
     return ImageList_Create(IL_IMGSIZE, IL_IMGSIZE, flags, 1, 0);
 }
 
+static UINT IL_CalculateOtherBpp(UINT ilc)
+{
+    UINT bpp = (ilc & ILC_COLORMASK) == ILC_COLOR32 ? ILC_COLOR16 : ILC_COLOR32;
+    return (ilc & ~ILC_COLORMASK) | bpp;
+}
+
 static BOOL IL_AddImagesForTest(HIMAGELIST himl)
 {
     int idx = -1;
     HINSTANCE hInst = LoadLibraryW(L"USER32");
+    if (!hInst)
+        return FALSE;
     HICON hIco = (HICON)LoadImage(hInst, MAKEINTRESOURCE(100), /* Windows */
                                   IMAGE_ICON, IL_IMGSIZE, IL_IMGSIZE, 0);
     if (!hIco)
@@ -52,12 +59,13 @@ static BOOL IL_AddImagesForTest(HIMAGELIST himl)
         idx = ImageList_AddIcon(himl, hIco);
         DestroyIcon(hIco);
     }
+    FreeLibrary(hInst);
     return idx != -1;
 }
 
-static void Test_SystemIL()
+static void Test_SystemIL(void)
 {
-    UINT flags = ILC_COLOR16 | ILC_MASK;
+    const UINT flags = ILC_COLOR16 | ILC_MASK;
     HIMAGELIST himl;
 
     himl = IL_Create(flags);
@@ -75,19 +83,21 @@ static void Test_SystemIL()
         ok(IL_Destroy(himl) == S_OK && !IL_IsValid(himl), "Can destroy system\n");
 }
 
-static void Test_Flags()
+static void Test_Flags(void)
 {
-    UINT flags = ILC_COLOR16 | ILC_MASK, flagsIn, flagsOut;
+    const UINT flags = ILC_COLOR16 | ILC_MASK;
+    UINT flagsIn, flagsOut;
     HIMAGELIST himl;
 
-    flagsOut = ImageList_GetFlags(himl = IL_Create(flagsIn = flags));
+    himl = IL_Create(flagsIn = flags);
+    flagsOut = ImageList_GetFlags(himl);
     if (himl ? TRUE : (skip("Could not initialize\n"), FALSE))
     {
-        ok((flagsOut & ILC_CLRMASK) == (flagsIn & ILC_CLRMASK), "ILC_COLOR\n");
+        ok((flagsOut & ILC_COLORMASK) == (flagsIn & ILC_COLORMASK), "ILC_COLOR\n");
         ok(!(flagsOut & ILC_SYSTEM), "!ILC_SYSTEM\n");
 
         ok(IL_AddImagesForTest(himl), "Initialize\n");
-        ok(ImageList_SetFlags(himl, flagsIn ^= 0x30), "Can change BPP\n");
+        ok(ImageList_SetFlags(himl, flagsIn = IL_CalculateOtherBpp(flagsIn)), "Can change BPP\n");
         ok(ImageList_GetImageCount(himl) == 0, "SetFlags deletes all images\n");
 
         ok(IL_AddImagesForTest(himl), "Initialize\n");
@@ -106,13 +116,15 @@ static void Test_Flags()
         IL_Destroy(himl);
     }
 
-    flagsOut = ImageList_GetFlags(himl = IL_Create(flagsIn = flags | ILC_SYSTEM));
+    himl = IL_Create(flagsIn = flags | ILC_SYSTEM);
+    flagsOut = ImageList_GetFlags(himl);
     if (himl ? TRUE : (skip("Could not initialize\n"), FALSE))
     {
         ok((flagsOut & ILC_SYSTEM), "ILC_SYSTEM\n"); /* Flag is not hidden */
 
         ok(IL_AddImagesForTest(himl), "Initialize\n");
-        ok(ImageList_SetFlags(himl, flagsIn ^= 0x30), "Can change BPP\n");
+
+        ok(ImageList_SetFlags(himl, flagsIn = IL_CalculateOtherBpp(flagsIn)), "Can change BPP\n");
         ok(ImageList_GetImageCount(himl) == 0, "SetFlags deletes all images\n");
 
         ok(IL_AddImagesForTest(himl), "Initialize\n");
@@ -132,7 +144,7 @@ static void Test_Flags()
 
 START_TEST(imagelist)
 {
-    LoadLibraryW(L"comctl32.dll"); /* same as statically linking to comctl32 and doing InitCommonControls */
+    InitCommonControls();
     Test_SystemIL();
     Test_Flags();
 }

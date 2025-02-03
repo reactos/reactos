@@ -118,11 +118,11 @@ struct _IMAGELIST
 #ifdef __REACTOS__
 #define IMAGELIST_MAGIC_DESTROYED 0x44454144
 
-#ifndef ILC_SYSTEM
-#define ILC_SYSTEM 0x0100
-#endif
-#define ILC_PUBLICFLAGS ( 0xFFFFFFFF ) /* Allow all flags for now */
 #define WinVerMajor() LOBYTE(GetVersion())
+
+#include <comctl32_undoc.h>
+#define ILC_PUBLICFLAGS ( 0xFFFFFFFF ) /* Allow all flags for now */
+#define ILC_COLORMASK 0xFE
 #endif /* __REACTOS__ */
 
 /* Header used by ImageList_Read() and ImageList_Write() */
@@ -3026,7 +3026,7 @@ ImageList_SetFilter (HIMAGELIST himl, INT i, DWORD dwFilter)
 static BOOL
 ChangeColorDepth(HIMAGELIST himl)
 {
-    UINT ilc = himl->flags & 0xFE;
+    UINT ilc = himl->flags & ILC_COLORMASK;
     if (ilc >= ILC_COLOR4 && ilc <= ILC_COLOR32)
         himl->uBitsPixel = ilc;
     else
@@ -3042,7 +3042,7 @@ ImageList_SetFlags(HIMAGELIST himl, DWORD flags)
     if (!is_valid(himl))
         return FALSE;
 
-    if (flags & ~(ILC_PUBLICFLAGS))
+    if (flags & ~ILC_PUBLICFLAGS)
         return FALSE;
 
     if (((himl->flags ^ flags) & ILC_SYSTEM) && WinVerMajor() < 6)
