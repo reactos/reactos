@@ -427,8 +427,12 @@ IntGetWindow(HWND hWnd,
                     FoundWnd = FoundWnd->spwndNext;
                 break;
 
+            case GW_ENABLEDPOPUP:
+                FoundWnd = DWP_GetEnabledPopup(Wnd);
+                break;
+
             default:
-                Wnd = NULL;
+                EngSetLastError(ERROR_INVALID_GW_COMMAND);
                 break;
     }
 

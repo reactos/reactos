@@ -1150,8 +1150,10 @@ GetWindow(HWND hWnd,
             }
 
             default:
-                Wnd = NULL;
+            {
+                UserSetLastError(ERROR_INVALID_GW_COMMAND);
                 break;
+            }
         }
 
         if (FoundWnd != NULL)
