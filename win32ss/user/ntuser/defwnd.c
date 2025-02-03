@@ -498,9 +498,8 @@ DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
 PWND FASTCALL
 DWP_GetEnabledPopup(PWND pWnd)
 {
-    PWND pwndNode1, pwndNode2;
+    PWND pwndNode1;
     PTHREADINFO pti = pWnd->head.pti, ptiNode;
-    DWORD style;
     BOOL bFoundNullNode = FALSE;
 
     for (pwndNode1 = pWnd->spwndNext; pwndNode1 != pWnd; )
@@ -519,10 +518,11 @@ DWP_GetEnabledPopup(PWND pWnd)
         if ((!(pti->TIF_flags & TIF_16BIT) && ptiNode->MessageQueue == pti->MessageQueue) ||
             ((pti->TIF_flags & TIF_16BIT) && ptiNode == pti))
         {
-            style = pwndNode1->style;
+            DWORD style = pwndNode1->style;
             if ((style & WS_VISIBLE) && !(style & WS_DISABLED)) /* Visible and enabled? */
             {
                 /* Does pwndNode1 have a pWnd as an ancestor? */
+                PWND pwndNode2;
                 for (pwndNode2 = pwndNode1->spwndOwner; pwndNode2;
                      pwndNode2 = pwndNode2->spwndOwner)
                 {
