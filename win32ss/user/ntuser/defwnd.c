@@ -515,7 +515,8 @@ DWP_GetEnabledPopup(PWND pWnd)
         }
 
         ptiNode = pwndNode1->head.pti;
-        if (ptiNode->MessageQueue == pti->MessageQueue) /* Same message queue? */
+        if ((!(pti->TIF_flags & TIF_16BIT) && ptiNode->MessageQueue == pti->MessageQueue) ||
+            ((pti->TIF_flags & TIF_16BIT) && ptiNode == pti))
         {
             style = pwndNode1->style;
             if ((style & WS_VISIBLE) && !(style & WS_DISABLED)) /* Visible and enabled? */
