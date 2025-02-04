@@ -39,9 +39,6 @@ START_TEST(RtlDosSearchPath_Ustr)
     UNICODE_STRING DynamicString;
     PUNICODE_STRING FullNameOut;
     UNICODE_STRING EmptyString;
-    static const WCHAR* longDirName =  L"C:\\Program Files\\Very_long_test_path_which_can_trigger_heap_overflow_test_1234567890______________________________________________________AB";
-    static const WCHAR* longFileName = L"this_is_long_file_name_for_checking______________________________________________________________________________CD";
-    static const WCHAR* ext = L".txt";
     SIZE_T FilePartSize;
     SIZE_T LengthNeeded;
     INT i;
@@ -217,9 +214,9 @@ START_TEST(RtlDosSearchPath_Ustr)
     /* Buffer overflow test
      * length(longDirName) + length(longFileName) + length(ext) = MAX_PATH
      */
-    RtlInitUnicodeString(&PathString, longDirName);
-    RtlInitUnicodeString(&FileNameString, longFileName);
-    RtlInitUnicodeString(&ExtensionString, ext);
+    RtlInitUnicodeString(&PathString, L"C:\\Program Files\\Very_long_test_path_which_can_trigger_heap_overflow_test_1234567890______________________________________________________AB");
+    RtlInitUnicodeString(&FileNameString, L"this_is_long_file_name_for_checking______________________________________________________________________________CD");
+    RtlInitUnicodeString(&ExtensionString, L".txt");
     StartSeh()
         Status = RtlDosSearchPath_Ustr(0,
                                        &PathString,
