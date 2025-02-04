@@ -516,8 +516,12 @@ DWP_GetEnabledPopup(PWND pWnd)
 
         /*
          * 1. We want to detect the window that owns the same input target of pWnd.
-         *    The message queue will identify the input target.
-         * 2. 16-bit app has no message queue.
+         * 2. For non-16-bit apps, we need to check the two threads' input queues to
+         *    see whether they are the same, while for 16-bit apps it's sufficient to
+         *    only check the thread info pointers themselves (ptiNode and pti).
+         * See also:
+         *    https://devblogs.microsoft.com/oldnewthing/20060221-09/?p=32203
+         *    https://github.com/reactos/reactos/pull/7700#discussion_r1939435931
          */
         ptiNode = pwndNode1->head.pti;
         if ((!(pti->TIF_flags & TIF_16BIT) && ptiNode->MessageQueue == pti->MessageQueue) ||
