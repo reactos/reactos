@@ -210,6 +210,8 @@ KiGetFeatureBits(VOID)
     if (VersionInfo.Ecx.Bits.XSAVE) FeatureBits |= KF_XSTATE;
     if (VersionInfo.Ecx.Bits.RDRAND) FeatureBits |= KF_RDRAND;
 
+    if (VersionInfo.Ecx.Bits.AVX) FeatureBits |= KF_AVX;
+
     /* Check if the CPU has hyper-threading */
     if (VersionInfo.Edx.Bits.HTT)
     {
@@ -250,6 +252,9 @@ KiGetFeatureBits(VOID)
         if (ExtFlags.Ebx.Bits.SMEP) FeatureBits |= KF_SMEP;
         if (ExtFlags.Ebx.Bits.FSGSBASE) FeatureBits |= KF_RDWRFSGSBASE;
         if (ExtFlags.Ebx.Bits.SMAP) FeatureBits |= KF_SMAP;
+
+        if (ExtFlags.Ebx.Bits.AVX2) FeatureBits |= KF_AVX2;
+        if (ExtFlags.Ebx.Bits.AVX512F) FeatureBits |= KF_AVX512F;
     }
 
     /* Check if CPUID_EXTENDED_STATE (0x0D) is supported */

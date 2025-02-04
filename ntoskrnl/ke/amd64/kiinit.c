@@ -399,9 +399,12 @@ KiInitializeKernelMachineDependent(
         (FeatureBits & KF_SSE4_1) ? TRUE : FALSE;
     SharedUserData->ProcessorFeatures[PF_SSE4_2_INSTRUCTIONS_AVAILABLE] =
         (FeatureBits & KF_SSE4_2) ? TRUE : FALSE;
-    SharedUserData->ProcessorFeatures[PF_AVX_INSTRUCTIONS_AVAILABLE] = FALSE; // FIXME
-    SharedUserData->ProcessorFeatures[PF_AVX2_INSTRUCTIONS_AVAILABLE] = FALSE; // FIXME
-    SharedUserData->ProcessorFeatures[PF_AVX512F_INSTRUCTIONS_AVAILABLE] = FALSE; // FIXME
+    SharedUserData->ProcessorFeatures[PF_AVX_INSTRUCTIONS_AVAILABLE] =
+        (FeatureBits & KF_AVX) ? TRUE : FALSE;
+    SharedUserData->ProcessorFeatures[PF_AVX2_INSTRUCTIONS_AVAILABLE] =
+        (FeatureBits & KF_AVX2) ? TRUE : FALSE;
+    SharedUserData->ProcessorFeatures[PF_AVX512F_INSTRUCTIONS_AVAILABLE] =
+        (FeatureBits & KF_AVX512F) ? TRUE : FALSE;
 
     /* Set the default NX policy (opt-in) */
     SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_OPTIN;
