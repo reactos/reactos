@@ -6,12 +6,7 @@
  */
 
 #include <apitest.h>
-#include <shlwapi.h>
 #include <shlobj.h>
-#include <shlobj_undoc.h>
-#include <shlguid_undoc.h>
-#include <shlwapi_undoc.h>
-#include <versionhelpers.h>
 
 typedef BOOL (WINAPI *FN_WinList_Init)(VOID);
 typedef VOID (WINAPI *FN_WinList_Terminate)(VOID);
@@ -60,7 +55,7 @@ TEST_WinList_GetShellWindows(VOID)
     if (pShellWindows1 != pShellWindows2 && pShellWindows2)
         pShellWindows2->Release();
 
-    if (pShellWindows1 != pShellWindows2 && pShellWindows2 != pShellWindows3 && pShellWindows3)
+    if (pShellWindows2 != pShellWindows3 && pShellWindows3)
         pShellWindows3->Release();
 
     if (bInited && g_pWinList_Terminate)
