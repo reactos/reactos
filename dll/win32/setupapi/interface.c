@@ -336,7 +336,7 @@ InstallOneInterface(
     IN HDEVINFO DeviceInfoSet,
     IN struct DeviceInfo *devInfo)
 {
-    HKEY hKey, hRefKey;
+    HKEY hKey;
     LPWSTR Path;
     SP_DEVICE_INTERFACE_DATA DeviceInterfaceData;
     struct DeviceInterface *DevItf = NULL;
@@ -374,37 +374,7 @@ InstallOneInterface(
         return FALSE;
     }
 
-    if (ReferenceString)
-    {
-        Path = HeapAlloc(GetProcessHeap(), 0, (wcslen(ReferenceString) + 2) * sizeof(WCHAR));
-        if (!Path)
-        {
-            RegCloseKey(hKey);
-            return FALSE;
-        }
-
-        wcscpy(Path, L"#");
-        wcscat(Path, ReferenceString);
-
-        if (RegCreateKeyExW(hKey, Path, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hRefKey, NULL) != ERROR_SUCCESS)
-        {
-            ERR("failed to create key %s %lx\n", debugstr_w(Path), GetLastError());
-            HeapFree(GetProcessHeap(), 0, Path);
-            return FALSE;
-        }
-
-        RegCloseKey(hKey);
-        hKey = hRefKey;
-        HeapFree(GetProcessHeap(), 0, Path);
-    }
-
-    if (RegCreateKeyExW(hKey, L"Device Parameters", 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hRefKey, NULL) != ERROR_SUCCESS)
-    {
-        RegCloseKey(hKey);
-        return FALSE;
-    }
-
-    return SetupInstallFromInfSectionW(NULL, /* FIXME */ hInf, InterfaceSection, SPINST_REGISTRY, hRefKey, NULL, 0, NULL, NULL, NULL, NULL);
+    return SetupInstallFromInfSectionW(NULL, /* FIXME */ hInf, InterfaceSection, SPINST_REGISTRY, hKey, NULL, 0, NULL, NULL, NULL, NULL);
 }
 
 /***********************************************************************
