@@ -64,6 +64,26 @@ TEST_WinList_GetShellWindows(VOID)
 }
 
 static VOID
+TEST_WinList_Mix(VOID)
+{
+    IShellWindows *pShellWindows1 = g_pWinList_GetShellWindows(FALSE);
+    trace("%p\n", pShellWindows1);
+    ok(pShellWindows1 != NULL, "pShellWindows1 was null\n");
+
+    IShellWindows *pShellWindows2 = NULL;
+    CoCreateInstance(CLSID_ShellWindows, NULL, CLSCTX_INPROC_SERVER | CLSCTX_LOCAL_SERVER,
+                     IID_IShellWindows, (LPVOID *)&pShellWindows2);
+    ok(pShellWindows2 != NULL, "pShellWindows2 was null\n");
+
+    ok_ptr(pShellWindows1, pShellWindows2);
+
+    if (pShellWindows1)
+        pShellWindows1->Release();
+    if (pShellWindows1 != pShellWindows2 && pShellWindows2)
+        pShellWindows2->Release();
+}
+
+static VOID
 TEST_SHDOCVW_WinList(VOID)
 {
     HINSTANCE hSHDOCVW = LoadLibraryW(L"shdocvw.dll");
@@ -84,6 +104,7 @@ TEST_SHDOCVW_WinList(VOID)
     else
     {
         TEST_WinList_GetShellWindows();
+        TEST_WinList_Mix();
     }
 
     FreeLibrary(hSHDOCVW);
