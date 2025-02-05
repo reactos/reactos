@@ -55,7 +55,7 @@ TEST_WinList_GetShellWindows(VOID)
     if (pShellWindows1 != pShellWindows2 && pShellWindows2)
         pShellWindows2->Release();
 
-    if (pShellWindows2 != pShellWindows3 && pShellWindows3)
+    if (pShellWindows1 != pShellWindows2 && pShellWindows2 != pShellWindows3 && pShellWindows3)
         pShellWindows3->Release();
 
     if (bInited && g_pWinList_Terminate)
