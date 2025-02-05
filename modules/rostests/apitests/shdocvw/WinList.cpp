@@ -53,10 +53,10 @@ TEST_WinList_GetShellWindows(VOID)
         ok_int(TRUE, FALSE);
     }
 
-    if (pShellWindows1 != pShellWindows2 && pShellWindows2)
+    if (pShellWindows2)
         pShellWindows2->Release();
 
-    if (pShellWindows1 != pShellWindows2 && pShellWindows2 != pShellWindows3 && pShellWindows3)
+    if (pShellWindows3)
         pShellWindows3->Release();
 
     if (bInited && g_pWinList_Terminate)
@@ -79,7 +79,7 @@ TEST_WinList_Mix(VOID)
 
     if (pShellWindows1)
         pShellWindows1->Release();
-    if (pShellWindows1 != pShellWindows2 && pShellWindows2)
+    if (pShellWindows2)
         pShellWindows2->Release();
 }
 
@@ -141,7 +141,7 @@ TEST_CLSID_ShellWindows(VOID)
         ok_int(TRUE, FALSE);
     }
 
-    if (pShellWindows1 != pShellWindows2 && pShellWindows2)
+    if (pShellWindows2)
         pShellWindows2->Release();
 }
 
