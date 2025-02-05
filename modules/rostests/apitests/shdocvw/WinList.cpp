@@ -63,30 +63,6 @@ TEST_WinList_GetShellWindows(VOID)
 }
 
 static VOID
-TEST_CLSID_ShellWindows(VOID)
-{
-    IShellWindows *pShellWindows = NULL;
-    CoCreateInstance(CLSID_ShellWindows, NULL, CLSCTX_INPROC_SERVER | CLSCTX_LOCAL_SERVER,
-                     IID_IShellWindows, (LPVOID *)&pShellWindows);
-    ok(pShellWindows != NULL, "pShellWindows was null\n");
-
-    if (pShellWindows)
-    {
-        LONG nCount = -1;
-        HRESULT hr = pShellWindows->get_Count(&nCount);
-        ok_hex(hr, S_OK);
-        ok(nCount >= 0, "nCount was %ld\n", nCount);
-
-        pShellWindows->Release();
-    }
-    else
-    {
-        ok_int(TRUE, FALSE);
-        ok_int(TRUE, FALSE);
-    }
-}
-
-static VOID
 TEST_SHDOCVW_WinList(VOID)
 {
     HINSTANCE hSHDOCVW = LoadLibraryW(L"shdocvw.dll");
@@ -110,6 +86,30 @@ TEST_SHDOCVW_WinList(VOID)
     }
 
     FreeLibrary(hSHDOCVW);
+}
+
+static VOID
+TEST_CLSID_ShellWindows(VOID)
+{
+    IShellWindows *pShellWindows = NULL;
+    CoCreateInstance(CLSID_ShellWindows, NULL, CLSCTX_INPROC_SERVER | CLSCTX_LOCAL_SERVER,
+                     IID_IShellWindows, (LPVOID *)&pShellWindows);
+    ok(pShellWindows != NULL, "pShellWindows was null\n");
+
+    if (pShellWindows)
+    {
+        LONG nCount = -1;
+        HRESULT hr = pShellWindows->get_Count(&nCount);
+        ok_hex(hr, S_OK);
+        ok(nCount >= 0, "nCount was %ld\n", nCount);
+
+        pShellWindows->Release();
+    }
+    else
+    {
+        ok_int(TRUE, FALSE);
+        ok_int(TRUE, FALSE);
+    }
 }
 
 START_TEST(WinList)
