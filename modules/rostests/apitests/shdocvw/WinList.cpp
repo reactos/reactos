@@ -43,6 +43,7 @@ TEST_WinList_GetShellWindows(VOID)
         HRESULT hr = pShellWindows1->get_Count(&nCount);
         ok_hex(hr, S_OK);
         ok(nCount >= 0, "nCount was %ld\n", nCount);
+        trace("%ld\n", nCount);
 
         pShellWindows1->Release();
     }
@@ -102,6 +103,7 @@ TEST_CLSID_ShellWindows(VOID)
         HRESULT hr = pShellWindows->get_Count(&nCount);
         ok_hex(hr, S_OK);
         ok(nCount >= 0, "nCount was %ld\n", nCount);
+        trace("%ld\n", nCount);
 
         pShellWindows->Release();
     }
