@@ -86,31 +86,37 @@ TEST_CLSID_ShellWindows(VOID)
     }
 }
 
-START_TEST(WinList)
+static VOID
+TEST_SHDOCVW_WinList(VOID)
 {
-    HRESULT hrCoInit = CoInitialize(NULL);
-
     HINSTANCE hSHDOCVW = LoadLibraryW(L"shdocvw.dll");
     if (!hSHDOCVW)
     {
         skip("shdocvw.dll not loaded\n");
+        return;
+    }
+
+    g_pWinList_Init = (FN_WinList_Init)GetProcAddress(hSHDOCVW, MAKEINTRESOURCEA(110));
+    g_pWinList_Terminate = (FN_WinList_Terminate)GetProcAddress(hSHDOCVW, MAKEINTRESOURCEA(111));
+    g_pWinList_GetShellWindows = (FN_WinList_GetShellWindows)GetProcAddress(hSHDOCVW, MAKEINTRESOURCEA(179));
+    if (!g_pWinList_Init || !g_pWinList_Terminate || !g_pWinList_GetShellWindows)
+    {
+        skip("Some WinList_* functions not found: %p %p %p\n",
+             g_pWinList_Init, g_pWinList_Terminate, g_pWinList_GetShellWindows);
     }
     else
     {
-        g_pWinList_Init = (FN_WinList_Init)GetProcAddress(hSHDOCVW, MAKEINTRESOURCEA(110));
-        g_pWinList_Terminate = (FN_WinList_Terminate)GetProcAddress(hSHDOCVW, MAKEINTRESOURCEA(111));
-        g_pWinList_GetShellWindows = (FN_WinList_GetShellWindows)GetProcAddress(hSHDOCVW, MAKEINTRESOURCEA(179));
-        if (!g_pWinList_Init || !g_pWinList_Terminate || !g_pWinList_GetShellWindows)
-        {
-            skip("Some WinList_* functions not found: %p %p %p\n",
-                 g_pWinList_Init, g_pWinList_Terminate, g_pWinList_GetShellWindows);
-        }
-        else
-        {
-            TEST_WinList_GetShellWindows();
-        }
+        TEST_WinList_GetShellWindows();
     }
 
+    FreeLibrary(hSHDOCVW);
+}
+
+START_TEST(WinList)
+{
+    HRESULT hrCoInit = CoInitialize(NULL);
+
+    TEST_SHDOCVW_WinList();
     TEST_CLSID_ShellWindows();
 
     if (SUCCEEDED(hrCoInit))
