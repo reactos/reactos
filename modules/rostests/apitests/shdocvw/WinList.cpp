@@ -22,28 +22,46 @@ static FN_WinList_Terminate g_pWinList_Terminate = NULL;
 static FN_WinList_GetShellWindows g_pWinList_GetShellWindows = NULL;
 
 static VOID
-TEST_WinList(VOID)
+TEST_WinList_GetShellWindows(VOID)
 {
     BOOL bInited = g_pWinList_Init && g_pWinList_Init();
     ok_int(bInited, FALSE); // WinList_Init should fail because this process is not explorer.exe
 
-    IShellWindows *pShellWindows = g_pWinList_GetShellWindows(FALSE);
-    ok(pShellWindows != NULL, "pShellWindows was null\n");
+    IShellWindows *pShellWindows1 = g_pWinList_GetShellWindows(FALSE);
+    trace("%p\n", pShellWindows1);
+    ok(pShellWindows1 != NULL, "pShellWindows1 was null\n");
 
-    if (pShellWindows)
+    IShellWindows *pShellWindows2 = g_pWinList_GetShellWindows(FALSE);
+    trace("%p\n", pShellWindows2);
+    ok(pShellWindows2 != NULL, "pShellWindows2 was null\n");
+
+    IShellWindows *pShellWindows3 = g_pWinList_GetShellWindows(TRUE);
+    trace("%p\n", pShellWindows3);
+    ok(pShellWindows3 != NULL, "pShellWindows3 was null\n");
+
+    ok_ptr(pShellWindows1, pShellWindows2);
+    ok_ptr(pShellWindows2, pShellWindows3);
+
+    if (pShellWindows1)
     {
         LONG nCount = -1;
-        HRESULT hr = pShellWindows->get_Count(&nCount);
+        HRESULT hr = pShellWindows1->get_Count(&nCount);
         ok_long(hr, S_OK);
         ok(nCount >= 0, "nCount was %ld\n", nCount);
 
-        pShellWindows->Release();
+        pShellWindows1->Release();
     }
     else
     {
         ok_int(TRUE, FALSE);
         ok_int(TRUE, FALSE);
     }
+
+    if (pShellWindows1 != pShellWindows2 && pShellWindows2)
+        pShellWindows2->Release();
+
+    if (pShellWindows1 != pShellWindows2 && pShellWindows2 != pShellWindows3 && pShellWindows3)
+        pShellWindows3->Release();
 
     if (bInited && g_pWinList_Terminate)
         g_pWinList_Terminate();
@@ -70,7 +88,7 @@ START_TEST(WinList)
         }
         else
         {
-            TEST_WinList();
+            TEST_WinList_GetShellWindows();
         }
     }
 
