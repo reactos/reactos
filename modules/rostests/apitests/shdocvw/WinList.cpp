@@ -62,6 +62,30 @@ TEST_WinList_GetShellWindows(VOID)
         g_pWinList_Terminate();
 }
 
+static VOID
+TEST_CLSID_ShellWindows(VOID)
+{
+    IShellWindows *pShellWindows = NULL;
+    CoCreateInstance(CLSID_ShellWindows, NULL, CLSCTX_INPROC_SERVER | CLSCTX_LOCAL_SERVER,
+                     IID_IShellWindows, (LPVOID *)&pShellWindows);
+    ok(pShellWindows != NULL, "pShellWindows was null\n");
+
+    if (pShellWindows)
+    {
+        LONG nCount = -1;
+        HRESULT hr = pShellWindows->get_Count(&nCount);
+        ok_long(hr, S_OK);
+        ok(nCount >= 0, "nCount was %ld\n", nCount);
+
+        pShellWindows->Release();
+    }
+    else
+    {
+        ok_int(TRUE, FALSE);
+        ok_int(TRUE, FALSE);
+    }
+}
+
 START_TEST(WinList)
 {
     HRESULT hrCoInit = CoInitialize(NULL);
@@ -86,6 +110,8 @@ START_TEST(WinList)
             TEST_WinList_GetShellWindows();
         }
     }
+
+    TEST_CLSID_ShellWindows();
 
     if (SUCCEEDED(hrCoInit))
         CoUninitialize();
