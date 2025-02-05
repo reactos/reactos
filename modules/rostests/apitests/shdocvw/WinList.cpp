@@ -92,26 +92,36 @@ TEST_SHDOCVW_WinList(VOID)
 static VOID
 TEST_CLSID_ShellWindows(VOID)
 {
-    IShellWindows *pShellWindows = NULL;
+    IShellWindows *pShellWindows1 = NULL;
     CoCreateInstance(CLSID_ShellWindows, NULL, CLSCTX_INPROC_SERVER | CLSCTX_LOCAL_SERVER,
-                     IID_IShellWindows, (LPVOID *)&pShellWindows);
-    ok(pShellWindows != NULL, "pShellWindows was null\n");
+                     IID_IShellWindows, (LPVOID *)&pShellWindows1);
+    ok(pShellWindows1 != NULL, "pShellWindows1 was null\n");
 
-    if (pShellWindows)
+    IShellWindows *pShellWindows2 = NULL;
+    CoCreateInstance(CLSID_ShellWindows, NULL, CLSCTX_INPROC_SERVER | CLSCTX_LOCAL_SERVER,
+                     IID_IShellWindows, (LPVOID *)&pShellWindows2);
+    ok(pShellWindows2 != NULL, "pShellWindows2 was null\n");
+
+    ok_ptr(pShellWindows1, pShellWindows2);
+
+    if (pShellWindows1)
     {
         LONG nCount = -1;
-        HRESULT hr = pShellWindows->get_Count(&nCount);
+        HRESULT hr = pShellWindows1->get_Count(&nCount);
         ok_hex(hr, S_OK);
         ok(nCount >= 0, "nCount was %ld\n", nCount);
         trace("%ld\n", nCount);
 
-        pShellWindows->Release();
+        pShellWindows1->Release();
     }
     else
     {
         ok_int(TRUE, FALSE);
         ok_int(TRUE, FALSE);
     }
+
+    if (pShellWindows1 != pShellWindows2 && pShellWindows2)
+        pShellWindows2->Release();
 }
 
 START_TEST(WinList)
