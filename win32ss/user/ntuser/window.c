@@ -428,7 +428,7 @@ IntGetWindow(HWND hWnd,
                 break;
 
             default:
-                Wnd = NULL;
+                EngSetLastError(ERROR_INVALID_GW_COMMAND);
                 break;
     }
 

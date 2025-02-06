@@ -1670,7 +1670,7 @@ enum SimpleCallRoutines
     TWOPARAM_ROUTINE_WOWCLEANUP
 };
 
-DWORD
+DWORD_PTR
 NTAPI
 NtUserCallHwnd(
     HWND hWnd,
