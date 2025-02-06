@@ -773,7 +773,7 @@ typedef png_row_info * * png_row_infopp;
  * expected to return the read data in the buffer.
  */
 typedef PNG_CALLBACK(void, *png_error_ptr, (png_structp, png_const_charp));
-typedef PNG_CALLBACK(void, *png_rw_ptr, (png_structp, png_bytep, png_uint_32));
+typedef PNG_CALLBACK(void, *png_rw_ptr, (png_structp, png_bytep, size_t));
 typedef PNG_CALLBACK(void, *png_flush_ptr, (png_structp));
 typedef PNG_CALLBACK(void, *png_read_status_ptr, (png_structp, png_uint_32,
     int));

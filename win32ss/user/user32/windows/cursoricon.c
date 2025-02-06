@@ -158,7 +158,7 @@ struct png_wrapper
 };
 
 /* This function will be used for reading png data from array */
-static void read_data_memory(png_structp png_ptr, png_bytep data, png_uint_32 length) 
+static void read_data_memory(png_structp png_ptr, png_bytep data, size_t length) 
 {
     MEMORY_READER_STATE *f = png_get_io_ptr(png_ptr);
     if (length > (f->bufsize - f->current_pos))
@@ -246,7 +246,7 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
 
     TRACE("size %d, width1 %d, height1 %d\n",
         size, width1, height1);
-    rowbytes = png_get_rowbytes(png_ptr, info_ptr); // same as size above
+    rowbytes = (int)png_get_rowbytes(png_ptr, info_ptr); // same as size above
     image_size = height * rowbytes;
 
     // Read png image data
@@ -1909,7 +1909,7 @@ CURSORICON_LoadImageW(
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return NULL;
         }
-        ustrModule.Length = wsprintfW(ustrModule.Buffer, fakeNameFmt, hinst) * sizeof(WCHAR);
+        ustrModule.Length = (USHORT)wsprintfW(ustrModule.Buffer, fakeNameFmt, hinst) * sizeof(WCHAR);
     }
     else if(hinst)
     {
@@ -1940,8 +1940,8 @@ CURSORICON_LoadImageW(
             }
 
             ustrModule.Buffer[ret] = UNICODE_NULL;
-            ustrModule.Length = ret * sizeof(WCHAR);
-            ustrModule.MaximumLength = size * sizeof(WCHAR);
+            ustrModule.Length = (USHORT)(ret * sizeof(WCHAR));
+            ustrModule.MaximumLength = (USHORT)(size * sizeof(WCHAR));
             break;
         }
     }
