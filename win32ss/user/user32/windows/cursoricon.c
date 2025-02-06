@@ -50,8 +50,12 @@ struct png_wrapper
     size_t size, pos;
 };
 
-/* This function will be used for reading png data from array */
-static void read_data_memory(png_structp png_ptr, png_bytep data, size_t length) 
+/* This function will be used for reading png data from memory */
+static VOID
+read_data_memory(
+    _Inout_ png_structp png_ptr,
+    _Out_ png_bytep data,
+    _In_ size_t length) 
 {
     MEMORY_READER_STATE *state = png_get_io_ptr(png_ptr);
     if (length > (state->bufsize - state->current_pos))
@@ -59,11 +63,15 @@ static void read_data_memory(png_structp png_ptr, png_bytep data, size_t length)
         png_error(png_ptr, "read error in read_data_memory (loadpng)");
         return;
     }
-    memcpy(data, state->buffer + state->current_pos, length);
+    CopyMemory(data, state->buffer + state->current_pos, length);
     state->current_pos += length;
 }
 
-LPBYTE PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ PDWORD pdata_size)
+static LPBYTE
+PNGtoBMP(
+    _In_ LPBYTE pngbits,
+    _In_ DWORD filesize,
+    _Out_ PDWORD pdata_size)
 {
     if (!pngbits || !filesize)
         return NULL;
@@ -88,25 +96,17 @@ LPBYTE PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ PDWORD pdata_siz
         return NULL;
     }
 
-    png_infop end_info = png_create_info_struct(png_ptr);
-    if (!end_info)
-    {
-        ERR("png end_info error\n");
-        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-        return NULL;
-    }
-
-    // png_source is array which has png data
+    /* png_source is array which has png data */
     MEMORY_READER_STATE memory_reader_state;
     memory_reader_state.buffer = pngbits;
     memory_reader_state.bufsize = filesize;
     memory_reader_state.current_pos = PNG_BYTES_TO_CHECK;
 
-    // set our own read_function
+    /* Set our own read_function */
     png_set_read_fn(png_ptr, &memory_reader_state, read_data_memory);
     png_set_sig_bytes(png_ptr, PNG_BYTES_TO_CHECK);
 
-    // Read png info
+    /* Read png info */
     png_read_info(png_ptr, info_ptr);
 
     png_uint_32 width, height;
@@ -119,35 +119,34 @@ LPBYTE PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ PDWORD pdata_siz
     INT channels = png_get_channels(png_ptr, info_ptr);
     TRACE("channels is %d\n", channels);
 
-    // row_pointers
+    /* row_pointers */
     png_bytep *row_pointers = png_get_rows(png_ptr, info_ptr);
     int width1 = png_get_image_width(png_ptr, info_ptr);
     int height1 = png_get_image_height(png_ptr, info_ptr);
     int size = width1 * channels;
 
     TRACE("size %d, width1 %d, height1 %d\n", size, width1, height1);
-    int rowbytes = (int)png_get_rowbytes(png_ptr, info_ptr); // same as size above
+    int rowbytes = png_get_rowbytes(png_ptr, info_ptr); // same as size above
     int image_size = height * rowbytes;
 
-    // Read png image data
-    // Set row pointer which will take pixel value from png file
-    row_pointers = (png_bytepp)png_malloc(png_ptr, sizeof(png_bytepp) * height);
-
+    /* Read png image data */
+    /* Set row pointer which will take pixel value from png file */
+    row_pointers = png_malloc(png_ptr, sizeof(png_bytepp) * height);
     for (int i = 0; i < height; i++)
     {
         row_pointers[i] = png_malloc(png_ptr, png_get_rowbytes(png_ptr, info_ptr));
     }
 
-    // Set row pointer to the png struct
+    /* Set row pointer to the png struct */
     png_set_rows(png_ptr, info_ptr, row_pointers);
 
-    // Read png image data and save in row pointer
-    // After reading the image, you can deal with the image data with row pointers
+    /* Read png image data and save in row pointer */
+    /* After reading the image, you can deal with the image data with row pointers */
     png_read_image(png_ptr, row_pointers);
 
     png_read_end(png_ptr, info_ptr);
 
-    size += size % 4; // Align
+    size += size % 4; /* Align */
     size *= height;
 
     LPBYTE data = malloc(size);
@@ -156,11 +155,11 @@ LPBYTE PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ PDWORD pdata_siz
     {
         for (int j = 0; j < channels * width; j += channels)
         {
-            data[pos++] = row_pointers[i][j + 2]; // red
-            data[pos++] = row_pointers[i][j + 1]; // green
-            data[pos++] = row_pointers[i][j + 0]; // blue
+            data[pos++] = row_pointers[i][j + 2]; /* Red */
+            data[pos++] = row_pointers[i][j + 1]; /* Green */
+            data[pos++] = row_pointers[i][j + 0]; /* Blue */
             if (channels == 4)
-                data[pos++] = row_pointers[i][j + 3]; // alpha
+                data[pos++] = row_pointers[i][j + 3]; /* Alpha */
         }
         pos += (channels * width) % 4;
     }
@@ -193,9 +192,8 @@ LPBYTE PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ PDWORD pdata_siz
         return NULL;
     }
 
-    // set up BITMAPINFOHEADER data
-    BITMAPINFOHEADER info = { 0 };
-    info.biSize = sizeof(BITMAPINFOHEADER);
+    /* Set up BITMAPINFOHEADER data */
+    BITMAPINFOHEADER info = { sizeof(info) };
     info.biWidth = width;
     info.biHeight = 2 * height;
     info.biPlanes = 1;
@@ -203,19 +201,19 @@ LPBYTE PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ PDWORD pdata_siz
     info.biCompression = BI_RGB;
     info.biSizeImage = image_size;
 
-    //  set up CURSORICONFILEDIR data
+    /* Set up CURSORICONFILEDIR data */
     CURSORICONFILEDIR cifd = { 0 };
     cifd.idType = 1;
     cifd.idCount = 1;
     cifd.idEntries[0].bWidth = width;
     cifd.idEntries[0].bHeight = height;
-    cifd.idEntries[0].bColorCount = 0; // No Color Pallet
-    cifd.idEntries[0].xHotspot = 1; // Must be 0 or 1
+    cifd.idEntries[0].bColorCount = 0; /* No Color Pallet */
+    cifd.idEntries[0].xHotspot = 1; /* Must be 0 or 1 */
     cifd.idEntries[0].yHotspot = bpp;
     cifd.idEntries[0].dwDIBSize = image_size + sizeof (info);
     cifd.idEntries[0].dwDIBOffset = sizeof(CURSORICONFILEDIR);
 
-    // do writes in correct order
+    /* Do writes in correct order */
     *pdata_size = sizeof(cifd) + sizeof(info) + image_size;
     LPBYTE bmp_data = malloc(*pdata_size);
     if (!bmp_data)
@@ -224,6 +222,7 @@ LPBYTE PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ PDWORD pdata_siz
         return NULL;
     }
 
+    /* Store to bmp_data */
     size_t index = 0;
     CopyMemory(&bmp_data[index], &cifd, sizeof(cifd));
     index += sizeof(cifd);
