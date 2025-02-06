@@ -109,10 +109,13 @@ typedef struct tagPREVIEW_DATA
     INT m_xScrollOffset;
     INT m_yScrollOffset;
     UINT m_nMouseDownMsg;
+    UINT m_nTimer;
     POINT m_ptOrigin;
     IStream *m_pMemStream;
     WCHAR m_szFile[MAX_PATH];
 } PREVIEW_DATA, *PPREVIEW_DATA;
+
+static VOID Preview_ToggleSlideShowEx(PPREVIEW_DATA pData, BOOL StartTimer);
 
 static inline PPREVIEW_DATA
 Preview_GetData(HWND hwnd)
@@ -131,14 +134,34 @@ Preview_RestartTimer(HWND hwnd)
 {
     if (!Preview_IsMainWnd(hwnd))
     {
+        PPREVIEW_DATA pData = Preview_GetData(hwnd);
         KillTimer(hwnd, SLIDESHOW_TIMER_ID);
-        SetTimer(hwnd, SLIDESHOW_TIMER_ID, SLIDESHOW_TIMER_INTERVAL, NULL);
+        if (pData->m_nTimer)
+            SetTimer(hwnd, SLIDESHOW_TIMER_ID, pData->m_nTimer, NULL);
     }
 }
 
 static VOID
-ZoomWnd_UpdateScroll(PPREVIEW_DATA pData, HWND hwnd, BOOL bResetPos)
+Preview_ChangeSlideShowTimer(PPREVIEW_DATA pData, BOOL bSlower)
 {
+    BOOL fullscreen = !Preview_IsMainWnd(pData->m_hwnd);
+    enum { mintime = 1000, maxtime = SLIDESHOW_TIMER_INTERVAL * 3, step = 1000 };
+    UINT interval = pData->m_nTimer ? pData->m_nTimer : SLIDESHOW_TIMER_INTERVAL;
+    if (fullscreen)
+    {
+        interval = bSlower ? min(interval + step, maxtime) : max(interval - step, mintime);
+        if (pData->m_nTimer != interval)
+        {
+            pData->m_nTimer = interval;
+            Preview_RestartTimer(pData->m_hwnd);
+        }
+    }
+}
+
+static VOID
+ZoomWnd_UpdateScroll(PPREVIEW_DATA pData, BOOL bResetPos)
+{
+    HWND hwnd = pData->m_hwndZoom;
     RECT rcClient;
     UINT ImageWidth, ImageHeight, ZoomedWidth, ZoomedHeight;
     SCROLLINFO si;
@@ -221,10 +244,10 @@ Preview_UpdateZoom(PPREVIEW_DATA pData, UINT NewZoom, BOOL bEnableBestFit, BOOL 
     bEnableZoomOut = (NewZoom > MIN_ZOOM);
 
     /* Update toolbar buttons */
-    PostMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, bEnableZoomOut);
-    PostMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN,  bEnableZoomIn);
-    PostMessageW(hToolBar, TB_ENABLEBUTTON, IDC_BEST_FIT, bEnableBestFit);
-    PostMessageW(hToolBar, TB_ENABLEBUTTON, IDC_REAL_SIZE, bEnableRealSize);
+    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_BEST_FIT, bEnableBestFit);
+    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_REAL_SIZE, NewZoom != 100);
+    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN,  bEnableZoomIn);
+    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, bEnableZoomOut);
 
     /* Redraw the display window */
     InvalidateRect(pData->m_hwndZoom, NULL, TRUE);
@@ -233,7 +256,7 @@ Preview_UpdateZoom(PPREVIEW_DATA pData, UINT NewZoom, BOOL bEnableBestFit, BOOL 
     Preview_RestartTimer(pData->m_hwnd);
 
     /* Update scroll info */
-    ZoomWnd_UpdateScroll(pData, pData->m_hwndZoom, FALSE);
+    ZoomWnd_UpdateScroll(pData, FALSE);
 }
 
 static VOID
@@ -592,7 +615,7 @@ Preview_UpdateImage(PPREVIEW_DATA pData)
     if (!Preview_IsMainWnd(pData->m_hwnd))
         Preview_ResetZoom(pData);
 
-    ZoomWnd_UpdateScroll(pData, pData->m_hwndZoom, TRUE);
+    ZoomWnd_UpdateScroll(pData, TRUE);
 }
 
 static SHIMGVW_FILENODE*
@@ -985,8 +1008,8 @@ Preview_EndSlideShow(HWND hwnd)
         return;
 
     KillTimer(hwnd, SLIDESHOW_TIMER_ID);
+    ShowWindow(g_hMainWnd, SW_SHOW);
     ShowWindow(hwnd, SW_HIDE);
-    ShowWindow(g_hMainWnd, SW_SHOWNORMAL);
     Preview_ResetZoom(Preview_GetData(g_hMainWnd));
 }
 
@@ -1167,6 +1190,12 @@ ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             ZoomWnd_OnButtonUp(hwnd, uMsg, wParam, lParam);
             break;
         }
+        case WM_LBUTTONDBLCLK:
+        {
+            if (Preview_IsMainWnd(pData->m_hwnd))
+                Preview_ToggleSlideShowEx(pData, FALSE);
+            break;
+        }
         case WM_PAINT:
         {
             ZoomWnd_OnPaint(pData, hwnd);
@@ -1252,6 +1281,7 @@ Preview_OnCreate(HWND hwnd, LPCREATESTRUCT pCS)
         Preview_pLoadImageFromNode(pData, g_pCurrentFile);
         Preview_UpdateImage(pData);
         Preview_UpdateUI(pData);
+        PostMessageW(hwnd, WM_COMMAND, IDC_BEST_FIT, 0); /* Window not ready yet, delay */
     }
 
     return TRUE;
@@ -1298,7 +1328,9 @@ Preview_OnSize(HWND hwnd)
 
         MoveWindow(pData->m_hwndZoom, 0, 0, cx, cy - (rc.bottom - rc.top), TRUE);
 
-        if (!IsIconic(hwnd)) /* Is it not minimized? */
+        if (pData->m_nZoomPercents > 100)
+            ZoomWnd_UpdateScroll(pData, FALSE);
+        else if (!IsIconic(hwnd)) /* Is it not minimized? */
             Preview_ResetZoom(pData);
 
         Preview_OnMoveSize(hwnd);
@@ -1372,7 +1404,7 @@ Preview_Edit(HWND hwnd)
 }
 
 static VOID
-Preview_ToggleSlideShow(PPREVIEW_DATA pData)
+Preview_ToggleSlideShowEx(PPREVIEW_DATA pData, BOOL StartTimer)
 {
     if (!IsWindow(g_hwndFullscreen))
     {
@@ -1385,16 +1417,25 @@ Preview_ToggleSlideShow(PPREVIEW_DATA pData)
 
     if (IsWindowVisible(g_hwndFullscreen))
     {
-        ShowWindow(g_hwndFullscreen, SW_HIDE);
-        ShowWindow(g_hMainWnd, SW_SHOWNORMAL);
         KillTimer(g_hwndFullscreen, SLIDESHOW_TIMER_ID);
+        ShowWindow(g_hMainWnd, SW_SHOW);
+        ShowWindow(g_hwndFullscreen, SW_HIDE);
     }
     else
     {
-        ShowWindow(g_hMainWnd, SW_HIDE);
+        PPREVIEW_DATA pSlideData = Preview_GetData(g_hwndFullscreen);
+        pSlideData->m_nTimer = StartTimer ? SLIDESHOW_TIMER_INTERVAL : 0;
         ShowWindow(g_hwndFullscreen, SW_SHOWMAXIMIZED);
+        ShowWindow(g_hMainWnd, SW_HIDE);
+        Preview_ResetZoom(pSlideData);
         Preview_RestartTimer(g_hwndFullscreen);
     }
+}
+
+static VOID
+Preview_ToggleSlideShow(PPREVIEW_DATA pData)
+{
+    Preview_ToggleSlideShowEx(pData, TRUE);
 }
 
 static VOID
@@ -1450,6 +1491,15 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
 
         case IDC_ENDSLIDESHOW:
             Preview_EndSlideShow(hwnd);
+            break;
+
+        case IDC_TOGGLEFULLSCREEN:
+            Preview_ToggleSlideShowEx(pData, FALSE);
+            break;
+
+        case IDC_INCTIMER:
+        case IDC_DECTIMER:
+            Preview_ChangeSlideShowTimer(pData, nCommandID == IDC_INCTIMER);
             break;
 
         default:
@@ -1683,7 +1733,7 @@ ImageView_Main(HWND hwnd, LPCWSTR szFileName)
     WndClass.style          = CS_HREDRAW | CS_VREDRAW;
     WndClass.hIcon          = LoadIconW(g_hInstance, MAKEINTRESOURCEW(IDI_APP_ICON));
     WndClass.hCursor        = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
-    WndClass.hbrBackground  = (HBRUSH)UlongToHandle(COLOR_3DFACE + 1);
+    WndClass.hbrBackground  = GetStockBrush(NULL_BRUSH); /* less flicker */
     if (!RegisterClassW(&WndClass))
         return -1;
     WndClass.lpszClassName  = WC_ZOOM;
@@ -1714,7 +1764,8 @@ ImageView_Main(HWND hwnd, LPCWSTR szFileName)
     /* Message Loop */
     while (GetMessageW(&msg, NULL, 0, 0) > 0)
     {
-        if (g_hwndFullscreen && TranslateAcceleratorW(g_hwndFullscreen, hAccel, &msg))
+        const HWND hwndFull = g_hwndFullscreen;
+        if (IsWindowVisible(hwndFull) && TranslateAcceleratorW(hwndFull, hAccel, &msg))
             continue;
         if (TranslateAcceleratorW(hMainWnd, hAccel, &msg))
             continue;
