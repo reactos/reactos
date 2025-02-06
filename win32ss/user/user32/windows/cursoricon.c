@@ -34,27 +34,7 @@ typedef struct
 } CURSORICONFILEDIR;
 #include "poppack.h"
 
-LPWSTR FindTempFileW(VOID)
-{
-    static WCHAR s_szTempFileName[MAX_PATH];
-    WCHAR szTempPath[MAX_PATH];
-    DWORD cchTemp;
-
-    cchTemp = GetTempPathW(_countof(szTempPath), szTempPath);
-
-    if (!cchTemp || cchTemp > _countof(szTempPath) ||
-        !GetTempFileNameW(szTempPath, L"png", 0, s_szTempFileName))
-    {
-        ERR("Find Temp Directory Failed\n");
-        return NULL;
-    }
-
-    DeleteFileW(s_szTempFileName);
-    return s_szTempFileName;
-}
-
 /* libpng defines */
-#define png_infopp_NULL (png_infopp)NULL
 #define PNG_BYTES_TO_CHECK 4
 
 /* libpng helpers */
@@ -80,87 +60,72 @@ static void read_data_memory(png_structp png_ptr, png_bytep data, size_t length)
     f->current_pos += length;
 }
 
-void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
+LPBYTE PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ PDWORD pdata_size)
 {
-    int is_png;
-    BITMAPINFOHEADER info = { 0 };
-    CURSORICONFILEDIR cifd = { 0 };
-    int bpp = 0;
-    int image_size = 0;
-    FILE * fp;
-    WCHAR szTempFileName[MAX_PATH + 1];
-    MEMORY_READER_STATE memory_reader_state;
-    png_bytep mem_read_ptr = (png_bytep)&memory_reader_state;
-    png_uint_32 width, height, channels;
-    int bit_depth, color_type, interlace_type;
-    png_bytep* row_pointers;
-    int width1, height1, size, rowbytes, pos, stride;
-    LPBYTE data;
+    if (!pngbits || !filesize)
+        return NULL;
 
-    if (!pngbits)
-        return;
-
-    is_png = !png_sig_cmp((png_const_bytep)pngbits, 0, 8);
-
+    BOOL is_png = !png_sig_cmp(pngbits, 0, 8);
     TRACE("is_png %d and filesize %d\n", is_png, filesize);
-
     if (!is_png)
-        return;
+        return NULL;
 
     png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr)
     {
         ERR("png_create_read_struct error\n");
-        return;
+        return NULL;
     }
 
     png_infop info_ptr = png_create_info_struct(png_ptr);
     if (!info_ptr)
     {
         ERR("png_create_info_struct error\n");
-        png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
-        return;
+        png_destroy_read_struct(&png_ptr, NULL, NULL);
+        return NULL;
     }
 
     png_infop end_info = png_create_info_struct(png_ptr);
     if (!end_info)
     {
         ERR("png end_info error\n");
-        png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
-        return;
+        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+        return NULL;
     }
 
     // png_source is array which has png data
+    MEMORY_READER_STATE memory_reader_state;
     memory_reader_state.buffer = (png_bytep)pngbits;
     memory_reader_state.bufsize = filesize;
     memory_reader_state.current_pos = PNG_BYTES_TO_CHECK;
 
     // set our own read_function
+    png_bytep mem_read_ptr = (png_bytep)&memory_reader_state;
     png_set_read_fn(png_ptr, mem_read_ptr, read_data_memory);
     png_set_sig_bytes(png_ptr, PNG_BYTES_TO_CHECK);
 
-    //  Read png info
+    // Read png info
     png_read_info(png_ptr, info_ptr);
 
-    png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, \
-        &interlace_type, NULL, NULL);
+    png_uint_32 width, height;
+    int bit_depth, color_type, interlace_type;
+    png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
+                 &interlace_type, NULL, NULL);
     TRACE("width %d, height %d, bit depth %d, color type %d interlace type %d\n",
-        width, height, bit_depth, color_type, interlace_type);
+          width, height, bit_depth, color_type, interlace_type);
 
-    channels = png_get_channels(png_ptr, info_ptr);
+    INT channels = png_get_channels(png_ptr, info_ptr);
     TRACE("channels is %d\n", channels);
 
     // row_pointers
-    row_pointers = png_get_rows(png_ptr, info_ptr);
-    width1 = png_get_image_width(png_ptr, info_ptr);
-    height1 = png_get_image_height(png_ptr, info_ptr);
+    png_bytep *row_pointers = png_get_rows(png_ptr, info_ptr);
+    int width1 = png_get_image_width(png_ptr, info_ptr);
+    int height1 = png_get_image_height(png_ptr, info_ptr);
+    int size = width1 * channels;
 
-    size = width1 * channels;
-
-    TRACE("size %d, width1 %d, height1 %d\n",
-        size, width1, height1);
-    rowbytes = (int)png_get_rowbytes(png_ptr, info_ptr); // same as size above
-    image_size = height * rowbytes;
+    TRACE("size %d, width1 %d, height1 %d\n", size, width1, height1);
+    int rowbytes = (int)png_get_rowbytes(png_ptr, info_ptr); // same as size above
+    int image_size = height * rowbytes;
 
     // Read png image data
     // Set row pointer which will take pixel value from png file
@@ -180,12 +145,11 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
 
     png_read_end(png_ptr, info_ptr);
 
-    data = NULL;
+    LPBYTE data = NULL;
     size += size % 4; // Align
     size *= height;
     data = malloc(size);
-    pos = 0;
-    stride = channels;
+    int pos = 0, stride = channels;
 
     for(int i = height-1; i >= 0; i--)
     {
@@ -202,26 +166,16 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
         pos+=(stride*width) % 4;
     }
 
-    if (FindTempFileW() == NULL)
-        ERR("Temp Directory Not Found\n");
-    else
-    {
-        lstrcpynW(szTempFileName, FindTempFileW(), _countof(szTempFileName));
-        TRACE("Temp File Name is %S\n", szTempFileName);
-    }
-
     /* Clean up after the read, and free any memory allocated */
-    png_destroy_read_struct(&png_ptr, &info_ptr, png_infopp_NULL);
+    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 
-    bpp = 0;
-
+    int bpp = 0;
     switch (color_type)
     {
     case PNG_COLOR_TYPE_RGB:
         if (bit_depth == 8)
             bpp = 24;
         break;
-
     case PNG_COLOR_TYPE_RGB_ALPHA:
         if (bit_depth == 8)
         {
@@ -229,7 +183,6 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
             bpp = 32;
         }
         break;
-
     default:
         break;
     }
@@ -237,19 +190,12 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
     if (!bpp)
     {
         FIXME("unsupported PNG color format %d, %d bpp\n", color_type, bit_depth);
-        png_destroy_read_struct(&png_ptr, &info_ptr, png_infopp_NULL);
-        return;
-    }
-
-    fp = _wfopen(szTempFileName, L"wb");
-    if (!fp)
-    {
-        ERR("File Open Failed for '%S'.\n", szTempFileName);
-        free(data);
-        return;
+        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+        return NULL;
     }
 
     // set up BITMAPINFOHEADER data
+    BITMAPINFOHEADER info = { 0 };
     info.biSize = sizeof(BITMAPINFOHEADER);
     info.biWidth = width;
     info.biHeight = height * 2;
@@ -263,6 +209,7 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
     info.biClrImportant = 0;
 
     //  set up CURSORICONFILEDIR data
+    CURSORICONFILEDIR cifd = { 0 };
     cifd.idType = 1;
     cifd.idCount = 1;
     cifd.idEntries[0].bWidth = width;
@@ -274,15 +221,20 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
     cifd.idEntries[0].dwDIBOffset =sizeof(CURSORICONFILEDIR);
 
     // do writes in correct order
-    fwrite(&cifd, sizeof(cifd), 1, fp);
-    fwrite(&info, sizeof(info), 1, fp);
-    fwrite(data, image_size, 1, fp);
-    fclose(fp);
+    *pdata_size = sizeof(cifd) + sizeof(info) + image_size;
+    LPBYTE bmp_data = malloc(*pdata_size);
+    if (!bmp_data)
+    {
+        free(data);
+        return NULL;
+    }
+    CopyMemory(&bmp_data[0], &cifd, sizeof(cifd));
+    CopyMemory(&bmp_data[sizeof(cifd)], &info, sizeof(info));
+    CopyMemory(&bmp_data[sizeof(cifd) + sizeof(info)], data, image_size);
 
     free(data);
-    data = NULL;
+    return bmp_data;
 }
-
 
 /* We only use Wide string functions */
 #undef MAKEINTRESOURCE
@@ -1641,12 +1593,10 @@ CURSORICON_LoadFromFileW(
     const CURSORICONFILEDIRENTRY *entry;
     const CURSORICONFILEDIR *dir;
     DWORD filesize = 0;
-    LPBYTE bits;
-    LPBYTE pngbits;
+    LPBYTE bits, pngbits, bmp_data = NULL;
     HANDLE hCurIcon = NULL;
     CURSORDATA cursorData;
-    int is_png;
-    WCHAR szTempFileName[MAX_PATH + 1];
+    DWORD bmp_size;
 
     TRACE("loading %s\n", debugstr_w( lpszName ));
 
@@ -1681,30 +1631,16 @@ CURSORICON_LoadFromFileW(
     /* Do the dance */
     if(!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO*)(&bits[entry->dwDIBOffset])))
     {
-    pngbits = &bits[entry->dwDIBOffset];
+        pngbits = &bits[entry->dwDIBOffset];
+        bmp_data = PNGtoBMP(pngbits, filesize, &bmp_size);
 
-    PNGtoBMP(pngbits, filesize, pngbits);
+        if (!bmp_data)
+        {
+            ERR("bmp_data is NULL\n");
+            return NULL;
+        }
 
-    is_png = !png_sig_cmp((png_const_bytep)(&bits[entry->dwDIBOffset]), 0, 8);
-    is_png = !png_sig_cmp((png_const_bytep)pngbits, 0, 8);
-    ERR("is_png is %d and filesize is %d\n", is_png, filesize);
-
-    if (FindTempFileW() == NULL)
-        ERR("Temp DirectoryW Not Found\n");
-    else
-    {
-        lstrcpynW(szTempFileName, FindTempFileW(), _countof(szTempFileName));
-        DPRINTF("Temp File Name is %S\n", szTempFileName);
-    }
-
-    bits = map_fileW(szTempFileName, &filesize );
-    if (!bits)
-    {
-        ERR("bit is NULL\n");
-        return NULL;
-    }
-
-    dir = (CURSORICONFILEDIR*) bits;
+    dir = (CURSORICONFILEDIR*)bmp_data;
     entry = get_best_icon_file_entry(dir, filesize, cxDesired, cyDesired, bIcon, fuLoad);
 
     if(!entry)
@@ -1718,7 +1654,7 @@ CURSORICON_LoadFromFileW(
 
     cursorData.rt = (USHORT)((ULONG_PTR)(bIcon ? RT_ICON : RT_CURSOR));
 
-    if(!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO*)(&bits[entry->dwDIBOffset])))
+    if(!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO*)(&bmp_data[entry->dwDIBOffset])))
       {
 
         ERR("Failing File is \n    '%S'.\n", lpszName);
@@ -1742,10 +1678,12 @@ CURSORICON_LoadFromFileW(
 
 end:
     UnmapViewOfFile(bits);
+    free(bmp_data);
     return hCurIcon;
 
     /* Clean up */
 end_error:
+    free(bmp_data);
     DeleteObject(cursorData.hbmMask);
     if(cursorData.hbmColor) DeleteObject(cursorData.hbmColor);
     if(cursorData.hbmAlpha) DeleteObject(cursorData.hbmAlpha);
@@ -2840,11 +2778,9 @@ HICON WINAPI CreateIconFromResourceEx(
 {
     CURSORDATA cursorData;
     HICON hIcon;
-    BOOL isAnimated;
-    int is_png;
-    BYTE outbytes;
-    PBYTE pbIconBitsOut = & outbytes;
-    WCHAR szTempFileName[MAX_PATH + 1];
+    BOOL isAnimated, is_png;
+    LPBYTE bmp_data = NULL;
+    DWORD bmp_size = 0;
 
     TRACE("%p, %lu, %lu, %lu, %i, %i, %lu.\n", pbIconBits, cbIconBits, fIcon, dwVersion, cxDesired, cyDesired, uFlags);
 
@@ -2936,20 +2872,11 @@ HICON WINAPI CreateIconFromResourceEx(
             LPBYTE bits;
             const CURSORICONFILEDIRENTRY *entry;
             const CURSORICONFILEDIR *dir;
-            DWORD filesize = 0;
 
             if (is_png)
-                PNGtoBMP(pbIconBits, cbIconBits, pbIconBitsOut);
+                bmp_data = PNGtoBMP(pbIconBits, cbIconBits, &bmp_size);
 
-            if (FindTempFileW() == NULL)
-                ERR("Temp DirectoryW Not Found\n");
-            else
-            {
-                lstrcpynW(szTempFileName, FindTempFileW(), _countof(szTempFileName));
-                ERR("Temp File Name is %S\n", szTempFileName);
-            }
-
-            bits = map_fileW(szTempFileName, &filesize );
+            bits = bmp_data;
             if (!bits)
             {
                 ERR("bit is NULL\n");
@@ -2957,7 +2884,7 @@ HICON WINAPI CreateIconFromResourceEx(
             }
 
             dir = (CURSORICONFILEDIR*) bits;
-            entry = get_best_icon_file_entry(dir, filesize, cxDesired, cyDesired, fIcon, uFlags);
+            entry = get_best_icon_file_entry(dir, bmp_size, cxDesired, cyDesired, fIcon, uFlags);
 
             if (!entry)
                 goto out;
@@ -2981,7 +2908,10 @@ out:
             if (ResHandle)
                 FreeResource(ResHandle);
             if (!is_png)
+            {
+                free(bmp_data);
                 return NULL;
+            }
         }
         if (ResHandle)
             FreeResource(ResHandle);
@@ -3006,10 +2936,12 @@ out:
         HeapFree(GetProcessHeap(), 0, cursorData.aspcur);
 
 end:
+    free(bmp_data);
     return hIcon;
 
     /* Clean up */
 end_error:
+    free(bmp_data);
     if(isAnimated)
         HeapFree(GetProcessHeap(), 0, cursorData.aspcur);
     DeleteObject(cursorData.hbmMask);
