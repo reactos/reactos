@@ -272,7 +272,7 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
     size *= height;
     data = malloc(size);
     pos = 0;
-    stride=channels;
+    stride = channels;
 
     for(int i = height-1; i >= 0; i--)
     {
@@ -586,7 +586,7 @@ static int DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
     }
     if (memcmp(&header->biSize, png_sig_pattern, sizeof(png_sig_pattern)) == 0)
     {
-//        ERR("Cannot yet display PNG icons\n");
+        TRACE("We have a PNG icon\n");
         /* for PNG format details see https://en.wikipedia.org/wiki/PNG */
     }
     else
