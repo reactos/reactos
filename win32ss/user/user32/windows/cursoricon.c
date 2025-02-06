@@ -34,7 +34,7 @@ typedef struct
 } CURSORICONFILEDIR;
 #include "poppack.h"
 
-LPWSTR FindTempDirectoryW(VOID)
+LPWSTR FindTempFileW(VOID)
 {
     static WCHAR s_szTempFileName[MAX_PATH];
     WCHAR szTempPath[MAX_PATH];
@@ -202,11 +202,11 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
         pos+=(stride*width) % 4;
     }
 
-    if (FindTempDirectoryW() == NULL)
+    if (FindTempFileW() == NULL)
         ERR("Temp Directory Not Found\n");
     else
     {
-        wcscpy(lpTempPathBuffer, FindTempDirectoryW());
+        wcscpy(lpTempPathBuffer, FindTempFileW());
         TRACE("Temp File Name is %S\n", lpTempPathBuffer);
     }
 
@@ -1689,11 +1689,11 @@ CURSORICON_LoadFromFileW(
     is_png = !png_sig_cmp((png_const_bytep)pngbits, 0, 8);
     ERR("is_png is %d and filesize is %d\n", is_png, filesize);
 
-    if (FindTempDirectoryW() == NULL)
+    if (FindTempFileW() == NULL)
         ERR("Temp DirectoryW Not Found\n");
     else
     {
-        wcscpy(lpTempPathBuffer, FindTempDirectoryW());
+        wcscpy(lpTempPathBuffer, FindTempFileW());
         DPRINTF("Temp File Name is %S\n", lpTempPathBuffer);
     }
 
@@ -2941,11 +2941,11 @@ HICON WINAPI CreateIconFromResourceEx(
             if (is_png)
                 PNGtoBMP(pbIconBits, cbIconBits, pbIconBitsOut);
 
-            if (FindTempDirectoryW() == NULL)
+            if (FindTempFileW() == NULL)
                 ERR("Temp DirectoryW Not Found\n");
             else
             {
-                wcscpy(lpTempPathBuffer, FindTempDirectoryW());
+                wcscpy(lpTempPathBuffer, FindTempFileW());
                 ERR("Temp File Name is %S\n", lpTempPathBuffer);
             }
 
