@@ -280,6 +280,8 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
     if (!fp)
     {
         ERR("File Open Failed for '%S'.\n", lpTempPathBuffer);
+        GlobalFree(data);
+        return;
     }
 
     // set up BITMAPINFOHEADER data
