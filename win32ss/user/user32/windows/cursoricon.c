@@ -13,7 +13,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(cursor);
 WINE_DECLARE_DEBUG_CHANNEL(icon);
 //WINE_DECLARE_DEBUG_CHANNEL(resource);
 
-#include "pshpack1.h"
+#include <pshpack1.h>
 typedef struct {
     BYTE bWidth;
     BYTE bHeight;
@@ -32,7 +32,7 @@ typedef struct
     WORD                idCount;
     CURSORICONFILEDIRENTRY  idEntries[1];
 } CURSORICONFILEDIR;
-#include "poppack.h"
+#include <poppack.h>
 
 /* libpng defines */
 #define PNG_BYTES_TO_CHECK 4
@@ -53,11 +53,14 @@ struct png_wrapper
 /* This function will be used for reading png data from array */
 static void read_data_memory(png_structp png_ptr, png_bytep data, size_t length) 
 {
-    MEMORY_READER_STATE *f = png_get_io_ptr(png_ptr);
-    if (length > (f->bufsize - f->current_pos))
+    MEMORY_READER_STATE *state = png_get_io_ptr(png_ptr);
+    if (length > (state->bufsize - state->current_pos))
+    {
         png_error(png_ptr, "read error in read_data_memory (loadpng)");
-    memcpy(data, f->buffer + f->current_pos, length);
-    f->current_pos += length;
+        return;
+    }
+    memcpy(data, state->buffer + state->current_pos, length);
+    state->current_pos += length;
 }
 
 LPBYTE PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ PDWORD pdata_size)
@@ -95,13 +98,12 @@ LPBYTE PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ PDWORD pdata_siz
 
     // png_source is array which has png data
     MEMORY_READER_STATE memory_reader_state;
-    memory_reader_state.buffer = (png_bytep)pngbits;
+    memory_reader_state.buffer = pngbits;
     memory_reader_state.bufsize = filesize;
     memory_reader_state.current_pos = PNG_BYTES_TO_CHECK;
 
     // set our own read_function
-    png_bytep mem_read_ptr = (png_bytep)&memory_reader_state;
-    png_set_read_fn(png_ptr, mem_read_ptr, read_data_memory);
+    png_set_read_fn(png_ptr, &memory_reader_state, read_data_memory);
     png_set_sig_bytes(png_ptr, PNG_BYTES_TO_CHECK);
 
     // Read png info
