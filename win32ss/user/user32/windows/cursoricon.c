@@ -274,8 +274,8 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
     cifd.idEntries[0].dwDIBOffset =sizeof(CURSORICONFILEDIR);
 
     // do writes in correct order
-    fwrite((void*)&cifd, sizeof(cifd), 1, fp);
-    fwrite((void*)&info, sizeof(info), 1, fp);
+    fwrite(&cifd, sizeof(cifd), 1, fp);
+    fwrite(&info, sizeof(info), 1, fp);
     fwrite(data, image_size, 1, fp);
     fclose(fp);
 
