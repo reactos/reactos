@@ -7,7 +7,7 @@
  */
 
 #include <user32.h>
-#include "libpng\png.h"
+#include "libs\libpng\png.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(cursor);
 WINE_DECLARE_DEBUG_CHANNEL(icon);
