@@ -5,7 +5,8 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys
     include
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
-    ${REACTOS_SOURCE_DIR}/win32ss/include)
+    ${REACTOS_SOURCE_DIR}/win32ss/include
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libpng)
 
 list(APPEND SOURCE
     controls/appswitch.c
