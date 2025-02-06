@@ -81,7 +81,9 @@ add_library(user32 MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/user32.def)
 
 set_module_type(user32 win32dll UNICODE ENTRYPOINT DllMain 12)
-target_link_libraries(user32 libpng user32_vista_static user32_wsprintf wine win32ksys ${PSEH_LIB})
+target_link_libraries(user32 user32_vista_static user32_wsprintf wine win32ksys ${PSEH_LIB})
+add_delay_importlibs(user32 usp10 libpng)
+add_importlibs(user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_dependencies(user32 asm)
 
 if(MSVC AND (ARCH STREQUAL "i386"))
