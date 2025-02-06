@@ -1640,8 +1640,8 @@ CURSORICON_LoadFromFileW(
             return NULL;
         }
 
-    dir = (CURSORICONFILEDIR*)bmp_data;
-    entry = get_best_icon_file_entry(dir, filesize, cxDesired, cyDesired, bIcon, fuLoad);
+        dir = (CURSORICONFILEDIR*)bmp_data;
+        entry = get_best_icon_file_entry(dir, bmp_size, cxDesired, cyDesired, bIcon, fuLoad);
 
     if(!entry)
         goto end;
