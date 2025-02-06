@@ -282,13 +282,6 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
         ERR("File Open Failed for '%S'.\n", lpTempPathBuffer);
     }
 
-    if (fp == INVALID_HANDLE_VALUE)
-    {
-        ERR("can't write '%S'\n", lpTempPathBuffer);
-        GlobalFree(data);
-        return;
-    }
-
     // set up BITMAPINFOHEADER data
     info.biSize = sizeof(BITMAPINFOHEADER);
     info.biWidth = width;
