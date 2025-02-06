@@ -34,57 +34,23 @@ typedef struct
 } CURSORICONFILEDIR;
 #include "poppack.h"
 
-WCHAR* FindTempDirectoryW(void)
+LPWSTR FindTempDirectoryW(VOID)
 {
-    static WCHAR lpTempPathBuffer[MAX_PATH + 1];
-    WCHAR *out = lpTempPathBuffer;
-    DWORD dwRetVal = 0;
-    FILE * fp;
-    DWORD dwAttrib;
+    static WCHAR s_szTempFileName[MAX_PATH];
+    WCHAR szTempPath[MAX_PATH];
+    DWORD cchTemp;
 
-     /*  Gets the temp path env string. Not guaranteed to be valid. */
-    dwRetVal = GetTempPathW(MAX_PATH * 2, lpTempPathBuffer);
+    cchTemp = GetTempPathW(_countof(szTempPath), szTempPath);
 
-    if (dwRetVal > MAX_PATH || (dwRetVal == 0))
+    if (!cchTemp || cchTemp > _countof(szTempPath) ||
+        !GetTempFileNameW(szTempPath, L"png", 0, s_szTempFileName))
     {
         ERR("Find Temp Directory Failed\n");
-        goto exit_error;
+        return NULL;
     }
 
-    dwAttrib = GetFileAttributesW(lpTempPathBuffer);
-    if (dwAttrib != INVALID_FILE_ATTRIBUTES && 
-         (dwAttrib & FILE_ATTRIBUTE_DIRECTORY))
-        TRACE("Temp Subdir OK\n");
-    else
-        goto exit_error;
-
-    if (dwRetVal + sizeof(L"bmpout.ico1")> MAX_PATH)
-    {
-        ERR("Not Enough working room\n");
-        goto exit_error;
-    }
-    else
-    {
-        wcscat(lpTempPathBuffer, L"bmpout.ico1");
-    }
-
-    fp = _wfopen(lpTempPathBuffer, L"wb");
-    if (!fp)
-    {
-        ERR("Temp Directory Path File Open Failed\n");
-        goto exit_error;
-    }
-    else
-    {
-        fclose(fp);
-    }
-
-    _wremove(lpTempPathBuffer);
-    lpTempPathBuffer[wcslen(lpTempPathBuffer) - 1] = 0;
-
-    return out;
-exit_error:
-    return 0;
+    DeleteFileW(s_szTempFileName);
+    return s_szTempFileName;
 }
 
 /* libpng defines */
