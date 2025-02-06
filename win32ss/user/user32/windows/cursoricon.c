@@ -197,15 +197,11 @@ LPBYTE PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ PDWORD pdata_siz
     BITMAPINFOHEADER info = { 0 };
     info.biSize = sizeof(BITMAPINFOHEADER);
     info.biWidth = width;
-    info.biHeight = height * 2;
+    info.biHeight = 2 * height;
     info.biPlanes = 1;
     info.biBitCount = bpp;
     info.biCompression = BI_RGB;
     info.biSizeImage = image_size;
-    info.biXPelsPerMeter = 0;
-    info.biYPelsPerMeter = 0;
-    info.biClrUsed = 0;
-    info.biClrImportant = 0;
 
     //  set up CURSORICONFILEDIR data
     CURSORICONFILEDIR cifd = { 0 };
@@ -213,11 +209,11 @@ LPBYTE PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ PDWORD pdata_siz
     cifd.idCount = 1;
     cifd.idEntries[0].bWidth = width;
     cifd.idEntries[0].bHeight = height;
-    cifd.idEntries[0].bColorCount =0; // No Color Pallet
-    cifd.idEntries[0].xHotspot =1; // Must be 0 or 1
-    cifd.idEntries[0].yHotspot =bpp;
-    cifd.idEntries[0].dwDIBSize =image_size + sizeof (info);
-    cifd.idEntries[0].dwDIBOffset =sizeof(CURSORICONFILEDIR);
+    cifd.idEntries[0].bColorCount = 0; // No Color Pallet
+    cifd.idEntries[0].xHotspot = 1; // Must be 0 or 1
+    cifd.idEntries[0].yHotspot = bpp;
+    cifd.idEntries[0].dwDIBSize = image_size + sizeof (info);
+    cifd.idEntries[0].dwDIBOffset = sizeof(CURSORICONFILEDIR);
 
     // do writes in correct order
     *pdata_size = sizeof(cifd) + sizeof(info) + image_size;
@@ -1646,26 +1642,24 @@ CURSORICON_LoadFromFileW(
         dir = (CURSORICONFILEDIR*)bmp_data;
         entry = get_best_icon_file_entry(dir, bmp_size, cxDesired, cyDesired, bIcon, fuLoad);
 
-    if(!entry)
-        goto end;
+        if (!entry)
+            goto end;
 
-    /* Fix dimensions */
-    if(!cxDesired) cxDesired = entry->bWidth;
-    if(!cyDesired) cyDesired = entry->bHeight;
-    /* A bit of preparation */
-    ZeroMemory(&cursorData, sizeof(cursorData));
+        /* Fix dimensions */
+        if (!cxDesired) cxDesired = entry->bWidth;
+        if (!cyDesired) cyDesired = entry->bHeight;
 
-    cursorData.rt = (USHORT)((ULONG_PTR)(bIcon ? RT_ICON : RT_CURSOR));
+        /* A bit of preparation */
+        ZeroMemory(&cursorData, sizeof(cursorData));
+        cursorData.rt = (USHORT)((ULONG_PTR)(bIcon ? RT_ICON : RT_CURSOR));
 
-    if(!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO*)(&bmp_data[entry->dwDIBOffset])))
-      {
+        if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO*)(&bmp_data[entry->dwDIBOffset])))
+        {
+            ERR("Failing File is \n    '%S'.\n", lpszName);
+            goto end;
+        }
 
-        ERR("Failing File is \n    '%S'.\n", lpszName);
-        goto end;
-      }
-
-      ERR("Processing Special File:\n    '%S'.\n", lpszName);
-
+        ERR("Processing Special File:\n    '%S'.\n", lpszName);
     }
 
     hCurIcon = NtUserxCreateEmptyCurObject(FALSE);
@@ -2872,39 +2866,33 @@ HICON WINAPI CreateIconFromResourceEx(
 
         if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO*)pbIconBits))
         {
-            LPBYTE bits;
-            const CURSORICONFILEDIRENTRY *entry;
-            const CURSORICONFILEDIR *dir;
-
             if (is_png)
                 bmp_data = PNGtoBMP(pbIconBits, cbIconBits, &bmp_size);
 
-            bits = bmp_data;
-            if (!bits)
+            if (!bmp_data)
             {
-                ERR("bit is NULL\n");
+                ERR("bmp_data is NULL\n");
                 return NULL;
             }
 
-            dir = (CURSORICONFILEDIR*) bits;
-            entry = get_best_icon_file_entry(dir, bmp_size, cxDesired, cyDesired, fIcon, uFlags);
+            CURSORICONFILEDIR *dir = (CURSORICONFILEDIR *)bmp_data;
+            const CURSORICONFILEDIRENTRY *entry =
+                get_best_icon_file_entry(dir, bmp_size, cxDesired, cyDesired, fIcon, uFlags);
 
             if (!entry)
                 goto out;
 
             /* Fix dimensions */
-            if(!cxDesired) cxDesired = entry->bWidth;
-            if(!cyDesired) cyDesired = entry->bHeight;
+            if (!cxDesired) cxDesired = entry->bWidth;
+            if (!cyDesired) cyDesired = entry->bHeight;
+
             /* A bit of preparation */
             ZeroMemory(&cursorData, sizeof(cursorData));
-
             cursorData.rt = (USHORT)((ULONG_PTR)(fIcon ? RT_ICON : RT_CURSOR));
 
-            if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO*)
-                (&bits[entry->dwDIBOffset])))
-            {
+            DWORD offset = entry->dwDIBOffset;
+            if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)&bmp_data[offset]))
                 goto end;
-            }
 
 out:
             ERR("Couldn't fill the CURSORDATA structure.\n");
