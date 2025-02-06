@@ -1281,7 +1281,6 @@ Preview_OnCreate(HWND hwnd, LPCREATESTRUCT pCS)
         Preview_pLoadImageFromNode(pData, g_pCurrentFile);
         Preview_UpdateImage(pData);
         Preview_UpdateUI(pData);
-        PostMessageW(hwnd, WM_COMMAND, IDC_BEST_FIT, 0); /* Window not ready yet, delay */
     }
 
     return TRUE;
