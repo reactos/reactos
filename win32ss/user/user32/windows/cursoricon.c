@@ -88,7 +88,7 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
     int bpp = 0;
     int image_size = 0;
     FILE * fp;
-    WCHAR lpTempPathBuffer[MAX_PATH + 1];
+    WCHAR szTempFileName[MAX_PATH + 1];
     MEMORY_READER_STATE memory_reader_state;
     png_bytep mem_read_ptr = (png_bytep)&memory_reader_state;
     png_uint_32 width, height, channels;
@@ -206,8 +206,8 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
         ERR("Temp Directory Not Found\n");
     else
     {
-        wcscpy(lpTempPathBuffer, FindTempFileW());
-        TRACE("Temp File Name is %S\n", lpTempPathBuffer);
+        wcscpy(szTempFileName, FindTempFileW());
+        TRACE("Temp File Name is %S\n", szTempFileName);
     }
 
     /* Clean up after the read, and free any memory allocated */
@@ -241,10 +241,10 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
         return;
     }
 
-    fp = _wfopen(lpTempPathBuffer, L"wb");
+    fp = _wfopen(szTempFileName, L"wb");
     if (!fp)
     {
-        ERR("File Open Failed for '%S'.\n", lpTempPathBuffer);
+        ERR("File Open Failed for '%S'.\n", szTempFileName);
         GlobalFree(data);
         return;
     }
@@ -1646,7 +1646,7 @@ CURSORICON_LoadFromFileW(
     HANDLE hCurIcon = NULL;
     CURSORDATA cursorData;
     int is_png;
-    WCHAR lpTempPathBuffer[MAX_PATH + 1];
+    WCHAR szTempFileName[MAX_PATH + 1];
 
     TRACE("loading %s\n", debugstr_w( lpszName ));
 
@@ -1693,11 +1693,11 @@ CURSORICON_LoadFromFileW(
         ERR("Temp DirectoryW Not Found\n");
     else
     {
-        wcscpy(lpTempPathBuffer, FindTempFileW());
-        DPRINTF("Temp File Name is %S\n", lpTempPathBuffer);
+        wcscpy(szTempFileName, FindTempFileW());
+        DPRINTF("Temp File Name is %S\n", szTempFileName);
     }
 
-    bits = map_fileW(lpTempPathBuffer, &filesize );
+    bits = map_fileW(szTempFileName, &filesize );
     if (!bits)
     {
         ERR("bit is NULL\n");
@@ -2844,7 +2844,7 @@ HICON WINAPI CreateIconFromResourceEx(
     int is_png;
     BYTE outbytes;
     PBYTE pbIconBitsOut = & outbytes;
-    WCHAR lpTempPathBuffer[MAX_PATH + 1];
+    WCHAR szTempFileName[MAX_PATH + 1];
 
     TRACE("%p, %lu, %lu, %lu, %i, %i, %lu.\n", pbIconBits, cbIconBits, fIcon, dwVersion, cxDesired, cyDesired, uFlags);
 
@@ -2945,11 +2945,11 @@ HICON WINAPI CreateIconFromResourceEx(
                 ERR("Temp DirectoryW Not Found\n");
             else
             {
-                wcscpy(lpTempPathBuffer, FindTempFileW());
-                ERR("Temp File Name is %S\n", lpTempPathBuffer);
+                wcscpy(szTempFileName, FindTempFileW());
+                ERR("Temp File Name is %S\n", szTempFileName);
             }
 
-            bits = map_fileW(lpTempPathBuffer, &filesize );
+            bits = map_fileW(szTempFileName, &filesize );
             if (!bits)
             {
                 ERR("bit is NULL\n");
