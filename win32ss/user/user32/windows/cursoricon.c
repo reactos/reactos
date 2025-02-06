@@ -213,6 +213,7 @@ PNGtoBMP(
     if (!bpp)
     {
         FIXME("unsupported PNG color format %d, %d bpp\n", color_type, bit_depth);
+        HeapFree(GetProcessHeap(), 0, image_bytes);
         return NULL;
     }
 
