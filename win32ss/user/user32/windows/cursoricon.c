@@ -145,25 +145,22 @@ LPBYTE PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ PDWORD pdata_siz
 
     png_read_end(png_ptr, info_ptr);
 
-    LPBYTE data = NULL;
     size += size % 4; // Align
     size *= height;
-    data = malloc(size);
-    int pos = 0, stride = channels;
 
-    for(int i = height-1; i >= 0; i--)
+    LPBYTE data = malloc(size);
+    size_t pos = 0;
+    for (int i = height - 1; i >= 0; i--)
     {
-        for(int j = 0; j <stride*width; j += stride)
+        for (int j = 0; j < channels * width; j += channels)
         {
-            data[pos++] = row_pointers[i][j+2]; // red
-            data[pos++] = row_pointers[i][j+1]; // green
-            data[pos++] = row_pointers[i][j];  // blue
-            if(stride==4)
-            {
-                data[pos++] = row_pointers[i][j+3]; // alpha
-            }
+            data[pos++] = row_pointers[i][j + 2]; // red
+            data[pos++] = row_pointers[i][j + 1]; // green
+            data[pos++] = row_pointers[i][j + 0]; // blue
+            if (channels == 4)
+                data[pos++] = row_pointers[i][j + 3]; // alpha
         }
-        pos+=(stride*width) % 4;
+        pos += (channels * width) % 4;
     }
 
     /* Clean up after the read, and free any memory allocated */
@@ -228,9 +225,13 @@ LPBYTE PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ PDWORD pdata_siz
         free(data);
         return NULL;
     }
-    CopyMemory(&bmp_data[0], &cifd, sizeof(cifd));
-    CopyMemory(&bmp_data[sizeof(cifd)], &info, sizeof(info));
-    CopyMemory(&bmp_data[sizeof(cifd) + sizeof(info)], data, image_size);
+
+    size_t index = 0;
+    CopyMemory(&bmp_data[index], &cifd, sizeof(cifd));
+    index += sizeof(cifd);
+    CopyMemory(&bmp_data[index], &info, sizeof(info));
+    index += sizeof(info);
+    CopyMemory(&bmp_data[index], data, image_size);
 
     free(data);
     return bmp_data;
