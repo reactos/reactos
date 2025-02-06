@@ -101,6 +101,13 @@ static const MSGBTNINFO MsgBtnInfo[] =
     DECLARE_MB_3(CANCEL, TRYAGAIN, CONTINUE)
 };
 
+typedef struct _WINDOWSIZE
+{
+    short cx;
+    short cy;
+} WINDOWSIZE, *PWINDOWSIZE;
+
+WINDOWSIZE gws; /* Global Window Size (find another solution please) */
 
 /* INTERNAL FUNCTIONS ********************************************************/
 
@@ -418,6 +425,44 @@ static INT_PTR CALLBACK MessageBoxProc(
             HWND hwndOwner = GetWindow(hwnd, GW_OWNER);
             if (hwndOwner)
                 SendMessageW(hwndOwner, WM_HELP, 0, lParam);
+        }
+        return TRUE;
+    }
+
+    case WM_CTLCOLORSTATIC:
+    {
+        /* Paint the background of the static controls */
+        /* BUG It sets once, but changing the color doesn't change the background of the text or icon */
+        HDC hDC = (HDC)wParam;
+        SetBkMode(hDC, TRANSPARENT);
+        HBRUSH hBrush = (HBRUSH)GetStockObject(WHITE_BRUSH);
+        return (LRESULT)hBrush;
+    }
+
+    case WM_PAINT:
+    {
+        HBRUSH hBrush;
+        RECT rc;
+        HDC hdc;
+        PAINTSTRUCT ps;
+
+        /* Set the brush color */
+        hBrush = GetSysColorBrush(COLOR_WINDOW);
+
+        /* Set the size of the rectangle based on the window size */
+        rc.top = 0;
+        rc.left = 0;
+        rc.right = gws.cx;
+
+        MapDialogRect(hwnd, &rc); /* Convert dialog units to px */
+
+        rc.bottom = gws.cy - 4; /* Don't paint over the buttons */
+
+        hdc = BeginPaint(hwnd, &ps);
+        if (hdc)
+        {
+            FillRect(hdc, &rc, hBrush);
+            EndPaint(hwnd, &ps);
         }
         return TRUE;
     }
@@ -872,7 +917,7 @@ SoftModalMessageBox(IN LPMSGBOXDATA lpMsgBoxData)
         else
         {
             rc.left = MSGBOXEX_MARGIN;
-            btnleft = MSGBOXEX_MARGIN + ((txtrect.right + rc.right + MSGBOXEX_SPACING - btnleft) / 2);
+            btnleft = MSGBOXEX_MARGIN + (txtrect.right + rc.right + MSGBOXEX_SPACING - btnleft);
         }
 
         iconPos.x = RESCALE_X(rc.left, units);
@@ -880,7 +925,7 @@ SoftModalMessageBox(IN LPMSGBOXDATA lpMsgBoxData)
         iconSize.cx = RESCALE_X(rc.right, units);
         iconSize.cy = RESCALE_Y(rc.bottom, units);
 
-        btntop = rc.top + rc.bottom + MSGBOXEX_SPACING;
+        btntop = rc.top + rc.bottom + MSGBOXEX_SPACING + MSGBOXEX_MARGIN;
         rc.left += rc.right + MSGBOXEX_SPACING;
     }
     else
@@ -898,7 +943,7 @@ SoftModalMessageBox(IN LPMSGBOXDATA lpMsgBoxData)
         else
         {
             rc.left = MSGBOXEX_MARGIN;
-            btnleft = MSGBOXEX_MARGIN + ((txtrect.right - btnleft) / 2);
+            btnleft = MSGBOXEX_MARGIN + (txtrect.right - btnleft);
         }
     }
 
@@ -1043,6 +1088,10 @@ SoftModalMessageBox(IN LPMSGBOXDATA lpMsgBoxData)
     /* Set the size of the window */
     tpl->cx = RESCALE_X(btnleft, units);
     tpl->cy = RESCALE_Y(btntop, units);
+
+    /* Store the size of the window */
+    gws.cx = tpl->cx;
+    gws.cy = tpl->cy;
 
     /* Finally show the message-box */
     ERR("MessageBox: %s\n", wine_dbgstr_wn(lpMsgBoxParams->lpszText, textlen));
