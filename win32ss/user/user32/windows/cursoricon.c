@@ -206,7 +206,7 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
         ERR("Temp Directory Not Found\n");
     else
     {
-        wcscpy(szTempFileName, FindTempFileW());
+        lstrcpynW(szTempFileName, FindTempFileW(), _countof(szTempFileName));
         TRACE("Temp File Name is %S\n", szTempFileName);
     }
 
@@ -1693,7 +1693,7 @@ CURSORICON_LoadFromFileW(
         ERR("Temp DirectoryW Not Found\n");
     else
     {
-        wcscpy(szTempFileName, FindTempFileW());
+        lstrcpynW(szTempFileName, FindTempFileW(), _countof(szTempFileName));
         DPRINTF("Temp File Name is %S\n", szTempFileName);
     }
 
@@ -2945,7 +2945,7 @@ HICON WINAPI CreateIconFromResourceEx(
                 ERR("Temp DirectoryW Not Found\n");
             else
             {
-                wcscpy(szTempFileName, FindTempFileW());
+                lstrcpynW(szTempFileName, FindTempFileW(), _countof(szTempFileName));
                 ERR("Temp File Name is %S\n", szTempFileName);
             }
 
