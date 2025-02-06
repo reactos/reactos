@@ -423,7 +423,7 @@ static UINT ICO_ExtractIconExW(
 
 /* NE exe/dll */
 #ifdef __REACTOS__
-	if (sig==IMAGE_OS2_SIGNATURE || sig==1) /* .ICO file */
+    if (sig==IMAGE_OS2_SIGNATURE || sig==1) /* .ICO file */
 #else
 	if (sig==IMAGE_OS2_SIGNATURE)
 #endif

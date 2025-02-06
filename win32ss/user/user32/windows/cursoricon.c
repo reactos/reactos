@@ -177,6 +177,7 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
     FILE * fp;
     CHAR lpTempPathBuffer[MAX_PATH + 1];
     MEMORY_READER_STATE memory_reader_state;
+    png_bytep mem_read_ptr = (png_bytep)&memory_reader_state;
     png_uint_32 width, height, channels;
     int bit_depth, color_type, interlace_type;
     png_bytep* row_pointers;
@@ -222,7 +223,7 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
     memory_reader_state.current_pos = PNG_BYTES_TO_CHECK;
 
     // set our own read_function
-    png_set_read_fn(png_ptr, &memory_reader_state, read_data_memory);
+    png_set_read_fn(png_ptr, mem_read_ptr, read_data_memory);
     png_set_sig_bytes(png_ptr, PNG_BYTES_TO_CHECK);
 
     //  Read png info
