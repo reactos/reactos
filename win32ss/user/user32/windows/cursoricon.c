@@ -149,7 +149,7 @@ PNGtoBMP(
     size += size % 4; /* Align */
     size *= height;
 
-    LPBYTE data = malloc(size);
+    LPBYTE data = HeapAlloc(GetProcessHeap(), 0, size);
     size_t pos = 0;
     for (int i = height - 1; i >= 0; i--)
     {
@@ -215,10 +215,10 @@ PNGtoBMP(
 
     /* Do writes in correct order */
     *pdata_size = sizeof(cifd) + sizeof(info) + image_size;
-    LPBYTE bmp_data = malloc(*pdata_size);
+    LPBYTE bmp_data = HeapAlloc(GetProcessHeap(), 0, *pdata_size);
     if (!bmp_data)
     {
-        free(data);
+        HeapFree(GetProcessHeap(), 0, data);
         return NULL;
     }
 
@@ -230,7 +230,7 @@ PNGtoBMP(
     index += sizeof(info);
     CopyMemory(&bmp_data[index], data, image_size);
 
-    free(data);
+    HeapFree(GetProcessHeap(), 0, data);
     return bmp_data;
 }
 
@@ -1674,12 +1674,12 @@ CURSORICON_LoadFromFileW(
 
 end:
     UnmapViewOfFile(bits);
-    free(bmp_data);
+    HeapFree(GetProcessHeap(), 0, bmp_data);
     return hCurIcon;
 
     /* Clean up */
 end_error:
-    free(bmp_data);
+    HeapFree(GetProcessHeap(), 0, bmp_data);
     DeleteObject(cursorData.hbmMask);
     if(cursorData.hbmColor) DeleteObject(cursorData.hbmColor);
     if(cursorData.hbmAlpha) DeleteObject(cursorData.hbmAlpha);
@@ -2899,7 +2899,7 @@ out:
                 FreeResource(ResHandle);
             if (!is_png)
             {
-                free(bmp_data);
+                HeapFree(GetProcessHeap(), 0, bmp_data);
                 return NULL;
             }
         }
@@ -2926,12 +2926,12 @@ out:
         HeapFree(GetProcessHeap(), 0, cursorData.aspcur);
 
 end:
-    free(bmp_data);
+    HeapFree(GetProcessHeap(), 0, bmp_data);
     return hIcon;
 
     /* Clean up */
 end_error:
-    free(bmp_data);
+    HeapFree(GetProcessHeap(), 0, bmp_data);
     if(isAnimated)
         HeapFree(GetProcessHeap(), 0, cursorData.aspcur);
     DeleteObject(cursorData.hbmMask);
