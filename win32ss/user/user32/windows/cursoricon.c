@@ -275,8 +275,7 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
         return;
     }
 
-    _wremove(lpTempPathBuffer);
-    fp = _wfopen(lpTempPathBuffer, L"ab");
+    fp = _wfopen(lpTempPathBuffer, L"wb");
     if (!fp)
     {
         ERR("File Open Failed for '%S'.\n", lpTempPathBuffer);
