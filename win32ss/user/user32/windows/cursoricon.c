@@ -34,59 +34,6 @@ typedef struct
 } CURSORICONFILEDIR;
 #include "poppack.h"
 
-CHAR* FindTempDirectoryA(void)
-{
-    static CHAR lpTempPathBuffer[MAX_PATH];
-    CHAR *out = lpTempPathBuffer;
-    DWORD dwRetVal = 0;
-    FILE * fp;
-    DWORD dwAttrib;
-
-     /*  Gets the temp path env string. Not guaranteed to be valid. */
-    dwRetVal = GetTempPathA(MAX_PATH, lpTempPathBuffer);
-
-    if (dwRetVal > MAX_PATH || (dwRetVal == 0))
-    {
-        ERR("Find Temp Directory Failed\n");
-        goto exit_error;
-    }
-
-    dwAttrib = GetFileAttributesA(lpTempPathBuffer);
-    if (dwAttrib != INVALID_FILE_ATTRIBUTES && 
-         (dwAttrib & FILE_ATTRIBUTE_DIRECTORY))
-        TRACE("Temp Subdir OK\n");
-    else
-        goto exit_error;
-
-    if (dwRetVal + sizeof("bmpout.ico1")> MAX_PATH)
-    {
-        ERR("Not Enough working room\n");
-        goto exit_error;
-    }
-    else
-    {
-        strcat(lpTempPathBuffer, "bmpout.ico1");
-    }
-
-    fp = fopen(lpTempPathBuffer, "wb");
-    if (!fp)
-    {
-        ERR("Temp Directory Path File Open Failed\n");
-        goto exit_error;
-    }
-    else
-    {
-        fclose(fp);
-    }
-
-    remove(lpTempPathBuffer);
-    lpTempPathBuffer[strlen(lpTempPathBuffer) - 1] = 0;
-
-    return out;
-exit_error:
-    return 0;
-}
-
 WCHAR* FindTempDirectoryW(void)
 {
     static WCHAR lpTempPathBuffer[MAX_PATH + 1];
@@ -175,7 +122,7 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
     int bpp = 0;
     int image_size = 0;
     FILE * fp;
-    CHAR lpTempPathBuffer[MAX_PATH + 1];
+    WCHAR lpTempPathBuffer[MAX_PATH + 1];
     MEMORY_READER_STATE memory_reader_state;
     png_bytep mem_read_ptr = (png_bytep)&memory_reader_state;
     png_uint_32 width, height, channels;
@@ -289,12 +236,12 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
         pos+=(stride*width) % 4;
     }
 
-    if (FindTempDirectoryA() == NULL)
+    if (FindTempDirectoryW() == NULL)
         ERR("Temp Directory Not Found\n");
     else
     {
-        strcpy(lpTempPathBuffer, FindTempDirectoryA());
-        TRACE("Temp File Name is %s\n", lpTempPathBuffer);
+        wcscpy(lpTempPathBuffer, FindTempDirectoryW());
+        TRACE("Temp File Name is %S\n", lpTempPathBuffer);
     }
 
     /* Clean up after the read, and free any memory allocated */
@@ -328,16 +275,16 @@ void PNGtoBMP(_In_ LPBYTE pngbits, _In_ DWORD filesize, _Out_ LPBYTE outbits)
         return;
     }
 
-    remove(lpTempPathBuffer);
-    fp = fopen(lpTempPathBuffer, "ab");
+    _wremove(lpTempPathBuffer);
+    fp = _wfopen(lpTempPathBuffer, L"ab");
     if (!fp)
     {
-        ERR("File Open Failed for '%s'.\n", lpTempPathBuffer);
+        ERR("File Open Failed for '%S'.\n", lpTempPathBuffer);
     }
 
     if (fp == INVALID_HANDLE_VALUE)
     {
-        ERR("can't write '%s'\n", lpTempPathBuffer);
+        ERR("can't write '%S'\n", lpTempPathBuffer);
         GlobalFree(data);
         return;
     }
