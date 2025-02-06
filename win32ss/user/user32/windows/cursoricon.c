@@ -116,25 +116,42 @@ PNGtoBMP(
     TRACE("width %d, height %d, bit depth %d, color type %d interlace type %d\n",
           width, height, bit_depth, color_type, interlace_type);
 
-    INT channels = png_get_channels(png_ptr, info_ptr);
-    TRACE("channels is %d\n", channels);
-
-    /* row_pointers */
-    png_bytep *row_pointers = png_get_rows(png_ptr, info_ptr);
+    int channels = png_get_channels(png_ptr, info_ptr);
     int width1 = png_get_image_width(png_ptr, info_ptr);
     int height1 = png_get_image_height(png_ptr, info_ptr);
     int size = width1 * channels;
-
-    TRACE("size %d, width1 %d, height1 %d\n", size, width1, height1);
     int rowbytes = png_get_rowbytes(png_ptr, info_ptr); // same as size above
     int image_size = height * rowbytes;
 
+    TRACE("channels is %d\n", channels);
+    TRACE("size %d, width1 %d, height1 %d\n", size, width1, height1);
+
     /* Read png image data */
     /* Set row pointer which will take pixel value from png file */
-    row_pointers = png_malloc(png_ptr, sizeof(png_bytepp) * height);
+    png_bytep *row_pointers = png_malloc(png_ptr, sizeof(png_bytepp) * height);
+    if (!row_pointers)
+    {
+        ERR("png_malloc failed\n");
+        png_destroy_read_struct(&png_ptr, NULL, NULL);
+        return NULL;
+    }
+
+    /* Allocate rows */
     for (int i = 0; i < height; i++)
     {
         row_pointers[i] = png_malloc(png_ptr, png_get_rowbytes(png_ptr, info_ptr));
+        if (!row_pointers[i])
+        {
+            ERR("png_malloc failed\n");
+
+            /* Clean up */
+            while (--i >= 0)
+                png_free(png_ptr, row_pointers[i]);
+            png_free(png_ptr, row_pointers);
+            png_destroy_read_struct(&png_ptr, NULL, NULL);
+
+            return NULL;
+        }
     }
 
     /* Set row pointer to the png struct */
@@ -149,40 +166,47 @@ PNGtoBMP(
     size += size % 4; /* Align */
     size *= height;
 
-    LPBYTE data = HeapAlloc(GetProcessHeap(), 0, size);
+    LPBYTE image_bytes = HeapAlloc(GetProcessHeap(), 0, size);
     size_t pos = 0;
     for (int i = height - 1; i >= 0; i--)
     {
         for (int j = 0; j < channels * width; j += channels)
         {
-            data[pos++] = row_pointers[i][j + 2]; /* Red */
-            data[pos++] = row_pointers[i][j + 1]; /* Green */
-            data[pos++] = row_pointers[i][j + 0]; /* Blue */
+            image_bytes[pos++] = row_pointers[i][j + 2]; /* Red */
+            image_bytes[pos++] = row_pointers[i][j + 1]; /* Green */
+            image_bytes[pos++] = row_pointers[i][j + 0]; /* Blue */
             if (channels == 4)
-                data[pos++] = row_pointers[i][j + 3]; /* Alpha */
+                image_bytes[pos++] = row_pointers[i][j + 3]; /* Alpha */
         }
         pos += (channels * width) % 4;
     }
 
-    /* Clean up after the read, and free any memory allocated */
+    /* Clean up */
+    for (int i = 0; i < height; i++)
+    {
+        png_free(png_ptr, row_pointers[i]);
+    }
+    png_free(png_ptr, row_pointers);
     png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 
     int bpp = 0;
     switch (color_type)
     {
-    case PNG_COLOR_TYPE_RGB:
-        if (bit_depth == 8)
-            bpp = 24;
-        break;
-    case PNG_COLOR_TYPE_RGB_ALPHA:
-        if (bit_depth == 8)
-        {
-            png_set_bgr(png_ptr);
-            bpp = 32;
-        }
-        break;
-    default:
-        break;
+        case PNG_COLOR_TYPE_RGB:
+            if (bit_depth == 8)
+                bpp = 24;
+            break;
+
+        case PNG_COLOR_TYPE_RGB_ALPHA:
+            if (bit_depth == 8)
+            {
+                png_set_bgr(png_ptr);
+                bpp = 32;
+            }
+            break;
+
+        default:
+            break;
     }
 
     if (!bpp)
@@ -218,7 +242,7 @@ PNGtoBMP(
     LPBYTE bmp_data = HeapAlloc(GetProcessHeap(), 0, *pdata_size);
     if (!bmp_data)
     {
-        HeapFree(GetProcessHeap(), 0, data);
+        HeapFree(GetProcessHeap(), 0, image_bytes);
         return NULL;
     }
 
@@ -228,9 +252,9 @@ PNGtoBMP(
     index += sizeof(cifd);
     CopyMemory(&bmp_data[index], &info, sizeof(info));
     index += sizeof(info);
-    CopyMemory(&bmp_data[index], data, image_size);
+    CopyMemory(&bmp_data[index], image_bytes, image_size);
 
-    HeapFree(GetProcessHeap(), 0, data);
+    HeapFree(GetProcessHeap(), 0, image_bytes);
     return bmp_data;
 }
 
