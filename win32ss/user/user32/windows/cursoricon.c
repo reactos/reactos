@@ -52,7 +52,7 @@ struct png_wrapper
 
 /* This function will be used for reading png data from memory */
 static VOID
-read_data_memory(
+read_memory_png(
     _Inout_ png_structp png_ptr,
     _Out_ png_bytep data,
     _In_ size_t length) 
@@ -60,7 +60,7 @@ read_data_memory(
     MEMORY_READER_STATE *state = png_get_io_ptr(png_ptr);
     if (length > (state->bufsize - state->current_pos))
     {
-        png_error(png_ptr, "read error in read_data_memory (loadpng)");
+        png_error(png_ptr, "read error in read_memory_png (loadpng)");
         return;
     }
     CopyMemory(data, state->buffer + state->current_pos, length);
@@ -96,14 +96,12 @@ PNGtoBMP(
         return NULL;
     }
 
-    /* png_source is array which has png data */
+    /* Set our own read_function */
     MEMORY_READER_STATE reader_state;
     reader_state.buffer = pngbits;
     reader_state.bufsize = filesize;
     reader_state.current_pos = PNG_BYTES_TO_CHECK;
-
-    /* Set our own read_function */
-    png_set_read_fn(png_ptr, &reader_state, read_data_memory);
+    png_set_read_fn(png_ptr, &reader_state, read_memory_png);
     png_set_sig_bytes(png_ptr, PNG_BYTES_TO_CHECK);
 
     /* Read png info */
@@ -153,11 +151,11 @@ PNGtoBMP(
     png_set_rows(png_ptr, info_ptr, row_pointers);
 
     /* Read png image data and save in row pointer */
-    /* After reading the image, you can deal with the image data with row pointers */
     png_read_image(png_ptr, row_pointers);
 
     png_read_end(png_ptr, info_ptr);
 
+    /* After reading the image, you can deal with the image data with row pointers */
     LPBYTE image_bytes = HeapAlloc(GetProcessHeap(), 0, image_size);
     size_t pos = 0;
     if (image_bytes)
@@ -222,7 +220,7 @@ PNGtoBMP(
     info.biWidth = width;
     info.biHeight = 2 * height;
     info.biPlanes = 1;
-    info.biBitCount = bpp;
+    info.biBitCount = (WORD)bpp;
     info.biCompression = BI_RGB;
     info.biSizeImage = image_size;
 
@@ -230,15 +228,15 @@ PNGtoBMP(
     CURSORICONFILEDIR cifd = { 0 };
     cifd.idType = 1;
     cifd.idCount = 1;
-    cifd.idEntries[0].bWidth = width;
-    cifd.idEntries[0].bHeight = height;
-    cifd.idEntries[0].bColorCount = 0; /* No Color Pallet */
+    cifd.idEntries[0].bWidth = (BYTE)width;
+    cifd.idEntries[0].bHeight = (BYTE)height;
+    cifd.idEntries[0].bColorCount = 0; /* No color pallete */
     cifd.idEntries[0].xHotspot = 1; /* Must be 0 or 1 */
-    cifd.idEntries[0].yHotspot = bpp;
-    cifd.idEntries[0].dwDIBSize = image_size + sizeof (info);
-    cifd.idEntries[0].dwDIBOffset = sizeof(CURSORICONFILEDIR);
+    cifd.idEntries[0].yHotspot = (WORD)bpp;
+    cifd.idEntries[0].dwDIBSize = (DWORD)(sizeof(info) + image_size);
+    cifd.idEntries[0].dwDIBOffset = (DWORD)sizeof(cifd);
 
-    /* Do writes in correct order */
+    /* Allocate bitmap data */
     *pbmp_size = sizeof(cifd) + sizeof(info) + image_size;
     LPBYTE bmp_data = HeapAlloc(GetProcessHeap(), 0, *pbmp_size);
     if (!bmp_data)
@@ -247,7 +245,7 @@ PNGtoBMP(
         return NULL;
     }
 
-    /* Store to bmp_data */
+    /* Store data to bmp_data */
     LPBYTE pb = bmp_data;
     CopyMemory(pb, &cifd, sizeof(cifd));
     pb += sizeof(cifd);
