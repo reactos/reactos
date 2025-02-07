@@ -17,7 +17,6 @@ LPCWSTR szWindowClass = MAINWINDOWCLASSNAME;
 LONG g_Busy = 0;
 
 HWND hMainWnd;
-HWND g_hLastFocus = NULL;
 HINSTANCE hInst;
 SETTINGS_INFO SettingsInfo;
 

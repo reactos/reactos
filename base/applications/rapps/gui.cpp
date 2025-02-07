@@ -81,6 +81,7 @@ CSideTreeView::~CSideTreeView()
 // **** CSideTreeView ****
 
 // **** CMainWindow ****
+HWND CMainWindow::m_hLastFocus = NULL;
 bool CMainWindow::m_PendingInstalledViewRefresh = false;
 
 CMainWindow::CMainWindow(CAppDB *db, BOOL bAppwiz) : m_ClientPanel(NULL), m_Db(db), m_bAppwizMode(bAppwiz), SelectedEnumType(ENUM_ALL_INSTALLED)
@@ -355,12 +356,12 @@ CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
 
         case WM_ACTIVATE:
             if (LOWORD(wParam) == WA_INACTIVE)
-                g_hLastFocus = ::GetFocus();
+                m_hLastFocus = ::GetFocus();
             break;
 
         case WM_SETFOCUS:
-            if (g_hLastFocus)
-                ::SetFocus(g_hLastFocus);
+            if (m_hLastFocus)
+                ::SetFocus(m_hLastFocus);
             break;
 
         case WM_NEXTDLGCTL:

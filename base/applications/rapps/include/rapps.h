@@ -15,7 +15,6 @@
 
 extern LONG g_Busy;
 extern bool g_PendingInstalledViewRefresh;
-extern HWND g_hLastFocus;
 
 #define WM_NOTIFY_OPERATIONCOMPLETED (WM_APP + 0)
 #define WM_NOTIFY_INSTALLERFINISHED  (WM_APP + 1)
