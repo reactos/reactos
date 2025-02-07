@@ -120,6 +120,7 @@ convert_png_to_bmp_icon(
         png_set_gray_to_rgb(png_ptr);
         color_type = PNG_COLOR_TYPE_RGB_ALPHA;
     }
+    png_set_scale_16(png_ptr); /* Convert 16-bit channel to 8-bit */
 
     png_uint_32 width, height;
     int bit_depth, interlace_type;
@@ -128,7 +129,7 @@ convert_png_to_bmp_icon(
     TRACE("width %d, height %d, bit depth %d, color type %d interlace type %d\n",
           width, height, bit_depth, color_type, interlace_type);
 
-    int channels = png_get_channels(png_ptr, info_ptr);
+    int channels = ((color_type == PNG_COLOR_TYPE_RGB_ALPHA) ? 4 : 3);
     int rowbytes = png_get_rowbytes(png_ptr, info_ptr);
     int image_size = height * rowbytes;
     TRACE("rowbytes %d, channels %d, image_size %d\n", rowbytes, channels, image_size);
