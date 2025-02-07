@@ -102,8 +102,15 @@ convert_png_to_bmp_icon(
     /* Read png info */
     png_read_info(png_ptr, info_ptr);
 
+    /* Fix some PNG formats */
+    int color_type = png_get_color_type(png_ptr, info_ptr);
+    if (color_type == PNG_COLOR_TYPE_PALETTE)
+        png_set_palette_to_rgb(png_ptr);
+    else if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+        png_set_gray_to_rgb(png_ptr);
+
     png_uint_32 width, height;
-    int bit_depth, color_type, interlace_type;
+    int bit_depth, interlace_type;
     png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
                  &interlace_type, NULL, NULL);
     TRACE("width %d, height %d, bit depth %d, color type %d interlace type %d\n",
@@ -182,10 +189,10 @@ convert_png_to_bmp_icon(
     int bpp;
     switch (color_type)
     {
-        case PNG_COLOR_TYPE_GRAY:       bpp =     bit_depth; break;
+        //case PNG_COLOR_TYPE_GRAY:       bpp =     bit_depth; break; // Fixed by png_set_gray_to_rgb
         case PNG_COLOR_TYPE_RGB:        bpp = 3 * bit_depth; break;
-        case PNG_COLOR_TYPE_PALETTE:    bpp =     bit_depth; break;
-        case PNG_COLOR_TYPE_GRAY_ALPHA: bpp = 2 * bit_depth; break;
+        //case PNG_COLOR_TYPE_PALETTE:    bpp =     bit_depth; break; // Fixed by png_set_palette_to_rgb
+        //case PNG_COLOR_TYPE_GRAY_ALPHA: bpp = 2 * bit_depth; break; // Fixed by png_set_gray_to_rgb
         case PNG_COLOR_TYPE_RGB_ALPHA:  bpp = 4 * bit_depth; break;
         default: bpp = 0; break;
     }
