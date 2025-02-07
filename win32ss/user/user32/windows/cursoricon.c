@@ -48,8 +48,8 @@ typedef struct
 /* libpng helpers */
 typedef struct {
     png_bytep buffer;
-    size_t bufsize;
-    size_t current_pos;
+    size_t bufSize;
+    size_t currentPos;
 } PNG_READER_STATE;
 
 /* This function will be used for reading png data from memory */
@@ -60,14 +60,14 @@ ReadMemoryPng(
     _In_ size_t length)
 {
     PNG_READER_STATE *state = png_get_io_ptr(png_ptr);
-    if ((state->current_pos + length) > state->bufsize)
+    if ((state->currentPos + length) > state->bufSize)
     {
         ERR("png read error\n");
         png_error(png_ptr, "read error in ReadMemoryPng");
         return;
     }
-    RtlCopyMemory(data, state->buffer + state->current_pos, length);
-    state->current_pos += length;
+    RtlCopyMemory(data, state->buffer + state->currentPos, length);
+    state->currentPos += length;
 }
 
 static int get_dib_image_size( int width, int height, int depth );
@@ -107,20 +107,20 @@ ConvertPngToBmpIcon(
     png_read_info(png_ptr, info_ptr);
 
     /* Add translation of some PNG formats and update info */
-    int color_type = png_get_color_type(png_ptr, info_ptr);
-    if (color_type == PNG_COLOR_TYPE_PALETTE)
+    int colorType = png_get_color_type(png_ptr, info_ptr);
+    if (colorType == PNG_COLOR_TYPE_PALETTE)
         png_set_palette_to_rgb(png_ptr);
-    else if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+    else if (colorType == PNG_COLOR_TYPE_GRAY || colorType == PNG_COLOR_TYPE_GRAY_ALPHA)
         png_set_gray_to_rgb(png_ptr);
     png_set_scale_16(png_ptr); /* Convert 16-bit channels to 8-bit */
     png_read_update_info(png_ptr, info_ptr);
 
     /* Get updated png info */
     png_uint_32 width, height;
-    int bit_depth;
-    png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, NULL, NULL, NULL);
-    TRACE("width %d, height %d, bit_depth %d, color_type %d\n",
-          width, height, bit_depth, color_type);
+    int bitDepth;
+    png_get_IHDR(png_ptr, info_ptr, &width, &height, &bitDepth, &colorType, NULL, NULL, NULL);
+    TRACE("width %d, height %d, bitDepth %d, colorType %d\n",
+          width, height, bitDepth, colorType);
 
     int channels = png_get_channels(png_ptr, info_ptr);
     int rowbytes = png_get_rowbytes(png_ptr, info_ptr);
@@ -128,8 +128,8 @@ ConvertPngToBmpIcon(
     TRACE("rowbytes %d, channels %d, imageSize %d\n", rowbytes, channels, imageSize);
 
     /* Allocate rows data */
-    png_bytepp row_pointers = png_malloc(png_ptr, sizeof(png_bytep) * height);
-    if (!row_pointers)
+    png_bytepp rows = png_malloc(png_ptr, sizeof(png_bytep) * height);
+    if (!rows)
     {
         ERR("png_malloc failed\n");
         png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
@@ -138,15 +138,15 @@ ConvertPngToBmpIcon(
 
     for (int i = 0; i < (int)height; i++)
     {
-        row_pointers[i] = png_malloc(png_ptr, rowbytes);
-        if (!row_pointers[i])
+        rows[i] = png_malloc(png_ptr, rowbytes);
+        if (!rows[i])
         {
             ERR("png_malloc failed\n");
 
             /* Clean up */
             while (--i >= 0)
-                png_free(png_ptr, row_pointers[i]);
-            png_free(png_ptr, row_pointers);
+                png_free(png_ptr, rows[i]);
+            png_free(png_ptr, rows);
             png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 
             return NULL;
@@ -154,8 +154,8 @@ ConvertPngToBmpIcon(
     }
 
     /* Read png image data */
-    png_set_rows(png_ptr, info_ptr, row_pointers);
-    png_read_image(png_ptr, row_pointers);
+    png_set_rows(png_ptr, info_ptr, rows);
+    png_read_image(png_ptr, rows);
     png_read_end(png_ptr, info_ptr);
 
     /* After reading the image, you can deal with row pointers */
@@ -165,7 +165,7 @@ ConvertPngToBmpIcon(
         LPBYTE pb = imageBytes;
         for (int i = height - 1; i >= 0; i--)
         {
-            png_bytep row = row_pointers[i];
+            png_bytep row = rows[i];
             for (int j = 0; j < channels * width; j += channels)
             {
                 *pb++ = row[j + 2]; /* Red */
@@ -180,8 +180,8 @@ ConvertPngToBmpIcon(
 
     /* Clean up */
     for (int i = 0; i < (int)height; i++)
-        png_free(png_ptr, row_pointers[i]);
-    png_free(png_ptr, row_pointers);
+        png_free(png_ptr, rows[i]);
+    png_free(png_ptr, rows);
     png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 
     if (!imageBytes)
@@ -191,7 +191,7 @@ ConvertPngToBmpIcon(
     }
 
     /* Get BPP (Bits Per Pixel) */
-    WORD bpp = (WORD)(bit_depth * channels);
+    WORD bpp = (WORD)(bitDepth * channels);
 
     /* The size of mask bits */
     DWORD maskSize = get_dib_image_size(width, height, 1);
