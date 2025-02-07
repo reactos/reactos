@@ -74,7 +74,7 @@ static int get_dib_image_size(int width, int height, int depth);
 
 /* Convert PNG raw data to BMP icon data */
 static LPBYTE
-ConvertPngToBmpIcon(
+CURSORICON_ConvertPngToBmpIcon(
     _In_ LPBYTE pngBits,
     _In_ DWORD fileSize,
     _Out_ PDWORD pBmpIconSize)
@@ -1638,7 +1638,7 @@ CURSORICON_LoadFromFileW(
     {
         /* Convert PNG raw data to BMP icon if the icon was PNG icon */
         LPBYTE pngBits = &bits[entry->dwDIBOffset];
-        pbBmpIcon = ConvertPngToBmpIcon(pngBits, filesize, &BmpIconSize);
+        pbBmpIcon = CURSORICON_ConvertPngToBmpIcon(pngBits, filesize, &BmpIconSize);
         if (!pbBmpIcon)
             goto end; /* Not PNG icon or failed */
 
@@ -2872,7 +2872,7 @@ HICON WINAPI CreateIconFromResourceEx(
         if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)pbIconBits))
         {
             /* Convert PNG raw data to BMP icon if the icon was PNG icon */
-            pbBmpIcon = ConvertPngToBmpIcon(pbIconBits, cbIconBits, &BmpIconSize);
+            pbBmpIcon = CURSORICON_ConvertPngToBmpIcon(pbIconBits, cbIconBits, &BmpIconSize);
             if (!pbBmpIcon)
                 goto end; /* Not PNG icon or failed */
 
