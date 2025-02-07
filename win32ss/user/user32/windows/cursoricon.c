@@ -43,7 +43,6 @@ typedef struct
 } CURSORICONFILEDIR;
 #include <poppack.h>
 
-#define PNG_BYTES_TO_CHECK 4
 #define PNG_CHECK_SIG_SIZE 8 /* Check signature size */
 
 /* libpng helpers */
@@ -79,13 +78,10 @@ convert_png_to_bmp_icon(
     _In_ DWORD filesize,
     _Out_ PDWORD pbmp_icon_size)
 {
-    if (!pngbits || filesize < PNG_CHECK_SIG_SIZE)
+    if (!pngbits || filesize < PNG_CHECK_SIG_SIZE || !png_check_sig(pngbits, PNG_CHECK_SIG_SIZE))
         return NULL;
 
-    BOOL is_png = png_check_sig(pngbits, PNG_CHECK_SIG_SIZE);
-    TRACE("is_png %d and filesize %d\n", is_png, filesize);
-    if (!is_png)
-        return NULL;
+    TRACE("pngbits %p filesize %d\n", pngbits, filesize);
 
     png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr)
@@ -103,9 +99,9 @@ convert_png_to_bmp_icon(
     }
 
     /* Set our own read_function */
-    PNG_READER_STATE reader_state = { pngbits, filesize, PNG_BYTES_TO_CHECK };
+    PNG_READER_STATE reader_state = { pngbits, filesize, PNG_CHECK_SIG_SIZE };
     png_set_read_fn(png_ptr, &reader_state, read_memory_png);
-    png_set_sig_bytes(png_ptr, PNG_BYTES_TO_CHECK);
+    png_set_sig_bytes(png_ptr, PNG_CHECK_SIG_SIZE);
 
     /* Read png info */
     png_read_info(png_ptr, info_ptr);
@@ -1362,12 +1358,11 @@ BITMAP_LoadImageW(
         ResSize = SizeofResource(hinst, hrsrc);
     }
 
-    if (pbmi->bmiHeader.biCompression == BI_BITFIELDS &&
-        pbmi->bmiHeader.biBitCount == 32)
+    if (pbmi->bmiHeader.biCompression == BI_BITFIELDS && pbmi->bmiHeader.biBitCount == 32)
     {
         SIZE_T totalSize = pbmi->bmiHeader.biSize + (3 * sizeof(DWORD)) +
                            pbmi->bmiHeader.biSizeImage;
-        if (totalSize != ResSize)
+        if (pbmi->bmiHeader.biSizeImage != 0 && totalSize != ResSize)
             WARN("Possibly bad resource size provided\n");
     }
 
@@ -1601,11 +1596,10 @@ CURSORICON_LoadFromFileW(
 {
     const CURSORICONFILEDIRENTRY *entry;
     const CURSORICONFILEDIR *dir;
-    DWORD filesize = 0;
+    DWORD filesize = 0, bmp_icon_size;
     LPBYTE bits, pngbits, bmp_icon = NULL;
     HANDLE hCurIcon = NULL;
     CURSORDATA cursorData;
-    DWORD bmp_icon_size;
 
     TRACE("loading %s\n", debugstr_w( lpszName ));
 
@@ -1635,19 +1629,17 @@ CURSORICON_LoadFromFileW(
         cursorData.xHotspot = entry->xHotspot;
         cursorData.yHotspot = entry->yHotspot;
     }
-    cursorData.rt = (USHORT)((ULONG_PTR)(bIcon ? RT_ICON : RT_CURSOR));
+    cursorData.rt = LOWORD(bIcon ? RT_ICON : RT_CURSOR);
 
-    /* Do the dance */
+    /* Try to load BMP icon */
     DWORD offset = entry->dwDIBOffset;
     if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)(&bits[offset])))
     {
+        /* Try to load PNG icon */
         pngbits = &bits[entry->dwDIBOffset];
         bmp_icon = convert_png_to_bmp_icon(pngbits, filesize, &bmp_icon_size);
         if (!bmp_icon)
-        {
-            ERR("bmp_icon is NULL\n");
             goto end;
-        }
 
         dir = (CURSORICONFILEDIR *)bmp_icon;
         entry = get_best_icon_file_entry(dir, bmp_icon_size, cxDesired, cyDesired, bIcon, fuLoad);
@@ -1660,12 +1652,12 @@ CURSORICON_LoadFromFileW(
 
         /* A bit of preparation */
         ZeroMemory(&cursorData, sizeof(cursorData));
-        cursorData.rt = (USHORT)((ULONG_PTR)(bIcon ? RT_ICON : RT_CURSOR));
+        cursorData.rt = LOWORD(bIcon ? RT_ICON : RT_CURSOR);
 
         offset = entry->dwDIBOffset;
         if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)(&bmp_icon[offset])))
         {
-            ERR("Failing File is \n    '%S'.\n", lpszName);
+            ERR("Failing file: '%S'.\n", lpszName);
             goto end;
         }
 
@@ -2785,7 +2777,7 @@ HICON WINAPI CreateIconFromResourceEx(
 {
     CURSORDATA cursorData;
     HICON hIcon;
-    BOOL isAnimated, is_png;
+    BOOL isAnimated;
     LPBYTE bmp_icon = NULL;
     DWORD bmp_icon_size;
 
@@ -2806,7 +2798,7 @@ HICON WINAPI CreateIconFromResourceEx(
     ZeroMemory(&cursorData, sizeof(cursorData));
     cursorData.cx = cxDesired;
     cursorData.cy = cyDesired;
-    cursorData.rt = (USHORT)((ULONG_PTR)(fIcon ? RT_ICON : RT_CURSOR));
+    cursorData.rt = LOWORD(fIcon ? RT_ICON : RT_CURSOR);
 
     /* Convert to win32k-ready data */
     if(!memcmp(pbIconBits, "RIFF", 4))
@@ -2877,19 +2869,13 @@ HICON WINAPI CreateIconFromResourceEx(
             pbIconBits = (PBYTE)pt;
         }
 
-        is_png = png_check_sig(pbIconBits, PNG_CHECK_SIG_SIZE);
-        TRACE("is_png %d\n", is_png);
-
+        /* Try to load BMP icon */
         if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)pbIconBits))
         {
-            if (is_png)
-                bmp_icon = convert_png_to_bmp_icon(pbIconBits, cbIconBits, &bmp_icon_size);
-
+            /* Try to load PNG icon */
+            bmp_icon = convert_png_to_bmp_icon(pbIconBits, cbIconBits, &bmp_icon_size);
             if (!bmp_icon)
-            {
-                ERR("bmp_icon is NULL\n");
                 goto end;
-            }
 
             CURSORICONFILEDIR *dir = (CURSORICONFILEDIR *)bmp_icon;
             const CURSORICONFILEDIRENTRY *entry =
@@ -2906,7 +2892,7 @@ HICON WINAPI CreateIconFromResourceEx(
 
             /* A bit of preparation */
             ZeroMemory(&cursorData, sizeof(cursorData));
-            cursorData.rt = (USHORT)((ULONG_PTR)(fIcon ? RT_ICON : RT_CURSOR));
+            cursorData.rt = LOWORD(fIcon ? RT_ICON : RT_CURSOR);
 
             DWORD offset = entry->dwDIBOffset;
             if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)&bmp_icon[offset]))
