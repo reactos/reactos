@@ -200,9 +200,9 @@ convert_png_to_bmp_icon(
     int bpp;
     switch (color_type)
     {
-        case PNG_COLOR_TYPE_RGB:        bpp = 3 * bit_depth; break;
-        case PNG_COLOR_TYPE_RGB_ALPHA:  bpp = 4 * bit_depth; break;
-        default: bpp = 0; break;
+        case PNG_COLOR_TYPE_RGB:       bpp = 24; break;
+        case PNG_COLOR_TYPE_RGB_ALPHA: bpp = 32; break;
+        default:                       bpp = 0;  break;
     }
     if (!bpp)
     {
