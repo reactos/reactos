@@ -35,8 +35,8 @@ typedef struct
 } CURSORICONFILEDIR;
 #include <poppack.h>
 
-/* libpng defines */
 #define PNG_BYTES_TO_CHECK 4
+#define PNG_CHECK_SIG_SIZE 8
 
 /* libpng helpers */
 typedef struct {
@@ -72,7 +72,7 @@ convert_png_to_bmp_icon(
     if (!pngbits || !filesize)
         return NULL;
 
-    BOOL is_png = !png_sig_cmp(pngbits, 0, 8);
+    BOOL is_png = png_check_sig(pngbits, PNG_CHECK_SIG_SIZE);
     TRACE("is_png %d and filesize %d\n", is_png, filesize);
     if (!is_png)
         return NULL;
@@ -2857,7 +2857,7 @@ HICON WINAPI CreateIconFromResourceEx(
             pbIconBits = (PBYTE)pt;
         }
 
-        is_png = !png_sig_cmp(pbIconBits, 0, 8);
+        is_png = png_check_sig(pbIconBits, PNG_CHECK_SIG_SIZE);
         TRACE("is_png %d\n", is_png);
 
         if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)pbIconBits))
