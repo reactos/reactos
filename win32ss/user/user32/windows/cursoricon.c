@@ -2777,6 +2777,12 @@ HICON WINAPI CreateIconFromResourceEx(
 
     TRACE("%p, %lu, %lu, %lu, %i, %i, %lu.\n", pbIconBits, cbIconBits, fIcon, dwVersion, cxDesired, cyDesired, uFlags);
 
+    if (!pbIconBits || cbIconBits < 2 * sizeof(DWORD))
+    {
+        ERR("Sanity check failed\n");
+        return NULL;
+    }
+
     if(uFlags & LR_DEFAULTSIZE)
     {
         if(!cxDesired) cxDesired = GetSystemMetrics(fIcon ? SM_CXICON : SM_CXCURSOR);
