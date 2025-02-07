@@ -20,8 +20,16 @@ typedef struct {
     BYTE bHeight;
     BYTE bColorCount;
     BYTE bReserved;
-    WORD xHotspot; /* planes in .ico */
-    WORD yHotspot; /* bpp in .ico */
+    union
+    {
+        WORD wPlanes; /* For icons */
+        WORD xHotspot; /* For cursors */
+    };
+    union
+    {
+        WORD wBitCount; /* For icons */
+        WORD yHotspot; /* For cursors */
+    };
     DWORD dwDIBSize;
     DWORD dwDIBOffset;
 } CURSORICONFILEDIRENTRY;
@@ -201,8 +209,8 @@ convert_png_to_bmp_icon(
     cifd.idEntries[0].bWidth = (BYTE)width;
     cifd.idEntries[0].bHeight = (BYTE)height;
     cifd.idEntries[0].bColorCount = 0; /* No color pallete */
-    cifd.idEntries[0].xHotspot = 1; /* Must be 0 or 1 */
-    cifd.idEntries[0].yHotspot = bpp;
+    cifd.idEntries[0].wPlanes = 1; /* Must be 1 */
+    cifd.idEntries[0].wBitCount = bpp;
     cifd.idEntries[0].dwDIBSize = (DWORD)(sizeof(info) + image_size);
     cifd.idEntries[0].dwDIBOffset = (DWORD)sizeof(cifd);
 
