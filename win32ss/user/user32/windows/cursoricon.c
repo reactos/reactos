@@ -1,9 +1,10 @@
 /*
- * PROJECT:         ReactOS user32.dll
- * COPYRIGHT:       GPL - See COPYING in the top level directory
- * FILE:            win32ss/user/user32/windows/cursoricon.c
- * PURPOSE:         cursor and icons implementation
- * PROGRAMMER:      Jérôme Gardou (jerome.gardou@reactos.org)
+ * PROJECT:     ReactOS user32.dll
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     cursor and icons implementation
+ * COPYRIGHT:   Copyright Jérôme Gardou (jerome.gardou@reactos.org)
+ *              Copyright 2022-2025 Doug Lyons (douglyons@douglyons.com)
+ *              Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <user32.h>
