@@ -175,7 +175,7 @@ class CAppInfoDisplay : public CUiWindow<CWindowImpl<CAppInfoDisplay>>
     Create(HWND hwndParent);
 
     VOID
-    ShowAppInfo(CAppInfo *Info);
+    ShowAppInfo(CAppInfo &Info, bool OnlyUpdateText = false);
     void
     SetWelcomeText(bool bAppwiz);
     VOID
@@ -388,6 +388,8 @@ class CApplicationView : public CUiWindow<CWindowImpl<CApplicationView>>
     void
     SetRedraw(BOOL bRedraw);
     void
+    RefreshAvailableItem(PCWSTR PackageName);
+    void
     SetFocusOnSearchBar();
     BOOL
     SetDisplayAppType(APPLICATION_VIEW_TYPE AppType);
@@ -414,6 +416,9 @@ class CApplicationView : public CUiWindow<CWindowImpl<CApplicationView>>
     GetRestoreListSelectionData(RESTORELISTSELECTION &Restore);
     VOID
     RestoreListSelection(const RESTORELISTSELECTION &Restore);
+
+    VOID
+    RefreshDetailsPane(CAppInfo &Info, bool OnlyUpdateText = false);
 
     // this function is called when a item of listview get focus.
     // CallbackParam is the param passed to listview when adding the item (the one getting focus now).
