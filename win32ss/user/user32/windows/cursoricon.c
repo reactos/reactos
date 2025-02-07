@@ -2883,7 +2883,7 @@ HICON WINAPI CreateIconFromResourceEx(
             pbIconBits = (PBYTE)pt;
         }
 
-        is_png = !png_sig_cmp((png_const_bytep)pbIconBits, 0, 8);
+        is_png = !png_sig_cmp(pbIconBits, 0, 8);
         TRACE("is_png %d\n", is_png);
 
         if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)pbIconBits))
