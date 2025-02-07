@@ -1649,16 +1649,14 @@ CURSORICON_LoadFromFileW(
     {
         pngbits = &bits[entry->dwDIBOffset];
         bmp_data = PNGtoBMP(pngbits, filesize, &bmp_size);
-
         if (!bmp_data)
         {
             ERR("bmp_data is NULL\n");
-            return NULL;
+            goto end;
         }
 
-        dir = (CURSORICONFILEDIR*)bmp_data;
+        dir = (CURSORICONFILEDIR *)bmp_data;
         entry = get_best_icon_file_entry(dir, bmp_size, cxDesired, cyDesired, bIcon, fuLoad);
-
         if (!entry)
             goto end;
 
@@ -1670,7 +1668,8 @@ CURSORICON_LoadFromFileW(
         ZeroMemory(&cursorData, sizeof(cursorData));
         cursorData.rt = (USHORT)((ULONG_PTR)(bIcon ? RT_ICON : RT_CURSOR));
 
-        if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO*)(&bmp_data[entry->dwDIBOffset])))
+        DWORD offset = entry->dwDIBOffset;
+        if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)(&bmp_data[offset])))
         {
             ERR("Failing File is \n    '%S'.\n", lpszName);
             goto end;
@@ -2881,7 +2880,7 @@ HICON WINAPI CreateIconFromResourceEx(
         is_png = !png_sig_cmp((png_const_bytep)pbIconBits, 0, 8);
         TRACE("is_png %d\n", is_png);
 
-        if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO*)pbIconBits))
+        if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)pbIconBits))
         {
             if (is_png)
                 bmp_data = PNGtoBMP(pbIconBits, cbIconBits, &bmp_size);
@@ -2889,15 +2888,17 @@ HICON WINAPI CreateIconFromResourceEx(
             if (!bmp_data)
             {
                 ERR("bmp_data is NULL\n");
-                return NULL;
+                goto end;
             }
 
             CURSORICONFILEDIR *dir = (CURSORICONFILEDIR *)bmp_data;
             const CURSORICONFILEDIRENTRY *entry =
                 get_best_icon_file_entry(dir, bmp_size, cxDesired, cyDesired, fIcon, uFlags);
-
             if (!entry)
-                goto out;
+            {
+                ERR("Couldn't get icon entry\n");
+                goto end;
+            }
 
             /* Fix dimensions */
             if (!cxDesired) cxDesired = entry->bWidth;
@@ -2909,20 +2910,11 @@ HICON WINAPI CreateIconFromResourceEx(
 
             DWORD offset = entry->dwDIBOffset;
             if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)&bmp_data[offset]))
-                goto end;
-
-out:
-            ERR("Couldn't fill the CURSORDATA structure.\n");
-            if (ResHandle)
-                FreeResource(ResHandle);
-            if (!is_png)
             {
-                HeapFree(GetProcessHeap(), 0, bmp_data);
-                return NULL;
+                ERR("Couldn't get cursor/icon data\n");
+                goto end;
             }
         }
-        if (ResHandle)
-            FreeResource(ResHandle);
         isAnimated = FALSE;
     }
 
