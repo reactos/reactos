@@ -1651,7 +1651,7 @@ CURSORICON_LoadFromFileW(
         if (!cyDesired) cyDesired = entry->bHeight;
 
         /* A bit of preparation */
-        ZeroMemory(&cursorData, sizeof(cursorData));
+        RtlZeroMemory(&cursorData, sizeof(cursorData));
         cursorData.rt = LOWORD(bIcon ? RT_ICON : RT_CURSOR);
 
         offset = entry->dwDIBOffset;
@@ -2891,7 +2891,7 @@ HICON WINAPI CreateIconFromResourceEx(
             if (!cyDesired) cyDesired = entry->bHeight;
 
             /* A bit of preparation */
-            ZeroMemory(&cursorData, sizeof(cursorData));
+            RtlZeroMemory(&cursorData, sizeof(cursorData));
             cursorData.rt = LOWORD(fIcon ? RT_ICON : RT_CURSOR);
 
             DWORD offset = entry->dwDIBOffset;
