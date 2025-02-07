@@ -1644,9 +1644,7 @@ CURSORICON_LoadFromFileW(
 
         /* Find icon entry from BMP icon */
         dir = (CURSORICONFILEDIR *)pbBmpIcon;
-        entry = get_best_icon_file_entry(dir, BmpIconSize, cxDesired, cyDesired, bIcon, fuLoad);
-        if (!entry)
-            goto end;
+        entry = &dir->idEntries[0];
 
         /* A bit of preparation */
         RtlZeroMemory(&cursorData, sizeof(cursorData));
@@ -2877,14 +2875,8 @@ HICON WINAPI CreateIconFromResourceEx(
                 goto end; /* Not PNG icon or failed */
 
             /* Find icon entry from BMP icon */
-            CURSORICONFILEDIR *dir = (CURSORICONFILEDIR *)pbBmpIcon;
-            const CURSORICONFILEDIRENTRY *entry =
-                get_best_icon_file_entry(dir, BmpIconSize, cxDesired, cyDesired, fIcon, uFlags);
-            if (!entry)
-            {
-                ERR("Couldn't get icon entry\n");
-                goto end;
-            }
+            const CURSORICONFILEDIR *dir = (CURSORICONFILEDIR *)pbBmpIcon;
+            const CURSORICONFILEDIRENTRY *entry = &dir->idEntries[0];
 
             /* A bit of preparation */
             RtlZeroMemory(&cursorData, sizeof(cursorData));
