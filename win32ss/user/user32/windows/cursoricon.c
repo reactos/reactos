@@ -1669,7 +1669,7 @@ CURSORICON_LoadFromFileW(
             goto end;
         }
 
-        ERR("Processing Special File:\n    '%S'.\n", lpszName);
+        TRACE("Processing PNG/Vista icon: '%S'\n", lpszName);
     }
 
     hCurIcon = NtUserxCreateEmptyCurObject(FALSE);
