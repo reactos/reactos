@@ -44,6 +44,32 @@ WinList_RegisterPending(
     _In_ DWORD dwUnused,
     _Out_ PLONG plCookie);
 
+/*****************************************************************************
+ * IConnectionPointCB interface
+ *
+ * The method names are unconfirmed.
+ */
+#define INTERFACE IConnectionPointCB
+DECLARE_INTERFACE_(IConnectionPointCB, IUnknown)
+{
+     /*** IUnknown ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+     /*** IConnectionPointCB ***/
+    STDMETHOD(OnAdvise)(THIS_ REFIID riid, UINT nNewItemCount, DWORD dwCookie) PURE;
+    STDMETHOD(OnUnadvise)(THIS_ REFIID riid, UINT nNewItemCount, DWORD dwCookie) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define IConnectionPointCB_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
+#define IConnectionPointCB_AddRef(T) (T)->lpVtbl->AddRef(T)
+#define IConnectionPointCB_Release(T) (T)->lpVtbl->Release(T)
+#define IConnectionPointCB_OnAdvise(T,a,b,c) (T)->lpVtbl->OnAdvise(T,a,b,c)
+#define IConnectionPointCB_OnUnadvise(T,a,b,c) (T)->lpVtbl->OnUnadvise(T,a,b,c)
+#endif
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

@@ -10,7 +10,22 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
-static VARIANT s_vaEmpty = { VT_EMPTY };
+static IShellWindows *g_pShellWindows = NULL;
+static DWORD g_dwWinListCFCookie = 0;
+
+static BOOL
+IsExplorerProcess(VOID)
+{
+    static INT bValue = -1;
+    if (bValue == -1)
+        bValue = !!GetModuleHandleW(L"explorer.exe");
+    return bValue;
+}
+
+//////////////////////////////////////////////////////////////////////////
+//   OLE Automation for scripting
+
+static VARIANT g_vaEmpty = { VT_EMPTY };
 
 static HRESULT
 InitVariantFromBuffer(
@@ -41,32 +56,169 @@ InitVariantFromIDList(
     return InitVariantFromBuffer(pvarg, pidl, ILGetSize(pidl));
 }
 
+//////////////////////////////////////////////////////////////////////////
+//   Marshaling
+//
+// NOTE: GIT stands for "Global Interface Table"
+
 static HRESULT
-VariantClearLazy(_Inout_ LPVARIANTARG pvarg)
+MarshalToGIT(
+    _In_ IUnknown *pUnknown,
+    _In_ REFIID riid,
+    _Out_ PDWORD pdwCookie)
 {
-    switch (V_VT(pvarg))
-    {
-        case VT_EMPTY:
-        case VT_BOOL:
-        case VT_I4:
-        case VT_UI4:
-            break;
-        case VT_UNKNOWN:
-            if (V_UNKNOWN(pvarg))
-                V_UNKNOWN(pvarg)->Release();
-            break;
-        case VT_DISPATCH:
-            if (V_DISPATCH(pvarg))
-                V_DISPATCH(pvarg)->Release();
-            break;
-        case VT_SAFEARRAY:
-            SafeArrayDestroy(V_ARRAY(pvarg));
-            break;
-        default:
-            return VariantClear(pvarg);
-    }
-    V_VT(pvarg) = VT_EMPTY;
-    return S_OK;
+    *pdwCookie = 0;
+
+    CComPtr<IGlobalInterfaceTable> pTable;
+    HRESULT hr = CoCreateInstance(CLSID_StdGlobalInterfaceTable, 0, CLSCTX_INPROC_SERVER,
+                                  IID_PPV_ARG(IGlobalInterfaceTable, &pTable));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    return pTable->RegisterInterfaceInGlobal(pUnknown, riid, pdwCookie);
+}
+
+static VOID
+RevokeFromGIT(_In_ DWORD dwCookie)
+{
+    if (dwCookie == MAXDWORD)
+        return;
+
+    CComPtr<IGlobalInterfaceTable> pTable;
+    HRESULT hr = CoCreateInstance(CLSID_StdGlobalInterfaceTable, 0, CLSCTX_INPROC_SERVER,
+                                  IID_PPV_ARG(IGlobalInterfaceTable, &pTable));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return;
+    pTable->RevokeInterfaceFromGlobal(dwCookie);
+}
+
+static HRESULT
+UnMarshalFromGIT(
+    _In_ DWORD dwCookie,
+    _In_ REFIID riid,
+    _Out_ LPVOID *ppv)
+{
+    CComPtr<IGlobalInterfaceTable> pTable;
+    HRESULT hr = CoCreateInstance(CLSID_StdGlobalInterfaceTable, 0, CLSCTX_INPROC_SERVER,
+                                  IID_PPV_ARG(IGlobalInterfaceTable, &pTable));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    return pTable->GetInterfaceFromGlobal(dwCookie, riid, ppv);
+}
+
+EXTERN_C HRESULT
+ShellWindowsGetClassObject(
+    _In_ REFIID rclsid,
+    _In_ REFIID riid,
+    _Out_ LPVOID *ppv)
+{
+    if (rclsid != CLSID_ShellWindows)
+        return CLASS_E_CLASSNOTAVAILABLE;
+
+    if (IsExplorerProcess())
+        return CoGetClassObject(CLSID_ShellWindows, CLSCTX_LOCAL_SERVER, NULL, riid, ppv);
+
+    return UnMarshalFromGIT(g_dwWinListCFCookie, riid, ppv);
+}
+
+//////////////////////////////////////////////////////////////////////////
+//   CShellWindowListCF class --- Shell window list class factory
+
+class CShellWindowListCF : public CComClassFactory
+{
+public:
+    CComPtr<IShellWindows> m_pShellWindows;
+
+    CShellWindowListCF()           { SHDOCVW_LockModule();   }
+    virtual ~CShellWindowListCF()  { SHDOCVW_UnlockModule(); }
+
+    HRESULT Init();
+    HRESULT Register();
+    static VOID UnRegister();
+
+    // IUnknown methods will be populated by ShellObjectCreator
+
+    // *** IClassFactory methods ***
+    STDMETHODIMP CreateInstance(
+        _In_ IUnknown *pUnkOuter,
+        _In_ REFIID riid,
+        _Out_ void **ppvObject) override;
+    STDMETHODIMP LockServer(_In_ BOOL fLock) override { return S_OK; }
+
+    DECLARE_CLASSFACTORY_EX(CShellWindowListCF)
+    DECLARE_NOT_AGGREGATABLE(CShellWindowListCF)
+
+    BEGIN_COM_MAP(CComClassFactory)
+        COM_INTERFACE_ENTRY_IID(IID_IClassFactory, IClassFactory)
+    END_COM_MAP()
+};
+
+//////////////////////////////////////////////////////////////////////////
+//   CShellWindowListCF methods
+
+HRESULT
+CShellWindowListCF::Init()
+{
+    ATLASSERT(!m_pShellWindows);
+    return CSDWindows_CreateInstance(&m_pShellWindows);
+}
+
+STDMETHODIMP
+CShellWindowListCF::CreateInstance(
+    _In_ IUnknown *pUnkOuter,
+    _In_ REFIID riid,
+    _Out_ void **ppvObject)
+{
+    if (!m_pShellWindows)
+        return E_FAIL;
+    return m_pShellWindows->QueryInterface(riid, ppvObject);
+}
+
+HRESULT
+CShellWindowListCF::Register()
+{
+    if (IsExplorerProcess())
+        return CoRegisterClassObject(CLSID_ShellWindows, this,
+                                     CLSCTX_INPROC_SERVER | CLSCTX_LOCAL_SERVER,
+                                     REGCLS_MULTIPLEUSE, &g_dwWinListCFCookie);
+
+    return MarshalToGIT(this, IID_IClassFactory, &g_dwWinListCFCookie);
+}
+
+VOID
+CShellWindowListCF::UnRegister(VOID)
+{
+    if (!g_dwWinListCFCookie)
+        return;
+
+    if (IsExplorerProcess())
+        CoRevokeClassObject(g_dwWinListCFCookie);
+    else
+        RevokeFromGIT(g_dwWinListCFCookie);
+
+    g_dwWinListCFCookie = 0;
+}
+
+//////////////////////////////////////////////////////////////////////////
+//   CSDWindows methods
+
+CSDWindows::CSDWindows()
+    : m_hDpa1(NULL)
+    , m_hDpa2(NULL)
+    , m_dwUnknown(0)
+    , m_hwndWorker(NULL)
+    , m_dwThreadId(0)
+    , m_ConnectionPoint(this, &DIID_DShellWindowsEvents)
+{
+}
+
+EXTERN_C HRESULT
+CSDWindows_CreateInstance(_Out_ IShellWindows **ppShellWindows)
+{
+    CComPtr<CSDWindows> pShellWindows;
+    HRESULT hr = ShellObjectCreator(pShellWindows);
+    if (FAILED_UNEXPECTEDLY(hr) || !pShellWindows->Init())
+        return E_OUTOFMEMORY;
+    return pShellWindows->QueryInterface(IID_PPV_ARG(IShellWindows, ppShellWindows));
 }
 
 /*************************************************************************
@@ -78,8 +230,29 @@ EXTERN_C
 BOOL WINAPI
 WinList_Init(VOID)
 {
-    FIXME("()\n");
-    return FALSE;
+    TRACE("()\n");
+
+    if (!IsExplorerProcess() && GetShellWindow())
+        return FALSE;
+
+    CComPtr<CShellWindowListCF> pWinListCF;
+    HRESULT hr = ShellObjectCreator(pWinListCF);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return FALSE;
+
+    hr = pWinListCF->Init();
+    if (FAILED_UNEXPECTEDLY(hr))
+        return FALSE;
+
+    hr = pWinListCF->Register();
+    if (FAILED_UNEXPECTEDLY(hr))
+        return FALSE;
+
+    g_pShellWindows = pWinListCF->m_pShellWindows;
+    ATLASSERT(g_pShellWindows != NULL);
+    g_pShellWindows->AddRef();
+
+    return TRUE;
 }
 
 /*************************************************************************
@@ -91,7 +264,15 @@ EXTERN_C
 VOID WINAPI
 WinList_Terminate(VOID)
 {
-    FIXME("()\n");
+    TRACE("()\n");
+
+    CShellWindowListCF::UnRegister();
+
+    if (g_pShellWindows)
+    {
+        g_pShellWindows->Release();
+        g_pShellWindows = NULL;
+    }
 }
 
 /*************************************************************************
@@ -105,8 +286,18 @@ IShellWindows* WINAPI
 WinList_GetShellWindows(
     _In_ BOOL bCreate)
 {
-    FIXME("(%d)\n", bCreate);
-    return NULL;
+    TRACE("(%d)\n", bCreate);
+
+    if (!bCreate && g_pShellWindows)
+    {
+        g_pShellWindows->AddRef();
+        return g_pShellWindows;
+    }
+
+    CComPtr<IShellWindows> pShellWindows;
+    CoCreateInstance(CLSID_ShellWindows, NULL, CLSCTX_INPROC_SERVER | CLSCTX_LOCAL_SERVER,
+                     IID_PPV_ARG(IShellWindows, &pShellWindows));
+    return pShellWindows.Detach();
 }
 
 /*************************************************************************
@@ -136,7 +327,7 @@ WinList_NotifyNewLocation(
         return hr;
 
     hr = pShellWindows->OnNavigate(lCookie, &varg);
-    VariantClearLazy(&varg);
+    SafeArrayDestroy(V_ARRAY(&varg));
     return hr;
 }
 
@@ -184,11 +375,11 @@ WinList_FindFolderWindow(
 
     CComPtr<IDispatch> pDispatch;
     const INT options = SWFO_INCLUDEPENDING | (ppWebBrowserApp ? SWFO_NEEDDISPATCH : 0);
-    hr = pShellWindows->FindWindowSW(&varg, &s_vaEmpty, SWC_BROWSER, phwnd, options, &pDispatch);
+    hr = pShellWindows->FindWindowSW(&varg, &g_vaEmpty, SWC_BROWSER, phwnd, options, &pDispatch);
     if (pDispatch && ppWebBrowserApp)
         hr = pDispatch->QueryInterface(IID_PPV_ARG(IWebBrowserApp, ppWebBrowserApp));
 
-    VariantClearLazy(&varg);
+    SafeArrayDestroy(V_ARRAY(&varg));
     return hr;
 }
 
@@ -226,8 +417,8 @@ WinList_RegisterPending(
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = pShellWindows->RegisterPending(dwThreadId, &varg, &s_vaEmpty, SWC_BROWSER, plCookie);
-    VariantClearLazy(&varg);
+    hr = pShellWindows->RegisterPending(dwThreadId, &varg, &g_vaEmpty, SWC_BROWSER, plCookie);
+    SafeArrayDestroy(V_ARRAY(&varg));
     return hr;
 }
 

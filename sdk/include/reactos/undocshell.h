@@ -976,6 +976,8 @@ SHGetComputerDisplayNameW(
     _Out_writes_z_(cchNameMax) LPWSTR pszName,
     _In_ DWORD cchNameMax);
 
+HRESULT WINAPI SHLoadInProc(_In_ REFCLSID rclsid);
+
 /*****************************************************************************
  * INVALID_FILETITLE_CHARACTERS
  */
