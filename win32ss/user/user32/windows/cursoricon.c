@@ -114,8 +114,7 @@ convert_png_to_bmp_icon(
     int image_size = height * rowbytes;
     TRACE("rowbytes %d, channels %d, image_size %d\n", rowbytes, channels, image_size);
 
-    /* Read png image data */
-    /* Set row pointer which will take pixel value from png file */
+    /* Allocate rows data */
     png_bytepp row_pointers = png_malloc(png_ptr, sizeof(png_bytep) * height);
     if (!row_pointers)
     {
@@ -124,7 +123,6 @@ convert_png_to_bmp_icon(
         return NULL;
     }
 
-    /* Allocate rows */
     for (int i = 0; i < height; i++)
     {
         row_pointers[i] = png_malloc(png_ptr, rowbytes);
@@ -141,6 +139,7 @@ convert_png_to_bmp_icon(
             return NULL;
         }
     }
+
     png_set_rows(png_ptr, info_ptr, row_pointers);
 
     /* Read png image data */
