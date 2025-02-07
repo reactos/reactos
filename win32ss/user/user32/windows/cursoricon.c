@@ -64,7 +64,7 @@ read_memory_png(
     if ((state->current_pos + length) > state->bufsize)
     {
         ERR("png read error\n");
-        png_error(png_ptr, "read error in read_memory_png (loadpng)");
+        png_error(png_ptr, "read error in read_memory_png");
         return;
     }
     RtlCopyMemory(data, state->buffer + state->current_pos, length);
