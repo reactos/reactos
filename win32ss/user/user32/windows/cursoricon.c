@@ -63,7 +63,7 @@ read_memory_png(
     PNG_READER_STATE *state = png_get_io_ptr(png_ptr);
     if ((state->current_pos + length) > state->bufsize)
     {
-        ERR("read error\n");
+        ERR("png read error\n");
         png_error(png_ptr, "read error in read_memory_png (loadpng)");
         return;
     }
