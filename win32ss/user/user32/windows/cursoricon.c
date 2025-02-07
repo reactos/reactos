@@ -126,7 +126,7 @@ convert_png_to_bmp_icon(
     if (!row_pointers)
     {
         ERR("png_malloc failed\n");
-        png_destroy_read_struct(&png_ptr, NULL, NULL);
+        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
         return NULL;
     }
 
@@ -141,7 +141,7 @@ convert_png_to_bmp_icon(
             while (--i >= 0)
                 png_free(png_ptr, row_pointers[i]);
             png_free(png_ptr, row_pointers);
-            png_destroy_read_struct(&png_ptr, NULL, NULL);
+            png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 
             return NULL;
         }
