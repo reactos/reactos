@@ -71,6 +71,8 @@ read_memory_png(
     state->current_pos += length;
 }
 
+static int get_dib_image_size( int width, int height, int depth );
+
 static LPBYTE
 convert_png_to_bmp_icon(
     _In_ LPBYTE pngbits,
@@ -195,6 +197,9 @@ convert_png_to_bmp_icon(
     /* Get BPP (Bits Per Pixel) */
     WORD bpp = (WORD)(bit_depth * channels);
 
+    /* The size of mask bits */
+    DWORD mask_size = get_dib_image_size(width, height, 1);
+
     /* Set up BITMAPINFOHEADER data */
     BITMAPINFOHEADER info = { sizeof(info) };
     info.biWidth = width;
@@ -202,7 +207,6 @@ convert_png_to_bmp_icon(
     info.biPlanes = 1;
     info.biBitCount = bpp;
     info.biCompression = BI_RGB;
-    info.biSizeImage = image_size;
 
     /* Set up CURSORICONFILEDIR data */
     CURSORICONFILEDIR cifd = { 0, 1, 1 };
@@ -211,11 +215,11 @@ convert_png_to_bmp_icon(
     cifd.idEntries[0].bColorCount = 0; /* No color pallete */
     cifd.idEntries[0].wPlanes = 1; /* Must be 1 */
     cifd.idEntries[0].wBitCount = bpp;
-    cifd.idEntries[0].dwDIBSize = (DWORD)(sizeof(info) + image_size);
+    cifd.idEntries[0].dwDIBSize = (DWORD)(sizeof(info) + image_size + mask_size);
     cifd.idEntries[0].dwDIBOffset = (DWORD)sizeof(cifd);
 
     /* Allocate BMP icon data */
-    *pbmp_icon_size = (DWORD)(sizeof(cifd) + sizeof(info) + image_size);
+    *pbmp_icon_size = (DWORD)(sizeof(cifd) + sizeof(info) + image_size + mask_size);
     LPBYTE bmp_icon = HeapAlloc(GetProcessHeap(), 0, *pbmp_icon_size);
     if (!bmp_icon)
     {
@@ -231,6 +235,8 @@ convert_png_to_bmp_icon(
     RtlCopyMemory(pb, &info, sizeof(info));
     pb += sizeof(info);
     RtlCopyMemory(pb, image_bytes, image_size);
+    pb += image_size;
+    RtlFillMemory(pb, mask_size, 0xFF); /* Mask bits for AND operation */
 
     HeapFree(GetProcessHeap(), 0, image_bytes);
     return bmp_icon;
