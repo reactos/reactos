@@ -44,7 +44,7 @@ typedef struct
 #include <poppack.h>
 
 #define PNG_BYTES_TO_CHECK 4
-#define PNG_CHECK_SIG_SIZE 8
+#define PNG_CHECK_SIG_SIZE 8 /* Check signature size */
 
 /* libpng helpers */
 typedef struct {
