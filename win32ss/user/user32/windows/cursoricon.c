@@ -63,7 +63,7 @@ read_memory_png(
 }
 
 static LPBYTE
-PNGtoBMP(
+convert_png_to_bmp_icon(
     _In_ LPBYTE pngbits,
     _In_ DWORD filesize,
     _Out_ PDWORD pbmp_size)
@@ -1649,7 +1649,7 @@ CURSORICON_LoadFromFileW(
     if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)(&bits[offset])))
     {
         pngbits = &bits[entry->dwDIBOffset];
-        bmp_data = PNGtoBMP(pngbits, filesize, &bmp_size);
+        bmp_data = convert_png_to_bmp_icon(pngbits, filesize, &bmp_size);
         if (!bmp_data)
         {
             ERR("bmp_data is NULL\n");
@@ -2884,7 +2884,7 @@ HICON WINAPI CreateIconFromResourceEx(
         if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)pbIconBits))
         {
             if (is_png)
-                bmp_data = PNGtoBMP(pbIconBits, cbIconBits, &bmp_size);
+                bmp_data = convert_png_to_bmp_icon(pbIconBits, cbIconBits, &bmp_size);
 
             if (!bmp_data)
             {
