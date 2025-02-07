@@ -69,7 +69,7 @@ convert_png_to_bmp_icon(
     _In_ DWORD filesize,
     _Out_ PDWORD pbmp_icon_size)
 {
-    if (!pngbits || !filesize)
+    if (!pngbits || filesize < PNG_CHECK_SIG_SIZE)
         return NULL;
 
     BOOL is_png = png_check_sig(pngbits, PNG_CHECK_SIG_SIZE);
