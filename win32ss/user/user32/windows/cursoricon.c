@@ -20,7 +20,7 @@ typedef struct {
     BYTE bColorCount;
     BYTE bReserved;
     WORD xHotspot;
-    WORD yHotspot;
+    WORD yHotspot; /* bpp in .ico */
     DWORD dwDIBSize;
     DWORD dwDIBOffset;
 } CURSORICONFILEDIRENTRY;
@@ -42,7 +42,7 @@ typedef struct {
     png_bytep buffer;
     png_uint_32 bufsize;
     png_uint_32 current_pos;
-} MEMORY_READER_STATE;
+} PNG_READER_STATE;
 
 /* This function will be used for reading png data from memory */
 static VOID
@@ -51,7 +51,7 @@ read_memory_png(
     _Out_ png_bytep data,
     _In_ size_t length) 
 {
-    MEMORY_READER_STATE *state = png_get_io_ptr(png_ptr);
+    PNG_READER_STATE *state = png_get_io_ptr(png_ptr);
     if (length > (state->bufsize - state->current_pos))
     {
         ERR("read error\n");
@@ -92,7 +92,7 @@ PNGtoBMP(
     }
 
     /* Set our own read_function */
-    MEMORY_READER_STATE reader_state;
+    PNG_READER_STATE reader_state;
     reader_state.buffer = pngbits;
     reader_state.bufsize = filesize;
     reader_state.current_pos = PNG_BYTES_TO_CHECK;
@@ -116,7 +116,7 @@ PNGtoBMP(
 
     /* Read png image data */
     /* Set row pointer which will take pixel value from png file */
-    png_bytep *row_pointers = png_malloc(png_ptr, sizeof(png_bytep) * height);
+    png_bytepp row_pointers = png_malloc(png_ptr, sizeof(png_bytep) * height);
     if (!row_pointers)
     {
         ERR("png_malloc failed\n");
@@ -1645,7 +1645,8 @@ CURSORICON_LoadFromFileW(
     cursorData.rt = (USHORT)((ULONG_PTR)(bIcon ? RT_ICON : RT_CURSOR));
 
     /* Do the dance */
-    if(!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO*)(&bits[entry->dwDIBOffset])))
+    DWORD offset = entry->dwDIBOffset;
+    if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)(&bits[offset])))
     {
         pngbits = &bits[entry->dwDIBOffset];
         bmp_data = PNGtoBMP(pngbits, filesize, &bmp_size);
@@ -1668,7 +1669,7 @@ CURSORICON_LoadFromFileW(
         ZeroMemory(&cursorData, sizeof(cursorData));
         cursorData.rt = (USHORT)((ULONG_PTR)(bIcon ? RT_ICON : RT_CURSOR));
 
-        DWORD offset = entry->dwDIBOffset;
+        offset = entry->dwDIBOffset;
         if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)(&bmp_data[offset])))
         {
             ERR("Failing File is \n    '%S'.\n", lpszName);
