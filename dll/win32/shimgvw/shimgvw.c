@@ -13,7 +13,7 @@
 #include <shlobj.h>
 #include <shellapi.h>
 
-EXTERN_C LPCWSTR GetExtraExtensionsGdipList();
+EXTERN_C PCWSTR GetExtraExtensionsGdipList(VOID);
 EXTERN_C HRESULT LoadImageFromPath(LPCWSTR Path, GpImage** ppImage);
 
 /* Toolbar image size */
@@ -366,7 +366,7 @@ Preview_pLoadImage(PPREVIEW_DATA pData, LPCWSTR szOpenFileName)
     hr = LoadImageFromPath(szOpenFileName, &g_pImage);
     if (FAILED(hr))
     {
-        DPRINT1("GdipLoadImageFromStream() failed %d\n", hr);
+        DPRINT1("GdipLoadImageFromStream() failed, %d\n", hr);
         Preview_pFreeImage(pData);
         Preview_UpdateTitle(pData, NULL);
         return;
@@ -571,7 +571,8 @@ pBuildFileList(LPCWSTR szFirstFile)
     ImageCodecInfo *codecInfo;
     UINT num = 0, size = 0, ExtraSize = 0;
     UINT j;
-    const LPCWSTR ExtraExtensions = GetExtraExtensionsGdipList();
+
+    const PCWSTR ExtraExtensions = GetExtraExtensionsGdipList();
     const UINT ExtraCount = ExtraExtensions[0] ? 1 : 0;
     if (ExtraCount)
         ExtraSize += sizeof(*codecInfo) + (wcslen(ExtraExtensions) + 1) * sizeof(WCHAR);

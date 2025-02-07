@@ -108,14 +108,14 @@ static bool GetInfoFromIcoBmp(const void* pBitmapInfo, IMAGEINFO& stat)
     return ret && stat.h;
 }
 
-EXTERN_C LPCWSTR GetExtraExtensionsGdipList()
+EXTERN_C PCWSTR GetExtraExtensionsGdipList()
 {
     return L"*.CUR"; // "*.FOO;*.BAR" etc.
 }
 
 static void OverrideFileContent(HGLOBAL& hMem, DWORD& Size)
 {
-    char* buffer = (char*)GlobalLock(hMem);
+    PBYTE buffer = (PBYTE)GlobalLock(hMem);
     if (!buffer)
         return;
 
@@ -139,7 +139,7 @@ static void OverrideFileContent(HGLOBAL& hMem, DWORD& Size)
             {
                 BOOL valid = FALSE;
                 IMAGEINFO info;
-                const char* data = buffer + entries[i].offset;
+                const BYTE* data = buffer + entries[i].offset;
                 if (IsPngSignature(data, entries[i].size))
                     valid = GetInfoFromPng(data, entries[i].size, info);
                 else
@@ -166,7 +166,7 @@ static void OverrideFileContent(HGLOBAL& hMem, DWORD& Size)
                     for (UINT i = 0; i < count; ++i)
                     {
                         BitmapInfoHeader bih;
-                        const char* data = buffer + entries[i].offset;
+                        const BYTE* data = buffer + entries[i].offset;
                         if (IsPngSignature(data, entries[i].size))
                         {
                             IMAGEINFO info;
@@ -189,9 +189,9 @@ static void OverrideFileContent(HGLOBAL& hMem, DWORD& Size)
 #if 0
                 // Convert to a .ico with a single image
                 pIcoHdr->Count = 1;
-                const char* data = buffer + entries[bestindex].offset;
+                const BYTE* data = buffer + entries[bestindex].offset;
                 entries[0] = entries[bestindex];
-                entries[0].offset = (UINT)UINT_PTR((char*)&entries[1] - buffer);
+                entries[0].offset = (UINT)UINT_PTR((PBYTE)&entries[1] - buffer);
                 MoveMemory(buffer + entries[0].offset, data, entries[0].size);
                 Size = entries[0].offset + entries[0].size;
 #else
