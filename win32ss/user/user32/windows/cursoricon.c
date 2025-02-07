@@ -19,7 +19,8 @@ typedef struct {
     BYTE bHeight;
     BYTE bColorCount;
     BYTE bReserved;
-    WORD xHotspot;
+    WORD xHotspot; /* planes in .ico */
+    WORD yHotspot; /* bpp in .ico */
     WORD yHotspot; /* bpp in .ico */
     DWORD dwDIBSize;
     DWORD dwDIBOffset;
