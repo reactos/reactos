@@ -219,7 +219,7 @@ ConvertPngToBmpIcon(
     LPBYTE pbBmpIcon = HeapAlloc(GetProcessHeap(), 0, *pBmpIconSize);
     if (!pbBmpIcon)
     {
-        ERR("pbBmpIcon was NULL\n");
+        ERR("HeapAlloc failed\n");
         HeapFree(GetProcessHeap(), 0, imageBytes);
         return NULL;
     }
