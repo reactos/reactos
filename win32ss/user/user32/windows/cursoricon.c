@@ -21,7 +21,6 @@ typedef struct {
     BYTE bReserved;
     WORD xHotspot; /* planes in .ico */
     WORD yHotspot; /* bpp in .ico */
-    WORD yHotspot; /* bpp in .ico */
     DWORD dwDIBSize;
     DWORD dwDIBOffset;
 } CURSORICONFILEDIRENTRY;
