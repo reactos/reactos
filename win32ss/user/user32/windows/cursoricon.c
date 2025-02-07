@@ -74,14 +74,14 @@ static int get_dib_image_size( int width, int height, int depth );
 
 static LPBYTE
 ConvertPngToBmpIcon(
-    _In_ LPBYTE pngbits,
-    _In_ DWORD filesize,
+    _In_ LPBYTE pngBits,
+    _In_ DWORD fileSize,
     _Out_ PDWORD pBmpIconSize)
 {
-    if (!pngbits || filesize < PNG_CHECK_SIG_SIZE || !png_check_sig(pngbits, PNG_CHECK_SIG_SIZE))
+    if (!pngBits || fileSize < PNG_CHECK_SIG_SIZE || !png_check_sig(pngBits, PNG_CHECK_SIG_SIZE))
         return NULL;
 
-    TRACE("pngbits %p filesize %d\n", pngbits, filesize);
+    TRACE("pngBits %p fileSize %d\n", pngBits, fileSize);
 
     png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr)
@@ -99,8 +99,8 @@ ConvertPngToBmpIcon(
     }
 
     /* Set our own read_function */
-    PNG_READER_STATE reader_state = { pngbits, filesize, PNG_CHECK_SIG_SIZE };
-    png_set_read_fn(png_ptr, &reader_state, ReadMemoryPng);
+    PNG_READER_STATE readerState = { pngBits, fileSize, PNG_CHECK_SIG_SIZE };
+    png_set_read_fn(png_ptr, &readerState, ReadMemoryPng);
     png_set_sig_bytes(png_ptr, PNG_CHECK_SIG_SIZE);
 
     /* Read png info */
@@ -124,8 +124,8 @@ ConvertPngToBmpIcon(
 
     int channels = png_get_channels(png_ptr, info_ptr);
     int rowbytes = png_get_rowbytes(png_ptr, info_ptr);
-    int image_size = height * rowbytes;
-    TRACE("rowbytes %d, channels %d, image_size %d\n", rowbytes, channels, image_size);
+    int imageSize = height * rowbytes;
+    TRACE("rowbytes %d, channels %d, imageSize %d\n", rowbytes, channels, imageSize);
 
     /* Allocate rows data */
     png_bytepp row_pointers = png_malloc(png_ptr, sizeof(png_bytep) * height);
@@ -159,10 +159,10 @@ ConvertPngToBmpIcon(
     png_read_end(png_ptr, info_ptr);
 
     /* After reading the image, you can deal with row pointers */
-    LPBYTE image_bytes = HeapAlloc(GetProcessHeap(), 0, image_size);
-    if (image_bytes)
+    LPBYTE imageBytes = HeapAlloc(GetProcessHeap(), 0, imageSize);
+    if (imageBytes)
     {
-        LPBYTE pb = image_bytes;
+        LPBYTE pb = imageBytes;
         for (int i = height - 1; i >= 0; i--)
         {
             png_bytep row = row_pointers[i];
@@ -184,7 +184,7 @@ ConvertPngToBmpIcon(
     png_free(png_ptr, row_pointers);
     png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 
-    if (!image_bytes)
+    if (!imageBytes)
     {
         ERR("HeapAlloc failed\n");
         return NULL;
@@ -194,7 +194,7 @@ ConvertPngToBmpIcon(
     WORD bpp = (WORD)(bit_depth * channels);
 
     /* The size of mask bits */
-    DWORD mask_size = get_dib_image_size(width, height, 1);
+    DWORD maskSize = get_dib_image_size(width, height, 1);
 
     /* Set up BITMAPINFOHEADER data */
     BITMAPINFOHEADER info = { sizeof(info) };
@@ -211,16 +211,16 @@ ConvertPngToBmpIcon(
     cifd.idEntries[0].bColorCount = 0; /* No color pallete */
     cifd.idEntries[0].wPlanes = 1; /* Must be 1 */
     cifd.idEntries[0].wBitCount = bpp;
-    cifd.idEntries[0].dwDIBSize = (DWORD)(sizeof(info) + image_size + mask_size);
+    cifd.idEntries[0].dwDIBSize = (DWORD)(sizeof(info) + imageSize + maskSize);
     cifd.idEntries[0].dwDIBOffset = (DWORD)sizeof(cifd);
 
     /* Allocate BMP icon data */
-    *pBmpIconSize = (DWORD)(sizeof(cifd) + sizeof(info) + image_size + mask_size);
+    *pBmpIconSize = (DWORD)(sizeof(cifd) + sizeof(info) + imageSize + maskSize);
     LPBYTE pBmpIcon = HeapAlloc(GetProcessHeap(), 0, *pBmpIconSize);
     if (!pBmpIcon)
     {
         ERR("pBmpIcon was NULL\n");
-        HeapFree(GetProcessHeap(), 0, image_bytes);
+        HeapFree(GetProcessHeap(), 0, imageBytes);
         return NULL;
     }
 
@@ -230,11 +230,11 @@ ConvertPngToBmpIcon(
     pb += sizeof(cifd);
     RtlCopyMemory(pb, &info, sizeof(info));
     pb += sizeof(info);
-    RtlCopyMemory(pb, image_bytes, image_size);
-    pb += image_size;
-    RtlFillMemory(pb, mask_size, 0xFF); /* Mask bits for AND operation */
+    RtlCopyMemory(pb, imageBytes, imageSize);
+    pb += imageSize;
+    RtlFillMemory(pb, maskSize, 0xFF); /* Mask bits for AND operation */
 
-    HeapFree(GetProcessHeap(), 0, image_bytes);
+    HeapFree(GetProcessHeap(), 0, imageBytes);
     return pBmpIcon;
 }
 
@@ -1597,7 +1597,7 @@ CURSORICON_LoadFromFileW(
     const CURSORICONFILEDIRENTRY *entry;
     const CURSORICONFILEDIR *dir;
     DWORD filesize = 0, BmpIconSize;
-    LPBYTE bits, pngbits, pBmpIcon = NULL;
+    LPBYTE bits, pBmpIcon = NULL;
     HANDLE hCurIcon = NULL;
     CURSORDATA cursorData;
 
@@ -1636,8 +1636,8 @@ CURSORICON_LoadFromFileW(
     if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)(&bits[offset])))
     {
         /* Try to load PNG icon */
-        pngbits = &bits[entry->dwDIBOffset];
-        pBmpIcon = ConvertPngToBmpIcon(pngbits, filesize, &BmpIconSize);
+        LPBYTE pngBits = &bits[entry->dwDIBOffset];
+        pBmpIcon = ConvertPngToBmpIcon(pngBits, filesize, &BmpIconSize);
         if (!pBmpIcon)
             goto end;
 
