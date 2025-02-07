@@ -147,9 +147,8 @@ convert_png_to_bmp_icon(
         }
     }
 
-    png_set_rows(png_ptr, info_ptr, row_pointers);
-
     /* Read png image data */
+    png_set_rows(png_ptr, info_ptr, row_pointers);
     png_read_image(png_ptr, row_pointers);
     png_read_end(png_ptr, info_ptr);
 
@@ -208,7 +207,7 @@ convert_png_to_bmp_icon(
     cifd.idEntries[0].dwDIBOffset = (DWORD)sizeof(cifd);
 
     /* Allocate BMP icon data */
-    *pbmp_icon_size = sizeof(cifd) + sizeof(info) + image_size;
+    *pbmp_icon_size = (DWORD)(sizeof(cifd) + sizeof(info) + image_size);
     LPBYTE bmp_icon = HeapAlloc(GetProcessHeap(), 0, *pbmp_icon_size);
     if (!bmp_icon)
     {
