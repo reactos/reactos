@@ -27,10 +27,10 @@ typedef struct {
 
 typedef struct
 {
-    WORD                idReserved;
-    WORD                idType;
-    WORD                idCount;
-    CURSORICONFILEDIRENTRY  idEntries[1];
+    WORD idReserved;
+    WORD idType;
+    WORD idCount;
+    CURSORICONFILEDIRENTRY idEntries[1];
 } CURSORICONFILEDIR;
 #include <poppack.h>
 
@@ -44,12 +44,6 @@ typedef struct {
     png_uint_32 current_pos;
 } MEMORY_READER_STATE;
 
-struct png_wrapper
-{
-    const char *buffer;
-    size_t size, pos;
-};
-
 /* This function will be used for reading png data from memory */
 static VOID
 read_memory_png(
@@ -60,6 +54,7 @@ read_memory_png(
     MEMORY_READER_STATE *state = png_get_io_ptr(png_ptr);
     if (length > (state->bufsize - state->current_pos))
     {
+        ERR("read error\n");
         png_error(png_ptr, "read error in read_memory_png (loadpng)");
         return;
     }
@@ -121,7 +116,7 @@ PNGtoBMP(
 
     /* Read png image data */
     /* Set row pointer which will take pixel value from png file */
-    png_bytep *row_pointers = png_malloc(png_ptr, sizeof(png_bytepp) * height);
+    png_bytep *row_pointers = png_malloc(png_ptr, sizeof(png_bytep) * height);
     if (!row_pointers)
     {
         ERR("png_malloc failed\n");
@@ -132,7 +127,7 @@ PNGtoBMP(
     /* Allocate rows */
     for (int i = 0; i < height; i++)
     {
-        row_pointers[i] = png_malloc(png_ptr, png_get_rowbytes(png_ptr, info_ptr));
+        row_pointers[i] = png_malloc(png_ptr, rowbytes);
         if (!row_pointers[i])
         {
             ERR("png_malloc failed\n");
