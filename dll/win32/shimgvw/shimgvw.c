@@ -1431,7 +1431,7 @@ Preview_ToggleSlideShowEx(PPREVIEW_DATA pData, BOOL StartTimer)
     }
 }
 
-static VOID
+static inline VOID
 Preview_ToggleSlideShow(PPREVIEW_DATA pData)
 {
     Preview_ToggleSlideShowEx(pData, TRUE);
