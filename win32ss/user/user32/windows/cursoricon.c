@@ -59,7 +59,7 @@ read_memory_png(
         png_error(png_ptr, "read error in read_memory_png (loadpng)");
         return;
     }
-    CopyMemory(data, state->buffer + state->current_pos, length);
+    RtlCopyMemory(data, state->buffer + state->current_pos, length);
     state->current_pos += length;
 }
 
@@ -218,11 +218,11 @@ convert_png_to_bmp_icon(
 
     /* Store data to bmp_icon */
     LPBYTE pb = bmp_icon;
-    CopyMemory(pb, &cifd, sizeof(cifd));
+    RtlCopyMemory(pb, &cifd, sizeof(cifd));
     pb += sizeof(cifd);
-    CopyMemory(pb, &info, sizeof(info));
+    RtlCopyMemory(pb, &info, sizeof(info));
     pb += sizeof(info);
-    CopyMemory(pb, image_bytes, image_size);
+    RtlCopyMemory(pb, image_bytes, image_size);
 
     HeapFree(GetProcessHeap(), 0, image_bytes);
     return bmp_icon;
