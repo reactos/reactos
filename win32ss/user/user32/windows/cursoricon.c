@@ -183,7 +183,7 @@ convert_png_to_bmp_icon(
     }
 
     /* Clean up */
-    for (int i = 0; i < height; i++)
+    for (int i = 0; i < (int)height; i++)
         png_free(png_ptr, row_pointers[i]);
     png_free(png_ptr, row_pointers);
     png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
