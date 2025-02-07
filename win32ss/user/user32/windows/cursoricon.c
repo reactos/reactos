@@ -40,8 +40,8 @@ typedef struct
 /* libpng helpers */
 typedef struct {
     png_bytep buffer;
-    png_uint_32 bufsize;
-    png_uint_32 current_pos;
+    size_t bufsize;
+    size_t current_pos;
 } PNG_READER_STATE;
 
 /* This function will be used for reading png data from memory */
