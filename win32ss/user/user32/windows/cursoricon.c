@@ -93,10 +93,7 @@ convert_png_to_bmp_icon(
     }
 
     /* Set our own read_function */
-    PNG_READER_STATE reader_state;
-    reader_state.buffer = pngbits;
-    reader_state.bufsize = filesize;
-    reader_state.current_pos = PNG_BYTES_TO_CHECK;
+    PNG_READER_STATE reader_state = { pngbits, filesize, PNG_BYTES_TO_CHECK };
     png_set_read_fn(png_ptr, &reader_state, read_memory_png);
     png_set_sig_bytes(png_ptr, PNG_BYTES_TO_CHECK);
 
@@ -201,9 +198,7 @@ convert_png_to_bmp_icon(
     info.biSizeImage = image_size;
 
     /* Set up CURSORICONFILEDIR data */
-    CURSORICONFILEDIR cifd = { 0 };
-    cifd.idType = 1;
-    cifd.idCount = 1;
+    CURSORICONFILEDIR cifd = { 0, 1, 1 };
     cifd.idEntries[0].bWidth = (BYTE)width;
     cifd.idEntries[0].bHeight = (BYTE)height;
     cifd.idEntries[0].bColorCount = 0; /* No color pallete */
