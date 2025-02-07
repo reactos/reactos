@@ -1369,11 +1369,14 @@ BITMAP_LoadImageW(
         ResSize = SizeofResource(hinst, hrsrc);
     }
 
- 
     if (pbmi->bmiHeader.biCompression == BI_BITFIELDS &&
-        pbmi->bmiHeader.biBitCount == 32 &&
-        pbmi->bmiHeader.biSizeImage + pbmi->bmiHeader.biSize + 12 != ResSize)
-        WARN("Possibly bad resource size provided\n");
+        pbmi->bmiHeader.biBitCount == 32)
+    {
+        SIZE_T totalSize = pbmi->bmiHeader.biSize + (3 * sizeof(DWORD)) +
+                           pbmi->bmiHeader.biSizeImage;
+        if (totalSize != ResSize)
+            WARN("Possibly bad resource size provided\n");
+    }
 
     /* Fix up values */
     if(DIB_GetBitmapInfo(&pbmi->bmiHeader, &width, &height, &bpp, &compr) == -1)
