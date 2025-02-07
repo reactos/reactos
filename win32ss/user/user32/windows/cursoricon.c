@@ -50,7 +50,7 @@ static VOID
 read_memory_png(
     _Inout_ png_structp png_ptr,
     _Out_ png_bytep data,
-    _In_ size_t length) 
+    _In_ size_t length)
 {
     PNG_READER_STATE *state = png_get_io_ptr(png_ptr);
     if ((state->current_pos + length) > state->bufsize)
@@ -103,33 +103,23 @@ convert_png_to_bmp_icon(
     /* Read png info */
     png_read_info(png_ptr, info_ptr);
 
-    /* Fix some PNG formats */
+    /* Add translation of some PNG formats and update info */
     int color_type = png_get_color_type(png_ptr, info_ptr);
     if (color_type == PNG_COLOR_TYPE_PALETTE)
-    {
         png_set_palette_to_rgb(png_ptr);
-        color_type = PNG_COLOR_TYPE_RGB;
-    }
-    else if (color_type == PNG_COLOR_TYPE_GRAY)
-    {
+    else if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
         png_set_gray_to_rgb(png_ptr);
-        color_type = PNG_COLOR_TYPE_RGB;
-    }
-    else if (color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
-    {
-        png_set_gray_to_rgb(png_ptr);
-        color_type = PNG_COLOR_TYPE_RGB_ALPHA;
-    }
-    png_set_scale_16(png_ptr); /* Convert 16-bit channel to 8-bit */
+    png_set_scale_16(png_ptr); /* Convert 16-bit channels to 8-bit */
+    png_read_update_info(png_ptr, info_ptr);
 
+    /* Get updated png info */
     png_uint_32 width, height;
-    int bit_depth, interlace_type;
-    png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, NULL,
-                 &interlace_type, NULL, NULL);
-    TRACE("width %d, height %d, bit depth %d, color type %d interlace type %d\n",
-          width, height, bit_depth, color_type, interlace_type);
+    int bit_depth;
+    png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, NULL, NULL, NULL);
+    TRACE("width %d, height %d, bit_depth %d, color_type %d\n",
+          width, height, bit_depth, color_type);
 
-    int channels = ((color_type == PNG_COLOR_TYPE_RGB_ALPHA) ? 4 : 3);
+    int channels = png_get_channels(png_ptr, info_ptr);
     int rowbytes = png_get_rowbytes(png_ptr, info_ptr);
     int image_size = height * rowbytes;
     TRACE("rowbytes %d, channels %d, image_size %d\n", rowbytes, channels, image_size);
@@ -199,26 +189,14 @@ convert_png_to_bmp_icon(
     }
 
     /* Get BPP (Bits Per Pixel) */
-    int bpp;
-    switch (color_type)
-    {
-        case PNG_COLOR_TYPE_RGB:       bpp = 24; break;
-        case PNG_COLOR_TYPE_RGB_ALPHA: bpp = 32; break;
-        default:                       bpp = 0;  break;
-    }
-    if (!bpp)
-    {
-        FIXME("unsupported PNG color format %d, %d bpp\n", color_type, bit_depth);
-        HeapFree(GetProcessHeap(), 0, image_bytes);
-        return NULL;
-    }
+    WORD bpp = (WORD)(bit_depth * channels);
 
     /* Set up BITMAPINFOHEADER data */
     BITMAPINFOHEADER info = { sizeof(info) };
     info.biWidth = width;
     info.biHeight = 2 * height;
     info.biPlanes = 1;
-    info.biBitCount = (WORD)bpp;
+    info.biBitCount = bpp;
     info.biCompression = BI_RGB;
     info.biSizeImage = image_size;
 
@@ -230,7 +208,7 @@ convert_png_to_bmp_icon(
     cifd.idEntries[0].bHeight = (BYTE)height;
     cifd.idEntries[0].bColorCount = 0; /* No color pallete */
     cifd.idEntries[0].xHotspot = 1; /* Must be 0 or 1 */
-    cifd.idEntries[0].yHotspot = (WORD)bpp;
+    cifd.idEntries[0].yHotspot = bpp;
     cifd.idEntries[0].dwDIBSize = (DWORD)(sizeof(info) + image_size);
     cifd.idEntries[0].dwDIBOffset = (DWORD)sizeof(cifd);
 
