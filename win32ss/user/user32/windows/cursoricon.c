@@ -70,8 +70,9 @@ ReadMemoryPng(
     state->currentPos += length;
 }
 
-static int get_dib_image_size( int width, int height, int depth );
+static int get_dib_image_size(int width, int height, int depth);
 
+/* Convert PNG raw data to BMP icon data */
 static LPBYTE
 ConvertPngToBmpIcon(
     _In_ LPBYTE pngBits,
@@ -190,13 +191,13 @@ ConvertPngToBmpIcon(
         return NULL;
     }
 
-    /* Get BPP (Bits Per Pixel) */
+    /* BPP (Bits Per Pixel) */
     WORD bpp = (WORD)(bitDepth * channels);
 
-    /* The size of mask bits */
+    /* The byte size of mask bits */
     DWORD maskSize = get_dib_image_size(width, height, 1);
 
-    /* Set up BITMAPINFOHEADER data */
+    /* Build BITMAPINFOHEADER */
     BITMAPINFOHEADER info = { sizeof(info) };
     info.biWidth = width;
     info.biHeight = 2 * height;
@@ -204,7 +205,7 @@ ConvertPngToBmpIcon(
     info.biBitCount = bpp;
     info.biCompression = BI_RGB;
 
-    /* Set up CURSORICONFILEDIR data */
+    /* Build CURSORICONFILEDIR */
     CURSORICONFILEDIR cifd = { 0, 1, 1 };
     cifd.idEntries[0].bWidth = (BYTE)width;
     cifd.idEntries[0].bHeight = (BYTE)height;
@@ -1635,18 +1636,18 @@ CURSORICON_LoadFromFileW(
     DWORD dwOffset = entry->dwDIBOffset;
     if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)(&bits[dwOffset])))
     {
-        /* Try to load PNG icon */
+        /* Convert PNG raw data to BMP icon if the icon was PNG icon */
         LPBYTE pngBits = &bits[entry->dwDIBOffset];
         pbBmpIcon = ConvertPngToBmpIcon(pngBits, filesize, &BmpIconSize);
         if (!pbBmpIcon)
-            goto end;
+            goto end; /* Not PNG icon or failed */
 
+        /* Get icon entry from BMP icon */
         dir = (CURSORICONFILEDIR *)pbBmpIcon;
         entry = get_best_icon_file_entry(dir, BmpIconSize, cxDesired, cyDesired, bIcon, fuLoad);
         if (!entry)
             goto end;
 
-        /* Fix dimensions */
         if (!cxDesired) cxDesired = entry->bWidth;
         if (!cyDesired) cyDesired = entry->bHeight;
 
@@ -1654,6 +1655,7 @@ CURSORICON_LoadFromFileW(
         RtlZeroMemory(&cursorData, sizeof(cursorData));
         cursorData.rt = LOWORD(bIcon ? RT_ICON : RT_CURSOR);
 
+        /* Can we load this BMP icon? */
         dwOffset = entry->dwDIBOffset;
         if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)(&pbBmpIcon[dwOffset])))
         {
@@ -2872,11 +2874,12 @@ HICON WINAPI CreateIconFromResourceEx(
         /* Try to load BMP icon */
         if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)pbIconBits))
         {
-            /* Try to load PNG icon */
+            /* Convert PNG raw data to BMP icon if the icon was PNG icon */
             pbBmpIcon = ConvertPngToBmpIcon(pbIconBits, cbIconBits, &BmpIconSize);
             if (!pbBmpIcon)
-                goto end;
+                goto end; /* Not PNG icon or failed */
 
+            /* Get icon entry from BMP icon */
             CURSORICONFILEDIR *dir = (CURSORICONFILEDIR *)pbBmpIcon;
             const CURSORICONFILEDIRENTRY *entry =
                 get_best_icon_file_entry(dir, BmpIconSize, cxDesired, cyDesired, fIcon, uFlags);
@@ -2886,7 +2889,6 @@ HICON WINAPI CreateIconFromResourceEx(
                 goto end;
             }
 
-            /* Fix dimensions */
             if (!cxDesired) cxDesired = entry->bWidth;
             if (!cyDesired) cyDesired = entry->bHeight;
 
@@ -2894,6 +2896,7 @@ HICON WINAPI CreateIconFromResourceEx(
             RtlZeroMemory(&cursorData, sizeof(cursorData));
             cursorData.rt = LOWORD(fIcon ? RT_ICON : RT_CURSOR);
 
+            /* Can we load this BMP icon? */
             DWORD dwOffset = entry->dwDIBOffset;
             if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)&pbBmpIcon[dwOffset]))
             {
