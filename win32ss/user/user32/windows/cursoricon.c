@@ -140,7 +140,7 @@ convert_png_to_bmp_icon(
         return NULL;
     }
 
-    for (int i = 0; i < height; i++)
+    for (int i = 0; i < (int)height; i++)
     {
         row_pointers[i] = png_malloc(png_ptr, rowbytes);
         if (!row_pointers[i])
