@@ -421,9 +421,11 @@ static UINT ICO_ExtractIconExW(
 
 	sig = USER32_GetResourceTable(peimage, fsizel, &pData);
 
-/* NE exe/dll */
+/* NE exe/dll: IMAGE_OS2_SIGNATURE
+   .ICO file: 1
+ */
 #ifdef __REACTOS__
-    if (sig==IMAGE_OS2_SIGNATURE || sig==1) /* .ICO file */
+    if (sig==IMAGE_OS2_SIGNATURE || sig==1)
 #else
 	if (sig==IMAGE_OS2_SIGNATURE)
 #endif
