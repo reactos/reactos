@@ -1669,23 +1669,16 @@ CURSORICON_LoadFromFileW(
     if(!NtUserSetCursorIconData(hCurIcon, NULL, NULL, &cursorData))
     {
         NtUserDestroyCursor(hCurIcon, TRUE);
-        goto end_error;
+        hCurIcon = NULL;
+        if (cursorData.hbmMask) DeleteObject(cursorData.hbmMask);
+        if (cursorData.hbmColor) DeleteObject(cursorData.hbmColor);
+        if (cursorData.hbmAlpha) DeleteObject(cursorData.hbmAlpha);
     }
 
 end:
     UnmapViewOfFile(bits);
     HeapFree(GetProcessHeap(), 0, pbBmpIcon);
     return hCurIcon;
-
-    /* Clean up */
-end_error:
-    HeapFree(GetProcessHeap(), 0, pbBmpIcon);
-    DeleteObject(cursorData.hbmMask);
-    if(cursorData.hbmColor) DeleteObject(cursorData.hbmColor);
-    if(cursorData.hbmAlpha) DeleteObject(cursorData.hbmAlpha);
-    UnmapViewOfFile(bits);
-
-    return NULL;
 }
 
 static
