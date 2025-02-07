@@ -52,7 +52,7 @@ read_memory_png(
     _In_ size_t length) 
 {
     PNG_READER_STATE *state = png_get_io_ptr(png_ptr);
-    if (length > (state->bufsize - state->current_pos))
+    if ((state->current_pos + length) > state->bufsize)
     {
         ERR("read error\n");
         png_error(png_ptr, "read error in read_memory_png (loadpng)");
@@ -178,26 +178,17 @@ convert_png_to_bmp_icon(
         return NULL;
     }
 
-    int bpp = 0;
+    /* Get BPP (Bits Per Pixel) */
+    int bpp;
     switch (color_type)
     {
-        case PNG_COLOR_TYPE_RGB:
-            if (bit_depth == 8)
-                bpp = 24;
-            break;
-
-        case PNG_COLOR_TYPE_RGB_ALPHA:
-            if (bit_depth == 8)
-            {
-                png_set_bgr(png_ptr);
-                bpp = 32;
-            }
-            break;
-
-        default:
-            break;
+        case PNG_COLOR_TYPE_GRAY:       bpp =     bit_depth; break;
+        case PNG_COLOR_TYPE_RGB:        bpp = 3 * bit_depth; break;
+        case PNG_COLOR_TYPE_PALETTE:    bpp =     bit_depth; break;
+        case PNG_COLOR_TYPE_GRAY_ALPHA: bpp = 2 * bit_depth; break;
+        case PNG_COLOR_TYPE_RGB_ALPHA:  bpp = 4 * bit_depth; break;
+        default: bpp = 0; break;
     }
-
     if (!bpp)
     {
         FIXME("unsupported PNG color format %d, %d bpp\n", color_type, bit_depth);
