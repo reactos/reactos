@@ -216,16 +216,16 @@ ConvertPngToBmpIcon(
 
     /* Allocate BMP icon data */
     *pBmpIconSize = (DWORD)(sizeof(cifd) + sizeof(info) + imageSize + maskSize);
-    LPBYTE pBmpIcon = HeapAlloc(GetProcessHeap(), 0, *pBmpIconSize);
-    if (!pBmpIcon)
+    LPBYTE pbBmpIcon = HeapAlloc(GetProcessHeap(), 0, *pBmpIconSize);
+    if (!pbBmpIcon)
     {
-        ERR("pBmpIcon was NULL\n");
+        ERR("pbBmpIcon was NULL\n");
         HeapFree(GetProcessHeap(), 0, imageBytes);
         return NULL;
     }
 
-    /* Store data to pBmpIcon */
-    LPBYTE pb = pBmpIcon;
+    /* Store data to pbBmpIcon */
+    LPBYTE pb = pbBmpIcon;
     RtlCopyMemory(pb, &cifd, sizeof(cifd));
     pb += sizeof(cifd);
     RtlCopyMemory(pb, &info, sizeof(info));
@@ -235,7 +235,7 @@ ConvertPngToBmpIcon(
     RtlFillMemory(pb, maskSize, 0xFF); /* Mask bits for AND operation */
 
     HeapFree(GetProcessHeap(), 0, imageBytes);
-    return pBmpIcon;
+    return pbBmpIcon;
 }
 
 /* We only use Wide string functions */
@@ -1597,7 +1597,7 @@ CURSORICON_LoadFromFileW(
     const CURSORICONFILEDIRENTRY *entry;
     const CURSORICONFILEDIR *dir;
     DWORD filesize = 0, BmpIconSize;
-    LPBYTE bits, pBmpIcon = NULL;
+    LPBYTE bits, pbBmpIcon = NULL;
     HANDLE hCurIcon = NULL;
     CURSORDATA cursorData;
 
@@ -1637,11 +1637,11 @@ CURSORICON_LoadFromFileW(
     {
         /* Try to load PNG icon */
         LPBYTE pngBits = &bits[entry->dwDIBOffset];
-        pBmpIcon = ConvertPngToBmpIcon(pngBits, filesize, &BmpIconSize);
-        if (!pBmpIcon)
+        pbBmpIcon = ConvertPngToBmpIcon(pngBits, filesize, &BmpIconSize);
+        if (!pbBmpIcon)
             goto end;
 
-        dir = (CURSORICONFILEDIR *)pBmpIcon;
+        dir = (CURSORICONFILEDIR *)pbBmpIcon;
         entry = get_best_icon_file_entry(dir, BmpIconSize, cxDesired, cyDesired, bIcon, fuLoad);
         if (!entry)
             goto end;
@@ -1655,7 +1655,7 @@ CURSORICON_LoadFromFileW(
         cursorData.rt = LOWORD(bIcon ? RT_ICON : RT_CURSOR);
 
         offset = entry->dwDIBOffset;
-        if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)(&pBmpIcon[offset])))
+        if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)(&pbBmpIcon[offset])))
         {
             ERR("Failing file: '%S'.\n", lpszName);
             goto end;
@@ -1677,12 +1677,12 @@ CURSORICON_LoadFromFileW(
 
 end:
     UnmapViewOfFile(bits);
-    HeapFree(GetProcessHeap(), 0, pBmpIcon);
+    HeapFree(GetProcessHeap(), 0, pbBmpIcon);
     return hCurIcon;
 
     /* Clean up */
 end_error:
-    HeapFree(GetProcessHeap(), 0, pBmpIcon);
+    HeapFree(GetProcessHeap(), 0, pbBmpIcon);
     DeleteObject(cursorData.hbmMask);
     if(cursorData.hbmColor) DeleteObject(cursorData.hbmColor);
     if(cursorData.hbmAlpha) DeleteObject(cursorData.hbmAlpha);
@@ -2778,7 +2778,7 @@ HICON WINAPI CreateIconFromResourceEx(
     CURSORDATA cursorData;
     HICON hIcon;
     BOOL isAnimated;
-    LPBYTE pBmpIcon = NULL;
+    LPBYTE pbBmpIcon = NULL;
     DWORD BmpIconSize;
 
     TRACE("%p, %lu, %lu, %lu, %i, %i, %lu.\n", pbIconBits, cbIconBits, fIcon, dwVersion, cxDesired, cyDesired, uFlags);
@@ -2873,11 +2873,11 @@ HICON WINAPI CreateIconFromResourceEx(
         if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)pbIconBits))
         {
             /* Try to load PNG icon */
-            pBmpIcon = ConvertPngToBmpIcon(pbIconBits, cbIconBits, &BmpIconSize);
-            if (!pBmpIcon)
+            pbBmpIcon = ConvertPngToBmpIcon(pbIconBits, cbIconBits, &BmpIconSize);
+            if (!pbBmpIcon)
                 goto end;
 
-            CURSORICONFILEDIR *dir = (CURSORICONFILEDIR *)pBmpIcon;
+            CURSORICONFILEDIR *dir = (CURSORICONFILEDIR *)pbBmpIcon;
             const CURSORICONFILEDIRENTRY *entry =
                 get_best_icon_file_entry(dir, BmpIconSize, cxDesired, cyDesired, fIcon, uFlags);
             if (!entry)
@@ -2895,7 +2895,7 @@ HICON WINAPI CreateIconFromResourceEx(
             cursorData.rt = LOWORD(fIcon ? RT_ICON : RT_CURSOR);
 
             DWORD offset = entry->dwDIBOffset;
-            if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)&pBmpIcon[offset]))
+            if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)&pbBmpIcon[offset]))
             {
                 ERR("Couldn't get cursor/icon data\n");
                 goto end;
@@ -2922,12 +2922,12 @@ HICON WINAPI CreateIconFromResourceEx(
         HeapFree(GetProcessHeap(), 0, cursorData.aspcur);
 
 end:
-    HeapFree(GetProcessHeap(), 0, pBmpIcon);
+    HeapFree(GetProcessHeap(), 0, pbBmpIcon);
     return hIcon;
 
     /* Clean up */
 end_error:
-    HeapFree(GetProcessHeap(), 0, pBmpIcon);
+    HeapFree(GetProcessHeap(), 0, pbBmpIcon);
     if(isAnimated)
         HeapFree(GetProcessHeap(), 0, cursorData.aspcur);
     DeleteObject(cursorData.hbmMask);
