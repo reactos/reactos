@@ -113,7 +113,6 @@ typedef struct tagPREVIEW_DATA
     INT m_yScrollOffset;
     UINT m_nMouseDownMsg;
     POINT m_ptOrigin;
-    IStream *m_pMemStream;
     WCHAR m_szFile[MAX_PATH];
 } PREVIEW_DATA, *PPREVIEW_DATA;
 
@@ -346,12 +345,6 @@ Preview_pFreeImage(PPREVIEW_DATA pData)
     {
         GdipDisposeImage(g_pImage);
         g_pImage = NULL;
-    }
-
-    if (pData->m_pMemStream)
-    {
-        pData->m_pMemStream->lpVtbl->Release(pData->m_pMemStream);
-        pData->m_pMemStream = NULL;
     }
 
     pData->m_szFile[0] = UNICODE_NULL;

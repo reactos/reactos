@@ -108,7 +108,7 @@ static bool GetInfoFromIcoBmp(const void* pBitmapInfo, IMAGEINFO& stat)
     return ret && stat.h;
 }
 
-EXTERN_C PCWSTR GetExtraExtensionsGdipList()
+EXTERN_C PCWSTR GetExtraExtensionsGdipList(VOID)
 {
     return L"*.CUR"; // "*.FOO;*.BAR" etc.
 }
@@ -119,7 +119,7 @@ static void OverrideFileContent(HGLOBAL& hMem, DWORD& Size)
     if (!buffer)
         return;
 
-    // TODO: We could try to load an ICO/PNG/BMP resource from a PE file here
+    // TODO: We could try to load an ICO/PNG/BMP resource from a PE file here into buffer
 
     // ICO/CUR
     struct ICOHDR { WORD Sig, Type, Count; };
@@ -216,7 +216,7 @@ static HRESULT LoadImageFromStream(IStream* pStream, GpImage** ppImage)
 static HRESULT LoadImageFromFileHandle(HANDLE hFile, GpImage** ppImage)
 {
     DWORD size = GetFileSize(hFile, NULL);
-    if (!size || (size == INVALID_FILE_SIZE))
+    if (!size || size == INVALID_FILE_SIZE)
         return HResultFromWin32(ERROR_NOT_SUPPORTED);
 
     HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, size);
