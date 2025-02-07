@@ -2787,7 +2787,7 @@ HICON WINAPI CreateIconFromResourceEx(
     HICON hIcon;
     BOOL isAnimated, is_png;
     LPBYTE bmp_icon = NULL;
-    DWORD bmp_icon_size = 0;
+    DWORD bmp_icon_size;
 
     TRACE("%p, %lu, %lu, %lu, %i, %i, %lu.\n", pbIconBits, cbIconBits, fIcon, dwVersion, cxDesired, cyDesired, uFlags);
 
