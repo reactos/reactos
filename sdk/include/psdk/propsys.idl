@@ -27,7 +27,13 @@ import "shtypes.idl";
 import "structuredquerycondition.idl";
 
 cpp_quote("#ifndef PSSTDAPI")
-cpp_quote("#define PSSTDAPI EXTERN_C DECLSPEC_IMPORT HRESULT STDAPICALLTYPE")
+cpp_quote("#ifdef _PROPSYS_")
+cpp_quote("#define PSSTDAPI          STDAPI")
+cpp_quote("#define PSSTDAPI_(type)   STDAPI_(type)")
+cpp_quote("#else")
+cpp_quote("#define PSSTDAPI          EXTERN_C DECLSPEC_IMPORT HRESULT STDAPICALLTYPE")
+cpp_quote("#define PSSTDAPI_(type)   EXTERN_C DECLSPEC_IMPORT type STDAPICALLTYPE")
+cpp_quote("#endif")
 cpp_quote("#endif")
 
 cpp_quote("#if 0")
@@ -272,7 +278,7 @@ interface IPropertyEnumType : IUnknown
 }
 
 [
-    uuid(9b6e051c-5ddd-4321-9070-fe2acb55e974),
+    uuid(9b6e051c-5ddd-4321-9070-fe2acb55e794),
     object,
     pointer_default(unique)
 ]
@@ -799,14 +805,15 @@ cpp_quote("#define PKEY_PIDSTR_MAX 10")
 cpp_quote("#define GUIDSTRING_MAX 39")
 cpp_quote("#define PKEYSTR_MAX (GUIDSTRING_MAX + 1 + PKEY_PIDSTR_MAX)")
 
-cpp_quote("HRESULT WINAPI PSCreateMemoryPropertyStore(REFIID,void **);")
-cpp_quote("HRESULT WINAPI PSStringFromPropertyKey(REFPROPERTYKEY,LPWSTR,UINT);")
-cpp_quote("HRESULT WINAPI PSPropertyKeyFromString(LPCWSTR,PROPERTYKEY*);")
-cpp_quote("HRESULT WINAPI PSGetPropertyDescription(REFPROPERTYKEY,REFIID,void **);")
-cpp_quote("HRESULT WINAPI PSGetPropertyDescriptionListFromString(LPCWSTR,REFIID,void **);")
-cpp_quote("HRESULT WINAPI PSRefreshPropertySchema(void);")
-cpp_quote("HRESULT WINAPI PSRegisterPropertySchema(LPCWSTR);")
-cpp_quote("HRESULT WINAPI PSUnregisterPropertySchema(LPCWSTR);")
+cpp_quote("PSSTDAPI PSCreateMemoryPropertyStore(REFIID,void **);")
+cpp_quote("PSSTDAPI PSCreatePropertyStoreFromObject(IUnknown*,DWORD,REFIID,void **);")
+cpp_quote("PSSTDAPI PSStringFromPropertyKey(REFPROPERTYKEY,LPWSTR,UINT);")
+cpp_quote("PSSTDAPI PSPropertyKeyFromString(LPCWSTR,PROPERTYKEY*);")
+cpp_quote("PSSTDAPI PSGetPropertyDescription(REFPROPERTYKEY,REFIID,void **);")
+cpp_quote("PSSTDAPI PSGetPropertyDescriptionListFromString(LPCWSTR,REFIID,void **);")
+cpp_quote("PSSTDAPI PSRefreshPropertySchema(void);")
+cpp_quote("PSSTDAPI PSRegisterPropertySchema(LPCWSTR);")
+cpp_quote("PSSTDAPI PSUnregisterPropertySchema(LPCWSTR);")
 
 /* TODO: Add remainder of the C api here */
 
@@ -821,7 +828,7 @@ library PropSysObjects
     {
         interface IPropertyStore;
     }
-    [uuid(b8967f86-58ae-4f96-9fb2-5d7904798f4b)] coclass PropertySystem
+    [uuid(b8967f85-58ae-4f46-9fb2-5d7904798f4b)] coclass PropertySystem
     {
         interface IPropertySystem;
     }
