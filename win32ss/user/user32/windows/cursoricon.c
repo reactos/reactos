@@ -1648,9 +1648,6 @@ CURSORICON_LoadFromFileW(
         if (!entry)
             goto end;
 
-        if (!cxDesired) cxDesired = entry->bWidth;
-        if (!cyDesired) cyDesired = entry->bHeight;
-
         /* A bit of preparation */
         RtlZeroMemory(&cursorData, sizeof(cursorData));
         cursorData.rt = LOWORD(bIcon ? RT_ICON : RT_CURSOR);
@@ -2888,9 +2885,6 @@ HICON WINAPI CreateIconFromResourceEx(
                 ERR("Couldn't get icon entry\n");
                 goto end;
             }
-
-            if (!cxDesired) cxDesired = entry->bWidth;
-            if (!cyDesired) cyDesired = entry->bHeight;
 
             /* A bit of preparation */
             RtlZeroMemory(&cursorData, sizeof(cursorData));
