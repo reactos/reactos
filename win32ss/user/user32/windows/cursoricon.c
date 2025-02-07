@@ -217,7 +217,7 @@ convert_png_to_bmp_icon(
     cifd.idEntries[0].dwDIBSize = (DWORD)(sizeof(info) + image_size);
     cifd.idEntries[0].dwDIBOffset = (DWORD)sizeof(cifd);
 
-    /* Allocate bitmap data */
+    /* Allocate BMP icon data */
     *pbmp_icon_size = sizeof(cifd) + sizeof(info) + image_size;
     LPBYTE bmp_icon = HeapAlloc(GetProcessHeap(), 0, *pbmp_icon_size);
     if (!bmp_icon)
