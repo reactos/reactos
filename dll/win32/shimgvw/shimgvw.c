@@ -20,6 +20,8 @@
 /* Slide show timer */
 #define SLIDESHOW_TIMER_ID          0xFACE
 #define SLIDESHOW_TIMER_INTERVAL    5000 /* 5 seconds */
+#define HIDECURSOR_TIMER_ID         0xBABE
+#define HIDECURSOR_TIMER_TIMEOUT    3000
 
 HINSTANCE           g_hInstance         = NULL;
 HWND                g_hMainWnd          = NULL;
@@ -110,6 +112,7 @@ typedef struct tagPREVIEW_DATA
     INT m_yScrollOffset;
     UINT m_nMouseDownMsg;
     UINT m_nTimer;
+    BOOL m_bHideCursor;
     POINT m_ptOrigin;
     IStream *m_pMemStream;
     WCHAR m_szFile[MAX_PATH];
@@ -1014,6 +1017,19 @@ Preview_EndSlideShow(HWND hwnd)
 }
 
 static VOID
+GenerateSetCursor(HWND hwnd, UINT uMsg)
+{
+    SendMessage(hwnd, WM_SETCURSOR, (WPARAM)hwnd, MAKELONG(HTCLIENT, uMsg));
+}
+
+static VOID
+ZoomWnd_StopHideCursor(PPREVIEW_DATA pData)
+{
+    pData->m_bHideCursor = FALSE;
+    KillTimer(pData->m_hwndZoom, HIDECURSOR_TIMER_ID);
+}
+
+static VOID
 ZoomWnd_OnButtonDown(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     PPREVIEW_DATA pData = Preview_GetData(hwnd);
@@ -1025,6 +1041,7 @@ ZoomWnd_OnButtonDown(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         return;
     }
 
+    ZoomWnd_StopHideCursor(pData);
     pData->m_nMouseDownMsg = uMsg;
     pData->m_ptOrigin.x = GET_X_LPARAM(lParam);
     pData->m_ptOrigin.y = GET_Y_LPARAM(lParam);
@@ -1037,6 +1054,13 @@ ZoomWnd_OnMouseMove(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     PPREVIEW_DATA pData = Preview_GetData(hwnd);
     POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+
+    if (!Preview_IsMainWnd(pData->m_hwnd))
+    {
+        ZoomWnd_StopHideCursor(pData);
+        if (!pData->m_nMouseDownMsg)
+            SetTimer(hwnd, HIDECURSOR_TIMER_ID, HIDECURSOR_TIMER_TIMEOUT, NULL);
+    }
 
     if (pData->m_nMouseDownMsg == WM_MBUTTONDOWN)
     {
@@ -1057,6 +1081,12 @@ ZoomWnd_OnSetCursor(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         SetCursor(LoadCursorW(g_hInstance, MAKEINTRESOURCEW(IDC_HANDDRAG)));
         return TRUE;
     }
+
+    if (pData->m_bHideCursor)
+    {
+        SetCursor(NULL); /* Hide cursor in fullscreen */
+        return TRUE;
+    }
     return FALSE;
 }
 
@@ -1064,8 +1094,15 @@ static VOID
 ZoomWnd_OnButtonUp(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     PPREVIEW_DATA pData = Preview_GetData(hwnd);
+    BOOL wasdrag = pData->m_nMouseDownMsg == WM_MBUTTONDOWN;
+
     pData->m_nMouseDownMsg = 0;
+    if (wasdrag)
+        GenerateSetCursor(hwnd, uMsg); /* Reset to default cursor */
     ReleaseCapture();
+
+    if (!Preview_IsMainWnd(pData->m_hwnd))
+        SetTimer(hwnd, HIDECURSOR_TIMER_ID, HIDECURSOR_TIMER_TIMEOUT, NULL);
 }
 
 static VOID
@@ -1213,8 +1250,19 @@ ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
         case WM_TIMER:
         {
+            if (wParam == HIDECURSOR_TIMER_ID)
+            {
+                ZoomWnd_StopHideCursor(pData);
+                if (IsWindowVisible(hwnd))
+                {
+                    pData->m_bHideCursor = TRUE;
+                    GenerateSetCursor(hwnd, uMsg);
+                }
+            }
             if (Anime_OnTimer(&pData->m_Anime, wParam))
+            {
                 InvalidateRect(hwnd, NULL, FALSE);
+            }
             break;
         }
         default:
@@ -1428,6 +1476,7 @@ Preview_ToggleSlideShowEx(PPREVIEW_DATA pData, BOOL StartTimer)
         ShowWindow(g_hMainWnd, SW_HIDE);
         Preview_ResetZoom(pSlideData);
         Preview_RestartTimer(g_hwndFullscreen);
+        PostMessage(pSlideData->m_hwndZoom, WM_MOUSEMOVE, 0, 0); /* Start hide cursor */
     }
 }
 
@@ -1590,6 +1639,7 @@ Preview_OnDestroy(HWND hwnd)
     PPREVIEW_DATA pData = Preview_GetData(hwnd);
 
     KillTimer(hwnd, SLIDESHOW_TIMER_ID);
+    KillTimer(hwnd, HIDECURSOR_TIMER_ID);
 
     pFreeFileList(g_pCurrentFile);
     g_pCurrentFile = NULL;
