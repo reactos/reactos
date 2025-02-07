@@ -27,10 +27,7 @@ list(APPEND SOURCE
     pngwutil.c
     pngpriv.h)
 
-spec2def(libpng.dll libpng.spec ADD_IMPORTLIB)
-
-add_library(libpng MODULE ${SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/libpng.def)
-
+add_library(libpng MODULE ${SOURCE})
 set_module_type(libpng win32dll)
 target_link_libraries(libpng zlib)
 add_importlibs(libpng msvcrt kernel32 ntdll)

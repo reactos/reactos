@@ -5,8 +5,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys
     include
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
-    ${REACTOS_SOURCE_DIR}/win32ss/include
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libpng)
+    ${REACTOS_SOURCE_DIR}/win32ss/include)
 
 list(APPEND SOURCE
     controls/appswitch.c
@@ -89,7 +88,7 @@ if(MSVC AND (ARCH STREQUAL "i386"))
     target_sources(user32 PRIVATE $<TARGET_OBJECTS:ftol2_sse>)
 endif()
 
-add_delay_importlibs(user32 usp10 libpng)
-add_importlibs(user32 gdi32 advapi32 msvcrt kernel32 ntdll)
+add_delay_importlibs(user32 usp10)
+add_importlibs(user32 gdi32 advapi32 kernel32 ntdll)
 add_pch(user32 include/user32.h SOURCE)
 add_cd_file(TARGET user32 DESTINATION reactos/system32 FOR all)
