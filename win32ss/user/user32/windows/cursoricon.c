@@ -1632,8 +1632,8 @@ CURSORICON_LoadFromFileW(
     cursorData.rt = LOWORD(bIcon ? RT_ICON : RT_CURSOR);
 
     /* Try to load BMP icon */
-    DWORD offset = entry->dwDIBOffset;
-    if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)(&bits[offset])))
+    DWORD dwOffset = entry->dwDIBOffset;
+    if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)(&bits[dwOffset])))
     {
         /* Try to load PNG icon */
         LPBYTE pngBits = &bits[entry->dwDIBOffset];
@@ -1654,8 +1654,8 @@ CURSORICON_LoadFromFileW(
         RtlZeroMemory(&cursorData, sizeof(cursorData));
         cursorData.rt = LOWORD(bIcon ? RT_ICON : RT_CURSOR);
 
-        offset = entry->dwDIBOffset;
-        if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)(&pbBmpIcon[offset])))
+        dwOffset = entry->dwDIBOffset;
+        if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)(&pbBmpIcon[dwOffset])))
         {
             ERR("Failing file: '%S'.\n", lpszName);
             goto end;
@@ -2894,8 +2894,8 @@ HICON WINAPI CreateIconFromResourceEx(
             RtlZeroMemory(&cursorData, sizeof(cursorData));
             cursorData.rt = LOWORD(fIcon ? RT_ICON : RT_CURSOR);
 
-            DWORD offset = entry->dwDIBOffset;
-            if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)&pbBmpIcon[offset]))
+            DWORD dwOffset = entry->dwDIBOffset;
+            if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO *)&pbBmpIcon[dwOffset]))
             {
                 ERR("Couldn't get cursor/icon data\n");
                 goto end;
