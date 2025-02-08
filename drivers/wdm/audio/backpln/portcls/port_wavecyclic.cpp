@@ -198,6 +198,7 @@ CPortWaveCyclic::Init(
     NTSTATUS Status;
     PPINCOUNT PinCount;
     PPOWERNOTIFY PowerNotify;
+    PPCLASS_DEVICE_EXTENSION DeviceExtension;
 
     DPRINT("IPortWaveCyclic_Init entered %p\n", this);
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
@@ -269,6 +270,25 @@ CPortWaveCyclic::Init(
     Status = UnknownMiniport->QueryInterface(IID_IPowerNotify, (PVOID*)&PowerNotify);
     if (NT_SUCCESS(Status))
     {
+        // get device extension
+        DeviceExtension = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+        PENTRY_POWER_NOTIFY Notify = (PENTRY_POWER_NOTIFY)AllocateItem(NonPagedPool, sizeof(ENTRY_POWER_NOTIFY), TAG_PORTCLASS);
+        if (Notify)
+        {
+            KIRQL OldLevel;
+
+            // setup item
+            Notify->PowerNotify = PowerNotify;
+
+            // acquire lock
+            KeAcquireSpinLock(&DeviceExtension->PowerNotifyListLock, &OldLevel);
+
+            // insert item
+            InsertTailList(&DeviceExtension->PowerNotifyList, &Notify->Entry);
+
+            // release lock
+            KeReleaseSpinLock(&DeviceExtension->PowerNotifyListLock, OldLevel);
+        }
         // store reference
         m_pPowerNotify = PowerNotify;
     }
@@ -479,7 +499,7 @@ CPortWaveCyclic::DataRangeIntersection(
     {
         return m_pMiniport->DataRangeIntersection (PinId, DataRange, MatchingDataRange, OutputBufferLength, ResultantFormat, ResultantFormatLength);
     }
-
+    UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -512,9 +532,29 @@ CPortWaveCyclic::PinCount(
        return STATUS_SUCCESS;
     }
 
-    // FIXME
     // scan filter descriptor
+    if (m_SubDeviceDescriptor && m_SubDeviceDescriptor->DeviceDescriptor)
+    {
+        if (PinId >= m_SubDeviceDescriptor->DeviceDescriptor->PinCount)
+        {
+            DPRINT1("PinId %u outside MaxPins %u\n", PinId, m_SubDeviceDescriptor->DeviceDescriptor->PinCount);
+            return STATUS_UNSUCCESSFUL;
+        }
+        ASSERT(m_SubDeviceDescriptor->DeviceDescriptor->PinSize >= sizeof(PCPIN_DESCRIPTOR));
 
+        ULONG_PTR Offset = PinId * m_SubDeviceDescriptor->DeviceDescriptor->PinSize;
+        PPCPIN_DESCRIPTOR Descriptor = (PPCPIN_DESCRIPTOR)((ULONG_PTR)m_SubDeviceDescriptor->DeviceDescriptor->Pins + Offset);
+        *FilterPossible = Descriptor->MaxFilterInstanceCount;
+        *FilterNecessary = Descriptor->MinFilterInstanceCount;
+        *FilterCurrent = m_SubDeviceDescriptor->Factory.Instances[PinId].CurrentPinInstanceCount;
+        *GlobalCurrent = m_SubDeviceDescriptor->Factory.Instances[PinId].CurrentPinInstanceCount;
+        *GlobalPossible = Descriptor->MaxGlobalInstanceCount;
+        return STATUS_SUCCESS;
+    }
+
+
+
+    UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -558,6 +598,6 @@ NewPortWaveCyclic(
         delete Port;
     }
 
-    DPRINT("NewPortWaveCyclic %p Status %u\n", Port, Status);
+    DPRINT1("NewPortWaveCyclic %p Status %u\n", Port, Status);
     return Status;
 }
