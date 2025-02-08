@@ -218,6 +218,7 @@ static LPWSTR __inline strdupW(LPCWSTR src)
 
 static BOOL PathEnvSubstIsDirectory(LPCWSTR pszPath)
 {
+    // Note: Don't call SHExpandEnvironmentStringsW here, we need the required length
     WCHAR szStack[MAX_PATH];
     DWORD cch = ExpandEnvironmentStringsW(pszPath, szStack, _countof(szStack));
     if (cch <= _countof(szStack))
