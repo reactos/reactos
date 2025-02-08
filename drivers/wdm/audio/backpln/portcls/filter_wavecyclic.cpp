@@ -43,7 +43,7 @@ CPortFilterWaveCyclic::QueryInterface(
     else if (IsEqualGUIDAligned(refiid, IID_IPort))
     {
         *Output = PUNKNOWN(m_Port);
-        PUNKNOWN(*Output)->AddRef();
+        PPORT(*Output)->AddRef();
         return STATUS_SUCCESS;
     }
 
@@ -77,6 +77,7 @@ CPortFilterWaveCyclic::NewIrpTarget(
     Status = PcValidateConnectRequest(Irp, &m_Descriptor->Factory, &ConnectDetails);
     if (!NT_SUCCESS(Status))
     {
+        ASSERT(FALSE);
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -84,6 +85,7 @@ CPortFilterWaveCyclic::NewIrpTarget(
         (m_Descriptor->Factory.Instances[ConnectDetails->PinId].CurrentPinInstanceCount == m_Descriptor->Factory.Instances[ConnectDetails->PinId].MaxFilterInstanceCount))
     {
         // release existing instance
+        ASSERT(FALSE);
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -312,7 +314,7 @@ CPortFilterWaveCyclic::Init(
 NTSTATUS
 NTAPI
 CPortFilterWaveCyclic::FreePin(
-    IN PPORTPINWAVECYCLIC Pin)
+    IN IPortPinWaveCyclic * Pin)
 {
     ULONG Index;
 
@@ -325,6 +327,7 @@ CPortFilterWaveCyclic::FreePin(
             return STATUS_SUCCESS;
         }
     }
+    ASSERT(FALSE);
     return STATUS_UNSUCCESSFUL;
 }
 

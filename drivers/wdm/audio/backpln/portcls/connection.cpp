@@ -214,12 +214,12 @@ RegisterConnection(
 
     if (FromSubDeviceDescriptor)
     {
+        ASSERT(ToString->MaximumLength);
         FromEntry->FromPin = FromPin;
         FromEntry->Connection.Pin = ToPin;
         FromEntry->Connection.Size = sizeof(KSPIN_PHYSICALCONNECTION) + ToString->MaximumLength + sizeof(WCHAR);
         RtlMoveMemory(&FromEntry->Connection.SymbolicLinkName, ToString->Buffer, ToString->MaximumLength);
         FromEntry->Connection.SymbolicLinkName[ToString->Length / sizeof(WCHAR)] = UNICODE_NULL;
-
         InsertTailList(&FromSubDeviceDescriptor->PhysicalConnectionList, &FromEntry->Entry);
     }
 
@@ -234,6 +234,12 @@ RegisterConnection(
         InsertTailList(&ToSubDeviceDescriptor->PhysicalConnectionList, &ToEntry->Entry);
 
     }
+
+    if (FromSubDevice)
+        FromSubDevice->Release();
+
+    if (ToSubDevice)
+        ToSubDevice->Release();
 
     return STATUS_SUCCESS;
 
