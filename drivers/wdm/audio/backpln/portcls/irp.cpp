@@ -98,8 +98,8 @@ PortClsPnp(
                 return Status;
             }
 
-            // Assign the resource list to our extension
-            DeviceExt->resources = resource_list;
+            // release resource list
+            resource_list->Release();
 
             // store device power state
             DeviceExt->DevicePowerState = PowerDeviceD0;
@@ -111,6 +111,7 @@ PortClsPnp(
 
             Irp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            DPRINT("IRP_MN_START_DEVICE Completed with %x\n", Status);
             return Status;
 
         case IRP_MN_REMOVE_DEVICE:
@@ -155,6 +156,27 @@ PortClsPnp(
             DPRINT("IRP_MN_READ_CONFIG\n");
             Status = PcForwardIrpSynchronous(DeviceObject, Irp);
             return PcCompleteIrp(DeviceObject, Irp, Status);
+      case IRP_MN_QUERY_CAPABILITIES:
+            DPRINT("IRP_MN_QUERY_CAPABILITIES\n");
+            if (DeviceExt->AdapterPowerManagement)
+            {
+                Status = DeviceExt->AdapterPowerManagement->QueryDeviceCapabilities(IoStack->Parameters.DeviceCapabilities.Capabilities);
+                DPRINT1("QueryCapabilities Status %x\n", Status);
+            }
+            else
+            {
+                Status = PcForwardIrpSynchronous(DeviceObject, Irp);
+            }
+            return PcCompleteIrp(DeviceObject, Irp, Status);
+      case IRP_MN_QUERY_PNP_DEVICE_STATE:
+            DPRINT("IRP_MN_QUERY_PNP_DEVICE_STATE\n");
+            Status = PcForwardIrpSynchronous(DeviceObject, Irp);
+            return PcCompleteIrp(DeviceObject, Irp, Status);
+      case IRP_MN_CANCEL_REMOVE_DEVICE:
+            DPRINT1("IRP_MN_CANCEL_REMOVE_DEVICE");
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_SUCCESS;
     }
 
     DPRINT("unhandled function %u\n", IoStack->MinorFunction);
@@ -288,7 +310,31 @@ PortClsPower(
                 DeviceExtension->AdapterPowerManagement->PowerChangeState(PowerState);
             }
 
-            // FIXME call all registered IPowerNotify interfaces via ISubdevice interface
+            // call all registered IPowerNotify interfaces via ISubdevice interface
+            KIRQL OldLevel;
+            KeAcquireSpinLock(&DeviceExtension->PowerNotifyListLock, &OldLevel);
+
+            PLIST_ENTRY Entry = DeviceExtension->PowerNotifyList.Flink;
+            while (Entry != &DeviceExtension->PowerNotifyList)
+            {
+                PENTRY_POWER_NOTIFY PowerEntry = CONTAINING_RECORD(Entry, ENTRY_POWER_NOTIFY, Entry);
+
+                // move to next entry
+                Entry = Entry->Flink;
+
+                // release lock
+                KeReleaseSpinLock(&DeviceExtension->PowerNotifyListLock, OldLevel);
+
+                // call entry
+                DPRINT1("Calling %p\n", PowerEntry->PowerNotify);
+                PowerEntry->PowerNotify->PowerChangeNotify(PowerState);
+
+                // reacquire lock
+                KeAcquireSpinLock(&DeviceExtension->PowerNotifyListLock, &OldLevel);
+            }
+
+            // release lock
+            KeReleaseSpinLock(&DeviceExtension->PowerNotifyListLock, OldLevel);
 
             // store new power state
             DeviceExtension->DevicePowerState = IoStack->Parameters.Power.State.DeviceState;

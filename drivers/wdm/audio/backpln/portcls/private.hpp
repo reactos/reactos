@@ -16,8 +16,10 @@
 
 #include <ntddk.h>
 #include <portcls.h>
+#include <ks.h>
 #include <dmusicks.h>
 #include <kcom.h>
+#include <pseh/pseh2.h>
 
 #include "interfaces.hpp"
 
@@ -412,6 +414,9 @@ typedef struct
     LIST_ENTRY TimerList;
     KSPIN_LOCK TimerListLock;
 
+    LIST_ENTRY PowerNotifyList;
+    KSPIN_LOCK PowerNotifyListLock;
+
     DEVICE_POWER_STATE DevicePowerState;
     SYSTEM_POWER_STATE  SystemPowerState;
 
@@ -438,6 +443,12 @@ typedef struct
     IIrpTarget * Target;
     PKSOBJECT_CREATE_ITEM CreateItem;
 }DISPATCH_CONTEXT, *PDISPATCH_CONTEXT;
+
+typedef struct
+{
+    LIST_ENTRY Entry;
+    PPOWERNOTIFY PowerNotify;
+}ENTRY_POWER_NOTIFY, *PENTRY_POWER_NOTIFY;
 
 template<typename... Interfaces>
 class CUnknownImpl : public Interfaces...

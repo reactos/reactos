@@ -102,11 +102,6 @@ CPortFilterWaveRT::NewIrpTarget(
         return Status;
     }
 
-    // release existing pin
-    if (m_Pins[ConnectDetails->PinId])
-    {
-        m_Pins[ConnectDetails->PinId]->Release();
-    }
     // store pin
     m_Pins[ConnectDetails->PinId] = Pin;
 
