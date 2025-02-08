@@ -1,3 +1,11 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/hdaudbus/hda_registers.h
+ * PURPOSE:         HDAUDBUS Driver
+ * PROGRAMMER:      Coolstar TODO
+                    Johannes Anderwald
+ */
 #define HDA_REG_GCAP			0x00
 #define   HDA_GCAP_64OK		(1 << 0)   /* 64bit address support */
 #define   HDA_GCAP_NSDO		(3 << 1)   /* # of serial data out signals */

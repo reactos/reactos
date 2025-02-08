@@ -1,3 +1,12 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/hdaudbus/regfuncs.h
+ * PURPOSE:         HDAUDBUS Driver
+ * PROGRAMMER:      Coolstar TODO
+                    Johannes Anderwald
+ */
+
 static inline UINT8 read8(PVOID addr) {
 	UINT8 ret = *(UINT8*)addr;
 	return ret;

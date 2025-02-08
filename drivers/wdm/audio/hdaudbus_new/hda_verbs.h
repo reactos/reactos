@@ -1,3 +1,12 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/hdaudbus/hda_verbs.h
+ * PURPOSE:         HDAUDBUS Driver
+ * PROGRAMMER:      Coolstar TODO
+                    Johannes Anderwald
+ */
+
 #if !defined(_HDA_VERBS_H_)
 #define _HDA_VERBS_H_
 

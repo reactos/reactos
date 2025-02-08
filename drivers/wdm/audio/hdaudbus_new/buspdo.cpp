@@ -2,546 +2,371 @@
 #include "adsp.h"
 
 NTSTATUS
-Bus_CreatePdo(
-    _In_ WDFDEVICE       Device,
-    _In_ PWDFDEVICE_INIT DeviceInit,
-    _In_ PPDO_IDENTIFICATION_DESCRIPTION           Desc
-);
-
-NTSTATUS
-Bus_EvtChildListIdentificationDescriptionDuplicate(
-    WDFCHILDLIST DeviceList,
-    PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER SourceIdentificationDescription,
-    PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER DestinationIdentificationDescription
-)
-/*++
-Routine Description:
-    It is called when the framework needs to make a copy of a description.
-    This happens when a request is made to create a new child device by
-    calling WdfChildListAddOrUpdateChildDescriptionAsPresent.
-    If this function is left unspecified, RtlCopyMemory will be used to copy the
-    source description to destination. Memory for the description is managed by the
-    framework.
-    NOTE:   Callback is invoked with an internal lock held.  So do not call out
-    to any WDF function which will require this lock
-    (basically any other WDFCHILDLIST api)
-Arguments:
-    DeviceList - Handle to the default WDFCHILDLIST created by the framework.
-    SourceIdentificationDescription - Description of the child being created -memory in
-                            the calling thread stack.
-    DestinationIdentificationDescription - Created by the framework in nonpaged pool.
-Return Value:
-    NT Status code.
---*/
+HDA_PDORemoveDevice(
+    _In_ PDEVICE_OBJECT DeviceObject)
 {
-    PPDO_IDENTIFICATION_DESCRIPTION src, dst;
+    PPDO_DEVICE_DATA DeviceExtension;
+    ULONG CodecIndex;
 
-    UNREFERENCED_PARAMETER(DeviceList);
+    /* get device extension */
+    DeviceExtension = static_cast<PPDO_DEVICE_DATA>(DeviceObject->DeviceExtension);
+    ASSERT(DeviceExtension->IsFDO == FALSE);
 
-    src = CONTAINING_RECORD(SourceIdentificationDescription,
-        PDO_IDENTIFICATION_DESCRIPTION,
-        Header);
-    dst = CONTAINING_RECORD(DestinationIdentificationDescription,
-        PDO_IDENTIFICATION_DESCRIPTION,
-        Header);
+    for (CodecIndex = 0; CodecIndex < HDA_MAX_CODECS; CodecIndex++)
+    {
+        if (DeviceExtension->FdoContext->codecs[CodecIndex] == NULL)
+            continue;
 
-    SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
-        "%s\n", __func__);
-
-    dst->FdoContext = src->FdoContext;
-    RtlCopyMemory(&dst->CodecIds, &src->CodecIds, sizeof(dst->CodecIds));
-
+        if (DeviceExtension->FdoContext->codecs[CodecIndex]->ChildPDO == DeviceObject)
+        {
+            DPRINT1("Removing reference\n");
+            DeviceExtension->FdoContext->codecs[CodecIndex]->ChildPDO = NULL;
+        }
+    }
+    IoDeleteDevice(DeviceObject);
     return STATUS_SUCCESS;
 }
 
-BOOLEAN
-Bus_EvtChildListIdentificationDescriptionCompare(
-    WDFCHILDLIST DeviceList,
-    PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER FirstIdentificationDescription,
-    PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER SecondIdentificationDescription
-)
-/*++
-Routine Description:
-    It is called when the framework needs to compare one description with another.
-    Typically this happens whenever a request is made to add a new child device.
-    If this function is left unspecified, RtlCompareMemory will be used to compare the
-    descriptions.
-    NOTE:   Callback is invoked with an internal lock held.  So do not call out
-    to any WDF function which will require this lock
-    (basically any other WDFCHILDLIST api)
-Arguments:
-    DeviceList - Handle to the default WDFCHILDLIST created by the framework.
-Return Value:
-   TRUE or FALSE.
---*/
-{
-    PPDO_IDENTIFICATION_DESCRIPTION lhs, rhs;
-
-    UNREFERENCED_PARAMETER(DeviceList);
-
-    lhs = CONTAINING_RECORD(FirstIdentificationDescription,
-        PDO_IDENTIFICATION_DESCRIPTION,
-        Header);
-    rhs = CONTAINING_RECORD(SecondIdentificationDescription,
-        PDO_IDENTIFICATION_DESCRIPTION,
-        Header);
-
-    SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
-        "%s\n", __func__);
-
-    return (lhs->FdoContext == rhs->FdoContext) &&
-        (RtlCompareMemory(&lhs->CodecIds, &rhs->CodecIds, sizeof(lhs->CodecIds)) == sizeof(lhs->CodecIds));
-}
-
-VOID
-Bus_EvtChildListIdentificationDescriptionCleanup(
-    _In_ WDFCHILDLIST DeviceList,
-    _Inout_ PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER IdentificationDescription
-)
-/*++
-Routine Description:
-    It is called to free up any memory resources allocated as part of the description.
-    This happens when a child device is unplugged or ejected from the bus.
-    Memory for the description itself will be freed by the framework.
-Arguments:
-    DeviceList - Handle to the default WDFCHILDLIST created by the framework.
-    IdentificationDescription - Description of the child being deleted
-Return Value:
---*/
-{
-    UNREFERENCED_PARAMETER(DeviceList);
-    UNREFERENCED_PARAMETER(IdentificationDescription);
-}
-
 NTSTATUS
-Bus_EvtDeviceListCreatePdo(
-    WDFCHILDLIST DeviceList,
-    PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER IdentificationDescription,
-    PWDFDEVICE_INIT ChildInit
-)
-/*++
-Routine Description:
-    Called by the framework in response to Query-Device relation when
-    a new PDO for a child device needs to be created.
-Arguments:
-    DeviceList - Handle to the default WDFCHILDLIST created by the framework as part
-                        of FDO.
-    IdentificationDescription - Decription of the new child device.
-    ChildInit - It's a opaque structure used in collecting device settings
-                    and passed in as a parameter to CreateDevice.
-Return Value:
-    NT Status code.
---*/
+HDA_PDOQueryBusInformation(
+    IN PIRP Irp)
 {
-    PPDO_IDENTIFICATION_DESCRIPTION pDesc;
+    PPNP_BUS_INFORMATION BusInformation;
 
-    PAGED_CODE();
+    DPRINT1("HDA_PDOQueryBusInformation\n");
 
-    pDesc = CONTAINING_RECORD(IdentificationDescription,
-        PDO_IDENTIFICATION_DESCRIPTION,
-        Header);
+    /* allocate bus information */
+    BusInformation = (PPNP_BUS_INFORMATION)AllocateItem(PagedPool, sizeof(PNP_BUS_INFORMATION));
 
-    SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
-        "%s\n", __func__);
-
-    return Bus_CreatePdo(WdfChildListGetDevice(DeviceList),
-        ChildInit,
-        pDesc);
-}
-
-NTSTATUS
-Bus_CreatePdo(
-    _In_ WDFDEVICE       Device,
-    _In_ PWDFDEVICE_INIT DeviceInit,
-    _In_ PPDO_IDENTIFICATION_DESCRIPTION           Desc
-)
-{
-    UNREFERENCED_PARAMETER(Device);
-
-    NTSTATUS                    status;
-    PPDO_DEVICE_DATA            pdoData = NULL;
-    WDFDEVICE                   hChild = NULL;
-    WDF_QUERY_INTERFACE_CONFIG  qiConfig;
-    WDF_OBJECT_ATTRIBUTES       pdoAttributes;
-    WDF_DEVICE_PNP_CAPABILITIES pnpCaps;
-    WDF_DEVICE_POWER_CAPABILITIES powerCaps;
-    DECLARE_CONST_UNICODE_STRING(deviceLocation, L"High Definition Audio Bus");
-    DECLARE_UNICODE_STRING_SIZE(buffer, MAX_INSTANCE_ID_LEN);
-    DECLARE_UNICODE_STRING_SIZE(deviceId, MAX_INSTANCE_ID_LEN);
-    DECLARE_UNICODE_STRING_SIZE(compatId, MAX_INSTANCE_ID_LEN);
-
-    SklHdAudBusPrint(DEBUG_LEVEL_INFO, DBG_INIT,
-        "%s\n", __func__);
-
-    if (Desc->CodecIds.IsDSP) {
-        //
-        // Set DeviceType
-        //
-        WdfDeviceInitSetDeviceType(DeviceInit, FILE_DEVICE_BUS_EXTENDER);
-
-        //
-        // Provide DeviceID, HardwareIDs, CompatibleIDs and InstanceId
-        //
-        status = RtlUnicodeStringPrintf(&deviceId, L"CSAUDIO\\ADSP&CTLR_VEN_%04X&CTLR_DEV_%04X",
-             Desc->CodecIds.CtlrVenId, Desc->CodecIds.CtlrDevId);
-        if (!NT_SUCCESS(status)) {
-            return status;
-        }
-
-        status = WdfPdoInitAssignInstanceID(DeviceInit, &deviceId);
-        if (!NT_SUCCESS(status)) {
-            return status;
-        }
-
-        status = WdfPdoInitAssignDeviceID(DeviceInit, &deviceId);
-        if (!NT_SUCCESS(status)) {
-            return status;
-        }
-
-        //
-        // NOTE: same string  is used to initialize hardware id too
-        //
-        status = WdfPdoInitAddHardwareID(DeviceInit, &deviceId);
-        if (!NT_SUCCESS(status)) {
-            return status;
-        }
-
-        status = RtlUnicodeStringPrintf(&compatId, L"CSAUDIO\\ADSP&CTLR_VEN_%04X&CTLR_DEV_%04X",
-            Desc->CodecIds.CtlrVenId, Desc->CodecIds.CtlrDevId);
-        if (!NT_SUCCESS(status)) {
-            return status;
-        }
-
-        //
-        // NOTE: same string  is used to initialize compat id too
-        //
-        status = WdfPdoInitAddCompatibleID(DeviceInit, &compatId);
-        if (!NT_SUCCESS(status)) {
-            return status;
-        }
+    if (!BusInformation)
+    {
+        /* no memory */
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
-    else {
-        //
-        // Set DeviceType
-        //
-        WdfDeviceInitSetDeviceType(DeviceInit, FILE_DEVICE_SOUND);
 
-        PWCHAR prefix = L"HDAUDIO";
-        PWCHAR funcPrefix = L"";
-        if (Desc->CodecIds.IsGraphicsCodec) {
-            funcPrefix = L"SGPC_";
-        }
+    /* return info */
+    BusInformation->BusNumber = 0;
+    BusInformation->LegacyBusType = PNPBus;
+    RtlCopyMemory(&BusInformation->BusTypeGuid, &GUID_HDAUDIO_BUS_CLASS, sizeof(GUID));
 
-        //
-        // Provide DeviceID, HardwareIDs, CompatibleIDs and InstanceId
-        //
-        status = RtlUnicodeStringPrintf(&deviceId, L"%s\\%sFUNC_%02X&VEN_%04X&DEV_%04X&SUBSYS_%08X&REV_%04X",
-            prefix, funcPrefix, Desc->CodecIds.FuncId, Desc->CodecIds.VenId, Desc->CodecIds.DevId, Desc->CodecIds.SubsysId, Desc->CodecIds.RevId);
-        if (!NT_SUCCESS(status)) {
-            return status;
-        }
+    /* store result */
+    Irp->IoStatus.Information = (ULONG_PTR)BusInformation;
 
-        status = WdfPdoInitAssignDeviceID(DeviceInit, &deviceId);
-        if (!NT_SUCCESS(status)) {
-            return status;
-        }
+    /* done */
+    return STATUS_SUCCESS;
+}
 
-        //
-        // NOTE: same string  is used to initialize hardware id too
-        //
-        status = WdfPdoInitAddHardwareID(DeviceInit, &deviceId);
-        if (!NT_SUCCESS(status)) {
-            return status;
-        }
 
-        //Add second hardware ID without Rev
-        status = RtlUnicodeStringPrintf(&deviceId, L"%s\\%sFUNC_%02X&VEN_%04X&DEV_%04X&SUBSYS_%08X",
-            prefix, funcPrefix, Desc->CodecIds.FuncId, Desc->CodecIds.VenId, Desc->CodecIds.DevId, Desc->CodecIds.SubsysId);
-        if (!NT_SUCCESS(status)) {
-            return status;
-        }
+NTSTATUS
+NTAPI
+HDA_PDOQueryId(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+    WCHAR DeviceName[200];
+    PPDO_DEVICE_DATA DeviceExtension;
+    PFDO_CONTEXT FdoDeviceExtension;
+    ULONG Length;
+    LPWSTR Device;
+    NTSTATUS Status;
 
-        status = WdfPdoInitAddHardwareID(DeviceInit, &deviceId);
-        if (!NT_SUCCESS(status)) {
-            return status;
-        }
+    /* get device extension */
+    DeviceExtension = (PPDO_DEVICE_DATA)DeviceObject->DeviceExtension;
+    ASSERT(DeviceExtension->IsFDO == FALSE);
 
-        //Add Compatible Ids
+    /* get FDO device extension */
+    FdoDeviceExtension = DeviceExtension->FdoContext;
+    ASSERT(FdoDeviceExtension->IsFDO);
+
+    /* get current irp stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    if (IoStack->Parameters.QueryId.IdType == BusQueryInstanceID)
+    {
+        Status = RtlStringCbPrintfW(DeviceName,
+                                    sizeof(DeviceName),
+                                    L"%02x%02x",
+                                    DeviceExtension->CodecIds.CodecAddress,
+                                    DeviceExtension->CodecIds.FunctionGroupStartNode);
+        NT_ASSERT(NT_SUCCESS(Status));
+        Length = wcslen(DeviceName) + 1;
+
+        /* allocate result buffer*/
+        Device = (LPWSTR)AllocateItem(PagedPool, Length * sizeof(WCHAR));
+        if (!Device)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        Status = RtlStringCbCopyW(Device,
+                                  Length * sizeof(WCHAR),
+                                  DeviceName);
+        NT_ASSERT(NT_SUCCESS(Status));
+
+        DPRINT1("ID: %S\n", Device);
+        /* store result */
+        Irp->IoStatus.Information = (ULONG_PTR)Device;
+        return STATUS_SUCCESS;
+    }
+    else if (IoStack->Parameters.QueryId.IdType == BusQueryDeviceID ||
+        IoStack->Parameters.QueryId.IdType == BusQueryHardwareIDs)
+    {
+
+        /* calculate size */
+        swprintf(DeviceName, L"HDAUDIO\\FUNC_%02X&VEN_%04X&DEV_%04X&SUBSYS_%08X",
+            DeviceExtension->CodecIds.FuncId,
+            DeviceExtension->CodecIds.VenId,
+            DeviceExtension->CodecIds.DevId,
+            DeviceExtension->CodecIds.SubsysId);
+
+        Length = wcslen(DeviceName) + 20;
+
+        /* allocate result buffer*/
+        Device = (LPWSTR)AllocateItem(PagedPool, Length * sizeof(WCHAR));
+        if (!Device)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        wcscpy(Device, DeviceName);
+
+        DPRINT1("ID: %S\n", Device);
+        /* store result */
+        Irp->IoStatus.Information = (ULONG_PTR)Device;
+        return STATUS_SUCCESS;
+    }
+    else if (IoStack->Parameters.QueryId.IdType == BusQueryCompatibleIDs)
+    {
+        RtlZeroMemory(DeviceName, sizeof(DeviceName));
+        Length = swprintf(DeviceName, L"HDAUDIO\\FUNC_%02X&VEN_%04X&DEV_%04X&REV_%04X", DeviceExtension->CodecIds.FuncId, DeviceExtension->CodecIds.VenId, DeviceExtension->CodecIds.DevId, DeviceExtension->CodecIds.SubsysId) + 1;
+        Length += swprintf(&DeviceName[Length], L"HDAUDIO\\FUNC_%02X&VEN_%04X&DEV_%04X", DeviceExtension->CodecIds.FuncId, DeviceExtension->CodecIds.VenId, DeviceExtension->CodecIds.DevId) + 1;
+        Length += swprintf(&DeviceName[Length], L"HDAUDIO\\FUNC_%02X&VEN_%04X", DeviceExtension->CodecIds.FuncId, DeviceExtension->CodecIds.VenId) + 1;
+        Length += swprintf(&DeviceName[Length], L"HDAUDIO\\FUNC_%02X", DeviceExtension->CodecIds.FuncId) + 2;
+
+        /* allocate result buffer*/
+        Device = (LPWSTR)AllocateItem(PagedPool, Length * sizeof(WCHAR));
+        if (!Device)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        RtlCopyMemory(Device, DeviceName, Length * sizeof(WCHAR));
+
+        DPRINT1("ID: %S\n", Device);
+        /* store result */
+        Irp->IoStatus.Information = (ULONG_PTR)Device;
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        DPRINT1("QueryID Type %x not implemented\n", IoStack->Parameters.QueryId.IdType);
+        return Irp->IoStatus.Status;
+    }
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+HDA_PDOHandleQueryDeviceText(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+    LPWSTR Buffer;
+    PPDO_DEVICE_DATA DeviceExtension;
+
+    static WCHAR DeviceText[] = L"Audio Device on High Definition Audio Bus";
+    static WCHAR ModemText[] = L"Modem Device on High Definition Audio Bus";
+
+    /* get device extension */
+    DeviceExtension = (PPDO_DEVICE_DATA)DeviceObject->DeviceExtension;
+    ASSERT(DeviceExtension->IsFDO == FALSE);
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    if (IoStack->Parameters.QueryDeviceText.DeviceTextType == DeviceTextDescription)
+    {
+        DPRINT("HDA_PdoHandleQueryDeviceText DeviceTextDescription\n");
+
+        if (DeviceExtension->CodecIds.IsDSP)
         {
-            status = RtlUnicodeStringPrintf(&compatId, L"%s\\%sFUNC_%02X&CTLR_VEN_%02X&CTLR_DEV_%02X&VEN_%04X&DEV_%04X&REV_%04X",
-                prefix, funcPrefix, Desc->CodecIds.FuncId, Desc->CodecIds.CtlrVenId, Desc->CodecIds.CtlrDevId, Desc->CodecIds.VenId, Desc->CodecIds.DevId, Desc->CodecIds.RevId);
-            if (!NT_SUCCESS(status)) {
-                return status;
+            Buffer = (LPWSTR)AllocateItem(PagedPool, sizeof(DeviceText));
+            if (!Buffer)
+            {
+                Irp->IoStatus.Information = 0;
+                return STATUS_INSUFFICIENT_RESOURCES;
             }
 
-            status = WdfPdoInitAddCompatibleID(DeviceInit, &compatId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = RtlUnicodeStringPrintf(&compatId, L"%s\\%sFUNC_%02X&CTLR_VEN_%02X&VEN_%04X&DEV_%04X&REV_%04X",
-                prefix, funcPrefix, Desc->CodecIds.FuncId, Desc->CodecIds.CtlrVenId, Desc->CodecIds.VenId, Desc->CodecIds.DevId, Desc->CodecIds.RevId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = WdfPdoInitAddCompatibleID(DeviceInit, &compatId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = RtlUnicodeStringPrintf(&compatId, L"%s\\%sFUNC_%02X&VEN_%04X&DEV_%04X&REV_%04X",
-                prefix, funcPrefix, Desc->CodecIds.FuncId, Desc->CodecIds.VenId, Desc->CodecIds.DevId, Desc->CodecIds.RevId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = WdfPdoInitAddCompatibleID(DeviceInit, &compatId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = RtlUnicodeStringPrintf(&compatId, L"%s\\%sFUNC_%02X&CTLR_VEN_%02X&CTLR_DEV_%02X&VEN_%04X&DEV_%04X",
-                prefix, funcPrefix, Desc->CodecIds.FuncId, Desc->CodecIds.CtlrVenId, Desc->CodecIds.CtlrDevId, Desc->CodecIds.VenId, Desc->CodecIds.DevId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = WdfPdoInitAddCompatibleID(DeviceInit, &compatId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = RtlUnicodeStringPrintf(&compatId, L"%s\\%sFUNC_%02X&CTLR_VEN_%02X&VEN_%04X&DEV_%04X",
-                prefix, funcPrefix, Desc->CodecIds.FuncId, Desc->CodecIds.CtlrVenId, Desc->CodecIds.VenId, Desc->CodecIds.DevId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = WdfPdoInitAddCompatibleID(DeviceInit, &compatId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = RtlUnicodeStringPrintf(&compatId, L"%s\\%sFUNC_%02X&VEN_%04X&DEV_%04X",
-                prefix, funcPrefix, Desc->CodecIds.FuncId, Desc->CodecIds.VenId, Desc->CodecIds.DevId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = WdfPdoInitAddCompatibleID(DeviceInit, &compatId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = RtlUnicodeStringPrintf(&compatId, L"%s\\%sFUNC_%02X&CTLR_VEN_%02X&CTLR_DEV_%02X&VEN_%04X",
-                prefix, funcPrefix, Desc->CodecIds.FuncId, Desc->CodecIds.CtlrVenId, Desc->CodecIds.CtlrDevId, Desc->CodecIds.VenId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = WdfPdoInitAddCompatibleID(DeviceInit, &compatId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = RtlUnicodeStringPrintf(&compatId, L"%s\\%sFUNC_%02X&CTLR_VEN_%02X&VEN_%04X",
-                prefix, funcPrefix, Desc->CodecIds.FuncId, Desc->CodecIds.CtlrVenId, Desc->CodecIds.VenId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = WdfPdoInitAddCompatibleID(DeviceInit, &compatId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = RtlUnicodeStringPrintf(&compatId, L"%s\\%sFUNC_%02X&VEN_%04X",
-                prefix, funcPrefix, Desc->CodecIds.FuncId, Desc->CodecIds.VenId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = WdfPdoInitAddCompatibleID(DeviceInit, &compatId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = RtlUnicodeStringPrintf(&compatId, L"%s\\%sFUNC_%02X&CTLR_VEN_%02X&CTLR_DEV_%02X",
-                prefix, funcPrefix, Desc->CodecIds.FuncId, Desc->CodecIds.CtlrVenId, Desc->CodecIds.CtlrDevId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = WdfPdoInitAddCompatibleID(DeviceInit, &compatId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = RtlUnicodeStringPrintf(&compatId, L"%s\\%sFUNC_%02X&CTLR_VEN_%02X",
-                prefix, funcPrefix, Desc->CodecIds.FuncId, Desc->CodecIds.CtlrVenId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = WdfPdoInitAddCompatibleID(DeviceInit, &compatId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = RtlUnicodeStringPrintf(&compatId, L"%s\\%sFUNC_%02X",
-                prefix, funcPrefix, Desc->CodecIds.FuncId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-
-            status = WdfPdoInitAddCompatibleID(DeviceInit, &compatId);
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
+            wcscpy(Buffer, DeviceText);
         }
+        else
+        {
+            Buffer = (LPWSTR)AllocateItem(PagedPool, sizeof(ModemText));
+            if (!Buffer)
+            {
+                Irp->IoStatus.Information = 0;
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            wcscpy(Buffer, ModemText);
+
+        }
+        Irp->IoStatus.Information = (ULONG_PTR)Buffer;
+        return STATUS_SUCCESS;
     }
+    else
+    {
+        DPRINT("HDA_PdoHandleQueryDeviceText DeviceTextLocationInformation\n");
 
-    status = RtlUnicodeStringPrintf(&buffer, L"%02d", Desc->CodecIds.CodecAddress);
-    if (!NT_SUCCESS(status)) {
-        return status;
-    }
+        if (DeviceExtension->CodecIds.IsDSP)
+        {
+            Buffer = (LPWSTR)AllocateItem(PagedPool, sizeof(DeviceText));
+            if (!Buffer)
+            {
+                Irp->IoStatus.Information = 0;
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
 
-    status = WdfPdoInitAssignInstanceID(DeviceInit, &buffer);
-    if (!NT_SUCCESS(status)) {
-        return status;
-    }
+            wcscpy(Buffer, DeviceText);
+        }
+        else
+        {
+            Buffer = (LPWSTR)AllocateItem(PagedPool, sizeof(ModemText));
+            if (!Buffer)
+            {
+                Irp->IoStatus.Information = 0;
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
 
-    //
-    // Provide a description about the device. This text is usually read from
-    // the device. In the case of USB device, this text comes from the string
-    // descriptor. This text is displayed momentarily by the PnP manager while
-    // it's looking for a matching INF. If it finds one, it uses the Device
-    // Description from the INF file or the friendly name created by
-    // coinstallers to display in the device manager. FriendlyName takes
-    // precedence over the DeviceDesc from the INF file.
-    //
-    if (Desc->CodecIds.IsDSP) {
-        status = RtlUnicodeStringPrintf(&buffer,
-            L"Intel Audio DSP");
-    }
-    else {
-        status = RtlUnicodeStringPrintf(&buffer,
-            L"High Definition Audio Device");
-    }
-    if (!NT_SUCCESS(status)) {
-        return status;
-    }
-
-    //
-    // You can call WdfPdoInitAddDeviceText multiple times, adding device
-    // text for multiple locales. When the system displays the text, it
-    // chooses the text that matches the current locale, if available.
-    // Otherwise it will use the string for the default locale.
-    // The driver can specify the driver's default locale by calling
-    // WdfPdoInitSetDefaultLocale.
-    //
-    status = WdfPdoInitAddDeviceText(DeviceInit,
-        &buffer,
-        &deviceLocation,
-        0x409);
-    if (!NT_SUCCESS(status)) {
-        return status;
-    }
-
-    WdfPdoInitSetDefaultLocale(DeviceInit, 0x409);
-
-    //
-    // Initialize the attributes to specify the size of PDO device extension.
-    // All the state information private to the PDO will be tracked here.
-    //
-    WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&pdoAttributes, PDO_DEVICE_DATA);
-
-    status = WdfDeviceCreate(&DeviceInit, &pdoAttributes, &hChild);
-    if (!NT_SUCCESS(status)) {
-        return status;
-    }
-
-    //
-    // Get the device context.
-    //
-    pdoData = PdoGetData(hChild);
-
-    pdoData->FdoContext = Desc->FdoContext;
-    RtlCopyMemory(&pdoData->CodecIds, &Desc->CodecIds, sizeof(Desc->CodecIds));
-
-    if (!Desc->CodecIds.IsDSP)
-        Desc->FdoContext->codecs[Desc->CodecIds.CodecAddress] = pdoData;
-
-    //
-    // Set some properties for the child device.
-    //
-    WDF_DEVICE_PNP_CAPABILITIES_INIT(&pnpCaps);
-    pnpCaps.Removable = WdfFalse;
-    pnpCaps.EjectSupported = Desc->CodecIds.IsGraphicsCodec ? WdfTrue : WdfFalse;
-    pnpCaps.SurpriseRemovalOK = Desc->CodecIds.IsGraphicsCodec ? WdfTrue : WdfFalse;
-
-    pnpCaps.Address = Desc->CodecIds.CodecAddress;
-    pnpCaps.UINumber = Desc->CodecIds.CodecAddress;
-
-    WdfDeviceSetPnpCapabilities(hChild, &pnpCaps);
-
-    WDF_DEVICE_POWER_CAPABILITIES_INIT(&powerCaps);
-
-    powerCaps.DeviceD1 = WdfTrue;
-    powerCaps.WakeFromD1 = WdfTrue;
-    powerCaps.DeviceWake = PowerDeviceD1;
-
-    powerCaps.DeviceState[PowerSystemWorking] = PowerDeviceD1;
-    powerCaps.DeviceState[PowerSystemSleeping1] = PowerDeviceD1;
-    powerCaps.DeviceState[PowerSystemSleeping2] = PowerDeviceD2;
-    powerCaps.DeviceState[PowerSystemSleeping3] = PowerDeviceD2;
-    powerCaps.DeviceState[PowerSystemHibernate] = PowerDeviceD3;
-    powerCaps.DeviceState[PowerSystemShutdown] = PowerDeviceD3;
-
-    WdfDeviceSetPowerCapabilities(hChild, &powerCaps);
-
-    if (Desc->CodecIds.IsDSP) {
-        ADSP_BUS_INTERFACE busInterface = ADSP_BusInterface(pdoData);
-        WDF_QUERY_INTERFACE_CONFIG_INIT(&qiConfig,
-            (PINTERFACE)&busInterface,
-            &GUID_ADSP_BUS_INTERFACE,
-            NULL);
-        status = WdfDeviceAddQueryInterface(hChild, &qiConfig);
-    }
-    else {
-        HDAUDIO_BUS_INTERFACE busInterface = HDA_BusInterface(pdoData);
-
-        WDF_QUERY_INTERFACE_CONFIG_INIT(&qiConfig,
-            (PINTERFACE)&busInterface,
-            &GUID_HDAUDIO_BUS_INTERFACE,
-            NULL);
-
-        status = WdfDeviceAddQueryInterface(hChild, &qiConfig);
-        if (!NT_SUCCESS(status)) {
-            return status;
+            wcscpy(Buffer, ModemText);
         }
 
-        HDAUDIO_BUS_INTERFACE_V2 busInterface2 = HDA_BusInterfaceV2(pdoData);
-        WDF_QUERY_INTERFACE_CONFIG_INIT(&qiConfig,
-            (PINTERFACE)&busInterface2,
-            &GUID_HDAUDIO_BUS_INTERFACE_V2,
-            NULL);
-        status = WdfDeviceAddQueryInterface(hChild, &qiConfig);
-        if (!NT_SUCCESS(status)) {
-            return status;
-        }
-
-        HDAUDIO_BUS_INTERFACE_V3 busInterface3 = HDA_BusInterfaceV3(pdoData);
-        WDF_QUERY_INTERFACE_CONFIG_INIT(&qiConfig,
-            (PINTERFACE)&busInterface3,
-            &GUID_HDAUDIO_BUS_INTERFACE_V3,
-            NULL);
-        status = WdfDeviceAddQueryInterface(hChild, &qiConfig);
-        if (!NT_SUCCESS(status)) {
-            return status;
-        }
+        /* save result */
+        Irp->IoStatus.Information = (ULONG_PTR)Buffer;
+        return STATUS_SUCCESS;
     }
 
-    return status;
+}
+
+NTSTATUS
+HDA_PDOQueryBusDeviceCapabilities(
+    IN PIRP Irp)
+{
+    PDEVICE_CAPABILITIES Capabilities;
+    PIO_STACK_LOCATION IoStack;
+
+    /* get stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* get capabilities */
+    Capabilities = IoStack->Parameters.DeviceCapabilities.Capabilities;
+
+    RtlZeroMemory(Capabilities, sizeof(DEVICE_CAPABILITIES));
+
+    /* setup capabilities */
+    Capabilities->UniqueID = TRUE;
+    Capabilities->SilentInstall = TRUE;
+    Capabilities->SurpriseRemovalOK = TRUE;
+    Capabilities->Address = 0;
+    Capabilities->UINumber = 0;
+    Capabilities->SystemWake = PowerSystemWorking; /* FIXME common device extension */
+    Capabilities->DeviceWake = PowerDeviceD0;
+    Capabilities->Size = sizeof(DEVICE_CAPABILITIES);
+    /* done */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+HDA_PDOQueryBusDevicePnpState(
+    IN PIRP Irp)
+{
+    /* set device flags */
+    Irp->IoStatus.Information = PNP_DEVICE_DONT_DISPLAY_IN_UI | PNP_DEVICE_NOT_DISABLEABLE;
+
+    /* done */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+HDA_PDOHandleQueryInterface(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+    PPDO_DEVICE_DATA DeviceExtension;
+    UNICODE_STRING GuidString;
+    NTSTATUS Status;
+
+    /* get device extension */
+    DeviceExtension = (PPDO_DEVICE_DATA)DeviceObject->DeviceExtension;
+    ASSERT(DeviceExtension->IsFDO == FALSE);
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    if (IsEqualGUIDAligned(*IoStack->Parameters.QueryInterface.InterfaceType, GUID_HDAUDIO_BUS_INTERFACE))
+    {
+        PHDAUDIO_BUS_INTERFACE InterfaceHDA = (PHDAUDIO_BUS_INTERFACE)IoStack->Parameters.QueryInterface.Interface;
+        HDA_BusInterface(DeviceExtension, InterfaceHDA);
+        return STATUS_SUCCESS;
+    }
+    else if (IsEqualGUIDAligned(*IoStack->Parameters.QueryInterface.InterfaceType, GUID_HDAUDIO_BUS_INTERFACE_V2))
+    {
+        PHDAUDIO_BUS_INTERFACE_V2 InterfaceHDA = (PHDAUDIO_BUS_INTERFACE_V2)IoStack->Parameters.QueryInterface.Interface;
+        HDA_BusInterfaceV2(DeviceExtension, InterfaceHDA);
+        return STATUS_SUCCESS;
+    }
+    else if (IsEqualGUIDAligned(*IoStack->Parameters.QueryInterface.InterfaceType, GUID_HDAUDIO_BUS_INTERFACE_BDL))
+    {
+        PHDAUDIO_BUS_INTERFACE_BDL InterfaceHDA = (PHDAUDIO_BUS_INTERFACE_BDL)IoStack->Parameters.QueryInterface.Interface;
+        HDA_BusInterfaceBDL(DeviceExtension, InterfaceHDA);
+        return STATUS_SUCCESS;
+    }
+    else if (IsEqualGUIDAligned(*IoStack->Parameters.QueryInterface.InterfaceType, GUID_BUS_INTERFACE_STANDARD))
+    {
+        PBUS_INTERFACE_STANDARD InterfaceBus = (PBUS_INTERFACE_STANDARD)IoStack->Parameters.QueryInterface.Interface;
+        HDA_BusInterfaceStandard(DeviceExtension, InterfaceBus);
+        return STATUS_SUCCESS;
+    }
+    else if (IsEqualGUIDAligned(*IoStack->Parameters.QueryInterface.InterfaceType, KSMEDIUMSETID_Standard))
+    {
+        PBUS_INTERFACE_REFERENCE InterfaceBus = (PBUS_INTERFACE_REFERENCE)IoStack->Parameters.QueryInterface.Interface;
+        HDA_BusInterfaceReference(DeviceExtension, InterfaceBus);
+        return STATUS_SUCCESS;
+    }
+
+    Status = RtlStringFromGUID(*IoStack->Parameters.QueryInterface.InterfaceType, &GuidString);
+    if (NT_SUCCESS(Status))
+    {
+        DPRINT1("UNIMPLEMENTED InterfaceType: %wZ\n", &GuidString);
+    }
+    UNIMPLEMENTED;
+    return STATUS_NOT_SUPPORTED;
+}
+
+NTSTATUS
+NTAPI
+PDO_CreateDevices(PDEVICE_OBJECT DeviceObject)
+{
+    PFDO_CONTEXT FdoDeviceExtension;
+    ULONG Index;
+    PPDO_DEVICE_DATA ChildDeviceExtension;
+    PDEVICE_OBJECT ChildPDO;
+    NTSTATUS Status;
+
+    FdoDeviceExtension = (PFDO_CONTEXT)DeviceObject->DeviceExtension;
+    DPRINT1("PDO_CreateDevices numCodecs %u\n", FdoDeviceExtension->numCodecs);
+
+    for (Index = 0; Index < FdoDeviceExtension->numCodecs; Index++)
+    {
+        Status = IoCreateDevice(DeviceObject->DriverObject, sizeof(PDO_DEVICE_DATA), NULL, FILE_DEVICE_SOUND, FILE_AUTOGENERATED_DEVICE_NAME, FALSE, &ChildPDO);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("hda failed to create device object %x\n", Status);
+            return Status;
+        }
+
+        FdoDeviceExtension->codecs[Index] = ChildDeviceExtension = (PPDO_DEVICE_DATA)ChildPDO->DeviceExtension;
+        RtlZeroMemory(ChildDeviceExtension, sizeof(PDO_DEVICE_DATA));
+        ChildDeviceExtension->FdoContext = FdoDeviceExtension;
+        ChildDeviceExtension->ChildPDO = ChildPDO;
+        ChildDeviceExtension->IsFDO = FALSE;
+        RtlCopyMemory(&ChildDeviceExtension->CodecIds, &FdoDeviceExtension->CodecIds[Index], sizeof(CODEC_IDS));
+        /* setup flags */
+        ChildPDO->Flags |= DO_POWER_PAGABLE;
+        ChildPDO->Flags &= ~DO_DEVICE_INITIALIZING;
+    }
+    return STATUS_SUCCESS;
 }

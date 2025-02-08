@@ -1,3 +1,11 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/wdm/audio/hdaudbus/fdo.h
+ * PURPOSE:         HDAUDBUS Driver
+ * PROGRAMMER:      Coolstar TODO
+                    Johannes Anderwald
+ */
 #if !defined(_SKLHDAUDBUS_FDO_H_)
 #define _SKLHDAUDBUS_FDO_H_
 
@@ -31,7 +39,8 @@ typedef struct _HDAC_BDLENTRY {
     UINT32 lowAddr;
     UINT32 highAddr;
     UINT32 len;
-    UINT32 ioc;
+    UINT32 ioc:1;
+    UINT32 reserved : 31;
 } HDAC_BDLENTRY, *PHDAC_BDLENTRY;
 
 typedef struct _HDAC_STREAM {
@@ -65,6 +74,7 @@ typedef struct _HDAC_STREAM {
 
     BOOLEAN running;
     BOOLEAN irqReceived;
+    HDAUDIO_STREAM_STATE StreamState;
 } HDAC_STREAM, *PHDAC_STREAM;
 
 typedef struct _HDAC_RIRB {
@@ -88,41 +98,27 @@ typedef struct _HDAC_RB {
     HDAC_CODEC_XFER xfer[HDA_MAX_CODECS];
 } HDAC_RB, *PHDAC_RB;
 
-typedef struct _GRAPHICSWORKITEM_CONTEXT {
-    struct _FDO_CONTEXT* FdoContext;
-    UNICODE_STRING GPUDeviceSymlink;
-} GRAPHICSWORKITEM_CONTEXT, *PGRAPHICSWORKITEM_CONTEXT;
-
-WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(GRAPHICSWORKITEM_CONTEXT, GraphicsWorkitem_GetContext)
-
-typedef struct _GRAPHICSIOTARGET_CONTEXT {
-    struct _FDO_CONTEXT* FdoContext;
-    DXGK_GRAPHICSPOWER_REGISTER_OUTPUT graphicsPowerRegisterOutput;
-} GRAPHICSIOTARGET_CONTEXT, *PGRAPHICSIOTARGET_CONTEXT;
-WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(GRAPHICSIOTARGET_CONTEXT, GraphicsIoTarget_GetContext)
-
 typedef struct _FDO_CONTEXT
 {
-    WDFDEVICE WdfDevice;
+    BOOL IsFDO;
+    PDEVICE_OBJECT DeviceObject;
 
     UINT16 venId;
     UINT16 devId;
     UINT8 revId;
+    UINT16 subvendorId;
+    UINT16 subsysId;
 
     PCI_BAR m_BAR0; //required
     PCI_BAR m_BAR4; //Intel AudioDSP
     BUS_INTERFACE_STANDARD BusInterface; //PCI Bus Interface
-    WDFINTERRUPT Interrupt;
+    PKINTERRUPT Interrupt;
+    KSPIN_LOCK InterruptSpinLock;
+    KDPC StreamDpc;
+    KDPC QueueDpc;
+    PDEVICE_OBJECT LowerDevice;
 
-    //Graphics Notifications
-    PVOID GraphicsNotificationHandle;
-    WDFWAITLOCK GraphicsDevicesCollectionWaitLock;
-    WDFCOLLECTION GraphicsDevicesCollection;
-    ULONG GraphicsCodecAddress;
-    BOOLEAN UseSGPCCodec;
-
-    UINT8 *mlcap;
-    UINT8 *ppcap;
+    UINT8* ppcap;
     UINT8 *spbcap;
 
     BOOLEAN ControllerEnabled;
@@ -138,6 +134,7 @@ typedef struct _FDO_CONTEXT
 
     PHDAC_STREAM streams;
     struct _PDO_DEVICE_DATA* codecs[HDA_MAX_CODECS];
+    CODEC_IDS CodecIds[HDA_MAX_CODECS];
 
     PADSP_INTERRUPT_CALLBACK dspInterruptCallback;
     PVOID dspInterruptContext;
@@ -162,11 +159,12 @@ typedef struct _FDO_CONTEXT
     PVOID posbuf;
 } FDO_CONTEXT, * PFDO_CONTEXT;
 
-WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(FDO_CONTEXT, Fdo_GetContext)
-
-NTSTATUS
-Fdo_Create(
-	_Inout_ PWDFDEVICE_INIT DeviceInit
-);
+inline
+PFDO_CONTEXT
+Fdo_GetContext(
+    IN PDEVICE_OBJECT DeviceObject
+) {
+    return (PFDO_CONTEXT)DeviceObject->DeviceExtension;
+}
 
 #endif
