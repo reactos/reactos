@@ -940,6 +940,9 @@ ProbeMdl:
             goto ProbeMdl;
     }
 
+    // HACK for MS portcls
+    HeaderSize = Length;
+
     /* probe user mode buffers */
     if (Length && ( (!HeaderSize) || (Length % HeaderSize == 0) || ((ProbeFlags & KSPROBE_ALLOWFORMATCHANGE) && (Length == sizeof(KSSTREAM_HEADER))) ) )
     {
@@ -1846,8 +1849,8 @@ FindMatchingCreateItem(
             continue;
         }
 
-        DPRINT("CreateItem %S Length %u Request %wZ %u\n",
-               CreateItemEntry->CreateItem->ObjectClass.Buffer,
+        DPRINT("CreateItem %wZ Length %u Request %wZ %u\n",
+               &CreateItemEntry->CreateItem->ObjectClass,
                CreateItemEntry->CreateItem->ObjectClass.Length,
                &RefString,
                RefString.Length);
@@ -2029,7 +2032,16 @@ KspDispatchIrp(
     if (Dispatch)
     {
         /* now call the dispatch function */
-        Status = Dispatch(DeviceObject, Irp);
+        _SEH2_TRY
+        {
+            Status = Dispatch(DeviceObject, Irp);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Fail the IRP */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
     }
     else
     {
@@ -2052,6 +2064,9 @@ KsSetMajorFunctionHandler(
     IN  ULONG MajorFunction)
 {
     DPRINT("KsSetMajorFunctionHandler Function %x\n", MajorFunction);
+
+    // HACK for MS portcls
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = KspCreate;
 
     switch ( MajorFunction )
     {

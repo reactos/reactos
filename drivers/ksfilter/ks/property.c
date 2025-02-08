@@ -244,8 +244,16 @@ KspPropertyHandler(
             /* is it from user mode */
             if (Irp->RequestorMode == UserMode)
             {
-                /* probe buffer for writing */
-                ProbeForWrite(Irp->UserBuffer, IoStack->Parameters.DeviceIoControl.OutputBufferLength, 1);
+                _SEH2_TRY
+                {
+                    /* probe buffer for writing */
+                    ProbeForWrite(Irp->UserBuffer, IoStack->Parameters.DeviceIoControl.OutputBufferLength, 1);
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                }
+                _SEH2_END;
             }
 
             if (!Allocator || !(Property->Flags & KSPROPERTY_TYPE_GET))
