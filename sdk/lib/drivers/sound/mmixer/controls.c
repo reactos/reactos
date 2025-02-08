@@ -1562,8 +1562,6 @@ MMixerInitializeFilter(
     Status = MMixerAllocateTopologyPinArray(MixerContext, Topology, &Pins);
     ASSERT(Status == MM_STATUS_SUCCESS);
 
-    PinsFound = 0;
-
     /* now get all sink / source pins, which are attached to the ADC / DAC node
      * For sink pins (wave out) search up stream
      * For source pins (wave in) search down stream
@@ -1580,7 +1578,12 @@ MMixerInitializeFilter(
     if (Status != MM_STATUS_SUCCESS)
     {
         /* failed to create wave info struct */
-        MixerContext->Free(MixerInfo);
+        if (NewMixerInfo)
+        {
+            DPRINT1("MMixerInitializeWaveInfo failed with %x\n", Status);
+            MixerContext->Free(MixerInfo);
+            MixerData->MixerInfo = NULL;
+        }
         MixerContext->Free(Pins);
         return Status;
     }
