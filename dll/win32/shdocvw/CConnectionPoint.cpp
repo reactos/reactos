@@ -29,8 +29,9 @@ CConnectionPoint::Init(
     ATLASSERT(pContainer != NULL);
     ATLASSERT(pIID != NULL);
 
+    m_pContainer = pContainer;
     m_pIID = pIID;
-    return pContainer->QueryInterface(IID_PPV_ARG(IConnectionPointContainer, &m_pContainer));
+    return S_OK;
 }
 
 CConnectionPoint::~CConnectionPoint()
