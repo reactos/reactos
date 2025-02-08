@@ -82,7 +82,7 @@ PcAddAdapterDevice(
     PDEVICE_OBJECT PrevDeviceObject;
     PPCLASS_DEVICE_EXTENSION portcls_ext = NULL;
 
-    DPRINT("PcAddAdapterDevice called\n");
+    DPRINT("PcAddAdapterDevice called DriverObject %x PDO %x StartDevice %x MaxObjects %x DeviceExtensionSize %x\n", DriverObject, PhysicalDeviceObject, StartDevice, MaxObjects, DeviceExtensionSize);
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     if (!DriverObject || !PhysicalDeviceObject || !StartDevice)
@@ -142,6 +142,11 @@ PcAddAdapterDevice(
     KeInitializeSpinLock(&portcls_ext->TimerListLock);
     // initialize timer list
     InitializeListHead(&portcls_ext->TimerList);
+    // initialize power notify list
+    InitializeListHead(&portcls_ext->PowerNotifyList);
+    //initialize power notify list lock
+    KeInitializeSpinLock(&portcls_ext->PowerNotifyListLock);
+
     // initialize io timer
     IoInitializeTimer(fdo, PcIoTimerRoutine, NULL);
     // start the io timer
@@ -157,6 +162,7 @@ PcAddAdapterDevice(
     // did we succeed
     if (!NT_SUCCESS(status))
     {
+        DPRINT("KsAllocateDeviceHeader failed with %x\n", status);
         goto cleanup;
     }
 
@@ -166,11 +172,12 @@ PcAddAdapterDevice(
     if (PrevDeviceObject)
     {
         // store the device object in the device header
-        //KsSetDevicePnpBaseObject(portcls_ext->KsDeviceHeader, fdo, PrevDeviceObject);
+        KsSetDevicePnpAndBaseObject(portcls_ext->KsDeviceHeader, fdo, PrevDeviceObject);
         portcls_ext->PrevDeviceObject = PrevDeviceObject;
     }
     else
     {
+        DPRINT("IoAttachDevice failed\n");
         // return error code
         status = STATUS_UNSUCCESSFUL;
         goto cleanup;
@@ -178,7 +185,7 @@ PcAddAdapterDevice(
 
     // register shutdown notification
     IoRegisterShutdownNotification(PhysicalDeviceObject);
-
+    DPRINT("PcAddAdapterDevice completed successfully\n");
     return status;
 
 cleanup:
@@ -197,6 +204,7 @@ cleanup:
 
     // delete created fdo
     IoDeleteDevice(fdo);
+    DPRINT("PcAddAdapterDevice completed failed with %x\n", status);
 
     return status;
 }
@@ -257,6 +265,7 @@ PcRegisterSubdevice(
     }
 
     // add an create item to the device header
+    DPRINT("PcRegisterSubDevice Name %S SubDevice %p\n", Name, SubDevice);
     Status = KsAddObjectCreateItemToDeviceHeader(DeviceExt->KsDeviceHeader, PcCreateItemDispatch, (PVOID)SubDevice, Name, NULL);
     if (!NT_SUCCESS(Status))
     {

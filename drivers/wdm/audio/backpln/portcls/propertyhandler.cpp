@@ -206,7 +206,7 @@ HandlePhysicalConnection(
     }while(Entry != &Descriptor->PhysicalConnectionList);
 
     IoStatus->Information = 0;
-    return STATUS_NOT_FOUND;
+    return STATUS_NOT_SUPPORTED;
 }
 
 NTSTATUS
@@ -272,6 +272,7 @@ PinPropertyHandler(
         case KSPROPERTY_PIN_CATEGORY:
         case KSPROPERTY_PIN_NAME:
         case KSPROPERTY_PIN_PROPOSEDATAFORMAT:
+        case KSPROPERTY_PIN_CONSTRAINEDDATARANGES:
             Status = KsPinPropertyHandler(Irp, Request, Data, Descriptor->Factory.PinDescriptorCount, Descriptor->Factory.KsPinDescriptor);
             break;
         case KSPROPERTY_PIN_GLOBALCINSTANCES:
@@ -289,10 +290,6 @@ PinPropertyHandler(
             break;
         case KSPROPERTY_PIN_PHYSICALCONNECTION:
             Status = HandlePhysicalConnection(&Irp->IoStatus, Request, IoStack->Parameters.DeviceIoControl.InputBufferLength, Data, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Descriptor);
-            break;
-        case KSPROPERTY_PIN_CONSTRAINEDDATARANGES:
-            UNIMPLEMENTED;
-            Status = STATUS_NOT_IMPLEMENTED;
             break;
         default:
             UNIMPLEMENTED;
