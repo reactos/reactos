@@ -714,6 +714,8 @@ CPortPinWaveRT::Init(
     NTSTATUS Status;
     PKSDATAFORMAT DataFormat;
     KSRTAUDIO_HWLATENCY Latency;
+    ISubdevice *Subdevice = NULL;
+    PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor = NULL;
 
     Port->AddRef();
     Filter->AddRef();
@@ -771,14 +773,12 @@ CPortPinWaveRT::Init(
     if (!NT_SUCCESS(Status))
         goto cleanup;
 
-    ISubdevice *Subdevice = NULL;
     // get subdevice interface
     Status = Port->QueryInterface(IID_ISubdevice, (PVOID *)&Subdevice);
 
     if (!NT_SUCCESS(Status))
         goto cleanup;
 
-    PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor = NULL;
     Status = Subdevice->GetDescriptor(&SubDeviceDescriptor);
     if (!NT_SUCCESS(Status))
     {
