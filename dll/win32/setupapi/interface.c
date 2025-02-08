@@ -213,7 +213,10 @@ SETUP_CreateInterfaceList(
             /* Read SymbolicLink value */
             rc = RegQueryValueExW(hReferenceKey, SymbolicLink, NULL, &dwRegType, NULL, &dwLength);
             if (rc != ERROR_SUCCESS )
-                goto cleanup;
+            {
+                RegCloseKey(hReferenceKey);
+                continue;
+            }
             if (dwRegType != REG_SZ)
             {
                 rc = ERROR_GEN_FAILURE;
