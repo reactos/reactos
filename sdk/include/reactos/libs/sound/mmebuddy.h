@@ -314,8 +314,56 @@ typedef struct _SOUND_DEVICE_INSTANCE
     HANDLE hNotifyEvent;
     HANDLE hStopEvent;
     HANDLE hResetEvent;
+    BOOL bClosed;
+    BOOL LegacyStreaming;
+    BOOL RTStreamingEnabled;
+    HANDLE hRTStreamingThread;
+    HANDLE hRTStreamingCompletionThread;
+    HANDLE hNotifyRTStreamingEvent;
+    HANDLE hNotifyRTStreamingStopEvent;
+    HANDLE hNotifyRTStreamingCompletionStopEvent;
+    HANDLE hNotifyRTStreamingCompletionEvent;
+
+    /* protects the completion and capture request lists and the start of playback */
+    CRITICAL_SECTION RTStreamingLock;
+    BOOL RTStreamingLockInitialized;
+    LIST_ENTRY RTStreamingCompletionList;          /* requests to complete, in order */
+    LIST_ENTRY RTStreamingCaptureList;             /* capture requests waiting for data */
+    volatile LONG RTStreamingCompletionsPending;   /* queued and not yet completed */
+    volatile LONG RTStreamingCommitActive;         /* commits touching the ring right now */
+
+    /* WaveRT buffer, filled or read in two halves on the notifications */
+    PUCHAR RTStreamingBuffer;
+    ULONG RTStreamingBufferLength;
+    ULONG RTStreamingHalfLength;                   /* block aligned half of the buffer */
+    volatile LONG RTStreamingBufferOffset;         /* half to service on the next notification */
+    ULONG RTStreamingHalfData[2];                  /* stream bytes in each half (render) */
+    ULONG RTStreamingBytesPerSec;
+    LONGLONG RTStreamingPeriodTicks;               /* duration of a half in performance counter ticks */
+    LARGE_INTEGER RTStreamingLastWake;             /* last notification, performance counter */
+    volatile LONG RTStreamingPeriodCount;          /* notifications since the start */
+    volatile LONG RTStreamingLastDataPeriod;       /* notification which wrote the last stream data */
+    volatile LONG RTStreamingBytesPlayed;          /* bytes played (render) or delivered (capture) */
+    volatile LONG RTStreamingLastPosition;         /* keeps the reported position monotonic */
+    volatile LONG RTStreamingUnderrunCount;
+    volatile LONG RTStreamingUnderrunBytes;
+    volatile LONG RTStreamingOverrunBytes;
+    BOOL RTStreamingRunning;                       /* pin is in KSSTATE_RUN */
+
+    PUCHAR RTStreamingShadowBuffer;
+    ULONG RTStreamingShadowBufferLength;
+    volatile LONG RTStreamingShadowBufferBytesUsed;
+    ULONG RTStreamingShadowBufferReadOffset;
+    ULONG RTStreamingShadowBufferWriteOffset;
+
     BOOL ResetInProgress;
     BOOL bPaused;
+    BOOL bStarted;                                 /* RT pin is primed and in PAUSE or RUN */
+
+    /* protects HeadWaveHeader, TailWaveHeader and the lpNext links */
+    CRITICAL_SECTION QueueLock;
+    volatile LONG StreamingRequests;               /* serializes the streaming thread */
+
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
 
 /* This lives in WAVEHDR.reserved */
@@ -632,7 +680,6 @@ MMRESULT
 WriteWaveHeader(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PWAVEHDR Header);
-
 
 /*
     wave/streaming.c
