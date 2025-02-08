@@ -32,7 +32,7 @@ public:
     CSDWindows();
     virtual ~CSDWindows() { }
 
-    BOOL Init() { return FALSE; }
+    HRESULT Init(CComPtr<CSDWindows> pSDWindows, const IID *pIID);
 
     DECLARE_REGISTRY_RESOURCEID(IDR_SHELLWINDOWS)
     DECLARE_NOT_AGGREGATABLE(CSDWindows)
@@ -46,7 +46,7 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IConnectionPointContainer, IConnectionPointContainer)
     END_COM_MAP()
 
-    // IUnknown methods will be populated by ShellObjectCreator
+    // IUnknown methods are populated by CComPtr and ShellObjectCreator
 
     // *** IDispatch methods ***
     STDMETHODIMP GetTypeInfoCount(_Out_ UINT *pctinfo) override { return E_NOTIMPL; }

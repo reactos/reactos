@@ -10,19 +10,27 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
-CConnectionPoint::CConnectionPoint(
-    _Inout_ IConnectionPointContainer *pContainer,
-    _In_ const IID *pIID)
+CConnectionPoint::CConnectionPoint()
     : m_nRefs(1)
     , m_pSlots(NULL)
     , m_nValidItems(0)
     , m_nSlots(0)
-    , m_pContainer(pContainer)
-    , m_pIID(pIID)
+    , m_pContainer(NULL)
+    , m_pIID(NULL)
 {
     SHDOCVW_LockModule();
+}
+
+HRESULT
+CConnectionPoint::Init(
+    _Inout_ IConnectionPointContainer *pContainer,
+    _In_ const IID *pIID)
+{
     ATLASSERT(pContainer != NULL);
     ATLASSERT(pIID != NULL);
+
+    m_pIID = pIID;
+    return pContainer->QueryInterface(IID_PPV_ARG(IConnectionPointContainer, &m_pContainer));
 }
 
 CConnectionPoint::~CConnectionPoint()

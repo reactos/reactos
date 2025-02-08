@@ -41,6 +41,7 @@ add_library(shdocvw_sublib OBJECT
     CExplorerBand.cpp
     CFavBand.cpp
     CNSCBand.cpp
+    CSDWindows.cpp
     mrulist.cpp
     objects.cpp
     utility.cpp

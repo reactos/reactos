@@ -20,9 +20,10 @@ typedef struct tagCONNECTION
 class CConnectionPoint : public IConnectionPoint
 {
 public:
-    CConnectionPoint(_Inout_ IConnectionPointContainer *pContainer, _In_ const IID *pIID);
+    CConnectionPoint();
     virtual ~CConnectionPoint();
 
+    HRESULT Init(_Inout_ IConnectionPointContainer *pContainer, _In_ const IID *pIID);
     HRESULT InvokeDispid(_In_ DISPID dispId);
     HRESULT UnadviseAll();
 

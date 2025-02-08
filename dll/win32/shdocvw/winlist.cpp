@@ -198,29 +198,6 @@ CShellWindowListCF::UnRegister(VOID)
     g_dwWinListCFCookie = 0;
 }
 
-//////////////////////////////////////////////////////////////////////////
-//   CSDWindows methods
-
-CSDWindows::CSDWindows()
-    : m_hDpa1(NULL)
-    , m_hDpa2(NULL)
-    , m_dwUnknown(0)
-    , m_hwndWorker(NULL)
-    , m_dwThreadId(0)
-    , m_ConnectionPoint(this, &DIID_DShellWindowsEvents)
-{
-}
-
-EXTERN_C HRESULT
-CSDWindows_CreateInstance(_Out_ IShellWindows **ppShellWindows)
-{
-    CComPtr<CSDWindows> pShellWindows;
-    HRESULT hr = ShellObjectCreator(pShellWindows);
-    if (FAILED_UNEXPECTEDLY(hr) || !pShellWindows->Init())
-        return E_OUTOFMEMORY;
-    return pShellWindows->QueryInterface(IID_PPV_ARG(IShellWindows, ppShellWindows));
-}
-
 /*************************************************************************
  *    WinList_Init (SHDOCVW.110)
  *
