@@ -111,7 +111,7 @@ typedef struct tagPREVIEW_DATA
     INT m_xScrollOffset;
     INT m_yScrollOffset;
     UINT m_nMouseDownMsg;
-    UINT m_nTimer;
+    UINT m_nTimerInterval;
     BOOL m_bHideCursor;
     POINT m_ptOrigin;
     IStream *m_pMemStream;
@@ -139,23 +139,23 @@ Preview_RestartTimer(HWND hwnd)
     {
         PPREVIEW_DATA pData = Preview_GetData(hwnd);
         KillTimer(hwnd, SLIDESHOW_TIMER_ID);
-        if (pData->m_nTimer)
-            SetTimer(hwnd, SLIDESHOW_TIMER_ID, pData->m_nTimer, NULL);
+        if (pData->m_nTimerInterval)
+            SetTimer(hwnd, SLIDESHOW_TIMER_ID, pData->m_nTimerInterval, NULL);
     }
 }
 
 static VOID
 Preview_ChangeSlideShowTimer(PPREVIEW_DATA pData, BOOL bSlower)
 {
-    BOOL fullscreen = !Preview_IsMainWnd(pData->m_hwnd);
+    BOOL IsFullscreen = !Preview_IsMainWnd(pData->m_hwnd);
     enum { mintime = 1000, maxtime = SLIDESHOW_TIMER_INTERVAL * 3, step = 1000 };
-    UINT interval = pData->m_nTimer ? pData->m_nTimer : SLIDESHOW_TIMER_INTERVAL;
-    if (fullscreen)
+    UINT interval = pData->m_nTimerInterval ? pData->m_nTimerInterval : SLIDESHOW_TIMER_INTERVAL;
+    if (IsFullscreen)
     {
         interval = bSlower ? min(interval + step, maxtime) : max(interval - step, mintime);
-        if (pData->m_nTimer != interval)
+        if (pData->m_nTimerInterval != interval)
         {
-            pData->m_nTimer = interval;
+            pData->m_nTimerInterval = interval;
             Preview_RestartTimer(pData->m_hwnd);
         }
     }
@@ -1471,7 +1471,7 @@ Preview_ToggleSlideShowEx(PPREVIEW_DATA pData, BOOL StartTimer)
     else
     {
         PPREVIEW_DATA pSlideData = Preview_GetData(g_hwndFullscreen);
-        pSlideData->m_nTimer = StartTimer ? SLIDESHOW_TIMER_INTERVAL : 0;
+        pSlideData->m_nTimerInterval = StartTimer ? SLIDESHOW_TIMER_INTERVAL : 0;
         ShowWindow(g_hwndFullscreen, SW_SHOWMAXIMIZED);
         ShowWindow(g_hMainWnd, SW_HIDE);
         Preview_ResetZoom(pSlideData);
