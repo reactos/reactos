@@ -31,6 +31,7 @@ extern "C" {
 #pragma section(".CRT$XPXA", long, read)
 
 #pragma section(".CRT$XIA", long, read)
+#pragma section(".CRT$XIAA", long, read) // CRT startup
 #pragma section(".CRT$XIZ", long, read)
 #pragma section(".CRT$XCA", long, read)
 #pragma section(".CRT$XCZ", long, read)

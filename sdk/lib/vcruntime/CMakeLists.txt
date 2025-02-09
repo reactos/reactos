@@ -35,6 +35,8 @@ list(APPEND VCRT_STARTUP_SOURCES
     __acrt_initialize_stub.cpp
     __scrt_uninitialize_crt.cpp
     __vcrt_init_stubs.c
+    _onexit.c
+    atexit.c
     mainCRTStartup.cpp
     wmainCRTStartup.cpp
 )
