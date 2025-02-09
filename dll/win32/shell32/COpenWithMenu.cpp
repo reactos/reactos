@@ -31,6 +31,54 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 EXTERN_C BOOL PathIsExeW(LPCWSTR lpszPath);
 
+static SIZE_T PathGetAppFromCommandLine(LPCWSTR pszIn, LPWSTR pszOut, SIZE_T cchMax)
+{
+    SIZE_T count = 0, stop = ' ';
+    if (pszIn[0] == '"')
+        stop = *(pszIn++);
+
+    for (LPCWSTR pwszSrc = pszIn; *pwszSrc && *pwszSrc != stop; ++pwszSrc)
+    {
+        if (++count >= cchMax)
+            return 0;
+        *(pszOut++) = *pwszSrc;
+    }
+    *pszOut = 0;
+    return count;
+}
+
+HRESULT SHELL32_GetDllFromRundll32CommandLine(LPCWSTR pszCmd, LPWSTR pszOut, SIZE_T cchMax)
+{
+    WCHAR szDll[MAX_PATH + 100];
+    if (!PathGetAppFromCommandLine(pszCmd, szDll, _countof(szDll)))
+        return HRESULT_FROM_WIN32(ERROR_BUFFER_OVERFLOW);
+
+    PWSTR pszName = PathFindFileNameW(szDll);
+    if (_wcsicmp(pszName, L"rundll32") && _wcsicmp(pszName, L"rundll32.exe"))
+        return E_UNEXPECTED;
+
+    PCWSTR pszDllStart = pszCmd + (UINT_PTR)(pszName - szDll) + lstrlenW(pszName);
+    if (*pszDllStart == '\"')
+        ++pszDllStart; // Skip possible end quote of ..\rundll32.exe" foo.dll,func
+    while (*pszDllStart <= ' ' && *pszDllStart)
+        ++pszDllStart;
+
+    if (PathGetAppFromCommandLine(pszDllStart, szDll, _countof(szDll)))
+    {
+        PWSTR pszComma = szDll + lstrlenW(szDll);
+        while (pszComma > szDll && *pszComma != ',' && *pszComma != '\\' && *pszComma != '/')
+            --pszComma;
+        SIZE_T cch = pszComma - szDll;
+        if (*pszComma == ',' && cch <= cchMax)
+        {
+            *pszComma = UNICODE_NULL;
+            lstrcpynW(pszOut, szDll, cchMax);
+            return S_OK;
+        }
+    }
+    return HRESULT_FROM_WIN32(ERROR_BUFFER_OVERFLOW);
+}
+
 class COpenWithList
 {
     public:
@@ -396,26 +444,24 @@ BOOL COpenWithList::LoadInfo(COpenWithList::SApp *pApp)
 
 BOOL COpenWithList::GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd)
 {
-    WCHAR wszBuf[MAX_PATH], *pwszDest = wszBuf;
+    // TODO: Use ASSOCSTR_EXECUTABLE with ASSOCF_REMAPRUNDLL | ASSOCF_IGNOREBASECLASS
+    WCHAR wszBuf[MAX_PATH];
 
     /* Remove arguments */
-    if (pwszCmd[0] == '"')
-    {
-        for(LPCWSTR pwszSrc = pwszCmd + 1; *pwszSrc && *pwszSrc != '"'; ++pwszSrc)
-            *(pwszDest++) = *pwszSrc;
-    }
-    else
-    {
-        for(LPCWSTR pwszSrc = pwszCmd; *pwszSrc && *pwszSrc != ' '; ++pwszSrc)
-            *(pwszDest++) = *pwszSrc;
-    }
+    if (!PathGetAppFromCommandLine(pwszCmd, wszBuf, _countof(wszBuf)))
+        return FALSE;
 
-    *pwszDest = 0;
+    /* Replace rundll32.exe with the dll path */
+    SHELL32_GetDllFromRundll32CommandLine(pwszCmd, wszBuf, _countof(wszBuf));
 
-    /* Expand evn vers and optionally search for path */
+    /* Expand env. vars and optionally search for path */
     ExpandEnvironmentStrings(wszBuf, pwszAppPath, MAX_PATH);
     if (!PathFileExists(pwszAppPath))
-        return SearchPath(NULL, pwszAppPath, NULL, MAX_PATH, pwszAppPath, NULL);
+    {
+        UINT cch = SearchPath(NULL, pwszAppPath, NULL, MAX_PATH, pwszAppPath, NULL);
+        if (!cch || cch >= MAX_PATH)
+            return FALSE;
+    }
     return TRUE;
 }
 
@@ -644,7 +690,7 @@ VOID COpenWithList::LoadRecommendedFromHKCU(LPCWSTR pwszExt)
         LoadMRUList(hKey);
         LoadProgIdList(hKey, pwszExt);
 
-        /* Handle "Aplication" value */
+        /* Handle "Application" value */
         DWORD cbBuf = sizeof(wszBuf);
         if (RegGetValueW(hKey, NULL, L"Application", RRF_RT_REG_SZ, NULL, wszBuf, &cbBuf) == ERROR_SUCCESS)
         {
