@@ -33,6 +33,7 @@
 #   define IID_NULL_PPV_ARG(Itype, ppType) &IID_##Itype, NULL, (void**)(ppType)
 #endif
 HRESULT WINAPI SHForwardContextMenuMsg(IUnknown* pUnk, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT* pResult, BOOL useIContextMenu2);
+HWND WINAPI SHCreateWorkerWindowW(WNDPROC wndProc, HWND hWndParent, DWORD dwExStyle, DWORD dwStyle, HMENU hMenu, LONG_PTR wnd_extra);
 
 #include "resource.h"
 

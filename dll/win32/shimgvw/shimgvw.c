@@ -138,11 +138,10 @@ DoShellContextMenu(HWND hwnd, IContextMenu *pCM, LPARAM lParam)
 {
     enum { first = 1, last = 0x7fff };
     HRESULT hr;
-    LONG_PTR OrgWndProc;
     HMENU hMenu = CreatePopupMenu();
     UINT cmf = GetKeyState(VK_SHIFT) < 0 ? CMF_EXTENDEDVERBS : 0;
     POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-    if ((int)(INT_PTR)lParam == -1)
+    if ((int)lParam == -1)
     {
         RECT rect;
         GetWindowRect(hwnd, &rect);
@@ -151,8 +150,7 @@ DoShellContextMenu(HWND hwnd, IContextMenu *pCM, LPARAM lParam)
     }
 
     g_pContextMenu = pCM;
-    hwnd = CreateWindowExW(0, L"STATIC", NULL, WS_VISIBLE | WS_CHILD, pt.x, pt.y, 0, 0, hwnd, NULL, NULL, NULL);
-    OrgWndProc = SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)ShellContextMenuWindowProc);
+    hwnd = SHCreateWorkerWindowW(ShellContextMenuWindowProc, hwnd, 0, WS_VISIBLE | WS_CHILD, NULL, 0);
 
     hr = IContextMenu_QueryContextMenu(pCM, hMenu, 0, first, last, cmf);
     if (SUCCEEDED(hr))
@@ -168,7 +166,6 @@ DoShellContextMenu(HWND hwnd, IContextMenu *pCM, LPARAM lParam)
         }
     }
     DestroyMenu(hMenu);
-    SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)OrgWndProc);
     DestroyWindow(hwnd);
     g_pContextMenu = NULL;
 }
@@ -1305,8 +1302,7 @@ ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
             break;
         }
-        default:
-        doDefault:
+        default: doDefault:
         {
             return DefWindowProcW(hwnd, uMsg, wParam, lParam);
         }
@@ -1770,7 +1766,7 @@ PreviewWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_CONTEXTMENU:
         {
             PPREVIEW_DATA pData = Preview_GetData(hwnd);
-            if ((int)(INT_PTR)lParam == -1)
+            if ((int)lParam == -1)
                 return ZoomWndProc(pData->m_hwndZoom, uMsg, wParam, lParam);
             break;
         }
