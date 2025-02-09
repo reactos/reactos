@@ -12,6 +12,7 @@
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 #define INITGUID
+#define COBJMACROS
 
 #include <windef.h>
 #include <winbase.h>
@@ -23,8 +24,15 @@
 #include <gdiplus.h>
 #include <shlwapi.h>
 #include <strsafe.h>
+#include <shobjidl.h>
 
 #include <debug.h>
+
+#ifndef IID_PPV_ARG
+#   define IID_PPV_ARG(Itype, ppType) &IID_##Itype, (void**)(ppType)
+#   define IID_NULL_PPV_ARG(Itype, ppType) &IID_##Itype, NULL, (void**)(ppType)
+#endif
+HRESULT WINAPI SHForwardContextMenuMsg(IUnknown* pUnk, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT* pResult, BOOL useIContextMenu2);
 
 #include "resource.h"
 

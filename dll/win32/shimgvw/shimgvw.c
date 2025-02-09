@@ -33,6 +33,7 @@ HWND                g_hwndFullscreen    = NULL;
 SHIMGVW_FILENODE *  g_pCurrentFile      = NULL;
 GpImage *           g_pImage            = NULL;
 SHIMGVW_SETTINGS    g_Settings;
+IContextMenu *      g_pContextMenu      = NULL;
 
 static const UINT s_ZoomSteps[] =
 {
@@ -122,6 +123,76 @@ typedef struct tagPREVIEW_DATA
 } PREVIEW_DATA, *PPREVIEW_DATA;
 
 static VOID Preview_ToggleSlideShowEx(PPREVIEW_DATA pData, BOOL StartTimer);
+
+static LRESULT CALLBACK
+ShellContextMenuWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    LRESULT lRes = 0;
+    if (FAILED(SHForwardContextMenuMsg((IUnknown*)g_pContextMenu, uMsg, wParam, lParam, &lRes, TRUE)))
+        lRes = DefWindowProc(hwnd, uMsg, wParam, lParam);
+    return lRes;
+}
+
+static void
+DoShellContextMenu(HWND hwnd, IContextMenu *pCM, LPARAM lParam)
+{
+    enum { first = 1, last = 0x7fff };
+    HRESULT hr;
+    LONG_PTR OrgWndProc;
+    HMENU hMenu = CreatePopupMenu();
+    UINT cmf = GetKeyState(VK_SHIFT) < 0 ? CMF_EXTENDEDVERBS : 0;
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+    if ((int)(INT_PTR)lParam == -1)
+    {
+        RECT rect;
+        GetWindowRect(hwnd, &rect);
+        pt.x = rect.left + (rect.right - rect.left) / 2;
+        pt.y = rect.top;
+    }
+
+    g_pContextMenu = pCM;
+    hwnd = CreateWindowExW(0, L"STATIC", NULL, WS_VISIBLE | WS_CHILD, pt.x, pt.y, 0, 0, hwnd, NULL, NULL, NULL);
+    OrgWndProc = SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)ShellContextMenuWindowProc);
+
+    hr = IContextMenu_QueryContextMenu(pCM, hMenu, 0, first, last, cmf);
+    if (SUCCEEDED(hr))
+    {
+        UINT cmd = TrackPopupMenuEx(hMenu, TPM_RETURNCMD, pt.x, pt.y, hwnd, NULL);
+        if (cmd)
+        {
+            UINT flags = (GetKeyState(VK_SHIFT) < 0 ? CMIC_MASK_SHIFT_DOWN : 0) |
+                         (GetKeyState(VK_CONTROL) < 0 ? CMIC_MASK_CONTROL_DOWN : 0);
+            CMINVOKECOMMANDINFO ici = { sizeof(ici), flags, hwnd, MAKEINTRESOURCEA(cmd - first) };
+            ici.nShow = SW_SHOW;
+            hr = IContextMenu_InvokeCommand(pCM, &ici);
+        }
+    }
+    DestroyMenu(hMenu);
+    SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)OrgWndProc);
+    DestroyWindow(hwnd);
+    g_pContextMenu = NULL;
+}
+
+static void
+DoShellContextMenuOnFile(HWND hwnd, PCWSTR File, LPARAM lParam)
+{
+    HRESULT hr;
+    IShellFolder *pSF;
+    PCUITEMID_CHILD pidlItem;
+    PIDLIST_ABSOLUTE pidl = ILCreateFromPath(File);
+    if (pidl && SUCCEEDED(SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &pSF), &pidlItem)))
+    {
+        IContextMenu *pCM;
+        hr = IShellFolder_GetUIObjectOf(pSF, hwnd, 1, &pidlItem, &IID_IContextMenu, NULL, (void**)&pCM);
+        if (SUCCEEDED(hr))
+        {
+            DoShellContextMenu(hwnd, pCM, lParam);
+            IContextMenu_Release(pCM);
+        }
+        IShellFolder_Release(pSF);
+    }
+    SHFree(pidl);
+}
 
 static inline PPREVIEW_DATA
 Preview_GetData(HWND hwnd)
@@ -1190,7 +1261,7 @@ ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_RBUTTONUP:
         {
             ZoomWnd_OnButtonUp(hwnd, uMsg, wParam, lParam);
-            break;
+            goto doDefault;
         }
         case WM_LBUTTONDBLCLK:
         {
@@ -1209,6 +1280,10 @@ ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                                  (SHORT)HIWORD(wParam), (UINT)LOWORD(wParam));
             break;
         }
+        case WM_CONTEXTMENU:
+            if (Preview_IsMainWnd(pData->m_hwnd))
+                DoShellContextMenuOnFile(hwnd, pData->m_szFile, lParam);
+            break;
         case WM_HSCROLL:
         case WM_VSCROLL:
             ZoomWnd_OnHVScroll(pData, hwnd, wParam, uMsg == WM_VSCROLL);
@@ -1231,6 +1306,7 @@ ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
         }
         default:
+        doDefault:
         {
             return DefWindowProcW(hwnd, uMsg, wParam, lParam);
         }
@@ -1429,9 +1505,7 @@ Preview_ToggleSlideShowEx(PPREVIEW_DATA pData, BOOL StartTimer)
 
     if (IsWindowVisible(g_hwndFullscreen))
     {
-        KillTimer(g_hwndFullscreen, SLIDESHOW_TIMER_ID);
-        ShowWindow(g_hMainWnd, SW_SHOW);
-        ShowWindow(g_hwndFullscreen, SW_HIDE);
+        Preview_EndSlideShow(g_hwndFullscreen);
     }
     else
     {
@@ -1691,6 +1765,13 @@ PreviewWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_DESTROY:
         {
             Preview_OnDestroy(hwnd);
+            break;
+        }
+        case WM_CONTEXTMENU:
+        {
+            PPREVIEW_DATA pData = Preview_GetData(hwnd);
+            if ((int)(INT_PTR)lParam == -1)
+                return ZoomWndProc(pData->m_hwndZoom, uMsg, wParam, lParam);
             break;
         }
         case WM_TIMER:
