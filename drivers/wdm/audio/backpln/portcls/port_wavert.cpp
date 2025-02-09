@@ -283,8 +283,11 @@ CPortWaveRT::Init(
         m_pPowerNotify = PowerNotify;
     }
 
-    // increment reference on resource list
-    ResourceList->AddRef();
+    if (ResourceList)
+    {
+        // increment reference on resource list
+        ResourceList->AddRef();
+    }
 
     DPRINT("IPortWaveRT successfully initialized\n");
     return STATUS_SUCCESS;
