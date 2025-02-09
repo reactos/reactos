@@ -141,12 +141,12 @@ BEGIN
 END
 
 DIALOG_PRINTING DIALOG 0, 0, 160, 100
-CAPTION "Now printing"
+CAPTION "Şimdi yazdırılıyor"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CTEXT "Print job is starting...", IDC_PRINTING_STATUS, 5, 10, 150, 15
-    CTEXT "(Filename)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
+    CTEXT "Yazdırma işi başlatılıyor...", IDC_PRINTING_STATUS, 5, 10, 150, 15
+    CTEXT "(Dosya adı)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
     CTEXT "Sayfa %u", IDC_PRINTING_PAGE, 5, 55, 150, 15
     PUSHBUTTON "İptal", IDCANCEL, 50, 75, 60, 20
 END
