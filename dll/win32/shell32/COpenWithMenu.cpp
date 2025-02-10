@@ -33,7 +33,8 @@ EXTERN_C BOOL PathIsExeW(LPCWSTR lpszPath);
 
 static SIZE_T PathGetAppFromCommandLine(LPCWSTR pszIn, LPWSTR pszOut, SIZE_T cchMax)
 {
-    SIZE_T count = 0, stop = ' ';
+    SIZE_T count = 0;
+    WCHAR stop = ' ';
     if (pszIn[0] == '"')
         stop = *(pszIn++);
 
@@ -43,7 +44,7 @@ static SIZE_T PathGetAppFromCommandLine(LPCWSTR pszIn, LPWSTR pszOut, SIZE_T cch
             return 0;
         *(pszOut++) = *pwszSrc;
     }
-    *pszOut = 0;
+    *pszOut = UNICODE_NULL;
     return count;
 }
 
@@ -57,19 +58,20 @@ HRESULT SHELL32_GetDllFromRundll32CommandLine(LPCWSTR pszCmd, LPWSTR pszOut, SIZ
     if (_wcsicmp(pszName, L"rundll32") && _wcsicmp(pszName, L"rundll32.exe"))
         return E_UNEXPECTED;
 
-    PCWSTR pszDllStart = pszCmd + (UINT_PTR)(pszName - szDll) + lstrlenW(pszName);
+    PCWSTR pszDllStart = pszCmd + (pszName - szDll) + lstrlenW(pszName);
+
     if (*pszDllStart == '\"')
         ++pszDllStart; // Skip possible end quote of ..\rundll32.exe" foo.dll,func
     while (*pszDllStart <= ' ' && *pszDllStart)
         ++pszDllStart;
-
     if (PathGetAppFromCommandLine(pszDllStart, szDll, _countof(szDll)))
     {
+        BOOL quoted = *pszDllStart == '\"';
         PWSTR pszComma = szDll + lstrlenW(szDll);
-        while (pszComma > szDll && *pszComma != ',' && *pszComma != '\\' && *pszComma != '/')
+        while (!quoted && pszComma > szDll && *pszComma != ',' && *pszComma != '\\' && *pszComma != '/')
             --pszComma;
         SIZE_T cch = pszComma - szDll;
-        if (*pszComma == ',' && cch <= cchMax)
+        if (cch <= cchMax && (quoted || *pszComma == ','))
         {
             *pszComma = UNICODE_NULL;
             lstrcpynW(pszOut, szDll, cchMax);
@@ -444,7 +446,6 @@ BOOL COpenWithList::LoadInfo(COpenWithList::SApp *pApp)
 
 BOOL COpenWithList::GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd)
 {
-    // TODO: Use ASSOCSTR_EXECUTABLE with ASSOCF_REMAPRUNDLL | ASSOCF_IGNOREBASECLASS
     WCHAR wszBuf[MAX_PATH];
 
     /* Remove arguments */
@@ -458,7 +459,7 @@ BOOL COpenWithList::GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd)
     ExpandEnvironmentStrings(wszBuf, pwszAppPath, MAX_PATH);
     if (!PathFileExists(pwszAppPath))
     {
-        UINT cch = SearchPath(NULL, pwszAppPath, NULL, MAX_PATH, pwszAppPath, NULL);
+        UINT cch = SearchPathW(NULL, pwszAppPath, NULL, MAX_PATH, pwszAppPath, NULL);
         if (!cch || cch >= MAX_PATH)
             return FALSE;
     }
