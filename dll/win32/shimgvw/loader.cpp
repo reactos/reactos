@@ -55,6 +55,21 @@ public:
     }
 };
 
+#include <pshpack1.h>
+union PNGSIGNATURE { UINT64 number; BYTE bytes[8]; };
+struct PNGCHUNKHEADER { UINT length, type; };
+struct PNGCHUNKFOOTER { UINT crc; };
+struct PNGIHDR { UINT w, h; BYTE depth, type, compression, filter, interlace; };
+struct PNGSIGANDIHDR
+{
+    PNGSIGNATURE sig;
+    PNGCHUNKHEADER chunkheader;
+    PNGIHDR ihdr;
+    PNGCHUNKFOOTER chunkfooter;
+};
+struct PNGFOOTER { PNGCHUNKHEADER chunkheader; PNGCHUNKFOOTER footer; };
+#include <poppack.h>
+
 static inline bool IsPngSignature(const void* buffer)
 {
     const BYTE* p = (BYTE*)buffer;
@@ -64,7 +79,7 @@ static inline bool IsPngSignature(const void* buffer)
 
 static inline bool IsPngSignature(const void* buffer, SIZE_T size)
 {
-    return size >= 8 && IsPngSignature(buffer);
+    return size >= sizeof(PNGSIGNATURE) && IsPngSignature(buffer);
 }
 
 static BYTE GetPngBppFromIHDRData(const void* buffer)
@@ -76,11 +91,14 @@ static BYTE GetPngBppFromIHDRData(const void* buffer)
 
 static bool GetInfoFromPng(const void* file, SIZE_T size, IMAGEINFO& info)
 {
-    if (size > 8 + (8 + (4 + 4 + 5) + 4) && IsPngSignature(file))
+    C_ASSERT(sizeof(PNGSIGNATURE) == 8);
+    C_ASSERT(sizeof(PNGSIGANDIHDR) == 8 + (4 + 4 + (4 + 4 + 5) + 4));
+
+    if (size > sizeof(PNGSIGANDIHDR) + sizeof(PNGFOOTER) && IsPngSignature(file))
     {
         const UINT PNGIHDRSIG = 0x52444849; // Note: Big endian
-        const UINT* chunkhdr = (UINT*)((char*)file + 8);
-        if (BigToHost32(chunkhdr[0]) >= (4 + 4 + 5) && chunkhdr[1] == PNGIHDRSIG)
+        const UINT* chunkhdr = (UINT*)((char*)file + sizeof(PNGSIGNATURE));
+        if (BigToHost32(chunkhdr[0]) >= sizeof(PNGIHDR) && chunkhdr[1] == PNGIHDRSIG)
         {
             info.w = BigToHost32(chunkhdr[2]);
             info.h = BigToHost32(chunkhdr[3]);
@@ -126,7 +144,7 @@ static void OverrideFileContent(HGLOBAL& hMem, DWORD& Size)
     ICOHDR* pIcoHdr = (ICOHDR*)buffer;
     if (Size > 6 && !pIcoHdr->Sig && pIcoHdr->Type > 0 && pIcoHdr->Type < 3 && pIcoHdr->Count)
     {
-        const UINT minbmp = sizeof(BITMAPCOREHEADER) + 1, minpng = 8 + (8 + (4 + 4 + 5) + 4);
+        const UINT minbmp = sizeof(BITMAPCOREHEADER) + 1, minpng = sizeof(PNGSIGANDIHDR);
         const UINT minfile = min(minbmp, minpng), count = pIcoHdr->Count;
         struct ICOENTRY { BYTE w, h, pal, null; WORD planes, bpp; UINT size, offset; };
         ICOENTRY* entries = (ICOENTRY*)&pIcoHdr[1];
