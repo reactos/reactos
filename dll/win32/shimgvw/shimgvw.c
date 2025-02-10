@@ -145,7 +145,7 @@ DoShellContextMenu(HWND hwnd, IContextMenu *pCM, LPARAM lParam)
     {
         RECT rect;
         GetWindowRect(hwnd, &rect);
-        pt.x = rect.left + (rect.right - rect.left) / 2;
+        pt.x = (rect.left + rect.right) / 2;
         pt.y = rect.top;
     }
 
