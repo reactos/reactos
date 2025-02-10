@@ -1035,10 +1035,10 @@ struct RTFTable
 	int numCellsInserted;
 
 	/* v4.1 */
-	/* tableRowStart may be the start row paragraph of the table row,
+	/* row_start may be the start row paragraph of the table row,
 	 * or it may store the end of the previous row if it may still be
 	 * continued, otherwise NULL is stored. */
-	ME_DisplayItem *tableRowStart;
+	ME_Paragraph *row_start;
 
 	/* Table definitions are stored as a stack to support nested tables. */
 	RTFTable *parent;
