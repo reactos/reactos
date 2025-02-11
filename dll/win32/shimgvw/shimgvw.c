@@ -1579,6 +1579,10 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
             Preview_Edit(hwnd);
             break;
 
+        case IDC_HELP_TOC:
+            DisplayHelp(hwnd);
+            break;
+
         default:
             break;
     }

@@ -72,6 +72,7 @@ void Anime_Pause(PANIME pAnime);
 BOOL Anime_OnTimer(PANIME pAnime, WPARAM wParam);
 
 void DoShellContextMenuOnFile(HWND hwnd, PCWSTR File, LPARAM lParam);
+void DisplayHelp(HWND hwnd);
 
 static inline LPVOID QuickAlloc(SIZE_T cbSize, BOOL bZero)
 {

@@ -49,6 +49,7 @@ ModifyShellContextMenu(IContextMenu *pCM, HMENU hMenu, UINT CmdIdFirst, PCWSTR A
             continue;
 
         *buf = UNICODE_NULL;
+        /* Note: We just ask for the wide string because all the items we care about come from shell32 and it handles both */
         hr = IContextMenu_GetCommandString(pCM, id - CmdIdFirst, GCS_VERBW, NULL, (char*)buf, _countof(buf));
         if (SUCCEEDED(hr))
         {
@@ -82,12 +83,13 @@ ShellContextMenuWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 static void
-DoShellContextMenu(HWND hwnd, IContextMenu *pCM, PCWSTR Assoc, LPARAM lParam)
+DoShellContextMenu(HWND hwnd, IContextMenu *pCM, PCWSTR File, LPARAM lParam)
 {
     enum { first = 1, last = 0x7fff };
     HRESULT hr;
     HMENU hMenu = CreatePopupMenu();
     UINT cmf = GetKeyState(VK_SHIFT) < 0 ? CMF_EXTENDEDVERBS : 0;
+
     POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
     if ((int)lParam == -1)
     {
@@ -105,7 +107,7 @@ DoShellContextMenu(HWND hwnd, IContextMenu *pCM, PCWSTR Assoc, LPARAM lParam)
     if (SUCCEEDED(hr))
     {
         UINT id;
-        ModifyShellContextMenu(pCM, hMenu, first, Assoc);
+        ModifyShellContextMenu(pCM, hMenu, first, PathFindExtensionW(File));
         id = TrackPopupMenuEx(hMenu, TPM_RETURNCMD, pt.x, pt.y, hwnd, NULL);
         if (id)
         {
@@ -135,10 +137,15 @@ DoShellContextMenuOnFile(HWND hwnd, PCWSTR File, LPARAM lParam)
         hr = IShellFolder_GetUIObjectOf(pSF, hwnd, 1, &pidlItem, &IID_IContextMenu, NULL, (void**)&pCM);
         if (SUCCEEDED(hr))
         {
-            DoShellContextMenu(hwnd, pCM, PathFindExtensionW(File), lParam);
+            DoShellContextMenu(hwnd, pCM, File, lParam);
             IContextMenu_Release(pCM);
         }
         IShellFolder_Release(pSF);
     }
     SHFree(pidl);
+}
+
+void DisplayHelp(HWND hwnd)
+{
+    SHELL_ErrorBoxHelper(hwnd, ERROR_NOT_SUPPORTED);
 }
