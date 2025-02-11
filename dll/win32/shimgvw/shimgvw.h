@@ -28,13 +28,6 @@
 
 #include <debug.h>
 
-#ifndef IID_PPV_ARG
-#   define IID_PPV_ARG(Itype, ppType) &IID_##Itype, (void**)(ppType)
-#   define IID_NULL_PPV_ARG(Itype, ppType) &IID_##Itype, NULL, (void**)(ppType)
-#endif
-HRESULT WINAPI SHForwardContextMenuMsg(IUnknown* pUnk, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT* pResult, BOOL useIContextMenu2);
-HWND WINAPI SHCreateWorkerWindowW(WNDPROC wndProc, HWND hWndParent, DWORD dwExStyle, DWORD dwStyle, HMENU hMenu, LONG_PTR wnd_extra);
-
 #include "resource.h"
 
 extern HINSTANCE g_hInstance;
@@ -77,6 +70,8 @@ void Anime_SetFrameIndex(PANIME pAnime, UINT nFrameIndex);
 void Anime_Start(PANIME pAnime, DWORD dwDelay);
 void Anime_Pause(PANIME pAnime);
 BOOL Anime_OnTimer(PANIME pAnime, WPARAM wParam);
+
+void DoShellContextMenuOnFile(HWND hwnd, PCWSTR File, LPARAM lParam);
 
 static inline LPVOID QuickAlloc(SIZE_T cbSize, BOOL bZero)
 {

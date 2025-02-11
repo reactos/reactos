@@ -23,6 +23,9 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
+#ifndef __cplusplus
+static
+#endif
 inline ULONG
 Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 {
@@ -63,10 +66,13 @@ Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 #   define IID_PPV_ARG(Itype, ppType) IID_##Itype, reinterpret_cast<void**>((static_cast<Itype**>(ppType)))
 #   define IID_NULL_PPV_ARG(Itype, ppType) IID_##Itype, NULL, reinterpret_cast<void**>((static_cast<Itype**>(ppType)))
 #else
-#   define IID_PPV_ARG(Itype, ppType) IID_##Itype, (void**)(ppType)
-#   define IID_NULL_PPV_ARG(Itype, ppType) IID_##Itype, NULL, (void**)(ppType)
+#   define IID_PPV_ARG(Itype, ppType) &IID_##Itype, (void**)(ppType)
+#   define IID_NULL_PPV_ARG(Itype, ppType) &IID_##Itype, NULL, (void**)(ppType)
 #endif
 
+#ifndef __cplusplus
+static
+#endif
 inline HRESULT HResultFromWin32(DWORD hr)
 {
      // HRESULT_FROM_WIN32 will evaluate its parameter twice, this function will not.
@@ -75,6 +81,9 @@ inline HRESULT HResultFromWin32(DWORD hr)
 
 #if 1
 
+#ifndef __cplusplus
+static
+#endif
 inline BOOL _ROS_FAILED_HELPER(HRESULT hr, const char* expr, const char* filename, int line)
 {
     if (FAILED(hr))
