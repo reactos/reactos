@@ -11,6 +11,8 @@
 using namespace Gdiplus;
 #include "shimgvw.h"
 
+#define HResultFromWin32 SHIMGVW_HResultFromWin32
+
 static HRESULT Read(HANDLE hFile, void* Buffer, DWORD Size)
 {
     DWORD Transferred;

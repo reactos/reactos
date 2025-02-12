@@ -100,7 +100,7 @@ static inline ULARGE_INTEGER MakeULargeInteger(UINT64 value)
     return ret;
 }
 
-static inline HRESULT HResultFromWin32(DWORD hr)
+static inline HRESULT SHIMGVW_HResultFromWin32(DWORD hr)
 {
      // HRESULT_FROM_WIN32 will evaluate its parameter twice, this function will not.
     return HRESULT_FROM_WIN32(hr);
@@ -113,11 +113,11 @@ static inline HRESULT HResultFromGdiplus(Status status)
         case Ok: return S_OK;
         case InvalidParameter: return E_INVALIDARG;
         case OutOfMemory: return E_OUTOFMEMORY;
-        case NotImplemented: return HResultFromWin32(ERROR_CALL_NOT_IMPLEMENTED);
-        case Win32Error: return HResultFromWin32(GetLastError());
-        case FileNotFound: return HResultFromWin32(ERROR_FILE_NOT_FOUND);
-        case AccessDenied: return HResultFromWin32(ERROR_ACCESS_DENIED);
-        case UnknownImageFormat: return HResultFromWin32(ERROR_BAD_FORMAT);
+        case NotImplemented: return HRESULT_FROM_WIN32(ERROR_CALL_NOT_IMPLEMENTED);
+        case Win32Error: return SHIMGVW_HResultFromWin32(GetLastError());
+        case FileNotFound: return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+        case AccessDenied: return HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED);
+        case UnknownImageFormat: return HRESULT_FROM_WIN32(ERROR_BAD_FORMAT);
     }
     return E_FAIL;
 }
