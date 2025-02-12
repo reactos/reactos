@@ -24,6 +24,13 @@ HRESULT CSDWindows::Init(CComPtr<CSDWindows> pSDWindows, const IID *pIID)
     return m_ConnectionPoint.Init(pSDWindows, pIID);
 }
 
+STDMETHODIMP CSDWindows::get_Count(_Out_ LONG *Count)
+{
+    FIXME("%p\n", Count);
+    *Count = 0;
+    return S_OK;
+}
+
 EXTERN_C HRESULT
 CSDWindows_CreateInstance(_Out_ IShellWindows **ppShellWindows)
 {

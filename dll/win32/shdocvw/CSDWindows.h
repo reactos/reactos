@@ -71,7 +71,7 @@ public:
         _Out_ UINT *puArgErr) override { return E_NOTIMPL; }
 
     // *** IShellWindows methods ***
-    STDMETHODIMP get_Count(_Out_ LONG *Count) override { return E_NOTIMPL; }
+    STDMETHODIMP get_Count(_Out_ LONG *Count) override;
     STDMETHODIMP Item(_In_ VARIANT index, _Out_ IDispatch **Folder) override { return E_NOTIMPL; }
     STDMETHODIMP _NewEnum(_Out_ IUnknown **ppunk) override { return E_NOTIMPL; }
     STDMETHODIMP Register(

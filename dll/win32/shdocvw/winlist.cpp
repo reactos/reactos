@@ -10,8 +10,8 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
-static IShellWindows *g_pShellWindows = NULL;
 static DWORD g_dwWinListCFCookie = 0;
+static IShellWindows *g_pShellWindows = NULL;
 
 static BOOL
 IsExplorerProcess(VOID)
@@ -126,14 +126,12 @@ ShellWindowsGetClassObject(
 class CShellWindowListCF : public CComClassFactory
 {
 public:
-    CComPtr<IShellWindows> m_pShellWindows;
-
-    CShellWindowListCF()           { SHDOCVW_LockModule();   }
-    virtual ~CShellWindowListCF()  { SHDOCVW_UnlockModule(); }
+    CShellWindowListCF();
+    virtual ~CShellWindowListCF();
 
     HRESULT Init();
     HRESULT Register();
-    static VOID UnRegister();
+    VOID UnRegister();
 
     // IUnknown methods will be populated by ShellObjectCreator
 
@@ -150,27 +148,33 @@ public:
     BEGIN_COM_MAP(CComClassFactory)
         COM_INTERFACE_ENTRY_IID(IID_IClassFactory, IClassFactory)
     END_COM_MAP()
+
+protected:
+    CComPtr<IShellWindows> m_pShellWindows;
 };
+
+static CShellWindowListCF *g_pcfWinList = NULL;
 
 //////////////////////////////////////////////////////////////////////////
 //   CShellWindowListCF methods
 
+CShellWindowListCF::CShellWindowListCF()
+{
+    SHDOCVW_LockModule();
+}
+
+CShellWindowListCF::~CShellWindowListCF()
+{
+    if (g_pShellWindows)
+        g_pShellWindows = NULL;
+    m_pShellWindows = NULL;
+    SHDOCVW_UnlockModule();
+}
+
 HRESULT
 CShellWindowListCF::Init()
 {
-    ATLASSERT(!m_pShellWindows);
     return CSDWindows_CreateInstance(&m_pShellWindows);
-}
-
-STDMETHODIMP
-CShellWindowListCF::CreateInstance(
-    _In_ IUnknown *pUnkOuter,
-    _In_ REFIID riid,
-    _Out_ void **ppvObject)
-{
-    if (!m_pShellWindows)
-        return E_FAIL;
-    return m_pShellWindows->QueryInterface(riid, ppvObject);
 }
 
 HRESULT
@@ -198,6 +202,17 @@ CShellWindowListCF::UnRegister(VOID)
     g_dwWinListCFCookie = 0;
 }
 
+STDMETHODIMP
+CShellWindowListCF::CreateInstance(
+    _In_ IUnknown *pUnkOuter,
+    _In_ REFIID riid,
+    _Out_ void **ppvObject)
+{
+    if (!m_pShellWindows)
+        return E_FAIL;
+    return m_pShellWindows->QueryInterface(riid, ppvObject);
+}
+
 /*************************************************************************
  *    WinList_Init (SHDOCVW.110)
  *
@@ -221,13 +236,9 @@ WinList_Init(VOID)
     if (FAILED_UNEXPECTEDLY(hr))
         return FALSE;
 
-    hr = pWinListCF->Register();
-    if (FAILED_UNEXPECTEDLY(hr))
-        return FALSE;
-
-    g_pShellWindows = pWinListCF->m_pShellWindows;
-    ATLASSERT(g_pShellWindows != NULL);
-    g_pShellWindows->AddRef();
+    pWinListCF->Register();
+    g_pcfWinList = pWinListCF.Detach();
+    g_pcfWinList->AddRef();
 
     return TRUE;
 }
@@ -243,7 +254,12 @@ WinList_Terminate(VOID)
 {
     TRACE("()\n");
 
-    CShellWindowListCF::UnRegister();
+    if (g_pcfWinList)
+    {
+        g_pcfWinList->UnRegister();
+        g_pcfWinList->Release();
+        g_pcfWinList = NULL;
+    }
 
     if (g_pShellWindows)
     {
@@ -265,16 +281,27 @@ WinList_GetShellWindows(
 {
     TRACE("(%d)\n", bCreate);
 
-    if (!bCreate && g_pShellWindows)
+    HRESULT hr;
+
+    if (g_pShellWindows)
     {
         g_pShellWindows->AddRef();
         return g_pShellWindows;
     }
 
-    CComPtr<IShellWindows> pShellWindows;
-    CoCreateInstance(CLSID_ShellWindows, NULL, CLSCTX_INPROC_SERVER | CLSCTX_LOCAL_SERVER,
-                     IID_PPV_ARG(IShellWindows, &pShellWindows));
-    return pShellWindows.Detach();
+    if (!bCreate && g_pcfWinList)
+    {
+        hr = g_pcfWinList->CreateInstance(NULL, IID_PPV_ARG(IShellWindows, &g_pShellWindows));
+        if (!FAILED_UNEXPECTEDLY(hr))
+            return g_pShellWindows;
+    }
+
+    hr = CoCreateInstance(CLSID_ShellWindows, NULL, CLSCTX_INPROC_SERVER | CLSCTX_LOCAL_SERVER,
+                          IID_PPV_ARG(IShellWindows, &g_pShellWindows));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return NULL;
+
+    return g_pShellWindows;
 }
 
 /*************************************************************************
