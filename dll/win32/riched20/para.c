@@ -493,7 +493,7 @@ static BOOL para_set_fmt( ME_TextEditor *editor, ME_Paragraph *para, const PARAF
   if (dwMask & PFM_TABSTOPS)
   {
     para->fmt.cTabCount = max(0, min(pFmt->cTabCount, MAX_TAB_STOPS)); /* Clamp between 0 and MAX_TAB_STOPS */
-    memcpy(para->fmt.rgxTabs, pFmt->rgxTabs, pFmt->cTabCount*sizeof(LONG));
+    memcpy(para->fmt.rgxTabs, pFmt->rgxTabs, para->fmt.cTabCount * sizeof(LONG));
   }
 
 #define EFFECTS_MASK (PFM_RTLPARA|PFM_KEEP|PFM_KEEPNEXT|PFM_PAGEBREAKBEFORE| \
