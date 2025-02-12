@@ -101,7 +101,7 @@ IDM_DVSELECT MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Se&lect", 0
+        MENUITEM "Se&ç", 0
     END
 END
 
