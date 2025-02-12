@@ -564,8 +564,8 @@ pBuildFileList(LPCWSTR szFirstFile)
     SHIMGVW_FILENODE *root = NULL;
     SHIMGVW_FILENODE *conductor = NULL;
     ImageCodecInfo *codecInfo;
-    SIZE_T size = 0, ExtraSize = 0;
-    UINT num = 0, j;
+    UINT num = 0, size = 0, ExtraSize = 0;
+    UINT j;
 
     const PCWSTR ExtraExtensions = GetExtraExtensionsGdipList();
     const UINT ExtraCount = ExtraExtensions[0] ? 1 : 0;
