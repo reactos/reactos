@@ -11,7 +11,7 @@ if(ENABLE_ROSTESTS)
     add_subdirectory(rostests)
 endif()
 
-if(ENABLE_WALLPAPERS)
+if(ENABLE_WALLPAPERS OR TRUE)
     add_subdirectory(wallpapers)
 endif()
 
