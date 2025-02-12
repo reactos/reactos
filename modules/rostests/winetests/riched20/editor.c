@@ -33,6 +33,8 @@
 #include <ole2.h>
 #include <richedit.h>
 #include <richole.h>
+#include <imm.h>
+#include <textserv.h>
 #include <commdlg.h>
 #include <time.h>
 #include <wine/test.h>
@@ -51,12 +53,38 @@ static CHAR string1[MAX_PATH], string2[MAX_PATH], string3[MAX_PATH];
 static HMODULE hmoduleRichEdit;
 static BOOL is_lang_japanese;
 
+#if defined(__i386__) && !defined(__MINGW32__) && (!defined(_MSC_VER) || !defined(__clang__))
+static void disable_beep( HWND hwnd )
+{
+    /* don't attempt to disable beep if we don't have thiscall compiler support */
+}
+#else
+#define ITextServices_OnTxPropertyBitsChange(This,a,b) (This)->lpVtbl->OnTxPropertyBitsChange(This,a,b)
+static void disable_beep( HWND hwnd )
+{
+    IRichEditOle *richole;
+    ITextServices *services;
+    IID *pIID_ITextServices = (IID *)GetProcAddress( hmoduleRichEdit, "IID_ITextServices" );
+
+    if (SendMessageW( hwnd, EM_GETOLEINTERFACE, 0, (LPARAM)&richole ))
+    {
+        if (SUCCEEDED( IRichEditOle_QueryInterface( richole, pIID_ITextServices, (void **)&services ) ))
+        {
+            ITextServices_OnTxPropertyBitsChange( services, TXTBIT_ALLOWBEEP, 0 );
+            ITextServices_Release( services );
+        }
+        IRichEditOle_Release( richole );
+    }
+}
+#endif
+
 static HWND new_window(LPCSTR lpClassName, DWORD dwStyle, HWND parent) {
   HWND hwnd;
   hwnd = CreateWindowA(lpClassName, NULL, dwStyle|WS_POPUP|WS_HSCROLL|WS_VSCROLL
                       |WS_VISIBLE, 0, 0, 200, 60, parent, NULL,
                       hmoduleRichEdit, NULL);
   ok(hwnd != NULL, "class: %s, error: %d\n", lpClassName, (int) GetLastError());
+  disable_beep( hwnd );
   return hwnd;
 }
 
@@ -66,6 +94,7 @@ static HWND new_windowW(LPCWSTR lpClassName, DWORD dwStyle, HWND parent) {
                       |WS_VISIBLE, 0, 0, 200, 60, parent, NULL,
                       hmoduleRichEdit, NULL);
   ok(hwnd != NULL, "class: %s, error: %d\n", wine_dbgstr_w(lpClassName), (int) GetLastError());
+  disable_beep( hwnd );
   return hwnd;
 }
 
@@ -615,7 +644,7 @@ static void test_EM_POSFROMCHAR(void)
       "gg\n"
       "hh\n";
 
-  rtl = (GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_FONTSIGNATURE,
+  rtl = (GetLocaleInfoA(LOCALE_SYSTEM_DEFAULT, LOCALE_FONTSIGNATURE,
                         (LPSTR) &sig, sizeof(LOCALESIGNATURE)) &&
          (sig.lsUsb[3] & 0x08000000) != 0);
 
@@ -772,7 +801,7 @@ static void test_EM_SETCHARFORMAT(void)
   BOOL rtl;
   DWORD expect_effects;
 
-  rtl = (GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_FONTSIGNATURE,
+  rtl = (GetLocaleInfoA(LOCALE_SYSTEM_DEFAULT, LOCALE_FONTSIGNATURE,
                         (LPSTR) &sig, sizeof(LOCALESIGNATURE)) &&
          (sig.lsUsb[3] & 0x08000000) != 0);
 
@@ -1791,8 +1820,8 @@ static void test_EM_GETTEXTRANGE(void)
         textRange.chrg.cpMin = 4;
         textRange.chrg.cpMax = 8;
         result = SendMessageA(hwndRichEdit, EM_GETTEXTRANGE, 0, (LPARAM)&textRange);
-        todo_wine ok(result == 5, "EM_GETTEXTRANGE returned %ld\n", result);
-        todo_wine ok(!strcmp("ef\x8e\xf0g", buffer), "EM_GETTEXTRANGE filled %s\n", buffer);
+        ok(result == 5, "EM_GETTEXTRANGE returned %ld\n", result);
+        ok(!strcmp("ef\x8e\xf0g", buffer), "EM_GETTEXTRANGE filled %s\n", buffer);
     }
 
     DestroyWindow(hwndRichEdit);
@@ -1829,8 +1858,8 @@ static void test_EM_GETSELTEXT(void)
         SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"abcdef\x8e\xf0ghijk");
         SendMessageA(hwndRichEdit, EM_SETSEL, 4, 8);
         result = SendMessageA(hwndRichEdit, EM_GETSELTEXT, 0, (LPARAM)buffer);
-        todo_wine ok(result == 5, "EM_GETSELTEXT returned %ld\n", result);
-        todo_wine ok(!strcmp("ef\x8e\xf0g", buffer), "EM_GETSELTEXT filled %s\n", buffer);
+        ok(result == 5, "EM_GETSELTEXT returned %ld\n", result);
+        ok(!strcmp("ef\x8e\xf0g", buffer), "EM_GETSELTEXT filled %s\n", buffer);
     }
 
     DestroyWindow(hwndRichEdit);
@@ -1863,6 +1892,7 @@ static void test_EM_SETOPTIONS(void)
                                 hmoduleRichEdit, NULL);
     ok(hwndRichEdit != NULL, "class: %s, error: %d\n",
        RICHEDIT_CLASS20A, (int) GetLastError());
+    disable_beep( hwndRichEdit );
     options = SendMessageA(hwndRichEdit, EM_GETOPTIONS, 0, 0);
     /* WS_[VH]SCROLL cause the ECO_AUTO[VH]SCROLL options to be set */
     ok(options == (ECO_AUTOVSCROLL|ECO_AUTOHSCROLL),
@@ -3110,11 +3140,9 @@ static void test_scrollbar_visibility(void)
   GetScrollInfo(hwndRichEdit, SB_VERT, &si);
   ok (((GetWindowLongA(hwndRichEdit, GWL_STYLE) & WS_VSCROLL) != 0),
     "Vertical scrollbar is invisible, should be visible.\n");
-  todo_wine {
   ok(si.nPage == 0 && si.nMin == 0 && si.nMax == 100,
         "reported page/range is %d (%d..%d) expected 0 (0..100)\n",
         si.nPage, si.nMin, si.nMax);
-  }
 
   /* Ditto, see above */
   SendMessageA(hwndRichEdit, WM_SETTEXT, 0, 0);
@@ -3124,11 +3152,9 @@ static void test_scrollbar_visibility(void)
   GetScrollInfo(hwndRichEdit, SB_VERT, &si);
   ok (((GetWindowLongA(hwndRichEdit, GWL_STYLE) & WS_VSCROLL) != 0),
     "Vertical scrollbar is invisible, should be visible.\n");
-  todo_wine {
   ok(si.nPage == 0 && si.nMin == 0 && si.nMax == 100,
         "reported page/range is %d (%d..%d) expected 0 (0..100)\n",
         si.nPage, si.nMin, si.nMax);
-  }
 
   /* Ditto, see above */
   SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"a");
@@ -3138,11 +3164,9 @@ static void test_scrollbar_visibility(void)
   GetScrollInfo(hwndRichEdit, SB_VERT, &si);
   ok (((GetWindowLongA(hwndRichEdit, GWL_STYLE) & WS_VSCROLL) != 0),
     "Vertical scrollbar is invisible, should be visible.\n");
-  todo_wine {
   ok(si.nPage == 0 && si.nMin == 0 && si.nMax == 100,
         "reported page/range is %d (%d..%d) expected 0 (0..100)\n",
         si.nPage, si.nMin, si.nMax);
-  }
 
   /* Ditto, see above */
   SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"a\na");
@@ -3152,11 +3176,9 @@ static void test_scrollbar_visibility(void)
   GetScrollInfo(hwndRichEdit, SB_VERT, &si);
   ok (((GetWindowLongA(hwndRichEdit, GWL_STYLE) & WS_VSCROLL) != 0),
     "Vertical scrollbar is invisible, should be visible.\n");
-  todo_wine {
   ok(si.nPage == 0 && si.nMin == 0 && si.nMax == 100,
         "reported page/range is %d (%d..%d) expected 0 (0..100)\n",
         si.nPage, si.nMin, si.nMax);
-  }
 
   /* Ditto, see above */
   SendMessageA(hwndRichEdit, WM_SETTEXT, 0, 0);
@@ -3166,11 +3188,9 @@ static void test_scrollbar_visibility(void)
   GetScrollInfo(hwndRichEdit, SB_VERT, &si);
   ok (((GetWindowLongA(hwndRichEdit, GWL_STYLE) & WS_VSCROLL) != 0),
     "Vertical scrollbar is invisible, should be visible.\n");
-  todo_wine {
   ok(si.nPage == 0 && si.nMin == 0 && si.nMax == 100,
         "reported page/range is %d (%d..%d) expected 0 (0..100)\n",
         si.nPage, si.nMin, si.nMax);
-  }
 
   SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)text);
   SendMessageA(hwndRichEdit, WM_SETTEXT, 0, 0);
@@ -5610,7 +5630,7 @@ static void test_EM_FORMATRANGE(void)
     {"WINE\r\n\r\nwine\r\nwine", 5, 6}
   };
 
-  skip_non_english = (PRIMARYLANGID(GetUserDefaultLangID()) != LANG_ENGLISH);
+  skip_non_english = (PRIMARYLANGID(GetSystemDefaultLangID()) != LANG_ENGLISH);
   if (skip_non_english)
     skip("Skipping some tests on non-English platform\n");
 
@@ -6348,6 +6368,7 @@ static void test_WM_CHAR(void)
     hwnd = CreateWindowExA(0, "RichEdit20W", NULL, WS_POPUP,
                            0, 0, 200, 60, 0, 0, 0, 0);
     ok(hwnd != 0, "CreateWindowExA error %u\n", GetLastError());
+    disable_beep( hwnd );
 
     p = char_list;
     while (*p != '\0') {
@@ -6951,6 +6972,7 @@ static void test_undo_coalescing(void)
     hwnd = CreateWindowExA(0, "RichEdit20W", NULL, WS_POPUP|ES_MULTILINE,
                            0, 0, 200, 60, 0, 0, 0, 0);
     ok(hwnd != 0, "CreateWindowExA error %u\n", GetLastError());
+    disable_beep( hwnd );
 
     result = SendMessageA(hwnd, EM_CANUNDO, 0, 0);
     ok (result == FALSE, "Can undo after window creation.\n");
@@ -7461,12 +7483,25 @@ static void test_format_rect(void)
     ok(EqualRect(&rc, &expected), "rect %s != %s\n", wine_dbgstr_rect(&rc),
        wine_dbgstr_rect(&expected));
 
+    /* reset back to client rect and now try adding selection bar */
+    SendMessageA(hwnd, EM_SETRECT, 0, 0);
+    expected = clientRect;
+    InflateRect(&expected, -1, 0);
+    SendMessageA(hwnd, EM_GETRECT, 0, (LPARAM)&rc);
+    ok(EqualRect(&rc, &expected), "rect %s != %s\n", wine_dbgstr_rect(&rc),
+       wine_dbgstr_rect(&expected));
+    SendMessageA(hwnd, EM_SETOPTIONS, ECOOP_OR, ECO_SELECTIONBAR);
+    SendMessageA(hwnd, EM_GETRECT, 0, (LPARAM)&rc);
+    ok(EqualRect(&rc, &expected), "rect %s != %s\n", wine_dbgstr_rect(&rc),
+       wine_dbgstr_rect(&expected));
+    SendMessageA(hwnd, EM_SETOPTIONS, ECOOP_AND, ~ECO_SELECTIONBAR);
+
     /* Set the absolute value of the formatting rectangle. */
     rc = clientRect;
     SendMessageA(hwnd, EM_SETRECT, 0, (LPARAM)&rc);
     expected = clientRect;
     SendMessageA(hwnd, EM_GETRECT, 0, (LPARAM)&rc);
-    ok(EqualRect(&rc, &expected), "[n=%d] rect %s != %s\n", n, wine_dbgstr_rect(&rc),
+    ok(EqualRect(&rc, &expected), "rect %s != %s\n", wine_dbgstr_rect(&rc),
        wine_dbgstr_rect(&expected));
 
     /* MSDN documents the EM_SETRECT message as using the rectangle provided in
@@ -9026,7 +9061,7 @@ START_TEST( editor )
    * RICHED20.DLL, so the linker doesn't actually link to it. */
   hmoduleRichEdit = LoadLibraryA("riched20.dll");
   ok(hmoduleRichEdit != NULL, "error: %d\n", (int) GetLastError());
-  is_lang_japanese = (PRIMARYLANGID(GetUserDefaultLangID()) == LANG_JAPANESE);
+  is_lang_japanese = (PRIMARYLANGID(GetSystemDefaultLangID()) == LANG_JAPANESE);
 
   test_window_classes();
   test_WM_CHAR();

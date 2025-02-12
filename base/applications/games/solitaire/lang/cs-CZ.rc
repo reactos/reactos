@@ -1,7 +1,11 @@
-/* FILE:       applications/games/solitaire/lang/cs-CZ.rc
- * PURPOSE:    Czech Language File
- * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2008-11-30 by Kario
+/*
+ * PROJECT:     ReactOS Solitaire
+ * LICENSE:     Freeware, permission to use under Public Domain
+ * PURPOSE:     Czech resource file
+ * TRANSLATORS: Copyright 2008 Radek Liška (Black_Fox) <radekliska@gmail.com>
+ *              Copyright 2008 Mário Kačmár <kario@szm.sk>
+ *              Copyright 2011-2017 Kamil Horníček <kamil.hornicek@reactos.org>
+ *              Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -13,13 +17,13 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 CAPTION "Možnosti"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Karty", -1, 7, 7, 90, 40
+    GROUPBOX "Sejmout", -1, 7, 7, 90, 40
     AUTORADIOBUTTON "Sejmout &jednu", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Sejmout &tři", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
-    GROUPBOX "Scoring", -1, 100, 7, 75, 53
+    GROUPBOX "Skórování", -1, 100, 7, 75, 53
     AUTORADIOBUTTON "&Standard", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 107, 32, 60, 10
-    AUTORADIOBUTTON "&None", IDC_OPT_NOSCORE, 107, 45, 60, 10
+    AUTORADIOBUTTON "Žá&dné", IDC_OPT_NOSCORE, 107, 45, 60, 10
     AUTOCHECKBOX "Zobrazit č&as", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
     AUTOCHECKBOX "Stavový řád&ek", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
     AUTOCHECKBOX "&Ponechat skóre", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
@@ -55,7 +59,7 @@ BEGIN
     IDS_SOL_NAME "Solitaire"
     IDS_SOL_ABOUT "Solitaire by J Brown\nCardLib verze 1.0"
     IDS_SOL_QUIT "Ukončit rozehranou hru?"
-    IDS_SOL_WIN "Gratulujeme, zvítězili jste!!"
+    IDS_SOL_WIN "Gratulujeme, zvítězili jste!"
     IDS_SOL_DEAL "Rozdat znova?"
     IDS_SOL_SCORE "Skóre: %d"
     IDS_SOL_TIME "Čas: %d"
@@ -69,8 +73,8 @@ BEGIN
     BEGIN
         MENUITEM "&Rozdat\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
-        MENUITEM "Rub& karet...", IDM_GAME_DECK
+        MENUITEM "&Zpět", IDM_GAME_UNDO, GRAYED
+        MENUITEM "Ru&b karet...", IDM_GAME_DECK
         MENUITEM "&Možnosti...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&Konec", IDM_GAME_EXIT

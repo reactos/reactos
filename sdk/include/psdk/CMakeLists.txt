@@ -45,6 +45,7 @@ list(APPEND SOURCE
     docobjectservice.idl
     downloadmgr.idl
     drmexternals.idl
+    dxgiformat.idl
 #   dyngraph.idl
     endpointvolume.idl
     exdisp.idl

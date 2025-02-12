@@ -142,8 +142,7 @@ struct DownloadInfo
         AppInfo.GetDownloadInfo(szUrl, szSHA1, SizeInBytes);
         szName = AppInfo.szDisplayName;
         IType = AppInfo.GetInstallerType();
-        if (IType == INSTALLER_GENERATE)
-            szPackageName = AppInfo.szIdentifier;
+        szPackageName = AppInfo.szIdentifier;
 
         CConfigParser *cfg = static_cast<const CAvailableApplicationInfo&>(AppInfo).GetConfigParser();
         if (cfg)
@@ -452,6 +451,8 @@ ShowLastError(HWND hWndOwner, BOOL bInetError, DWORD dwLastError)
         return FALSE;
     }
 
+    if (hWndOwner && !IsWindowVisible(hWndOwner))
+        hWndOwner = NULL;
     MessageBoxW(hWndOwner, lpMsg, NULL, MB_OK | MB_ICONERROR);
     return TRUE;
 }
@@ -1090,8 +1091,12 @@ run:
             SendMessageW(hDlg, WM_SETSTATUS, DLSTATUS_INSTALLING, 0);
 
             // TODO: issue an install operation separately so that the apps could be downloaded in the background
-            WaitForSingleObject(shExInfo.hProcess, INFINITE);
-            CloseHandle(shExInfo.hProcess);
+            if (shExInfo.hProcess)
+            {
+                WaitForSingleObject(shExInfo.hProcess, INFINITE);
+                CloseHandle(shExInfo.hProcess);
+                SendMessageW(hMainWnd, WM_NOTIFY_INSTALLERFINISHED, 0, (LPARAM)(PCWSTR)Info.szPackageName);
+            }
         }
         else
         {

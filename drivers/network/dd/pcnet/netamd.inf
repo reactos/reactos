@@ -39,6 +39,9 @@ HKR,,LED2,,"10000"
 HKR,,LED3,,"10000"
 HKR,,MPMODE,,"0"
 HKR,,TP,,"1"
+HKR, Ndi,            Service,    0, "PCNet"
+HKR, Ndi\Interfaces, UpperRange, 0, "ndis5"
+HKR, Ndi\Interfaces, LowerRange, 0, "ethernet"
 
 [PCNet_CopyFiles.NT]
 pcnet.sys

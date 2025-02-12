@@ -10,12 +10,10 @@
 
 #pragma once
 
-#include <suppress.h>
-#include <intrin.h>
 #include <corecrt_startup.h>
 #include <crtdbg.h>
-#include <windows.h> // for HMODULE
-#include <malloc.h>
+#include <windef.h>
+#include <winbase.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,6 +38,20 @@ extern "C" {
 #pragma section(".CRT$XPZ", long, read)
 #pragma section(".CRT$XTA", long, read)
 #pragma section(".CRT$XTZ", long, read)
+
+
+#pragma section(".CRT$XDA",long,read)
+#pragma section(".CRT$XDC",long,read)
+#pragma section(".CRT$XDZ",long,read)
+
+#pragma section(".CRT$XLA",long,read) // TLS callback start
+#pragma section(".CRT$XLC",long,read) // TLS constructors
+#pragma section(".CRT$XLD",long,read) // TLS destructors
+#pragma section(".CRT$XLZ",long,read) // TLS callback end
+
+#pragma section(".tls",long,read,write)
+#pragma section(".tls$AAA",long,read,write)
+#pragma section(".tls$ZZZ",long,read,write)
 #endif
 
 extern _PIFV __xi_a[];
@@ -52,6 +64,8 @@ extern _PVFV __xt_a[];
 extern _PVFV __xt_z[];
 
 extern char __ImageBase;
+
+extern const IMAGE_TLS_DIRECTORY _tls_used;
 
 #define CRT_WARNING_DISABLE_PUSH(wn, message) \
     __pragma(warning(push)) \

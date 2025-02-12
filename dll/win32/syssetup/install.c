@@ -336,11 +336,9 @@ InstallStartMenuItems(
                                        INF_STYLE_WIN4,
                                        NULL);
 
-//    Steps = SetupGetLineCountW(hShortcutsInf1, L"ShortcutFolders");
     Steps = CountShortcuts(hShortcutsInf1, L"ShortcutFolders");
     if (hShortcutsInf2 != INVALID_HANDLE_VALUE)
         Steps += CountShortcuts(hShortcutsInf2, L"ShortcutFolders");
-//        Steps += SetupGetLineCountW(hShortcutsInf2, L"ShortcutFolders");
 
     SendMessage(pItemsData->hwndDlg, PM_ITEM_START, 1, (LPARAM)Steps);
 
@@ -538,7 +536,11 @@ InstallSysSetupInfComponents(VOID)
 
 
 BOOL
-RegisterTypeLibraries(HINF hinf, LPCWSTR szSection)
+RegisterTypeLibraries(
+    _In_ PITEMSDATA pItemsData,
+    _In_ PREGISTRATIONNOTIFY pNotify,
+    _In_ HINF hinf,
+    _In_ LPCWSTR szSection)
 {
     INFCONTEXT InfContext;
     BOOL res;
@@ -575,6 +577,15 @@ RegisterTypeLibraries(HINF hinf, LPCWSTR szSection)
         p = PathAddBackslash(szPath);
         wcscpy(p, szName);
 
+        if (pItemsData && pNotify)
+        {
+            pNotify->Progress++;
+            pNotify->CurrentItem = szName;
+
+            DPRINT("RegisterTypeLibraries: Start step %ld\n", pNotify->Progress);
+            SendMessage(pItemsData->hwndDlg, PM_STEP_START, 0, (LPARAM)pNotify);
+        }
+
         hmod = LoadLibraryW(szPath);
         if (hmod == NULL)
         {
@@ -583,6 +594,12 @@ RegisterTypeLibraries(HINF hinf, LPCWSTR szSection)
         }
 
         __wine_register_resources(hmod);
+
+        if (pItemsData && pNotify)
+        {
+            DPRINT("RegisterTypeLibraries: End step %ld\n", pNotify->Progress);
+            SendMessage(pItemsData->hwndDlg, PM_STEP_END, 0, (LPARAM)pNotify);
+        }
 
     } while (SetupFindNextLine(&InfContext, &InfContext));
 
@@ -1073,7 +1090,7 @@ InstallLiveCD(VOID)
             DPRINT1("SetupInstallFromInfSectionW failed!\n");
         }
 
-        RegisterTypeLibraries(hSysSetupInf, L"TypeLibraries");
+        RegisterTypeLibraries(NULL, NULL, hSysSetupInf, L"TypeLibraries");
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {

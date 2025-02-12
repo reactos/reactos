@@ -94,7 +94,7 @@ BOOLEAN CallPxe(UINT16 Service, PVOID Parameter)
     if (Service != PXENV_TFTP_READ)
     {
         // HACK: this delay shouldn't be necessary
-        KeStallExecutionProcessor(100 * 1000); // 100 ms
+        StallExecutionProcessor(100 * 1000); // 100 ms
         TRACE("PxeCall(0x%x, %p)\n", Service, Parameter);
     }
 

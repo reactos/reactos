@@ -156,12 +156,14 @@ extern void winetest_pop_context(void);
 #define skip_(file, line)     (winetest_set_location(file, line), 0) ? (void)0 : winetest_skip
 #define win_skip_(file, line) (winetest_set_location(file, line), 0) ? (void)0 : winetest_win_skip
 #define trace_(file, line)    (winetest_set_location(file, line), 0) ? (void)0 : winetest_trace
+#define wait_child_process_(file, line) (winetest_set_location(file, line), 0) ? (void)0 : winetest_wait_child_process
 
 #define subtest  subtest_(__FILE__, __LINE__)
 #define ok       ok_(__FILE__, __LINE__)
 #define skip     skip_(__FILE__, __LINE__)
 #define win_skip win_skip_(__FILE__, __LINE__)
 #define trace    trace_(__FILE__, __LINE__)
+#define wait_child_process wait_child_process_(__FILE__, __LINE__)
 
 #define todo_if(is_todo) for (winetest_start_todo(is_todo); \
                               winetest_loop_todo(); \
@@ -184,6 +186,9 @@ extern void winetest_pop_context(void);
 #define disable_success_count   for (winetest_start_nocount(1); \
                                      winetest_loop_nocount(); \
                                      winetest_end_nocount())
+
+#define skip_2k3_crash if (_winver < 0x600) skip("Test skipped, because it crashes on win 2003\n"); else
+#define skip_2k3_fail if (_winver < 0x600) skip("Test skipped, because it fails on win 2003\n"); else
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 

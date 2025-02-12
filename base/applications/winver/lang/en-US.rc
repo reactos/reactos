@@ -1,0 +1,14 @@
+/*
+ * PROJECT:      ReactOS Version Program
+ * LICENSE:      MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:      English (United States) resource file
+ * TRANSLATOR:   Copyright 2025 Thamatip Chitpong <thamatip.chitpong@reactos.org>
+ */
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_OSINFO_COMPAT_FORMAT "Reporting NT %s (Build %s%s)"
+    IDS_OSINFO_SPK_FORMAT ": %s"
+END

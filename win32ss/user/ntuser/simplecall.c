@@ -706,7 +706,7 @@ NtUserCallHwndOpt(
     return hWnd;
 }
 
-DWORD
+DWORD_PTR
 APIENTRY
 NtUserCallHwnd(
     HWND hWnd,
@@ -754,6 +754,17 @@ NtUserCallHwnd(
             }
             UserLeave();
             return FALSE;
+        }
+
+        case HWND_ROUTINE_DWP_GETENABLEDPOPUP:
+        {
+            PWND pWnd;
+            UserEnterShared();
+            pWnd = UserGetWindowObject(hWnd);
+            if (pWnd)
+                pWnd = DWP_GetEnabledPopup(pWnd);
+            UserLeave();
+            return (DWORD_PTR)pWnd;
         }
     }
 

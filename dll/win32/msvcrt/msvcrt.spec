@@ -555,7 +555,7 @@
 @ cdecl -version=0x600+ _get_errno(ptr)
 @ stub -version=0x600+ _get_fileinfo
 @ stub -version=0x600+ _get_fmode
-# @ cdecl _get_heap_handle()
+@ cdecl _get_heap_handle()
 @ cdecl _get_osfhandle(long)
 @ cdecl -version=0x600+ _get_osplatform(ptr)
 @ stub -version=0x600+ _get_osver

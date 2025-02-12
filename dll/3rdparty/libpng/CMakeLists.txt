@@ -9,6 +9,8 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libpng
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
 
+spec2def(libpng.dll libpng.spec ADD_IMPORTLIB)
+
 list(APPEND SOURCE
     png.c
     pngerror.c
@@ -27,7 +29,7 @@ list(APPEND SOURCE
     pngwutil.c
     pngpriv.h)
 
-add_library(libpng MODULE ${SOURCE})
+add_library(libpng MODULE ${SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/libpng.def)
 set_module_type(libpng win32dll)
 target_link_libraries(libpng zlib)
 add_importlibs(libpng msvcrt kernel32 ntdll)

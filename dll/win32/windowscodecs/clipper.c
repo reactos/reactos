@@ -72,7 +72,7 @@ static ULONG WINAPI BitmapClipper_AddRef(IWICBitmapClipper *iface)
     BitmapClipper *This = impl_from_IWICBitmapClipper(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) refcount=%u\n", iface, ref);
+    TRACE("(%p) refcount=%lu\n", iface, ref);
 
     return ref;
 }
@@ -82,14 +82,14 @@ static ULONG WINAPI BitmapClipper_Release(IWICBitmapClipper *iface)
     BitmapClipper *This = impl_from_IWICBitmapClipper(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) refcount=%u\n", iface, ref);
+    TRACE("(%p) refcount=%lu\n", iface, ref);
 
     if (ref == 0)
     {
         This->lock.DebugInfo->Spare[0] = 0;
         DeleteCriticalSection(&This->lock);
         if (This->source) IWICBitmapSource_Release(This->source);
-        HeapFree(GetProcessHeap(), 0, This);
+        free(This);
     }
 
     return ref;
@@ -244,13 +244,17 @@ HRESULT BitmapClipper_Create(IWICBitmapClipper **clipper)
 {
     BitmapClipper *This;
 
-    This = HeapAlloc(GetProcessHeap(), 0, sizeof(BitmapClipper));
+    This = malloc(sizeof(BitmapClipper));
     if (!This) return E_OUTOFMEMORY;
 
     This->IWICBitmapClipper_iface.lpVtbl = &BitmapClipper_Vtbl;
     This->ref = 1;
     This->source = NULL;
+#ifdef __REACTOS__
     InitializeCriticalSection(&This->lock);
+#else
+    InitializeCriticalSectionEx(&This->lock, 0, RTL_CRITICAL_SECTION_FLAG_FORCE_DEBUG_INFO);
+#endif
     This->lock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": BitmapClipper.lock");
 
     *clipper = &This->IWICBitmapClipper_iface;

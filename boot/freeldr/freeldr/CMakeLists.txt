@@ -58,11 +58,6 @@ list(APPEND FREELDR_BOOTLIB_SOURCE
 
 list(APPEND FREELDR_BOOTMGR_SOURCE
     include/freeldr.h
-    custom.c
-    # linuxboot.c
-    miscboot.c
-    options.c
-    oslist.c
     settings.c
     ui/directui.c
     # ui/gui.c
@@ -88,10 +83,7 @@ if(ARCH STREQUAL "i386")
         # arch/i386/linux.S
 
     list(APPEND FREELDR_ARC_SOURCE
-        arch/i386/i386bug.c
-        arch/i386/halstub.c
-        arch/i386/ntoskrnl.c
-        disk/scsiport.c)
+        arch/i386/i386bug.c)
 
     list(APPEND FREELDR_NTLDR_SOURCE
         ntldr/arch/i386/winldr.c
@@ -118,23 +110,18 @@ else()
 endif()
 
 list(APPEND FREELDR_BASE_SOURCE
-    bootmgr.c # This file is compiled with custom definitions
     freeldr.c
-    ntldr/setupldr.c ## Strangely enough this file is needed in GCC builds
-                     ## even if ${FREELDR_NTLDR_SOURCE} is not added,
-                     ## otherwise we get linking errors with Rtl**Bitmap** APIs.
-                     ## Do not happen on MSVC builds however...
-    ntldr/inffile.c
-    ntldr/ntldropts.c
+    ntldr/ntldropts.c # Should be in rosload, but is currently needed by machpc.c, etc.
     lib/rtl/libsupp.c)
 
-if(ARCH STREQUAL "i386")
+if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
     # Must be included together with disk/scsiport.c
     list(APPEND FREELDR_BASE_SOURCE
-        ${CMAKE_CURRENT_BINARY_DIR}/freeldr_pe.def)
+        ${CMAKE_CURRENT_BINARY_DIR}/freeldr.def)
 endif()
 
 include(pcat.cmake)
+include(rosload.cmake)
 if(NOT ARCH STREQUAL "i386" OR NOT (SARCH STREQUAL "pc98" OR SARCH STREQUAL "xbox"))
     include(uefi.cmake)
 endif()

@@ -1,6 +1,8 @@
-/* Portuguese Language resource file
- *
- * Traduzido por: Jose Carlos Jesus 17-01-2020 zecarlos1957@hotmail.com
+/*
+ * PROJECT:     ReactOS Picture and Fax Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATOR:  Copyright 2019-2025 Jose Carlos Jesus <zecarlos1957@hotmail.com>
  */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
@@ -9,34 +11,34 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "Visualizador de imagens e faxes do ReactOS"
     IDS_SETASDESKBG "Definir como plano de fundo da área de trabalho"
-    IDS_NOPREVIEW "No preview available."
-    IDS_PREVIEW "Pre-visualizar"
+    IDS_NOPREVIEW "Nenhuma pré-visualização disponível."
+    IDS_PREVIEW "Pré-visualizar"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Próxima imagem"
     IDS_TOOLTIP_PREV_PIC "Imagem anterior"
-    IDS_TOOLTIP_BEST_FIT "Best fit to window (Ctrl+B)"
-    IDS_TOOLTIP_REAL_SIZE "Actual size (Ctrl+A)"
-    IDS_TOOLTIP_SLIDE_SHOW "Start slideshow (F11)"
+    IDS_TOOLTIP_BEST_FIT "Melhor ajuste à janela(Ctrl+B)"
+    IDS_TOOLTIP_REAL_SIZE "Tamanho actual (Ctrl+A)"
+    IDS_TOOLTIP_SLIDE_SHOW "Iniciar apresentação de diapositivos (F11)"
     IDS_TOOLTIP_ZOOM_IN "Zoom (+)"
     IDS_TOOLTIP_ZOOM_OUT "Zoom (-)"
-    IDS_TOOLTIP_ROT_CLOCKW "Girar no sentido dos ponteiros do relógio(Ctrl+K)"
-    IDS_TOOLTIP_ROT_COUNCW "Girar no sentido anti-horário (Ctrl+L)"
-    IDS_TOOLTIP_ROT_CWSAVE "Rotate Clockwise and Save (Lossy)"
-    IDS_TOOLTIP_ROT_CCWSAVE "Rotate Counterclockwise and Save (Lossy)"
-    IDS_TOOLTIP_DELETE "Delete (DEL)"
+    IDS_TOOLTIP_ROT_CLOCKW "Girar no sentido dos ponteiros do relógio (Ctrl+K)"
+    IDS_TOOLTIP_ROT_COUNCW "Girar no sentido contrário aos ponteiros do relógio (Ctrl+L)"
+    IDS_TOOLTIP_ROT_CWSAVE "Girar no sentido dos ponteiros do relógio e guardar (com perdas)"
+    IDS_TOOLTIP_ROT_CCWSAVE "Girar no sentido contrário aos ponteiros do relógio e guardar (com perdas)"
+    IDS_TOOLTIP_DELETE "Eliminar (DEL)"
     IDS_TOOLTIP_PRINT "Imprimir (Ctrl+P)"
     IDS_TOOLTIP_SAVEAS "Guardar como... (Ctrl+S)"
-    IDS_TOOLTIP_MODIFY "Modify (Ctrl+E)"
-    IDS_TOOLTIP_HELP_TOC "Help topics (F1)"
+    IDS_TOOLTIP_MODIFY "Modificar (Ctrl+E)"
+    IDS_TOOLTIP_HELP_TOC "Tópicos da ajuda (F1)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_EMF_FILE    "EMF Image"
-    IDS_GIF_FILE    "GIF Image"
-    IDS_JPG_FILE    "JPEG Image"
-    IDS_BMP_FILE    "Bitmap Image"
-    IDS_PNG_FILE    "PNG Image"
-    IDS_TIF_FILE    "TIF Image"
-    IDS_WMF_FILE    "WMF Image"
+    IDS_EMF_FILE    "Imagem EMF"
+    IDS_GIF_FILE    "Imagem GIF"
+    IDS_JPG_FILE    "Imagem JPEG"
+    IDS_BMP_FILE    "Imagem Bitmap"
+    IDS_PNG_FILE    "Imagem PNG"
+    IDS_TIF_FILE    "Imagem TIF"
+    IDS_WMF_FILE    "Imagem WMF"
 END

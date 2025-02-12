@@ -216,6 +216,22 @@ static LPWSTR __inline strdupW(LPCWSTR src)
     return dest;
 }
 
+static BOOL PathEnvSubstIsDirectory(LPCWSTR pszPath)
+{
+    // Note: Don't call SHExpandEnvironmentStringsW here, we need the required length
+    WCHAR szStack[MAX_PATH];
+    DWORD cch = ExpandEnvironmentStringsW(pszPath, szStack, _countof(szStack));
+    if (cch <= _countof(szStack))
+        return cch && PathIsDirectory(szStack);
+
+    PWSTR szHeap = (PWSTR)SHAlloc(cch);
+    if (!szHeap)
+        return FALSE;
+    BOOL bResult = ExpandEnvironmentStringsW(pszPath, szHeap, cch) && PathIsDirectory(szHeap);
+    SHFree(szHeap);
+    return bResult;
+}
+
 // TODO: Use it for constructor & destructor too
 VOID CShellLink::Reset()
 {
@@ -2667,7 +2683,7 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
         sei.nShow = lpici->nShow; // Allow invoker to override .lnk show mode
 
     // Use the invoker specified working directory if the link did not specify one
-    if (StrIsNullOrEmpty(sei.lpDirectory) || !PathIsDirectoryW(sei.lpDirectory))
+    if (StrIsNullOrEmpty(sei.lpDirectory) || !PathEnvSubstIsDirectory(sei.lpDirectory))
     {
         LPCSTR pszDirA = lpici->lpDirectory;
         if (unicode && !StrIsNullOrEmpty(iciex->lpDirectoryW))

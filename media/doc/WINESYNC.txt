@@ -160,7 +160,7 @@ dll/win32/pdh                 # Synced to WineStaging-4.18
 dll/win32/pidgen              # Synced to WineStaging-4.18
 dll/win32/powrprof            # Forked at Wine-1.0rc5
 dll/win32/printui             # Synced to WineStaging-4.18
-dll/win32/propsys             # Synced to WineStaging-4.18
+dll/win32/propsys             # Synced to Wine-10.0
 dll/win32/pstorec             # Synced to WineStaging-3.3
 dll/win32/qmgr                # Synced to WineStaging-4.18
 dll/win32/qmgrprxy            # Synced to WineStaging-2.9
@@ -206,8 +206,8 @@ dll/win32/version             # Synced to WineStaging-4.18
 dll/win32/vssapi              # Synced to WineStaging-4.18
 dll/win32/wbemdisp            # Synced to WineStaging-4.18
 dll/win32/wbemprox            # Synced to WineStaging-4.18
-dll/win32/windowscodecs       # Synced to WineStaging-4.18
-dll/win32/windowscodecsext    # Synced to WineStaging-2.9
+dll/win32/windowscodecs       # Synced to Wine-10.0
+dll/win32/windowscodecsext    # Synced to Wine-10.0
 dll/win32/winemp3.acm         # Synced to WineStaging-4.18
 dll/win32/wing32              # Synced to WineStaging-3.3
 dll/win32/winhttp             # Synced to WineStaging-4.18

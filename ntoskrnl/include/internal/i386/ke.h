@@ -22,6 +22,14 @@ extern "C"
 #define KD_BREAKPOINT_SIZE        sizeof(UCHAR)
 #define KD_BREAKPOINT_VALUE       0xCC
 
+/* CPUID 1 - ECX flags */
+#define X86_FEATURE_SSE3        0x00000001
+#define X86_FEATURE_SSSE3       0x00000200
+#define X86_FEATURE_SSE4_1      0x00080000
+#define X86_FEATURE_SSE4_2      0x00100000
+#define X86_FEATURE_XSAVE       0x04000000
+#define X86_FEATURE_RDRAND      0x40000000
+
 /* CPUID 1 - EDX flags */
 #define X86_FEATURE_FPU         0x00000001 /* x87 FPU is present */
 #define X86_FEATURE_VME         0x00000002 /* Virtual 8086 Extensions are present */
@@ -462,7 +470,7 @@ NTAPI
 KiSetProcessorType(VOID);
 
 CODE_SEG("INIT")
-ULONG
+ULONG64
 NTAPI
 KiGetFeatureBits(VOID);
 

@@ -915,7 +915,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Auteurs"
     IDS_SHELL_ABOUT_BACK "< Précédent"
-    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
+    FCIDM_SHVIEW_NEW "&Nouveau"
     FCIDM_SHVIEW_NEWFOLDER "Nouveau d&ossier"
     FCIDM_SHVIEW_NEWLINK "Nouveau &lien"
     IDS_FOLDER_OPTIONS "Options du dossier"

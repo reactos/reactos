@@ -97,8 +97,6 @@ VOID MachInit(const char *CmdLine);
     MachVtbl.VideoGetDisplaySize((W), (H), (D))
 #define MachVideoGetBufferSize()    \
     MachVtbl.VideoGetBufferSize()
-#define MachVideoGetFontsFromFirmware(RomFontPointers) \
-    MachVtbl.VideoGetFontsFromFirmware((RomFontPointers))
 #define MachVideoSetTextCursorPosition(X, Y)    \
     MachVtbl.VideoSetTextCursorPosition((X), (Y))
 #define MachVideoHideShowTextCursor(Show)   \
@@ -117,10 +115,6 @@ VOID MachInit(const char *CmdLine);
     MachVtbl.VideoSync()
 #define MachBeep()  \
     MachVtbl.Beep()
-#define MachPrepareForReactOS() \
-    MachVtbl.PrepareForReactOS()
-#define MachGetExtendedBIOSData(ExtendedBIOSDataArea, ExtendedBIOSDataSize) \
-    MachVtbl.GetExtendedBIOSData((ExtendedBIOSDataArea), (ExtendedBIOSDataSize))
 #define MachGetFloppyCount() \
     MachVtbl.GetFloppyCount()
 #define MachDiskReadLogicalSectors(Drive, Start, Count, Buf)    \
@@ -133,15 +127,19 @@ VOID MachInit(const char *CmdLine);
 #define MachInitializeBootDevices() \
     MachVtbl.InitializeBootDevices()
 
-#define MachHwDetect(Options) \
-    MachVtbl.HwDetect(Options)
-
 #define MachHwIdle() \
     MachVtbl.HwIdle()
+
 
 /* ARC FUNCTIONS **************************************************************/
 
 TIMEINFO* ArcGetTime(VOID);
 ULONG ArcGetRelativeTime(VOID);
+
+PCONFIGURATION_COMPONENT_DATA MachHwDetect(_In_opt_ PCSTR Options);
+VOID MachPrepareForReactOS(VOID);
+VOID MachGetExtendedBIOSData(PULONG ExtendedBIOSDataArea, PULONG ExtendedBIOSDataSize);
+VOID MachVideoGetFontsFromFirmware(PULONG RomFontPointers);
+ULONG MachGetBootSectorLoadAddress(IN UCHAR DriveNumber);
 
 /* EOF */

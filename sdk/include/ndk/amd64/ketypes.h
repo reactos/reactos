@@ -939,7 +939,10 @@ typedef struct _KPRCB
     ULONG CacheCount;
 #endif
 #ifdef __REACTOS__
+#if  (NTDDI_VERSION < NTDDI_WINBLUE)
+    // On Win 8.1+ the FeatureBits field is extended to 64 bits
     ULONG FeatureBitsHigh;
+#endif
 #endif
 } KPRCB, *PKPRCB;
 

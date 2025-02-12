@@ -1,9 +1,9 @@
 //
-// __vcrt_init.c
+// __vcrt_init_stubs.c
 //
 //      Copyright (c) 2024 Timo Kreuzer
 //
-// Implementation of vcruntime initialization and termination functions.
+// Stubs for vcruntime initialization and termination in vcstartup.
 //
 // SPDX-License-Identifier: MIT
 //

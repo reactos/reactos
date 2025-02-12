@@ -31,18 +31,21 @@ Path: dll/3rdparty/libjpeg
 Used Version: 9d
 License: custom, BSD-like
 URL: http://www.ijg.org/
+Modifications: added .spec file
 
 Title: libpng
 Path: dll/3rdparty/libpng
 Used Version: 1.6.39
 License: PNG Reference Library version 2
 URL: http://libpng.sourceforge.net/
+Modifications: added .spec file
 
 Title: libtiff
 Path: dll/3rdparty/libtiff
 Used Version: 4.1.0
 License: libtiff (https://spdx.org/licenses/libtiff.html)
 URL: http://www.simplesystems.org/libtiff/
+Modifications: added .spec file
 
 Title: Libxslt
 Path: dll/3rdparty/libxslt

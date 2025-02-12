@@ -68,9 +68,14 @@ extern HINSTANCE hDllInstance;
 extern HINF hSysSetupInf;
 extern ADMIN_INFO AdminInfo;
 
-BOOL RegisterTypeLibraries (HINF hinf, LPCWSTR szSection);
-
 /* install */
+
+BOOL
+RegisterTypeLibraries(
+    _In_ PITEMSDATA pItemsData,
+    _In_ PREGISTRATIONNOTIFY pNotify,
+    _In_ HINF hinf,
+    _In_ LPCWSTR szSection);
 
 VOID
 InstallStartMenuItems(
