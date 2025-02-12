@@ -492,7 +492,8 @@ static BOOL para_set_fmt( ME_TextEditor *editor, ME_Paragraph *para, const PARAF
   COPY_FIELD(PFM_ALIGNMENT, wAlignment);
   if (dwMask & PFM_TABSTOPS)
   {
-    para->fmt.cTabCount = max(0, min(pFmt->cTabCount, MAX_TAB_STOPS)); /* Clamp between 0 and MAX_TAB_STOPS */
+    /* Clamp between 0 and MAX_TAB_STOPS */
+    para->fmt.cTabCount = max(0, min(pFmt->cTabCount, MAX_TAB_STOPS));
     memcpy(para->fmt.rgxTabs, pFmt->rgxTabs, para->fmt.cTabCount * sizeof(LONG));
   }
 
