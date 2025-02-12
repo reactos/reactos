@@ -21,7 +21,7 @@ static HRESULT Read(HANDLE hFile, void* Buffer, DWORD Size)
     return Size == Transferred ? S_OK : HResultFromWin32(ERROR_HANDLE_EOF);
 }
 
-struct IMAGEINFO
+struct IMAGESTATS
 {
     UINT w, h;
     BYTE bpp;
@@ -91,7 +91,7 @@ static BYTE GetPngBppFromIHDRData(const void* buffer)
     return (depth <= 16 && type <= 6) ? channels[type] * depth : 0;
 }
 
-static bool GetInfoFromPng(const void* file, SIZE_T size, IMAGEINFO& info)
+static bool GetInfoFromPng(const void* file, SIZE_T size, IMAGESTATS& info)
 {
     C_ASSERT(sizeof(PNGSIGNATURE) == 8);
     C_ASSERT(sizeof(PNGSIGANDIHDR) == 8 + (4 + 4 + (4 + 4 + 5) + 4));
@@ -111,7 +111,7 @@ static bool GetInfoFromPng(const void* file, SIZE_T size, IMAGEINFO& info)
     return false;
 }
 
-static bool GetInfoFromBmp(const void* pBitmapInfo, IMAGEINFO& info)
+static bool GetInfoFromBmp(const void* pBitmapInfo, IMAGESTATS& info)
 {
     BitmapInfoHeader bih(pBitmapInfo);
     info.w = bih.biWidth;
@@ -121,11 +121,11 @@ static bool GetInfoFromBmp(const void* pBitmapInfo, IMAGEINFO& info)
     return info.w && bpp == info.bpp;
 }
 
-static bool GetInfoFromIcoBmp(const void* pBitmapInfo, IMAGEINFO& stat)
+static bool GetInfoFromIcoBmp(const void* pBitmapInfo, IMAGESTATS& info)
 {
-    bool ret = GetInfoFromBmp(pBitmapInfo, stat);
-    stat.h /= 2; // Don't include mask
-    return ret && stat.h;
+    bool ret = GetInfoFromBmp(pBitmapInfo, info);
+    info.h /= 2; // Don't include mask
+    return ret && info.h;
 }
 
 EXTERN_C PCWSTR GetExtraExtensionsGdipList(VOID)
@@ -158,7 +158,7 @@ static void OverrideFileContent(HGLOBAL& hMem, DWORD& Size)
             for (UINT i = 0; i < count; ++i)
             {
                 BOOL valid = FALSE;
-                IMAGEINFO info;
+                IMAGESTATS info;
                 const BYTE* data = buffer + entries[i].offset;
                 if (IsPngSignature(data, entries[i].size))
                     valid = GetInfoFromPng(data, entries[i].size, info);
@@ -189,7 +189,7 @@ static void OverrideFileContent(HGLOBAL& hMem, DWORD& Size)
                         const BYTE* data = buffer + entries[i].offset;
                         if (IsPngSignature(data, entries[i].size))
                         {
-                            IMAGEINFO info;
+                            IMAGESTATS info;
                             if (!GetInfoFromPng(data, entries[i].size, info))
                                 continue;
                             bih.biPlanes = 1;
