@@ -4,8 +4,8 @@ Wallpapers
 |--------------------------------|-----------------------------------------------|--------------------------------------------------------|
 |Filename                        | Author                                        | Origin                                                 |
 |--------------------------------|-----------------------------------------------|--------------------------------------------------------|
-|"Angelus ReactOS Dark 4-3.jpg"  | Forum user "Angelus" (jedi.knight@wanadoo.es) | https://reactos.org/forum/viewtopic.php?p=50543#p50543 |
-|"Angelus ReactOS Dark 16-9.jpg" | Forum user "Angelus" (jedi.knight@wanadoo.es) | https://reactos.org/forum/viewtopic.php?p=50543#p50543 |
+|"Angelus ReactOS Dark 4x3.jpg"  | Forum user "Angelus" (jedi.knight@wanadoo.es) | https://reactos.org/forum/viewtopic.php?p=50543#p50543 |
+|"Angelus ReactOS Dark 16x9.jpg" | Forum user "Angelus" (jedi.knight@wanadoo.es) | https://reactos.org/forum/viewtopic.php?p=50543#p50543 |
 |"ReactOS Mizu.png"              | Forum user "Foxlet" (foxlet@furcode.co)       | https://jira.reactos.org/browse/CORE-15783             |
 |"ReactOS Mizu 4x3.png"          | Forum user "Foxlet" (foxlet@furcode.co)       | https://jira.reactos.org/browse/CORE-15783             |
 |"ReactOS Mizu 16x9 A.png"       | Forum user "Foxlet" (foxlet@furcode.co)       | https://jira.reactos.org/browse/CORE-15783             |
