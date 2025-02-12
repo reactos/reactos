@@ -309,11 +309,7 @@ static ME_String *para_num_get_str( ME_Paragraph *para, WORD num )
     {
     case PFN_ARABIC:
     default:
-#ifdef __REACTOS__
-        p += swprintf( p, L"%d", num );
-#else
         p += swprintf( p, 20, L"%d", num );
-#endif
         break;
 
     case PFN_LCLETTER:
