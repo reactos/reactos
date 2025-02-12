@@ -4,6 +4,7 @@
  * PURPOSE:     Image file browsing and manipulation
  * COPYRIGHT:   Copyright Dmitry Chapyshev (dmitry@reactos.org)
  *              Copyright 2018-2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ *              Copyright 2025 Whindmar Saksit <whindsaks@proton.me>
  */
 
 #include "shimgvw.h"
@@ -12,6 +13,9 @@
 #include <commdlg.h>
 #include <shlobj.h>
 #include <shellapi.h>
+
+EXTERN_C PCWSTR GetExtraExtensionsGdipList(VOID);
+EXTERN_C HRESULT LoadImageFromPath(LPCWSTR Path, GpImage** ppImage);
 
 /* Toolbar image size */
 #define TB_IMAGE_WIDTH  16
@@ -114,7 +118,6 @@ typedef struct tagPREVIEW_DATA
     UINT m_nTimerInterval;
     BOOL m_bHideCursor;
     POINT m_ptOrigin;
-    IStream *m_pMemStream;
     WCHAR m_szFile[MAX_PATH];
 } PREVIEW_DATA, *PPREVIEW_DATA;
 
@@ -371,67 +374,20 @@ Preview_pFreeImage(PPREVIEW_DATA pData)
         g_pImage = NULL;
     }
 
-    if (pData->m_pMemStream)
-    {
-        pData->m_pMemStream->lpVtbl->Release(pData->m_pMemStream);
-        pData->m_pMemStream = NULL;
-    }
-
     pData->m_szFile[0] = UNICODE_NULL;
-}
-
-IStream* MemStreamFromFile(LPCWSTR pszFileName)
-{
-    HANDLE hFile;
-    DWORD dwFileSize, dwRead;
-    LPBYTE pbMemFile = NULL;
-    IStream *pStream;
-
-    hFile = CreateFileW(pszFileName, GENERIC_READ, FILE_SHARE_READ, NULL,
-                        OPEN_EXISTING, 0, NULL);
-    if (hFile == INVALID_HANDLE_VALUE)
-        return NULL;
-
-    dwFileSize = GetFileSize(hFile, NULL);
-    pbMemFile = QuickAlloc(dwFileSize, FALSE);
-    if (!dwFileSize || (dwFileSize == INVALID_FILE_SIZE) || !pbMemFile)
-    {
-        CloseHandle(hFile);
-        return NULL;
-    }
-
-    if (!ReadFile(hFile, pbMemFile, dwFileSize, &dwRead, NULL) || (dwRead != dwFileSize))
-    {
-        QuickFree(pbMemFile);
-        CloseHandle(hFile);
-        return NULL;
-    }
-
-    CloseHandle(hFile);
-    pStream = SHCreateMemStream(pbMemFile, dwFileSize);
-    QuickFree(pbMemFile);
-    return pStream;
 }
 
 static VOID
 Preview_pLoadImage(PPREVIEW_DATA pData, LPCWSTR szOpenFileName)
 {
+    HRESULT hr;
     Preview_pFreeImage(pData);
+    InvalidateRect(pData->m_hwnd, NULL, FALSE); /* Schedule redraw in case we change to "No preview" */
 
-    pData->m_pMemStream = MemStreamFromFile(szOpenFileName);
-    if (!pData->m_pMemStream)
+    hr = LoadImageFromPath(szOpenFileName, &g_pImage);
+    if (FAILED(hr))
     {
-        DPRINT1("MemStreamFromFile() failed\n");
-        Preview_UpdateTitle(pData, NULL);
-        return;
-    }
-
-    /* NOTE: GdipLoadImageFromFile locks the file.
-             Avoid file locking by using GdipLoadImageFromStream and memory stream. */
-    GdipLoadImageFromStream(pData->m_pMemStream, &g_pImage);
-    if (!g_pImage)
-    {
-        DPRINT1("GdipLoadImageFromStream() failed\n");
+        DPRINT1("GdipLoadImageFromStream() failed, %d\n", hr);
         Preview_pFreeImage(pData);
         Preview_UpdateTitle(pData, NULL);
         return;
@@ -439,8 +395,8 @@ Preview_pLoadImage(PPREVIEW_DATA pData, LPCWSTR szOpenFileName)
 
     Anime_LoadInfo(&pData->m_Anime);
 
-    SHAddToRecentDocs(SHARD_PATHW, szOpenFileName);
     GetFullPathNameW(szOpenFileName, _countof(pData->m_szFile), pData->m_szFile, NULL);
+    SHAddToRecentDocs(SHARD_PATHW, pData->m_szFile);
 
     /* Reset zoom and redraw display */
     Preview_ResetZoom(pData);
@@ -625,7 +581,7 @@ static SHIMGVW_FILENODE*
 pBuildFileList(LPCWSTR szFirstFile)
 {
     HANDLE hFindHandle;
-    WCHAR *extension;
+    WCHAR *extension, *buffer;
     WCHAR szSearchPath[MAX_PATH];
     WCHAR szSearchMask[MAX_PATH];
     WCHAR szFileTypes[MAX_PATH];
@@ -634,15 +590,19 @@ pBuildFileList(LPCWSTR szFirstFile)
     SHIMGVW_FILENODE *root = NULL;
     SHIMGVW_FILENODE *conductor = NULL;
     ImageCodecInfo *codecInfo;
-    UINT num;
-    UINT size;
+    UINT num = 0, size = 0, ExtraSize = 0;
     UINT j;
+
+    const PCWSTR ExtraExtensions = GetExtraExtensionsGdipList();
+    const UINT ExtraCount = ExtraExtensions[0] ? 1 : 0;
+    if (ExtraCount)
+        ExtraSize += sizeof(*codecInfo) + (wcslen(ExtraExtensions) + 1) * sizeof(WCHAR);
 
     StringCbCopyW(szSearchPath, sizeof(szSearchPath), szFirstFile);
     PathRemoveFileSpecW(szSearchPath);
 
     GdipGetImageDecodersSize(&num, &size);
-    codecInfo = QuickAlloc(size, FALSE);
+    codecInfo = QuickAlloc(size + ExtraSize, FALSE);
     if (!codecInfo)
     {
         DPRINT1("QuickAlloc() failed in pLoadFileList()\n");
@@ -650,6 +610,10 @@ pBuildFileList(LPCWSTR szFirstFile)
     }
 
     GdipGetImageDecoders(num, size, codecInfo);
+    buffer = (PWSTR)((UINT_PTR)codecInfo + size + (sizeof(*codecInfo) * ExtraCount));
+    if (ExtraCount)
+        codecInfo[num].FilenameExtension = wcscpy(buffer, ExtraExtensions);
+    num += ExtraCount;
 
     root = QuickAlloc(sizeof(SHIMGVW_FILENODE), FALSE);
     if (!root)
@@ -663,6 +627,7 @@ pBuildFileList(LPCWSTR szFirstFile)
 
     for (j = 0; j < num; ++j)
     {
+        // FIXME: Parse each FilenameExtension list to bypass szFileTypes limit
         StringCbCopyW(szFileTypes, sizeof(szFileTypes), codecInfo[j].FilenameExtension);
 
         extension = wcstok(szFileTypes, L";");

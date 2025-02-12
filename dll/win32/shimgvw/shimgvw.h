@@ -78,3 +78,46 @@ static inline VOID QuickFree(LPVOID ptr)
 {
     HeapFree(GetProcessHeap(), 0, ptr);
 }
+
+static inline WORD Swap16(WORD v)
+{
+    return MAKEWORD(HIBYTE(v), LOBYTE(v));
+}
+
+static inline UINT Swap32(UINT v)
+{
+    return MAKELONG(Swap16(HIWORD(v)), Swap16(LOWORD(v)));
+}
+
+#ifdef _WIN32
+#define BigToHost32 Swap32
+#endif
+
+static inline ULARGE_INTEGER MakeULargeInteger(UINT64 value)
+{
+    ULARGE_INTEGER ret;
+    ret.QuadPart = value;
+    return ret;
+}
+
+static inline HRESULT SHIMGVW_HResultFromWin32(DWORD hr)
+{
+     // HRESULT_FROM_WIN32 will evaluate its parameter twice, this function will not.
+    return HRESULT_FROM_WIN32(hr);
+}
+
+static inline HRESULT HResultFromGdiplus(Status status)
+{
+    switch ((UINT)status)
+    {
+        case Ok: return S_OK;
+        case InvalidParameter: return E_INVALIDARG;
+        case OutOfMemory: return E_OUTOFMEMORY;
+        case NotImplemented: return HRESULT_FROM_WIN32(ERROR_CALL_NOT_IMPLEMENTED);
+        case Win32Error: return SHIMGVW_HResultFromWin32(GetLastError());
+        case FileNotFound: return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+        case AccessDenied: return HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED);
+        case UnknownImageFormat: return HRESULT_FROM_WIN32(ERROR_BAD_FORMAT);
+    }
+    return E_FAIL;
+}
