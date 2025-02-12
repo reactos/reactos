@@ -9,8 +9,8 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE, "Kullanım: TASKLIST [/?] [/NH]\n"
-    IDS_DESCRIPTION, "\n\
+    IDS_USAGE "Kullanım: TASKLIST [/?] [/NH]\n"
+    IDS_DESCRIPTION "\n\
 Açıklama:\
     Bu araç, makinede şu anda çalışan işlemlerin bir listesini görüntüler.\n"
     IDS_OPTION_TOO_MUCH, "Hata: Geçersiz sözdizimi. '%1' seçeneğine '%2!d!'den fazla kez izin verilmiyor..\n"

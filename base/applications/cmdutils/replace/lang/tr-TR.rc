@@ -10,7 +10,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_REPLACE_HELP1 "Replaces files.\n\n\
+    STRING_REPLACE_HELP1 "Dosyaları değiştirir.\n\n\
 REPLACE [sürücü1:][yol1]filename [sürücü2:][yol2] [/A] [/P] [/R] [/W]\n\
 REPLACE [sürücü1:][yol1]filename [sürücü2:][yol2] [/P] [/R] [/S] [/W] [/U]\n\n\
   [drive1:][yol1]dosya adı  Kaynak dosyayı veya dosyaları belirtir.\n\
