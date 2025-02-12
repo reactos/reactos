@@ -142,7 +142,7 @@ static void OverrideFileContent(HGLOBAL& hMem, DWORD& Size)
     // ICO/CUR
     struct ICOHDR { WORD Sig, Type, Count; };
     ICOHDR* pIcoHdr = (ICOHDR*)buffer;
-    if (Size > 6 && !pIcoHdr->Sig && pIcoHdr->Type > 0 && pIcoHdr->Type < 3 && pIcoHdr->Count)
+    if (Size > sizeof(ICOHDR) && !pIcoHdr->Sig && pIcoHdr->Type > 0 && pIcoHdr->Type < 3 && pIcoHdr->Count)
     {
         const UINT minbmp = sizeof(BITMAPCOREHEADER) + 1, minpng = sizeof(PNGSIGANDIHDR);
         const UINT minfile = min(minbmp, minpng), count = pIcoHdr->Count;
@@ -269,9 +269,8 @@ EXTERN_C HRESULT LoadImageFromPath(LPCWSTR Path, GpImage** ppImage)
     // NOTE: GdipLoadImageFromFile locks the file.
     //       Avoid file locking by using GdipLoadImageFromStream and memory stream.
 
-    const UINT share = FILE_SHARE_READ | FILE_SHARE_DELETE;
-    const UINT fileflags = FILE_FLAG_SEQUENTIAL_SCAN;
-    HANDLE hFile = CreateFileW(Path, GENERIC_READ, share, NULL, OPEN_EXISTING, fileflags, NULL);
+    HANDLE hFile = CreateFileW(Path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE,
+                               NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
     if (hFile != INVALID_HANDLE_VALUE)
     {
         HRESULT hr = LoadImageFromFileHandle(hFile, ppImage);

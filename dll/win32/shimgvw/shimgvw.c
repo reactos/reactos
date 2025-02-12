@@ -4,6 +4,7 @@
  * PURPOSE:     Image file browsing and manipulation
  * COPYRIGHT:   Copyright Dmitry Chapyshev (dmitry@reactos.org)
  *              Copyright 2018-2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ *              Copyright 2025 Whindmar Saksit <whindsaks@proton.me>
  */
 
 #include "shimgvw.h"
@@ -355,6 +356,7 @@ Preview_pLoadImage(PPREVIEW_DATA pData, LPCWSTR szOpenFileName)
 {
     HRESULT hr;
     Preview_pFreeImage(pData);
+    InvalidateRect(pData->m_hwnd, NULL, FALSE); /* Schedule redraw in case we change to "No preview" */
 
     hr = LoadImageFromPath(szOpenFileName, &g_pImage);
     if (FAILED(hr))
@@ -562,8 +564,8 @@ pBuildFileList(LPCWSTR szFirstFile)
     SHIMGVW_FILENODE *root = NULL;
     SHIMGVW_FILENODE *conductor = NULL;
     ImageCodecInfo *codecInfo;
-    UINT num = 0, size = 0, ExtraSize = 0;
-    UINT j;
+    SIZE_T size = 0, ExtraSize = 0;
+    UINT num = 0, j;
 
     const PCWSTR ExtraExtensions = GetExtraExtensionsGdipList();
     const UINT ExtraCount = ExtraExtensions[0] ? 1 : 0;
