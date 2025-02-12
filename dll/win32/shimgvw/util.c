@@ -154,5 +154,5 @@ DoShellContextMenuOnFile(HWND hwnd, PCWSTR File, LPARAM lParam)
 
 void DisplayHelp(HWND hwnd)
 {
-    SHELL_ErrorBoxHelper(hwnd, ERROR_NOT_SUPPORTED);
+    SHELL_ErrorBox(hwnd, ERROR_NOT_SUPPORTED);
 }
