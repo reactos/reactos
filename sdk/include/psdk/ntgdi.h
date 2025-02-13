@@ -3923,4 +3923,390 @@ NtGdiGetCurrentDpiInfo(
 
 #endif /* PRIVATE_DWM_INTERFACE */
 
+
+/* ReactOS Display Driver Model */
+__kernel_entry
+W32KAPI
+BOOLEAN
+APIENTRY
+NtGdiDdDDICheckExclusiveOwnership(VOID);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDICreateAllocation(
+    _Inout_ D3DKMT_CREATEALLOCATION* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDICheckMonitorPowerState(
+    _In_ const D3DKMT_CHECKMONITORPOWERSTATE* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDICheckOcclusion(
+    _In_ const D3DKMT_CHECKOCCLUSION* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDICloseAdapter(
+    _In_ const D3DKMT_CLOSEADAPTER* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+WINAPI
+NtGdiDdDDICreateContext(
+    _Inout_ D3DKMT_CREATECONTEXT* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDICreateDevice(
+    _Inout_ D3DKMT_CREATEDEVICE* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDICreateOverlay(
+    _Inout_ D3DKMT_CREATEOVERLAY* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDICreateSynchronizationObject(
+    _Inout_ D3DKMT_CREATESYNCHRONIZATIONOBJECT* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIWaitForVerticalBlankEvent(
+    _In_ const D3DKMT_WAITFORVERTICALBLANKEVENT* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIWaitForIdle(
+    _In_ const D3DKMT_WAITFORIDLE* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIUpdateOverlay(
+    _In_ const D3DKMT_UPDATEOVERLAY* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+WINAPI
+NtGdiDdDDIUnlock(
+    _In_ const D3DKMT_UNLOCK* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIDestroyAllocation(
+    _In_ const D3DKMT_DESTROYALLOCATION* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIDestroyContext(
+    _In_ const D3DKMT_DESTROYCONTEXT* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIDestroyDevice(
+    _In_ const D3DKMT_DESTROYDEVICE* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIDestroyOverlay(
+    _In_ const D3DKMT_DESTROYOVERLAY* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIDestroySynchronizationObject(
+    _In_ const D3DKMT_DESTROYSYNCHRONIZATIONOBJECT* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIEscape(
+    _In_ const D3DKMT_ESCAPE* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIFlipOverlay(
+    _In_ const D3DKMT_FLIPOVERLAY* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIGetContextSchedulingPriority(
+    _Inout_ D3DKMT_GETCONTEXTSCHEDULINGPRIORITY* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIGetDeviceState(
+    _Inout_ D3DKMT_GETDEVICESTATE* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIGetDisplayModeList(
+    _Inout_ D3DKMT_GETDISPLAYMODELIST* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIGetMultisampleMethodList(
+    _Inout_ D3DKMT_GETMULTISAMPLEMETHODLIST* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIGetPresentHistory(
+    _Inout_ D3DKMT_GETPRESENTHISTORY* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIGetProcessSchedulingPriorityClass(
+    _In_  HANDLE                                unnamedParam1,
+    _Out_ D3DKMT_SCHEDULINGPRIORITYCLASS        *unnamedParam2);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIGetRuntimeData(
+    _In_ const D3DKMT_GETRUNTIMEDATA* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIGetScanLine(
+    _In_ D3DKMT_GETSCANLINE* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIGetSharedPrimaryHandle(
+    _Inout_ D3DKMT_GETSHAREDPRIMARYHANDLE* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIInvalidateActiveVidPn(
+    _In_ const D3DKMT_INVALIDATEACTIVEVIDPN* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDILock(
+    _Inout_ D3DKMT_LOCK* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIOpenAdapterFromDeviceName(
+    _Inout_ D3DKMT_OPENADAPTERFROMDEVICENAME* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIOpenAdapterFromGdiDisplayName(
+    _Inout_ D3DKMT_OPENADAPTERFROMGDIDISPLAYNAME* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIOpenAdapterFromHdc(
+    _Inout_ D3DKMT_OPENADAPTERFROMHDC* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIOpenResource(
+    _Inout_ D3DKMT_OPENRESOURCE* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIPollDisplayChildren(
+    _In_ const D3DKMT_POLLDISPLAYCHILDREN* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIPresent(
+    _In_ D3DKMT_PRESENT* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIQueryAdapterInfo(
+    _Inout_ const D3DKMT_QUERYADAPTERINFO* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIQueryAllocationResidency(
+    _In_ const D3DKMT_QUERYALLOCATIONRESIDENCY* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIQueryResourceInfo(
+    _Inout_ D3DKMT_QUERYRESOURCEINFO* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIQueryStatistics(
+    _Inout_ const D3DKMT_QUERYSTATISTICS* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIReleaseProcessVidPnSourceOwners(
+    _In_ HANDLE unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIRender(
+    _In_ D3DKMT_RENDER* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISetAllocationPriority(
+    _In_ const D3DKMT_SETALLOCATIONPRIORITY* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISetContextSchedulingPriority(
+    _In_ const D3DKMT_SETCONTEXTSCHEDULINGPRIORITY* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISetDisplayMode(
+    _In_ const D3DKMT_SETDISPLAYMODE* unnamedParam1);
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISetDisplayPrivateDriverFormat(
+    _In_ const D3DKMT_SETDISPLAYPRIVATEDRIVERFORMAT* unnamedParam1);
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISetGammaRamp(
+    _In_ const D3DKMT_SETGAMMARAMP* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISetProcessSchedulingPriorityClass(
+                    _In_ HANDLE                                    unnamedParam1,
+                    _In_ D3DKMT_SCHEDULINGPRIORITYCLASS            unnamedParam2);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISetQueuedLimit(
+    _Inout_ const D3DKMT_SETQUEUEDLIMIT* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISetVidPnSourceOwner(
+    _In_ const D3DKMT_SETVIDPNSOURCEOWNER* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISharedPrimaryLockNotification(
+    _In_ const D3DKMT_SHAREDPRIMARYLOCKNOTIFICATION* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISharedPrimaryUnLockNotification(
+    _In_ const D3DKMT_SHAREDPRIMARYUNLOCKNOTIFICATION* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDISignalSynchronizationObject(
+    _In_ const D3DKMT_SIGNALSYNCHRONIZATIONOBJECT* unnamedParam1);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDDIWaitForSynchronizationObject(
+    _In_ const D3DKMT_WAITFORSYNCHRONIZATIONOBJECT* unnamedParam1);
+
 #endif /* _NTGDI_ */

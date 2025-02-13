@@ -608,3 +608,62 @@
 608 stdcall bMakePathNameW(wstr wstr wstr long)
 609 stdcall cGetTTFFromFOT(long long long long long long long)
 610 stdcall gdiPlaySpoolStream(long long long long long long)
+
+; ReactOS Display Driver Model
+@ stdcall -version=0x600+ D3DKMTCheckExclusiveOwnership() NtGdiDdDDICheckExclusiveOwnership
+@ stdcall -version=0x600+ D3DKMTCheckMonitorPowerState(ptr) NtGdiDdDDICheckMonitorPowerState
+@ stdcall -version=0x600+ D3DKMTCheckOcclusion(ptr) NtGdiDdDDICheckOcclusion
+@ stdcall -version=0x600+ D3DKMTCloseAdapter(ptr) NtGdiDdDDICloseAdapter
+@ stdcall -version=0x600+ D3DKMTCreateAllocation(ptr) NtGdiDdDDICreateAllocation
+@ stdcall -version=0x600+ D3DKMTCreateContext(ptr) NtGdiDdDDICreateContext
+@ stdcall -version=0x600+ D3DKMTCreateDCFromMemory(ptr)
+@ stdcall -version=0x600+ D3DKMTCreateDevice(ptr) NtGdiDdDDICreateDevice
+@ stdcall -version=0x600+ D3DKMTCreateOverlay(ptr) NtGdiDdDDICreateOverlay
+@ stdcall -version=0x600+ D3DKMTCreateSynchronizationObject(ptr) NtGdiDdDDICreateSynchronizationObject
+@ stdcall -version=0x600+ D3DKMTDestroyAllocation(ptr) NtGdiDdDDIDestroyAllocation
+@ stdcall -version=0x600+ D3DKMTDestroyContext(ptr) NtGdiDdDDIDestroyContext
+@ stdcall -version=0x600+ D3DKMTDestroyDCFromMemory(ptr)
+@ stdcall -version=0x600+ D3DKMTDestroyDevice(ptr) NtGdiDdDDIDestroyDevice
+@ stdcall -version=0x600+ D3DKMTDestroyOverlay(ptr) NtGdiDdDDIDestroyOverlay
+@ stdcall -version=0x600+ D3DKMTDestroySynchronizationObject(ptr) NtGdiDdDDIDestroySynchronizationObject
+@ stdcall -version=0x600+ D3DKMTEscape(ptr) NtGdiDdDDIEscape
+@ stdcall -version=0x600+ D3DKMTFlipOverlay(ptr) NtGdiDdDDIFlipOverlay
+@ stdcall -version=0x600+ D3DKMTGetContextSchedulingPriority(ptr) NtGdiDdDDIGetContextSchedulingPriority
+@ stdcall -version=0x600+ D3DKMTGetDeviceState(ptr) NtGdiDdDDIGetDeviceState
+@ stdcall -version=0x600+ D3DKMTGetDisplayModeList(ptr) NtGdiDdDDIGetDisplayModeList
+@ stdcall -version=0x600+ D3DKMTGetMultisampleMethodList(ptr) NtGdiDdDDIGetMultisampleMethodList
+@ stdcall -version=0x600+ D3DKMTGetPresentHistory(ptr) NtGdiDdDDIGetPresentHistory
+@ stdcall -version=0x600+ D3DKMTGetProcessSchedulingPriorityClass(ptr ptr) NtGdiDdDDIGetProcessSchedulingPriorityClass
+@ stdcall -version=0x600+ D3DKMTGetRuntimeData(ptr) NtGdiDdDDIGetRuntimeData
+@ stdcall -version=0x600+ D3DKMTGetScanLine(ptr) NtGdiDdDDIGetScanLine
+@ stdcall -version=0x600+ D3DKMTGetSharedPrimaryHandle(ptr) NtGdiDdDDIGetSharedPrimaryHandle
+@ stdcall -version=0x600+ D3DKMTInvalidateActiveVidPn(ptr) NtGdiDdDDIInvalidateActiveVidPn
+@ stdcall -version=0x600+ D3DKMTLock(ptr) NtGdiDdDDILock
+@ stdcall -version=0x600+ D3DKMTOpenAdapterFromDeviceName(ptr) NtGdiDdDDIOpenAdapterFromDeviceName
+@ stdcall -version=0x600+ D3DKMTOpenAdapterFromGdiDisplayName(ptr)
+@ stdcall -version=0x600+ D3DKMTOpenAdapterFromHdc(ptr) NtGdiDdDDIOpenAdapterFromHdc
+@ stdcall -version=0x600+ D3DKMTOpenResource(ptr) NtGdiDdDDIOpenResource
+@ stdcall -version=0x600+ D3DKMTPollDisplayChildren(ptr) NtGdiDdDDIPollDisplayChildren
+@ stdcall -version=0x600+ D3DKMTPresent(ptr) NtGdiDdDDIPresent
+@ stdcall -version=0x600+ D3DKMTQueryAdapterInfo(ptr) NtGdiDdDDIQueryAdapterInfo
+@ stdcall -version=0x600+ D3DKMTQueryAllocationResidency(ptr) NtGdiDdDDIQueryAllocationResidency
+@ stdcall -version=0x600+ D3DKMTQueryResourceInfo(ptr) NtGdiDdDDIQueryResourceInfo
+@ stdcall -version=0x600+ D3DKMTQueryStatistics(ptr) NtGdiDdDDIQueryStatistics
+@ stdcall -version=0x600+ D3DKMTReleaseProcessVidPnSourceOwners(ptr) NtGdiDdDDIReleaseProcessVidPnSourceOwners
+@ stdcall -version=0x600+ D3DKMTRender(ptr) NtGdiDdDDIRender
+@ stdcall -version=0x600+ D3DKMTSetAllocationPriority(ptr) NtGdiDdDDISetAllocationPriority
+@ stdcall -version=0x600+ D3DKMTSetContextSchedulingPriority(ptr) NtGdiDdDDISetContextSchedulingPriority
+@ stdcall -version=0x600+ D3DKMTSetDisplayMode(ptr) NtGdiDdDDISetDisplayMode
+@ stdcall -version=0x600+ D3DKMTSetDisplayPrivateDriverFormat(ptr) NtGdiDdDDISetDisplayPrivateDriverFormat
+@ stdcall -version=0x600+ D3DKMTSetGammaRamp(ptr) NtGdiDdDDISetGammaRamp
+@ stdcall -version=0x600+ D3DKMTSetProcessSchedulingPriorityClass(ptr ptr) NtGdiDdDDISetProcessSchedulingPriorityClass
+@ stdcall -version=0x600+ D3DKMTSetQueuedLimit(ptr) NtGdiDdDDISetQueuedLimit
+@ stdcall -version=0x600+ D3DKMTSetVidPnSourceOwner(ptr) NtGdiDdDDISetVidPnSourceOwner
+@ stdcall -version=0x600+ D3DKMTSharedPrimaryLockNotification(ptr) NtGdiDdDDISharedPrimaryLockNotification
+@ stdcall -version=0x600+ D3DKMTSharedPrimaryUnLockNotification(ptr) NtGdiDdDDISharedPrimaryUnLockNotification
+@ stdcall -version=0x600+ D3DKMTSignalSynchronizationObject(ptr) NtGdiDdDDISignalSynchronizationObject
+@ stdcall -version=0x600+ D3DKMTUnlock(ptr) NtGdiDdDDIUnlock
+@ stdcall -version=0x600+ D3DKMTUpdateOverlay(ptr) NtGdiDdDDIUpdateOverlay
+@ stdcall -version=0x600+ D3DKMTWaitForIdle(ptr) NtGdiDdDDIWaitForIdle
+@ stdcall -version=0x600+ D3DKMTWaitForSynchronizationObject(ptr) NtGdiDdDDIWaitForSynchronizationObject
+@ stdcall -version=0x600+ D3DKMTWaitForVerticalBlankEvent(ptr) NtGdiDdDDIWaitForVerticalBlankEvent
