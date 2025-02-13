@@ -23,7 +23,9 @@
 #include "newdev_private.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <winnls.h>
+#include <assert.h>
 
 /* Global variables */
 HINSTANCE hDllInstance;
@@ -344,14 +346,17 @@ SearchDriverRecursive(
     IN LPCWSTR Path)
 {
     WIN32_FIND_DATAW wfd;
-    WCHAR DirPath[MAX_PATH];
-    WCHAR FileName[MAX_PATH];
+    WCHAR DirPath[MAX_PATH + 1];
     WCHAR FullPath[MAX_PATH];
     WCHAR LastDirPath[MAX_PATH] = L"";
-    WCHAR PathWithPattern[MAX_PATH];
+    WCHAR PathWithPattern[MAX_PATH + 2];
     BOOL ok = TRUE;
     BOOL retval = FALSE;
     HANDLE hFindFile = INVALID_HANDLE_VALUE;
+
+    /* Path with pattern is too long to be searched */
+    if (wcslen(Path) + 2 >= _countof(PathWithPattern))
+        return FALSE;
 
     wcscpy(DirPath, Path);
 
@@ -365,16 +370,18 @@ SearchDriverRecursive(
         ok && hFindFile != INVALID_HANDLE_VALUE;
         ok = FindNextFileW(hFindFile, &wfd))
     {
-
-        wcscpy(FileName, wfd.cFileName);
-        if (IsDots(FileName))
+        if (IsDots(wfd.cFileName))
             continue;
 
         if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
+            /* Full path is too long to be searched */
+            if (wcslen(DirPath) + wcslen(wfd.cFileName) >= _countof(FullPath))
+                continue;
+
             /* Recursive search */
             wcscpy(FullPath, DirPath);
-            wcscat(FullPath, FileName);
+            wcscat(FullPath, wfd.cFileName);
             if (SearchDriverRecursive(DevInstData, FullPath))
             {
                 retval = TRUE;
@@ -383,15 +390,14 @@ SearchDriverRecursive(
         }
         else
         {
-            LPCWSTR pszExtension = GetFileExt(FileName);
+            LPCWSTR pszExtension = GetFileExt(wfd.cFileName);
 
             if ((_wcsicmp(pszExtension, L".inf") == 0) && (wcscmp(LastDirPath, DirPath) != 0))
             {
                 wcscpy(LastDirPath, DirPath);
 
-                if (wcslen(DirPath) > MAX_PATH)
-                    /* Path is too long to be searched */
-                    continue;
+                /* if wcslen(DirPath) >= MAX_PATH here it's too late, program has already crashed */
+                assert(wcslen(DirPath) < MAX_PATH);
 
                 if (SearchDriver(DevInstData, DirPath, NULL))
                 {
