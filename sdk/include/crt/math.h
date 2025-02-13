@@ -313,6 +313,7 @@ _Check_return_ __CRT_INLINE long long llrintl(_In_ long double x) { return (long
 #define log2 _log2 // nasty hack, see CORE-18255
 #endif
 _Check_return_ __CRT_INLINE double log2(_In_ double x) { return log(x) / log(2); }
+_Check_return_ __CRT_INLINE float log2f(_In_ float x) { return (float)log2((double)x); }
 #endif /* !_CRTBLD */
 
 #ifndef NO_OLDNAMES /* !__STDC__ */
