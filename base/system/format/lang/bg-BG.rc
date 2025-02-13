@@ -29,7 +29,7 @@ BEGIN
     STRING_FMIFS_FAIL "Неуспешно определяне разположението на входните точки на FMIFS\n\n"
     STRING_UNKNOW_ARG "Неизвестен ключ: %s\n"
     STRING_DRIVE_PARM "Задължителният ключ за името на устройството липсва.\n\n"
-    STRING_ERROR_DRIVE_TYPE "Неуспешно определяне вида на устройството"
+    STRING_ERROR_DRIVE_TYPE "Неуспешно определяне вида на устройството.\n"
     STRING_INSERT_DISK "Сложете нова дискета в устройство %C:\n,след което натиснете Enter..."
     STRING_NO_VOLUME "Неуспешно определяне на тома"
     STRING_NO_VOLUME_SIZE "Неуспешно определяне на размера на тома"

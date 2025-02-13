@@ -28,7 +28,7 @@ BEGIN
     STRING_FMIFS_FAIL "Imposible localizar puntos de entrada FMIFS.\n\n"
     STRING_UNKNOW_ARG "Argumento desconocido: %s\n"
     STRING_DRIVE_PARM "Parámetro de unidad requerido no encontrado.\n\n"
-    STRING_ERROR_DRIVE_TYPE "Imposible determinar el tipo de unidad"
+    STRING_ERROR_DRIVE_TYPE "Imposible determinar el tipo de unidad.\n"
     STRING_INSERT_DISK "Inserte un nuevo disco en la unidad %C:\ny presione Enter cuando esté preparado..."
     STRING_NO_VOLUME "Imposible consultar el volumen"
     STRING_NO_VOLUME_SIZE "Imposible consultar el tamaño de volumen"
