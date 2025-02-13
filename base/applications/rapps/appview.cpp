@@ -15,6 +15,7 @@ using namespace Gdiplus;
 
 HICON g_hDefaultPackageIcon = NULL;
 static int g_DefaultPackageIconILIdx = I_IMAGENONE;
+UINT g_IconSize = 0;
 
 // **** Menu helpers ****
 
@@ -1063,9 +1064,10 @@ AsyncLoadIconProc(LPVOID Param)
         if (task->TaskId == g_AsyncIconTaskId)
         {
             HICON hIcon;
+            HICON *phBigIcon = SettingsInfo.bSmallIcons ? NULL : &hIcon, *phSmallIcon = phBigIcon ? NULL : &hIcon;
             if (!task->Parse)
-                hIcon = (HICON)LoadImageW(NULL, task->Location, IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
-            else if (!ExtractIconExW(task->Location, PathParseIconLocationW(task->Location), &hIcon, NULL, 1))
+                hIcon = (HICON)LoadImageW(NULL, task->Location, IMAGE_ICON, g_IconSize, g_IconSize, LR_LOADFROMFILE);
+            else if (!ExtractIconExW(task->Location, PathParseIconLocationW(task->Location), phBigIcon, phSmallIcon, 1))
                 hIcon = NULL;
 
             if (hIcon)
@@ -1392,13 +1394,14 @@ CAppsListView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
     if (!g_hDefaultPackageIcon)
     {
         ImageList_Destroy(m_hImageListView);
-        UINT IconSize = GetSystemMetrics(SM_CXICON);
+        g_IconSize = GetSystemMetrics(SettingsInfo.bSmallIcons ? SM_CXSMICON : SM_CXICON);
+        g_IconSize = max(g_IconSize, 8);
         UINT ilc = GetSystemColorDepth() | ILC_MASK;
-        m_hImageListView = ImageList_Create(IconSize, IconSize, ilc, 0, 1);
+        m_hImageListView = ImageList_Create(g_IconSize, g_IconSize, ilc, 0, 1);
         SetImageList(m_hImageListView, LVSIL_SMALL);
         SetImageList(m_hImageListView, LVSIL_NORMAL);
         g_hDefaultPackageIcon = (HICON)LoadImageW(hInst, MAKEINTRESOURCEW(IDI_MAIN),
-                                                  IMAGE_ICON, IconSize, IconSize, LR_SHARED);
+                                                  IMAGE_ICON, g_IconSize, g_IconSize, LR_SHARED);
     }
     ImageList_RemoveAll(m_hImageListView);
 
