@@ -62,7 +62,7 @@ isKeyWord(PCHAR p)
 }
 
 PCHAR
-getVKName(IN ULONG VirtualKey,
+getVKName(IN UCHAR VirtualKey,
           IN BOOLEAN Prefix)
 {
     ULONG i;
@@ -108,7 +108,7 @@ getVKName(IN ULONG VirtualKey,
     return gVKeyName;
 }
 
-ULONG
+UCHAR
 getVKNum(IN PCHAR p)
 {
     ULONG Length;
@@ -146,8 +146,8 @@ getVKNum(IN PCHAR p)
     if ((*p == '0') && ((*(p + 1) == 'x') || (*(p + 1) == 'X')))
     {
         /* Get the key number from the hex string */
-        *(p + 1) = 'x';
-        if (sscanf(p, "0x%x", &KeyNumber) == 1) return KeyNumber;
+        if (sscanf(p + 2, "%x", &KeyNumber) == 1 && KeyNumber <= 0xFF)
+            return KeyNumber;
     }
 
     /* No hope: fail */
@@ -719,7 +719,6 @@ DoLAYOUT(IN PLAYOUT LayoutData,
     ULONG KeyWord;
     ULONG ScanCode, CurrentCode;
     ULONG TokenCount;
-    ULONG VirtualKey;
     ULONG i;
     ULONG Count;
     BOOLEAN FullEntry;
@@ -789,8 +788,6 @@ DoLAYOUT(IN PLAYOUT LayoutData,
                 /* New code */
                 if (Verbose) printf("A new scancode is being defined: 0x%2X, %s\n", Entry->ScanCode, Token);
 
-                /* Fill out the entry */
-                Entry->VirtualKey = getVKNum(Token);
                 break;
             }
             else if (ScanCode == CurrentCode)
@@ -804,7 +801,7 @@ DoLAYOUT(IN PLAYOUT LayoutData,
                 }
 
                 /* Check if there is a valid virtual key */
-                if (ScVk[i].VirtualKey == 0xFFFF)
+                if (ScVk[i].VirtualKey == 0xFF)
                 {
                     /* Fail */
                     printf("The Scancode you tried to use (%X) is reserved.\n", ScanCode);
@@ -823,13 +820,12 @@ DoLAYOUT(IN PLAYOUT LayoutData,
         ScVk[i].Processed = TRUE;
 
         /* Get the virtual key from the entry */
-        VirtualKey = getVKNum(Token);
-        Entry->VirtualKey = VirtualKey;
+        Entry->VirtualKey = getVKNum(Token);
         DPRINT1("ENTRY: [%x %x %x %s] with ",
                 Entry->VirtualKey, Entry->OriginalVirtualKey, Entry->ScanCode, Entry->Name);
 
         /* Make sure it's valid */
-        if (VirtualKey == 0xFFFF)
+        if (Entry->VirtualKey == 0xFF)
         {
             /* Warn the user */
             if (Verbose) printf("An invalid Virtual Key '%s' was defined.\n", Token);
