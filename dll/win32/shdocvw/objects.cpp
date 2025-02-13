@@ -28,6 +28,7 @@ void operator delete(void *ptr, size_t size)
 BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_SH_FavBand, CFavBand)
     OBJECT_ENTRY(CLSID_ExplorerBand, CExplorerBand)
+    OBJECT_ENTRY(CLSID_ShellWindows, CSDWindows)
 END_OBJECT_MAP()
 
 class SHDOCVW_Module : public CComModule
@@ -76,6 +77,10 @@ SHDOCVW_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     {
         return CMruPidlList_CreateInstance(0, ppv, 0);
     }
+
+    hr = ShellWindowsGetClassObject(rclsid, riid, ppv);
+    if (SUCCEEDED(hr))
+        return hr;
 
     return CLASS_E_CLASSNOTAVAILABLE;
 }
