@@ -230,6 +230,39 @@ extern void winetest_pop_context(void);
 # define S5(x) (x)
 #endif
 
+#ifdef USE_WHITELIST
+
+typedef enum _WHITELIST_ATTRIBUTES
+{
+    WLA_BROKEN_ROS = 0x1,
+    WLA_BROKEN_WIN2003 = 0x2,
+    WLA_BROKEN_WINVISTA = 0x4,
+    WLA_BROKEN_WIN7 = 0x8,
+    WLA_BROKEN_WIN8 = 0x10,
+    WLA_BROKEN_WIN81 = 0x20,
+    WLA_BROKEN_WIN10 = 0x40,
+    WLA_BROKEN_WIN = 0x7E,
+    WLA_ARCH_X86 = 0x1000,
+    WLA_ARCH_X64 = 0x2000,
+    WLA_ARCH_ANY = 0x3000,
+    WLA_FLAKY = 0x10000,
+} WHITELIST_ATTRIBUTES;
+
+typedef struct _WHITELIST_ENTRY
+{
+    int Line;
+    WHITELIST_ATTRIBUTES Attributes;
+    const char* Reason;
+} WHITELIST_ENTRY, *PWHITELIST_ENTRY;
+
+typedef struct _WHITELIST_FILE_ENTRY
+{
+    const char* File;
+    PWHITELIST_ENTRY Entries;
+    int NumEntries;
+} WHITELIST_FILE_ENTRY, *PWHITELIST_FILE_ENTRY;
+
+#endif
 
 /************************************************************************/
 /* Below is the implementation of the various functions, to be included
@@ -406,6 +439,98 @@ int broken( int condition )
     ) && condition;
 }
 
+#ifdef USE_WHITELIST
+extern WHITELIST_FILE_ENTRY g_Whitelist[];
+extern int g_WhitelistLength;
+
+static PWHITELIST_ENTRY get_whitelist_entry(const char *File, int Line)
+{
+    int i, j;
+
+    for (i = 0; i < g_WhitelistLength; i++)
+    {
+        if (!strcmp(g_Whitelist[i].File, File))
+        {
+            PWHITELIST_ENTRY entries = g_Whitelist[i].Entries;
+            for (j = 0; j < g_Whitelist[i].NumEntries; j++)
+            {
+                if (entries[j].Line == Line)
+                {
+                    return &entries[j];
+                }
+            }
+        }
+    }
+
+    return NULL;
+}
+
+static int does_whitelist_entry_apply(PWHITELIST_ENTRY entry)
+{
+    /* Check if the architecture applies */
+#ifdef _M_IX86
+    if (!(entry->Attributes & WLA_ARCH_X86))
+#elif defined(_M_AMD64)
+    if (!(entry->Attributes & WLA_ARCH_X64))
+#else
+    if (0)
+#endif
+    {
+        /* Architecture does not match */
+        return 0;
+    }
+
+    /* Check for reactos */
+    if ((entry->Attributes & WLA_BROKEN_ROS) && (strcmp(winetest_platform, "reactos") == 0))
+    {
+        return 1;
+    }
+
+    /* Check for current Windows version */
+    unsigned int winver = GetVersion();
+    winver = ((winver & 0xFF) << 8) | ((winver >> 8) & 0xFF);
+    if (((entry->Attributes & WLA_BROKEN_WIN2003) && (winver == 0x502)) ||
+        ((entry->Attributes & WLA_BROKEN_WINVISTA) && (winver == 0x600)) ||
+        ((entry->Attributes & WLA_BROKEN_WIN7) && (winver == 0x601)) ||
+        ((entry->Attributes & WLA_BROKEN_WIN8) && (winver == 0x602)) ||
+        ((entry->Attributes & WLA_BROKEN_WIN81) && (winver == 0x603)) ||
+        ((entry->Attributes & WLA_BROKEN_WIN10) && (winver == 0xA00)))
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+static int check_whitelist(tls_data* data, int condition)
+{
+    PWHITELIST_ENTRY entry = get_whitelist_entry(data->current_file, data->current_line);
+
+    if (entry != 0)
+    {
+        /* Wefound an entry for the test, check if it applies to the OS */
+        if (does_whitelist_entry_apply(entry))
+        {
+            /* Check for success and not flaky */
+            if (condition && !(entry->Attributes & WLA_FLAKY))
+            {
+                fprintf(stdout, __winetest_file_line_prefix ": Whitelisted test succeeded: %s\n",
+                        data->current_file, data->current_line, entry->Reason);
+            }
+            else
+            {
+                fprintf(stdout, __winetest_file_line_prefix ": Test ignored: %s\n",
+                        data->current_file, data->current_line, entry->Reason);
+            }
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+#endif // USE_WHITELIST
+
 /*
  * Checks condition.
  * Parameters:
@@ -419,6 +544,13 @@ int broken( int condition )
 int winetest_vok( int condition, const char *msg, __winetest_va_list args )
 {
     tls_data* data=get_tls_data();
+
+#ifdef USE_WHITELIST
+    if (check_whitelist(data, condition))
+    {
+        return 0;
+    }
+#endif
 
     if (data->todo_level)
     {
