@@ -1433,7 +1433,13 @@ typedef struct _READ_CAPACITY16_DATA {
     UCHAR Prot_EN:1;
     UCHAR RTO_EN:1;
     UCHAR Reserved:6;
+#ifdef __REACTOS__
+    /* In ReactOS SDK sizeof(READ_CAPACITY16_DATA) == 32.
+     * Fixes CORE-19696 memory corruption on SCSIOP_SERVICE_ACTION16. */
+    UCHAR Reserved1[19];
+#else
     UCHAR Reserved1[20];
+#endif
 } READ_CAPACITY16_DATA, *PREAD_CAPACITY16_DATA;
 
 // CD ROM Read Table Of Contents (TOC) structures
