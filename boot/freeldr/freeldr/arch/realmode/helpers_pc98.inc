@@ -80,15 +80,22 @@ writechr:
     pushf
     pusha
 
+    mov ax, word ptr VramSegment
+    test ax, ax
+    jnz .writechr_test_done2
+
     /* High-resolution mode check */
     test byte ptr ds:[HEX(501)], HEX(08)
     jz .writechr_normal
-    push HEX(0E000)
+    mov ax, HEX(0E000)
     jmp short .writechr_test_done
 .writechr_normal:
-    push HEX(0A000)
-
+    mov ax, HEX(0A000)
 .writechr_test_done:
+    mov word ptr VramSegment, ax
+
+.writechr_test_done2:
+    push ax
     pop es
     mov di, word ptr VramOffset
     xor ah, ah
@@ -99,6 +106,8 @@ writechr:
     popf
     ret
 
+VramSegment:
+    .word 0
 VramOffset:
     .word 0
 
