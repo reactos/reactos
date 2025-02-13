@@ -12,6 +12,7 @@
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 #define INITGUID
+#define COBJMACROS
 
 #include <windef.h>
 #include <winbase.h>
@@ -23,6 +24,7 @@
 #include <gdiplus.h>
 #include <shlwapi.h>
 #include <strsafe.h>
+#include <shobjidl.h>
 
 #include <debug.h>
 
@@ -68,6 +70,9 @@ void Anime_SetFrameIndex(PANIME pAnime, UINT nFrameIndex);
 void Anime_Start(PANIME pAnime, DWORD dwDelay);
 void Anime_Pause(PANIME pAnime);
 BOOL Anime_OnTimer(PANIME pAnime, WPARAM wParam);
+
+void DoShellContextMenuOnFile(HWND hwnd, PCWSTR File, LPARAM lParam);
+void DisplayHelp(HWND hwnd);
 
 static inline LPVOID QuickAlloc(SIZE_T cbSize, BOOL bZero)
 {

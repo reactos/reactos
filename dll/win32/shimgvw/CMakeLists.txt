@@ -7,6 +7,7 @@ list(APPEND SOURCE
     shimgvw.c
     comsup.c
     shimgvw.rc
+    util.c
     ${CMAKE_CURRENT_BINARY_DIR}/shimgvw_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shimgvw.def)
 

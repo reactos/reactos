@@ -1190,7 +1190,7 @@ ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_RBUTTONUP:
         {
             ZoomWnd_OnButtonUp(hwnd, uMsg, wParam, lParam);
-            break;
+            goto doDefault;
         }
         case WM_LBUTTONDBLCLK:
         {
@@ -1209,6 +1209,10 @@ ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                                  (SHORT)HIWORD(wParam), (UINT)LOWORD(wParam));
             break;
         }
+        case WM_CONTEXTMENU:
+            if (Preview_IsMainWnd(pData->m_hwnd))
+                DoShellContextMenuOnFile(hwnd, pData->m_szFile, lParam);
+            break;
         case WM_HSCROLL:
         case WM_VSCROLL:
             ZoomWnd_OnHVScroll(pData, hwnd, wParam, uMsg == WM_VSCROLL);
@@ -1230,7 +1234,7 @@ ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
             break;
         }
-        default:
+        default: doDefault:
         {
             return DefWindowProcW(hwnd, uMsg, wParam, lParam);
         }
@@ -1429,9 +1433,7 @@ Preview_ToggleSlideShowEx(PPREVIEW_DATA pData, BOOL StartTimer)
 
     if (IsWindowVisible(g_hwndFullscreen))
     {
-        KillTimer(g_hwndFullscreen, SLIDESHOW_TIMER_ID);
-        ShowWindow(g_hMainWnd, SW_SHOW);
-        ShowWindow(g_hwndFullscreen, SW_HIDE);
+        Preview_EndSlideShow(g_hwndFullscreen);
     }
     else
     {
@@ -1577,6 +1579,10 @@ Preview_OnCommand(HWND hwnd, UINT nCommandID)
             Preview_Edit(hwnd);
             break;
 
+        case IDC_HELP_TOC:
+            DisplayHelp(hwnd);
+            break;
+
         default:
             break;
     }
@@ -1691,6 +1697,13 @@ PreviewWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_DESTROY:
         {
             Preview_OnDestroy(hwnd);
+            break;
+        }
+        case WM_CONTEXTMENU:
+        {
+            PPREVIEW_DATA pData = Preview_GetData(hwnd);
+            if ((int)lParam == -1)
+                return ZoomWndProc(pData->m_hwndZoom, uMsg, wParam, lParam);
             break;
         }
         case WM_TIMER:
