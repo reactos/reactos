@@ -2,13 +2,14 @@
 add_definitions(-DUNICODE -D_UNICODE)
 
 list(APPEND SOURCE
-    context.c
+    preparsed.h
+    hidparser.h
+    hidpmem.h
+    hidphelpers.h
     hidparser.c
-    parser.c
+    hidphelpers.c
     api.c
-    parser.h
-    hidp.c
-    hidp.h)
+    hidp.c)
 
 add_library(hidparser_um ${SOURCE})
 add_importlibs(hidparser_um ntdll)
