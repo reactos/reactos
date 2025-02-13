@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
-import sys
+import argparse
 import os
 import posixpath
 import string
-import argparse
 import subprocess
-import fnmatch
+
 import pygit2
 import yaml
+
 
 def string_to_valid_file_name(to_convert):
     valid_chars = '-_.()' + string.ascii_letters + string.digits
@@ -32,7 +32,7 @@ class wine_sync:
             self.wine_src = config['repos']['wine']
             self.wine_staging_src = config['repos']['wine-staging']
         else:
-            config = { }
+            config = {}
             self.reactos_src = input('Please enter the path to the reactos git tree: ')
             self.wine_src = input('Please enter the path to the wine git tree: ')
             self.wine_staging_src = input('Please enter the path to the wine-staging git tree: ')
@@ -67,7 +67,7 @@ class wine_sync:
             wine_branch_name += '-' + wine_staging_tag
 
         branch = self.wine_repo.lookup_branch(wine_branch_name)
-        if branch is None:
+        if not branch:
             # get our target commits
             wine_target_commit = self.wine_repo.revparse_single(wine_tag)
             if isinstance(wine_target_commit, pygit2.Tag):
@@ -147,7 +147,7 @@ class wine_sync:
             if delta.status == pygit2.GIT_DELTA_ADDED:
                 # check if we should care
                 new_reactos_path = self.wine_to_reactos_path(delta.new_file.path)
-                if not new_reactos_path is None:
+                if new_reactos_path:
                     warning_message += 'file ' + delta.new_file.path + ' is added to the wine tree!\n'
                     old_reactos_path = '/dev/null'
                 else:
@@ -155,7 +155,7 @@ class wine_sync:
             elif delta.status == pygit2.GIT_DELTA_DELETED:
                 # check if we should care
                 old_reactos_path = self.wine_to_reactos_path(delta.old_file.path)
-                if not old_reactos_path is None:
+                if old_reactos_path:
                     warning_message += 'file ' + delta.old_file.path + ' is removed from the wine tree!\n'
                     new_reactos_path = '/dev/null'
                 else:
@@ -168,7 +168,7 @@ class wine_sync:
                 new_reactos_path = self.wine_to_reactos_path(delta.new_file.path)
                 old_reactos_path = self.wine_to_reactos_path(delta.old_file.path)
 
-            if (new_reactos_path is not None) or (old_reactos_path is not None):
+            if new_reactos_path or old_reactos_path:
                 # print('Must apply diff: ' + old_reactos_path + ' --> ' + new_reactos_path)
                 if delta.status == pygit2.GIT_DELTA_ADDED:
                     new_blob = self.wine_repo.get(delta.new_file.id)
@@ -200,14 +200,14 @@ class wine_sync:
                 # reactos_repo.apply(reactos_diff)
                 try:
                     subprocess.run(['git', '-C', self.reactos_src, 'apply', '--reject'], input=blob_patch.data, check=True)
-                except subprocess.CalledProcessError as err:
-                    warning_message += 'Error while applying patch to ' + new_reactos_path + '\n'
+                except subprocess.CalledProcessError:
+                    warning_message += f'Error while applying patch to {new_reactos_path}\n'
 
                 if delta.status == pygit2.GIT_DELTA_DELETED:
                     try:
                         self.reactos_index.remove(old_reactos_path)
-                    except IOError as err:
-                        warning_message += 'Error while removing file ' + old_reactos_path + '\n'
+                    except IOError:
+                        warning_message += f'Error while removing file {old_reactos_path}\n'
                 # here we check if the file exists. We don't complain, because applying the patch already failed anyway
                 elif os.path.isfile(os.path.join(self.reactos_src, new_reactos_path)):
                     self.reactos_index.add(new_reactos_path)
@@ -222,10 +222,10 @@ class wine_sync:
             # We applied nothing
             return False, ''
 
-        print('Applied patches from wine commit ' + str(wine_commit.id))
+        print(f'Applied patches from wine commit {str(wine_commit.id)}')
 
         if ignored_files:
-            warning_message += 'WARNING: some files were ignored: ' + ' '.join(ignored_files) + '\n'
+            warning_message += f'WARNING: some files were ignored: {" ".join(ignored_files)}\n'
 
         if not in_staging:
             self.module_cfg['tags']['wine'] = str(wine_commit.id)
@@ -244,7 +244,7 @@ class wine_sync:
         self.reactos_index.write()
 
         commit_msg = f'[WINESYNC] {wine_commit.message}\n'
-        if (in_staging):
+        if in_staging:
             commit_msg += f'wine-staging patch by {wine_commit.author.name} <{wine_commit.author.email}>'
         else:
             commit_msg += f'wine commit id {str(wine_commit.id)} by {wine_commit.author.name} <{wine_commit.author.email}>'
@@ -257,7 +257,7 @@ class wine_sync:
             self.reactos_index.write_tree(),
             [self.reactos_repo.head.target])
 
-        if (warning_message != ''):
+        if warning_message != '':
             warning_message += 'If needed, amend the current commit in your reactos tree and start this script again'
 
             if not in_staging:
@@ -275,7 +275,7 @@ class wine_sync:
 
         return True, warning_message
 
-    def revert_staged_patchset(self):
+    def revert_staged_patchset(self) -> bool:
         # revert all of this in one commit
         staged_patch_dir_path = posixpath.join(self.reactos_src, self.staged_patch_dir)
         if not os.path.isdir(staged_patch_dir_path):
@@ -293,7 +293,7 @@ class wine_sync:
             with open(patch_path, 'rb') as patch_file:
                 try:
                     subprocess.run(['git', '-C', self.reactos_src, 'apply', '-R', '--ignore-whitespace', '--reject'], stdin=patch_file, check=True)
-                except subprocess.CalledProcessError as err:
+                except subprocess.CalledProcessError:
                     print(f'Error while reverting patch {patch_file_name}')
                     print('Please check, remove the offending patch with git rm, and relaunch this script')
                     return False
@@ -309,7 +309,7 @@ class wine_sync:
         # we should not call index.add_all(), otherwise we would add
         # any untracked file present in the repository.
         if self.module_cfg['files']:
-            self.reactos_index.add_all([f for f in self.module_cfg['files'].values()])
+            self.reactos_index.add_all(list(self.module_cfg['files'].values()))
         if self.module_cfg['directories']:
             self.reactos_index.add_all([f'{d}/*.*' for d in self.module_cfg['directories'].values()])
         self.reactos_index.write()
@@ -366,8 +366,7 @@ class wine_sync:
 
             if warning_message != '':
                 print("THERE WERE SOME ISSUES WHEN APPLYING THE PATCH\n\n")
-                print(warning_message)
-                print("\n")
+                print(f"{warning_message}\n")
                 finished_sync = False
                 break
 
@@ -388,7 +387,7 @@ class wine_sync:
                 self.reactos_index.write_tree(),
                 [self.reactos_repo.head.target])
 
-            print('The branch ' + wine_branch_name + ' was created in your wine repository. You might want to delete it, but you should keep it in case you want to sync more module up to this wine version')
+            print(f'The branch {wine_branch_name} was created in your wine repository. You might want to delete it, but you should keep it in case you want to sync more module up to this wine version')
 
 def main():
     parser = argparse.ArgumentParser()
