@@ -40,6 +40,7 @@ BOOLEAN    ExtReadInode(PEXT_VOLUME_INFO Volume, ULONG Inode, PEXT_INODE InodeBu
 BOOLEAN    ExtReadGroupDescriptor(PEXT_VOLUME_INFO Volume, ULONG Group, PEXT_GROUP_DESC GroupBuffer);
 ULONG*    ExtReadBlockPointerList(PEXT_VOLUME_INFO Volume, PEXT_INODE Inode);
 ULONGLONG        ExtGetInodeFileSize(PEXT_INODE Inode);
+BOOLEAN ExtCopyBlockPointersByExtents(PEXT_VOLUME_INFO Volume, ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, PEXT4_EXTENT_HEADER ExtentHeader);
 BOOLEAN    ExtCopyIndirectBlockPointers(PEXT_VOLUME_INFO Volume, ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG IndirectBlock);
 BOOLEAN    ExtCopyDoubleIndirectBlockPointers(PEXT_VOLUME_INFO Volume, ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG DoubleIndirectBlock);
 BOOLEAN    ExtCopyTripleIndirectBlockPointers(PEXT_VOLUME_INFO Volume, ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG TripleIndirectBlock);
@@ -1037,6 +1038,21 @@ ULONG* ExtReadBlockPointerList(PEXT_VOLUME_INFO Volume, PEXT_INODE Inode)
 
     RtlZeroMemory(BlockList, BlockCount * sizeof(ULONG));
 
+    // If the file is stored in extents, copy the block pointers by reading the
+    // extent entries.
+    if (Inode->Flags & EXT4_INODE_FLAG_EXTENTS)
+    {
+        CurrentBlockInList = 0;
+
+        if (!ExtCopyBlockPointersByExtents(Volume, BlockList, &CurrentBlockInList, BlockCount, &Inode->ExtentHeader))
+        {
+            FrLdrTempFree(BlockList, TAG_EXT_BLOCK_LIST);
+            return NULL;
+        }
+
+        return BlockList;
+    }
+
     // Copy the direct block pointers
     for (CurrentBlockInList = CurrentBlock = 0;
          CurrentBlockInList < BlockCount && CurrentBlock < sizeof(Inode->Blocks.DirectBlocks) / sizeof(*Inode->Blocks.DirectBlocks);
@@ -1088,6 +1104,72 @@ ULONGLONG ExtGetInodeFileSize(PEXT_INODE Inode)
     {
         return ((ULONGLONG)(Inode->Size) | ((ULONGLONG)(Inode->DirACL) << 32));
     }
+}
+
+BOOLEAN ExtCopyBlockPointersByExtents(PEXT_VOLUME_INFO Volume, ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, PEXT4_EXTENT_HEADER ExtentHeader)
+{
+    TRACE("ExtCopyBlockPointersByExtents() BlockCount = 0x%p\n", BlockCount);
+
+    if (ExtentHeader->Magic != EXT4_EXTENT_HEADER_MAGIC ||
+        ExtentHeader->Depth > EXT4_EXTENT_MAX_LEVEL)
+        return FALSE;
+
+    ULONG Level = ExtentHeader->Depth;
+    ULONG Entries = ExtentHeader->Entries;
+
+    TRACE("Level: %d\n", Level);
+    TRACE("Entries: %d\n", Entries);
+
+    // If the level is 0, we have a direct extent block mapping
+    if (!Level)
+    {
+        PEXT4_EXTENT Extent = (PVOID)&ExtentHeader[1];
+
+        while ((*CurrentBlockInList) < BlockCount && Entries--)
+        {
+            BOOLEAN SparseExtent = (Extent->Length > EXT4_EXTENT_MAX_LENGTH);
+            ULONG Length = SparseExtent ? (Extent->Length - EXT4_EXTENT_MAX_LENGTH) : Extent->Length; 
+            ULONG CurrentBlock = SparseExtent ? 0 : Extent->Start;
+
+            // Copy the pointers to the block list
+            while ((*CurrentBlockInList) < BlockCount && Length--)
+            {
+                BlockList[(*CurrentBlockInList)++] = CurrentBlock;
+
+                if (!SparseExtent)
+                    CurrentBlock++;
+            }
+
+            Extent++;
+        }
+    }
+    else
+    {
+        PEXT4_EXTENT_IDX Extent = (PVOID)&ExtentHeader[1];
+
+        PEXT4_EXTENT_HEADER BlockBuffer = FrLdrTempAlloc(Volume->BlockSizeInBytes, TAG_EXT_BUFFER);
+        if (!BlockBuffer)
+        {
+            return FALSE;
+        }
+
+        // Recursively copy the pointers to the block list
+        while ((*CurrentBlockInList) < BlockCount && Entries--)
+        {
+            if (!(ExtReadBlock(Volume, Extent->Leaf, BlockBuffer) &&
+                  ExtCopyBlockPointersByExtents(Volume, BlockList, CurrentBlockInList, BlockCount, BlockBuffer)))
+            {
+                FrLdrTempFree(BlockBuffer, TAG_EXT_BUFFER);
+                return FALSE;
+            }
+
+            Extent++;
+        }
+
+        FrLdrTempFree(BlockBuffer, TAG_EXT_BUFFER);
+    }
+
+    return TRUE;
 }
 
 BOOLEAN ExtCopyIndirectBlockPointers(PEXT_VOLUME_INFO Volume, ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG IndirectBlock)
