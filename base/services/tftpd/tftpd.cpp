@@ -32,13 +32,13 @@
 
 //Global Variables
 char serviceName[] = "TFTPServer";
-char displayName[] = "Open TFTP Server, MultiThreaded";
-char sVersion[] = "Open TFTP Server MultiThreaded Version 1.64 Windows Built 2001";
+char displayName[] = "Open TFTP MultiThreaded Server";
+char sVersion[] = "Open TFTP Server MultiThreaded Version 1.70 Windows Built 2004";
 char iniFile[_MAX_PATH];
 char logFile[_MAX_PATH];
 char lnkFile[_MAX_PATH];
 char tempbuff[256];
-char extbuff[_MAX_PATH];
+char extbuff[256];
 char logBuff[512];
 char fileSep = '\\';
 char notFileSep = '/';
@@ -127,6 +127,7 @@ void WINAPI ServiceMain(DWORD /*argc*/, TCHAR* /*argv*/[])
 
         fd_set readfds;
         timeval tv;
+        int fdsReady = 0;
         tv.tv_sec = 20;
         tv.tv_usec = 0;
 
@@ -138,9 +139,14 @@ void WINAPI ServiceMain(DWORD /*argc*/, TCHAR* /*argv*/[])
 
         do
         {
-            network.busy = false;
+            if (!network.ready)
+            {
+                network.readyForChange = true;
+                Sleep(1000);
+                continue;
+            }
 
-            if (!network.tftpConn[0].ready || !network.ready)
+            if (!network.tftpConn[0].ready)
             {
                 Sleep(1000);
                 continue;
@@ -155,30 +161,25 @@ void WINAPI ServiceMain(DWORD /*argc*/, TCHAR* /*argv*/[])
 
             for (int i = 0; fdsReady > 0 && i < MAX_SERVERS && network.tftpConn[i].ready; i++)
             {
-                if (network.ready)
+                if (FD_ISSET(network.tftpConn[i].sock, &readfds))
                 {
-                    network.busy = true;
+                    WaitForSingleObject(sEvent, INFINITE);
 
-                    if (FD_ISSET(network.tftpConn[i].sock, &readfds))
+                    currentServer = i;
+
+                    if (!totalThreads || activeThreads >= totalThreads)
                     {
-                        WaitForSingleObject(sEvent, INFINITE);
+                        _beginthread(
+                              processRequest,                 // thread function
+                              0,                            // default security attributes
+                              NULL);                          // argument to thread function
 
-                        currentServer = i;
-
-                        if (!totalThreads || activeThreads >= totalThreads)
-                        {
-                            _beginthread(
-                                  processRequest,                 // thread function
-                                  0,                            // default security attributes
-                                  NULL);                          // argument to thread function
-
-                        }
-
-                        SetEvent(tEvent);
-                        WaitForSingleObject(sEvent, INFINITE);
-                        fdsReady--;
-                        SetEvent(sEvent);
                     }
+
+                    SetEvent(tEvent);
+                    WaitForSingleObject(sEvent, INFINITE);
+                    fdsReady--;
+                    SetEvent(sEvent);
                 }
             }
         }
@@ -327,6 +328,7 @@ void printWindowsError()
     if (dw)
     {
         LPVOID lpMsgBuf;
+        LPVOID lpDisplayBuf;
 
         FormatMessage(
             FORMAT_MESSAGE_ALLOCATE_BUFFER |
@@ -338,7 +340,7 @@ void printWindowsError()
             (LPTSTR) &lpMsgBuf,
             0, NULL );
 
-        printf("Error: %s\nPress Enter..\n", (LPTSTR)lpMsgBuf);
+        printf("Error: %s\nPress Enter..\n", lpMsgBuf);
         getchar();
     }
 }
@@ -410,15 +412,20 @@ void runProg()
     tv.tv_sec = 20;
     tv.tv_usec = 0;
 
-    printf("\naccepting requests..\n");
+    //printf("\naccepting requests..\n");
 
     do
     {
-        network.busy = false;
-
         //printf("Active=%u Total=%u\n",activeThreads, totalThreads);
 
-        if (!network.tftpConn[0].ready || !network.ready)
+        if (!network.ready)
+        {
+            network.readyForChange = true;
+            Sleep(1000);
+            continue;
+        }
+
+        if (!network.tftpConn[0].ready)
         {
             Sleep(1000);
             continue;
@@ -431,43 +438,30 @@ void runProg()
 
         fdsReady = select(network.maxFD, &readfds, NULL, NULL, &tv);
 
-        if (!network.ready)
-            continue;
-
-        //errno = WSAGetLastError();
-
-        //if (errno)
-        //    printf("%d\n", errno);
-
         for (int i = 0; fdsReady > 0 && i < MAX_SERVERS && network.tftpConn[i].ready; i++)
         {
-            if (network.ready)
+            if (FD_ISSET(network.tftpConn[i].sock, &readfds))
             {
-                network.busy = true;
+                printf("%d Requests Waiting\n", fdsReady);
 
-                if (FD_ISSET(network.tftpConn[i].sock, &readfds))
+                WaitForSingleObject(sEvent, INFINITE);
+
+                currentServer = i;
+
+                if (!totalThreads || activeThreads >= totalThreads)
                 {
-                    //printf("%d Requests Waiting\n", fdsReady);
-
-                    WaitForSingleObject(sEvent, INFINITE);
-
-                    currentServer = i;
-
-                    if (!totalThreads || activeThreads >= totalThreads)
-                    {
-                        _beginthread(
-                              processRequest,                 // thread function
-                              0,                            // default security attributes
-                              NULL);                          // argument to thread function
-                    }
-                    SetEvent(tEvent);
-
-                    //printf("thread signalled=%u\n",SetEvent(tEvent));
-
-                    WaitForSingleObject(sEvent, INFINITE);
-                    fdsReady--;
-                    SetEvent(sEvent);
+                    _beginthread(
+                          processRequest,                 // thread function
+                          0,                            // default security attributes
+                          NULL);                          // argument to thread function
                 }
+                SetEvent(tEvent);
+
+                //printf("thread signalled=%u\n",SetEvent(tEvent));
+
+                WaitForSingleObject(sEvent, INFINITE);
+                fdsReady--;
+                SetEvent(sEvent);
             }
         }
     }
@@ -540,11 +534,7 @@ void processRequest(void *lpParam)
                 MYDWORD iip = ntohl(req.client.sin_addr.s_addr);
                 bool allowed = false;
 
-#ifdef __REACTOS__
-                for (MYWORD j = 0; j < _countof(cfig.hostRanges) && cfig.hostRanges[j].rangeStart; j++)
-#else
                 for (int j = 0; j <= 32 && cfig.hostRanges[j].rangeStart; j++)
-#endif
                 {
                     if (iip >= cfig.hostRanges[j].rangeStart && iip <= cfig.hostRanges[j].rangeEnd)
                     {
@@ -755,11 +745,7 @@ void processRequest(void *lpParam)
                 continue;
             }
 
-#ifdef __REACTOS__
-            for (int i = 0; i < MAX_SERVERS; i++)
-#else
             for (int i = 0; i < 8; i++)
-#endif
             {
                 //printf("%s=%i\n", req.filename, cfig.homes[i].alias[0]);
                 if (cfig.homes[i].alias[0] && !strcasecmp(req.filename, cfig.homes[i].alias))
@@ -911,7 +897,7 @@ void processRequest(void *lpParam)
             }
         }
 
-        setvbuf(req.file, NULL, _IOFBF, 5 * req.blksize);
+        setvbuf(req.file, NULL, _IOFBF, 2 * req.blksize);
 
         if (*inPtr)
         {
@@ -1009,7 +995,7 @@ void processRequest(void *lpParam)
                 continue;
 
             errno = 0;
-            req.bytesReady = (const char*)outPtr - (const char*)&req.mesout;
+            req.bytesReady = (MYLWORD)outPtr - (MYLWORD)&req.mesout;
             //printf("Bytes Ready=%u\n", req.bytesReady);
             send(req.sock, (const char*)&req.mesout, req.bytesReady, 0);
             errno = WSAGetLastError();
@@ -1560,7 +1546,7 @@ bool getSection(const char *sectionName, char *buffer, MYBYTE serial, char *file
                         if (strstr(buff, "[") == buff)
                             break;
 
-                        if (((*buff) >= '0' && (*buff) <= '9') || ((*buff) >= 'A' && (*buff) <= 'Z') || ((*buff) >= 'a' && (*buff) <= 'z') || ((*buff) && strchr("/\\?*", (*buff))))
+                        if ((*buff) >= '0' && (*buff) <= '9' || (*buff) >= 'A' && (*buff) <= 'Z' || (*buff) >= 'a' && (*buff) <= 'z' || ((*buff) && strchr("/\\?*", (*buff))))
                         {
                             buffer += sprintf(buffer, "%s", buff);
                             buffer++;
@@ -1617,7 +1603,7 @@ char *readSection(char* buff, FILE *f)
         if (*buff == '[')
             break;
 
-        if (((*buff) >= '0' && (*buff) <= '9') || ((*buff) >= 'A' && (*buff) <= 'Z') || ((*buff) >= 'a' && (*buff) <= 'z') || ((*buff) && strchr("/\\?*", (*buff))))
+        if ((*buff) >= '0' && (*buff) <= '9' || (*buff) >= 'A' && (*buff) <= 'Z' || (*buff) >= 'a' && (*buff) <= 'z' || ((*buff) && strchr("/\\?*", (*buff))))
             return buff;
     }
 
@@ -1826,7 +1812,7 @@ void init(void *lpParam)
         cfig.logLevel = 2;
         printf("%s\n\n", sVersion);
     }
-    else if ((f = openSection("LOGGING", 1, iniFile)))
+    else if (f = openSection("LOGGING", 1, iniFile))
     {
         cfig.logLevel = 1;
         tempbuff[0] = 0;
@@ -1875,7 +1861,7 @@ void init(void *lpParam)
         logMess(logBuff, 1);
     }
 
-    if ((f = openSection("HOME", 1, iniFile)))
+    if (f = openSection("HOME", 1, iniFile))
     {
         while (readSection(raw, f))
         {
@@ -1895,11 +1881,7 @@ void init(void *lpParam)
                 }
                 else if (name[0] && strlen(name) < 64 && value[0])
                 {
-#ifdef __REACTOS__
-                    for (int i = 0; i < MAX_SERVERS; i++)
-#else
                     for (int i = 0; i < 8; i++)
-#endif
                     {
                         if (cfig.homes[i].alias[0] && !strcasecmp(name, cfig.homes[i].alias))
                         {
@@ -1925,7 +1907,7 @@ void init(void *lpParam)
                 }
                 else
                 {
-                    sprintf(logBuff, "Section [HOME], alias %s too large", name);
+                    sprintf(logBuff, "Section [HOME], alias name too large", name);
                     logMess(logBuff, 1);
                 }
             }
@@ -1967,7 +1949,7 @@ void init(void *lpParam)
 
     cfig.fileRead = true;
 
-    if ((f = openSection("TFTP-OPTIONS", 1, iniFile)))
+    if (f = openSection("TFTP-OPTIONS", 1, iniFile))
     {
         while (readSection(raw, f))
         {
@@ -2056,21 +2038,13 @@ void init(void *lpParam)
         }
     }
 
-    if ((f = openSection("ALLOWED-CLIENTS", 1, iniFile)))
+    if (f = openSection("ALLOWED-CLIENTS", 1, iniFile))
     {
-#ifdef __REACTOS__
-        MYWORD i = 0;
-#else
         int i = 0;
-#endif
 
         while (readSection(raw, f))
         {
-#ifdef __REACTOS__
-            if (i < _countof(cfig.hostRanges))
-#else
             if (i < 32)
-#endif
             {
                 MYDWORD rs = 0;
                 MYDWORD re = 0;
@@ -2118,11 +2092,7 @@ void init(void *lpParam)
     {
         char temp[128];
 
-#ifdef __REACTOS__
-        for (MYWORD i = 0; i < _countof(cfig.hostRanges) && cfig.hostRanges[i].rangeStart; i++)
-#else
         for (MYWORD i = 0; i <= sizeof(cfig.hostRanges) && cfig.hostRanges[i].rangeStart; i++)
-#endif
         {
             sprintf(logBuff, "%s", "permitted clients: ");
             sprintf(temp, "%s-", IP2String(tempbuff, htonl(cfig.hostRanges[i].rangeStart)));
@@ -2176,7 +2146,7 @@ void init(void *lpParam)
 
     if (lEvent == NULL)
     {
-        printf("CreateEvent error: %lu\n", GetLastError());
+        printf("CreateEvent error: %d\n", GetLastError());
         exit(-1);
     }
     else if ( GetLastError() == ERROR_ALREADY_EXISTS )
@@ -2194,7 +2164,7 @@ void init(void *lpParam)
 
     if (tEvent == NULL)
     {
-        printf("CreateEvent error: %lu\n", GetLastError());
+        printf("CreateEvent error: %d\n", GetLastError());
         exit(-1);
     }
     else if ( GetLastError() == ERROR_ALREADY_EXISTS )
@@ -2212,7 +2182,7 @@ void init(void *lpParam)
 
     if (sEvent == NULL)
     {
-        printf("CreateEvent error: %lu\n", GetLastError());
+        printf("CreateEvent error: %d\n", GetLastError());
         exit(-1);
     }
     else if ( GetLastError() == ERROR_ALREADY_EXISTS )
@@ -2230,7 +2200,7 @@ void init(void *lpParam)
 
     if (cEvent == NULL)
     {
-        printf("CreateEvent error: %lu\n", GetLastError());
+        printf("CreateEvent error: %d\n", GetLastError());
         exit(-1);
     }
     else if ( GetLastError() == ERROR_ALREADY_EXISTS )
@@ -2260,44 +2230,60 @@ void init(void *lpParam)
         logMess(logBuff, 1);
     }
 
+    sprintf(logBuff, "Detecting Static Interfaces..");
+    logMess(logBuff, 1);
+
     do
     {
         memset(&newNetwork, 0, sizeof(data1));
+        getInterfaces(&newNetwork);
 
+        bool ifSpecified = false;
         bool bindfailed = false;
 
-        if ((f = openSection("LISTEN-ON", 1, iniFile)))
+        if (f = openSection("LISTEN-ON", 1, iniFile))
         {
-            MYBYTE i = 0;
+            //char *name = myGetToken(iniStr, 0)
+            int i = 0;
 
             while (readSection(raw, f))
             {
-                MYWORD port = 69;
-
-                cfig.ifspecified = true;
                 mySplit(name, value, raw, ':');
 
-                if (value[0])
-                    port = atoi(value);
-
-                if(i < MAX_SERVERS)
+                if(i < MAX_SERVERS && name[0])
                 {
-                    if (isIP(name))
-                    {
-                        MYDWORD addr = my_inet_addr(name);
+                    ifSpecified = true;
+                    MYDWORD addr = my_inet_addr(name);
 
-                        if (!addr)
+                    if (isIP(name) && addr && (!value[0] || atoi(value)))
+                    {
+                        for (MYBYTE m = 0; ; m++)
                         {
-                            newNetwork.listenServers[0] = 0;
-                            newNetwork.listenPorts[0] = port;
-                            fclose(f);
-                            break;
-                        }
-                        else if (!findServer(newNetwork.listenServers, addr))
-                        {
-                            newNetwork.listenServers[i] = addr;
-                            newNetwork.listenPorts[i] = port;
-                            i++;
+                            if (m >= MAX_SERVERS || !newNetwork.allServers[m])
+                            {
+                                sprintf(logBuff, "Warning: Section [LISTEN-ON], Interface %s not available", raw);
+                                logMess(logBuff, 1);
+                                break;
+                            }
+                            else if (newNetwork.allServers[m] == addr)
+                            {
+                                for (MYBYTE n = 0; n < MAX_SERVERS; n++)
+                                {
+                                    if (newNetwork.listenServers[n] == addr)
+                                        break;
+                                    else if (!newNetwork.listenServers[n])
+                                    {
+                                        newNetwork.listenServers[n] = addr;
+
+                                        if (value[0])
+                                            newNetwork.listenPorts[n] = atoi(value);
+                                        else
+                                            newNetwork.listenPorts[n] = 69;
+                                        break;
+                                    }
+                                }
+                                break;
+                            }
                         }
                     }
                     else
@@ -2309,32 +2295,28 @@ void init(void *lpParam)
             }
         }
 
-        if (!cfig.ifspecified)
+        if (!ifSpecified)
         {
-            sprintf(logBuff, "detecting Interfaces..");
-            logMess(logBuff, 1);
-            getInterfaces(&newNetwork);
-
-            for (MYBYTE n = 0; n < MAX_SERVERS && newNetwork.staticServers[n]; n++)
+            for (MYBYTE m = 0; m < MAX_SERVERS && newNetwork.staticServers[m]; m++)
             {
-                newNetwork.listenServers[n] = newNetwork.staticServers[n];
-                newNetwork.listenPorts[n] = 69;
+                newNetwork.listenServers[m] = newNetwork.staticServers[m];
+                newNetwork.listenPorts[m] = 69;
             }
         }
 
-        MYBYTE i = 0;
+        int i = 0;
 
-        for (int j = 0; j < MAX_SERVERS && newNetwork.listenPorts[j]; j++)
+        for (int j = 0; j < MAX_SERVERS && newNetwork.listenServers[j]; j++)
         {
             int k = 0;
 
             for (; k < MAX_SERVERS && network.tftpConn[k].loaded; k++)
             {
-                if (network.tftpConn[k].ready && network.tftpConn[k].server == newNetwork.listenServers[j] && network.tftpConn[k].port == newNetwork.listenPorts[j])
+                if (network.tftpConn[k].ready && network.tftpConn[k].server == newNetwork.listenServers[j])
                     break;
             }
 
-            if (network.tftpConn[k].ready && network.tftpConn[k].server == newNetwork.listenServers[j] && network.tftpConn[k].port == newNetwork.listenPorts[j])
+            if (network.tftpConn[k].ready && network.tftpConn[k].server == newNetwork.listenServers[j])
             {
                 memcpy(&(newNetwork.tftpConn[i]), &(network.tftpConn[k]), sizeof(tftpConnType));
 
@@ -2342,7 +2324,6 @@ void init(void *lpParam)
                     newNetwork.maxFD = newNetwork.tftpConn[i].sock;
 
                 network.tftpConn[k].ready = false;
-                //printf("%d, %s found\n", i, IP2String(tempbuff, newNetwork.tftpConn[i].server));
                 i++;
                 continue;
             }
@@ -2358,35 +2339,36 @@ void init(void *lpParam)
                     continue;
                 }
 
-                //printf("Socket %u\n", newNetwork.tftpConn[i].sock);
-
-                errno = 0;
                 newNetwork.tftpConn[i].addr.sin_family = AF_INET;
+
+                if (!newNetwork.listenPorts[j])
+                    newNetwork.listenPorts[j] = 69;
+
                 newNetwork.tftpConn[i].addr.sin_addr.s_addr = newNetwork.listenServers[j];
                 newNetwork.tftpConn[i].addr.sin_port = htons(newNetwork.listenPorts[j]);
-                int nRet = bind(newNetwork.tftpConn[i].sock, (sockaddr*)&newNetwork.tftpConn[i].addr, sizeof(struct sockaddr_in));
 
-                if (nRet == SOCKET_ERROR || errno)
+                socklen_t nRet = bind(newNetwork.tftpConn[i].sock,
+                                      (sockaddr*)&newNetwork.tftpConn[i].addr,
+                                      sizeof(struct sockaddr_in)
+                                     );
+
+                if (nRet == SOCKET_ERROR)
                 {
                     bindfailed = true;
                     closesocket(newNetwork.tftpConn[i].sock);
-                    sprintf(logBuff, "%s Port %i bind failed", IP2String(tempbuff, newNetwork.listenServers[j]), newNetwork.listenPorts[j]);
+                    sprintf(logBuff, "%s Port %u, bind failed", IP2String(tempbuff, newNetwork.listenServers[j]), newNetwork.listenPorts[j]);
                     logMess(logBuff, 1);
                     continue;
                 }
 
                 newNetwork.tftpConn[i].loaded = true;
                 newNetwork.tftpConn[i].ready = true;
-                newNetwork.tftpConn[i].server = newNetwork.listenServers[j];
-                newNetwork.tftpConn[i].port = newNetwork.listenPorts[j];
-
-                //printf("%d, %s created\n", i, IP2String(tempbuff, newNetwork.tftpConn[i].server));
 
                 if (newNetwork.maxFD < newNetwork.tftpConn[i].sock)
                     newNetwork.maxFD = newNetwork.tftpConn[i].sock;
 
-                if (!newNetwork.listenServers[j])
-                    break;
+                newNetwork.tftpConn[i].server = newNetwork.listenServers[j];
+                newNetwork.tftpConn[i].port = newNetwork.listenPorts[j];
 
                 i++;
             }
@@ -2419,63 +2401,52 @@ void init(void *lpParam)
 
     } while (detectChange());
 
-    //printf("Exiting Init\n");
-
-    _endthread();
     return;
 }
 
 bool detectChange()
 {
-    if (!cfig.failureCount)
-    {
-        if (cfig.ifspecified)
-            return false;
-    }
+    char logBuff[512];
+    //debug("Calling detectChange()");
 
-    MYDWORD eventWait = UINT_MAX;
-
-    if (cfig.failureCount)
-#ifdef __REACTOS__
-        eventWait = 10000 * (1 << cfig.failureCount);
-#else
-        eventWait = 10000 * pow(2, cfig.failureCount);
-#endif
-
-    OVERLAPPED overlap;
-    MYDWORD ret;
-    HANDLE hand = NULL;
-    overlap.hEvent = WSACreateEvent();
-
-    ret = NotifyAddrChange(&hand, &overlap);
-
-    if (ret != NO_ERROR)
-    {
-        if (WSAGetLastError() != WSA_IO_PENDING)
-        {
-            printf("NotifyAddrChange error...%d\n", WSAGetLastError());
-            return true;
-        }
-    }
-
-    if ( WaitForSingleObject(overlap.hEvent, eventWait) == WAIT_OBJECT_0 )
-        WSACloseEvent(overlap.hEvent);
-
-    network.ready = false;
-
-    while (network.busy)
-        Sleep(1000);
+    network.ready = true;
+    network.readyForChange = false;
+    //debug("Released");
 
     if (cfig.failureCount)
     {
+        MYDWORD eventWait = (MYDWORD)(10000 * pow(2, cfig.failureCount));
+        Sleep(eventWait);
         sprintf(logBuff, "Retrying failed Listening Interfaces..");
         logMess(logBuff, 1);
+        network.ready = false;
+
+        while (!network.readyForChange)
+            Sleep(500);
+
+        //debug("Blocked");
+
+        return true;
     }
-    else
+
+    DWORD ret = NotifyAddrChange(NULL, NULL);
+
+    if ((errno = WSAGetLastError()) && errno != WSA_IO_PENDING)
     {
-        sprintf(logBuff, "Network changed, re-detecting Interfaces..");
+        sprintf(logBuff, "NotifyAddrChange error...%d", errno);
         logMess(logBuff, 1);
     }
+
+    sprintf(logBuff, "Network changed, re-detecting Static Interfaces..");
+    logMess(logBuff, 1);
+    network.ready = false;
+    //Sleep(1000);
+
+    while (!network.readyForChange)
+        Sleep(500);
+
+    //debug(network.ready);
+    //debug("Blocked");
 
     return true;
 }
