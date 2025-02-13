@@ -263,7 +263,7 @@ SelectWindowRgn(PWND Window, HRGN hRgnClip)
         /* Delete no longer needed region handle */
         IntGdiSetRegionOwner(Window->hrgnClip, GDI_OBJ_HMGR_POWNED);
         GreDeleteObject(Window->hrgnClip);
-        Window->hrgnClip = NULL;       
+        Window->hrgnClip = NULL;
     }
 
     if (hRgnClip > HRGN_WINDOW)
@@ -915,7 +915,7 @@ UserGetWindowBorders(DWORD Style, DWORD ExStyle, SIZE *Size, BOOL WithClient)
 
 //
 // Fix CORE-5177
-// See winetests:user32:win.c:wine_AdjustWindowRectEx, 
+// See winetests:user32:win.c:wine_AdjustWindowRectEx,
 // Simplified version.
 //
 DWORD IntGetWindowBorders(DWORD Style, DWORD ExStyle)
@@ -2256,7 +2256,11 @@ co_WinPosSetWindowPos(
             //ERR("WPSWP : set active window\n");
             if (!(Window->state & WNDS_BEINGACTIVATED)) // Inside SAW?
             {
+               // Set state flag to prevent recursions.
+               BOOL WasBeingActivated = (Window->state & WNDS_BEINGACTIVATED) != 0;
+               Window->state |= WNDS_BEINGACTIVATED;
                co_IntSetForegroundWindow(Window); // Fixes SW_HIDE issues. Wine win test_SetActiveWindow & test_SetForegroundWindow.
+               if (!WasBeingActivated) Window->state &= ~WNDS_BEINGACTIVATED;
             }
          }
       }
@@ -2264,7 +2268,7 @@ co_WinPosSetWindowPos(
 
    if ( !PosChanged &&
          (WinPos.flags & SWP_FRAMECHANGED) &&
-        !(WinPos.flags & SWP_DEFERERASE) &&    // Prevent sending WM_SYNCPAINT message. 
+        !(WinPos.flags & SWP_DEFERERASE) &&    // Prevent sending WM_SYNCPAINT message.
          VisAfter )
    {
        PWND Parent = Window->spwndParent;
@@ -3915,7 +3919,7 @@ co_IntCalculateSnapPosition(PWND Wnd, UINT Edge, OUT RECT *Pos)
     {
     case HTTOP: /* Maximized (Calculate RECT snap preview for SC_MOVE) */
         height = min(Pos->bottom - Pos->top, maxs.y);
-        break; 
+        break;
     case HTLEFT:
         Pos->right = width;
         break;
