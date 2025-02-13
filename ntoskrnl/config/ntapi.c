@@ -1315,10 +1315,12 @@ NtNotifyChangeKey(IN HANDLE KeyHandle,
 
 NTSTATUS
 NTAPI
-NtInitializeRegistry(IN USHORT Flag)
+NtInitializeRegistry(
+    _In_ USHORT Flag)
 {
-    BOOLEAN SetupBoot;
     NTSTATUS Status = STATUS_SUCCESS;
+    BOOLEAN SetupBoot;
+
     PAGED_CODE();
 
     /* Always do this as kernel mode */
@@ -1329,13 +1331,15 @@ NtInitializeRegistry(IN USHORT Flag)
     Ki386PerfEnd();
 
     /* Validate flag */
-    if (Flag > CM_BOOT_FLAG_MAX) return STATUS_INVALID_PARAMETER;
+    if (Flag > CM_BOOT_FLAG_MAX)
+        return STATUS_INVALID_PARAMETER;
 
     /* Check if boot was accepted */
     if ((Flag >= CM_BOOT_FLAG_ACCEPTED) && (Flag <= CM_BOOT_FLAG_MAX))
     {
         /* Only allow once */
-        if (!CmBootAcceptFirstTime) return STATUS_ACCESS_DENIED;
+        if (!CmBootAcceptFirstTime)
+            return STATUS_ACCESS_DENIED;
         CmBootAcceptFirstTime = FALSE;
 
         /* Get the control set accepted */
@@ -1359,10 +1363,11 @@ NtInitializeRegistry(IN USHORT Flag)
     }
 
     /* Check if this was a setup boot */
-    SetupBoot = (Flag == CM_BOOT_FLAG_SETUP ? TRUE : FALSE);
+    SetupBoot = (Flag == CM_BOOT_FLAG_SETUP);
 
     /* Make sure we're only called once */
-    if (!CmFirstTime) return STATUS_ACCESS_DENIED;
+    if (!CmFirstTime)
+        return STATUS_ACCESS_DENIED;
     CmFirstTime = FALSE;
 
     /* Lock the registry exclusively */

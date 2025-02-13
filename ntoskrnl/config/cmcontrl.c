@@ -264,8 +264,9 @@ CmGetSystemControlValues(IN PVOID SystemHiveData,
 
 NTSTATUS
 NTAPI
-CmpSaveBootControlSet(IN USHORT ControlSet)
+CmpSaveBootControlSet(
+    _In_ USHORT ControlSet)
 {
-    DPRINT1("CmpSaveBootControlSet(%lu)\n", ControlSet);
+    DPRINT1("CmpSaveBootControlSet(%lu) is UNIMPLEMENTED\n", ControlSet);
     return STATUS_SUCCESS;
 }
