@@ -306,6 +306,7 @@ CFileDefExt::InitOpensWithField(HWND hwndDlg)
         StringCbCatW(wszBuf, sizeof(wszBuf), L"\\shell\\open\\command");
         dwSize = sizeof(wszPath);
         // FIXME: Missing FileExt check, see COpenWithList::SetDefaultHandler for details
+        // FIXME: Use HCR_GetDefaultVerbW to find the default verb
         if (RegGetValueW(HKEY_CLASSES_ROOT, wszBuf, L"", RRF_RT_REG_SZ, NULL, wszPath, &dwSize) == ERROR_SUCCESS)
         {
             /* Get path from command line */
