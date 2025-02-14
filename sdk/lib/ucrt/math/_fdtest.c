@@ -10,7 +10,7 @@
 
 #include <math.h>
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && (_MSC_VER >= 1920)
 #pragma function(_fdtest)
 #endif
 
