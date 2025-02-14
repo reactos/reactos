@@ -24,6 +24,7 @@ Rs232PortPutByte(UCHAR ByteToSend)
     *UART0DR = ByteToSend;
 }
 
+DECLSPEC_NORETURN
 VOID
 FrLdrBugCheckWithMessage(
     ULONG BugCode,
