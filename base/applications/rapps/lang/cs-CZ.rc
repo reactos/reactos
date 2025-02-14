@@ -266,4 +266,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_INSTGEN_CONFIRMUNINST "Opravdu chcete odinstalovat %s?"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "Installation complete, run %s now?"
 END

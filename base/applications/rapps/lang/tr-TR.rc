@@ -267,4 +267,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_INSTGEN_CONFIRMUNINST "Kaldırmak istediğinizden emin misiniz %s?"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "Installation complete, run %s now?"
 END
