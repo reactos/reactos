@@ -209,7 +209,7 @@ PropertyItemDispatch(
     PropertyRequest->Value = Data;
 
     // now scan the property set for the attached property set item stored in Relations member
-    if (PropertySet)
+    if (PropertySet && (!(Property->Flags & KSPROPERTY_TYPE_TOPOLOGY)))
     {
         // sanity check
         PC_ASSERT(IsEqualGUIDAligned(Property->Set, *PropertySet->Set));
@@ -227,15 +227,14 @@ PropertyItemDispatch(
             }
         }
     }
-
-    // check if there has been a property set item attached
-    if (!PropertyRequest->PropertyItem)
+    else
     {
         // is topology node id valid
         if (PropertyRequest->Node < Descriptor->DeviceDescriptor->NodeCount)
         {
             // get node descriptor
-            NodeDescriptor = (PPCNODE_DESCRIPTOR) ((ULONG_PTR)Descriptor->DeviceDescriptor->Nodes + PropertyRequest->Node * Descriptor->DeviceDescriptor->NodeSize);
+            NodeDescriptor = (PPCNODE_DESCRIPTOR)((ULONG_PTR)Descriptor->DeviceDescriptor->Nodes +
+                                                  PropertyRequest->Node * Descriptor->DeviceDescriptor->NodeSize);
 
             // get node automation table
             NodeAutomation = (PPCAUTOMATION_TABLE)NodeDescriptor->AutomationTable;
@@ -245,7 +244,7 @@ PropertyItemDispatch(
             {
                 // now scan the properties and check if it supports this request
                 PropertyItem = (PPCPROPERTY_ITEM)NodeAutomation->Properties;
-                for(Index = 0; Index < NodeAutomation->PropertyCount; Index++)
+                for (Index = 0; Index < NodeAutomation->PropertyCount; Index++)
                 {
                     // are they same property
                     if (IsEqualGUIDAligned(*PropertyItem->Set, Property->Set))
@@ -482,6 +481,7 @@ PcAddToPropertyTable(
     {
         // property set item handler already present
         // now replace initialize property item
+#if 0
         DPRINT1("Replacing existing handler\n");
         FilterPropertyItem = (PKSPROPERTY_ITEM)&SubDeviceDescriptor->FilterPropertySet[PropertySetIndex]
                                  .PropertyItem[PropertySetItemIndex];
@@ -516,6 +516,7 @@ PcAddToPropertyTable(
             // node properties should not be exposed on a filter & pin
             ASSERT(SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertyItem[PropertySetItemIndex].Relations != NULL);
         }
+#endif
     }
 
     // done
