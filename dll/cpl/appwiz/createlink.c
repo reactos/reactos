@@ -489,6 +489,9 @@ FinishDlgProc(HWND hwndDlg,
                     PathRemoveExtensionW(pContext->szLinkName);
                     PathAddExtensionW(pContext->szLinkName, L".lnk");
 
+                    /* Don't set a comment */
+                    pContext->szDescription[0] = UNICODE_NULL;
+
                     if (!CreateShortcut(pContext))
                     {
                         WCHAR szMessage[128];
