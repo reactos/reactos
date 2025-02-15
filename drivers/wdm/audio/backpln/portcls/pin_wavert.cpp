@@ -787,6 +787,7 @@ CloseStreamRoutine(
 
     if (This->m_StreamNotification)
     {
+#ifdef LEGACY_STREAMING
         if (This->m_CommonBuffer)
         {
             DPRINT("Before FreeBufferWithNotification\n");
@@ -795,6 +796,15 @@ CloseStreamRoutine(
             This->m_CommonBufferSize = 0;
             This->m_CommonBufferOffset = 0;
         }
+#else
+        if (This->m_CommonBufferSize)
+        {
+            This->m_StreamNotification->FreeBufferWithNotification(This->m_Mdl, This->m_CommonBufferSize);
+            This->m_Mdl = NULL;
+            This->m_CommonBufferSize = 0;
+        }
+#endif
+
         DPRINT("Before UnregisterNotificationEvent\n");
 #ifdef LEGACY_STREAMING
        
