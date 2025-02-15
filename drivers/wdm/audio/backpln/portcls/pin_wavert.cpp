@@ -11,6 +11,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#define LEGACY_STREAMING
+
 class CPortPinWaveRT : public CUnknownImpl<IPortPinWaveRT>
 {
 public:
@@ -86,6 +88,8 @@ typedef struct
     PIO_WORKITEM WorkItem;
     KSSTATE State;
 }SETSTREAM_CONTEXT, *PSETSTREAM_CONTEXT;
+
+#ifndef LEGACY_STREAMING
 
 NTSTATUS NTAPI PinWaveRTAudioGetAudioBuffer(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
 NTSTATUS NTAPI PinWaveRTAudioGetHwLatency(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
@@ -327,7 +331,7 @@ PinWaveRTAudioUnregisterNotificationEvent(IN PIRP Irp, IN PKSIDENTIFIER Request,
     Irp->IoStatus.Information = 0;
     return STATUS_SUCCESS;
 }
-
+#endif
 //==================================================================================================================================
 
 NTSTATUS
@@ -1084,8 +1088,13 @@ CPortPinWaveRT::Init(
         &m_Descriptor, SubDeviceDescriptor->InterfaceCount, SubDeviceDescriptor->Interfaces,
         0, /* FIXME KSINTERFACE_STANDARD with KSINTERFACE_STANDARD_STREAMING / KSINTERFACE_STANDARD_LOOPED_STREAMING */
         NULL,
+#ifndef LEGACY_STREAMING
         sizeof(PinWaveRTPropertySet) / sizeof(KSPROPERTY_SET),
         PinWaveRTPropertySet,
+#else
+        0,
+        NULL,
+#endif
         0,
         0,
         0,
