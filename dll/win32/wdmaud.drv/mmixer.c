@@ -20,7 +20,7 @@
 #include <debug.h>
 #include <mmebuddy_debug.h>
 
-
+#define LEGACY_STREAMING
 BOOL MMixerLibraryInitialized = FALSE;
 
 
@@ -533,7 +533,6 @@ WdmAudSetWaveDeviceFormatByMMixer(
         }
         return MMSYSERR_NOERROR;
     }
-    DPRINT1("Failed\n");
     return MMSYSERR_ERROR;
 }
 
@@ -993,7 +992,7 @@ WdmAudCommitWaveBufferByMMixer(
 
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
     SND_ASSERT( Result == MMSYSERR_NOERROR );
-
+#ifndef LEGACY_STREAMING
     if (SoundDeviceInstance->RTStreamingEnabled)
     {
         DWORD Offset = 0;
@@ -1024,6 +1023,7 @@ WdmAudCommitWaveBufferByMMixer(
         return MMSYSERR_NOERROR;
     }
     else
+#endif
     {
         lpHeader = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(KSSTREAM_HEADER));
         if (!lpHeader)
