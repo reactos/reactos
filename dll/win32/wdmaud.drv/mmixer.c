@@ -16,7 +16,7 @@
 #include <ndk/rtlfuncs.h>
 #include <ndk/iofuncs.h>
 
-#define NDEBUG
+#define YDEBUG
 #include <debug.h>
 #include <mmebuddy_debug.h>
 
@@ -207,12 +207,10 @@ Control(
     /* Don't need this any more */
     CloseHandle(Overlapped.hEvent);
 
-    if ( ! IoResult )
+    if (!IoResult)
         return MM_STATUS_UNSUCCESSFUL;
-
     if ( lpBytesReturned )
         *lpBytesReturned = Transferred;
-
     return MM_STATUS_SUCCESS;
 }
 
@@ -498,6 +496,35 @@ WdmAudSetWaveDeviceFormatByMMixer(
 
     if (MMixerOpenWave(&MixerContext, DeviceId, bWaveIn, WaveFormat, NULL, NULL, &Instance->Handle) == MM_STATUS_SUCCESS)
     {
+#ifndef LEGACY_STREAMING
+        MIXER_STATUS MixerStatus = MMixerInitializeRTStreamingBuffer(
+            &MixerContext,
+            Instance->Handle,
+            PAGE_SIZE * 8,
+            2,
+            &Instance->RTStreamingBuffer,
+            &Instance->RTStreamingBufferLength);
+        if (MixerStatus == MM_STATUS_SUCCESS)
+        {
+            // clear buffer
+            RtlFillMemory(Instance->RTStreamingBuffer, Instance->RTStreamingBufferLength, 0x00);
+            // set offset
+            Instance->RTStreamingBufferOffset = 0;
+            Instance->hNotifyRTStreamingEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+            if (Instance->hNotifyRTStreamingEvent == NULL)
+            {
+                DPRINT1("Failed to create event with %x", GetLastError());
+                return MMSYSERR_ERROR;
+            }
+            MixerStatus = MMixerRegisterRTStreamingEvent(&MixerContext, Instance->Handle, Instance->hNotifyRTStreamingEvent);
+            if (MixerStatus == MM_STATUS_SUCCESS)
+            {
+                Instance->RTStreamingEnabled = TRUE;
+                DPRINT1("RT Audio Stream enabled\n");
+            }
+        }
+#endif
+
         if (DeviceType == WAVE_OUT_DEVICE_TYPE)
         {
             MMixerSetWaveStatus(&MixerContext, Instance->Handle, KSSTATE_ACQUIRE);
@@ -506,6 +533,7 @@ WdmAudSetWaveDeviceFormatByMMixer(
         }
         return MMSYSERR_NOERROR;
     }
+    DPRINT1("Failed\n");
     return MMSYSERR_ERROR;
 }
 
@@ -966,44 +994,69 @@ WdmAudCommitWaveBufferByMMixer(
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
     SND_ASSERT( Result == MMSYSERR_NOERROR );
 
-    lpHeader = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(KSSTREAM_HEADER));
-    if ( ! lpHeader )
+    if (SoundDeviceInstance->RTStreamingEnabled)
     {
-        /* no memory */
-        return MMSYSERR_NOMEM;
+        DWORD Offset = 0;
+        while (Offset < Length)
+        {
+            DWORD dwStatus = WaitForSingleObject(SoundDeviceInstance->hNotifyRTStreamingEvent, INFINITE);
+            if (dwStatus == WAIT_OBJECT_0)
+            {
+                DWORD BytesCopied = min(Length, SoundDeviceInstance->RTStreamingBufferLength / 2);
+                BytesCopied =
+                    min(BytesCopied,
+                        SoundDeviceInstance->RTStreamingBufferLength - SoundDeviceInstance->RTStreamingBufferOffset);
+                //DPRINT1(
+                //    "Offset %u BytesCopied %u BufferLength %u InputBufferLength %u\n",
+                //    SoundDeviceInstance->RTStreamingBufferOffset, BytesCopied,
+                //    SoundDeviceInstance->RTStreamingBufferLength, Length);
+                RtlCopyMemory(
+                    &SoundDeviceInstance->RTStreamingBuffer[SoundDeviceInstance->RTStreamingBufferOffset],
+                    OffsetPtr,
+                    BytesCopied);
+                Offset += BytesCopied;
+                SoundDeviceInstance->RTStreamingBufferOffset += BytesCopied;
+                SoundDeviceInstance->RTStreamingBufferOffset %= SoundDeviceInstance->RTStreamingBufferLength;
+                //ResetEvent(SoundDeviceInstance->hNotifyRTStreamingEvent);
+            }
+        }
+        CompletionRoutine(STATUS_SUCCESS, Offset, &Overlap->Standard);
+        return MMSYSERR_NOERROR;
     }
-
-    /* setup stream packet */
-    lpHeader->Size = sizeof(KSSTREAM_HEADER);
-    lpHeader->PresentationTime.Numerator = 1;
-    lpHeader->PresentationTime.Denominator = 1;
-    lpHeader->Data = OffsetPtr;
-    lpHeader->FrameExtent = Length;
-    Overlap->CompletionContext = lpHeader;
-    Overlap->OriginalCompletionRoutine = CompletionRoutine;
-    IoCtl = (DeviceType == WAVE_OUT_DEVICE_TYPE ? IOCTL_KS_WRITE_STREAM : IOCTL_KS_READ_STREAM);
-
-    if (DeviceType == WAVE_OUT_DEVICE_TYPE)
+    else
     {
-        lpHeader->DataUsed = Length;
+        lpHeader = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(KSSTREAM_HEADER));
+        if (!lpHeader)
+        {
+            /* no memory */
+            return MMSYSERR_NOMEM;
+        }
+
+        /* setup stream packet */
+        lpHeader->Size = sizeof(KSSTREAM_HEADER);
+        lpHeader->PresentationTime.Numerator = 1;
+        lpHeader->PresentationTime.Denominator = 1;
+        lpHeader->Data = OffsetPtr;
+        lpHeader->FrameExtent = Length;
+        Overlap->CompletionContext = lpHeader;
+        Overlap->OriginalCompletionRoutine = CompletionRoutine;
+        IoCtl = (DeviceType == WAVE_OUT_DEVICE_TYPE ? IOCTL_KS_WRITE_STREAM : IOCTL_KS_READ_STREAM);
+
+        if (DeviceType == WAVE_OUT_DEVICE_TYPE)
+        {
+            lpHeader->DataUsed = Length;
+        }
+
+        Status = NtDeviceIoControlFile(
+            SoundDeviceInstance->Handle, NULL, CommitWaveBufferApc, NULL, (PIO_STATUS_BLOCK)Overlap, IoCtl, NULL, 0,
+            lpHeader, sizeof(KSSTREAM_HEADER));
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtDeviceIoControlFile() failed with status %08lx\n", Status);
+            return MMSYSERR_ERROR;
+        }
+
+        return MMSYSERR_NOERROR;
     }
-
-    Status = NtDeviceIoControlFile(SoundDeviceInstance->Handle,
-                                   NULL,
-                                   CommitWaveBufferApc,
-                                   NULL,
-                                   (PIO_STATUS_BLOCK)Overlap,
-                                   IoCtl,
-                                   NULL,
-                                   0,
-                                   lpHeader,
-                                   sizeof(KSSTREAM_HEADER));
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtDeviceIoControlFile() failed with status %08lx\n", Status);
-        return MMSYSERR_ERROR;
-    }
-
-    return MMSYSERR_NOERROR;
 }
