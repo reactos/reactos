@@ -299,17 +299,23 @@ CFileDefExt::InitOpensWithField(HWND hwndDlg)
     BOOL bUnknownApp = TRUE;
     LPCWSTR pwszExt = PathFindExtensionW(m_wszPath);
 
+    // TODO: Use ASSOCSTR_EXECUTABLE with ASSOCF_REMAPRUNDLL | ASSOCF_IGNOREBASECLASS
     if (RegGetValueW(HKEY_CLASSES_ROOT, pwszExt, L"", RRF_RT_REG_SZ, NULL, wszBuf, &dwSize) == ERROR_SUCCESS)
     {
         bUnknownApp = FALSE;
         StringCbCatW(wszBuf, sizeof(wszBuf), L"\\shell\\open\\command");
         dwSize = sizeof(wszPath);
+        // FIXME: Missing FileExt check, see COpenWithList::SetDefaultHandler for details
+        // FIXME: Use HCR_GetDefaultVerbW to find the default verb
         if (RegGetValueW(HKEY_CLASSES_ROOT, wszBuf, L"", RRF_RT_REG_SZ, NULL, wszPath, &dwSize) == ERROR_SUCCESS)
         {
             /* Get path from command line */
             ExpandEnvironmentStringsW(wszPath, wszBuf, _countof(wszBuf));
-            PathRemoveArgs(wszBuf);
-            PathUnquoteSpacesW(wszBuf);
+            if (SHELL32_GetDllFromRundll32CommandLine(wszBuf, wszBuf, _countof(wszBuf)) != S_OK)
+            {
+                PathRemoveArgs(wszBuf);
+                PathUnquoteSpacesW(wszBuf);
+            }
             PathSearchAndQualify(wszBuf, wszPath, _countof(wszPath));
 
             HICON hIcon;
