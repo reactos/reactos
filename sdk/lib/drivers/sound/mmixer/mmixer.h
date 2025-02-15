@@ -265,3 +265,24 @@ MMixerOpenMidi(
     IN PIN_CREATE_CALLBACK CreateCallback,
     IN PVOID Context,
     OUT PHANDLE PinHandle);
+
+MIXER_STATUS
+MMixerInitializeRTStreamingBuffer(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE DeviceHandle,
+    IN ULONG RequestedBufferSize,
+    IN ULONG NotificationCount,
+    OUT PVOID *RTStreamingBuffer,
+    OUT PULONG RTStreamingBufferLength);
+
+MIXER_STATUS
+MMixerRegisterRTStreamingEvent(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE DeviceHandle,
+    IN HANDLE StreamingEvent);
+
+MIXER_STATUS
+MMixerUnregisterRTStreamingEvent(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE DeviceHandle,
+    IN HANDLE StreamingEvent);

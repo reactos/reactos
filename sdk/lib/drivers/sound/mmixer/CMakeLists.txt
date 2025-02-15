@@ -1,6 +1,11 @@
 
 add_definitions(
     -DUNICODE -D_UNICODE)
+
+remove_definitions(-D_WIN32_WINNT=0x502)
+add_definitions(-D_WIN32_WINNT=0x600)
+
+
 if(DBG)
     add_compile_definitions(NDEBUG)
 endif()
@@ -15,6 +20,7 @@ list(APPEND SOURCE
     sup.c
     wave.c
     topology.c
+    rtstreaming.c
     precomp.h)
 
 add_library(mmixer ${SOURCE})
