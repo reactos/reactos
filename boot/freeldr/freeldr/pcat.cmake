@@ -9,16 +9,18 @@
 ##              Copyright 2023 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
 ##
 
+set(FREELDR_BASE 0000)
+
 if(ARCH STREQUAL "i386")
     CreateBootSectorTarget(frldr16
         ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/i386.S
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
-        F800)
+        ${FREELDR_BASE})
 elseif(ARCH STREQUAL "amd64")
     CreateBootSectorTarget(frldr16
         ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/amd64.S
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
-        F800)
+        ${FREELDR_BASE})
 endif()
 
 
@@ -36,7 +38,8 @@ list(APPEND PCATLDR_BASE_ASM_SOURCE)
 
 if(ARCH STREQUAL "i386")
     list(APPEND PCATLDR_BASE_ASM_SOURCE
-        arch/i386/multiboot.S)
+        arch/i386/multiboot.S
+        arch/i386/relocldr.S)
 
     list(APPEND PCATLDR_COMMON_ASM_SOURCE
         arch/i386/drvmap.S
@@ -111,7 +114,8 @@ if(ARCH STREQUAL "i386")
 
 elseif(ARCH STREQUAL "amd64")
     list(APPEND PCATLDR_BASE_ASM_SOURCE
-        arch/i386/multiboot.S)
+        arch/i386/multiboot.S
+        arch/i386/relocldr.S)
 
     list(APPEND PCATLDR_COMMON_ASM_SOURCE
         arch/amd64/entry.S
