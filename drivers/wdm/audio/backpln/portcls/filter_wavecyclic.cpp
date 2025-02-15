@@ -84,8 +84,7 @@ CPortFilterWaveCyclic::NewIrpTarget(
     if (m_Pins[ConnectDetails->PinId] &&
         (m_Descriptor->Factory.Instances[ConnectDetails->PinId].CurrentPinInstanceCount == m_Descriptor->Factory.Instances[ConnectDetails->PinId].MaxFilterInstanceCount))
     {
-        // release existing instance
-        ASSERT(FALSE);
+        // no pins available
         return STATUS_UNSUCCESSFUL;
     }
 

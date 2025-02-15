@@ -80,11 +80,12 @@ CPortFilterWaveRT::NewIrpTarget(
         return STATUS_UNSUCCESSFUL;
     }
 
-    if (m_Pins[ConnectDetails->PinId] && m_Descriptor->Factory.Instances[ConnectDetails->PinId].CurrentPinInstanceCount)
+    if (m_Pins[ConnectDetails->PinId] &&
+        m_Descriptor->Factory.Instances[ConnectDetails->PinId].CurrentPinInstanceCount ==
+            m_Descriptor->Factory.Instances[ConnectDetails->PinId].MaxFilterInstanceCount)
     {
-        // release existing instance
-        PC_ASSERT(0);
-        m_Pins[ConnectDetails->PinId]->Close(DeviceObject, NULL);
+        // no pins available
+        return STATUS_UNSUCCESSFUL;
     }
 
     // now create the pin
