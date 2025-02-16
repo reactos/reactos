@@ -42,6 +42,7 @@ public:
     STDMETHODIMP GetFileName(SIZE_T BufferSize, LPWSTR Buffer, SIZE_T *RequiredSize) override;
     STDMETHODIMP Delete() override;
     STDMETHODIMP Restore() override;
+    STDMETHODIMP RemoveFromDatabase() override;
 
 protected:
     LONG m_ref;
@@ -224,6 +225,12 @@ STDMETHODIMP RecycleBin5File::Restore()
 {
     TRACE("(%p)\n", this);
     return m_recycleBin->Restore(m_FullName, &m_deletedFile);
+}
+
+STDMETHODIMP RecycleBin5File::RemoveFromDatabase()
+{
+    TRACE("(%p)\n", this);
+    return m_recycleBin->RemoveFromDatabase(m_FullName, &m_deletedFile);
 }
 
 RecycleBin5File::RecycleBin5File()
