@@ -112,6 +112,8 @@ BOOLEAN Rs232PortInitialize(IN ULONG ComPort,
 
     Rs232ComPort = ComPort;
 
+    DbgPrint("Initialized COM%d at 0x%p, baud rate %d\n", ComPort, Address, BaudRate);
+
     return TRUE;
 }
 
