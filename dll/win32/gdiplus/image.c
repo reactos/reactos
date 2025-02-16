@@ -4969,7 +4969,11 @@ static const struct image_codec codecs[NUM_CODECS] = {
     {
         { /* ICO */
             /* Clsid */              { 0x557cf407, 0x1a04, 0x11d3, { 0x9a, 0x73, 0x0, 0x0, 0xf8, 0x1e, 0xf3, 0x2e } },
+#ifdef __REACTOS__
+            /* FormatID */           { 0xb96b3cb5U, 0x0728U, 0x11d3U, {0x9d, 0x7b, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e} }, /* ImageFormatIcon */
+#else
             /* FormatID */           { 0xb96b3cabU, 0x0728U, 0x11d3U, {0x9d, 0x7b, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e} },
+#endif
             /* CodecName */          ico_codecname,
             /* DllName */            NULL,
             /* FormatDescription */  ico_format,
