@@ -73,6 +73,9 @@ HRESULT WINAPI IEnumNetCfgBindingInterface_Constructor(IUnknown *pUnkOuter, REFI
 HRESULT WINAPI INetCfgBindingPath_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppv);
 HRESULT WINAPI IEnumNetCfgBindingPath_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppv, DWORD dwFlags);
 
+/* netcfgclass_iface.c */
+HRESULT WINAPI INetCfgClass_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppv, const GUID *pguidClass, INetCfg *pNetCfg);
+
 /* tcpipconf_notify.c */
 HRESULT WINAPI TcpipConfigNotify_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
 

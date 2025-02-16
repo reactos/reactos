@@ -11,6 +11,7 @@ list(APPEND SOURCE
     netcfg_iface.c
     netcfgbindinginterface_iface.c
     netcfgbindingpath_iface.c
+    netcfgclass_iface.c
     inetcfgcomp_iface.c
     tcpipconf_notify.c
     propertypage.c
