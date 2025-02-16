@@ -48,6 +48,7 @@ list(APPEND SOURCE
 add_library(ws2_32 MODULE
     ${SOURCE}
     ws2_32.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/ws2_32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/ws2_32.def)
 
 set_module_type(ws2_32 win32dll)
