@@ -11,6 +11,7 @@
 #include "precomp.h"
 #include <sddl.h>
 #include <winnls.h>
+#include <setupapi_undoc.h> // For IsUserAdmin()
 
 #include <debug.h>
 

@@ -32,7 +32,6 @@
 
 static void test_SetupPromptForDiskA(void)
 {
-    char file[] = "kernel32.dll";
     char path[MAX_PATH];
     char buffer[MAX_PATH];
     UINT ret;
@@ -41,36 +40,33 @@ static void test_SetupPromptForDiskA(void)
     GetSystemDirectoryA(path, MAX_PATH);
 
     memset(buffer, 0, sizeof(buffer));
-    ret = SetupPromptForDiskA(0, "Test", "Testdisk", path, file, 0, IDF_CHECKFIRST, buffer, sizeof(buffer) - 1, &length);
+    ret = SetupPromptForDiskA(0, "Test", "Testdisk", path, "kernel32.dll", NULL, IDF_CHECKFIRST, buffer, sizeof(buffer) - 1, &length);
     ok(ret == DPROMPT_SUCCESS, "Expected DPROMPT_SUCCESS, got %u\n", ret);
-    ok(length == strlen(path)+1, "Expect length %u, got %u\n", (DWORD)strlen(path) + 1, length);
-    ok(strcmp(path, buffer) == 0, "Expected path %s, got %s\n", path, buffer);
+    ok(length == strlen(path) + 1, "Expect length %u, got %lu\n", lstrlenA(path) + 1, length);
+    ok(!strcmp(path, buffer), "Expected path %s, got %s\n", debugstr_a(path), debugstr_a(buffer));
 
     memset(buffer, 0, sizeof(buffer));
-    ret = SetupPromptForDiskA(0, "Test", "Testdisk", path, file, 0, IDF_CHECKFIRST, 0, 0, &length);
+    ret = SetupPromptForDiskA(0, "Test", "Testdisk", path, "kernel32.dll", NULL, IDF_CHECKFIRST, NULL, 0, &length);
     ok(ret == DPROMPT_SUCCESS, "Expected DPROMPT_SUCCESS, got %d\n", ret);
-    ok(length == strlen(path)+1, "Expect length %u, got %u\n", (DWORD)strlen(path) + 1, length);
+    ok(length == strlen(path) + 1, "Expect length %u, got %lu\n", lstrlenA(path) + 1, length);
 
     memset(buffer, 0, sizeof(buffer));
-    ret = SetupPromptForDiskA(0, "Test", "Testdisk", path, file, 0, IDF_CHECKFIRST, buffer, 1, &length);
+    ret = SetupPromptForDiskA(0, "Test", "Testdisk", path, "kernel32.dll", NULL, IDF_CHECKFIRST, buffer, 1, &length);
     ok(ret == DPROMPT_BUFFERTOOSMALL, "Expected DPROMPT_BUFFERTOOSMALL, got %u\n", ret);
 
     memset(buffer, 0, sizeof(buffer));
-    ret = SetupPromptForDiskA(0, "Test", "Testdisk", path, file, 0, IDF_CHECKFIRST, buffer, strlen(path), &length);
+    ret = SetupPromptForDiskA(0, "Test", "Testdisk", path, "kernel32.dll", NULL, IDF_CHECKFIRST, buffer, strlen(path), &length);
     ok(ret == DPROMPT_BUFFERTOOSMALL, "Expected DPROMPT_BUFFERTOOSMALL, got %u\n", ret);
 
     memset(buffer, 0, sizeof(buffer));
-    ret = SetupPromptForDiskA(0, "Test", "Testdisk", path, file, 0, IDF_CHECKFIRST, buffer, strlen(path)+1, &length);
+    ret = SetupPromptForDiskA(0, "Test", "Testdisk", path, "kernel32.dll", NULL, IDF_CHECKFIRST, buffer, strlen(path) + 1, &length);
     ok(ret == DPROMPT_SUCCESS, "Expected DPROMPT_SUCCESS, got %u\n", ret);
-    ok(length == strlen(path)+1, "Expect length %u, got %u\n", (DWORD)strlen(path) + 1, length);
-    ok(strcmp(path, buffer) == 0, "Expected path %s, got %s\n", path, buffer);
+    ok(length == strlen(path) + 1, "Expect length %u, got %lu\n", lstrlenA(path) + 1, length);
+    ok(!strcmp(path, buffer), "Expected path %s, got %s\n", debugstr_a(path), debugstr_a(buffer));
 }
 
 static void test_SetupPromptForDiskW(void)
 {
-    WCHAR file[] = {'k','e','r','n','e','l','3','2','.','d','l','l','\0'};
-    WCHAR title[] = {'T','e','s','t','\0'};
-    WCHAR disk[] = {'T','e','s','t','d','i','s','k','\0'};
     WCHAR path[MAX_PATH];
     WCHAR buffer[MAX_PATH];
     UINT ret;
@@ -79,29 +75,29 @@ static void test_SetupPromptForDiskW(void)
     GetSystemDirectoryW(path, MAX_PATH);
 
     memset(buffer, 0, sizeof(buffer));
-    ret = SetupPromptForDiskW(0, title, disk, path, file, 0, IDF_CHECKFIRST, buffer, MAX_PATH-1, &length);
+    ret = SetupPromptForDiskW(0, L"Test", L"Testdisk", path, L"kernel32.dll", NULL, IDF_CHECKFIRST, buffer, ARRAY_SIZE(buffer) - 1, &length);
     ok(ret == DPROMPT_SUCCESS, "Expected DPROMPT_SUCCESS, got %u\n", ret);
-    ok(length == lstrlenW(path)+1, "Expect length %u, got %u\n", lstrlenW(path)+1, length);
-    ok(lstrcmpW(path, buffer) == 0, "Expected path %s, got %s\n", wine_dbgstr_w(path), wine_dbgstr_w(buffer));
+    ok(length == lstrlenW(path) + 1, "Expect length %u, got %lu\n", lstrlenW(path) + 1, length);
+    ok(!lstrcmpW(path, buffer), "Expected path %s, got %s\n", debugstr_w(path), debugstr_w(buffer));
 
     memset(buffer, 0, sizeof(buffer));
-    ret = SetupPromptForDiskW(0, title, disk, path, file, 0, IDF_CHECKFIRST, 0, 0, &length);
+    ret = SetupPromptForDiskW(0, L"Test", L"Testdisk", path, L"kernel32.dll", NULL, IDF_CHECKFIRST, NULL, 0, &length);
     ok(ret == DPROMPT_SUCCESS, "Expected DPROMPT_SUCCESS, got %d\n", ret);
-    ok(length == lstrlenW(path)+1, "Expect length %u, got %u\n", lstrlenW(path)+1, length);
+    ok(length == lstrlenW(path) + 1, "Expect length %u, got %lu\n", lstrlenW(path) + 1, length);
 
     memset(buffer, 0, sizeof(buffer));
-    ret = SetupPromptForDiskW(0, title, disk, path, file, 0, IDF_CHECKFIRST, buffer, 1, &length);
+    ret = SetupPromptForDiskW(0, L"Test", L"Testdisk", path, L"kernel32.dll", NULL, IDF_CHECKFIRST, buffer, 1, &length);
     ok(ret == DPROMPT_BUFFERTOOSMALL, "Expected DPROMPT_BUFFERTOOSMALL, got %u\n", ret);
 
     memset(buffer, 0, sizeof(buffer));
-    ret = SetupPromptForDiskW(0, title, disk, path, file, 0, IDF_CHECKFIRST, buffer, lstrlenW(path), &length);
+    ret = SetupPromptForDiskW(0, L"Test", L"Testdisk", path, L"kernel32.dll", NULL, IDF_CHECKFIRST, buffer, lstrlenW(path), &length);
     ok(ret == DPROMPT_BUFFERTOOSMALL, "Expected DPROMPT_BUFFERTOOSMALL, got %u\n", ret);
 
     memset(buffer, 0, sizeof(buffer));
-    ret = SetupPromptForDiskW(0, title, disk, path, file, 0, IDF_CHECKFIRST, buffer, lstrlenW(path)+1, &length);
+    ret = SetupPromptForDiskW(0, L"Test", L"Testdisk", path, L"kernel32.dll", NULL, IDF_CHECKFIRST, buffer, lstrlenW(path) + 1, &length);
     ok(ret == DPROMPT_SUCCESS, "Expected DPROMPT_SUCCESS, got %u\n", ret);
-    ok(length == lstrlenW(path)+1, "Expect length %u, got %u\n", lstrlenW(path)+1, length);
-    ok(lstrcmpW(path, buffer) == 0, "Expected path %s, got %s\n", wine_dbgstr_w(path), wine_dbgstr_w(buffer));
+    ok(length == lstrlenW(path) + 1, "Expect length %u, got %lu\n", lstrlenW(path) + 1, length);
+    ok(!lstrcmpW(path, buffer), "Expected path %s, got %s\n", debugstr_w(path), debugstr_w(buffer));
 }
 
 START_TEST(dialog)
