@@ -361,6 +361,9 @@ user32 -
   win32ss/user/user32/windows/text.c       # Forked (lstr.c)
   win32ss/user/user32/windows/winpos.c     # Forked
 
+  win32ss/user/user32_vista/input.c        # Synced to Wine-10.0
+  win32ss/user/user32_vista/misc.c         # Synced to Wine-10.0
+  win32ss/user/user32_vista/win.c          # Synced to Wine-10.0
 schannel.c
   dll/win32/schannel/schannel_wine.c    # synced to wine-1.7.17 (secur32/schannel.c)
   dll/win32/schannel/secur32_wine.c     # partial sync to wine-1.7.17 (secur32/secur32.c)
