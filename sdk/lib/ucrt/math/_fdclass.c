@@ -11,7 +11,7 @@
 #include <math.h>
 #include <stdint.h>
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1920)
+#if defined(_MSC_VER) && (_MSC_VER >= 1922)
 #pragma function(_fdclass)
 #endif
 
