@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 
-#ifdef  _MSC_VER
+#if defined(_MSC_VER) && (_MSC_VER >= 1922)
 #pragma function(ldiv)
 #endif
 extern "C" ldiv_t __cdecl ldiv(long const numerator, long const denominator)
