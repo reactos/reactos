@@ -271,15 +271,15 @@ GetLocalizedSMFolderName(LPCWSTR WinVal, LPCWSTR RosInf, LPCWSTR RosVal, CString
     return ReadIniValue(path, L"Strings", RosVal, Output) > 0;
 }
 
-static BOOL
-CreateShortcut(const CStringW &Target)
+static CStringW
+CreateMainShortcut(const CStringW &Target)
 {
     InstallInfo &Info = *static_cast<InstallInfo *>(g_pInfo);
     UINT csidl = Info.PerUser ? CSIDL_PROGRAMS : CSIDL_COMMON_PROGRAMS;
     CStringW rel = Info.ShortcutFile, path, dir, tmp;
 
     if (FAILED(GetSpecialPath(csidl, path, Info.GetGuiOwner())))
-        return TRUE; // Pretend everything is OK
+        return L""; // Pretend everything is OK
 
     int cat;
     if (Info.Parser.GetInt(DB_CATEGORY, cat) && cat == ENUM_CAT_GAMES)
@@ -300,7 +300,7 @@ CreateShortcut(const CStringW &Target)
     if ((Info.Error = ErrorFromHResult(hr)) != 0)
     {
         ErrorBox(Info.Error);
-        return FALSE;
+        return L"";
     }
 
     CComPtr<IShellLinkW> link;
@@ -337,7 +337,7 @@ CreateShortcut(const CStringW &Target)
     {
         ErrorBox(ErrorFromHResult(hr));
     }
-    return !Info.Error;
+    return Info.Error ? L"" : path;
 }
 
 static BOOL
@@ -563,7 +563,20 @@ ExtractAndInstallThread(LPVOID Parameter)
 
         if (!Info.Error && Info.ShortcutFile)
         {
-            CreateShortcut(Info.MainApp);
+            tmp = CreateMainShortcut(Info.MainApp);
+            if (!tmp.IsEmpty() && !Info.Silent)
+            {
+                CStringW message, format;
+                format.LoadString(IDS_INSTGEN_CONFIRMINSTRUNAPP);
+                message.Format(format, const_cast<PCWSTR>(AppName));
+                if (MessageBoxW(Info.GetGuiOwner(), message, AppName, MB_YESNO | MB_ICONQUESTION) == IDYES)
+                {
+                    SHELLEXECUTEINFOW sei = { sizeof(sei), SEE_MASK_NOASYNC, Info.GetGuiOwner() };
+                    sei.lpFile = tmp;
+                    sei.nShow = SW_SHOW;
+                    ShellExecuteExW(&sei);
+                }
+            }
         }
     }
 
@@ -609,7 +622,7 @@ UIDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 ErrorBox();
                 SendMessageW(hDlg, IM_END, 0, 0);
             }
-            break;
+            return TRUE;
         }
         case WM_CLOSE:
             return TRUE;
