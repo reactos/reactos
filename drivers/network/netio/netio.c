@@ -49,8 +49,22 @@ ULONG DebugTraceLevel = MIN_TRACE;
 #define AFD_SHARE_WILDCARD  0x2L
 #define AFD_SHARE_EXCLUSIVE 0x3L
 
+#define ExAllocatePoolWithTag(pool, size, tag) \
+({ \
+	void *ret; \
+	if (tag == TAG_NETIO) { \
+		ret = ExAllocatePoolWithTag(pool, size+4, tag); \
+		if (ret != NULL) \
+			*(int*)(((char*)ret)+size) = 0xabcdef; \
+	} else { \
+		ret = ExAllocatePoolWithTag(pool, size, tag); \
+	} \
+	ret; \
+})
+
 #define ExFreePoolWithTag(p, tag) \
 	NETIO_DbgPrint(MIN_TRACE, ("ExFreePoolWithTag %p %x\n", p, tag))
+
 
 typedef struct _WSK_SOCKET_INTERNAL
 {
@@ -273,7 +287,8 @@ TdiTransportAddressFromSocketAddress(PSOCKADDR SocketAddress)
 {
     PTRANSPORT_ADDRESS ta;
 
-    ta = ExAllocatePoolWithTag(NonPagedPool, sizeof(*ta) + sizeof(struct sockaddr), TAG_NETIO);
+DbgPrint("sizeof(*ta) is %d sizeof(struct sockaddr) is %d alloc size is %d\n", sizeof(*ta), sizeof(*SocketAddress), sizeof(*ta) + sizeof(*SocketAddress));
+    ta = ExAllocatePoolWithTag(NonPagedPool, sizeof(*ta) + sizeof(*SocketAddress), TAG_NETIO);
     if (ta == NULL)
     {
         DbgPrint("TdiTransportAddressFromSocketAddress: Out of memory\n");
@@ -281,9 +296,12 @@ TdiTransportAddressFromSocketAddress(PSOCKADDR SocketAddress)
     }
 
     ta->TAAddressCount = 1;
-    ta->Address[0].AddressLength = sizeof(SocketAddress->sa_data);
-    ta->Address[0].AddressType = SocketAddress->sa_family;
-    memcpy(&ta->Address[0].Address[0], &SocketAddress->sa_data, ta->Address[0].AddressLength);
+    ta->Address[0].AddressLength = sizeof(*SocketAddress);
+//    ta->Address[0].AddressType = SocketAddress->sa_family;
+    ta->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
+
+DbgPrint("ta is %p &ta->Address[0].Address[0] is %p memcpy len is ta->Address[0].AddressLength %d\n", ta, &ta->Address[0].Address[0], ta->Address[0].AddressLength);
+    memcpy(&ta->Address[0].Address[0], SocketAddress, ta->Address[0].AddressLength);
 
     return ta;
 }
