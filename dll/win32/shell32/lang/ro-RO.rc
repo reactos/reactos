@@ -1006,6 +1006,8 @@ BEGIN
     IDS_OBJECTS "%d Obiecte"
     IDS_OBJECTS_SELECTED "%d Obiecte selectate"
 
+    IDS_SEARCH_BROWSEITEM "Browse..."
+
     IDS_TITLE_MYCOMP "Computerul meu"
     IDS_TITLE_MYNET "Locaţii în reţea"
     IDS_TITLE_BIN_1 "Coş de reciclare (plin)"

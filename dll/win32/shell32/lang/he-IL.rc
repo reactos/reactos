@@ -1005,6 +1005,8 @@ BEGIN
     IDS_OBJECTS "%d פריטים"
     IDS_OBJECTS_SELECTED "%d פריטים נבחרו"
 
+    IDS_SEARCH_BROWSEITEM "Browse..."
+
     IDS_TITLE_MYCOMP "המחשב שלי"
     IDS_TITLE_MYNET "מיקומי הרשת שלי"
     IDS_TITLE_BIN_1 "Recycle Bin (full)"
