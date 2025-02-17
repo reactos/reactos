@@ -140,6 +140,14 @@ typedef INT (WINAPI *FN_FreeMRUList)(HANDLE);
 
 // #define GET_PROC(hComCtl32, fn) fn = (FN_##fn)GetProcAddress((hComCtl32), (LPSTR)I_##fn)
 
+#ifndef NOIMAGEAPIS
+
+#define ILC_SYSTEM 0x0100 /* Used by the shell system image lists */
+DWORD WINAPI ImageList_GetFlags(HIMAGELIST himl);
+BOOL WINAPI ImageList_SetFlags(HIMAGELIST himl, DWORD flags);
+
+#endif /* NOIMAGEAPIS */
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */

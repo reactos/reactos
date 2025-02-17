@@ -121,7 +121,13 @@ struct _IMAGELIST
 #ifdef __REACTOS__
 #define IMAGELIST_MAGIC_DESTROYED 0x44454144
 #define IMAGELIST_VERSION 0x101
-#endif
+
+#define WinVerMajor() LOBYTE(GetVersion())
+
+#include <comctl32_undoc.h>
+#define ILC_PUBLICFLAGS ( 0xFFFFFFFF ) /* Allow all flags for now */
+#define ILC_COLORMASK 0xFE
+#endif /* __REACTOS__ */
 
 /* Header used by ImageList_Read() and ImageList_Write() */
 #include "pshpack2.h"
@@ -935,7 +941,12 @@ BOOL WINAPI
 ImageList_Destroy (HIMAGELIST himl)
 {
     if (!is_valid(himl))
-	return FALSE;
+        return FALSE;
+
+#ifdef __REACTOS__
+    if ((himl->flags & ILC_SYSTEM) && WinVerMajor() >= 6)
+        return FALSE;
+#endif
 
     IImageList_Release((IImageList *) himl);
     return TRUE;
@@ -1944,7 +1955,7 @@ ImageList_GetFlags(HIMAGELIST himl)
 #ifdef __REACTOS__
     if(!is_valid2(himl))
         return 0;
-    return himl->flags;
+    return himl->flags & ILC_PUBLICFLAGS;
 #else
     return is_valid(himl) ? himl->flags : 0;
 #endif
@@ -3047,12 +3058,46 @@ ImageList_SetFilter (HIMAGELIST himl, INT i, DWORD dwFilter)
  *    Stub.
  */
 
+#ifdef __REACTOS__
+static BOOL
+ChangeColorDepth(HIMAGELIST himl)
+{
+    UINT ilc = himl->flags & ILC_COLORMASK;
+    if (ilc >= ILC_COLOR4 && ilc <= ILC_COLOR32)
+        himl->uBitsPixel = ilc;
+    else
+        himl->uBitsPixel = (UINT)GetDeviceCaps (himl->hdcImage, BITSPIXEL);
+
+    /* Create new himl->hbmImage for BPP changes (for SHELL32) */
+    return ((IImageList*)himl)->lpVtbl->SetImageCount((IImageList*)himl, 0) == S_OK;
+}
+
+BOOL WINAPI
+ImageList_SetFlags(HIMAGELIST himl, DWORD flags)
+{
+    if (!is_valid(himl))
+        return FALSE;
+
+    if (flags & ~ILC_PUBLICFLAGS)
+        return FALSE;
+
+    if (((himl->flags ^ flags) & ILC_SYSTEM) && WinVerMajor() < 6)
+        return FALSE; /* Can't change this flag */
+
+    if (himl->flags == flags && WinVerMajor() >= 6)
+        return TRUE;
+
+    himl->flags = flags;
+    return ChangeColorDepth(himl);
+}
+#else
 DWORD WINAPI
 ImageList_SetFlags(HIMAGELIST himl, DWORD flags)
 {
     FIXME("(%p %08x):empty stub\n", himl, flags);
     return 0;
 }
+#endif /* __REACTOS__ */
 
 
 /*************************************************************************
