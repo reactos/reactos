@@ -77,7 +77,7 @@ static int get_dib_image_size(int width, int height, int depth);
 /* Convert PNG raw data to BMP icon data */
 static PBYTE
 CURSORICON_ConvertPngToBmpIcon(
-    _In_ LPBYTE pngBits,
+    _In_ PBYTE pngBits,
     _In_ DWORD fileSize,
     _Out_ PDWORD pBmpIconSize)
 {
