@@ -1007,6 +1007,8 @@ BEGIN
     IDS_OBJECTS "%d Nesne"
     IDS_OBJECTS_SELECTED "%d Nesne Seçili"
 
+    IDS_SEARCH_BROWSEITEM "Browse..."
+
     IDS_TITLE_MYCOMP "Bilgisayarım"
     IDS_TITLE_MYNET "Ağ Bağlantılarım"
     IDS_TITLE_BIN_1 "Recycle Bin (full)"

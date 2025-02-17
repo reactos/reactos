@@ -47,6 +47,126 @@ static UINT GetShellViewItemCount(IShellView *pSV)
     return 0;
 }
 
+
+struct SPECIALFINDITEMID
+{
+    WORD cb;
+    BYTE Type, Id;
+    CLSID Cls;
+    WORD Terminator;
+};
+enum { SPECIAL_BROWSE = 42 };
+
+static const SPECIALFINDITEMID g_pidlBrowseDir = { FIELD_OFFSET(SPECIALFINDITEMID, Terminator),
+                                                   0, SPECIAL_BROWSE, CLSID_FindFolder, 0 };
+
+static BYTE GetSpecial(PCIDLIST_ABSOLUTE pidl)
+{
+    if (pidl && pidl->mkid.cb == FIELD_OFFSET(SPECIALFINDITEMID, Terminator))
+    {
+        SPECIALFINDITEMID *pSpecial = (SPECIALFINDITEMID*)pidl;
+        if (pSpecial->Type == g_pidlBrowseDir.Type && pSpecial->Cls == g_pidlBrowseDir.Cls &&
+            ILIsEmpty(ILGetNext(pidl)))
+        {
+            return pSpecial->Id;
+        }
+    }
+    return 0;
+}
+
+static HRESULT BindToObject(PCIDLIST_ABSOLUTE pidl, REFIID riid, void **ppv)
+{
+    PCUITEMID_CHILD pidlChild;
+    CComPtr<IShellFolder> psf;
+    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psf), &pidlChild);
+    return SUCCEEDED(hr) ? psf->BindToObject(pidlChild, NULL, riid, ppv) : hr;
+}
+
+static HRESULT GetClassOfItem(PCIDLIST_ABSOLUTE pidl, CLSID *pCLSID)
+{
+    CComPtr<IShellFolder> psf;
+    HRESULT hr = BindToObject(pidl, IID_PPV_ARG(IShellFolder, &psf));
+    return SUCCEEDED(hr) ? IUnknown_GetClassID(psf, pCLSID) : hr;
+}
+
+void FreeList(LOCATIONITEM *pItems)
+{
+    for (; pItems;)
+    {
+        LOCATIONITEM *pNext = pItems->pNext;
+        SHFree(pItems);
+        pItems = pNext;
+    }
+}
+
+static LOCATIONITEM* CreateLocationListItem(PCWSTR szPath)
+{
+    const SIZE_T cch = lstrlenW(szPath) + 1;
+    LOCATIONITEM *p = (LOCATIONITEM*)CoTaskMemAlloc(FIELD_OFFSET(LOCATIONITEM, szPath[cch]));
+    if (p)
+    {
+        p->pNext = NULL;
+        CopyMemory(p->szPath, szPath, cch * sizeof(*szPath));
+    }
+    return p;
+}
+
+template<class T> static LOCATIONITEM* BuildLocationList(T **rgszPaths, SIZE_T nCount)
+{
+    LOCATIONITEM *pStart = NULL, *pPrev = NULL;
+    for (SIZE_T i = 0; i < nCount; ++i)
+    {
+        LOCATIONITEM *pItem = CreateLocationListItem(rgszPaths[i]);
+        if (!pStart)
+            pStart = pItem;
+        else if (pPrev)
+            pPrev->pNext = pItem;
+        pPrev = pItem;
+        if (!pItem)
+        {
+            FreeList(pStart);
+            return NULL;
+        }
+    }
+    return pStart;
+}
+
+static LOCATIONITEM* GetDesktopLocations()
+{
+    SIZE_T nCount = 0;
+    PCWSTR rgszLocations[2];
+    WCHAR szUser[MAX_PATH], szCommon[MAX_PATH];
+
+    rgszLocations[nCount] = szUser;
+    nCount += !!SHGetSpecialFolderPathW(NULL, szUser, CSIDL_DESKTOPDIRECTORY, FALSE);
+    rgszLocations[nCount] = szCommon;
+    nCount += !!SHGetSpecialFolderPathW(NULL, szCommon, CSIDL_COMMON_DESKTOPDIRECTORY, FALSE);
+    return BuildLocationList(rgszLocations, nCount);
+}
+
+static LOCATIONITEM* GetLocalDisksLocations()
+{
+    PCWSTR rgszLocations[26];
+    WCHAR rgszDrives[_countof(rgszLocations) + 1][4];
+    UINT nCount = 0;
+    for (UINT i = 0, fDrives = GetLogicalDrives(); i < _countof(rgszLocations); ++i)
+    {
+        if (fDrives & (1 << i))
+        {
+            nCount++;
+            rgszLocations[nCount - 1] = rgszDrives[nCount];
+            rgszDrives[nCount][0] = 'A' + i;
+            rgszDrives[nCount][1] = ':';
+            rgszDrives[nCount][2] = '\\';
+            rgszDrives[nCount][3] = UNICODE_NULL;
+            UINT fType = GetDriveTypeW(rgszDrives[nCount]);
+            if (fType != DRIVE_FIXED && fType != DRIVE_RAMDISK)
+                nCount--;
+        }
+    }
+    return BuildLocationList(rgszLocations, nCount);
+}
+
 CSearchBar::CSearchBar() :
     m_pSite(NULL),
     m_bVisible(FALSE)
@@ -96,6 +216,7 @@ LRESULT CSearchBar::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 
     SetSearchInProgress(FALSE);
 
+    m_RealItemIndex = 0;
     HWND hCombobox = GetDlgItem(IDC_SEARCH_COMBOBOX);
     CComPtr<IImageList> pImageList;
     HRESULT hResult = SHGetImageList(SHIL_SMALL, IID_PPV_ARG(IImageList, &pImageList));
@@ -194,11 +315,15 @@ LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndC
 
     pSearchStart->SearchHidden = IsDlgButtonChecked(IDC_SEARCH_HIDDEN);
 
-    if (!GetAddressEditBoxPath(pSearchStart->szPath))
+    WCHAR buf[MAX_PATH];
+    pSearchStart->pPaths = GetAddressEditBoxLocations(buf);
+    if (!pSearchStart->pPaths)
     {
-        ShellMessageBoxW(_AtlBaseModule.GetResourceInstance(), m_hWnd, MAKEINTRESOURCEW(IDS_SEARCHINVALID), MAKEINTRESOURCEW(IDS_SEARCHLABEL), MB_OK | MB_ICONERROR, pSearchStart->szPath);
+        ShellMessageBoxW(_AtlBaseModule.GetResourceInstance(), m_hWnd, MAKEINTRESOURCEW(IDS_SEARCHINVALID),
+                         MAKEINTRESOURCEW(IDS_SEARCHLABEL), MB_OK | MB_ICONERROR, buf);
         return 0;
     }
+    ScopedFreeLocationItems FreeLocationsHelper(pSearchStart->pPaths);
 
     // See if we have an szFileName by testing for its entry lenth > 0 and our searched FileName does not contain
     // an asterisk or a question mark. If so, then prepend and append an asterisk to the searched FileName.
@@ -255,6 +380,7 @@ LRESULT CSearchBar::OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndC
             return 0;
     }
 
+    FreeLocationsHelper.Detach();
     ::PostMessageW(hwnd, WM_SEARCH_START, 0, (LPARAM) pSearchStart.Detach());
 
     SetSearchInProgress(TRUE);
@@ -272,31 +398,90 @@ LRESULT CSearchBar::OnStopButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl
     return 0;
 }
 
-BOOL CSearchBar::GetAddressEditBoxPath(WCHAR *szPath)
+LRESULT CSearchBar::OnLocationEditChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
+    HWND hComboboxEx = hWndCtl;
+    INT_PTR idx = SendMessageW(hComboboxEx, CB_GETCURSEL, 0, 0);
+    if (idx < 0)
+        return 0;
+    COMBOBOXEXITEMW item;
+    item.mask = CBEIF_LPARAM;
+    item.iItem = idx;
+    item.cchTextMax = 0;
+    if (SendMessageW(hComboboxEx, CBEM_GETITEMW, 0, (LPARAM)&item) &&
+        GetSpecial((LPITEMIDLIST)item.lParam) == SPECIAL_BROWSE)
+    {
+        idx = max(m_RealItemIndex, 0);
+        SendMessageW(hComboboxEx, CB_SETCURSEL, idx, 0); // Reset to previous item
+
+        BROWSEINFOW bi = { hComboboxEx };
+        bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+        if (PIDLIST_ABSOLUTE pidl = SHBrowseForFolderW(&bi))
+        {
+            idx = FindItemInComboEx(hComboboxEx, pidl, ILIsEqual, TRUE);
+            if (idx < 0)
+            {
+                SHFILEINFO shfi;
+                if (SHGetFileInfoW((WCHAR*)pidl, 0, &shfi, sizeof(shfi), SHGFI_PIDL | SHGFI_DISPLAYNAME | SHGFI_SYSICONINDEX))
+                {
+                    item.mask = CBEIF_LPARAM | CBEIF_TEXT | CBEIF_SELECTEDIMAGE | CBEIF_IMAGE;
+                    item.iItem = -1;
+                    item.iImage = item.iSelectedImage = shfi.iIcon;
+                    item.pszText = shfi.szDisplayName;
+                    item.lParam = (LPARAM)pidl; // IAddressEditBox takes ownership
+                    idx = SendMessageW(hComboboxEx, CBEM_INSERTITEMW, 0, (LPARAM)&item);
+                }
+            }
+            if (idx >= 0)
+                SendMessageW(hComboboxEx, CB_SETCURSEL, idx, 0); // Select the browsed item
+            else
+                SHFree(pidl);
+        }
+    }
+    else
+    {
+        m_RealItemIndex = idx;
+    }
+    return 0;
+}
+
+LOCATIONITEM* CSearchBar::GetAddressEditBoxLocations(WCHAR *szPath)
+{
+    WCHAR szItemText[MAX_PATH], *pszPath = szPath;
     HWND hComboboxEx = GetDlgItem(IDC_SEARCH_COMBOBOX);
     ::GetWindowTextW(hComboboxEx, szPath, MAX_PATH);
     INT iSelectedIndex = SendMessageW(hComboboxEx, CB_GETCURSEL, 0, 0);
     if (iSelectedIndex != CB_ERR)
     {
-        WCHAR szItemText[MAX_PATH];
-        COMBOBOXEXITEMW item = {0};
+        COMBOBOXEXITEMW item;
         item.mask = CBEIF_LPARAM | CBEIF_TEXT;
         item.iItem = iSelectedIndex;
         item.pszText = szItemText;
         item.cchTextMax = _countof(szItemText);
         SendMessageW(hComboboxEx, CBEM_GETITEMW, 0, (LPARAM)&item);
-
-        if (!wcscmp(szItemText, szPath) && SHGetPathFromIDListW((LPCITEMIDLIST)item.lParam, szItemText))
+        if (!wcscmp(szItemText, szPath))
         {
-            StringCbCopyW(szPath, MAX_PATH * sizeof(WCHAR), szItemText);
-            return TRUE;
+            LPCITEMIDLIST pidl = (LPCITEMIDLIST)item.lParam;
+            CLSID clsid;
+            HRESULT hr = GetClassOfItem(pidl, &clsid);
+            if (SUCCEEDED(hr) && clsid == CLSID_MyComputer)
+                return GetLocalDisksLocations();
+            // TODO: Shell enumerate the network neighborhood if it is chosen
+            if (!pidl || !pidl->mkid.cb)
+                return GetDesktopLocations();
+            if (GetSpecial(pidl) || !SHGetPathFromIDListW(pidl, szItemText))
+                return NULL;
+            pszPath = szItemText;
         }
     }
 
-    DWORD dwAttributes = GetFileAttributesW(szPath);
-    return dwAttributes != INVALID_FILE_ATTRIBUTES
-        && (dwAttributes & FILE_ATTRIBUTE_DIRECTORY);
+    DWORD dwAttributes = GetFileAttributesW(pszPath);
+    if (dwAttributes != INVALID_FILE_ATTRIBUTES && (dwAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
+        PathIsAbsolute(pszPath))
+    {
+        return BuildLocationList(&pszPath, 1);
+    }
+    return NULL;
 }
 
 LRESULT CSearchBar::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -607,30 +792,70 @@ HRESULT STDMETHODCALLTYPE CSearchBar::Invoke(DISPID dispIdMember, REFIID riid, L
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
         HWND hComboboxEx = GetDlgItem(IDC_SEARCH_COMBOBOX);
-        int index = SendMessageW(hComboboxEx, CB_GETCOUNT, 0, 0);
-        if (index <= 0)
+        INT_PTR count = SendMessageW(hComboboxEx, CB_GETCOUNT, 0, 0);
+        if (count <= 0)
             return S_OK;
         COMBOBOXEXITEMW item = {0};
         item.mask = CBEIF_LPARAM;
-        item.iItem = index - 1;
+        item.iItem = count - 1;
         SendMessageW(hComboboxEx, CBEM_GETITEMW, 0, (LPARAM)&item);
         if (!item.lParam)
             return S_OK;
-        CComPtr<IShellFolder> pDesktopFolder;
-        hResult = SHGetDesktopFolder(&pDesktopFolder);
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
-        CComPtr<IShellFolder> pShellFolder;
-        hResult = pDesktopFolder->BindToObject((LPCITEMIDLIST)item.lParam, NULL, IID_PPV_ARG(IShellFolder, &pShellFolder));
-        if (FAILED(hResult))
-            return S_OK;
         CLSID clsid;
-        hResult = IUnknown_GetClassID(pShellFolder, &clsid);
+        hResult = GetClassOfItem((LPCITEMIDLIST)item.lParam, &clsid);
         if (SUCCEEDED(hResult) && clsid == CLSID_FindFolder)
         {
             SendMessageW(hComboboxEx, CBEM_DELETEITEM, item.iItem, 0);
             SendMessageW(hComboboxEx, CB_SETCURSEL, 0, 0);
+            // Starting in My Computer is better than just searching the desktop folder
+            PIDLIST_ABSOLUTE pidl;
+            if (SUCCEEDED(SHGetSpecialFolderLocation(NULL, CSIDL_DRIVES, &pidl)))
+            {
+                INT_PTR idx = FindItemInComboEx(hComboboxEx, pidl, ILIsEqual, TRUE);
+                if (idx >= 0)
+                    SendMessageW(hComboboxEx, CB_SETCURSEL, idx, 0);
+                SHFree(pidl);
+            }
         }
+
+        // Remove all non-filesystem items since we currently use FindFirstFile to search
+        BOOL FoundBrowse = FALSE;
+        for (item.iItem = 0; SendMessageW(hComboboxEx, CBEM_GETITEMW, 0, (LPARAM)&item); item.iItem++)
+        {
+            LPCITEMIDLIST pidl = (LPCITEMIDLIST)item.lParam;
+            BYTE special = GetSpecial(pidl);
+            FoundBrowse |= special == SPECIAL_BROWSE;
+            if (special)
+                continue;
+            const UINT fQuery = SFGAO_FILESYSTEM | SFGAO_FILESYSANCESTOR;
+            SHFILEINFO shfi;
+            shfi.dwAttributes = fQuery;
+            if (SHGetFileInfoW((WCHAR*)pidl, 0, &shfi, sizeof(shfi), SHGFI_PIDL | SHGFI_ATTRIBUTES | SHGFI_ATTR_SPECIFIED))
+            {
+                if (!(shfi.dwAttributes & fQuery))
+                {
+                    if (SendMessageW(hComboboxEx, CBEM_DELETEITEM, item.iItem, 0) != CB_ERR)
+                        item.iItem--;
+                }
+            }
+        }
+
+        // Add our custom Browse item
+        if (!FoundBrowse)
+        {
+            WCHAR buf[200];
+            item.mask = CBEIF_LPARAM | CBEIF_TEXT | CBEIF_INDENT;
+            item.iItem = -1;
+            item.iIndent = -2;
+            item.lParam = (LPARAM)ILClone((LPITEMIDLIST)&g_pidlBrowseDir);
+            item.pszText = const_cast<PWSTR>(L"...");
+            #define IDS_SEARCH_BROWSEITEM 10244 /* shell32 shresdef.h */
+            if (LoadStringW(GetModuleHandleW(L"SHELL32"), IDS_SEARCH_BROWSEITEM, buf, _countof(buf)))
+                item.pszText = buf;
+            if (item.lParam)
+                SendMessageW(hComboboxEx, CBEM_INSERTITEMW, 0, (LPARAM)&item);
+        }
+
         return S_OK;
     }
     case DISPID_SEARCHCOMPLETE:

@@ -1006,6 +1006,8 @@ BEGIN
     IDS_OBJECTS "%d 個物件"
     IDS_OBJECTS_SELECTED "已選擇 %d 個物件"
 
+    IDS_SEARCH_BROWSEITEM "Browse..."
+
     IDS_TITLE_MYCOMP "我的電腦"
     IDS_TITLE_MYNET "網絡上的芳鄰"
     IDS_TITLE_BIN_1 "Recycle Bin (full)"

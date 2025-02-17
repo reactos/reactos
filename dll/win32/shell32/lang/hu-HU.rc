@@ -997,6 +997,8 @@ BEGIN
     IDS_OBJECTS "%d elem"
     IDS_OBJECTS_SELECTED "%d kijelölt elem"
 
+    IDS_SEARCH_BROWSEITEM "Browse..."
+
     IDS_TITLE_MYCOMP "Számítógép"
     IDS_TITLE_MYNET "Hálózati helyek"
     IDS_TITLE_BIN_1 "Lomtár (tele)"

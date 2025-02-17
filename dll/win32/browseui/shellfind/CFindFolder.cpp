@@ -148,7 +148,7 @@ struct _SearchData
 {
     HWND hwnd;
     HANDLE hStopEvent;
-    CStringW szPath;
+    LOCATIONITEM *pPaths;
     CStringW szFileName;
     CStringA szQueryA;
     CStringW szQueryW;
@@ -156,6 +156,11 @@ struct _SearchData
     CStringA szQueryU8;
     BOOL SearchHidden;
     CComPtr<CFindFolder> pFindFolder;
+
+    ~_SearchData()
+    {
+        FreeList(pPaths);
+    }
 };
 
 template<typename TChar, typename TString, int (&StrNCmp)(const TChar *, const TChar *, size_t)>
@@ -461,11 +466,17 @@ DWORD WINAPI CFindFolder::SearchThreadProc(LPVOID lpParameter)
 {
     _SearchData *data = static_cast<_SearchData*>(lpParameter);
 
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
+
     HRESULT hrCoInit = CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
     data->pFindFolder->NotifyConnections(DISPID_SEARCHSTART);
 
-    UINT uTotalFound = RecursiveFind(data->szPath, data);
+    UINT uTotalFound = 0;
+    for (LOCATIONITEM *pLocation = data->pPaths; pLocation; pLocation = pLocation->pNext)
+    {
+        uTotalFound += RecursiveFind(pLocation->szPath, data);
+    }
 
     data->pFindFolder->NotifyConnections(DISPID_SEARCHCOMPLETE);
 
@@ -521,7 +532,7 @@ LRESULT CFindFolder::StartSearch(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     pSearchData->hwnd = m_hWnd;
 
     SearchStart *pSearchParams = (SearchStart *) lParam;
-    pSearchData->szPath = pSearchParams->szPath;
+    pSearchData->pPaths = pSearchParams->pPaths;
     pSearchData->szFileName = pSearchParams->szFileName;
     pSearchData->szQueryA = pSearchParams->szQuery;
     pSearchData->szQueryW = pSearchParams->szQuery;
@@ -589,12 +600,15 @@ LRESULT CFindFolder::StartSearch(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
         SetEvent(m_hStopEvent);
     pSearchData->hStopEvent = m_hStopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
-    if (!SHCreateThread(SearchThreadProc, pSearchData, NULL, NULL))
+    if (!SHCreateThread(SearchThreadProc, pSearchData, 0, NULL))
     {
-        SHFree(pSearchData);
-        return 0;
+        if (pSearchData->hStopEvent)
+        {
+            CloseHandle(pSearchData->hStopEvent);
+            m_hStopEvent = NULL;
+        }
+        delete pSearchData;
     }
-
     return 0;
 }
 
