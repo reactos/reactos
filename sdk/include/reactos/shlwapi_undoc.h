@@ -115,7 +115,6 @@ HRESULT WINAPI IsQSForward(REFGUID pguidCmdGroup,ULONG cCmds, OLECMD *prgCmds);
 BOOL WINAPI SHIsChildOrSelf(HWND hParent, HWND hChild);
 HRESULT WINAPI SHForwardContextMenuMsg(IUnknown* pUnk, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT* pResult, BOOL useIContextMenu2);
 VOID WINAPI SHSetDefaultDialogFont(HWND hWnd, INT id);
-
 HRESULT WINAPI SHRegGetCLSIDKeyW(REFGUID guid, LPCWSTR lpszValue, BOOL bUseHKCU, BOOL bCreate, PHKEY phKey);
 
 BOOL WINAPI SHAddDataBlock(LPDBLIST* lppList, const DATABLOCK_HEADER *lpNewItem);
@@ -138,6 +137,40 @@ RegCreateKeyExWrapW(
     _Out_ PHKEY phkResult,
     _Out_opt_ LPDWORD lpdwDisposition);
 
+DWORD WINAPI GetUIVersion(void);
+
+HRESULT WINAPI
+IConnectionPoint_InvokeWithCancel(
+    _Inout_ IConnectionPoint* iCP,
+    _In_ DISPID dispId,
+    _Inout_ DISPPARAMS* dispParams,
+    _In_ DWORD unknown1,
+    _In_ DWORD unknown2);
+
+HRESULT WINAPI
+IConnectionPoint_SimpleInvoke(
+    _Inout_ IConnectionPoint* iCP,
+    _In_ DISPID dispId,
+    _Inout_ DISPPARAMS* dispParams);
+
+/* Redirected to ole32!CoCreateInstance */
+HRESULT WINAPI
+SHCoCreateInstanceAC(
+    _In_ REFCLSID rclsid,
+    _In_ LPUNKNOWN pUnkOuter,
+    _In_ DWORD dwClsContext,
+    _In_ REFIID iid,
+    _Out_ LPVOID *ppv);
+
+/* Redirected to kernel32!GetModuleHandleW */
+HMODULE WINAPI GetModuleHandleWrapW(_In_opt_ LPCWSTR lpModuleName);
+
+INT WINAPI
+SHStringFromGUIDW(
+    _In_ REFGUID guid,
+    _Out_ LPWSTR lpszDest,
+    _In_ INT cchMax);
+
 /* Redirected to kernel32.ExpandEnvironmentStringsA/W */
 DWORD WINAPI SHExpandEnvironmentStringsA(LPCSTR,LPSTR,DWORD);
 DWORD WINAPI SHExpandEnvironmentStringsW(LPCWSTR,LPWSTR,DWORD);
@@ -157,7 +190,6 @@ BOOL WINAPI SHExpandEnvironmentStringsForUserW(HANDLE, LPCWSTR, LPWSTR, DWORD);
 #define SHExpandEnvironmentStringsForUser SHExpandEnvironmentStringsForUserA
 #endif
 #endif
-
 
 BOOL WINAPI SHIsEmptyStream(IStream*);
 HRESULT WINAPI IStream_Size(IStream *lpStream, ULARGE_INTEGER* lpulSize);

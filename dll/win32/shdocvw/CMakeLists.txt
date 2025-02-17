@@ -11,7 +11,12 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/shdocvw_stubs.c)
 
 add_typelib(res/shdocvw_v1.idl)
-set_source_files_properties(shdocvw.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/shdocvw_v1.tlb)
+set_source_files_properties(shdocvw.rc PROPERTIES OBJECT_DEPENDS
+    ${CMAKE_CURRENT_BINARY_DIR}/shdocvw_v1.tlb
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/shdocvw_v1.rgs
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/favband.rgs
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/explorerband.rgs
+    ${CMAKE_CURRENT_SOURCE_DIR}/res/shellwindows.rgs)
 
 add_library(shdocvw MODULE
     ${SOURCE}
@@ -32,9 +37,11 @@ add_pch(shdocvw precomp.h SOURCE)
 add_cd_file(TARGET shdocvw DESTINATION reactos/system32 FOR all)
 
 add_library(shdocvw_sublib OBJECT
+    CConnectionPoint.cpp
     CExplorerBand.cpp
     CFavBand.cpp
     CNSCBand.cpp
+    CSDWindows.cpp
     mrulist.cpp
     objects.cpp
     utility.cpp
