@@ -165,7 +165,7 @@ CURSORICON_ConvertPngToBmpIcon(
     LPBYTE imageBytes = HeapAlloc(GetProcessHeap(), 0, imageSize);
     if (imageBytes)
     {
-        LPBYTE pb = imageBytes;
+        PBYTE pb = imageBytes;
         for (int i = height - 1; i >= 0; i--)
         {
             png_bytep row = rows[i];
