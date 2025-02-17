@@ -1,4 +1,5 @@
 
+remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
 add_definitions(-D__WINESRC__ -D__ROS_LONG64__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(riched20.dll riched20.spec ADD_IMPORTLIB)

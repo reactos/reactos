@@ -344,13 +344,12 @@ static HGLOBAL get_unicode_text(ME_TextEditor *editor, const ME_Cursor *start, i
     int pars = 0;
     WCHAR *data;
     HANDLE ret;
-    ME_DisplayItem *para;
+    ME_Paragraph *para;
     int nEnd = ME_GetCursorOfs(start) + nChars;
 
     /* count paragraphs in range */
-    para = start->pPara;
-    while((para = para->member.para.next_para) &&
-          para->member.para.nCharOfs <= nEnd)
+    para = start->para;
+    while ((para = para_next( para )) && para->nCharOfs <= nEnd)
         pars++;
 
     ret = GlobalAlloc(GMEM_MOVEABLE, sizeof(WCHAR) * (nChars + pars + 1));
