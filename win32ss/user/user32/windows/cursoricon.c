@@ -219,7 +219,7 @@ CURSORICON_ConvertPngToBmpIcon(
 
     /* Allocate BMP icon data */
     *pBmpIconSize = (DWORD)(sizeof(cifd) + sizeof(info) + imageSize + maskSize);
-    LPBYTE pbBmpIcon = HeapAlloc(GetProcessHeap(), 0, *pBmpIconSize);
+    PBYTE pbBmpIcon = HeapAlloc(GetProcessHeap(), 0, *pBmpIconSize);
     if (!pbBmpIcon)
     {
         ERR("HeapAlloc failed\n");
