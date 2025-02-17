@@ -162,7 +162,7 @@ CURSORICON_ConvertPngToBmpIcon(
     png_read_end(png_ptr, info_ptr);
 
     /* After reading the image, you can deal with row pointers */
-    LPBYTE imageBytes = HeapAlloc(GetProcessHeap(), 0, imageSize);
+    PBYTE imageBytes = HeapAlloc(GetProcessHeap(), 0, imageSize);
     if (imageBytes)
     {
         PBYTE pb = imageBytes;
