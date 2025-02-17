@@ -1007,6 +1007,8 @@ BEGIN
     IDS_OBJECTS "Elementów: %d"
     IDS_OBJECTS_SELECTED "Zaznaczonych elementów: %d"
 
+    IDS_SEARCH_BROWSEITEM "Browse..."
+
     IDS_TITLE_MYCOMP "Mój komputer"
     IDS_TITLE_MYNET "Moje miejsca sieciowe"
     IDS_TITLE_BIN_1 "Kosz (pełny)"

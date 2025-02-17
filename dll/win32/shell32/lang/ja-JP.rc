@@ -995,6 +995,8 @@ BEGIN
     IDS_OBJECTS "%d 個のオブジェクト"
     IDS_OBJECTS_SELECTED "%d 個のオブジェクトが選択済み"
 
+    IDS_SEARCH_BROWSEITEM "Browse..."
+
     IDS_TITLE_MYCOMP "マイ コンピュータ"
     IDS_TITLE_MYNET "マイ ネットワーク"
     IDS_TITLE_BIN_1 "ごみ箱 (いっぱい)"

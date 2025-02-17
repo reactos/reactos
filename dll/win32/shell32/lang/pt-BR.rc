@@ -998,6 +998,8 @@ BEGIN
     IDS_OBJECTS "%d Objects"
     IDS_OBJECTS_SELECTED "%d Objects Selected"
 
+    IDS_SEARCH_BROWSEITEM "Browse..."
+
     IDS_TITLE_MYCOMP "Meu Computador"
     IDS_TITLE_MYNET "Meus Locais de Rede"
     IDS_TITLE_BIN_1 "Lixeira (cheia)"
