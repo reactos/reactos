@@ -287,8 +287,8 @@ TdiTransportAddressFromSocketAddress(PSOCKADDR SocketAddress)
 {
     PTRANSPORT_ADDRESS ta;
 
-DbgPrint("sizeof(*ta) is %d sizeof(struct sockaddr) is %d alloc size is %d\n", sizeof(*ta), sizeof(*SocketAddress), sizeof(*ta) + sizeof(*SocketAddress));
-    ta = ExAllocatePoolWithTag(NonPagedPool, sizeof(*ta) + sizeof(*SocketAddress), TAG_NETIO);
+DbgPrint("sizeof(*ta) is %d sizeof(SocketAddress->sa_data) is %d alloc size is %d\n", sizeof(*ta), sizeof(SocketAddress->sa_data), sizeof(*ta) + sizeof(SocketAddress->sa_data));
+    ta = ExAllocatePoolWithTag(NonPagedPool, sizeof(*ta) + sizeof(SocketAddress->sa_data), TAG_NETIO);
     if (ta == NULL)
     {
         DbgPrint("TdiTransportAddressFromSocketAddress: Out of memory\n");
@@ -296,12 +296,12 @@ DbgPrint("sizeof(*ta) is %d sizeof(struct sockaddr) is %d alloc size is %d\n", s
     }
 
     ta->TAAddressCount = 1;
-    ta->Address[0].AddressLength = sizeof(*SocketAddress);
-//    ta->Address[0].AddressType = SocketAddress->sa_family;
-    ta->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
+		/* TODO: TDI_ADDRESS_LENGTH_IP: */
+    ta->Address[0].AddressLength = sizeof(SocketAddress->sa_data);
+    ta->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;	/* AF_INET */
 
 DbgPrint("ta is %p &ta->Address[0].Address[0] is %p memcpy len is ta->Address[0].AddressLength %d\n", ta, &ta->Address[0].Address[0], ta->Address[0].AddressLength);
-    memcpy(&ta->Address[0].Address[0], SocketAddress, ta->Address[0].AddressLength);
+    memcpy(&ta->Address[0].Address[0], &SocketAddress->sa_data, ta->Address[0].AddressLength);
 
     return ta;
 }
