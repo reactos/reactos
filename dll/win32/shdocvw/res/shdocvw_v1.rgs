@@ -153,12 +153,6 @@ HKCR
             Version = s '1.1'
             VersionIndependentProgId = s 'InternetExplorer.Application'
         }
-        '{9BA05972-F6A8-11CF-A442-00A0C90A8F39}' = s 'ShellWindows'
-        {
-            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
-            TypeLib = s '{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}'
-            Version = s '1.1'
-        }
         '{64AB4BB7-111E-11D1-8F79-00C04FC2FBE1}' = s 'Microsoft Shell UI Helper'
         {
             InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
