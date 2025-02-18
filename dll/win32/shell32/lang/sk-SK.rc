@@ -998,7 +998,7 @@ BEGIN
     IDS_OBJECTS "%d Objects"
     IDS_OBJECTS_SELECTED "%d Objects Selected"
 
-    IDS_SEARCH_BROWSEITEM "Browse..."
+    IDS_SEARCH_BROWSEITEM "Prehľadávať..."
 
     IDS_TITLE_MYCOMP "Tento počítač"
     IDS_TITLE_MYNET "Miesta v sieti"

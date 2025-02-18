@@ -998,7 +998,7 @@ BEGIN
     IDS_OBJECTS "%d objet(s)"
     IDS_OBJECTS_SELECTED "%d objet(s) sélectionné(s)"
 
-    IDS_SEARCH_BROWSEITEM "Browse..."
+    IDS_SEARCH_BROWSEITEM "Parcourir..."
 
     IDS_TITLE_MYCOMP "Poste de travail"
     IDS_TITLE_MYNET "Mon réseau"

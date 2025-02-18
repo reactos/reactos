@@ -999,7 +999,7 @@ BEGIN
     IDS_OBJECTS "%d Objekte"
     IDS_OBJECTS_SELECTED "%d Objekte ausgewählt"
 
-    IDS_SEARCH_BROWSEITEM "Browse..."
+    IDS_SEARCH_BROWSEITEM "Durchsuchen..."
 
     IDS_TITLE_MYCOMP "Arbeitsplatz"
     IDS_TITLE_MYNET "Netzwerkumgebung"

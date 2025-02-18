@@ -998,7 +998,7 @@ BEGIN
     IDS_OBJECTS "%d об'єктів"
     IDS_OBJECTS_SELECTED "Обрано %d об'єктів"
 
-    IDS_SEARCH_BROWSEITEM "Browse..."
+    IDS_SEARCH_BROWSEITEM "Огляд..."
 
     IDS_TITLE_MYCOMP "Мій комп'ютер"
     IDS_TITLE_MYNET "Мережне оточення"

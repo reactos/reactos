@@ -138,9 +138,9 @@ static LOCATIONITEM* GetDesktopLocations()
     WCHAR szUser[MAX_PATH], szCommon[MAX_PATH];
 
     rgszLocations[nCount] = szUser;
-    nCount += !!SHGetSpecialFolderPathW(NULL, szUser, CSIDL_DESKTOPDIRECTORY, FALSE);
+    nCount += !!SHGetSpecialFolderPathW(NULL, szUser, CSIDL_DESKTOPDIRECTORY, TRUE);
     rgszLocations[nCount] = szCommon;
-    nCount += !!SHGetSpecialFolderPathW(NULL, szCommon, CSIDL_COMMON_DESKTOPDIRECTORY, FALSE);
+    nCount += !!SHGetSpecialFolderPathW(NULL, szCommon, CSIDL_COMMON_DESKTOPDIRECTORY, TRUE);
     return BuildLocationList(rgszLocations, nCount);
 }
 
@@ -169,6 +169,7 @@ static LOCATIONITEM* GetLocalDisksLocations()
 
 CSearchBar::CSearchBar() :
     m_pSite(NULL),
+    m_RealItemIndex(0),
     m_bVisible(FALSE)
 {
 }
@@ -216,7 +217,6 @@ LRESULT CSearchBar::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 
     SetSearchInProgress(FALSE);
 
-    m_RealItemIndex = 0;
     HWND hCombobox = GetDlgItem(IDC_SEARCH_COMBOBOX);
     CComPtr<IImageList> pImageList;
     HRESULT hResult = SHGetImageList(SHIL_SMALL, IID_PPV_ARG(IImageList, &pImageList));
@@ -819,12 +819,12 @@ HRESULT STDMETHODCALLTYPE CSearchBar::Invoke(DISPID dispIdMember, REFIID riid, L
         }
 
         // Remove all non-filesystem items since we currently use FindFirstFile to search
-        BOOL FoundBrowse = FALSE;
+        BOOL fFoundBrowse = FALSE;
         for (item.iItem = 0; SendMessageW(hComboboxEx, CBEM_GETITEMW, 0, (LPARAM)&item); item.iItem++)
         {
             LPCITEMIDLIST pidl = (LPCITEMIDLIST)item.lParam;
             BYTE special = GetSpecial(pidl);
-            FoundBrowse |= special == SPECIAL_BROWSE;
+            fFoundBrowse |= special == SPECIAL_BROWSE;
             if (special)
                 continue;
             const UINT fQuery = SFGAO_FILESYSTEM | SFGAO_FILESYSANCESTOR;
@@ -841,7 +841,7 @@ HRESULT STDMETHODCALLTYPE CSearchBar::Invoke(DISPID dispIdMember, REFIID riid, L
         }
 
         // Add our custom Browse item
-        if (!FoundBrowse)
+        if (!fFoundBrowse)
         {
             WCHAR buf[200];
             item.mask = CBEIF_LPARAM | CBEIF_TEXT | CBEIF_INDENT;
