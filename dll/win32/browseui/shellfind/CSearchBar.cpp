@@ -20,6 +20,31 @@ WINE_DEFAULT_DEBUG_CHANNEL(shellfind);
 #define UNIMPLEMENTED DbgPrint("%s is UNIMPLEMENTED!\n", __FUNCTION__)
 #endif
 
+static BOOL IsWindowChildOf(const HWND hNeedle, const HWND hRoot)
+{
+    for (HWND hParent = hNeedle;;)
+    {
+        if (!hParent || hNeedle == hRoot)
+            return FALSE;
+        hParent = GetParent(hParent);
+        if (hParent == hRoot)
+            return TRUE;
+    }
+}
+
+static UINT GetShellViewItemCount(IShellView *pSV)
+{
+    int signedCount;
+    CComQIIDPtr<I_ID(IFolderView)> pFV(pSV);
+    if (pFV && SUCCEEDED(pFV->ItemCount(SVGIO_ALLVIEW, &signedCount)))
+        return signedCount;
+    UINT unsignedCount;
+    CComQIIDPtr<I_ID(IShellFolderView)> pSFV(pSV);
+    if (pSFV && SUCCEEDED(pSFV->GetObjectCount(&unsignedCount)))
+        return unsignedCount;
+    return 0;
+}
+
 CSearchBar::CSearchBar() :
     m_pSite(NULL),
     m_bVisible(FALSE)
@@ -336,6 +361,8 @@ HRESULT STDMETHODCALLTYPE CSearchBar::ShowDW(BOOL fShow)
 {
     m_bVisible = fShow;
     ShowWindow(fShow);
+    if (fShow)
+        TrySetFocus(DISPID_WINDOWSTATECHANGED);
     return S_OK;
 }
 
@@ -562,6 +589,7 @@ HRESULT STDMETHODCALLTYPE CSearchBar::Invoke(DISPID dispIdMember, REFIID riid, L
     case DISPID_DOCUMENTCOMPLETE:
     {
         TrySubscribeToSearchEvents();
+        TrySetFocus(DISPID_NAVIGATECOMPLETE2);
 
         // Remove the search results folder from the address box
         CComPtr<IDispatch> pDispatch;
@@ -606,8 +634,28 @@ HRESULT STDMETHODCALLTYPE CSearchBar::Invoke(DISPID dispIdMember, REFIID riid, L
     case DISPID_SEARCHCOMPLETE:
     case DISPID_SEARCHABORT:
         SetSearchInProgress(FALSE);
+        TrySetFocus(DISPID_SEARCHCOMPLETE);
         return S_OK;
     default:
         return E_INVALIDARG;
+    }
+}
+
+void CSearchBar::TrySetFocus(UINT Source)
+{
+    CComPtr<IShellBrowser> pBrowser;
+    CComPtr<IShellView> pResultsSV;
+    if (SUCCEEDED(GetSearchResultsFolder(&pBrowser, NULL, NULL)))
+        pBrowser->QueryActiveShellView(&pResultsSV);
+    UINT cItems = pResultsSV ? GetShellViewItemCount(pResultsSV) : 0;
+
+    // Attempt to set the focus if we are not in the results folder or if there are no results
+    HWND hWndFocus = ::GetFocus();
+    if (!hWndFocus || !pResultsSV || cItems == 0)
+    {
+        BOOL IsOnButton = GetDlgItem(IDC_SEARCH_BUTTON) == hWndFocus;
+        BOOL IsOnSelfPane = hWndFocus == m_hWnd;
+        if (!hWndFocus || IsOnSelfPane || IsOnButton || !IsWindowChildOf(hWndFocus, m_hWnd))
+            SendMessageW(WM_NEXTDLGCTL, (WPARAM)GetDlgItem(IDC_SEARCH_FILENAME), TRUE);
     }
 }
