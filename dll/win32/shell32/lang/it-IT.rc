@@ -998,7 +998,7 @@ BEGIN
     IDS_OBJECTS "%d Oggetti"
     IDS_OBJECTS_SELECTED "%d Oggetti selezionati"
 
-    IDS_SEARCH_BROWSEITEM "Browse..."
+    IDS_SEARCH_BROWSEITEM "Esplora..."
 
     IDS_TITLE_MYCOMP "Risorse del Computer"
     IDS_TITLE_MYNET "Risorse di rete"

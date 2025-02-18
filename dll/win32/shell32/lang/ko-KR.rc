@@ -1005,7 +1005,7 @@ BEGIN
     IDS_OBJECTS "%d Objects"
     IDS_OBJECTS_SELECTED "%d Objects Selected"
 
-    IDS_SEARCH_BROWSEITEM "Browse..."
+    IDS_SEARCH_BROWSEITEM "찾아보기..."
 
     IDS_TITLE_MYCOMP "내 컴퓨터"
     IDS_TITLE_MYNET "내 네트워크 환경"

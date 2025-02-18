@@ -1008,7 +1008,7 @@ BEGIN
     IDS_OBJECTS "%d 个对象"
     IDS_OBJECTS_SELECTED "已选中 %d 个对象"
 
-    IDS_SEARCH_BROWSEITEM "Browse..."
+    IDS_SEARCH_BROWSEITEM "浏览..."
 
     IDS_TITLE_MYCOMP "我的电脑"
     IDS_TITLE_MYNET "网上邻居"
