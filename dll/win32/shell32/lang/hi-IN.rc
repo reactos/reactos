@@ -1000,6 +1000,8 @@ BEGIN
     IDS_OBJECTS "%d वस्तुओं"
     IDS_OBJECTS_SELECTED "%d वस्तुओं का चयन किया"
 
+    IDS_SEARCH_BROWSEITEM "ब्राउज़ करें..."
+
     IDS_TITLE_MYCOMP "मेरा कंप्यूटर"
     IDS_TITLE_MYNET "मेरे नेटवर्क स्थान"
     IDS_TITLE_BIN_1 "Recycle Bin (full)"
