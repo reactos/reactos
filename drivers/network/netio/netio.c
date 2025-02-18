@@ -59,11 +59,13 @@ ULONG DebugTraceLevel = MIN_TRACE;
 	} else { \
 		ret = ExAllocatePoolWithTag(pool, size, tag); \
 	} \
+        NETIO_DbgPrint(MIN_TRACE, ("ExAllocatePoolWithTag returning %p size is %d tag is %x\n", ret, size, tag)) \
 	ret; \
 })
 
 #define ExFreePoolWithTag(p, tag) \
-	NETIO_DbgPrint(MIN_TRACE, ("ExFreePoolWithTag %p %x\n", p, tag))
+	NETIO_DbgPrint(MIN_TRACE, ("ExFreePoolWithTag %p %x\n", p, tag)) \
+	ExFreePoolWithTag(p, tag)
 
 
 typedef struct _WSK_SOCKET_INTERNAL
