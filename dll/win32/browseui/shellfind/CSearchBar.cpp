@@ -22,14 +22,16 @@ WINE_DEFAULT_DEBUG_CHANNEL(shellfind);
 
 static BOOL IsWindowChildOf(const HWND hNeedle, const HWND hRoot)
 {
-    for (HWND hParent = hNeedle;;)
+    if (hNeedle != hRoot)
     {
-        if (!hParent || hNeedle == hRoot)
-            return FALSE;
-        hParent = GetParent(hParent);
-        if (hParent == hRoot)
-            return TRUE;
+        for (HWND hParent = hNeedle; hParent;)
+        {
+            hParent = GetParent(hParent);
+            if (hParent == hRoot)
+                return TRUE;
+        }
     }
+    return FALSE;
 }
 
 static UINT GetShellViewItemCount(IShellView *pSV)
