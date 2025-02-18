@@ -575,6 +575,13 @@ WskConnect(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR RemoteAddress, _Reserved_ ULO
     PWSK_SOCKET_INTERNAL s = (PWSK_SOCKET_INTERNAL)Socket;
     NTSTATUS status;
     struct NetioContext *nc;
+    ULONG TdiAddressSize;
+
+    TdiAddressSize = TaLengthOfTransportAddressByType(TDI_ADDRESS_TYPE_IP);
+    if (TdiAddressSize == 0) {
+        DbgPrint("Warning: TdiAddressSize is 0, invalid address type?\n");
+        goto err_out;
+    }
 
 DbgPrint("WskConnect ...\n");
     IoSetNextIrpStackLocation(Irp);
@@ -615,7 +622,9 @@ DbgPrint("WskConnect 4\n");
     nc->TargetConnectionInfo = TargetConnectionInfo;
 
 DbgPrint("WskConnect 5\n");
-    PeerAddrRet = ExAllocatePoolWithTag(NonPagedPool, sizeof(*PeerAddrRet), TAG_NETIO);
+    // PeerAddrRet = ExAllocatePoolWithTag(NonPagedPool, sizeof(*PeerAddrRet), TAG_NETIO);
+DbgPrint("Will allocate sizeof(*PeerAddrRet)+TdiAddressSize bytes %d sizeof(*PeerAddrRet) is %d TdiAddressSize is %d...\n", sizeof(*PeerAddrRet)+TdiAddressSize, sizeof(*PeerAddrRet), TdiAddressSize);
+    PeerAddrRet = ExAllocatePoolWithTag(NonPagedPool, sizeof(*PeerAddrRet)+TdiAddressSize, TAG_NETIO);
     if (PeerAddrRet == NULL)
     {
         goto err_out_free_nc_and_tci;

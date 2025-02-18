@@ -6,6 +6,7 @@ PTRANSPORT_ADDRESS TaCopyTransportAddress(PTRANSPORT_ADDRESS OtherAddress);
 PTRANSPORT_ADDRESS TaBuildNullTransportAddress(UINT AddressType);
 UINT TaLengthOfAddress(PTA_ADDRESS Addr);
 UINT TaLengthOfTransportAddress(PTRANSPORT_ADDRESS Addr);
+UINT TaLengthOfTransportAddressByType(UINT AddressType);
 VOID TaCopyTransportAddressInPlace(PTRANSPORT_ADDRESS Target, PTRANSPORT_ADDRESS Source);
 UINT TdiAddressSizeFromType(UINT Type);
 UINT TdiAddressSizeFromName(PTRANSPORT_ADDRESS Name);
