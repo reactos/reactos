@@ -268,4 +268,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_INSTGEN_CONFIRMUNINST "Êtes-vous sûr de vouloir désinstaller %s ?"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "Installation complete, run %s now?"
 END
