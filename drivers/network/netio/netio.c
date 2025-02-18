@@ -623,8 +623,10 @@ DbgPrint("WskConnect 4\n");
 
 DbgPrint("WskConnect 5\n");
     // PeerAddrRet = ExAllocatePoolWithTag(NonPagedPool, sizeof(*PeerAddrRet), TAG_NETIO);
-DbgPrint("Will allocate sizeof(*PeerAddrRet)+TdiAddressSize bytes %d sizeof(*PeerAddrRet) is %d TdiAddressSize is %d...\n", sizeof(*PeerAddrRet)+TdiAddressSize, sizeof(*PeerAddrRet), TdiAddressSize);
-    PeerAddrRet = ExAllocatePoolWithTag(NonPagedPool, sizeof(*PeerAddrRet)+TdiAddressSize, TAG_NETIO);
+// DbgPrint("Will allocate sizeof(*PeerAddrRet)+TdiAddressSize bytes %d sizeof(*PeerAddrRet) is %d TdiAddressSize is %d...\n", sizeof(*PeerAddrRet)+TdiAddressSize, sizeof(*PeerAddrRet), TdiAddressSize);
+//    PeerAddrRet = ExAllocatePoolWithTag(NonPagedPool, sizeof(*PeerAddrRet)+TdiAddressSize, TAG_NETIO);
+    PeerAddrRet = NULL;
+    TdiBuildNullConnectionInfo(&PeerAddrRet, TDI_ADDRESS_TYPE_IP);
     if (PeerAddrRet == NULL)
     {
         goto err_out_free_nc_and_tci;
