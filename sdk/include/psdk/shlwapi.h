@@ -1907,6 +1907,8 @@ SHFreeShared(
 
 #endif /* NO_SHLWAPI_SHARED */
 
+INT WINAPI GetMenuPosFromID(_In_ HMENU hMenu, _In_ UINT uID);
+
 /* SHAutoComplete flags */
 #define SHACF_DEFAULT               0x00000000
 #define SHACF_FILESYSTEM            0x00000001

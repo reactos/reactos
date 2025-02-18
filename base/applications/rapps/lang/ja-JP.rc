@@ -23,9 +23,9 @@ BEGIN
         MENUITEM "アンインストール(&U)\tCtrl+Del", ID_UNINSTALL
         MENUITEM "変更(&M)", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "レジストリから削除(&E)\tF5", ID_REGREMOVE
+        MENUITEM "レジストリから削除(&E)", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "更新(&R)", ID_REFRESH
+        MENUITEM "更新(&R)\tF5", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "データベースの更新(&B)\tCtrl+F5", ID_RESETDB
     END
@@ -42,22 +42,6 @@ BEGIN
     BEGIN
         MENUITEM "ブラウザでリンクを開く(&O)", ID_OPEN_LINK
         MENUITEM "クリップボードにコピーする(&C)", ID_COPY_LINK
-    END
-END
-
-IDR_APPLICATIONMENU MENU
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "インストール(&I)\tCtrl+Enter", ID_INSTALL
-        MENUITEM "アンインストール(&U)\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "変更(&M)", ID_MODIFY
-        MENUITEM SEPARATOR
-        MENUITEM "レジストリから削除(&E)\tF5", ID_REGREMOVE
-        MENUITEM SEPARATOR
-        MENUITEM "更新(&R)", ID_REFRESH
-        MENUITEM SEPARATOR
-        MENUITEM "データベースの更新(&B)\tCtrl+F5", ID_RESETDB
     END
 END
 
@@ -190,11 +174,20 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS アプリ マネージャ"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "検索..."
-    IDS_APPS_COUNT "アプリ数: %d; Selected: %d"
-    IDS_WELCOME_TITLE "ReactOS アプリ マネージャへようこそ!\n\n"
+    IDS_WELCOME_TITLE "ReactOS アプリ マネージャへようこそ!"
     IDS_WELCOME_TEXT "左側からカテゴリを選択し、インストールまたはアンインストールするアプリを選んでください。\nReactOS ウェブ サイト: "
     IDS_WELCOME_URL "https://reactos.org"
+
+    IDS_APPWIZ_TITLE "Add/Remove Programs"
+    IDS_APPWIZ_TEXT1 "Choose ""Applications"" or ""Updates"" to view the list of applications or updates installed on your system."
+    IDS_APPWIZ_TEXT2 "To remove a program or to modify its installed components, select it from the list and click on ""Uninstall"" or ""Modify""."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "検索..."
+    IDS_APPS_COUNT "アプリ数: %d"
+    IDS_APPS_SELECT_COUNT "; Selected: %d"
     IDS_INSTALLED "インストール済み"
     IDS_AVAILABLEFORINST "インストール可能"
     IDS_UPDATES "更新"

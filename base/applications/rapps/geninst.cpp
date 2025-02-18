@@ -28,6 +28,7 @@ extern "C" {
 
 #define REGPATH_UNINSTALL L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
 
+#define DB_NONE L"!" // Skip/Ignore
 #define DB_GENINST_FILES L"Files"
 #define DB_GENINST_DIR L"Dir"
 #define DB_GENINST_ICON L"Icon"
@@ -230,6 +231,8 @@ GetCustomIconPath(InstallInfo &Info, CStringW &Path)
 {
     if (*GetGenerateString(DB_GENINST_ICON, Path))
     {
+        if (Path.Compare(DB_NONE) == 0)
+            return HRESULT_FROM_WIN32(ERROR_CAN_NOT_COMPLETE);
         Path = BuildPath(Info.InstallDir, Path);
         int idx = PathParseIconLocation(Path.GetBuffer());
         Path.ReleaseBuffer();
@@ -306,6 +309,9 @@ CreateShortcut(const CStringW &Target)
     {
         if (SUCCEEDED(hr = link->SetPath(Target)))
         {
+            SplitFileAndDirectory(Target, &tmp);
+            link->SetWorkingDirectory(tmp);
+
             if (SUCCEEDED(GetCustomIconPath(Info, tmp)))
             {
                 LPWSTR p = tmp.GetBuffer();
@@ -432,7 +438,7 @@ ExtractAndInstallThread(LPVOID Parameter)
 {
     const BOOL PerUserModeDefault = TRUE;
     InstallInfo &Info = *static_cast<InstallInfo *>(g_pInfo);
-    LPCWSTR AppName = Info.AppName, Archive = Info.ArchivePath, None = L"!";
+    LPCWSTR AppName = Info.AppName, Archive = Info.ArchivePath, None = DB_NONE;
     CStringW installdir, tempdir, files, shortcut, tmp;
     HRESULT hr;
     CRegKey arpkey;
@@ -534,9 +540,9 @@ ExtractAndInstallThread(LPVOID Parameter)
             (tmp = tmp.Mid(0, cch)).AppendFormat(unparamsfmt, L" /S", modechar, bitness, arpkeyname);
             WriteArpEntry(L"QuietUninstallString", tmp);
 
-            if (GetCustomIconPath(Info, tmp) != S_OK)
-                tmp = Info.MainApp;
-            WriteArpEntry(L"DisplayIcon", tmp);
+            hr = GetCustomIconPath(Info, tmp);
+            if (hr != HRESULT_FROM_WIN32(ERROR_CAN_NOT_COMPLETE))
+                WriteArpEntry(L"DisplayIcon", hr == S_OK ? tmp : Info.MainApp);
 
             if (*GetCommonString(DB_VERSION, tmp))
                 WriteArpEntry(L"DisplayVersion", tmp);

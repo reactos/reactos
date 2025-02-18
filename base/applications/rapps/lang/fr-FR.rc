@@ -46,22 +46,6 @@ BEGIN
     END
 END
 
-IDR_APPLICATIONMENU MENU
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "&Installer\tCtrl+Entrée", ID_INSTALL
-        MENUITEM "&Désinstaller\tCtrl+Suppr", ID_UNINSTALL
-        MENUITEM "&Modifier", ID_MODIFY
-        MENUITEM SEPARATOR
-        MENUITEM "&Supprimer du registre", ID_REGREMOVE
-        MENUITEM SEPARATOR
-        MENUITEM "&Rafraîchir\tF5", ID_REFRESH
-        MENUITEM SEPARATOR
-        MENUITEM "Mettre à jour la &base\tCtrl+F5", ID_RESETDB
-    END
-END
-
 IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 265
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Configuration"
@@ -191,11 +175,20 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "Gestionnaire d'applications ReactOS"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "Chercher…"
-    IDS_APPS_COUNT "Nombre d'applications : %d ; Sélectionnées : %d"
-    IDS_WELCOME_TITLE "Bienvenue dans ReactOS Applications Manager !\n\n"
+    IDS_WELCOME_TITLE "Bienvenue dans ReactOS Applications Manager !"
     IDS_WELCOME_TEXT "Choisissez une catégorie à gauche, ensuite choisissez une application à installer ou désinstaller.\nSite internet de ReactOS : "
     IDS_WELCOME_URL "https://reactos.org"
+
+    IDS_APPWIZ_TITLE "Ajout/Suppression de programmes" // "Ajouter/Supprimer des Programmes"
+    IDS_APPWIZ_TEXT1 "Choisissez ""Applications"" ou ""Mises à jour"" pour voir la liste des programmes ou des mises à jour installés sur votre système."
+    IDS_APPWIZ_TEXT2 "Pour supprimer un programme, ou modifier ses composants installés, sélectionnez-le dans la liste et cliquez sur ""Désinstaller"" ou ""Modifier""."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "Chercher…"
+    IDS_APPS_COUNT "Nombre d'applications : %d"
+    IDS_APPS_SELECT_COUNT " ; Sélectionnées : %d"
     IDS_INSTALLED "Installé"
     IDS_AVAILABLEFORINST "Disponible pour installation"
     IDS_UPDATES "Mises à jour"
@@ -274,5 +267,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+    IDS_INSTGEN_CONFIRMUNINST "Êtes-vous sûr de vouloir désinstaller %s ?"
 END

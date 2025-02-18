@@ -46,22 +46,6 @@ BEGIN
     END
 END
 
-IDR_APPLICATIONMENU MENU
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "&Install\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Uninstall\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Modify", ID_MODIFY
-        MENUITEM SEPARATOR
-        MENUITEM "R&emove from Registry", ID_REGREMOVE
-        MENUITEM SEPARATOR
-        MENUITEM "&Refresh\tF5", ID_REFRESH
-        MENUITEM SEPARATOR
-        MENUITEM "Update Data&base\tCtrl+F5", ID_RESETDB
-    END
-END
-
 IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 265
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Settings"
@@ -191,11 +175,20 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS Applications Manager"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "Search…"
-    IDS_APPS_COUNT "Applications count: %d; Selected: %d"
-    IDS_WELCOME_TITLE "Welcome to ReactOS Applications Manager!\n\n"
+    IDS_WELCOME_TITLE "Welcome to ReactOS Applications Manager!"
     IDS_WELCOME_TEXT "Choose a category on the left, then choose an application to install or uninstall.\nReactOS Web Site: "
     IDS_WELCOME_URL "https://reactos.org"
+
+    IDS_APPWIZ_TITLE "Add/Remove Programs"
+    IDS_APPWIZ_TEXT1 "Choose ""Applications"" or ""Updates"" to view the list of applications or updates installed on your system."
+    IDS_APPWIZ_TEXT2 "To remove a program or to modify its installed components, select it from the list and click on ""Uninstall"" or ""Modify""."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "Search…"
+    IDS_APPS_COUNT "Applications count: %d"
+    IDS_APPS_SELECT_COUNT "; Selected: %d"
     IDS_INSTALLED "Installed"
     IDS_AVAILABLEFORINST "Available for installation"
     IDS_UPDATES "Updates"

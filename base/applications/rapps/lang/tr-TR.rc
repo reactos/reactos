@@ -45,22 +45,6 @@ BEGIN
     END
 END
 
-IDR_APPLICATIONMENU MENU
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "&Kur\tCtrl+Enter", ID_INSTALL
-        MENUITEM "K&aldır\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Değiştir", ID_MODIFY
-        MENUITEM SEPARATOR
-        MENUITEM "&Girdiyi Kayıt Defteri'nden Kaldır", ID_REGREMOVE
-        MENUITEM SEPARATOR
-        MENUITEM "&Yenile\tF5", ID_REFRESH
-        MENUITEM SEPARATOR
-        MENUITEM "Uygulama Veri Ta&banını Yenile\tCtrl+F5", ID_RESETDB
-    END
-END
-
 IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 265
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Ayarlar"
@@ -190,11 +174,20 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS Uygulama Yöneticisi"
     IDS_APP_AUTHORS "Telif Hakkı: 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "Ara"
-    IDS_APPS_COUNT "Uygulama Sayısı: %d; Seçili: %d"
-    IDS_WELCOME_TITLE "ReactOS Uygulama Yöneticisi'ne hoş geldiniz.\n\n"
+    IDS_WELCOME_TITLE "ReactOS Uygulama Yöneticisi'ne hoş geldiniz."
     IDS_WELCOME_TEXT "Solda bir kategori seçiniz, ardından kurmak ya da kaldırmak için bir uygulama seçiniz.\nReactOS'un İnternet sitesi: "
     IDS_WELCOME_URL "https://reactos.org"
+
+    IDS_APPWIZ_TITLE "Program Ekle/Kaldır"
+    IDS_APPWIZ_TEXT1 "Sisteminizde yüklü olan uygulamaların veya güncellemelerin listesini görüntülemek için ""Uygulamalar"" veya ""Güncellemeler"" öğesini seçin."
+    IDS_APPWIZ_TEXT2 "Bir programı kaldırmak veya yüklü bileşenlerini değiştirmek için listeden seçin ve ""Kaldır"" veya ""Değiştir"" üzerine tıklayın."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "Ara…"
+    IDS_APPS_COUNT "Uygulama Sayısı: %d"
+    IDS_APPS_SELECT_COUNT "; Seçili: %d"
     IDS_INSTALLED "Kurulanlar"
     IDS_AVAILABLEFORINST "Kurulabilir Uygulamalar"
     IDS_UPDATES "Güncelleştirmeler"
@@ -220,7 +213,7 @@ BEGIN
     IDS_APP_DISPLAY_DETAILS "Detaylar"
     IDS_APP_DISPLAY_LIST "Liste"
     IDS_APP_DISPLAY_TILE "Karo"
-    IDS_NO_SEARCH_RESULTS "No search results"
+    IDS_NO_SEARCH_RESULTS "Arama sonucu yok"
 END
 
 STRINGTABLE
@@ -273,5 +266,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+    IDS_INSTGEN_CONFIRMUNINST "Kaldırmak istediğinizden emin misiniz %s?"
 END

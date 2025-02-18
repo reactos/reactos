@@ -39,6 +39,31 @@ CopyTextToClipboard(LPCWSTR lpszText)
     CloseClipboard();
 }
 
+static INT_PTR CALLBACK
+NothingDlgProc(HWND hDlg, UINT uMsg, WPARAM, LPARAM)
+{
+    return uMsg == WM_CLOSE ? DestroyWindow(hDlg) : FALSE;
+}
+
+VOID
+EmulateDialogReposition(HWND hwnd)
+{
+    static const DWORD DlgTmpl[] = { WS_POPUP | WS_CAPTION | WS_SYSMENU, 0, 0, 0, 0, 0 };
+    HWND hDlg = CreateDialogIndirectW(NULL, (LPDLGTEMPLATE)DlgTmpl, NULL, NothingDlgProc);
+    if (hDlg)
+    {
+        RECT r;
+        GetWindowRect(hwnd, &r);
+        if (SetWindowPos(hDlg, hDlg, r.left, r.top, r.right - r.left, r.bottom - r.top, SWP_NOZORDER | SWP_NOACTIVATE))
+        {
+            SendMessage(hDlg, DM_REPOSITION, 0, 0);
+            if (GetWindowRect(hDlg, &r))
+                SetWindowPos(hwnd, hwnd, r.left, r.top, r.right - r.left, r.bottom - r.top, SWP_NOZORDER | SWP_NOACTIVATE);
+        }
+        SendMessage(hDlg, WM_CLOSE, 0, 0);
+    }
+}
+
 VOID
 ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem, POINT *Point)
 {
@@ -135,6 +160,8 @@ StartProcess(const CStringW &Path, BOOL Wait)
     {
         EnableWindow(hMainWnd, TRUE);
         SetForegroundWindow(hMainWnd);
+        // We got the real activation message during MsgWaitForMultipleObjects while
+        // we were disabled, we need to set the focus again now.
         SetFocus(hMainWnd);
     }
 

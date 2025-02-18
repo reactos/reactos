@@ -43,22 +43,6 @@ BEGIN
     END
 END
 
-IDR_APPLICATIONMENU MENU
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "&Installi\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Desinstalli\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Muuda", ID_MODIFY
-        MENUITEM SEPARATOR
-        MENUITEM "&Eemalda registrist", ID_REGREMOVE
-        MENUITEM SEPARATOR
-        MENUITEM "&Värskenda\tF5", ID_REFRESH
-        MENUITEM SEPARATOR
-        MENUITEM "Uuenda andme&baasi\tCtrl+F5", ID_RESETDB
-    END
-END
-
 IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 265
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Sätted"
@@ -188,11 +172,20 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS'i Rakenduste Haldur"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "Otsi…"
-    IDS_APPS_COUNT "Rakenduste arv: %d; Valitud: %d"
-    IDS_WELCOME_TITLE "Tere tulemast ReactOS'i Rakenduste Haldurisse!\n\n"
+    IDS_WELCOME_TITLE "Tere tulemast ReactOS'i Rakenduste Haldurisse!"
     IDS_WELCOME_TEXT "Vali vasakult teema, siis vali paremalt rakendusi mida soovid installida või desinstallida.\nReactOS'i veebileht: "
     IDS_WELCOME_URL "https://reactos.org"
+
+    IDS_APPWIZ_TITLE "Add/Remove Programs"
+    IDS_APPWIZ_TEXT1 "Choose ""Applications"" or ""Updates"" to view the list of applications or updates installed on your system."
+    IDS_APPWIZ_TEXT2 "To remove a program or to modify its installed components, select it from the list and click on ""Uninstall"" or ""Modify""."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "Otsi…"
+    IDS_APPS_COUNT "Rakenduste arv: %d"
+    IDS_APPS_SELECT_COUNT "; Valitud: %d"
     IDS_INSTALLED "Installitud"
     IDS_AVAILABLEFORINST "Installimiseks saadaval"
     IDS_UPDATES "Uuendused"

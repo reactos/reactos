@@ -27,7 +27,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Aggiorna\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Aggiorna Data&base", ID_RESETDB
+        MENUITEM "Aggiorna Data&base\tCtrl+F5", ID_RESETDB
     END
     POPUP "?"
     BEGIN
@@ -42,22 +42,6 @@ BEGIN
     BEGIN
         MENUITEM "&Apri il collegamento in un browser", ID_OPEN_LINK
         MENUITEM "&Copia il collegamento negli appunti", ID_COPY_LINK
-    END
-END
-
-IDR_APPLICATIONMENU MENU
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "&Installa\tCtrl+Enter", ID_INSTALL
-        MENUITEM "Rim&uovi\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Modifica", ID_MODIFY
-        MENUITEM SEPARATOR
-        MENUITEM "Canc&ella dal registro", ID_REGREMOVE
-        MENUITEM SEPARATOR
-        MENUITEM "&Aggiorna\tF5", ID_REFRESH
-        MENUITEM SEPARATOR
-        MENUITEM "Aggiorna Data&base\tCtrl+F5", ID_RESETDB
     END
 END
 
@@ -190,11 +174,20 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS Gestione applicazioni"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "Cerca…"
-    IDS_APPS_COUNT "Numero applicazioni: %d; Selezionate: %d"
-    IDS_WELCOME_TITLE "Benvenuto!\n\n"
+    IDS_WELCOME_TITLE "Benvenuto!"
     IDS_WELCOME_TEXT "Scegliere una categoria a sinistra, poi scegliere una applicazione da installare o disinstallare.\nReactOS Web Site: "
     IDS_WELCOME_URL "https://reactos.org"
+
+    IDS_APPWIZ_TITLE "Add/Remove Programs"
+    IDS_APPWIZ_TEXT1 "Choose ""Applications"" or ""Updates"" to view the list of applications or updates installed on your system."
+    IDS_APPWIZ_TEXT2 "To remove a program or to modify its installed components, select it from the list and click on ""Uninstall"" or ""Modify""."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "Cerca…"
+    IDS_APPS_COUNT "Numero applicazioni: %d"
+    IDS_APPS_SELECT_COUNT "; Selezionate: %d"
     IDS_INSTALLED "Installato"
     IDS_AVAILABLEFORINST "Disponibile per l'installazione"
     IDS_UPDATES "Aggiornamenti"

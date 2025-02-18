@@ -191,7 +191,7 @@ HandleUninstallCommand(CAppDB &db, UINT argcLeft, LPWSTR *argvLeft)
 
     if (pInfo)
     {
-        retval = pInfo->UninstallApplication(silent ? UCF_SILENT : UCF_NONE);
+        retval = pInfo->UninstallApplication((silent ? UCF_SILENT : UCF_NONE) | UCF_SAMEPROCESS);
     }
     delete pDelete;
     return retval;
@@ -338,6 +338,7 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     BOOL bAppwizMode = (argc > 1 && MatchCmdOption(argv[1], CMD_KEY_APPWIZ));
     if (!bAppwizMode)
     {
+        CUpdateDatabaseMutex lock;
         if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
             db.RemoveCached();
 
@@ -349,16 +350,17 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     if (argc == 1 || bAppwizMode) // RAPPS is launched without options or APPWIZ mode is requested
     {
         // Check whether the RAPPS MainWindow is already launched in another process
-        HANDLE hMutex;
+        CStringW szWindowText(MAKEINTRESOURCEW(bAppwizMode ? IDS_APPWIZ_TITLE : IDS_APPTITLE));
+        LPCWSTR pszMutex = bAppwizMode ? L"RAPPWIZ" : MAINWINDOWMUTEX;
 
-        hMutex = CreateMutexW(NULL, FALSE, szWindowClass);
+        HANDLE hMutex = CreateMutexW(NULL, FALSE, pszMutex);
         if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
         {
             /* If already started, find its window */
             HWND hWindow;
             for (int wait = 2500, inter = 250; wait > 0; wait -= inter)
             {
-                if ((hWindow = FindWindowW(szWindowClass, NULL)) != NULL)
+                if ((hWindow = FindWindowW(szWindowClass, szWindowText)) != NULL)
                     break;
                 Sleep(inter);
             }
@@ -366,6 +368,7 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
             if (hWindow)
             {
                 /* Activate the window in the other instance */
+                ShowWindow(hWindow, SW_SHOWNA);
                 SwitchToThisWindow(hWindow, TRUE);
                 if (bAppwizMode)
                     PostMessage(hWindow, WM_COMMAND, ID_ACTIVATE_APPWIZ, 0);
@@ -376,6 +379,7 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
                 return FALSE;
             }
         }
+        szWindowText.Empty();
 
         CMainWindow wnd(&db, bAppwizMode);
         MainWindowLoop(&wnd, nCmdShow);

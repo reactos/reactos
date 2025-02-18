@@ -13,7 +13,8 @@
 #include <gdiplus.h>
 #include <conutils.h>
 
-LPCWSTR szWindowClass = L"ROSAPPMGR2";
+LPCWSTR szWindowClass = MAINWINDOWCLASSNAME;
+LONG g_Busy = 0;
 
 HWND hMainWnd;
 HINSTANCE hInst;
@@ -40,12 +41,7 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nSh
     }
 
     hInst = hInstance;
-
     BOOL bIsFirstLaunch = !LoadSettings(&SettingsInfo);
-    if (bIsFirstLaunch)
-    {
-        FillDefaultSettings(&SettingsInfo);
-    }
 
     InitLogs();
     InitCommonControls();
