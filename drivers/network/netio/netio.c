@@ -49,6 +49,12 @@ ULONG DebugTraceLevel = MIN_TRACE;
 #define AFD_SHARE_WILDCARD  0x2L
 #define AFD_SHARE_EXCLUSIVE 0x3L
 
+#if 0
+
+/* Very simple malloc debugger .. I would like to keep this here
+ * for now in case we find another BSOD.
+ */
+
 #define ExAllocatePoolWithTag(pool, size, tag) \
 ({ \
 	void *ret; \
@@ -67,6 +73,7 @@ ULONG DebugTraceLevel = MIN_TRACE;
 	NETIO_DbgPrint(MIN_TRACE, ("ExFreePoolWithTag %p %x\n", p, tag)) \
 	ExFreePoolWithTag(p, tag)
 
+#endif
 
 typedef struct _WSK_SOCKET_INTERNAL
 {
@@ -117,7 +124,6 @@ SocketPut(PWSK_SOCKET_INTERNAL s)
     s->RefCount--;
     if (s->RefCount == 0)
     {
-DbgPrint("Would close some files now ... LocalAddressHandle is %p ConnectionHandle is %p\n", s->LocalAddressHandle, s->ConnectionHandle);
         if (s->LocalAddressFile != NULL) {
             ObDereferenceObject(s->LocalAddressFile);
             s->LocalAddressFile = NULL;
@@ -152,13 +158,10 @@ NetioComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
     struct NetioContext *c = (struct NetioContext *)Context;
     PIRP UserIrp = c->UserIrp;
 
-NETIO_DbgPrint(MIN_TRACE, ("NetioComplete ...\n"));
     UserIrp->IoStatus.Status = Irp->IoStatus.Status;
     UserIrp->IoStatus.Information = Irp->IoStatus.Information;
 
     IoCompleteRequest(UserIrp, IO_NETWORK_INCREMENT);
-// NETIO_DbgPrint(MIN_TRACE, ("After IoCompleteRequest ...\n"));
-// NETIO_DbgPrint(MIN_TRACE, ("NOT freeing anything ...\n"));
 
     SocketPut(c->socket);
     if (c->TargetConnectionInfo != NULL)
@@ -171,7 +174,6 @@ NETIO_DbgPrint(MIN_TRACE, ("NetioComplete ...\n"));
     }
     ExFreePoolWithTag(c, TAG_NETIO);
 
-// NETIO_DbgPrint(MIN_TRACE, ("After Free, returing...\n"));
     return STATUS_SUCCESS;
 }
 
@@ -191,11 +193,8 @@ WskControlSocket(
     PWSK_SOCKET_INTERNAL s = (PWSK_SOCKET_INTERNAL)Socket;
     NTSTATUS status = STATUS_NOT_IMPLEMENTED;
 
-DbgPrint("WskControlSocket ...\n");
-
     if (s == NULL)
     {
-        DbgPrint("WskControlSocket: Socket is NULL\n");
         status = STATUS_INVALID_PARAMETER;
         goto err_out;
     }
@@ -283,8 +282,6 @@ WskCloseSocket(_In_ PWSK_SOCKET Socket, _Inout_ PIRP Irp)
     NTSTATUS status = STATUS_SUCCESS;
     PWSK_SOCKET_INTERNAL s = (PWSK_SOCKET_INTERNAL)Socket;
 
-DbgPrint("WskCloseSocket ...\n");
-
     IoSetNextIrpStackLocation(Irp);
 
     SocketPut(s);
@@ -300,7 +297,6 @@ TdiTransportAddressFromSocketAddress(PSOCKADDR SocketAddress)
 {
     PTRANSPORT_ADDRESS ta;
 
-DbgPrint("sizeof(*ta) is %d sizeof(SocketAddress->sa_data) is %d alloc size is %d\n", sizeof(*ta), sizeof(SocketAddress->sa_data), sizeof(*ta) + sizeof(SocketAddress->sa_data));
     ta = ExAllocatePoolWithTag(NonPagedPool, sizeof(*ta) + sizeof(SocketAddress->sa_data), TAG_NETIO);
     if (ta == NULL)
     {
@@ -309,11 +305,9 @@ DbgPrint("sizeof(*ta) is %d sizeof(SocketAddress->sa_data) is %d alloc size is %
     }
 
     ta->TAAddressCount = 1;
-		/* TODO: TDI_ADDRESS_LENGTH_IP: */
     ta->Address[0].AddressLength = sizeof(SocketAddress->sa_data);
     ta->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;	/* AF_INET */
 
-DbgPrint("ta is %p &ta->Address[0].Address[0] is %p memcpy len is ta->Address[0].AddressLength %d\n", ta, &ta->Address[0].Address[0], ta->Address[0].AddressLength);
     memcpy(&ta->Address[0].Address[0], &SocketAddress->sa_data, ta->Address[0].AddressLength);
 
     return ta;
@@ -351,8 +345,6 @@ WskBind(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR LocalAddress, _Reserved_ ULONG F
     PWSK_SOCKET_INTERNAL s = (PWSK_SOCKET_INTERNAL)Socket;
     PTRANSPORT_ADDRESS ta = TdiTransportAddressFromSocketAddress(LocalAddress);
 
-DbgPrint("WskBind ...\n");
-
     IoSetNextIrpStackLocation(Irp);
 
     if (ta == NULL)
@@ -361,19 +353,15 @@ DbgPrint("WskBind ...\n");
         status = STATUS_INSUFFICIENT_RESOURCES;
         goto err_out;
     }
-DbgPrint("WskBind 0\n");
     if (s->LocalAddressHandle != NULL)
     {
-DbgPrint("Warning: Called WskBind() on an already bound socket.\n");
         ZwClose(s->LocalAddressHandle);
         s->LocalAddressHandle = NULL;
         s->LocalAddressFile = NULL;
     }
 
-DbgPrint("WskBind 1\n");
     status = TdiOpenAddressFile(&s->TdiName,
                                 ta, AFD_SHARE_REUSE, &s->LocalAddressHandle, &s->LocalAddressFile);
-DbgPrint("WskBind 2\n");
     if (NT_SUCCESS(status))
     {
         memcpy(&s->LocalAddress, LocalAddress, sizeof(s->LocalAddress));
@@ -382,7 +370,6 @@ DbgPrint("WskBind 2\n");
 
 err_out:
     Irp->IoStatus.Status = status;
-DbgPrint("WskBind finished, completing request\n");
     IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 
     return status;
@@ -410,8 +397,6 @@ WskSendTo(
     NTSTATUS status;
     void *BufferData;
     struct NetioContext *nc;
-
-DbgPrint("WskSendTo ...\n");
 
     IoSetNextIrpStackLocation(Irp);
 
@@ -483,7 +468,6 @@ WskReceiveFrom(
     _Out_writes_bytes_opt_(*ControlLength) PCMSGHDR ControlInfo,
     _Out_opt_ PULONG ControlFlags, _Inout_ PIRP Irp)
 {
-DbgPrint("WskReceiveFrom...\n");
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -491,7 +475,6 @@ DbgPrint("WskReceiveFrom...\n");
 static NTSTATUS WSKAPI
 WskReleaseUdp(_In_ PWSK_SOCKET Socket, _In_ PWSK_DATAGRAM_INDICATION DatagramIndication)
 {
-DbgPrint("WskReleaseUdp...\n");
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -499,7 +482,6 @@ DbgPrint("WskReleaseUdp...\n");
 static NTSTATUS WSKAPI
 WskReleaseTcp(_In_ PWSK_SOCKET Socket, _In_ PWSK_DATA_INDICATION DataIndication)
 {
-DbgPrint("WskReleaseTcp...\n");
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -507,7 +489,6 @@ DbgPrint("WskReleaseTcp...\n");
 static NTSTATUS WSKAPI
 WskGetLocalAddress(_In_ PWSK_SOCKET Socket, _Out_ PSOCKADDR LocalAddress, _Inout_ PIRP Irp)
 {
-DbgPrint("WskGetLocalAddress...\n");
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -515,7 +496,6 @@ DbgPrint("WskGetLocalAddress...\n");
 static NTSTATUS WSKAPI
 WskGetRemoteAddress(_In_ PWSK_SOCKET Socket, _Out_ PSOCKADDR RemoteAddress, _Inout_ PIRP Irp)
 {
-DbgPrint("WskGetRemoteAddress...\n");
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -535,7 +515,6 @@ WskSocketConnect(
     _In_opt_ PSECURITY_DESCRIPTOR SecurityDescriptor,
     _Inout_ PIRP Irp)
 {
-DbgPrint("WskSocketConnect...\n");
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -550,7 +529,6 @@ WskControlClient(
     _Out_writes_bytes_opt_(OutputSize) PVOID OutputBuffer,
     _Out_opt_ SIZE_T * OutputSizeReturned, _Inout_opt_ PIRP Irp)
 {
-DbgPrint("WskControlClient...\n");
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -575,18 +553,9 @@ WskConnect(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR RemoteAddress, _Reserved_ ULO
     PWSK_SOCKET_INTERNAL s = (PWSK_SOCKET_INTERNAL)Socket;
     NTSTATUS status;
     struct NetioContext *nc;
-    ULONG TdiAddressSize;
 
-    TdiAddressSize = TaLengthOfTransportAddressByType(TDI_ADDRESS_TYPE_IP);
-    if (TdiAddressSize == 0) {
-        DbgPrint("Warning: TdiAddressSize is 0, invalid address type?\n");
-        goto err_out;
-    }
-
-DbgPrint("WskConnect ...\n");
     IoSetNextIrpStackLocation(Irp);
 
-DbgPrint("WskConnect 1\n");
     status = STATUS_INVALID_PARAMETER;
     if (s->LocalAddressHandle == NULL)
     {
@@ -594,14 +563,12 @@ DbgPrint("WskConnect 1\n");
         goto err_out;
     }
 
-DbgPrint("WskConnect 2\n");
     status = STATUS_INSUFFICIENT_RESOURCES;
     nc = ExAllocatePoolWithTag(NonPagedPool, sizeof(*nc), TAG_NETIO);
     if (nc == NULL)
     {
         goto err_out;
     }
-DbgPrint("WskConnect 3\n");
     nc->socket = s;
     nc->UserIrp = Irp;
 
@@ -613,7 +580,6 @@ DbgPrint("WskConnect 3\n");
         goto err_out_free_nc;
     }
 
-DbgPrint("WskConnect 4\n");
     TargetConnectionInfo = TdiConnectionInfoFromSocketAddress(RemoteAddress);
     if (TargetConnectionInfo == NULL)
     {
@@ -621,26 +587,19 @@ DbgPrint("WskConnect 4\n");
     }
     nc->TargetConnectionInfo = TargetConnectionInfo;
 
-DbgPrint("WskConnect 5\n");
-    // PeerAddrRet = ExAllocatePoolWithTag(NonPagedPool, sizeof(*PeerAddrRet), TAG_NETIO);
-// DbgPrint("Will allocate sizeof(*PeerAddrRet)+TdiAddressSize bytes %d sizeof(*PeerAddrRet) is %d TdiAddressSize is %d...\n", sizeof(*PeerAddrRet)+TdiAddressSize, sizeof(*PeerAddrRet), TdiAddressSize);
-//    PeerAddrRet = ExAllocatePoolWithTag(NonPagedPool, sizeof(*PeerAddrRet)+TdiAddressSize, TAG_NETIO);
     PeerAddrRet = NULL;
     TdiBuildNullConnectionInfo(&PeerAddrRet, TDI_ADDRESS_TYPE_IP);
     if (PeerAddrRet == NULL)
     {
         goto err_out_free_nc_and_tci;
     }
-DbgPrint("WskConnect 6\n");
     nc->PeerAddrRet = PeerAddrRet;
 
     IoMarkIrpPending(Irp);
     SocketGet(s);
 
-DbgPrint("WskConnect 7\n");
     status = TdiConnect(&tdiIrp, s->ConnectionFile, TargetConnectionInfo, PeerAddrRet, NetioComplete, nc);
 
-DbgPrint("WskConnect 8\n");
     /* If allocating tdiIrp fails we get here.
      * Call the IoCompletion of the application's Irp so this Irp
      * gets freed.
@@ -651,19 +610,15 @@ DbgPrint("WskConnect 8\n");
         SocketPut(s);
         goto err_out_free_nc_and_tci;
     }
-DbgPrint("WskConnect 9\n");
     return STATUS_PENDING;
 
 err_out_free_nc_and_tci:
-DbgPrint("WskConnect a\n");
     ExFreePoolWithTag(TargetConnectionInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
 
 err_out_free_nc:
-DbgPrint("WskConnect b\n");
     ExFreePoolWithTag(nc, TAG_NETIO);
 
 err_out:
-DbgPrint("WskConnect c\n");
     Irp->IoStatus.Status = status;
     IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 
@@ -684,7 +639,6 @@ WskStreamIo(
     void *BufferData;
     struct NetioContext *nc;
 
-DbgPrint("WskStreamIo ...\n");
     IoSetNextIrpStackLocation(Irp);
     status = STATUS_INSUFFICIENT_RESOURCES;
 
@@ -746,21 +700,18 @@ err_out:
 static NTSTATUS WSKAPI
 WskSend(_In_ PWSK_SOCKET Socket, _In_ PWSK_BUF Buffer, _In_ ULONG Flags, _Inout_ PIRP Irp)
 {
-DbgPrint("WskSend ...\n");
     return WskStreamIo(Socket, Buffer, Flags, Irp, DIR_SEND);
 }
 
 static NTSTATUS WSKAPI
 WskReceive(_In_ PWSK_SOCKET Socket, _In_ PWSK_BUF Buffer, _In_ ULONG Flags, _Inout_ PIRP Irp)
 {
-DbgPrint("WskReceive ...\n");
     return WskStreamIo(Socket, Buffer, Flags, Irp, DIR_RECEIVE);
 }
 
 static NTSTATUS WSKAPI
 WskDisconnect(_In_ PWSK_SOCKET Socket, _In_opt_ PWSK_BUF Buffer, _In_ ULONG Flags, _Inout_ PIRP Irp)
 {
-DbgPrint("WskDisconnect...\n");
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -796,7 +747,6 @@ WskSocket(
     PWSK_SOCKET_INTERNAL s;
     NTSTATUS status;
 
-DbgPrint("WskSocket ...\n");
     IoSetNextIrpStackLocation(Irp);
 
     if (AddressFamily != AF_INET)
@@ -917,7 +867,6 @@ static WSK_PROVIDER_DISPATCH provider_dispatch = {
 NTSTATUS WSKAPI
 WskRegister(_In_ PWSK_CLIENT_NPI client_npi, _Out_ PWSK_REGISTRATION reg)
 {
-DbgPrint("WskRegister...\n");
     reg->ReservedRegistrationState = 42;
     reg->ReservedRegistrationContext = NULL;
     KeInitializeSpinLock(&reg->ReservedRegistrationLock);
@@ -928,8 +877,6 @@ DbgPrint("WskRegister...\n");
 NTSTATUS WSKAPI
 WskCaptureProviderNPI(_In_ PWSK_REGISTRATION reg, _In_ ULONG wait, _Out_ PWSK_PROVIDER_NPI npi)
 {
-    DbgPrint("WskCaptureProviderNPI\n");
-    NETIO_DbgPrint(MIN_TRACE, ("Debug Feb 14 2025\n"));
     npi->Client = NULL;
     npi->Dispatch = &provider_dispatch;
 
@@ -939,13 +886,11 @@ WskCaptureProviderNPI(_In_ PWSK_REGISTRATION reg, _In_ ULONG wait, _Out_ PWSK_PR
 VOID WSKAPI
 WskReleaseProviderNPI(_In_ PWSK_REGISTRATION reg)
 {
-    DbgPrint("WskReleaseProviderNPI\n");
     /* noop */
 }
 
 VOID WSKAPI
 WskDeregister(_In_ PWSK_REGISTRATION reg)
 {
-    DbgPrint("WskDeregister\n");
     /* noop */
 }
