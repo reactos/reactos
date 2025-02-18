@@ -51,9 +51,7 @@ CAPTION "Ayarlar"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Genel", -1, 4, 2, 240, 61
-    AUTOCHECKBOX "&Pencere Konumunu Kaydet", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "&Başlangıçta Erişilebilir Programların Listesini Yenile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "P&rogramların Kurulma ve Kaldırma Günlüğünü Sakla", IDC_LOG_ENABLED, 15, 46, 219, 12
+    CONTROL "", IDC_GENERALLIST, "SysListView32", WS_TABSTOP | LVCHECKSTYLES, 15, 12, 219, 46, WS_EX_STATICEDGE
     GROUPBOX "İndirme", -1, 4, 65, 240, 51
     LTEXT "İndirme Dizini:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
@@ -214,6 +212,10 @@ BEGIN
     IDS_APP_DISPLAY_LIST "Liste"
     IDS_APP_DISPLAY_TILE "Karo"
     IDS_NO_SEARCH_RESULTS "Arama sonucu yok"
+    IDS_CFG_SAVE_WINDOW_POS "Pencere Konumunu Kaydet"
+    IDS_CFG_UPDATE_AVLIST "Başlangıçta Erişilebilir Programların Listesini Yenile"
+    IDS_CFG_LOG_ENABLED "Programların Kurulma ve Kaldırma Günlüğünü Sakla"
+    IDS_CFG_SMALL_ICONS "Küçük simgeler"
 END
 
 STRINGTABLE
