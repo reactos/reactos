@@ -57,6 +57,7 @@ list(APPEND SOURCE
     image.c
     interlck.c
     largeint.c
+    locale.c
     luid.c
     memstream.c
     message.c
