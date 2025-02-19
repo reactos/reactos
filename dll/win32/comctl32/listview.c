@@ -2270,11 +2270,7 @@ static void LISTVIEW_InvalidateSelectedItems(const LISTVIEW_INFO *infoPtr)
     iterator_frameditems(&i, infoPtr, &infoPtr->rcList); 
     while(iterator_next(&i))
     {
-#ifdef __REACTOS__
-	if (LISTVIEW_GetItemState(infoPtr, i.nItem, LVIS_SELECTED | LVIS_CUT))
-#else
 	if (LISTVIEW_GetItemState(infoPtr, i.nItem, LVIS_SELECTED))
-#endif
 	    LISTVIEW_InvalidateItem(infoPtr, i.nItem);
     }
     iterator_destroy(&i);
@@ -4782,7 +4778,11 @@ static void LISTVIEW_DrawItemPart(LISTVIEW_INFO *infoPtr, LVITEMW *item, const N
 
         TRACE("iImage=%d\n", item->iImage);
 
+#ifdef __REACTOS__
+        if (item->state & (LVIS_CUT | (infoPtr->bFocus ? LVIS_SELECTED : 0)))
+#else
         if (item->state & (LVIS_SELECTED | LVIS_CUT) && infoPtr->bFocus)
+#endif
             style = ILD_SELECTED;
         else
             style = ILD_NORMAL;
