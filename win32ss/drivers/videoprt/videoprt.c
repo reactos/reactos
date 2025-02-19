@@ -419,26 +419,26 @@ IntVideoPortFindAdapter(
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
     VP_STATUS vpStatus;
-    VIDEO_PORT_CONFIG_INFO ConfigInfo;
+    PVIDEO_PORT_CONFIG_INFO ConfigInfo;
     SYSTEM_BASIC_INFORMATION SystemBasicInfo;
     UCHAR Again = FALSE;
     BOOL LegacyDetection = FALSE;
 
     DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
+    ConfigInfo = &DeviceExtension->ConfigInfo;
+
     /* Setup a ConfigInfo structure that we will pass to HwFindAdapter. */
-    RtlZeroMemory(&ConfigInfo, sizeof(VIDEO_PORT_CONFIG_INFO));
-    ConfigInfo.Length = sizeof(VIDEO_PORT_CONFIG_INFO);
-    ConfigInfo.AdapterInterfaceType = DeviceExtension->AdapterInterfaceType;
-    if (ConfigInfo.AdapterInterfaceType == PCIBus)
-        ConfigInfo.InterruptMode = LevelSensitive;
+    RtlZeroMemory(ConfigInfo, sizeof(VIDEO_PORT_CONFIG_INFO));
+    ConfigInfo->Length = sizeof(VIDEO_PORT_CONFIG_INFO);
+    ConfigInfo->AdapterInterfaceType = DeviceExtension->AdapterInterfaceType;
+    if (ConfigInfo->AdapterInterfaceType == PCIBus)
+        ConfigInfo->InterruptMode = LevelSensitive;
     else
-        ConfigInfo.InterruptMode = Latched;
-    ConfigInfo.DriverRegistryPath = DriverExtension->RegistryPath.Buffer;
-    ConfigInfo.VideoPortGetProcAddress = IntVideoPortGetProcAddress;
-    ConfigInfo.SystemIoBusNumber = DeviceExtension->SystemIoBusNumber;
-    ConfigInfo.BusInterruptLevel = DeviceExtension->InterruptLevel;
-    ConfigInfo.BusInterruptVector = DeviceExtension->InterruptVector;
+        ConfigInfo->InterruptMode = Latched;
+    ConfigInfo->DriverRegistryPath = DriverExtension->RegistryPath.Buffer;
+    ConfigInfo->VideoPortGetProcAddress = IntVideoPortGetProcAddress;
+    ConfigInfo->SystemIoBusNumber = DeviceExtension->SystemIoBusNumber;
 
     Status = ZwQuerySystemInformation(SystemBasicInformation,
                                       &SystemBasicInfo,
@@ -446,7 +446,7 @@ IntVideoPortFindAdapter(
                                       NULL);
     if (NT_SUCCESS(Status))
     {
-        ConfigInfo.SystemMemorySize = SystemBasicInfo.NumberOfPhysicalPages *
+        ConfigInfo->SystemMemorySize = SystemBasicInfo.NumberOfPhysicalPages *
                                       SystemBasicInfo.PageSize;
     }
 
@@ -484,7 +484,7 @@ IntVideoPortFindAdapter(
                    DeviceExtension->AdapterInterfaceType, BusNumber);
 
             DeviceExtension->SystemIoBusNumber =
-                ConfigInfo.SystemIoBusNumber = BusNumber;
+                ConfigInfo->SystemIoBusNumber = BusNumber;
 
             RtlZeroMemory(&DeviceExtension->MiniPortDeviceExtension,
                           DriverExtension->InitializationData.HwDeviceExtensionSize);
@@ -495,7 +495,7 @@ IntVideoPortFindAdapter(
                          &DeviceExtension->MiniPortDeviceExtension,
                          DriverExtension->HwContext,
                          NULL,
-                         &ConfigInfo,
+                         ConfigInfo,
                          &Again);
 
             if (vpStatus == ERROR_DEV_NOT_EXIST)
@@ -515,7 +515,7 @@ IntVideoPortFindAdapter(
                      &DeviceExtension->MiniPortDeviceExtension,
                      DriverExtension->HwContext,
                      NULL,
-                     &ConfigInfo,
+                     ConfigInfo,
                      &Again);
     }
 
@@ -534,7 +534,7 @@ IntVideoPortFindAdapter(
     /* FIXME: Allocate hardware resources for device. */
 
     /* Allocate interrupt for device. */
-    if (!IntVideoPortSetupInterrupt(DeviceObject, DriverExtension, &ConfigInfo))
+    if (!IntVideoPortSetupInterrupt(DeviceObject, DriverExtension, ConfigInfo))
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto Failure;
