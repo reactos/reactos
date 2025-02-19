@@ -11,12 +11,12 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 MENU_001 MENUEX
 BEGIN
-    MENUITEM "&Büyük simgeler", FCIDM_SHVIEW_BIGICON
-    MENUITEM "&Küçük simgeler", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "&Büyük Simgeler", FCIDM_SHVIEW_BIGICON
+    MENUITEM "&Küçük Simgeler", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Liste", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Ayrıntılar", FCIDM_SHVIEW_REPORTVIEW
     MENUITEM "", -1, MFT_SEPARATOR
-    POPUP "&Simgeleri Düzenle", FCIDM_SHVIEW_ARRANGE
+    POPUP "Simgeleri &Düzenle", FCIDM_SHVIEW_ARRANGE
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Otomatik Düzenle", FCIDM_SHVIEW_AUTOARRANGE
@@ -77,8 +77,8 @@ BEGIN
         MENUITEM "K&opyala", IDM_COPY
         MENUITEM "&Yapıştır", IDM_INSERT
         MENUITEM SEPARATOR
-        MENUITEM "Kı&sayol oluştur", IDM_CREATELINK //FIXME: The accelerator IDM_CREATELINK is currently offsync in master compared to IDS_CREATELINK! Older releases used &o here but that is currently blocked by IDM_COPY
-        MENUITEM "Si&l", IDM_DELETE //FIXME: This accelerator is a poor choice, because l is a narrow character. Older releases used &S here. But that is currently blocked by IDM_CREATELINK
+        MENUITEM "Kı&sayol oluştur", IDM_CREATELINK
+        MENUITEM "Si&l", IDM_DELETE
         MENUITEM "Y&eniden adlandır", IDM_RENAME
         MENUITEM SEPARATOR
         MENUITEM "Ö&zellikler", IDM_PROPERTIES
@@ -802,20 +802,20 @@ BEGIN
     IDS_VIEW_DETAILS "&Ayrıntılar"
     IDS_SELECT "Seç"
     IDS_OPEN "Aç"
-    IDS_CREATELINK "Kısayol &oluştur"
+    IDS_CREATELINK "Kısayol &Oluştur"
     IDS_COPY "&Kopyala"
     IDS_DELETE "&Sil"
     IDS_PROPERTIES "Ö&zellikler"
     IDS_CUT "K&es"
-    IDS_RESTORE "Geri getir"
+    IDS_RESTORE "Geri Yükle"
     IDS_FORMATDRIVE "Biçimlendir..."
-    IDS_RENAME "Yeniden adlandır"
-    IDS_PASTE "Yapıştır"
+    IDS_RENAME "Yeniden Adlandır"
+    IDS_PASTE "&Yapıştır"
     IDS_EJECT "Çıkar"
-    IDS_DISCONNECT "Bağlantıyı kes"
-    IDS_OPENFILELOCATION "&Dosya konumunu aç"
+    IDS_DISCONNECT "Bağlantıyı Kes"
+    IDS_OPENFILELOCATION "Dosya &Konumunu Aç"
     IDS_SENDTO_MENU "&Gönder"
-    IDS_COPYASPATHMENU "Copy as path"
+    IDS_COPYASPATHMENU "Yol Olarak Kopyala"
 
     IDS_MOVEERRORTITLE "Dosya veya Dizin Taşıma Hatası"
     IDS_COPYERRORTITLE "Dosya veya Dizin Kopyalama Hatası"
@@ -824,11 +824,11 @@ BEGIN
     IDS_COPYERRORSAME "'%s' kopyalanamıyor: Kaynak ve hedef dosya adları aynı."
     IDS_MOVEERRORSUBFOLDER "'%s' taşınamıyor: Hedef dizin, kaynak dizinin bir alt dizinidir."
     IDS_COPYERRORSUBFOLDER "'%s' kopyalanamıyor: Hedef dizin, kaynak dizinin bir alt dizinidir."
-    IDS_MOVEERROR "Cannot move '%s': %s"
-    IDS_COPYERROR "Cannot copy '%s': %s"
+    IDS_MOVEERROR "'%s' taşınamıyor: %s"
+    IDS_COPYERROR "'%s' kopyalanamıyor: %s"
 
-    IDS_CREATEFILE_DENIED "Could not create file %1"
-    IDS_CREATEFILE_CAPTION "Error creating file"
+    IDS_CREATEFILE_DENIED "%1 dosyası oluşturulamadı"
+    IDS_CREATEFILE_CAPTION "Dosya oluşturma hatası"
     IDS_CREATEFOLDER_DENIED """%1"" dizini oluşturulamıyor."
     IDS_CREATEFOLDER_CAPTION "Dizin Oluşturulamıyor"
     IDS_DELETEITEM_CAPTION "Dosya Silmeyi Onayla"
@@ -873,9 +873,9 @@ BEGIN
     IDS_RUNDLG_BROWSE_FILTER "Çalıştırılabilir Dosyalar (*.exe)\0*.exe\0Tüm Dosyalar (*.*)\0*.*\0"
 
     /* Shortcut property sheet */
-    IDS_SHORTCUT_RUN_NORMAL "Normal window"
-    IDS_SHORTCUT_RUN_MIN "Minimized"
-    IDS_SHORTCUT_RUN_MAX "Maximized"
+    IDS_SHORTCUT_RUN_NORMAL "Normal pencere"
+    IDS_SHORTCUT_RUN_MIN "Simge durumunda"
+    IDS_SHORTCUT_RUN_MAX "Ekranı kaplar"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Başlat Menüsü\\Programlar"
@@ -908,7 +908,7 @@ BEGIN
     IDS_NETWORKPLACE "Ağ Bağlantılarım"
 
     IDS_NEWFOLDER "Yeni Dizin"
-    IDS_NEWITEMFORMAT "New %s"
+    IDS_NEWITEMFORMAT "Yeni %s"
 
     IDS_DRIVE_FIXED "Yerel Disk"
     IDS_DRIVE_CDROM "CD-ROM"
@@ -929,8 +929,8 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "Yeni &Dizin"
     FCIDM_SHVIEW_NEWLINK "Yeni &Kısayol"
     IDS_FOLDER_OPTIONS "Dizin Seçenekleri"
-    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
-    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
+    IDS_TASKBAR_OPTIONS "Görev Çubuğu ve Başlat Menüsü"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Başlat Menüsünü ve görev çubuğunu, görüntülenecek öge türleri ve nasıl görünmeleri gerektiği gibi özelleştirin."
     IDS_RECYCLEBIN_LOCATION "Geri Dönüşüm Kutusu Konumu"
     IDS_RECYCLEBIN_DISKSPACE "Kullanılabilir Alan"
     IDS_EMPTY_BITBUCKET "&Geri Dönüşüm Kutusu'nu Boşalt"
