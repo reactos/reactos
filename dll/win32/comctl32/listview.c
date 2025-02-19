@@ -4780,15 +4780,12 @@ static void LISTVIEW_DrawItemPart(LISTVIEW_INFO *infoPtr, LVITEMW *item, const N
 
 #ifdef __REACTOS__
         if (item->state & (LVIS_CUT | (infoPtr->bFocus ? LVIS_SELECTED : 0)))
-            style = ILD_SELECTED;
-        else
-            style = ILD_NORMAL;
 #else
         if (item->state & (LVIS_SELECTED | LVIS_CUT) && infoPtr->bFocus)
+#endif
             style = ILD_SELECTED;
         else
             style = ILD_NORMAL;
-#endif
 
         ImageList_DrawEx(himl, item->iImage, nmlvcd->nmcd.hdc, rcIcon.left, rcIcon.top,
                          rcIcon.right - rcIcon.left, rcIcon.bottom - rcIcon.top, infoPtr->clrBk,
