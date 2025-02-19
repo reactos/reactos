@@ -14,6 +14,14 @@ SHStrDupW(LPCWSTR Src)
     LPWSTR Dup;
     return SUCCEEDED(SHStrDupW(Src, &Dup)) ? Dup : NULL;
 }
+
+static inline UINT
+SHELL_ErrorBox(CMINVOKECOMMANDINFO &cmi, UINT Error)
+{
+    if (cmi.fMask & CMIC_MASK_FLAG_NO_UI)
+        return Error ? Error : ERROR_INTERNAL_ERROR;
+    return SHELL_ErrorBox(cmi.hwnd, Error);
+}
 #endif
 
 static inline BOOL
@@ -46,7 +54,8 @@ RegSetString(HKEY hKey, LPCWSTR Name, LPCWSTR Str, DWORD Type = REG_SZ)
     return RegSetValueExW(hKey, Name, 0, Type, LPBYTE(Str), (lstrlenW(Str) + 1) * sizeof(WCHAR));
 }
 
-typedef struct {
+typedef struct
+{
     LPCSTR Verb;
     WORD CmdId;
 } CMVERBMAP;

@@ -155,6 +155,10 @@ GetRecycleBinFileHandle(
     IN LPCWSTR pszRoot OPTIONAL,
     IN const RECYCLEBINFILEIDENTITY *pFI);
 
+EXTERN_C BOOL
+RemoveFromRecycleBinDatabase(
+    IN const RECYCLEBINFILEIDENTITY *pFI);
+
 /* Restores a deleted file
  * hDeletedFile: handle of the deleted file to restore
  * Returns TRUE if operation succeeded, FALSE otherwise.
@@ -187,6 +191,7 @@ DECLARE_INTERFACE_(IRecycleBinFile, IUnknown)
     STDMETHOD(GetFileName)(THIS_ SIZE_T BufferSize, LPWSTR Buffer, SIZE_T *RequiredSize) PURE;
     STDMETHOD(Delete)(THIS) PURE;
     STDMETHOD(Restore)(THIS) PURE;
+    STDMETHOD(RemoveFromDatabase)(THIS) PURE;
 
     END_INTERFACE
 };
@@ -262,6 +267,8 @@ EXTERN_C const IID IID_IRecycleBin;
     (This)->lpVtbl->Delete(This)
 #define IRecycleBinFile_Restore(This) \
     (This)->lpVtbl->Restore(This)
+#define IRecycleBinFile_RemoveFromDatabase(This) \
+    (This)->lpVtbl->RemoveFromDatabase(This)
 
 #define IRecycleBinEnumList_QueryInterface(This, riid, ppvObject) \
     (This)->lpVtbl->QueryInterface(This, riid, ppvObject)

@@ -45,6 +45,8 @@ typedef struct
     ULARGE_INTEGER completedSize;
     ULARGE_INTEGER totalSize;
     WCHAR szBuilderString[50];
+    FILEOPCALLBACK Callback;
+    void *CallerCallbackData;
 } FILE_OPERATION;
 
 #define ERROR_SHELL_INTERNAL_FILE_NOT_FOUND 1026
@@ -361,6 +363,19 @@ EXTERN_C HRESULT WINAPI SHIsFileAvailableOffline(LPCWSTR path, LPDWORD status)
     return E_FAIL;
 }
 
+static HRESULT FileOpCallback(FILE_OPERATION *op, FILEOPCALLBACKEVENT Event, LPCWSTR Source,
+                              LPCWSTR Destination, UINT Attributes, HRESULT hrOp = S_OK)
+{
+    HRESULT hr = S_OK;
+    if (op->Callback)
+    {
+        hr = op->Callback(Event, Source, Destination, Attributes, hrOp, op->CallerCallbackData);
+        if (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED))
+            op->bCancelled = TRUE;
+    }
+    return hr;
+}
+
 /**************************************************************************
  * SHELL_DeleteDirectory()  [internal]
  *
@@ -379,6 +394,9 @@ BOOL SHELL_DeleteDirectoryW(FILE_OPERATION *op, LPCWSTR pszDir, BOOL bShowUI)
     hFind = FindFirstFileW(szTemp, &wfd);
     if (hFind == INVALID_HANDLE_VALUE)
       return FALSE;
+
+    if (FAILED(FileOpCallback(op, FOCE_PREDELETEITEM, pszDir, NULL, wfd.dwFileAttributes)))
+        return FALSE;
 
     if (!bShowUI || (ret = SHELL_ConfirmDialogW(op->req->hwnd, ASK_DELETE_FOLDER, pszDir, NULL)))
     {
@@ -399,6 +417,7 @@ BOOL SHELL_DeleteDirectoryW(FILE_OPERATION *op, LPCWSTR pszDir, BOOL bShowUI)
     FindClose(hFind);
     if (ret)
         ret = (SHNotifyRemoveDirectoryW(pszDir) == ERROR_SUCCESS);
+    FileOpCallback(op, FOCE_POSTDELETEITEM, pszDir, NULL, wfd.dwFileAttributes, ret ? S_OK : E_FAIL);
     return ret;
 }
 
@@ -622,7 +641,11 @@ static DWORD SHNotifyDeleteFileW(FILE_OPERATION *op, LPCWSTR path)
         tmp.u.HighPart = wfd.nFileSizeHigh;
         FileSize.QuadPart = tmp.QuadPart;
     }
+    UINT attrib = hFile != INVALID_HANDLE_VALUE ? wfd.dwFileAttributes : 0;
+    BOOL aborted = FAILED(FileOpCallback(op, FOCE_PREDELETEITEM, path, NULL, attrib));
     FindClose(hFile);
+    if (aborted)
+        return ERROR_CANCELLED;
 
     ret = DeleteFileW(path);
     if (!ret)
@@ -633,6 +656,7 @@ static DWORD SHNotifyDeleteFileW(FILE_OPERATION *op, LPCWSTR path)
         if (SetFileAttributesW(path, dwAttr & ~(FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM)))
             ret = DeleteFileW(path);
     }
+    FileOpCallback(op, FOCE_POSTDELETEITEM, path, NULL, attrib, ret ? S_OK : E_FAIL);
     if (ret)
     {
         // Bit of a hack to make the progress bar move. We don't have progress inside the file, so inform when done.
@@ -720,6 +744,10 @@ static DWORD SHNotifyMoveFileW(FILE_OPERATION *op, LPCWSTR src, LPCWSTR dest, BO
 
     _SetOperationTexts(op, src, dest);
 
+    UINT attrib = isdir ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
+    if (FAILED(FileOpCallback(op, FOCE_PREMOVEITEM, src, dest, attrib)))
+        return ERROR_CANCELLED;
+
     ret = MoveFileWithProgressW(src, dest, SHCopyProgressRoutine, op, MOVEFILE_REPLACE_EXISTING);
 
     /* MOVEFILE_REPLACE_EXISTING fails with dirs, so try MoveFile */
@@ -740,6 +768,7 @@ static DWORD SHNotifyMoveFileW(FILE_OPERATION *op, LPCWSTR src, LPCWSTR dest, BO
                 ret = MoveFileW(src, dest);
       }
     }
+    FileOpCallback(op, FOCE_POSTMOVEITEM, src, dest, attrib, ret ? S_OK : E_FAIL);
     if (ret)
     {
         SHChangeNotify(isdir ? SHCNE_MKDIR : SHCNE_CREATE, SHCNF_PATHW, dest, NULL);
@@ -1691,6 +1720,10 @@ static void move_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
     if (feFrom->szFilename && IsDotDir(feFrom->szFilename))
         return;
 
+    UINT attrib = FILE_ATTRIBUTE_DIRECTORY;
+    if (FAILED(FileOpCallback(op, FOCE_PREMOVEITEM, feFrom->szFullPath, szDestPath, attrib)))
+        return;
+
     SHNotifyCreateDirectoryW(szDestPath, NULL);
 
     PathCombineW(szFrom, feFrom->szFullPath, L"*.*");
@@ -1709,8 +1742,10 @@ static void move_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
     destroy_file_list(&flFromNew);
     destroy_file_list(&flToNew);
 
+    BOOL success = FALSE;
     if (PathIsDirectoryEmptyW(feFrom->szFullPath))
-        Win32RemoveDirectoryW(feFrom->szFullPath);
+        success = Win32RemoveDirectoryW(feFrom->szFullPath);
+    FileOpCallback(op, FOCE_POSTMOVEITEM, feFrom->szFullPath, szDestPath, attrib, success ? S_OK : E_FAIL);
 }
 
 static BOOL move_file_to_file(FILE_OPERATION *op, const WCHAR *szFrom, const WCHAR *szTo)
@@ -1982,12 +2017,7 @@ validate_operation(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom, FILE_LIST *flT
     return ERROR_SUCCESS;
 }
 
-/*************************************************************************
- * SHFileOperationW          [SHELL32.@]
- *
- * See SHFileOperationA
- */
-int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
+int SHELL32_FileOperation(LPSHFILEOPSTRUCTW lpFileOp, FILEOPCALLBACK Callback, void *CallerData)
 {
     FILE_OPERATION op;
     FILE_LIST flFrom, flTo;
@@ -2017,6 +2047,8 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
     op.totalSize.QuadPart = 0ull;
     op.completedSize.QuadPart = 0ull;
     op.bManyItems = (flFrom.dwNumFiles > 1);
+    op.Callback = Callback;
+    op.CallerCallbackData = CallerData;
 
     ret = validate_operation(lpFileOp, &flFrom, &flTo);
     if (ret)
@@ -2034,6 +2066,8 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
         _SetOperationTitle(&op);
         _FileOpCountManager(&op, &flFrom);
     }
+
+    FileOpCallback(&op, FOCE_STARTOPERATIONS, NULL, NULL, 0);
 
     switch (lpFileOp->wFunc)
     {
@@ -2070,9 +2104,21 @@ cleanup:
     if (ret == ERROR_CANCELLED)
         lpFileOp->fAnyOperationsAborted = TRUE;
 
+    FileOpCallback(&op, FOCE_FINISHOPERATIONS, NULL, NULL, 0, HRESULT_FROM_WIN32(ret));
+
     CoUninitialize();
 
     return ret;
+}
+
+/*************************************************************************
+ * SHFileOperationW          [SHELL32.@]
+ *
+ * See SHFileOperationA
+ */
+int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
+{
+    return SHELL32_FileOperation(lpFileOp, NULL, NULL);
 }
 
 // Used by SHFreeNameMappings
