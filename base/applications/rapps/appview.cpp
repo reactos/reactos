@@ -1064,7 +1064,8 @@ AsyncLoadIconProc(LPVOID Param)
         if (task->TaskId == g_AsyncIconTaskId)
         {
             HICON hIcon;
-            HICON *phBigIcon = SettingsInfo.bSmallIcons ? NULL : &hIcon, *phSmallIcon = phBigIcon ? NULL : &hIcon;
+            HICON *phBigIcon = SettingsInfo.bSmallIcons ? NULL : &hIcon;
+            HICON *phSmallIcon = phBigIcon ? NULL : &hIcon;
             if (!task->Parse)
                 hIcon = (HICON)LoadImageW(NULL, task->Location, IMAGE_ICON, g_IconSize, g_IconSize, LR_LOADFROMFILE);
             else if (!ExtractIconExW(task->Location, PathParseIconLocationW(task->Location), phBigIcon, phSmallIcon, 1))

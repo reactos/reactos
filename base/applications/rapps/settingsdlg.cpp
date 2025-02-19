@@ -106,7 +106,7 @@ HandleGeneralListItems(HWND hWndList, PSETTINGS_INFO Load, PSETTINGS_INFO Save)
     PSETTINGS_INFO Info = Load ? Load : Save;
     const struct {
         WORD Id;
-        BOOL *Member;
+        BOOL *Setting;
     } Map[] = {
         { IDS_CFG_SAVE_WINDOW_POS, &Info->bSaveWndPos },
         { IDS_CFG_UPDATE_AVLIST, &Info->bUpdateAtStart },
@@ -129,7 +129,7 @@ HandleGeneralListItems(HWND hWndList, PSETTINGS_INFO Load, PSETTINGS_INFO Save)
             Name.LoadStringW(Map[i].Id);
             Item.pszText = const_cast<PWSTR>(Name.GetString());
             Item.iItem = ListView_InsertItem(hWndList, &Item);
-            ListView_SetCheckState(hWndList, Item.iItem, *Map[i].Member);
+            ListView_SetCheckState(hWndList, Item.iItem, *Map[i].Setting);
         }
         ListView_SetItemState(hWndList, 0, -1, LVIS_FOCUSED | LVIS_SELECTED);
     }
@@ -140,7 +140,7 @@ HandleGeneralListItems(HWND hWndList, PSETTINGS_INFO Load, PSETTINGS_INFO Save)
             LVFINDINFOW FindInfo = { LVFI_PARAM, NULL, Map[i].Id };
             int Idx = ListView_FindItem(hWndList, -1, &FindInfo);
             if (Idx >= 0)
-                *Map[i].Member = ListView_GetCheckState(hWndList, Idx);
+                *Map[i].Setting = ListView_GetCheckState(hWndList, Idx);
         }
     }
 }
