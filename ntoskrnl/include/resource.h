@@ -16,21 +16,31 @@
 
 #pragma once
 
+/* Options for SOS mode UI */
+#define SOS_UI_NONE         0
+#define SOS_UI_NEW          1
+#define SOS_UI_LEGACY       2
+
 #define IDB_BOOT_SCREEN     1
 #define IDB_HIBERNATE_BAR   2
 #define IDB_SHUTDOWN_MSG    3
 #define IDB_BAR_DEFAULT     4
 #define IDB_LOGO_DEFAULT    5
 
-#define IDB_WKSTA_HEADER    6
-#define IDB_WKSTA_FOOTER    7
-
 #define IDB_BAR_WKSTA       8
 #define IDB_BAR_HOME        9
 
 #define IDB_SERVER_LOGO     13
+
+/* Header and Footer for SOS UI */
+#if SOS_UI == SOS_UI_LEGACY
+#define IDB_WKSTA_HEADER    6
+#define IDB_WKSTA_FOOTER    7
 #define IDB_SERVER_HEADER   14
 #define IDB_SERVER_FOOTER   15
+#elif SOS_UI != SOS_UI_NONE
+#define IDB_HEADER_NEW      6
+#endif
 
 /* Workstation editions Overlays */
 #define IDB_TEXT_PROF       10  // Professional

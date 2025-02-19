@@ -15,12 +15,17 @@ IDB_HIBERNATE_BAR   BITMAP "inbv/resources/hibernate.bmp"
 IDB_SHUTDOWN_MSG    BITMAP "inbv/resources/shutdown.bmp"
 IDB_BAR_DEFAULT     BITMAP "inbv/resources/barserver.bmp"
 IDB_LOGO_DEFAULT    BITMAP "inbv/resources/logo.bmp"
-IDB_WKSTA_HEADER    BITMAP "inbv/resources/hwksta.bmp"
-IDB_WKSTA_FOOTER    BITMAP "inbv/resources/fwksta.bmp"
 IDB_BAR_WKSTA       BITMAP "inbv/resources/barwksta.bmp"
 IDB_SERVER_LOGO     BITMAP "inbv/resources/logo.bmp"
+/* Header and footer bitmaps */
+#if SOS_UI == SOS_UI_LEGACY
+IDB_WKSTA_HEADER    BITMAP "inbv/resources/hwksta.bmp"
+IDB_WKSTA_FOOTER    BITMAP "inbv/resources/fwksta.bmp"
 IDB_SERVER_HEADER   BITMAP "inbv/resources/hserver.bmp"
 IDB_SERVER_FOOTER   BITMAP "inbv/resources/fserver.bmp"
+#elif SOS_UI != SOS_UI_NONE
+IDB_HEADER_NEW      BITMAP "inbv/resources/header_new.bmp"
+#endif
 
 /* ReactOS additions */
 //IDB_LOGO_XMAS       BITMAP "inbv/resources/logo_xmas.bmp"
