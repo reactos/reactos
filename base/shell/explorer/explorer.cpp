@@ -49,6 +49,29 @@ static VOID InitializeAtlModule(HINSTANCE hInstance, BOOL bInitialize)
     }
 }
 
+static void
+InitializeServerAdminUI()
+{
+    HKEY hKey = SHGetShellKey(SHKEY_Root_HKCU | SHKEY_Key_Explorer, L"Advanced", TRUE);
+    if (!hKey)
+        return;
+
+    DWORD value, size = sizeof(value), type;
+    DWORD error = SHGetValueW(hKey, NULL, L"ServerAdminUI", &type, &value, &size);
+    if (error || type != REG_DWORD || size != sizeof(value))
+    {
+        // The value doesn't exist or is invalid, calculate and apply a default value
+        value = IsOS(OS_ANYSERVER) && IsUserAnAdmin();
+        SHSetValueW(hKey, NULL, L"ServerAdminUI", REG_DWORD, &value, sizeof(value));
+        if (value)
+        {
+            // TODO: Apply registry tweaks with RegInstallW; RegServerAdmin in the REGINST resource in shell32.
+            SystemParametersInfo(SPI_SETKEYBOARDCUES, 0, IntToPtr(TRUE), SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+        }
+    }
+    RegCloseKey(hKey);
+}
+
 #if !WIN7_DEBUG_MODE
 static BOOL
 SetShellReadyEvent(IN LPCWSTR lpEventName)
@@ -198,6 +221,8 @@ StartWithDesktop(IN HINSTANCE hInstance)
     /* WinXP: Notify msgina to hide the welcome screen */
     if (!SetShellReadyEvent(L"msgina: ShellReadyEvent"))
         SetShellReadyEvent(L"Global\\msgina: ShellReadyEvent");
+
+    InitializeServerAdminUI();
 
     if (DoStartStartupItems(Tray))
     {
