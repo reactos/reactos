@@ -39,6 +39,7 @@ Author:
 #define LDRP_IMAGE_DLL                          0x00000004
 #define LDRP_SHIMENG_SUPPRESSED_ENTRY           0x00000008
 #define LDRP_IMAGE_INTEGRITY_FORCED             0x00000020
+#define LDRP_TLS_LOADED                         0x00000040
 #define LDRP_LOAD_IN_PROGRESS                   0x00001000
 #define LDRP_UNLOAD_IN_PROGRESS                 0x00002000
 #define LDRP_ENTRY_PROCESSED                    0x00004000
