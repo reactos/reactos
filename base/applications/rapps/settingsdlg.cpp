@@ -100,6 +100,12 @@ IsCheckedDlgItem(HWND hDlg, INT nIDDlgItem)
     return SendDlgItemMessageW(hDlg, nIDDlgItem, BM_GETCHECK, 0, 0) == BST_CHECKED;
 }
 
+static inline void
+AdjustListViewHeader(HWND hWndList)
+{
+    ListView_SetColumnWidth(hWndList, 0, LVSCW_AUTOSIZE_USEHEADER);
+}
+
 static void
 HandleGeneralListItems(HWND hWndList, PSETTINGS_INFO Load, PSETTINGS_INFO Save)
 {
@@ -116,8 +122,14 @@ HandleGeneralListItems(HWND hWndList, PSETTINGS_INFO Load, PSETTINGS_INFO Save)
 
     if (Load)
     {
-        UINT ExStyle = LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP;
+        UINT ExStyle = LVS_EX_CHECKBOXES | LVS_EX_LABELTIP;
         ListView_SetExtendedListViewStyleEx(hWndList, ExStyle, ExStyle);
+        LVCOLUMN lvc;
+        lvc.mask = LVCF_TEXT | LVCF_SUBITEM;
+        lvc.iSubItem = 0;
+        lvc.pszText = const_cast<PWSTR>(L"");
+        ListView_InsertColumn(hWndList, 0, &lvc);
+
         CStringW Name;
         for (SIZE_T i = 0; i < _countof(Map); ++i)
         {
@@ -132,6 +144,7 @@ HandleGeneralListItems(HWND hWndList, PSETTINGS_INFO Load, PSETTINGS_INFO Save)
             ListView_SetCheckState(hWndList, Item.iItem, *Map[i].Setting);
         }
         ListView_SetItemState(hWndList, 0, -1, LVIS_FOCUSED | LVIS_SELECTED);
+        AdjustListViewHeader(hWndList);
     }
     else
     {
@@ -188,9 +201,11 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
             InitSettingsControls(hDlg, &SettingsInfo);
             return TRUE;
 
-        case WM_SYSCOLORCHANGE:
+        case WM_SETTINGCHANGE:
         case WM_THEMECHANGED:
+        case WM_SYSCOLORCHANGE:
             SendMessage(GetDlgItem(hDlg, IDC_GENERALLIST), Msg, wParam, lParam);
+            AdjustListViewHeader(GetDlgItem(hDlg, IDC_GENERALLIST));
             break;
 
         case WM_COMMAND:
