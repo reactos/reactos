@@ -182,6 +182,7 @@ VOID __cdecl ChainLoadBiosBootSectorCode(
     IN UCHAR BootDrive OPTIONAL,
     IN ULONG BootPartition OPTIONAL);
 
+DECLSPEC_NORETURN
 VOID __cdecl Relocator16Boot(
     IN REGS*  In,
     IN USHORT StackSegment,
@@ -189,7 +190,9 @@ VOID __cdecl Relocator16Boot(
     IN USHORT CodeSegment,
     IN USHORT CodePointer);
 
+DECLSPEC_NORETURN
 VOID __cdecl Reboot(VOID);
+
 VOID DetectHardware(VOID);
 
 #endif /* ! __ASM__ */
