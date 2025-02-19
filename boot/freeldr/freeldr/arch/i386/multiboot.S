@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Support for the Multiboot v1 specification.
  * COPYRIGHT:   Copyright 1998-2002 Brian Palmer <brianp@sginet.com>
- *              Copyright 2024 Daniel Victor <ilauncherdeveloper@gmail.com>
+ *              Copyright 2024-2025 Daniel Victor <ilauncherdeveloper@gmail.com>
  */
 
 #include <asm.inc>
@@ -33,7 +33,7 @@
  * multiboot kernels above 1MB. So we let GRUB load us
  * there and then relocate ourself to FREELDR_BASE.
  */
-#define INITIAL_BASE HEX(200000)
+#define INITIAL_BASE TEMPCODE_BASE
 
 
 #ifdef _M_IX86
@@ -190,7 +190,7 @@ mb4:
     mov cr0, rax
 
     /* Jump to real entry point */
-    ljmp16 0, FREELDR_BASE
+    ljmp16 FREELDR_BASE / 16, 0
 
 
     /* Force 8-byte alignment */

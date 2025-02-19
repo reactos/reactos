@@ -14,9 +14,13 @@
 #define BiosCHSDriveSizeHigh    6
 #define BiosCHSDriveSizeLow     8
 #define BiosCHSDriveSize        8
-#define ReadSectorsOffset       10
-#define ReadClusterOffset       12
-#define PutCharsOffset          14
+#define ReadSectorsOffset       12
+#define ReadClusterOffset       16
+#define PutCharsOffset          20
+
+#define ReadSectors far ptr ss:[bp-ReadSectorsOffset]
+#define ReadCluster far ptr ss:[bp-ReadClusterOffset]
+#define PutChars far ptr ss:[bp-PutCharsOffset]
 
 #define OEMName                 3
 #define BytesPerSector          11
@@ -65,8 +69,8 @@ FatHelperEntryPoint:
     push ax
 
     /* Display "Loading FreeLoader..." message */
-    mov si, offset msgLoading
-    call word ptr [bp-PutCharsOffset]
+    mov si, offset msgLoading 
+    call CS_PutChars
 
     call ReadFatIntoMemory
 
@@ -92,7 +96,7 @@ LoadFile3:
     push ax
     xor  bx,bx              // Load ROSLDR starting at 0000:8000h
     push es
-    call word ptr [bp-ReadClusterOffset]
+    call ReadCluster
     pop  es
 
     xor  bx,bx
@@ -133,7 +137,7 @@ ReadFatIntoMemory:
     mov bx, HEX(7000)
     mov es,bx
     xor bx,bx
-    call word ptr [bp-ReadSectorsOffset]
+    call ReadSectors
     ret
 
 
@@ -216,6 +220,22 @@ IsFat12_2:
 IsFat12_Done:
     ret
 
+CS_PutChars:
+    /* Save necessary registers */
+    push ax
+    push ds
+
+    /* Prepare ds before PutChars call */
+    mov ax, cs
+    mov ds, ax
+
+    /* Display the message */
+    call PutChars
+
+    /* Restore necessary registers and return */
+    pop ds
+    pop ax
+    ret
 
 msgLoading:
     .ascii "Loading FreeLoader...", CR, LF, NUL
