@@ -155,7 +155,7 @@
 @ stdcall NtGdiFillPath(ptr)
 @ stdcall NtGdiFillRgn(ptr ptr ptr)
 @ stdcall NtGdiFlattenPath(ptr)
-# @ stdcall NtGdiFlushUserBatch()
+@ stdcall NtGdiFlushUserBatch()
 @ stdcall NtGdiFlush()
 @ stdcall NtGdiForceUFIMapping(ptr ptr)
 @ stdcall NtGdiFrameRgn(ptr ptr ptr long long)
@@ -331,7 +331,7 @@
 @ stdcall NtUserCallOneParam(ptr long)
 @ stdcall NtUserCallTwoParam(ptr ptr long)
 @ stdcall NtUserChangeClipboardChain(ptr ptr)
-# @ stdcall NtUserChangeDisplaySettings(ptr ptr ptr long ptr)
+@ stdcall NtUserChangeDisplaySettings(ptr ptr long ptr) # FIXME: XP had 5 params. 2K3/Vista have 4 params, but ROS types do not match
 @ stdcall NtUserCheckImeHotKey(long long)
 @ stdcall NtUserCheckMenuItem(ptr long long)
 @ stdcall NtUserChildWindowFromPointEx(ptr long long long)
@@ -377,7 +377,7 @@
 @ stdcall NtUserEndMenu()
 @ stdcall NtUserEndPaint(ptr ptr)
 @ stdcall NtUserEnumDisplayDevices(ptr long ptr long)
-; @ stdcall NtUserEnumDisplayMonitors(ptr ptr ptr ptr) # FIXME: 4 on XP
+@ stdcall NtUserEnumDisplayMonitors(ptr ptr ptr ptr long) # FIXME: 4 params on XP
 @ stdcall NtUserEnumDisplaySettings(ptr long ptr long)
 @ stdcall NtUserEvent(long)
 @ stdcall NtUserExcludeUpdateRgn(ptr ptr)
@@ -589,9 +589,9 @@
 @ stdcall NtUserSetLayeredWindowAttributes(ptr long long long)
 @ stdcall NtUserUpdatePerUserSystemParameters(long long)
 @ stdcall NtUserUserHandleGrantAccess(ptr ptr long)
-#@ stdcall NtUserValidateHandleSecure(ptr long)
+@ stdcall NtUserValidateHandleSecure(ptr) # FIXME: XP had 2 params
 @ stdcall NtUserValidateRect(ptr ptr)
-#@ stdcall NtUserValidateTimerCallback(ptr ptr ptr)
+@ stdcall NtUserValidateTimerCallback(ptr) # FIXME: XP had 3 params
 @ stdcall NtUserVkKeyScanEx(long ptr long)
 @ stdcall NtUserWaitForInputIdle(ptr long long)
 @ stdcall NtUserWaitForMsgAndEvent(long)
@@ -672,4 +672,3 @@
 @ stdcall NtGdiBRUSHOBJ_DeleteRbrush(ptr ptr)
 @ stdcall NtGdiUMPDEngFreeUserMem(ptr)
 @ stdcall NtGdiDrawStream(ptr long ptr)
-
