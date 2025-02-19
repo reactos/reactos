@@ -42,14 +42,14 @@ CreateDeviceInterface(
     *pDeviceInterface = NULL;
 
     deviceInterface = HeapAlloc(GetProcessHeap(), 0,
-        FIELD_OFFSET(struct DeviceInterface, SymbolicLink) + (strlenW(SymbolicLink) + 1) * sizeof(WCHAR));
+        FIELD_OFFSET(struct DeviceInterface, SymbolicLink) + (lstrlenW(SymbolicLink) + 1) * sizeof(WCHAR));
     if (!deviceInterface)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
     deviceInterface->DeviceInfo = deviceInfo;
-    strcpyW(deviceInterface->SymbolicLink, SymbolicLink);
+    lstrcpyW(deviceInterface->SymbolicLink, SymbolicLink);
     deviceInterface->Flags = 0; /* Flags will be updated later */
     memcpy(&deviceInterface->InterfaceClassGuid, pInterfaceGuid, sizeof(GUID));
 
@@ -146,7 +146,7 @@ SETUP_CreateInterfaceList(
         if (DeviceInstanceW)
         {
             /* Check if device enumerator is not the right one */
-            if (strcmpW(DeviceInstanceW, InstancePath) != 0)
+            if (wcscmp(DeviceInstanceW, InstancePath) != 0)
                 continue;
         }
 
@@ -467,9 +467,9 @@ SetupDiInstallDeviceInterfaces(
             SelectedDriver->InfFileDetails->hInf,
             SelectedDriver->Details.SectionName,
             SectionName, MAX_PATH, &SectionNameLength, NULL);
-        if (!Result || SectionNameLength > MAX_PATH - strlenW(DotInterfaces) - 1)
+        if (!Result || SectionNameLength > MAX_PATH - lstrlenW(DotInterfaces) - 1)
             goto cleanup;
-        strcatW(SectionName, DotInterfaces);
+        lstrcatW(SectionName, DotInterfaces);
 
         ret = TRUE;
         Result = SetupFindFirstLineW(
@@ -482,7 +482,7 @@ SetupDiInstallDeviceInterfaces(
             ret = GetStringField(&ContextInterface, 1, &InterfaceGuidString);
             if (!ret)
                 goto cleanup;
-            else if (strlenW(InterfaceGuidString) != MAX_GUID_STRING_LEN - 1)
+            else if (lstrlenW(InterfaceGuidString) != MAX_GUID_STRING_LEN - 1)
             {
                 SetLastError(ERROR_INVALID_PARAMETER);
                 ret = FALSE;
