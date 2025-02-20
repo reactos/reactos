@@ -47,11 +47,10 @@ static void
 ModifyShellContextMenu(IContextMenu *pCM, HMENU hMenu, UINT CmdIdFirst, PCWSTR Assoc)
 {
     HRESULT hr;
-    UINT id, i;
-    for (i = 0; i < GetMenuItemCount(hMenu); ++i)
+    for (UINT i = 0, c = GetMenuItemCount(hMenu); i < c; ++i)
     {
         WCHAR buf[200];
-        id = GetMenuItemIdByPos(hMenu, i);
+        UINT id = GetMenuItemIdByPos(hMenu, i);
         if (id == (UINT)-1)
             continue;
 
@@ -131,8 +130,8 @@ die:
     g_pContextMenu = NULL;
 }
 
-void
-DoShellContextMenuOnFile(HWND hwnd, PCWSTR File, LPARAM lParam)
+HRESULT
+GetUIObjectOfPath(HWND hwnd, PCWSTR File, REFIID riid, void **ppv)
 {
     HRESULT hr;
     IShellFolder *pSF;
@@ -140,19 +139,110 @@ DoShellContextMenuOnFile(HWND hwnd, PCWSTR File, LPARAM lParam)
     PIDLIST_ABSOLUTE pidl = ILCreateFromPath(File);
     if (pidl && SUCCEEDED(SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &pSF), &pidlItem)))
     {
-        IContextMenu *pCM;
-        hr = IShellFolder_GetUIObjectOf(pSF, hwnd, 1, &pidlItem, &IID_IContextMenu, NULL, (void**)&pCM);
-        if (SUCCEEDED(hr))
-        {
-            DoShellContextMenu(hwnd, pCM, File, lParam);
-            IContextMenu_Release(pCM);
-        }
+        hr = IShellFolder_GetUIObjectOf(pSF, hwnd, 1, &pidlItem, riid, NULL, ppv);
         IShellFolder_Release(pSF);
     }
     SHFree(pidl);
+    return hr;
 }
 
-void DisplayHelp(HWND hwnd)
+void
+DoShellContextMenuOnFile(HWND hwnd, PCWSTR File, LPARAM lParam)
+{
+    IContextMenu *pCM;
+    HRESULT hr = GetUIObjectOfPath(hwnd, File, IID_PPV_ARG(IContextMenu, &pCM));
+    if (SUCCEEDED(hr))
+    {
+        DoShellContextMenu(hwnd, pCM, File, lParam);
+        IContextMenu_Release(pCM);
+    }
+}
+
+typedef struct
+{
+    HWND hwnd;
+    PCWSTR Verb;
+    UINT CmdId;
+    UINT ImageId;
+    WCHAR File[ANYSIZE_ARRAY];
+} ENABLECOMMANDDATA;
+
+static DWORD CALLBACK
+EnableCommandIfVerbExistsProc(LPVOID ThreadParam)
+{
+    enum { first = 1, last = 0x7fff };
+    ENABLECOMMANDDATA *pData = ThreadParam;
+    IContextMenu *pCM;
+    HRESULT hr = GetUIObjectOfPath(pData->hwnd, pData->File, IID_PPV_ARG(IContextMenu, &pCM));
+    if (SUCCEEDED(hr))
+    {
+        HMENU hMenu = CreatePopupMenu();
+        hr = IContextMenu_QueryContextMenu(pCM, hMenu, 0, first, last, CMF_NORMAL);
+        if (SUCCEEDED(hr))
+        {
+            for (UINT i = 0, c = GetMenuItemCount(hMenu); i < c; ++i)
+            {
+                WCHAR buf[200];
+                UINT id = GetMenuItemIdByPos(hMenu, i);
+                if (id == (UINT)-1)
+                    continue;
+
+                *buf = UNICODE_NULL;
+                hr = IContextMenu_GetCommandString(pCM, id - first, GCS_VERBW, NULL, (char*)buf, _countof(buf));
+                if (SUCCEEDED(hr) && !lstrcmpiW(buf, pData->Verb))
+                {
+                    PostMessageW(pData->hwnd, WM_UPDATECOMMANDSTATE, MAKELONG(pData->CmdId, TRUE), pData->ImageId);
+                    break;
+                }
+            }
+        }
+        DestroyMenu(hMenu);
+        IContextMenu_Release(pCM);
+    }
+    SHFree(pData);
+    return 0;
+}
+
+void
+EnableCommandIfVerbExists(UINT ImageId, HWND hwnd, UINT CmdId, PCWSTR Verb, PCWSTR File)
+{
+    const SIZE_T cch = lstrlenW(File) + 1;
+    ENABLECOMMANDDATA *pData = SHAlloc(FIELD_OFFSET(ENABLECOMMANDDATA, File[cch]));
+    if (pData)
+    {
+        pData->hwnd = hwnd;
+        pData->Verb = Verb; // Note: This assumes the string is valid for the lifetime of the thread.
+        pData->CmdId = CmdId;
+        pData->ImageId = ImageId;
+        CopyMemory(pData->File, File, cch * sizeof(*File));
+        SHCreateThread(EnableCommandIfVerbExistsProc, pData, CTF_COINIT | CTF_INSIST, NULL);
+    }
+}
+
+void
+ShellExecuteVerb(HWND hwnd, PCWSTR Verb, PCWSTR File, BOOL Quit)
+{
+    SHELLEXECUTEINFOW sei = { sizeof(sei), SEE_MASK_INVOKEIDLIST | SEE_MASK_ASYNCOK };
+    if (!File[0])
+        return ;
+
+    sei.hwnd = hwnd;
+    sei.lpVerb = Verb;
+    sei.lpFile = File;
+    sei.nShow = SW_SHOW;
+    if (!ShellExecuteExW(&sei))
+    {
+        DPRINT1("ShellExecuteExW(%ls, %ls) failed with code %ld\n", Verb, File, GetLastError());
+    }
+    else if (Quit)
+    {
+        // Destroy the window to quit the application
+        DestroyWindow(hwnd);
+    }
+}
+
+void
+DisplayHelp(HWND hwnd)
 {
     SHELL_ErrorBox(hwnd, ERROR_NOT_SUPPORTED);
 }
