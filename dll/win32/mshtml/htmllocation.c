@@ -16,7 +16,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
+
+#define COBJMACROS
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "ole2.h"
+#include "wininet.h"
+#include "shlwapi.h"
+
+#include "wine/debug.h"
+
 #include "mshtml_private.h"
+#include "binding.h"
+#include "resource.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 static HRESULT get_url(HTMLLocation *This, const WCHAR **ret)
 {
@@ -498,7 +516,7 @@ static HRESULT WINAPI HTMLLocation_get_search(IHTMLLocation *iface, BSTR *p)
 static HRESULT WINAPI HTMLLocation_put_hash(IHTMLLocation *iface, BSTR v)
 {
     HTMLLocation *This = impl_from_IHTMLLocation(iface);
-
+#ifdef __REACTOS__
     TRACE("(%p)->(%s)\n", This, debugstr_w(v));
 
     if(!This->window || !This->window->base.outer_window) {
@@ -507,6 +525,10 @@ static HRESULT WINAPI HTMLLocation_put_hash(IHTMLLocation *iface, BSTR v)
     }
 
     return navigate_url(This->window->base.outer_window, v, This->window->base.outer_window->uri, 0);
+#else // __REACTOS__
+    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
+    return E_NOTIMPL;
+#endif // __REACTOS__
 }
 
 static HRESULT WINAPI HTMLLocation_get_hash(IHTMLLocation *iface, BSTR *p)

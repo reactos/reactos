@@ -49,8 +49,6 @@ list(APPEND SOURCE
     htmlselect.c
     htmlstorage.c
     htmlstyle.c
-    htmlstyle2.c
-    htmlstyle3.c
     htmlstyleelem.c
     htmlstylesheet.c
     htmltable.c
@@ -102,6 +100,10 @@ add_library(mshtml MODULE
     ${PCH_SKIP_SOURCE}
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mshtml.def)
+
+if(NOT MSVC)
+    target_compile_options(mshtml PRIVATE -Wno-misleading-indentation)
+endif()
 
 list(APPEND mshtml_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/blank.htm
