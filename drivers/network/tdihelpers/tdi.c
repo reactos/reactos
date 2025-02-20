@@ -450,7 +450,7 @@ NTSTATUS TdiDisassociateAddressFile(
  */
 {
     PDEVICE_OBJECT DeviceObject;
-//    IO_STATUS_BLOCK Iosb;
+    IO_STATUS_BLOCK Iosb;
     KEVENT Event;
     PIRP Irp;
 
@@ -476,8 +476,8 @@ DbgPrint("Y4 Device Object is %p Connection Object is %p\n", DeviceObject, Conne
     Irp = TdiBuildInternalDeviceControlIrp(TDI_DISASSOCIATE_ADDRESS,   /* Sub function */
                                            DeviceObject,            /* Device object */
                                            ConnectionObject,        /* File object */
-                                           NULL,                  /* Event */
-                                           NULL);                  /* Status */
+                                           &Event,                  /* Event */
+                                           &Iosb);                  /* Status */
     if (!Irp)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -489,7 +489,7 @@ DbgPrint("Y5\n");
                                 NULL);
 
 DbgPrint("Y6\n");
-    return TdiCall(Irp, DeviceObject, NULL, NULL);
+    return TdiCall(Irp, DeviceObject, &Event, &Iosb);
 }
 
 NTSTATUS TdiListen(
