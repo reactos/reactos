@@ -63,7 +63,7 @@ NTSTATUS
 NTAPI
 NtGetDevicePowerState(
     _In_ HANDLE Device,
-    _In_ PDEVICE_POWER_STATE PowerState
+    _Out_ PDEVICE_POWER_STATE PowerState
 );
 
 NTSYSCALLAPI
