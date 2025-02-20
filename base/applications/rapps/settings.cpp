@@ -118,6 +118,7 @@ AddInfoFields(ATL::CAtlList<SettingsField *> &infoFields, SETTINGS_INFO &setting
     infoFields.AddTail(new SettingsFieldBool(&(settings.bLogEnabled), L"bLogEnabled"));
     infoFields.AddTail(new SettingsFieldString(settings.szDownloadDir, MAX_PATH, L"szDownloadDir"));
     infoFields.AddTail(new SettingsFieldBool(&(settings.bDelInstaller), L"bDelInstaller"));
+    infoFields.AddTail(new SettingsFieldBool(&(settings.bSmallIcons), L"SmallIcons"));
     infoFields.AddTail(new SettingsFieldBool(&(settings.Maximized), L"WindowPosMaximized"));
     infoFields.AddTail(new SettingsFieldInt(&(settings.Left), L"WindowPosLeft"));
     infoFields.AddTail(new SettingsFieldInt(&(settings.Top), L"WindowPosTop"));
