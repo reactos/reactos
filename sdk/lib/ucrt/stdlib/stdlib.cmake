@@ -24,8 +24,8 @@ list(APPEND UCRT_STDLIB_SOURCES
 )
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    add_asm_files(UCRT_STRING_ASM stdlib/clang-hacks.s)
+    add_asm_files(UCRT_STDLIB_ASM stdlib/clang-hacks.s)
     list(APPEND UCRT_STDLIB_SOURCES
-        ${UCRT_STRING_ASM}
+        ${UCRT_STDLIB_ASM}
     )
 endif()
