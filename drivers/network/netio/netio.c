@@ -95,6 +95,7 @@ typedef struct _WSK_SOCKET_INTERNAL
     /* Those exist for connection oriented (TCP/IP) sockets only */
     PFILE_OBJECT ConnectionFile;        /* Returned by TdiOpenConnectionEndpointFile() */
     HANDLE ConnectionHandle;            /* Returned by TdiOpenConnectionEndpointFile() */
+    BOOLEAN ConnectionFileAssociated;
 
     /* Incoming connection callback function: */
     const WSK_CLIENT_LISTEN_DISPATCH *ListenDispatch;
@@ -116,34 +117,59 @@ void
 SocketGet(PWSK_SOCKET_INTERNAL s)
 {
     s->RefCount++;
+DbgPrint("SocketGet: refcount is %d socket is %p\n", s->RefCount, s);
 }
 
 void
 SocketPut(PWSK_SOCKET_INTERNAL s)
 {
+    NTSTATUS status;
+
     s->RefCount--;
+DbgPrint("SocketPut: refcount is %d socket is %p\n", s->RefCount, s);
     if (s->RefCount == 0)
     {
-        if (s->LocalAddressFile != NULL) {
-            ObDereferenceObject(s->LocalAddressFile);
-            s->LocalAddressFile = NULL;
-        }
-        if (s->LocalAddressHandle != NULL)
-        {
-            ZwClose(s->LocalAddressHandle);
-            s->LocalAddressHandle = NULL;
-        }
+DbgPrint("X5\n");
         if (s->ConnectionFile != NULL) {
+DbgPrint("X5a\n");
+            if (s->ConnectionFileAssociated) {
+DbgPrint("X5b\n");
+                status = TdiDisassociateAddressFile(s->ConnectionFile);
+DbgPrint("X5c\n");
+                if (!NT_SUCCESS(status)) {
+                    NETIO_DbgPrint(MIN_TRACE, ("Warning: TdiDisassociateAddressFile returned status %08x\n", status));
+                }
+DbgPrint("X5d\n");
+                s->ConnectionFileAssociated = FALSE;
+            }
+DbgPrint("X6\n");
             ObDereferenceObject(s->ConnectionFile);
             s->ConnectionFile = NULL;
         }
+DbgPrint("X7\n");
         if (s->ConnectionHandle != NULL)
         {
+DbgPrint("X8\n");
             ZwClose(s->ConnectionHandle);
             s->ConnectionHandle = NULL;
         }
+DbgPrint("X1\n");
+        if (s->LocalAddressFile != NULL) {
+DbgPrint("X2\n");
+            ObDereferenceObject(s->LocalAddressFile);
+            s->LocalAddressFile = NULL;
+        }
+DbgPrint("X3\n");
+        if (s->LocalAddressHandle != NULL)
+        {
+DbgPrint("X4\n");
+            ZwClose(s->LocalAddressHandle);
+            s->LocalAddressHandle = NULL;
+        }
+DbgPrint("X9\n");
         ExFreePoolWithTag(s, TAG_NETIO);
     }
+DbgPrint("Xa\n");
 }
 
 NTSTATUS NTAPI
@@ -579,6 +605,7 @@ WskConnect(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR RemoteAddress, _Reserved_ ULO
     {
         goto err_out_free_nc;
     }
+    s->ConnectionFileAssociated = TRUE;
 
     TargetConnectionInfo = TdiConnectionInfoFromSocketAddress(RemoteAddress);
     if (TargetConnectionInfo == NULL)
@@ -816,6 +843,7 @@ WskSocket(
     s->RefCount = 1;            /* SocketPut() is in WskCloseSocket */
     s->ConnectionHandle = NULL;
     s->ConnectionFile = NULL;
+    s->ConnectionFileAssociated = FALSE;
 
     switch (SocketType)
     {
@@ -845,6 +873,8 @@ WskSocket(
             status = STATUS_NOT_SUPPORTED;
             goto err_out;
     }
+
+DbgPrint("Socket is %p s->ConnectionFile is %p ListenDispatch is %p\n", s, s->ConnectionFile, s->ListenDispatch);
 
     Irp->IoStatus.Information = (ULONG_PTR) s;
     status = STATUS_SUCCESS;

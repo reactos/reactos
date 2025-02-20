@@ -456,19 +456,23 @@ NTSTATUS TdiDisassociateAddressFile(
 
     AFD_DbgPrint(MAX_TRACE, ("Called. ConnectionObject (%p)\n", ConnectionObject));
 
+DbgPrint("Y1\n");
     if (!ConnectionObject) {
         AFD_DbgPrint(MIN_TRACE, ("Bad connection object.\n"));
         return STATUS_INVALID_PARAMETER;
     }
 
+DbgPrint("Y2\n");
     DeviceObject = IoGetRelatedDeviceObject(ConnectionObject);
     if (!DeviceObject) {
         AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
         return STATUS_INVALID_PARAMETER;
     }
 
+DbgPrint("Y3\n");
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
+DbgPrint("Y4 Device Object is %p Connection Object is %p\n", DeviceObject, ConnectionObject);
     Irp = TdiBuildInternalDeviceControlIrp(TDI_DISASSOCIATE_ADDRESS,   /* Sub function */
                                            DeviceObject,            /* Device object */
                                            ConnectionObject,        /* File object */
@@ -477,12 +481,14 @@ NTSTATUS TdiDisassociateAddressFile(
     if (!Irp)
         return STATUS_INSUFFICIENT_RESOURCES;
 
+DbgPrint("Y5\n");
     TdiBuildDisassociateAddress(Irp,
                                 DeviceObject,
                                 ConnectionObject,
                                 NULL,
                                 NULL);
 
+DbgPrint("Y6\n");
     return TdiCall(Irp, DeviceObject, &Event, &Iosb);
 }
 
