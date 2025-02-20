@@ -30,6 +30,8 @@
 
 #include "resource.h"
 
+#define WM_UPDATECOMMANDSTATE (WM_APP + 0)
+
 extern HINSTANCE g_hInstance;
 extern GpImage *g_pImage;
 
@@ -72,6 +74,8 @@ void Anime_Pause(PANIME pAnime);
 BOOL Anime_OnTimer(PANIME pAnime, WPARAM wParam);
 
 void DoShellContextMenuOnFile(HWND hwnd, PCWSTR File, LPARAM lParam);
+void EnableCommandIfVerbExists(UINT ImageId, HWND hwnd, UINT CmdId, PCWSTR Verb, PCWSTR File);
+void ShellExecuteVerb(HWND hwnd, PCWSTR Verb, PCWSTR File, BOOL Quit);
 void DisplayHelp(HWND hwnd);
 
 static inline LPVOID QuickAlloc(SIZE_T cbSize, BOOL bZero)
