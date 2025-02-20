@@ -998,6 +998,8 @@ BEGIN
     IDS_OBJECTS "%d Objects"
     IDS_OBJECTS_SELECTED "%d Objects Selected"
 
+    IDS_SEARCH_BROWSEITEM "Обзор..."
+
     IDS_TITLE_MYCOMP "Моят компютър"
     IDS_TITLE_MYNET "Моята мрежа"
     IDS_TITLE_BIN_1 "Кошче (пълно)"
