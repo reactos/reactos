@@ -117,7 +117,7 @@ void
 SocketGet(PWSK_SOCKET_INTERNAL s)
 {
     s->RefCount++;
-DbgPrint("SocketGet: refcount is %d socket is %p\n", s->RefCount, s);
+// DbgPrint("SocketGet: refcount is %d socket is %p\n", s->RefCount, s);
 }
 
 static
@@ -126,25 +126,25 @@ void SocketShutdown(PWSK_SOCKET_INTERNAL s)
     NTSTATUS status;
 
     if (s->ConnectionFile != NULL) {
-DbgPrint("X5a\n");
+// DbgPrint("X5a\n");
         if (s->ConnectionFileAssociated) {
-DbgPrint("X5b\n");
+// DbgPrint("X5b\n");
             status = TdiDisassociateAddressFile(s->ConnectionFile);
-DbgPrint("X5c\n");
+// DbgPrint("X5c\n");
             if (!NT_SUCCESS(status)) {
                 NETIO_DbgPrint(MIN_TRACE, ("Warning: TdiDisassociateAddressFile returned status %08x\n", status));
             }
-DbgPrint("X5d\n");
+// DbgPrint("X5d\n");
             s->ConnectionFileAssociated = FALSE;
         }
-DbgPrint("X6\n");
+// DbgPrint("X6\n");
         ObDereferenceObject(s->ConnectionFile);
         s->ConnectionFile = NULL;
     }
-DbgPrint("X7\n");
+// DbgPrint("X7\n");
     if (s->ConnectionHandle != NULL)
     {
-DbgPrint("X8\n");
+// DbgPrint("X8\n");
         ZwClose(s->ConnectionHandle);
         s->ConnectionHandle = NULL;
     }
@@ -154,34 +154,34 @@ void
 SocketPut(PWSK_SOCKET_INTERNAL s)
 {
     s->RefCount--;
-DbgPrint("SocketPut: refcount is %d socket is %p\n", s->RefCount, s);
+// DbgPrint("SocketPut: refcount is %d socket is %p\n", s->RefCount, s);
     if (s->RefCount == 0)
     {
 SocketShutdown(s);
-DbgPrint("X7\n");
+// DbgPrint("X7\n");
         if (s->ConnectionHandle != NULL)
         {
-DbgPrint("X8\n");
+// DbgPrint("X8\n");
             ZwClose(s->ConnectionHandle);
             s->ConnectionHandle = NULL;
         }
-DbgPrint("X1\n");
+// DbgPrint("X1\n");
         if (s->LocalAddressFile != NULL) {
-DbgPrint("X2\n");
+// DbgPrint("X2\n");
             ObDereferenceObject(s->LocalAddressFile);
             s->LocalAddressFile = NULL;
         }
-DbgPrint("X3\n");
+// DbgPrint("X3\n");
         if (s->LocalAddressHandle != NULL)
         {
-DbgPrint("X4\n");
+// DbgPrint("X4\n");
             ZwClose(s->LocalAddressHandle);
             s->LocalAddressHandle = NULL;
         }
-DbgPrint("X9\n");
+// DbgPrint("X9\n");
         ExFreePoolWithTag(s, TAG_NETIO);
     }
-DbgPrint("Xa\n");
+// DbgPrint("Xa\n");
 }
 
 NTSTATUS NTAPI
@@ -231,7 +231,7 @@ WskControlSocket(
     PWSK_SOCKET_INTERNAL s = (PWSK_SOCKET_INTERNAL)Socket;
     NTSTATUS status = STATUS_NOT_IMPLEMENTED;
 
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
 
     if (s == NULL)
     {
@@ -322,15 +322,15 @@ WskCloseSocket(_In_ PWSK_SOCKET Socket, _Inout_ PIRP Irp)
     NTSTATUS status = STATUS_SUCCESS;
     PWSK_SOCKET_INTERNAL s = (PWSK_SOCKET_INTERNAL)Socket;
 
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
     IoSetNextIrpStackLocation(Irp);
         /* There might be a reference from (for example) a pending
 	 * receive. Shutdown the socket here explicitly. We expect
          * all pending I/O operations to be cancelled, then.
 	 */
-DbgPrint("Into SocketShutdown %p\n", s);
+// DbgPrint("Into SocketShutdown %p\n", s);
     SocketShutdown(s);
-DbgPrint("Into SocketPut %p\n", s);
+// DbgPrint("Into SocketPut %p\n", s);
     SocketPut(s);
 
     Irp->IoStatus.Status = status;
@@ -392,7 +392,7 @@ WskBind(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR LocalAddress, _Reserved_ ULONG F
     PWSK_SOCKET_INTERNAL s = (PWSK_SOCKET_INTERNAL)Socket;
     PTRANSPORT_ADDRESS ta = TdiTransportAddressFromSocketAddress(LocalAddress);
 
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
     IoSetNextIrpStackLocation(Irp);
 
     if (ta == NULL)
@@ -411,7 +411,7 @@ DbgPrint("Function %s ...\n", __func__);
     status = TdiOpenAddressFile(&s->TdiName,
                                 ta, AFD_SHARE_REUSE, &s->LocalAddressHandle, &s->LocalAddressFile);
 
-DbgPrint("WskBind s is %p s->LocalAddressHandle is %p s->LocalAddressFile is %p status is %x TdiOpenAddressFile\n", s, s->LocalAddressHandle, s->LocalAddressFile, status);
+// DbgPrint("WskBind s is %p s->LocalAddressHandle is %p s->LocalAddressFile is %p status is %x TdiOpenAddressFile\n", s, s->LocalAddressHandle, s->LocalAddressFile, status);
 
     if (NT_SUCCESS(status))
     {
@@ -448,7 +448,7 @@ WskSendTo(
     NTSTATUS status;
     void *BufferData;
     struct NetioContext *nc;
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
 
     IoSetNextIrpStackLocation(Irp);
 
@@ -520,7 +520,7 @@ WskReceiveFrom(
     _Out_writes_bytes_opt_(*ControlLength) PCMSGHDR ControlInfo,
     _Out_opt_ PULONG ControlFlags, _Inout_ PIRP Irp)
 {
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -528,7 +528,7 @@ DbgPrint("Function %s ...\n", __func__);
 static NTSTATUS WSKAPI
 WskReleaseUdp(_In_ PWSK_SOCKET Socket, _In_ PWSK_DATAGRAM_INDICATION DatagramIndication)
 {
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -536,7 +536,7 @@ DbgPrint("Function %s ...\n", __func__);
 static NTSTATUS WSKAPI
 WskReleaseTcp(_In_ PWSK_SOCKET Socket, _In_ PWSK_DATA_INDICATION DataIndication)
 {
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -544,7 +544,7 @@ DbgPrint("Function %s ...\n", __func__);
 static NTSTATUS WSKAPI
 WskGetLocalAddress(_In_ PWSK_SOCKET Socket, _Out_ PSOCKADDR LocalAddress, _Inout_ PIRP Irp)
 {
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -552,7 +552,7 @@ DbgPrint("Function %s ...\n", __func__);
 static NTSTATUS WSKAPI
 WskGetRemoteAddress(_In_ PWSK_SOCKET Socket, _Out_ PSOCKADDR RemoteAddress, _Inout_ PIRP Irp)
 {
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -572,7 +572,7 @@ WskSocketConnect(
     _In_opt_ PSECURITY_DESCRIPTOR SecurityDescriptor,
     _Inout_ PIRP Irp)
 {
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -587,7 +587,7 @@ WskControlClient(
     _Out_writes_bytes_opt_(OutputSize) PVOID OutputBuffer,
     _Out_opt_ SIZE_T * OutputSizeReturned, _Inout_opt_ PIRP Irp)
 {
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -613,7 +613,7 @@ WskConnect(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR RemoteAddress, _Reserved_ ULO
     NTSTATUS status;
     struct NetioContext *nc;
 
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
     IoSetNextIrpStackLocation(Irp);
 
     status = STATUS_INVALID_PARAMETER;
@@ -634,9 +634,9 @@ DbgPrint("Function %s ...\n", __func__);
 
     tdiIrp = NULL;
 
-DbgPrint("s is %p s->LocalAddressHandle is %p\n", s, s->LocalAddressHandle);
+// DbgPrint("s is %p s->LocalAddressHandle is %p\n", s, s->LocalAddressHandle);
     status = TdiAssociateAddressFile(s->LocalAddressHandle, s->ConnectionFile);
-DbgPrint("s is %p s->ConnectionFile is %p status is %x TdiAssociateAddressFile succeeded\n", s, s->ConnectionFile, status);
+// DbgPrint("s is %p s->ConnectionFile is %p status is %x TdiAssociateAddressFile succeeded\n", s, s->ConnectionFile, status);
     if (!NT_SUCCESS(status))
     {
         goto err_out_free_nc;
@@ -702,7 +702,7 @@ WskStreamIo(
     void *BufferData;
     struct NetioContext *nc;
 
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
     IoSetNextIrpStackLocation(Irp);
     status = STATUS_INSUFFICIENT_RESOURCES;
 
@@ -764,21 +764,21 @@ err_out:
 static NTSTATUS WSKAPI
 WskSend(_In_ PWSK_SOCKET Socket, _In_ PWSK_BUF Buffer, _In_ ULONG Flags, _Inout_ PIRP Irp)
 {
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
     return WskStreamIo(Socket, Buffer, Flags, Irp, DIR_SEND);
 }
 
 static NTSTATUS WSKAPI
 WskReceive(_In_ PWSK_SOCKET Socket, _In_ PWSK_BUF Buffer, _In_ ULONG Flags, _Inout_ PIRP Irp)
 {
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
     return WskStreamIo(Socket, Buffer, Flags, Irp, DIR_RECEIVE);
 }
 
 static NTSTATUS WSKAPI
 WskDisconnect(_In_ PWSK_SOCKET Socket, _In_opt_ PWSK_BUF Buffer, _In_ ULONG Flags, _Inout_ PIRP Irp)
 {
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -813,7 +813,7 @@ WskSocket(
 {
     PWSK_SOCKET_INTERNAL s;
     NTSTATUS status;
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
 
     IoSetNextIrpStackLocation(Irp);
 
@@ -915,7 +915,7 @@ DbgPrint("Function %s ...\n", __func__);
             goto err_out;
     }
 
-DbgPrint("Socket is %p s->ConnectionFile is %p ListenDispatch is %p\n", s, s->ConnectionFile, s->ListenDispatch);
+// DbgPrint("Socket is %p s->ConnectionFile is %p ListenDispatch is %p\n", s, s->ConnectionFile, s->ListenDispatch);
 
     Irp->IoStatus.Information = (ULONG_PTR) s;
     status = STATUS_SUCCESS;
@@ -941,7 +941,7 @@ WskRegister(_In_ PWSK_CLIENT_NPI client_npi, _Out_ PWSK_REGISTRATION reg)
     reg->ReservedRegistrationState = 42;
     reg->ReservedRegistrationContext = NULL;
     KeInitializeSpinLock(&reg->ReservedRegistrationLock);
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
 
     return STATUS_SUCCESS;
 }
@@ -951,7 +951,7 @@ WskCaptureProviderNPI(_In_ PWSK_REGISTRATION reg, _In_ ULONG wait, _Out_ PWSK_PR
 {
     npi->Client = NULL;
     npi->Dispatch = &provider_dispatch;
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
 
     return STATUS_SUCCESS;
 }
@@ -959,13 +959,13 @@ DbgPrint("Function %s ...\n", __func__);
 VOID WSKAPI
 WskReleaseProviderNPI(_In_ PWSK_REGISTRATION reg)
 {
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
     /* noop */
 }
 
 VOID WSKAPI
 WskDeregister(_In_ PWSK_REGISTRATION reg)
 {
-DbgPrint("Function %s ...\n", __func__);
+// DbgPrint("Function %s ...\n", __func__);
     /* noop */
 }
