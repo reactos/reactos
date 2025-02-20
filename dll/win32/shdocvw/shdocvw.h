@@ -64,6 +64,12 @@ static inline void SHDOCVW_UnlockModule(void) { InterlockedDecrement( &SHDOCVW_r
 #include "objects.h"
 #define ARRAY_SIZE(array) _countof(array)
 EXTERN_C HINSTANCE instance;
+
+EXTERN_C HRESULT
+ShellWindowsGetClassObject(
+    _In_ REFIID rclsid,
+    _In_ REFIID riid,
+    _Out_ LPVOID *ppv);
 #endif // def __REACTOS__
 
 #endif /* __WINE_SHDOCVW_H */
