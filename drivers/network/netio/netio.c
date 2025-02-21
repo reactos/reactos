@@ -215,6 +215,100 @@ NetioComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
     return STATUS_SUCCESS;
 }
 
+struct ListenContext {
+    PWSK_SOCKET_INTERNAL socket;
+    PTDI_CONNECTION_INFORMATION RequestConnectionInfo, ReturnConnectionInfo;
+};
+
+static NTSTATUS NTAPI
+ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
+{
+    struct ListenContext *l = (struct ListenContext *)Context;
+    PWSK_SOCKET_INTERNAL s = l->socket;
+
+DbgPrint("ListenComplete s is %p\n", s);
+
+    if (s->CallbackMask & WSK_EVENT_ACCEPT) {
+        DbgPrint("Callback ...\n", s);
+    }
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS
+StartListening(PWSK_SOCKET_INTERNAL s)
+{
+    PIRP tdiIrp;
+    NTSTATUS status;
+    struct ListenContext *lc;
+
+DbgPrint("Function %s ...\n", __func__);
+
+    if (s->LocalAddressHandle == NULL)
+    {
+        DbgPrint("LocalAddressHandle is not set, need to bind your socket before listening\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    status = STATUS_INSUFFICIENT_RESOURCES;
+    lc = ExAllocatePoolWithTag(NonPagedPool, sizeof(*lc), TAG_NETIO);
+    if (lc == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    lc->socket = s;
+
+    tdiIrp = NULL;
+
+// DbgPrint("s is %p s->LocalAddressHandle is %p\n", s, s->LocalAddressHandle);
+    status = TdiAssociateAddressFile(s->LocalAddressHandle, s->ConnectionFile);
+// DbgPrint("s is %p s->ConnectionFile is %p status is %x TdiAssociateAddressFile succeeded\n", s, s->ConnectionFile, status);
+    if (!NT_SUCCESS(status))
+    {
+        goto err_out_free_lc;
+    }
+    s->ConnectionFileAssociated = TRUE;
+
+    lc->RequestConnectionInfo = NULL;
+    TdiBuildNullConnectionInfo(&lc->RequestConnectionInfo, TDI_ADDRESS_TYPE_IP);
+    if (lc->RequestConnectionInfo == NULL)
+    {
+        goto err_out_free_lc_and_disassociate;
+    }
+
+    lc->ReturnConnectionInfo = NULL;
+    TdiBuildNullConnectionInfo(&lc->ReturnConnectionInfo, TDI_ADDRESS_TYPE_IP);
+    if (lc->ReturnConnectionInfo == NULL)
+    {
+        goto err_out_free_lc_and_req_conn_info;
+    }
+    SocketGet(s);
+
+    status = TdiListen(&tdiIrp, s->ConnectionFile, &lc->RequestConnectionInfo, &lc->ReturnConnectionInfo, ListenComplete, lc);
+
+    if (!NT_SUCCESS(status))
+    {
+        ExFreePoolWithTag(lc->ReturnConnectionInfo, TAG_NETIO);
+        SocketPut(s);
+        goto err_out_free_lc_and_req_conn_info;
+    }
+    return STATUS_PENDING;
+
+err_out_free_lc_and_req_conn_info:
+    ExFreePoolWithTag(lc->RequestConnectionInfo, TAG_NETIO);
+
+err_out_free_lc_and_disassociate:
+    status = TdiDisassociateAddressFile(s->ConnectionFile);
+    if (!NT_SUCCESS(status)) {
+        NETIO_DbgPrint(MIN_TRACE, ("Warning: TdiDisassociateAddressFile returned status %08x\n", status));
+    }
+    s->ConnectionFileAssociated = FALSE;
+
+err_out_free_lc:
+    ExFreePoolWithTag(lc, TAG_NETIO);
+
+    return status;
+}
+
 static NTSTATUS WSKAPI
 WskControlSocket(
     _In_ PWSK_SOCKET Socket,
@@ -288,8 +382,13 @@ WskControlSocket(
                             }
                             WSK_EVENT_CALLBACK_CONTROL *c = (WSK_EVENT_CALLBACK_CONTROL *) InputBuffer;
 
-                            s->CallbackMask = c->EventMask;
-                            /* TODO: and start listening here? */
+                            if (((s->CallbackMask & WSK_EVENT_ACCEPT) == 0) &&
+                                ((c->EventMask & WSK_EVENT_ACCEPT) == WSK_EVENT_ACCEPT)) {
+                                s->CallbackMask = c->EventMask;
+                                StartListening(s);
+                            } else {
+                                s->CallbackMask = c->EventMask;
+                            }
 
                             status = STATUS_SUCCESS;
                             break;
@@ -610,7 +709,7 @@ WskConnect(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR RemoteAddress, _Reserved_ ULO
     PTDI_CONNECTION_INFORMATION TargetConnectionInfo, PeerAddrRet;
     PIRP tdiIrp;
     PWSK_SOCKET_INTERNAL s = (PWSK_SOCKET_INTERNAL)Socket;
-    NTSTATUS status;
+    NTSTATUS status, status2;
     struct NetioContext *nc;
 
 // DbgPrint("Function %s ...\n", __func__);
@@ -646,7 +745,7 @@ WskConnect(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR RemoteAddress, _Reserved_ ULO
     TargetConnectionInfo = TdiConnectionInfoFromSocketAddress(RemoteAddress);
     if (TargetConnectionInfo == NULL)
     {
-        goto err_out_free_nc;
+        goto err_out_free_nc_and_disassociate;
     }
     nc->TargetConnectionInfo = TargetConnectionInfo;
 
@@ -677,6 +776,13 @@ WskConnect(_In_ PWSK_SOCKET Socket, _In_ PSOCKADDR RemoteAddress, _Reserved_ ULO
 
 err_out_free_nc_and_tci:
     ExFreePoolWithTag(TargetConnectionInfo, TAG_AFD_TDI_CONNECTION_INFORMATION);
+
+err_out_free_nc_and_disassociate:
+    status2 = TdiDisassociateAddressFile(s->ConnectionFile);
+    if (!NT_SUCCESS(status2)) {
+        NETIO_DbgPrint(MIN_TRACE, ("Warning: TdiDisassociateAddressFile returned status %08x\n", status));
+    }
+    s->ConnectionFileAssociated = FALSE;
 
 err_out_free_nc:
     ExFreePoolWithTag(nc, TAG_NETIO);
