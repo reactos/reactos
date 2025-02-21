@@ -236,6 +236,7 @@ private:
         BOOL bShowClock = IsDlgButtonChecked(IDC_TASKBARPROP_CLOCK);
         BOOL bShowSeconds = IsDlgButtonChecked(IDC_TASKBARPROP_SECONDS);
         BOOL bHideInactive = IsDlgButtonChecked(IDC_TASKBARPROP_HIDEICONS);
+		BOOL bShowDesktopButton = IsDlgButtonChecked(IDC_TASKBARPROP_DESKTOP);
         UINT uImageId;
 
         HWND hwndCustomizeNotifyButton = GetDlgItem(IDC_TASKBARPROP_ICONCUST);
@@ -246,19 +247,34 @@ private:
         ::EnableWindow(hwndSeconds, bShowClock);
         if (!bShowSeconds)
             CheckDlgButton(IDC_TASKBARPROP_SECONDS, BST_UNCHECKED);
-
-        if (bHideInactive && bShowClock && bShowSeconds)
-            uImageId = IDB_SYSTRAYPROP_HIDE_SECONDS;
-        else if (bHideInactive && bShowClock && !bShowSeconds)
-            uImageId = IDB_SYSTRAYPROP_HIDE_CLOCK;
-        else if (bHideInactive && !bShowClock)
-            uImageId = IDB_SYSTRAYPROP_HIDE_NOCLOCK;
-        else if (!bHideInactive && bShowClock && bShowSeconds)
-            uImageId = IDB_SYSTRAYPROP_SHOW_SECONDS;
-        else if (!bHideInactive && bShowClock && !bShowSeconds)
-            uImageId = IDB_SYSTRAYPROP_SHOW_CLOCK;
-        else if (!bHideInactive && !bShowClock)
-            uImageId = IDB_SYSTRAYPROP_SHOW_NOCLOCK;
+		
+		if (bShowDesktopButton == false) {
+			if (bHideInactive && bShowClock && bShowSeconds)
+				uImageId = IDB_SYSTRAYPROP_HIDE_SECONDS_NODESK;
+			else if (bHideInactive && bShowClock && !bShowSeconds)
+				uImageId = IDB_SYSTRAYPROP_HIDE_CLOCK_NODESK;
+			else if (bHideInactive && !bShowClock)
+				uImageId = IDB_SYSTRAYPROP_HIDE_NOCLOCK_NODESK;
+			else if (!bHideInactive && bShowClock && bShowSeconds)
+				uImageId = IDB_SYSTRAYPROP_SHOW_SECONDS_NODESK;
+			else if (!bHideInactive && bShowClock && !bShowSeconds)
+				uImageId = IDB_SYSTRAYPROP_SHOW_CLOCK_NODESK;
+			else if (!bHideInactive && !bShowClock)
+				uImageId = IDB_SYSTRAYPROP_SHOW_NOCLOCK_NODESK;
+		} else {
+			if (bHideInactive && bShowClock && bShowSeconds)
+				uImageId = IDB_SYSTRAYPROP_HIDE_SECONDS_DESK;
+			else if (bHideInactive && bShowClock && !bShowSeconds)
+				uImageId = IDB_SYSTRAYPROP_HIDE_CLOCK_DESK;
+			else if (bHideInactive && !bShowClock)
+				uImageId = IDB_SYSTRAYPROP_HIDE_NOCLOCK_DESK;
+			else if (!bHideInactive && bShowClock && bShowSeconds)
+				uImageId = IDB_SYSTRAYPROP_SHOW_SECONDS_DESK;
+			else if (!bHideInactive && bShowClock && !bShowSeconds)
+				uImageId = IDB_SYSTRAYPROP_SHOW_CLOCK_DESK;
+			else if (!bHideInactive && !bShowClock)
+				uImageId = IDB_SYSTRAYPROP_SHOW_NOCLOCK_DESK;
+		}
 
         SetBitmap(hwndTrayBitmap, &m_hbmpTray, uImageId);
     }
