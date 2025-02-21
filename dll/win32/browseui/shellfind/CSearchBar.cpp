@@ -91,10 +91,10 @@ static HRESULT GetClassOfItem(PCIDLIST_ABSOLUTE pidl, CLSID *pCLSID)
 
 void FreeList(LOCATIONITEM *pItems)
 {
-    for (; pItems;)
+    while (pItems)
     {
         LOCATIONITEM *pNext = pItems->pNext;
-        SHFree(pItems);
+        CoTaskMemFree(pItems);
         pItems = pNext;
     }
 }
@@ -147,21 +147,22 @@ static LOCATIONITEM* GetDesktopLocations()
 static LOCATIONITEM* GetLocalDisksLocations()
 {
     PCWSTR rgszLocations[26];
-    WCHAR rgszDrives[_countof(rgszLocations) + 1][4];
+    WCHAR rgszDrives[_countof(rgszLocations)][4];
     UINT nCount = 0;
     for (UINT i = 0, fDrives = GetLogicalDrives(); i < _countof(rgszLocations); ++i)
     {
         if (fDrives & (1 << i))
         {
-            nCount++;
-            rgszLocations[nCount - 1] = rgszDrives[nCount];
             rgszDrives[nCount][0] = 'A' + i;
             rgszDrives[nCount][1] = ':';
             rgszDrives[nCount][2] = '\\';
             rgszDrives[nCount][3] = UNICODE_NULL;
             UINT fType = GetDriveTypeW(rgszDrives[nCount]);
-            if (fType != DRIVE_FIXED && fType != DRIVE_RAMDISK)
-                nCount--;
+            if (fType == DRIVE_FIXED || fType == DRIVE_RAMDISK)
+            {
+                rgszLocations[nCount] = rgszDrives[nCount];
+                nCount++;
+            }
         }
     }
     return BuildLocationList(rgszLocations, nCount);
@@ -408,39 +409,38 @@ LRESULT CSearchBar::OnLocationEditChange(WORD wNotifyCode, WORD wID, HWND hWndCt
     item.mask = CBEIF_LPARAM;
     item.iItem = idx;
     item.cchTextMax = 0;
-    if (SendMessageW(hComboboxEx, CBEM_GETITEMW, 0, (LPARAM)&item) &&
-        GetSpecial((LPITEMIDLIST)item.lParam) == SPECIAL_BROWSE)
-    {
-        idx = max(m_RealItemIndex, 0);
-        SendMessageW(hComboboxEx, CB_SETCURSEL, idx, 0); // Reset to previous item
-
-        BROWSEINFOW bi = { hComboboxEx };
-        bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
-        if (PIDLIST_ABSOLUTE pidl = SHBrowseForFolderW(&bi))
-        {
-            idx = FindItemInComboEx(hComboboxEx, pidl, ILIsEqual, TRUE);
-            if (idx < 0)
-            {
-                SHFILEINFO shfi;
-                if (SHGetFileInfoW((WCHAR*)pidl, 0, &shfi, sizeof(shfi), SHGFI_PIDL | SHGFI_DISPLAYNAME | SHGFI_SYSICONINDEX))
-                {
-                    item.mask = CBEIF_LPARAM | CBEIF_TEXT | CBEIF_SELECTEDIMAGE | CBEIF_IMAGE;
-                    item.iItem = -1;
-                    item.iImage = item.iSelectedImage = shfi.iIcon;
-                    item.pszText = shfi.szDisplayName;
-                    item.lParam = (LPARAM)pidl; // IAddressEditBox takes ownership
-                    idx = SendMessageW(hComboboxEx, CBEM_INSERTITEMW, 0, (LPARAM)&item);
-                }
-            }
-            if (idx >= 0)
-                SendMessageW(hComboboxEx, CB_SETCURSEL, idx, 0); // Select the browsed item
-            else
-                SHFree(pidl);
-        }
-    }
-    else
+    if (!SendMessageW(hComboboxEx, CBEM_GETITEMW, 0, (LPARAM)&item) ||
+        GetSpecial((LPITEMIDLIST)item.lParam) != SPECIAL_BROWSE)
     {
         m_RealItemIndex = idx;
+        return 0;
+    }
+
+    idx = max(m_RealItemIndex, 0);
+    SendMessageW(hComboboxEx, CB_SETCURSEL, idx, 0); // Reset to previous item
+
+    BROWSEINFOW bi = { hComboboxEx };
+    bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+    if (PIDLIST_ABSOLUTE pidl = SHBrowseForFolderW(&bi))
+    {
+        idx = FindItemInComboEx(hComboboxEx, pidl, ILIsEqual, TRUE);
+        if (idx < 0)
+        {
+            SHFILEINFO shfi;
+            if (SHGetFileInfoW((WCHAR*)pidl, 0, &shfi, sizeof(shfi), SHGFI_PIDL | SHGFI_DISPLAYNAME | SHGFI_SYSICONINDEX))
+            {
+                item.mask = CBEIF_LPARAM | CBEIF_TEXT | CBEIF_SELECTEDIMAGE | CBEIF_IMAGE;
+                item.iItem = -1;
+                item.iImage = item.iSelectedImage = shfi.iIcon;
+                item.pszText = shfi.szDisplayName;
+                item.lParam = (LPARAM)pidl; // IAddressEditBox takes ownership
+                idx = SendMessageW(hComboboxEx, CBEM_INSERTITEMW, 0, (LPARAM)&item);
+            }
+        }
+        if (idx >= 0)
+            SendMessageW(hComboboxEx, CB_SETCURSEL, idx, 0); // Select the browsed item
+        else
+            SHFree(pidl);
     }
     return 0;
 }
