@@ -570,6 +570,7 @@ Preview_UpdateUI(PPREVIEW_DATA pData)
 {
     BOOL bEnable = (g_pImage != NULL);
     SendMessageW(pData->m_hwndToolBar, TB_ENABLEBUTTON, IDC_SAVEAS, bEnable);
+    // These will be validated and enabled later by EnableCommandIfVerbExists
     SendMessageW(pData->m_hwndToolBar, TB_ENABLEBUTTON, IDC_PRINT, FALSE);
     SendMessageW(pData->m_hwndToolBar, TB_ENABLEBUTTON, IDC_MODIFY, FALSE);
 }

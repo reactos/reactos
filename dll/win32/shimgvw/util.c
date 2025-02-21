@@ -158,7 +158,7 @@ DoShellContextMenuOnFile(HWND hwnd, PCWSTR File, LPARAM lParam)
     }
 }
 
-typedef struct
+typedef struct _ENABLECOMMANDDATA
 {
     HWND hwnd;
     PCWSTR Verb;
@@ -223,8 +223,8 @@ void
 ShellExecuteVerb(HWND hwnd, PCWSTR Verb, PCWSTR File, BOOL Quit)
 {
     SHELLEXECUTEINFOW sei = { sizeof(sei), SEE_MASK_INVOKEIDLIST | SEE_MASK_ASYNCOK };
-    if (!File[0])
-        return ;
+    if (!*File)
+        return;
 
     sei.hwnd = hwnd;
     sei.lpVerb = Verb;
