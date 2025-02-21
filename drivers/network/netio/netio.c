@@ -230,6 +230,12 @@ DbgPrint("ListenComplete s is %p\n", s);
 
     if (s->CallbackMask & WSK_EVENT_ACCEPT) {
         DbgPrint("Callback ...\n", s);
+	/* TODO:
+		1) Create a socket (via WskSocket function?)
+		2) Associate the RemoteAddress with s->ConnectionFile
+		3) Call the callback (ListenDispatch)
+		4) Requeue StartListening
+	*/
     }
     return STATUS_SUCCESS;
 }
