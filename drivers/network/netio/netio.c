@@ -208,7 +208,7 @@ NetioComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
     }
     if (c->PeerAddrRet != NULL)
     {
-        ExFreePoolWithTag(c->PeerAddrRet, TAG_NETIO);
+        ExFreePoolWithTag(c->PeerAddrRet, TAG_AFD_TDI_CONNECTION_INFORMATION);
     }
     ExFreePoolWithTag(c, TAG_NETIO);
 
