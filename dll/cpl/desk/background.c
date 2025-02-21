@@ -155,6 +155,9 @@ GdipGetSupportedFileExtensions(VOID)
 
     for (i = 0; i < num; ++i)
     {
+        if (!lstrcmpiW(codecInfo[i].FilenameExtension, L"*.ico"))
+            continue;
+
         StringCbCatW(lpBuffer, size, codecInfo[i].FilenameExtension);
         if (i < (num - 1))
         {
