@@ -230,6 +230,8 @@ class CNotifySettingsPage : public CPropertyPageImpl<CNotifySettingsPage>
 private:
     HBITMAP m_hbmpTray;
     HWND m_hwndTaskbar;
+	
+	static const UINT uImageIdLookupTable[2][2][2][2];
 
     void _UpdateDialog()
     {
@@ -237,7 +239,6 @@ private:
         BOOL bShowSeconds = IsDlgButtonChecked(IDC_TASKBARPROP_SECONDS);
         BOOL bHideInactive = IsDlgButtonChecked(IDC_TASKBARPROP_HIDEICONS);
 		BOOL bShowDesktopButton = IsDlgButtonChecked(IDC_TASKBARPROP_DESKTOP);
-        UINT uImageId;
 
         HWND hwndCustomizeNotifyButton = GetDlgItem(IDC_TASKBARPROP_ICONCUST);
         HWND hwndSeconds = GetDlgItem(IDC_TASKBARPROP_SECONDS);
@@ -248,33 +249,7 @@ private:
         if (!bShowSeconds)
             CheckDlgButton(IDC_TASKBARPROP_SECONDS, BST_UNCHECKED);
 		
-		if (bShowDesktopButton == false) {
-			if (bHideInactive && bShowClock && bShowSeconds)
-				uImageId = IDB_SYSTRAYPROP_HIDE_SECONDS_NODESK;
-			else if (bHideInactive && bShowClock && !bShowSeconds)
-				uImageId = IDB_SYSTRAYPROP_HIDE_CLOCK_NODESK;
-			else if (bHideInactive && !bShowClock)
-				uImageId = IDB_SYSTRAYPROP_HIDE_NOCLOCK_NODESK;
-			else if (!bHideInactive && bShowClock && bShowSeconds)
-				uImageId = IDB_SYSTRAYPROP_SHOW_SECONDS_NODESK;
-			else if (!bHideInactive && bShowClock && !bShowSeconds)
-				uImageId = IDB_SYSTRAYPROP_SHOW_CLOCK_NODESK;
-			else if (!bHideInactive && !bShowClock)
-				uImageId = IDB_SYSTRAYPROP_SHOW_NOCLOCK_NODESK;
-		} else {
-			if (bHideInactive && bShowClock && bShowSeconds)
-				uImageId = IDB_SYSTRAYPROP_HIDE_SECONDS_DESK;
-			else if (bHideInactive && bShowClock && !bShowSeconds)
-				uImageId = IDB_SYSTRAYPROP_HIDE_CLOCK_DESK;
-			else if (bHideInactive && !bShowClock)
-				uImageId = IDB_SYSTRAYPROP_HIDE_NOCLOCK_DESK;
-			else if (!bHideInactive && bShowClock && bShowSeconds)
-				uImageId = IDB_SYSTRAYPROP_SHOW_SECONDS_DESK;
-			else if (!bHideInactive && bShowClock && !bShowSeconds)
-				uImageId = IDB_SYSTRAYPROP_SHOW_CLOCK_DESK;
-			else if (!bHideInactive && !bShowClock)
-				uImageId = IDB_SYSTRAYPROP_SHOW_NOCLOCK_DESK;
-		}
+		UINT uImageId = uImageIdLookupTable[bShowClock][bShowSeconds][bHideInactive][bShowDesktopButton];
 
         SetBitmap(hwndTrayBitmap, &m_hbmpTray, uImageId);
     }
@@ -337,6 +312,29 @@ public:
         SendMessage(m_hwndTaskbar, TWM_SETTINGSCHANGED, 0, (LPARAM)&newSettings);
 
         return PSNRET_NOERROR;
+    }
+};
+
+const UINT CNotifySettingsPage::uImageIdLookupTable[2][2][2][2] = {
+    {
+        {
+            {IDB_SYSTRAYPROP_SHOW_NOCLOCK_NODESK, IDB_SYSTRAYPROP_SHOW_NOCLOCK_DESK},
+            {IDB_SYSTRAYPROP_HIDE_NOCLOCK_NODESK, IDB_SYSTRAYPROP_HIDE_NOCLOCK_DESK}
+        },
+        {
+            {IDB_SYSTRAYPROP_SHOW_NOCLOCK_NODESK, IDB_SYSTRAYPROP_SHOW_NOCLOCK_DESK},
+            {IDB_SYSTRAYPROP_HIDE_NOCLOCK_NODESK, IDB_SYSTRAYPROP_HIDE_NOCLOCK_DESK}
+        }
+    },
+    {
+        {
+            {IDB_SYSTRAYPROP_SHOW_CLOCK_NODESK, IDB_SYSTRAYPROP_SHOW_CLOCK_DESK},
+            {IDB_SYSTRAYPROP_HIDE_CLOCK_NODESK, IDB_SYSTRAYPROP_HIDE_CLOCK_DESK}
+        },
+        {
+            {IDB_SYSTRAYPROP_SHOW_SECONDS_NODESK, IDB_SYSTRAYPROP_SHOW_SECONDS_DESK},
+            {IDB_SYSTRAYPROP_HIDE_SECONDS_NODESK, IDB_SYSTRAYPROP_HIDE_SECONDS_DESK}
+        }
     }
 };
 
