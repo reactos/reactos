@@ -28,7 +28,7 @@ BEGIN
     PUSHBUTTON "&Renk...", IDC_COLOR_BUTTON, 188, 167, 55, 15
     LTEXT "&Yerleşim:", IDC_STATIC, 188, 128, 55, 9
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Customize &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
+    PUSHBUTTON "&Masaüstünü Özelleştir...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 202
@@ -155,12 +155,12 @@ BEGIN
     AUTOCHECKBOX "&Belgelerim", IDC_ICONS_MYDOCS, 14, 14, 100, 12//FIXME: accelerator collision &B
     AUTOCHECKBOX "&Ağ Konumlarım", IDC_ICONS_MYNET, 116, 14, 100, 12
     AUTOCHECKBOX "&Bu bilgisayar", IDC_ICONS_MYCOMP, 14, 28, 100, 12//FIXME: accelerator collision &B
-    AUTOCHECKBOX "&İnternet tarayıcısı", IDC_ICONS_INTERNET, 116, 28, 100, 12
+    AUTOCHECKBOX "&İnternet Tarayıcısı", IDC_ICONS_INTERNET, 116, 28, 100, 12
     CONTROL "", IDC_ICONS_LISTVIEW, "SysListView32",
             LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP | WS_HSCROLL,
             6, 60, 212, 56
     PUSHBUTTON "S&imgeyi Değiştir...", IDC_ICONS_CHANGEICON, 86, 120, 64, 15
-    PUSHBUTTON "Va&rsayılana döndür", IDC_ICONS_SETDEFAULT, 154, 120, 64, 15
+    PUSHBUTTON "Va&rsayılana Dön", IDC_ICONS_SETDEFAULT, 154, 120, 64, 15
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX 0, 0, 253, 204
@@ -169,7 +169,7 @@ CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Görüntü", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Yazı Tipi Boyutu:", -1, 14, 20, 222, 9//FIXME: add accel. I used "&Yazı Tipi Boyutu:" for the backport. 2k3sp2 does use "&DPI setting:" here now. Feel free to translate that.
+    LTEXT "Yazı Tipi &Boyutu:", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Uyumluluk", -1, 7, 67, 237, 97
@@ -223,7 +223,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DESKTOP_ITEMS "Desktop Items"
+    IDS_DESKTOP_ITEMS "Masaüstü Ögeleri"
 END
 
 STRINGTABLE
