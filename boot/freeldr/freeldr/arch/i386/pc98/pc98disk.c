@@ -132,11 +132,6 @@ BOOLEAN DiskResetController(IN PPC98_DISK_DRIVE DiskDrive)
     return INT386_SUCCESS(Regs);
 }
 
-VOID Pc98DiskPrepareForReactOS(VOID)
-{
-    AtaFree();
-}
-
 PPC98_DISK_DRIVE
 Pc98DiskDriveNumberToDrive(IN UCHAR DriveNumber)
 {
@@ -187,7 +182,7 @@ Pc98DiskReadLogicalSectorsLBA(
 
     if (DiskDrive->Type & DRIVE_IDE && DiskDrive->Type & DRIVE_CDROM)
     {
-        return AtaAtapiReadLogicalSectorsLBA(AtaGetDevice(DiskDrive->IdeUnitNumber), SectorNumber, SectorCount, Buffer);
+        return AtaReadLogicalSectors(AtaGetDevice(DiskDrive->IdeUnitNumber), SectorNumber, SectorCount, Buffer);
     }
     else
     {
@@ -503,7 +498,7 @@ InitIdeDrive(
     {
         DiskDrive->Geometry.Cylinders = DeviceUnit->Cylinders;
         DiskDrive->Geometry.Heads = DeviceUnit->Heads;
-        DiskDrive->Geometry.SectorsPerTrack = DeviceUnit->Sectors;
+        DiskDrive->Geometry.SectorsPerTrack = DeviceUnit->SectorsPerTrack;
         DiskDrive->Geometry.BytesPerSector = DeviceUnit->SectorSize;
         DiskDrive->Geometry.Sectors = DeviceUnit->TotalSectors;
 
