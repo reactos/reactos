@@ -1,4 +1,4 @@
-; IPRTPRIO.DLL - MenuOS IP Route Priority API DLL
+; IPRTPRIO.DLL - ReactOS IP Route Priority API DLL
 
 LIBRARY iprtprio.dll
 

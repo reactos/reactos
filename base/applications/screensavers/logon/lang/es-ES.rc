@@ -5,6 +5,6 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_DESCRIPTION "Logotipo de MenuOS"
+    IDS_DESCRIPTION "Logotipo de ReactOS"
     IDS_TEXT "No se necesita configurar ninguna opción."
 END

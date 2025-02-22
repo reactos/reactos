@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Setup Library
+ * PROJECT:     ReactOS Setup Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     MBR and GPT Partition types
  * COPYRIGHT:   Copyright 2018-2020 Hermes Belusca-Maito
@@ -224,7 +224,7 @@ const MBR_PARTITION_TYPE MbrPartitionTypes[NUM_MBR_PARTITION_TYPES] =
 DEFINE_GUID(PARTITION_LEGACYMBR_GUID,        0x024DEE41, 0x33E7, 0x11D3, 0x9D, 0x69, 0x00, 0x08, 0xC7, 0x81, 0xF3, 0x9F);
 
 /*
- * Microsoft Windows / MenuOS
+ * Microsoft Windows / ReactOS
  */
 // DEFINE_GUID(PARTITION_BASIC_DATA_GUID,       0xEBD0A0A2, 0xB9E5, 0x4433, 0x87, 0xC0, 0x68, 0xB6, 0xB7, 0x26, 0x99, 0xC7);    // Basic data partition
 DEFINE_GUID(PARTITION_MAIN_OS_GUID,          0x57434F53, 0x8F45, 0x405E, 0x8A, 0x23, 0x18, 0x6D, 0x8A, 0x43, 0x30, 0xD3);    // Main OS partition
@@ -298,7 +298,7 @@ const GPT_PARTITION_TYPE GptPartitionTypes[NUM_GPT_PARTITION_TYPES] =
         "Lenovo boot partition" },
 
     /*
-     * Microsoft Windows / MenuOS
+     * Microsoft Windows / ReactOS
      */
     { // PARTITION_BASIC_DATA_GUID,
       GUID_CONST(0xEBD0A0A2, 0xB9E5, 0x4433, 0x87, 0xC0, 0x68, 0xB6, 0xB7, 0x26, 0x99, 0xC7),

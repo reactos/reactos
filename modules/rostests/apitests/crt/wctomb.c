@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS API tests
+ * PROJECT:         ReactOS API tests
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         Tests for wctomb
  * COPYRIGHT:       Copyright 2020 George Bișoc <george.bisoc@reactos.org>
@@ -35,7 +35,7 @@ START_TEST(wctomb)
         return;
     }
 
-    /* Output the current locale of the system and codepage for comparison between MenuOS and Windows */
+    /* Output the current locale of the system and codepage for comparison between ReactOS and Windows */
     loc = setlocale(LC_ALL, NULL);
     printf("The current codepage of your system tested is (%u) and locale (%s).\n\n", codepage, loc);
 

@@ -9,7 +9,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Menyediakan Informasi Bantuan untuk perintah MenuOS.\n\n\
+    IDS_USAGE "Menyediakan Informasi Bantuan untuk perintah ReactOS.\n\n\
 HELP [command]\n\n\
   command - Menampilkan informasi bantuan untuk perintah ini.\n"
     IDS_HELP1 "Daftar semua perintah yang tersedia (+ deskripsi)\n\n\
@@ -24,7 +24,7 @@ CD       Menampilkan nama atau mengubah direktori saat ini.\n\
 CHCP     Menampilkan atau menyetel nomor halaman kode aktif.\n\
 CHOICE   Menunggu pengguna untuk memilih satu dari set pilihan.\n\
 CLS      Membersihkan layar.\n\
-CMD      Memulai instan interpreter perintah MenuOS baru.\n\
+CMD      Memulai instan interpreter perintah ReactOS baru.\n\
 COLOR    Menyetel warna standar latar belakang dan depan konsol.\n\
 COPY     Menyalin satu atau lebih file ke lokasi lain.\n\
 DATE     Menampilkan atau menyetel tanggal.\n\
@@ -35,9 +35,9 @@ ERASE    Menghapus satu atau lebih file.\n\
 EXIT     Keluar dari program CMD.EXE (interpreter perintah).\n\
 FOR      Menjalankan perintah tertentu untuk setiap file atau set  file.\n\
 FREE     (bebas) ruang disc.\n\
-GOTO     Melangsungkan interpreter perintah MenuOS ke baris berlabel dalam\n\
+GOTO     Melangsungkan interpreter perintah ReactOS ke baris berlabel dalam\n\
          program batch.\n\
-HELP     Menyediakan informasi Bantuan untuk perintah MenuOS.\n\
+HELP     Menyediakan informasi Bantuan untuk perintah ReactOS.\n\
 HISTORY  Mendaftarkan semua perintah yang sudah digunakan\n\
 IF       Melakukan pemrosesan kondisional dalam program batch.\n\
 LABEL    Membuat, mengubah, atau menghapus label volume disk.\n\
@@ -58,7 +58,7 @@ REN      Mengganti nama file.\n\
 RENAME   Mengganti nama file.\n\
 RMDIR    Menghapus direktori.\n\
 SCREEN   Memindahkan kursor dan secara opsional mencetak teks.\n\
-SET      Menampilkan, menyetel, atau menghapus variabel lingkungan MenuOS.\n\
+SET      Menampilkan, menyetel, atau menghapus variabel lingkungan ReactOS.\n\
 SHIFT    Mengangkat posisi parameter yang bisa diganti dalam file batch.\n"
     IDS_HELP2 "START    Memulai jendela terpisah untuk menjalankan perintah atau program tertentu.\n\
          Menjalankan perintah.\n\
@@ -66,8 +66,8 @@ TIME     Menampilkan atau menyetel jam sistem.\n\
 TIMER    Mengijinkan penggunaan sepuluh stopwatch.\n\
 TITLE    Menyetel judul jendela untuk ses CMD.EXE.\n\
 TYPE     Menampilkan isi dari file teks.\n\
-VER      Menampilkan versi MenuOS.\n\
-VERIFY   Memberitahu MenuOS apakah memverifikasi bahwa file anda ditulis\n\
+VER      Menampilkan versi ReactOS.\n\
+VERIFY   Memberitahu ReactOS apakah memverifikasi bahwa file anda ditulis\n\
          dengan benar ke sebuah disk.\n\
 VOL      Menampilkan label volume disk dan nomor seri.\n"
 END

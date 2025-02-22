@@ -207,7 +207,7 @@ typedef struct
 
 /* List of all containers available */
 static struct list UrlContainers = LIST_INIT(UrlContainers);
-/* MenuOS r54992 */
+/* ReactOS r54992 */
 BOOL bDefaultContainersAdded = FALSE;
 
 static inline char *heap_strdupWtoUTF8(LPCWSTR str)
@@ -746,7 +746,7 @@ static void cache_container_delete_container(cache_container *pContainer)
 
 static void cache_containers_init(void)
 {
-    /* MenuOS r50916 */
+    /* ReactOS r50916 */
     static const struct
     {
         int nFolder; /* CSIDL_* constant */
@@ -761,7 +761,7 @@ static void cache_containers_init(void)
     };
     DWORD i;
 
-    /* MenuOS r50916 */
+    /* ReactOS r50916 */
     if (GetEnvironmentVariableW(L"USERPROFILE", NULL, 0) == 0 && GetLastError() == ERROR_ENVVAR_NOT_FOUND)
     {
         ERR("Environment variable 'USERPROFILE' does not exist!\n");
@@ -842,7 +842,7 @@ static DWORD cache_containers_find(const char *url, cache_container **ret)
         return ERROR_INVALID_PARAMETER;
 
 #ifdef __REACTOS__
-    /* MenuOS r54992 */
+    /* ReactOS r54992 */
     if (!bDefaultContainersAdded)
         cache_containers_init();
 #endif
@@ -874,7 +874,7 @@ static BOOL cache_containers_enum(char *search_pattern, DWORD index, cache_conta
         return FALSE;
 
 #ifdef __REACTOS__
-    /* MenuOS r54992 */
+    /* ReactOS r54992 */
     if (!bDefaultContainersAdded)
         cache_containers_init();
 #endif

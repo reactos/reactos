@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS FontExt Shell Extension
+ * PROJECT:     ReactOS FontExt Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     German resource translation
  * COPYRIGHT:   Copyright 2021 Joachim Henze (Joachim.Henze@reactos.org)
@@ -9,7 +9,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_FONTS_FOLDER "MenuOS Schriftartenordner"
+    IDS_REACTOS_FONTS_FOLDER "ReactOS Schriftartenordner"
 END
 
 STRINGTABLE

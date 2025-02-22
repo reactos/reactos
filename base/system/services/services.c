@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Service Control Manager
+ * PROJECT:     ReactOS Service Control Manager
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/system/services/services.c
  * PURPOSE:     Main SCM controller
@@ -127,7 +127,7 @@ CheckForLiveCD(VOID)
 
     if (dwSetupInProgress == 1)
     {
-        DPRINT1("MenuOS Setup currently in progress!\n");
+        DPRINT1("ReactOS Setup currently in progress!\n");
         ScmSetupInProgress = TRUE;
     }
 
@@ -326,7 +326,7 @@ wWinMain(HINSTANCE hInstance,
     /* Update the services database */
     ScmGetBootAndSystemDriverState();
 
-    /* Register the Service Control Manager process with the MenuOS Subsystem */
+    /* Register the Service Control Manager process with the ReactOS Subsystem */
     if (!RegisterServicesProcess(GetCurrentProcessId()))
     {
         DPRINT1("SERVICES: Could not register SCM process\n");

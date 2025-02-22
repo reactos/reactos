@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS system libraries
+ * PROJECT:           ReactOS system libraries
  * PURPOSE:           Timer Queue implementation
  * FILE:              lib/rtl/timerqueue.c
  * PROGRAMMER:

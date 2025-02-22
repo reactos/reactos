@@ -29,7 +29,7 @@
 #define DPRINT_DISK         6   // disk messages
 #define DPRINT_CACHE        7   // cache messages
 #define DPRINT_REGISTRY     8   // registry messages
-#define DPRINT_REACTOS      9   // MenuOS messages
+#define DPRINT_REACTOS      9   // ReactOS messages
 #define DPRINT_LINUX        10  // Linux messages
 #define DPRINT_HWDETECT     11  // hardware detection messages
 #define DPRINT_WINDOWS      12  // messages from Windows loader

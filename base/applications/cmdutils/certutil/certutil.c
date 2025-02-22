@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS certutil
+ * PROJECT:     ReactOS certutil
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CertUtil stub
  * COPYRIGHT:   Copyright 2020 Mark Jansen (mark.jansen@reactos.org)

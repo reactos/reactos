@@ -39,7 +39,7 @@ BEGIN
     BEGIN
         MENUITEM "&Частые вопросы по Проводнику...", ID_EXPLORER_FAQ
         MENUITEM "О &программе...", ID_ABOUT_EXPLORER
-        MENUITEM "О &MenuOS...", ID_ABOUT_WINDOWS
+        MENUITEM "О &ReactOS...", ID_ABOUT_WINDOWS
     END
 END
 
@@ -102,7 +102,7 @@ BEGIN
     BEGIN
         MENUITEM "&Частые вопросы по Проводнику...", ID_EXPLORER_FAQ
         MENUITEM "О &Проводнике...", ID_ABOUT_EXPLORER
-        MENUITEM "О &MenuOS...", ID_ABOUT_WINDOWS
+        MENUITEM "О &ReactOS...", ID_ABOUT_WINDOWS
     END
 END
 
@@ -217,10 +217,10 @@ END
 
 IDD_ABOUT_EXPLORER DIALOGEX 0, 0, 199, 106
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "О Проводнике MenuOS"
+CAPTION "О Проводнике ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Проводник MenuOS", IDC_ROS_EXPLORER, 91, 13, 104, 11
+    LTEXT "Проводник ReactOS", IDC_ROS_EXPLORER, 91, 13, 104, 11
     LTEXT "V 0.9", IDC_VERSION_TXT, 91, 27, 104, 8
     LTEXT "(c) 2003-2005 Martin Fuchs", IDC_STATIC, 91, 42, 104, 8
     LTEXT "", IDC_WIN_VERSION, 91, 58, 98, 22
@@ -232,7 +232,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TITLE "Проводник MenuOS"
+    IDS_TITLE "Проводник ReactOS"
     IDS_START "Пуск"
     IDS_LOGOFF "Выход из системы..."
     IDS_SHUTDOWN "Выключение..."

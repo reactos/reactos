@@ -353,6 +353,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARSE_ADDR_ERR_TITLE "MenuOS Intéző"
-    IDS_PARSE_ADDR_ERR_TEXT "A MenuOS Intéző nem találja a következőt: '%1'. Ellenőrizze az elgépeléseket és próbálja újra."
+    IDS_PARSE_ADDR_ERR_TITLE "ReactOS Intéző"
+    IDS_PARSE_ADDR_ERR_TEXT "A ReactOS Intéző nem találja a következőt: '%1'. Ellenőrizze az elgépeléseket és próbálja újra."
 END

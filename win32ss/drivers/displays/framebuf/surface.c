@@ -1,5 +1,5 @@
 /*
- * MenuOS Generic Framebuffer display driver
+ * ReactOS Generic Framebuffer display driver
  *
  * Copyright (C) 2004 Filip Navara
  *

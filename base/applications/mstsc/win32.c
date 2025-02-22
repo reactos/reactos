@@ -773,7 +773,7 @@ mi_create_window(void)
   /* name of window class */
   str_to_uni(classname, "rdesktop");
   wc.lpszClassName = classname;
-  str_to_uni(caption, "MenuOS Remote Desktop");
+  str_to_uni(caption, "ReactOS Remote Desktop");
   wc.hIcon = LoadIcon(g_Instance,
                       MAKEINTRESOURCE(IDI_MSTSC));
   /* Register the window class. */

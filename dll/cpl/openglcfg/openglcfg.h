@@ -19,7 +19,7 @@
 #define DEBUG_SET   1
 #define DEBUG_CLEAR 2
 
-#define KEY_RENDERER L"Software\\MenuOS\\OpenGL"
+#define KEY_RENDERER L"Software\\ReactOS\\OpenGL"
 #define KEY_DRIVERS  L"Software\\Microsoft\\Windows NT\\CurrentVersion\\OpenGLDrivers"
 #define KEY_DEBUG_CHANNEL L"System\\CurrentControlSet\\Control\\Session Manager\\Environment"
 

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS system libraries
+ * PROJECT:     ReactOS system libraries
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll\win32\batt\batt.c
  * PURPOSE:     Battery Class installers

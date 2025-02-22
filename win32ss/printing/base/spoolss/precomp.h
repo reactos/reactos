@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Spooler Router
+ * PROJECT:     ReactOS Spooler Router
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Precompiled Header for all source files
  * COPYRIGHT:   Copyright 2015 Colin Finck (colin@reactos.org)

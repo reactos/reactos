@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Explorer
+ * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Czech resource file
  * TRANSLATORS: Copyright 2008-2015 Radek Liška (Black_Fox) <radekliska@gmail.com>
@@ -119,7 +119,7 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Přizpůsobit oznámení"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT            "MenuOS zobrazuje ikony aktivních a důležitých upozornění a skrývá neaktivní. Toto chování je možné změnit pro položky z následujícího seznamu.", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "ReactOS zobrazuje ikony aktivních a důležitých upozornění a skrývá neaktivní. Toto chování je možné změnit pro položky z následujícího seznamu.", IDC_STATIC, 6, 6, 220, 30
     LTEXT            "Vyberte položku a poté její chování:", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS

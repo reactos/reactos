@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       BSD - See COPYING.ARM in the top level directory
- * PROJECT:         MenuOS CRT library
+ * PROJECT:         ReactOS CRT library
  * PURPOSE:         Portable implementation of round
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
  */

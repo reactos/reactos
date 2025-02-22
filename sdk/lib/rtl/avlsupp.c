@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS Runtime Library
+ * PROJECT:         ReactOS Runtime Library
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            lib/rtl/avlsupp.c
  * PURPOSE:         AVL Tree Internal Support Routines/Main Algorithms
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 /* INCLUDES ******************************************************************/

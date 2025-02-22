@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Keyboard Layout Switcher
+ * PROJECT:         ReactOS Keyboard Layout Switcher
  * FILE:            base/applications/kbswitch/kbsdll/kbsdll.c
  * PROGRAMMER:      Dmitry Chapyshev <dmitry@reactos.org>
  *

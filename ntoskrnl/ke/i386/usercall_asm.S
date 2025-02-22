@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/ke/i386/usercall_asm.S
  * PURPOSE:         User-Mode callbacks and return.
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)

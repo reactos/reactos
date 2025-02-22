@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS License Manager
+ * PROJECT:     ReactOS License Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Hong Kong) resource file
  * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
@@ -31,5 +31,5 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "許可證管理"
     IDS_CPLDESCRIPTION_1 "許可證管理"
-    IDS_REACTOS "MenuOS - 自由軟件"
+    IDS_REACTOS "ReactOS - 自由軟件"
 END

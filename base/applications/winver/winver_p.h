@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Version Program
+ * PROJECT:     ReactOS Version Program
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Main header file
  * COPYRIGHT:   Copyright 2025 Thamatip Chitpong <thamatip.chitpong@reactos.org>

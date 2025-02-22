@@ -294,7 +294,7 @@ udi_OK:
         ret
     }
 #else
-    /* FIXME MenuOS */
+    /* FIXME ReactOS */
     uint_di j, k;
     if( hDirNdx &&
         ((j = (i >> UDF_DIR_INDEX_FRAME_SH)) < (k = hDirNdx->FrameCount) ) &&

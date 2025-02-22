@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS ReactX
+ * PROJECT:         ReactOS ReactX
  * FILE:            dll/directx/d3d9/device.c
  * PURPOSE:         Direct3D9's device creation
  * PROGRAMERS:      Gregor Gullwi <gbrunmar (dot) ros (at) gmail (dot) com>

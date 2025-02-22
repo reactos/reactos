@@ -5,9 +5,9 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 /* Default settings */
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "MenuOS - Добро пожаловать!"
-    IDS_DEFAULT_TOPIC_TITLE "MenuOS"
-    IDS_DEFAULT_TOPIC_DESC "Добро пожаловать в MenuOS.\n\nВыберите пункт слева."
+    IDS_APPTITLE "ReactOS - Добро пожаловать!"
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Добро пожаловать в ReactOS.\n\nВыберите пункт слева."
     IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Показывать это окно снова"
     IDS_CLOSETEXT "&Выход"
@@ -16,7 +16,7 @@ END
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_BUTTON0 "&Установить MenuOS"
+    IDS_TOPIC_BUTTON0 "&Установить ReactOS"
     IDS_TOPIC_BUTTON1 "&Обзор диска"
     IDS_TOPIC_BUTTON2 "&Выход"
 END
@@ -24,7 +24,7 @@ END
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_TITLE0 "Установить MenuOS"
+    IDS_TOPIC_TITLE0 "Установить ReactOS"
     IDS_TOPIC_TITLE1 "Обзор диска"
     IDS_TOPIC_TITLE2 "Выход"
 END
@@ -32,7 +32,7 @@ END
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_DESC0 "Установит MenuOS на Ваш компьютер с нуля или обновит уже установленную версию."
+    IDS_TOPIC_DESC0 "Установит ReactOS на Ваш компьютер с нуля или обновит уже установленную версию."
     IDS_TOPIC_DESC1 "Обзор диска."
     IDS_TOPIC_DESC2 "Выберите для выхода из этого приложения."
 END

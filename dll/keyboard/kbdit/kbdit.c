@@ -1,6 +1,6 @@
 /*
- * MenuOS Italian Keyboard layout
- * Copyright (C) 2007 MenuOS
+ * ReactOS Italian Keyboard layout
+ * Copyright (C) 2007 ReactOS
  * License: LGPL, see: LGPL.txt
  *
  */
@@ -274,7 +274,7 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { VK_DIVIDE  ,0, {'/', '/'} },
   { VK_ESCAPE  ,0, {0x1b,0x1b} },
   { VK_SPACE   ,0, {' ', ' '} },
-  { VK_OEM_5   ,0, {0x00f9, 0x00a7} },//Ã¹Â§
+  { VK_OEM_5   ,0, {0x00f9, 0x00a7} },//ù§
   { 0, 0 }
 };
 
@@ -288,14 +288,14 @@ ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
 ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   /* Normal, Shifted, Ctrl, C-S-x */
   { VK_OEM_6,  0, {0x00ec, '^', WCH_NONE, '~' } },
-  { VK_OEM_3,  0, {0x00f2, 0x00e7, WCH_NONE, '@' } },//Ã²Ã§
-  { VK_OEM_7,  0, {0x00e0, 0x00b0, WCH_NONE, '#'} },//Ã Â°
+  { VK_OEM_3,  0, {0x00f2, 0x00e7, WCH_NONE, '@' } },//òç
+  { VK_OEM_7,  0, {0x00e0, 0x00b0, WCH_NONE, '#'} },//à°
 
-  { VK_OEM_1,  0,   {0x00e8, 0x00e9, '{', '['} },// Ã¨Ã©
+  { VK_OEM_1,  0,   {0x00e8, 0x00e9, '{', '['} },// èé
   { VK_OEM_PLUS,0,   {'+', '*', '}', ']'} },
 
   /* The alphabet */
-  { 'E',         CAPLOK,   {'e', 'E', 0x05, 0x20AC}  }, // eEâ‚¬
+  { 'E',         CAPLOK,   {'e', 'E', 0x05, 0x20AC}  }, // eE€
 
   /* Legacy Ascii generators */
 //zz  { VK_OEM_MINUS, 0, {'\'', '?', WCH_NONE, 0x1f /* US */} },
@@ -403,7 +403,7 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x51, L"Page Down" },
   { 0x52, L"Insert" },
   { 0x53, L"Delete" },
-  { 0x54, L"<MenuOS>" },
+  { 0x54, L"<ReactOS>" },
   { 0x55, L"Help" },
   { 0x56, L"Left Windows" },
   { 0x5b, L"Right Windows" },

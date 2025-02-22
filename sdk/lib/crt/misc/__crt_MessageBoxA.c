@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS C runtime library
+ * PROJECT:         ReactOS C runtime library
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            lib/sdk/crt/misc/__crt_MessageBoxA.c
  * PURPOSE:         __crt_MessageBoxA implementation
@@ -38,7 +38,7 @@ __crt_MessageBoxA (
     /* Display a message box */
     iResult = pMessageBoxA(NULL,
                            pszText,
-                           "MenuOS C Runtime Library",
+                           "ReactOS C Runtime Library",
                            uType);
 
     FreeLibrary(hmodUser32);

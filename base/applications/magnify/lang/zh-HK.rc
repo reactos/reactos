@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Magnify
+ * PROJECT:     ReactOS Magnify
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Chinese (Hong Kong) resource file
  * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
@@ -63,7 +63,7 @@ END
 
 IDD_WARNINGDIALOG DIALOGEX 0, 0, 250, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
-CAPTION "MenuOS 放大鏡"
+CAPTION "ReactOS 放大鏡"
 FONT 9, "新細明體", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "確定", IDOK, 193, 76, 50, 14

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Applications Manager
+ * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Japanese resource file
  * TRANSLATORS: Copyright 2009 pcds90net <ds200xnet-ros@yahoo.co.jp>
@@ -172,9 +172,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "MenuOS アプリ マネージャ"
+    IDS_APPTITLE "ReactOS アプリ マネージャ"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_WELCOME_TITLE "MenuOS アプリ マネージャへようこそ!"
+    IDS_WELCOME_TITLE "ReactOS アプリ マネージャへようこそ!"
     IDS_WELCOME_TEXT "左側からカテゴリを選択し、インストールまたはアンインストールするアプリを選んでください。\nReactOS ウェブ サイト: "
     IDS_WELCOME_URL "https://reactos.org"
 

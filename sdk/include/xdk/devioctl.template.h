@@ -3,7 +3,7 @@
  *
  * IOCTL definitions
  *
- * This file is part of the MenuOS PSDK package.
+ * This file is part of the ReactOS PSDK package.
  *
  * Contributors:
  *   Amine Khaldi

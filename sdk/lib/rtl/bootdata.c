@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Runtime Library
+ * PROJECT:         ReactOS Runtime Library
  * LICENSE:         See COPYING in the top level directory
  * FILE:            lib/rtl/bootdata.c
  * PURPOSE:         Boot Status Data Implementation

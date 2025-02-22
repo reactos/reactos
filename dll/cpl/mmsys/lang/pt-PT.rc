@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Multimedia Control Panel
+ * PROJECT:     ReactOS Multimedia Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Portuguese (Portugal) resource file
  * TRANSLATORS: Copyright 2020-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
@@ -35,7 +35,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Sons"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Um esquema de sons é um conjunto de sons aplicados a eventos no MenuOS e em programas. Pode seleccionar um esquema existente ou guardar um que tenha modificado.", -1, 8, 7, 230, 30
+    LTEXT "Um esquema de sons é um conjunto de sons aplicados a eventos no ReactOS e em programas. Pode seleccionar um esquema existente ou guardar um que tenha modificado.", -1, 8, 7, 230, 30
     LTEXT "&Esquema de sons:", -1, 8, 42, 150, 9
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Guardar como...", IDC_SAVEAS_BTN, 125, 70, 59, 15
@@ -131,7 +131,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Desempanho"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Estas definições controlam como o MenuOS reproduz o áudio, e podem ser úteis a resolver problemas de áudio.", 8492, 34, 7, 218, 23
+    LTEXT "Estas definições controlam como o ReactOS reproduz o áudio, e podem ser úteis a resolver problemas de áudio.", 8492, 34, 7, 218, 23
     GROUPBOX "Reprodução de áudio", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
     LTEXT "Aceleração de &hardware:", 8495, 13, 56, 111, 14
@@ -152,7 +152,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Desempanho"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Estas definições controlam como o MenuOS grava o áudio, e podem ser úteis a resolver problemas de áudio.", 8492, 34, 7, 217, 20
+    LTEXT "Estas definições controlam como o ReactOS grava o áudio, e podem ser úteis a resolver problemas de áudio.", 8492, 34, 7, 217, 20
     GROUPBOX "Gravação de áudio", 8494, 7, 29, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
     LTEXT "Aceleração de &hardware:", 8495, 13, 46, 103, 9
@@ -173,13 +173,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Definições"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "MenuOS Áudio", 10243, 7, 5, 213, 192
+    GROUPBOX "ReactOS Áudio", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "Este computador não pode reproduzir áudio porque o serviço MenuOS Áudio não está activado.", 10245, 60, 25, 150, 40
-    AUTOCHECKBOX "&Habilitar MenuOS Áudio", 10253, 60, 68, 150, 9
+    LTEXT "Este computador não pode reproduzir áudio porque o serviço ReactOS Áudio não está activado.", 10245, 60, 25, 150, 40
+    AUTOCHECKBOX "&Habilitar ReactOS Áudio", 10253, 60, 68, 150, 9
     LTEXT "Notas", 10246, 58, 87, 150, 11
     LTEXT "1. Só um administrador pode activar este serviço. Se não estiver ligado como administrador, será solicitado um nome e palavra-passe de administrador.", 10247, 60, 100, 150, 40
-    LTEXT "2. Depois de activar o MenuOS Áudio, terá de reiniciar o computador.", 10248, 60, 140, 150, 40
+    LTEXT "2. Depois de activar o ReactOS Áudio, terá de reiniciar o computador.", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOGEX 0, 0, 227, 218
@@ -229,11 +229,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Definições"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "MenuOS Áudio", 10259, 7, 5, 213, 192
+    GROUPBOX "ReactOS Áudio", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "O serviço MenuOS Áudio está agora activado. No entanto, o áudio pode não funcionar correctamente até que reinicie o computador. Para reiniciar agora, guarde o seu trabalho e feche todos os programas.", 10261, 60, 25, 150, 50
-    LTEXT "Para reiniciar o MenuOS, clique em OK.", 10262, 60, 75, 150, 20
-    LTEXT "Se cancelar, será necessário reiniciar mais tarde para que o MenuOS Áudio funcione correctamente.", 10263, 60, 100, 150, 40
+    LTEXT "O serviço ReactOS Áudio está agora activado. No entanto, o áudio pode não funcionar correctamente até que reinicie o computador. Para reiniciar agora, guarde o seu trabalho e feche todos os programas.", 10261, 60, 25, 150, 50
+    LTEXT "Para reiniciar o ReactOS, clique em OK.", 10262, 60, 75, 150, 20
+    LTEXT "Se cancelar, será necessário reiniciar mais tarde para que o ReactOS Áudio funcione correctamente.", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
@@ -270,15 +270,15 @@ BEGIN
     5843 "Asterisco"
     5844 "Alarme predefinido"
     5845 "Exclamação"
-    5846 "Sair do MenuOS"
+    5846 "Sair do ReactOS"
     5847 "Paragem crítica"
     5848 "Notificação do sistema"
     5849 "Pergunta"
-    5850 "Iniciar o MenuOS"
+    5850 "Iniciar o ReactOS"
     5851 "Menu iniciar"
-    IDS_REACTOS_LOGOFF "Terminar sessão no MenuOS"
-    IDS_REACTOS_LOGON "Iniciar sessão no MenuOS"
-    5854 "Explorador do MenuOS"
+    IDS_REACTOS_LOGOFF "Terminar sessão no ReactOS"
+    IDS_REACTOS_LOGON "Iniciar sessão no ReactOS"
+    5854 "Explorador do ReactOS"
     IDS_BROWSE_FOR_SOUND "Procurar por novos sons"
     IDS_WAVE_FILES_FILTER "Ficheiros Wave (*.wav)|*.wav|"
 END

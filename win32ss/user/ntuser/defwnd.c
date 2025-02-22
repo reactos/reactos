@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Win32k subsystem
+ * PROJECT:     ReactOS Win32k subsystem
  * LICENSE:     See COPYING in the top level directory
  * PURPOSE:     Miscellaneous User functions
  * COPYRIGHT:   2008-2020 James Tabor <james.tabor@reactos.org>
@@ -1265,7 +1265,7 @@ IntDefWindowProc(
           return 0;
       }
 
-      /* MenuOS only. */
+      /* ReactOS only. */
       case WM_CBT:
       {
          switch (wParam)

@@ -311,7 +311,7 @@ CAPTION "Sertifika Alma Sihirbazı"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "MenuOS, sertifika deposunu otomatik olarak seçebilir ya da sertifikalar için bir konum belirleyebilirsiniz.",
+  LTEXT "ReactOS, sertifika deposunu otomatik olarak seçebilir ya da sertifikalar için bir konum belirleyebilirsiniz.",
     -1, 21,1,220,25
   AUTORADIOBUTTON "&Sertifika Deposunu Otomatik Seç",
     IDC_IMPORT_AUTO_STORE, 31,28,220,12, BS_AUTORADIOBUTTON|WS_TABSTOP

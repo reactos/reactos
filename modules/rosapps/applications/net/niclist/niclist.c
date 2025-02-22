@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS packet driver interface list utility
+ * PROJECT:     ReactOS packet driver interface list utility
  * FILE:        apps/net/niclist/niclist.c
  * PURPOSE:     Network information utility
  * PROGRAMMERS: Robert Dickenson (robert_dickenson@users.sourceforge.net)

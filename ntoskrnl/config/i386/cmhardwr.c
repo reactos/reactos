@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/config/i386/cmhardwr.c
  * PURPOSE:         Configuration Manager - Hardware-Specific Code

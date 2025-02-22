@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Sound System
+ * PROJECT:     ReactOS Sound System
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/win32/wdmaud.drv/mixer.c
  *

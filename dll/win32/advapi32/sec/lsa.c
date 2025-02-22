@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/advapi32/sec/lsa.c
  * PURPOSE:         Local security authority functions
  * PROGRAMMER:      Emanuele Aliberti

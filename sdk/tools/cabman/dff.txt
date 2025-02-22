@@ -1,4 +1,4 @@
-Directive File Format for MenuOS Cabinet Manager
+Directive File Format for ReactOS Cabinet Manager
 -------------------------------------------------
 
 Directives begin with a period ("."), and are followed by a command

@@ -1,5 +1,5 @@
 /*
-* PROJECT:         MenuOS Kernel
+* PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
 * FILE:            ntoskrnl/ke/i386/mtrr.c
 * PURPOSE:         Support for MTRR and AMD K6 MTRR

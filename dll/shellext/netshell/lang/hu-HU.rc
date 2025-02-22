@@ -78,20 +78,20 @@ END
 
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS telepítő"
+CAPTION "ReactOS telepítő"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Kérjük válasszon hogy tipikus vagy egyedi beállításokat szeretne:", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "Tipikus beállítások", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Egyedi beállítások", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
-    LTEXT "Hálózati kapcsolatokat hoz létre a MenuOS Networks ügyfél, MenuOS Networks fájl- és nyomtatómegosztás, valamint az automatikus címzésű TCP/IP átviteli protokoll használatával.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "Hálózati kapcsolatokat hoz létre a ReactOS Networks ügyfél, ReactOS Networks fájl- és nyomtatómegosztás, valamint az automatikus címzésű TCP/IP átviteli protokoll használatával.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Lehetővé teszi hogy kézzel állítsa be a hálózati összetevőket.", IDC_STATIC, 65, 90, 243, 20
 END
 
 IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS telepítő"
+CAPTION "ReactOS telepítő"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Ehhez az eszközhöz:", IDC_STATIC, 33, 2, 125, 20
@@ -106,7 +106,7 @@ END
 
 IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS telepítő"
+CAPTION "ReactOS telepítő"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Szeretné hogy a számítógép egy tartomány tagja legyen?\n\
@@ -171,6 +171,6 @@ BEGIN
     IDS_NETWORKCOMPONENTSUBTITLE "Határozza meg hogy milyen hálózati összetevőket használ a számítógépen.\nÚj összetevő hozzáadásához kattintson a telepítés gombra."
     IDS_NETWORKDOMAINTITLE "Munkacsoport vagy számítógépes tartomány"
     IDS_NETWORKDOMAINSUBTITLE "A munkacsoport azonos munkacsoportnévvel rendelkező számítógépekből áll.\nA tartomány a hálózati rendszergazda által megadott számítógépcsoport."
-    IDS_REACTOS_SETUP "MenuOS telepítő"
+    IDS_REACTOS_SETUP "ReactOS telepítő"
     IDS_WZD_DOMAIN_NAME "A telepítő nem tud továbblépni amíg\nnem adja meg a tartomány vagy munkacsoport nevét."
 END

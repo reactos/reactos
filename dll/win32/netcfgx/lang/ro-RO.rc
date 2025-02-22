@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Configuration of network devices
+ * PROJECT:     ReactOS Configuration of network devices
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
@@ -233,7 +233,7 @@ BEGIN
     IDS_DHCPACTIVE "DHCP activat"
     IDS_AUTOMATIC "Automată"
     IDS_NOITEMSEL "Nu aţi selectat un element. Selectaţi întâi unul."
-    IDS_TCPIP "MenuOS-TCP/IP"
+    IDS_TCPIP "ReactOS-TCP/IP"
     IDS_ADD "Adăugare"
     IDS_MOD "OK"
     IDS_TCP_PORTS "Porturi TCP"

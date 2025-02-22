@@ -70,7 +70,7 @@ BEGIN
     IDS_QUERYDELETE,    "您确定要删除此项目吗？"
     IDS_CANTOPENKEY,    "无法打开注册表键值。"
     IDS_REBOOTNOW,      "注册表已经更新。现在需要重启系统吗？"
-    IDS_ABOUT,          "FontSub （字体名称替代） 版本 0.5\r\nby 片山博文MZ 和 The MenuOS Team\r\n\r\n本软件基于 CC0 1.0 许可证发布。"
+    IDS_ABOUT,          "FontSub （字体名称替代） 版本 0.5\r\nby 片山博文MZ 和 The ReactOS Team\r\n\r\n本软件基于 CC0 1.0 许可证发布。"
 END
 
 IDD_ADD DIALOGEX 0, 0, 315, 65

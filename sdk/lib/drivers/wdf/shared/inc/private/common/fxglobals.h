@@ -49,7 +49,7 @@ Revision History:
 #include <debug.h>
 
 // REACTOS
-#define ROSWDFNOTIMPLEMENTED (DbgPrint("(%s:%d) MenuOS KMDF: %s not implemented\n", __RELFILE__, __LINE__, __FUNCTION__))
+#define ROSWDFNOTIMPLEMENTED (DbgPrint("(%s:%d) ReactOS KMDF: %s not implemented\n", __RELFILE__, __LINE__, __FUNCTION__))
 // REACTOS
 
 #ifdef __cplusplus

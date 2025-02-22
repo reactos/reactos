@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS CRT library
+ * PROJECT:     ReactOS CRT library
  * FILE:        lib/sdk/crt/time/wstrdate.c
  * PURPOSE:     Fills a buffer with a formatted date representation
  * PROGRAMER:   Ariadne

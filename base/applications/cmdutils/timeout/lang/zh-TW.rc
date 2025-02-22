@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Timeout Utility
+ * PROJECT:     ReactOS Timeout Utility
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
@@ -9,7 +9,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "MenuOS 逾時公用程式\n\
+    IDS_USAGE "ReactOS 逾時公用程式\n\
 \n\
 TIMEOUT [/?] [/T] delay [/NOBREAK]\n\
 \n\

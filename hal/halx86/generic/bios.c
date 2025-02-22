@@ -1,8 +1,8 @@
 /*
- * PROJECT:         MenuOS Hardware Abstraction Layer (HAL)
+ * PROJECT:         ReactOS Hardware Abstraction Layer (HAL)
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * PURPOSE:         BIOS Access Routines
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  *                  Alex Ionescu (alex.ionescu@reactos.org)
  */
 

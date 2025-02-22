@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS CRT library
+ * PROJECT:     ReactOS CRT library
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     C specific exception/unwind handler for AMD64
  * COPYRIGHT:   Copyright 2018-2021 Timo Kreuzer <timo.kreuzer@reactos.org>

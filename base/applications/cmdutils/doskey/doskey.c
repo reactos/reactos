@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS DosKey Command
+ * PROJECT:     ReactOS DosKey Command
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Provides history and command aliases management for
  *              command-line programs.

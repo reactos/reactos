@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Console Server DLL
+ * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/condrv/dummyterm.c
  * PURPOSE:         Dummy Terminal used when no terminal
  *                  is attached to the specified console.

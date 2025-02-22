@@ -1,6 +1,6 @@
 /*
- *  MenuOS kernel
- *  Copyright (C) 2004 MenuOS Team
+ *  ReactOS kernel
+ *  Copyright (C) 2004 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/userenv/environment.c
  * PURPOSE:         User environment functions
  * PROGRAMMER:      Eric Kohl

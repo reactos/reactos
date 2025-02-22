@@ -32,8 +32,8 @@ STRINGTABLE
     14 "característica de:"
     15 "elija qué carpeta contiene %s"
 #ifdef __REACTOS__
-    34 "Paquete de instalación de MenuOS"
-    35 "MenuOS Installer Patch"
+    34 "Paquete de instalación de ReactOS"
+    35 "ReactOS Installer Patch"
     36 "Instalar" //FIXME: add accel
     37 "Reparar" //FIXME: add accel
     38 "Desinstalar" //FIXME: add accel

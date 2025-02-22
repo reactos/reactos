@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            lib/advapi32/sec/trustee.c
  * PURPOSE:         Trustee functions
  */

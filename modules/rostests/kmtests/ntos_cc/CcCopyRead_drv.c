@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS kernel-mode tests
+ * PROJECT:         ReactOS kernel-mode tests
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
  * PURPOSE:         Test driver for CcCopyRead function
  * PROGRAMMER:      Pierre Schweitzer <pierre@reactos.org>

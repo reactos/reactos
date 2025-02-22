@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Picture and Fax Viewer
+ * PROJECT:     ReactOS Picture and Fax Viewer
  * LICENSE:     GPL-2.0 (https://spdx.org/licenses/GPL-2.0)
  * PURPOSE:     Animation of shimgvw.dll
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)

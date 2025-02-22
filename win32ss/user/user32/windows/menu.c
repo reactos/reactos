@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS user32.dll
+ * PROJECT:         ReactOS user32.dll
  * FILE:            win32ss/user/user32/windows/menu.c
  * PURPOSE:         Menus
  *

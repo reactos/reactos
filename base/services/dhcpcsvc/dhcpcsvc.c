@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            lib/dhcpcapi/dhcpcapi.c
  * PURPOSE:         Client API for DHCP
  * COPYRIGHT:       Copyright 2005 Art Yerkes <ayerkes@speakeasy.net>
@@ -294,7 +294,7 @@ DhcpRequestParams(DWORD Flags,
  *
  * \return non-zero on success
  *
- * \remarks This is a MenuOS-only routine
+ * \remarks This is a ReactOS-only routine
  */
 DWORD APIENTRY
 DhcpRosGetAdapterInfo(DWORD AdapterIndex,

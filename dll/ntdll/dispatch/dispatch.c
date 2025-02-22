@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS NT Library
+ * PROJECT:         ReactOS NT Library
  * FILE:            dll/ntdll/dispatch/dispatch.c
  * PURPOSE:         User-Mode NT Dispatchers
  * PROGRAMERS:      Alex Ionescu (alex@relsoft.net)

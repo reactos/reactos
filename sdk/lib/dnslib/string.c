@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS DNS Shared Library
+ * PROJECT:     ReactOS DNS Shared Library
  * FILE:        lib/dnslib/string.c
  * PURPOSE:     functions for string manipulation and conversion.
  */

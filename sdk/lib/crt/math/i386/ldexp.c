@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS CRT
+ * PROJECT:     ReactOS CRT
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Implements the ldexp CRT function for IA-32 with Windows-compatible error codes.
  * COPYRIGHT:   Copyright 2010 Timo Kreuzer (timo.kreuzer@reactos.org)

@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Windows-Compatible Session Manager
+ * PROJECT:         ReactOS Windows-Compatible Session Manager
  * LICENSE:         BSD 2-Clause License
  * FILE:            base/system/smss/smloop.c
  * PURPOSE:         Main SMSS Code

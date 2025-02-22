@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS CTF Monitor
+ * PROJECT:     ReactOS CTF Monitor
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Providing Language Bar front-end
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>

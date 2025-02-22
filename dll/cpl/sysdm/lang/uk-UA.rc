@@ -27,7 +27,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "Відвідайте <A HREF=""https://reactos.org/"">домашню сторінку MenuOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    CONTROL "Відвідайте <A HREF=""https://reactos.org/"">домашню сторінку ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "&Ліцензія...", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -76,7 +76,7 @@ CAPTION "Налаштування системи"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Інформація про версію", IDC_STATIC, 6, 3, 210, 73
-    LTEXT "MenuOS повудована як серверна ОС, і так само про себе повідомляє. Обрати прапорець, щоб змінити це лише для програм.", IDC_STATIC, 15, 15, 183, 41
+    LTEXT "ReactOS повудована як серверна ОС, і так само про себе повідомляє. Обрати прапорець, щоб змінити це лише для програм.", IDC_STATIC, 15, 15, 183, 41
     CONTROL "Позначити як робочу станцію", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
 END
@@ -97,7 +97,7 @@ BEGIN
     PUSHBUTTON "Переі&менувати", IDC_HRDPROFRENAME, 116, 106, 54, 14, WS_DISABLED
     PUSHBUTTON "В&идалити", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
     GROUPBOX "Вибір профілю устаткування", IDC_STATIC, 7, 130, 240, 75
-    LTEXT "Під час завантаження MenuOS слід:", IDC_STATIC, 14, 142, 210, 8
+    LTEXT "Під час завантаження ReactOS слід:", IDC_STATIC, 14, 142, 210, 8
     AUTORADIOBUTTON "зачекати, п&оки користувач не вибере профіль", IDC_HRDPROFWAIT, 14, 158, 185, 8, WS_GROUP
     AUTORADIOBUTTON "ви&брати перший профіль у списку, якщо вибір не зроблено за", IDC_HRDPROFSELECT, 14, 173, 230, 8
     LTEXT "сек", IDC_STATIC, 65, 187, 35, 8
@@ -125,7 +125,7 @@ BEGIN
     AUTORADIOBUTTON "Комп'ютер &пристикований", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
     AUTORADIOBUTTON "Комп'ютер в&ідстикований", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
     GROUPBOX "Вибір профілів обладнання", IDC_STATIC, 10, 138, 192, 42
-    AUTOCHECKBOX "Завжди п&оказувати цей профіль при завантаженні MenuOS", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
+    AUTOCHECKBOX "Завжди п&оказувати цей профіль при завантаженні ReactOS", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
 END
 
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52

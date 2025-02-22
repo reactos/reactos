@@ -1,7 +1,7 @@
 /*
  * VideoPort driver
  *
- * Copyright (C) 2002, 2003, 2004 MenuOS Team
+ * Copyright (C) 2002, 2003, 2004 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

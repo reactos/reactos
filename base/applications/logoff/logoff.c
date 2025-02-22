@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS logoff utility
+ * PROJECT:     ReactOS logoff utility
  * FILE:        base/applications/logoff/logoff.c
  * PURPOSE:     Logoff current session, or another session, potentially on another machine
  * AUTHOR:      30.07.2007 - Frode Lillerud

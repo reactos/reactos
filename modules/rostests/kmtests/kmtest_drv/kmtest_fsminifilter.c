@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS kernel-mode tests - Filter Manager
+ * PROJECT:     ReactOS kernel-mode tests - Filter Manager
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     FS Mini-filter wrapper to host the filter manager tests
  * COPYRIGHT:   Copyright 2017 Thomas Faber <thomas.faber@reactos.org>

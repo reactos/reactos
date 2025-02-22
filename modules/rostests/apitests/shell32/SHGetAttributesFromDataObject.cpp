@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS api tests
+ * PROJECT:     ReactOS api tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Test for SHGetAttributesFromDataObject
  * COPYRIGHT:   Copyright 2021 Mark Jansen <mark.jansen@reactos.org>

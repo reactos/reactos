@@ -10,14 +10,14 @@ static MUI_ENTRY trTRSetupInitPageEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         0,
         20,
-        "MenuOS Kurulumu kendini ba\237lat\215rken ve ayg\215tlar\215n\215z\215",
+        "ReactOS Kurulumu kendini ba\237lat\215rken ve ayg\215tlar\215n\215z\215",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -48,7 +48,7 @@ static MUI_ENTRY trTRLanguagePageEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -100,21 +100,21 @@ static MUI_ENTRY trTRWelcomePageEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "MenuOS Kurulum Sihirbaz\215na ho\237 geldiniz.",
+        "ReactOS Kurulum Sihirbaz\215na ho\237 geldiniz.",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
     {
         6,
         11,
-        "Kurulumun bu b\224l\201m\201, MenuOS \230\237letim Sistemi'ni bilgisayar\215n\215za",
+        "Kurulumun bu b\224l\201m\201, ReactOS \230\237letim Sistemi'ni bilgisayar\215n\215za",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -128,28 +128,28 @@ static MUI_ENTRY trTRWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  MenuOS'u y\201klemek ya da y\201kseltmek i\207in ENTER'e bas\215n\215z.",
+        "\x07  ReactOS'u y\201klemek ya da y\201kseltmek i\207in ENTER'e bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-        "\x07  MenuOS'u onarmak veya y\201kseltmek i\207in R'ye bas\215n\215z.",
+        "\x07  ReactOS'u onarmak veya y\201kseltmek i\207in R'ye bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  MenuOS Lisans Terimleri'ni ve \236artlar\215'n\215 g\224rmek i\207in L'ye bas\215n\215z.",
+        "\x07  ReactOS Lisans Terimleri'ni ve \236artlar\215'n\215 g\224rmek i\207in L'ye bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         21,
-        "\x07  MenuOS'u kurmadan \207\215kmak i\207in F3'e bas\215n\215z.",
+        "\x07  ReactOS'u kurmadan \207\215kmak i\207in F3'e bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -187,21 +187,21 @@ static MUI_ENTRY trTRIntroPageEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "MenuOS S\201r\201m Durumu",
+        "ReactOS S\201r\201m Durumu",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
     {
         6,
         11,
-        "MenuOS alfa a\237amas\215ndad\215r, \224zellikleri tamamlanmam\215\237 anlam\215na gelmektedir",
+        "ReactOS alfa a\237amas\215ndad\215r, \224zellikleri tamamlanmam\215\237 anlam\215na gelmektedir",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -222,7 +222,7 @@ static MUI_ENTRY trTRIntroPageEntries[] =
     {
         6,
         15,
-        "E\247er, MenuOS'u ger\207ek donan\215m \201zerinde \207al\215\237t\215rmay\215 deneyecekseniz",
+        "E\247er, ReactOS'u ger\207ek donan\215m \201zerinde \207al\215\237t\215rmay\215 deneyecekseniz",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -236,14 +236,14 @@ static MUI_ENTRY trTRIntroPageEntries[] =
     {
         8,
         19,
-        "\x07  MenuOS Kur'a devam etmek i\207in ENTER'e bas\215n\215z.",
+        "\x07  ReactOS Kur'a devam etmek i\207in ENTER'e bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         21,
-        "\x07  MenuOS'u kurmadan \207\215kmak i\207in F3'e bas\215n\215z.",
+        "\x07  ReactOS'u kurmadan \207\215kmak i\207in F3'e bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -267,7 +267,7 @@ static MUI_ENTRY trTRLicensePageEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -281,7 +281,7 @@ static MUI_ENTRY trTRLicensePageEntries[] =
     {
         8,
         8,
-        "MenuOS Sistemi, GNU GPL'yle X11, BSD ve GNU LGPL",
+        "ReactOS Sistemi, GNU GPL'yle X11, BSD ve GNU LGPL",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -302,7 +302,7 @@ static MUI_ENTRY trTRLicensePageEntries[] =
     {
         8,
         11,
-        "Bu y\201zden MenuOS sisteminin b\224l\201m\201 olan t\201m yaz\215l\215mlar, korunan",
+        "Bu y\201zden ReactOS sisteminin b\224l\201m\201 olan t\201m yaz\215l\215mlar, korunan",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -323,7 +323,7 @@ static MUI_ENTRY trTRLicensePageEntries[] =
     {
         8,
         15,
-        "\201zerine hi\207bir g\201vence ve k\215s\215tlamayla gelmez. MenuOS'un",
+        "\201zerine hi\207bir g\201vence ve k\215s\215tlamayla gelmez. ReactOS'un",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -337,7 +337,7 @@ static MUI_ENTRY trTRLicensePageEntries[] =
     {
         8,
         17,
-        "E\247er baz\215 nedenlerden dolay\215 MenuOS ile GNU Genel",
+        "E\247er baz\215 nedenlerden dolay\215 ReactOS ile GNU Genel",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -403,7 +403,7 @@ static MUI_ENTRY trTRDevicePageEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -511,14 +511,14 @@ static MUI_ENTRY trTRRepairPageEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "MenuOS Kur, bir \224n geli\237me evresindedir. Daha t\201m\201yle kullan\215\237l\215",
+        "ReactOS Kur, bir \224n geli\237me evresindedir. Daha t\201m\201yle kullan\215\237l\215",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -584,21 +584,21 @@ static MUI_ENTRY trTRUpgradePageEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "MenuOS Kur, a\237a\247\215da listelenen bir mevcut MenuOS kurulumunu",
+        "ReactOS Kur, a\237a\247\215da listelenen bir mevcut ReactOS kurulumunu",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         9,
-        "y\201kseltebilir ya da MenuOS kurulumu zarar g\224rm\201\237se Kur, onu",
+        "y\201kseltebilir ya da ReactOS kurulumu zarar g\224rm\201\237se Kur, onu",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -640,7 +640,7 @@ static MUI_ENTRY trTRUpgradePageEntries[] =
     {
         8,
         21,
-        "\x07  MenuOS kurmadan \207\215kmak i\207in F3'e bas\215n\215z.",
+        "\x07  ReactOS kurmadan \207\215kmak i\207in F3'e bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -664,7 +664,7 @@ static MUI_ENTRY trTRComputerPageEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -723,7 +723,7 @@ static MUI_ENTRY trTRFlushPageEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -768,14 +768,14 @@ static MUI_ENTRY trTRQuitPageEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         10,
         6,
-        "MenuOS, t\201m\201yle kurulmad\215.",
+        "ReactOS, t\201m\201yle kurulmad\215.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -820,7 +820,7 @@ static MUI_ENTRY trTRDisplayPageEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -879,14 +879,14 @@ static MUI_ENTRY trTRSuccessPageEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         10,
         6,
-        "MenuOS'un ana bile\237enleri ba\237ar\215yla kuruldu.",
+        "ReactOS'un ana bile\237enleri ba\237ar\215yla kuruldu.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -931,7 +931,7 @@ static MUI_ENTRY trTRSelectPartitionEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -959,7 +959,7 @@ static MUI_ENTRY trTRSelectPartitionEntries[] =
     {
         8,
         13,
-        "\x07  Se\207ili b\224l\201me MenuOS'u y\201klemek i\207in ENTER'e bas\215n\215z.",
+        "\x07  Se\207ili b\224l\201me ReactOS'u y\201klemek i\207in ENTER'e bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1004,7 +1004,7 @@ static MUI_ENTRY trTRChangeSystemPartition[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1018,7 +1018,7 @@ static MUI_ENTRY trTRChangeSystemPartition[] =
     {
         6,
         12,
-        "b\224l\201m\201, MenuOS taraf\215ndan desteklenmeyen",
+        "b\224l\201m\201, ReactOS taraf\215ndan desteklenmeyen",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1032,7 +1032,7 @@ static MUI_ENTRY trTRChangeSystemPartition[] =
     {
         6,
         18,
-        "MenuOS'u ba\237ar\215yla kurmak i\207in, Kurulum program\215 mevcut",
+        "ReactOS'u ba\237ar\215yla kurmak i\207in, Kurulum program\215 mevcut",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1095,7 +1095,7 @@ static MUI_ENTRY trTRChangeSystemPartition[] =
     {
         6,
         34,
-        "gerekebilir veya MenuOS kurulumunu tamamlad\215ktan sonra sistem ",
+        "gerekebilir veya ReactOS kurulumunu tamamlad\215ktan sonra sistem ",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1126,7 +1126,7 @@ static MUI_ENTRY trTRConfirmDeleteSystemPartitionEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1147,7 +1147,7 @@ static MUI_ENTRY trTRConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         11,
-        "programlar\215, MenuOS gibi bir i\237letim sistemini ba\237latmak i\207in programlar",
+        "programlar\215, ReactOS gibi bir i\237letim sistemini ba\237latmak i\207in programlar",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1175,7 +1175,7 @@ static MUI_ENTRY trTRConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         16,
-        "B\224l\201m\201 sildi\247inizde MenuOS Kur'u bitirene kadar bilgisayar\215 sabit diskten",
+        "B\224l\201m\201 sildi\247inizde ReactOS Kur'u bitirene kadar bilgisayar\215 sabit diskten",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1227,7 +1227,7 @@ static MUI_ENTRY trTRFormatPartitionEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1265,7 +1265,7 @@ static MUI_ENTRY trTRCheckFSEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1296,14 +1296,14 @@ static MUI_ENTRY trTRInstallDirectoryEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "Kur, se\207ili b\224l\201me MenuOS dosyalar\215n\215 y\201kler. MenuOS'un",
+        "Kur, se\207ili b\224l\201me ReactOS dosyalar\215n\215 y\201kler. ReactOS'un",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1324,7 +1324,7 @@ static MUI_ENTRY trTRInstallDirectoryEntries[] =
     {
         6,
         15,
-        "bas\215n\215z ve ard\215ndan MenuOS'un y\201klenmesini istedi\247iniz dizini yaz\215n\215z.",
+        "bas\215n\215z ve ard\215ndan ReactOS'un y\201klenmesini istedi\247iniz dizini yaz\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1348,14 +1348,14 @@ static MUI_ENTRY trTRFileCopyEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         0,
         12,
-        "MenuOS Kur, MenuOS kurulum dizininize dosyalar\215 kopyalarken",
+        "ReactOS Kur, ReactOS kurulum dizininize dosyalar\215 kopyalarken",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -1393,7 +1393,7 @@ static MUI_ENTRY trTRBootLoaderSelectPageEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1452,7 +1452,7 @@ static MUI_ENTRY trTRBootLoaderInstallPageEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1483,7 +1483,7 @@ static MUI_ENTRY trTRBootLoaderRemovableDiskPageEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1529,7 +1529,7 @@ static MUI_ENTRY trTRKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1588,7 +1588,7 @@ static MUI_ENTRY trTRLayoutSettingsEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1648,14 +1648,14 @@ static MUI_ENTRY trTRPrepareCopyEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "Kur, MenuOS dosyalar\215n\215 kopyalamak i\207in bilgisayar\215n\215z\215 haz\215rl\215yor.",
+        "Kur, ReactOS dosyalar\215n\215 kopyalamak i\207in bilgisayar\215n\215z\215 haz\215rl\215yor.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1680,7 +1680,7 @@ static MUI_ENTRY trTRSelectFSEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1728,7 +1728,7 @@ static MUI_ENTRY trTRDeletePartitionEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1780,7 +1780,7 @@ static MUI_ENTRY trTRRegistryEntries[] =
     {
         4,
         3,
-        " MenuOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1815,8 +1815,8 @@ MUI_ERROR trTRErrorEntries[] =
     },
     {
         // ERROR_NOT_INSTALLED
-        "MenuOS, bilgisayara t\201m\201yle kurulmad\215. E\247er \237imdi\n"
-        "Kur'dan \207\215karsan\215z MenuOS'u kurmak i\207in Kur'u\n"
+        "ReactOS, bilgisayara t\201m\201yle kurulmad\215. E\247er \237imdi\n"
+        "Kur'dan \207\215karsan\215z ReactOS'u kurmak i\207in Kur'u\n"
         "yeniden \207al\215\237t\215rman\215z gerekecektir.\n"
         "\n"
         "  \x07  Kur'a devam etmek i\207in ENTER'e bas\215n\215z.\n"
@@ -1825,7 +1825,7 @@ MUI_ERROR trTRErrorEntries[] =
     },
     {
         // ERROR_NO_BUILD_PATH
-        "MenuOS kurulum dizini i\207in kurulum yollar\215 olu\237turulamad\215!!\n"
+        "ReactOS kurulum dizini i\207in kurulum yollar\215 olu\237turulamad\215!!\n"
         "ENTER = Bilgisayar\215 Yeniden Ba\237lat"
     },
     {
@@ -1835,7 +1835,7 @@ MUI_ERROR trTRErrorEntries[] =
     },
     {
         // ERROR_SOURCE_DIR
-        "MenuOS'u kurulum kaynak dizini i\207ine kuramazs\215n\215z!\n"
+        "ReactOS'u kurulum kaynak dizini i\207ine kuramazs\215n\215z!\n"
         "ENTER = Bilgisayar\215 Yeniden Ba\237lat"
     },
     {
@@ -2027,7 +2027,7 @@ MUI_ERROR trTRErrorEntries[] =
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "Se\207ili b\224l\201m MenuOS'u kurmak i\207in yeteri katar b\201y\201k de\247il.\n"
+        "Se\207ili b\224l\201m ReactOS'u kurmak i\207in yeteri katar b\201y\201k de\247il.\n"
         "Kurulum b\224l\201m\201 en az %lu MB b\201y\201kl\201\247\201nde olmal\215.\n"
         "\n"
         "  * Devam etmek i\207in bir tu\237a bas\215n\215z.",
@@ -2212,13 +2212,13 @@ MUI_STRING trTRStrings[] =
     {STRING_PARTFORMAT,
     "Bu b\224l\201m ileride bi\207imlendirilecektir."},
     {STRING_NONFORMATTEDPART,
-    "MenuOS'u yeni ya da bi\207imlendirilmemi\237 bir b\224l\201me kurmay\215 se\207tiniz."},
+    "ReactOS'u yeni ya da bi\207imlendirilmemi\237 bir b\224l\201me kurmay\215 se\207tiniz."},
     {STRING_NONFORMATTEDSYSTEMPART,
     "Sistem b\224l\201m\201 hen\201z bi\207imlendirilmemi\237."},
     {STRING_NONFORMATTEDOTHERPART,
     "Yeni b\224l\201m hen\201z bi\207imlendirilmemi\237."},
     {STRING_INSTALLONPART,
-    "Kur, MenuOS'u b\224l\201m \201zerine kurar."},
+    "Kur, ReactOS'u b\224l\201m \201zerine kurar."},
     {STRING_CONTINUE,
     "ENTER = Devam Et"},
     {STRING_QUITCONTINUE,

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS VGA Font Editor
+ * PROJECT:     ReactOS VGA Font Editor
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Main entry point of the application
  * COPYRIGHT:   Copyright 2008 Colin Finck (colin@reactos.org)

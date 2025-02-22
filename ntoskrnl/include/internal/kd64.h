@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/include/internal/kd64.h
  * PURPOSE:         Internal header for the KD64 Library
@@ -677,7 +677,7 @@ extern ULONG Kd_MM_Mask;
 extern ULONG Kd_DFSC_Mask;
 extern ULONG Kd_WOW64_Mask;
 //
-// Components specified in Vista+, some of which we also use in MenuOS
+// Components specified in Vista+, some of which we also use in ReactOS
 //
 extern ULONG Kd_ALPC_Mask;
 extern ULONG Kd_WDI_Mask;

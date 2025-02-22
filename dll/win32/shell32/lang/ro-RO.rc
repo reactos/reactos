@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Shell32
+ * PROJECT:     ReactOS Shell32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
@@ -153,9 +153,9 @@ BEGIN
     LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10, SS_NOPREFIX
     LTEXT "Drept de autor 1996-", IDC_STATIC, 35, 75, 68, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 103, 75, 17, 10
-    LTEXT " Echipa MenuOS\0", IDC_STATIC, 120, 75, 53, 10
+    LTEXT " Echipa ReactOS\0", IDC_STATIC, 120, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20, SS_NOPREFIX
-    LTEXT "Această versiune MenuOS este înregistrată pentru:", IDC_ABOUT_REG_TO, 35, 115, 180, 10
+    LTEXT "Această versiune ReactOS este înregistrată pentru:", IDC_ABOUT_REG_TO, 35, 115, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10, SS_NOPREFIX
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10, SS_NOPREFIX
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
@@ -169,7 +169,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "MenuOS vă este oferit de:", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "ReactOS vă este oferit de:", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -179,7 +179,7 @@ CAPTION "Executare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "Tastaţi numele unui program, folder, document sau al unei resurse Internet, iar MenuOS îl va deschide.", 12289, 36, 4, 185, 26
+    LTEXT "Tastaţi numele unui program, folder, document sau al unei resurse Internet, iar ReactOS îl va deschide.", 12289, 36, 4, 185, 26
     LTEXT "&Deschidere:", 12305, 7, 39, 33, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 41, 37, 179, 100
     DEFPUSHBUTTON "OK", IDOK, 36, 70, 59, 14
@@ -429,7 +429,7 @@ BEGIN
     GROUPBOX "Activităţi", -1, 7, 10, 249, 40
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
     AUTORADIOBUTTON "&Afişare activităţi comune în foldere", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "&Utilizare foldere MenuOS clasice", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
+    AUTORADIOBUTTON "&Utilizare foldere ReactOS clasice", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
     GROUPBOX "Răsfoire foldere", -1, 7, 60, 249, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "Se &deschide fiecare folder în aceeaşi fereastră", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
@@ -517,14 +517,14 @@ BEGIN
     PUSHBUTTON "&Comutare utilizatori", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
     PUSHBUTTON "&Log Off", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Revocare", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
-    LTEXT "Log Off din MenuOS", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 130, 19
+    LTEXT "Log Off din ReactOS", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 130, 19
     CTEXT "Comutare utilizatori", IDC_SWITCH_USER_STATIC, 31, 70, 71, 11
     CTEXT "Log Off", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
 END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Deconectare MenuOS"
+CAPTION "Deconectare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
@@ -538,7 +538,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLIN
 CAPTION "Autolansare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Selectaţi un tip de conţinut, apoi alegeţi o acţiune pe care MenuOS o va efectua automat când tipul respectiv este utilizat în acest dispozitiv:", 1000, 7, 7, 215, 20
+    LTEXT "&Selectaţi un tip de conţinut, apoi alegeţi o acţiune pe care ReactOS o va efectua automat când tipul respectiv este utilizat în acest dispozitiv:", 1000, 7, 7, 215, 20
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
     GROUPBOX "Acţiuni", -1, 7, 45, 212, 146
     AUTORADIOBUTTON "S&e selectează o acţiune de efectuat:", 1005, 14, 54, 202, 10, WS_GROUP
@@ -554,7 +554,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
     LTEXT "Acest disc sau dispozitiv prezintă mai multe tipuri de conţinut.", 1001, 32, 7, 191, 20
-    LTEXT "Ce să facă MenuOS?", 1002, 32, 31, 188, 8
+    LTEXT "Ce să facă ReactOS?", 1002, 32, 31, 188, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
     DEFPUSHBUTTON "OK", IDOK, 96, 186, 60, 14
     PUSHBUTTON "Revocare", IDCANCEL, 160, 186, 60, 14
@@ -566,10 +566,10 @@ CAPTION "Conţinut mixt"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "MenuOS poate să efectueze aceeaşi acţiune de fiecare dată când se inserează un disc sau se conectează un dispozitiv la acest tip de fişier:", 1001, 30, 7, 193, 20
+    LTEXT "ReactOS poate să efectueze aceeaşi acţiune de fiecare dată când se inserează un disc sau se conectează un dispozitiv la acest tip de fişier:", 1001, 30, 7, 193, 20
     ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
     EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Ce să facă MenuOS?", 1002, 32, 41, 190, 8
+    LTEXT "Ce să facă ReactOS?", 1002, 32, 41, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
     AUTOCHECKBOX "Întotdeauna se efectuează acţiunea selectată.", 1004, 32, 171, 190, 10
     DEFPUSHBUTTON "OK", IDOK, 96, 185, 60, 14
@@ -582,8 +582,8 @@ CAPTION "Redare automată"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "MenuOS poate să efectueze această acţiune de fiecare dată când conectaţi acest dispozitiv.", 1001, 32, 7, 190, 22
-    LTEXT "&Ce să facă MenuOS?", 1002, 32, 31, 190, 8
+    LTEXT "ReactOS poate să efectueze această acţiune de fiecare dată când conectaţi acest dispozitiv.", 1001, 32, 7, 190, 22
+    LTEXT "&Ce să facă ReactOS?", 1002, 32, 31, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
     AUTOCHECKBOX "&Efectuează mereu aceeaşi acțiune", 1004, 32, 143, 190, 8
     DEFPUSHBUTTON "OK", IDOK, 94, 160, 60, 14
@@ -592,7 +592,7 @@ END
 
 IDD_SHUTDOWN DIALOGEX 0, 0, 211, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Închidere MenuOS"
+CAPTION "Închidere ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
@@ -862,7 +862,7 @@ BEGIN
 
     /* Warning format system drive dialog strings */
     IDS_NO_FORMAT_TITLE "Imposibil de formatat volumul"
-    IDS_NO_FORMAT "Imposibil de formatat acest volum! Conţine fişiere de sistem importante care fac MenuOS să funcţioneze."
+    IDS_NO_FORMAT "Imposibil de formatat acest volum! Conţine fişiere de sistem importante care fac ReactOS să funcţioneze."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Imposibil de 'Executare fişier' (eroare internă)"
@@ -948,8 +948,8 @@ BEGIN
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Folder"
-    IDS_BAT_FILE "Fişier de comenzi MenuOS"
-    IDS_CMD_FILE "Script de comenzi MenuOS"
+    IDS_BAT_FILE "Fişier de comenzi ReactOS"
+    IDS_CMD_FILE "Script de comenzi ReactOS"
     IDS_COM_FILE "Executabil DOS"
     IDS_CPL_FILE "Element din Panoul de control"
     IDS_CUR_FILE "Indicator"
@@ -1070,7 +1070,7 @@ BEGIN
     IDS_SYSTEMFOLDER "Folder de sistem"
 
     /* For IDD_LOG_OFF_FANCY */
-    IDS_LOG_OFF_DESC "Închide programele şi încheie sesiunea MenuOS."
+    IDS_LOG_OFF_DESC "Închide programele şi încheie sesiunea ReactOS."
     IDS_SWITCH_USER_DESC "Permite unui alt utilizator să facă Log on în timp ce programele şi fişierele vă rămân deschise.\r\n\r\n(De asemenea, este posibil să comutaţi între utilizatori apăsând tasta Windows logo + L.)"
     IDS_LOG_OFF_TITLE "&Log Off"
     IDS_SWITCH_USER_TITLE "Comutare utilizatori"

@@ -5,7 +5,7 @@
  * Copyright 2003 CodeWeavers Inc. (Ulrich Czekalla)
  * Copyright 2006 Robert Reif
  *
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/advapi32/sec/misc.c
  * PURPOSE:         Miscellaneous security functions (some ported from Wine)
  */

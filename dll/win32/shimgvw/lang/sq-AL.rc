@@ -6,7 +6,7 @@ LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "MenuOS Vëzhguesi i Fotove dhe Faxit"
+    IDS_APPTITLE "ReactOS Vëzhguesi i Fotove dhe Faxit"
     IDS_SETASDESKBG "Vendos si Sfond Desktopi"
     IDS_NOPREVIEW "No preview available."
     IDS_PREVIEW "Shikim Paraprak"

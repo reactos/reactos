@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Services
+ * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/sc/sdshow.c
  * PURPOSE:     Show a service security descriptor

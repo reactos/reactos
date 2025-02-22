@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * PURPOSE:         Boot Data implementation
  * FILE:            lib/rtl/bootdata.c
  * PROGRAMMERS:

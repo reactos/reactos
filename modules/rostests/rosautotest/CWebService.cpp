@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Automatic Testing Utility
+ * PROJECT:     ReactOS Automatic Testing Utility
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Class implementing the interface to the "testman" Web Service
  * COPYRIGHT:   Copyright 2009-2020 Colin Finck (colin@reactos.org)

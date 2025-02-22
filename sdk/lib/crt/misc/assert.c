@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS C runtime library
+ * PROJECT:         ReactOS C runtime library
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            lib/sdk/crt/misc/assert.c
  * PURPOSE:         _assert implementation

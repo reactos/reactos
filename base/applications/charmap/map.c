@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Character Map
+ * PROJECT:     ReactOS Character Map
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/charmap/map.c
  * PURPOSE:     class implementation for painting glyph region

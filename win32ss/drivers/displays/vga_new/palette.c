@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Framebuffer Display Driver
+ * PROJECT:         ReactOS Framebuffer Display Driver
  * LICENSE:         Microsoft NT4 DDK Sample Code License
  * FILE:            win32ss/drivers/displays/vga_new/palette.c
  * PURPOSE:         Palette Support

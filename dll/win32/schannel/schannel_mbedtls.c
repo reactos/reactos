@@ -56,7 +56,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(schannel);
  /* WINE defines the back-end glue in here */
  #include "secur32_priv.h"
 
- /* in MenuOS we use schannel instead of secur32 */
+ /* in ReactOS we use schannel instead of secur32 */
  WINE_DEFAULT_DEBUG_CHANNEL(secur32);
 
  /* WINE prefers to keep it optional, disable this to link explicitly */

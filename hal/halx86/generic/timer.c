@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS HAL
+ * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         HAL Timer Routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)

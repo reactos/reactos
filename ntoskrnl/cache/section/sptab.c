@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1998-2005 MenuOS Team (and the authors from the programmers section)
+ * Copyright (C) 1998-2005 ReactOS Team (and the authors from the programmers section)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  *
- * PROJECT:         MenuOS kernel
+ * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cache/section/sptab.c
  * PURPOSE:         Section object page tables
  *

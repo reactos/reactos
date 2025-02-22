@@ -279,7 +279,7 @@ CAPTION "位置信息"
 FONT 9, "宋体"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 10, 10, 88, 155
-    LTEXT "在您做任何电话或调制解调器连接之前，MenuOS 需要知道关于您当前位置的信息。", 2000, 107, 15, 188, 25
+    LTEXT "在您做任何电话或调制解调器连接之前，ReactOS 需要知道关于您当前位置的信息。", 2000, 107, 15, 188, 25
     LTEXT "目前所在的国家(地区)(&W)：", -1, 107, 43, 189, 10
     COMBOBOX 1006, 107, 55, 180, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "您的区号(或城市号)是什么(&C)？", -1, 107, 74, 189, 10
@@ -300,7 +300,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 9, "宋体"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 0, 0, 88, 155
-    LTEXT "在您做任何电话或调制解调器连接之前，MenuOS 需要知道关于您当前位置的信息。", 2000, 95, 2, 188, 25
+    LTEXT "在您做任何电话或调制解调器连接之前，ReactOS 需要知道关于您当前位置的信息。", 2000, 95, 2, 188, 25
     LTEXT "目前所在的国家(地区)(&W)：", -1, 95, 30, 188, 10
     COMBOBOX 1006, 95, 41, 177, 68, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "您的区号(或城市号)是什么(&C)？", -1, 95, 61, 188, 10
@@ -314,7 +314,7 @@ END
 
 500 DIALOGEX 0, 0, 235, 88
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "MenuOS 浏览器"
+CAPTION "ReactOS 浏览器"
 FONT 9, "宋体"
 BEGIN
     ICON 504, 501, 13, 14, 21, 20
@@ -408,7 +408,7 @@ BEGIN
     80 "您确实是要删除这个区号编码规则吗？"
     81 "您必须键入数字号码才可拨号。"
     82 "您键入的电话卡名称已经处于使用中。请键入一个唯一的名称。"
-    83 "MenuOS 需要有关您拨号位置的电话信息才能正常运行。如果您不提供这个信息而取消，此程序在拨号时可能不能正常运行。而且，某些应用程序对您取消这个对话框的反应是立即重新发布它。\n您确实要取消吗？"
+    83 "ReactOS 需要有关您拨号位置的电话信息才能正常运行。如果您不提供这个信息而取消，此程序在拨号时可能不能正常运行。而且，某些应用程序对您取消这个对话框的反应是立即重新发布它。\n您确实要取消吗？"
     84 "确认取消"
     85 "我的位置"
     86 "<此安装没有可用的服务提供程序>"

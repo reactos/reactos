@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/iphlpapi/address.c
  * PURPOSE:         iphlpapi implementation - Adapter Address APIs
  * PROGRAMMERS:     Jérôme Gardou (jerome.gardou@reactos.org)
@@ -351,7 +351,7 @@ GetAdaptersAddresses(
             break;
         case AF_INET6:
             /* One day maybe... */
-            FIXME("IPv6 is not supported in MenuOS!\n");
+            FIXME("IPv6 is not supported in ReactOS!\n");
             /* We got nothing to say in this case */
             return ERROR_NO_DATA;
             break;

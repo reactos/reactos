@@ -30,7 +30,7 @@ END
 /* Information and error messages */
 STRINGTABLE
 BEGIN
-    IDS_USAGE "MenuOS 关闭计算机实用工具\n\
+    IDS_USAGE "ReactOS 关闭计算机实用工具\n\
 \n\
 用法：shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
        [/m \\\\computer][/t xxx][/d [p|u:]xx:yy [/c ""comment""]]\n\

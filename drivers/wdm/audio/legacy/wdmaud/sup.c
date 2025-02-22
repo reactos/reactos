@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Kernel Streaming
+ * PROJECT:         ReactOS Kernel Streaming
  * FILE:            drivers/wdm/audio/legacy/wdmaud/sup.c
  * PURPOSE:         Misc support routines
  * PROGRAMMER:      Andrew Greenwood

@@ -1,6 +1,6 @@
 * Introduction
 
-Having successfully built MenuOS and been amazed by what it does, you're
+Having successfully built ReactOS and been amazed by what it does, you're
 now desperate to fill in some of the omissions, this document shows you how.
 
 * Prerequisites
@@ -26,7 +26,7 @@ questions,
 
 * Style
 
-There is a coding style used for MenuOS, it's described in a MenuOS's Wiki
+There is a coding style used for ReactOS, it's described in a ReactOS's Wiki
 page called Coding Style: https://reactos.org/wiki/index.php/Coding_Style
 
 However, not all codebase complies with the rules outlined in that page, so
@@ -111,11 +111,11 @@ Debugging kernel-mode code is tricky, these are some snippets
 
 * Legal stuff
 
-    The MenuOS project is GPL'ed, please make sure any code submitted is
+    The ReactOS project is GPL'ed, please make sure any code submitted is
     compatible with this.
 
     The NT4 ddk license agreement allows its usage for developing nt drivers
-    only. Legally therefore it can not be used to develop MenuOS, neither the
+    only. Legally therefore it can not be used to develop ReactOS, neither the
     documentation or the sample code. I'm not a lawyer, but I doubt the
     effiacy of 'shrinkwrap licenses' particularly on freely downloadable
     software. The only precendent I know of, in a Scottish court, didn't

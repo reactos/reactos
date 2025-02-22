@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS api tests
+ * PROJECT:     ReactOS api tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Test for RtlNtPathNameToDosPathName
  * COPYRIGHT:   Copyright 2017-2020 Mark Jansen (mark.jansen@reactos.org)

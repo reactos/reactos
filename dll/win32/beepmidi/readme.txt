@@ -11,7 +11,7 @@ WHAT'S THIS ?
     which uses BEEP.SYS (the kernel-mode PC speaker driver) to play
     MIDI data. It installs as a standard MIDI output device and can even
     be selected as your default MIDI output device. The fundamental
-    code for interacting with BEEP.SYS was taken from MenuOS' kernel32
+    code for interacting with BEEP.SYS was taken from ReactOS' kernel32
     module.
 
 WHY WAS THIS WRITTEN ?

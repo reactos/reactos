@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS text-mode setup
+ * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/progress.c
  * PURPOSE:         Partition list functions
  * PROGRAMMER:

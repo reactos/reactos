@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Calc
+ * PROJECT:     ReactOS Calc
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
@@ -338,7 +338,7 @@ BEGIN
     BEGIN
         MENUITEM "&Termeni din Ajutor", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Despre Calculator MenuOS", IDM_HELP_ABOUT
+        MENUITEM "&Despre Calculator ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -371,7 +371,7 @@ BEGIN
     BEGIN
         MENUITEM "&Termeni din Ajutor", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Despre Calculator MenuOS", IDM_HELP_ABOUT
+        MENUITEM "&Despre Calculator ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -394,7 +394,7 @@ BEGIN
     BEGIN
         MENUITEM "&Termeni din Ajutor", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Despre Calculator MenuOS", IDM_HELP_ABOUT
+        MENUITEM "&Despre Calculator ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -409,7 +409,7 @@ END
 /* About */
 STRINGTABLE
 BEGIN
-    IDS_CALC_NAME "Calculator MenuOS"
+    IDS_CALC_NAME "Calculator ReactOS"
     IDS_AUTHOR "Scris de Carlo Bramini"
 END
 

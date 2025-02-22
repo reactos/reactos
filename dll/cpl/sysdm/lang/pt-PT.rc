@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS System Control Panel Applet
+ * PROJECT:     ReactOS System Control Panel Applet
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Portuguese (Portugal) resource file
  * TRANSLATOR:  Copyright 2019-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
@@ -26,7 +26,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 140, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 140, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 140, 173, 118, 9
-    CONTROL "Visite  <A HREF=""https://reactos.org/"">MenuOS Homepage</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 159, 10
+    CONTROL "Visite  <A HREF=""https://reactos.org/"">ReactOS Homepage</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 159, 10
     PUSHBUTTON "Ver &licença...", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -75,7 +75,7 @@ CAPTION "Definições do sistema"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Informações de versão", IDC_STATIC, 6, 3, 210, 73
-    LTEXT "O MenuOS é construído como um sistema operativo servidor e responde como tal. Marque esta opção para aplicar isso apenas a aplicações.", IDC_STATIC, 15, 15, 183, 41
+    LTEXT "O ReactOS é construído como um sistema operativo servidor e responde como tal. Marque esta opção para aplicar isso apenas a aplicações.", IDC_STATIC, 15, 15, 183, 41
     CONTROL "&Comportamento de estação de trabalho", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
 END
@@ -96,7 +96,7 @@ BEGIN
     PUSHBUTTON "&Mudar o nome", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
     PUSHBUTTON "&Eliminar", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
     GROUPBOX "Selecção de perfis de hardware", IDC_STATIC, 7, 130, 240, 75
-    LTEXT "Quando o MenuOS inicia:", IDC_STATIC, 14, 142, 210, 8
+    LTEXT "Quando o ReactOS inicia:", IDC_STATIC, 14, 142, 210, 8
     AUTORADIOBUTTON "&Aguardar que eu seleccione um perfil de hardware", IDC_HRDPROFWAIT, 14, 158, 200, 8, WS_GROUP
     AUTORADIOBUTTON "&Seleccionar o primeiro perfil listado se eu não eleger um perfil em:", IDC_HRDPROFSELECT, 14, 173, 230, 8
     LTEXT "segundos", IDC_STATIC, 65, 187, 35, 8
@@ -124,7 +124,7 @@ BEGIN
     AUTORADIOBUTTON "O computador está &ancorado", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
     AUTORADIOBUTTON "O computador está &desancorado", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
     GROUPBOX "Selecção de perfis de hardware", IDC_STATIC, 10, 138, 192, 42
-    AUTOCHECKBOX "&Incluir sempre este perfil como opção no arranque do MenuOS", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
+    AUTOCHECKBOX "&Incluir sempre este perfil como opção no arranque do ReactOS", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
 END
 
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52

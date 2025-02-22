@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Kernel
+ * PROJECT:     ReactOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Internal header containing information class probing helpers
  * COPYRIGHT:   Copyright 2022 George Bișoc <george.bisoc@reactos.org>

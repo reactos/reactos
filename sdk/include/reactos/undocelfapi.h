@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS EventLog Service
+ * PROJECT:     ReactOS EventLog Service
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Event logging NT client API.
  * COPYRIGHT:   Copyright 2016-2018 Hermes Belusca-Maito

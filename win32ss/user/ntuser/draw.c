@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS Win32k subsystem
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Win32ss internal drawing support.
  * FILE:             win32ss/user/ntuser/draw.c
  * PROGRAMER:        

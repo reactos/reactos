@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Standard Print Processor API Tests
+ * PROJECT:     ReactOS Standard Print Processor API Tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Tests for EnumPrintProcessorDatatypesW
  * COPYRIGHT:   Copyright 2015-2016 Colin Finck (colin@reactos.org)

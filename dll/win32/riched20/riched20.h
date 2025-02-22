@@ -23,7 +23,7 @@
  */
 
 
-/* Forward definitions from txtsrv.c to make MSVC compile in MenuOS. */
+/* Forward definitions from txtsrv.c to make MSVC compile in ReactOS. */
 
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxSendMessage( ITextServices *iface, UINT msg, WPARAM wparam,
                                                             LPARAM lparam, LRESULT *result );
@@ -76,7 +76,7 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_OnTxPropertyBitsChange( ITextServic
 DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetCachedSize(ITextServices *iface, DWORD *pdwWidth, DWORD *pdwHeight);
 
 
-/* Forward definitions from txthost.c to make MSVC compile in MenuOS. */
+/* Forward definitions from txthost.c to make MSVC compile in ReactOS. */
 
 
 DECLSPEC_HIDDEN HDC __thiscall ITextHostImpl_TxGetDC( ITextHost2 *iface );

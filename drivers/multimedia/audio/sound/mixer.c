@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS kernel
+ * PROJECT:          ReactOS kernel
  * FILE:             drivers/dd/sound/mixer.c
  * PURPOSE:          Wave Mixer?
  * PROGRAMMER:       ?

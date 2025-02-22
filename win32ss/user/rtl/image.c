@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS user32.dll and win32k.sys
+ * PROJECT:     ReactOS user32.dll and win32k.sys
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     RtlGetExpWinVer function
  * COPYRIGHT:   Copyright 2019 James Tabor <james.tabor@reactos.org>

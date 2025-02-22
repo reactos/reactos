@@ -1,8 +1,8 @@
 /*
- * PROJECT:     MenuOS Setup Library
+ * PROJECT:     ReactOS Setup Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Linked list support macros
- * COPYRIGHT:   Copyright 2005-2018 MenuOS Team
+ * COPYRIGHT:   Copyright 2005-2018 ReactOS Team
  */
 
 #pragma once

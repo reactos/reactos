@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS CRT library
+ * PROJECT:     ReactOS CRT library
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     x64 asm implementation of fabs
  * COPYRIGHT:   Copyright 2021 Timo Kreuzer <timo.kreuzer@reactos.org>

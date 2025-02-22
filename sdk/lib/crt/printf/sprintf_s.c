@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
- * PROJECT:         MenuOS crt library
+ * PROJECT:         ReactOS crt library
  * FILE:            lib/sdk/crt/printf/sprintf_s.c
  * PURPOSE:         Implementation of sprintf_s
  * PROGRAMMER:      Timo Kreuzer

@@ -187,7 +187,7 @@ ClassSendEjectionNotification(
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassSendNotification(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     _In_ const GUID * Guid,
@@ -1011,7 +1011,7 @@ ClasspSetMediaChangeStateEx(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassSetMediaChangeState(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     _In_ MEDIA_CHANGE_DETECTION_STATE NewState,
@@ -1045,7 +1045,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClasspMediaChangeDetectionCompletion(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -1748,7 +1748,7 @@ Return Value:
 
 --*/
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassCheckMediaState(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -1800,7 +1800,7 @@ Return Value:
 
 --*/
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassResetMediaChangeTimer(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -2369,7 +2369,7 @@ ExitWithError:
 //
 
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClasspDisableGesn(
     IN PDEVICE_OBJECT Fdo,
     IN PVOID Context
@@ -2417,7 +2417,7 @@ Return Value:
 --*/
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassInitializeTestUnitPolling(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     _In_ BOOLEAN AllowDriveToSleep
@@ -2453,7 +2453,7 @@ Return Value:
 --*/
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassInitializeMediaChangeDetection(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     _In_ PUCHAR EventPrefix
@@ -3098,7 +3098,7 @@ Return Value:
 --*/
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassEnableMediaChangeDetection(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -3184,7 +3184,7 @@ ULONG BreakOnMcnDisable = FALSE;
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassDisableMediaChangeDetection(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -3231,7 +3231,7 @@ Return Value:
 --*/
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassCleanupMediaChangeDetection(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -3381,7 +3381,7 @@ _Function_class_(RTL_QUERY_REGISTRY_ROUTINE)
 _IRQL_requires_max_(PASSIVE_LEVEL)
 _IRQL_requires_same_
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClasspMediaChangeRegistryCallBack(
     _In_z_ PWSTR ValueName,
     _In_ ULONG ValueType,
@@ -3499,7 +3499,7 @@ _IRQL_requires_min_(DISPATCH_LEVEL)
 _IRQL_requires_(DISPATCH_LEVEL)
 _IRQL_requires_same_
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClasspTimerTick(
     _In_ PKDPC Dpc,
     _In_opt_ PVOID DeferredContext,
@@ -4013,7 +4013,7 @@ Note:  this function can be called (via the workitem callback) after the paging 
          so it must be PAGE LOCKED.
 --*/
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClasspFailurePredict(
     IN PDEVICE_OBJECT DeviceObject,
     IN PVOID Context
@@ -4170,7 +4170,7 @@ Return Value:
 --*/
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassNotifyFailurePredicted(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     _In_reads_bytes_(BufferSize) PUCHAR Buffer,
@@ -4289,7 +4289,7 @@ Return Value:
 --*/
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassSetFailurePredictionPoll(
     _Inout_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     _In_ FAILURE_PREDICTION_METHOD FailurePredictionMethod,

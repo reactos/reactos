@@ -5,7 +5,7 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 /* Basic application information */
 STRINGTABLE
 BEGIN
-    IDS_APP_HEADER "Particionamento de disco de MenuOS"
+    IDS_APP_HEADER "Particionamento de disco de ReactOS"
     IDS_APP_USAGE "\nInterpretador de particionamento de disco.\n\n\
 Usage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
 /S filename\tRuns the given script.\n\

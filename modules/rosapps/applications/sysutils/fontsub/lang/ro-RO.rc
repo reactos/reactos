@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Font Substitute Editor
+ * PROJECT:     ReactOS Font Substitute Editor
  * LICENSE:     CC0-1.0 (https://spdx.org/licenses/CC0-1.0)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2019 Ștefan Fulea <stefan.fulea@mail.com>
@@ -66,7 +66,7 @@ BEGIN
     IDS_QUERYDELETE,    "Chiar doriți să ștergeți acest articol?"
     IDS_CANTOPENKEY,    "Imposibil de deschis cheia de registru."
     IDS_REBOOTNOW,      "Registrul a fost actualizat. Reporniți sistemul?"
-    IDS_ABOUT,          "FontSub (Editor pentru substitutul fontului) Versiunea 0.5\r\nde Katayama Hirofumi MZ și Echipa MenuOS\r\n\r\nAcest software a fost publicat sub licența CC0 1.0."
+    IDS_ABOUT,          "FontSub (Editor pentru substitutul fontului) Versiunea 0.5\r\nde Katayama Hirofumi MZ și Echipa ReactOS\r\n\r\nAcest software a fost publicat sub licența CC0 1.0."
 END
 
 IDD_ADD DIALOGEX 0, 0, 315, 65

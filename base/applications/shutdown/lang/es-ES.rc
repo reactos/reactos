@@ -33,7 +33,7 @@ END
 /* Information and error messages */
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Utilidad de apagado de MenuOS\n\
+    IDS_USAGE "Utilidad de apagado de ReactOS\n\
 \n\
 Uso: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
      [/m \\\\equipo][/t xxx][/d [p|u:]xx:yy [/c ""comentario""]]\n\

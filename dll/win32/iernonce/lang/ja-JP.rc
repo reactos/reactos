@@ -12,16 +12,16 @@ BEGIN
     IDS_NODEPENDENCY "依存ファイル %1 を読み込みできません。"
     IDS_SETUPERROR "%1 のセットアップ中にエラーが発生しました。このエラーは記録され、インストールは続行されます。"
     IDS_INCOMPLETE "アプリケーションの以前のインストールは、完了されていません。\n\nインストールを完了するため、管理者権限でログオンして下さい。"
-    IDS_SETUP "MenuOSセットアップ"
+    IDS_SETUP "ReactOSセットアップ"
     IDS_SERVICEERROR "いくつかのサービスが開始できませんでした。セットアップは、サービスを開始するためにシステムを再起動する必要があります。"
 END
 
 IDD_DIALOG DIALOGEX 0, 0, 206, 166
 STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "MenuOSセットアップ"
+CAPTION "ReactOSセットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "MenuOSは、次の項目をセットアップしています:", -1, 36, 13, 163, 11
+    LTEXT "ReactOSは、次の項目をセットアップしています:", -1, 36, 13, 163, 11
     LISTBOX IDC_LB_ITEMS, 36, 32, 163, 127, LBS_NOTIFY | LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
     ICON IDI_ICON, -1, 7, 7, 20, 20
 END

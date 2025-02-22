@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Shutdown
+ * PROJECT:     ReactOS Shutdown
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
@@ -38,7 +38,7 @@ END
 /* Information and error messages */
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Utilitar de închidere MenuOS\n\
+    IDS_USAGE "Utilitar de închidere ReactOS\n\
 \n\
 Utilizare: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
            [/m \\\\computer][/t xxx][/d [p|u:]xx:yy [/c «comentariu»]]\n\

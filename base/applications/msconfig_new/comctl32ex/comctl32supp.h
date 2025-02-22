@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Applications
+ * PROJECT:     ReactOS Applications
  * LICENSE:     LGPL - See COPYING in the top level directory
  * FILE:        base/applications/msconfig_new/comctl32ex/comctl32supp.h
  * PURPOSE:     Common Controls helper functions.

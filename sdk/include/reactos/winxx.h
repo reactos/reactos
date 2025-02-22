@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS header files
+ * PROJECT:     ReactOS header files
  * LICENSE:     CC-BY-4.0 (https://spdx.org/licenses/CC-BY-4.0)
  * PURPOSE:     An unofficial extension of <windowsx.h>
  * COPYRIGHT:   Copyright 2017-2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)

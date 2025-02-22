@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS File System Recognizer
+ * PROJECT:          ReactOS File System Recognizer
  * FILE:             drivers/filesystems/fs_rec/blockdev.c
  * PURPOSE:          Generic Helper Functions
  * PROGRAMMER:       Alex Ionescu (alex.ionescu@reactos.org)

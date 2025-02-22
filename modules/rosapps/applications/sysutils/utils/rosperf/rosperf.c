@@ -1,5 +1,5 @@
 /*
- *  MenuOS RosPerf - MenuOS GUI performance test program
+ *  ReactOS RosPerf - ReactOS GUI performance test program
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -318,7 +318,7 @@ PrintOSVersion(void)
   RosVersion = VersionInfo.szCSDVersion + wcslen(VersionInfo.szCSDVersion) + 1;
   RosVersionLen = sizeof(VersionInfo.szCSDVersion) / sizeof(VersionInfo.szCSDVersion[0]) -
                   (RosVersion - VersionInfo.szCSDVersion);
-  if (7 <= RosVersionLen && 0 == _wcsnicmp(RosVersion, L"MenuOS", 7))
+  if (7 <= RosVersionLen && 0 == _wcsnicmp(RosVersion, L"ReactOS", 7))
     {
       wprintf(L"Running on %s\n", RosVersion);
       return;
@@ -672,7 +672,7 @@ CreatePerfWindows(HINSTANCE hInstance, PPERF_INFO PerfInfo)
     }
 
   MainWnd = CreateWindowW(L"RosPerfMain",
-                          L"MenuOS performance test",
+                          L"ReactOS performance test",
                           WS_OVERLAPPEDWINDOW | WS_VISIBLE,
                           0,
                           0,

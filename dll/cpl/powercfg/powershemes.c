@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Power Configuration Applet
+ * PROJECT:         ReactOS Power Configuration Applet
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/cpl/powercfg/powershemes.c
  * PURPOSE:         powerschemes tab of applet

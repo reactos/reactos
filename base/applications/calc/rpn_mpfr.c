@@ -1,5 +1,5 @@
 /*
- * MenuOS Calc (RPN encoder/decoder for GMP/MPFR engine)
+ * ReactOS Calc (RPN encoder/decoder for GMP/MPFR engine)
  *
  * Copyright 2007-2017, Carlo Bramini
  *

@@ -129,7 +129,7 @@ BEGIN
     LTEXT "Tidak bisa melanjutkan Penuntun Penambahan Perangkat Keras", IDC_FINISHTITLE, 114, 8, 203, 28
     LTEXT "Untuk melanjutkan, sambungkan perangkat keras ini ke komputer anda.", -1, 114, 40, 193, 16
     AUTOCHECKBOX "&Matikan komputer ketika saya klik Selesai sehingga saya dapat membuka komputer dan menghubungkan perangkat keras.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "Pada beberapa kasus, MenuOS akan secara otomatis menmasang perangkat keras Anda setelah Anda menghubungkannya. Jika MenuOS tidak menemukannya, Anda dapat membuka kembali penuntun ini untuk memasang perangkat lunak pendukung.", -1, 114, 98, 193, 32
+    LTEXT "Pada beberapa kasus, ReactOS akan secara otomatis menmasang perangkat keras Anda setelah Anda menghubungkannya. Jika ReactOS tidak menemukannya, Anda dapat membuka kembali penuntun ini untuk memasang perangkat lunak pendukung.", -1, 114, 98, 193, 32
     LTEXT "Untuk menutup penuntun, klik Selesai.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 

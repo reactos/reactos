@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Explorer
+ * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Show Desktop tray button implementation
  * COPYRIGHT:   Copyright 2006-2007 Thomas Weidenmueller <w3seek@reactos.org>

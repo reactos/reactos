@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * PURPOSE:         Vista functions
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  */

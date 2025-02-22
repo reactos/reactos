@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API tests
+ * PROJECT:     ReactOS API tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Tests for basic hash APIs
  * COPYRIGHT:   Copyright 2023 Ratin Gao <ratin@knsoft.org>
@@ -102,7 +102,7 @@ FN_MD4Final(
     _Inout_ PMD4_CTX Context);
 
 static HMODULE g_hAdvapi32 = NULL;
-static ANSI_STRING g_TestString = RTL_CONSTANT_STRING("MenuOS Hash API Test String");
+static ANSI_STRING g_TestString = RTL_CONSTANT_STRING("ReactOS Hash API Test String");
 
 static ULONG g_ctxSHA1StateInit[] = { 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0 };
 static UCHAR g_aucSHA1Result[A_SHA_DIGEST_LEN] = {

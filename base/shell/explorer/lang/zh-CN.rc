@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Explorer
+ * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2011 Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
@@ -120,7 +120,7 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "自定义通知"
 FONT 9, "宋体"
 BEGIN
-    LTEXT            "MenuOS 显示活动和紧急通知的图标，并隐藏不活动的通知。 您可以更改以下列表中的项目的此行为。", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "ReactOS 显示活动和紧急通知的图标，并隐藏不活动的通知。 您可以更改以下列表中的项目的此行为。", IDC_STATIC, 6, 6, 220, 30
     LTEXT            "选择一个项目，然后选择它的通知行为：", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS

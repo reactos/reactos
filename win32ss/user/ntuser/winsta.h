@@ -38,7 +38,7 @@ typedef struct _WINSTATION_OBJECT
     LUID           luidUser;
     PVOID          psidUser;
 
-    /* MenuOS-specific */
+    /* ReactOS-specific */
     struct _DESKTOP* ActiveDesktop;
     HANDLE         ShellWindow;
     HANDLE         ShellListView;

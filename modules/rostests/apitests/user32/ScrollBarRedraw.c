@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API tests
+ * PROJECT:     ReactOS API tests
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Tests window redrawing when scrollbars appear or disappear
  * COPYRIGHT:   Copyright 2024 Marek Benc <benc.marek.elektro98@proton.me>

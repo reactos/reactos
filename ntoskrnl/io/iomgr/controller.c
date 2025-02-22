@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/io/iomgr/controller.c
  * PURPOSE:         I/O Wrappers (called Controllers) for Kernel Device Queues

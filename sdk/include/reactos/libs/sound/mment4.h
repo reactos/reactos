@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Sound System "MME Buddy" Library (NT4 Helpers)
+ * PROJECT:     ReactOS Sound System "MME Buddy" Library (NT4 Helpers)
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        include/reactos/libs/sound/mment4.h
  *

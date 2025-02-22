@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS netstat utility
+ * PROJECT:     ReactOS netstat utility
  * LICENSE:     GPL - See COPYING in the top level directory
  * PURPOSE:     display IP stack statistics
  * COPYRIGHT:   Copyright 2005 Ged Murphy <gedmurphy@gmail.com>

@@ -69,7 +69,7 @@ ClassInitializeDispatchTables(
 
 
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassGlobalDispatch(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -85,7 +85,7 @@ ClassGlobalDispatch(
 }
 
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassDispatchUnimplemented(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp

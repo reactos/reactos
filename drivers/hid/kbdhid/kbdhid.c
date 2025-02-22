@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS HID Stack
+ * PROJECT:     ReactOS HID Stack
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        drivers/hid/kbdhid/kbdhid.c
  * PURPOSE:     Keyboard HID Driver

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL, see COPYING in the top level directory
- * PROJECT:         MenuOS kernel
+ * PROJECT:         ReactOS kernel
  * FILE:            drivers/base/kddll/kddll.h
  * PURPOSE:         Base definitions for the kernel debugger.
  */

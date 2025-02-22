@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Local Spooler API Tests
+ * PROJECT:     ReactOS Local Spooler API Tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions needed to run our code as a service. This is needed to run in SYSTEM security context.
  * COPYRIGHT:   Copyright 2015 Colin Finck (colin@reactos.org)

@@ -23,5 +23,5 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "Gestor de Licenças"
     IDS_CPLDESCRIPTION_1 "Gestor de Licenças"
-    IDS_REACTOS "MenuOS - Software Livre"
+    IDS_REACTOS "ReactOS - Software Livre"
 END

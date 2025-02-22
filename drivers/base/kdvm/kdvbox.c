@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL, see COPYING in the top level directory
- * PROJECT:         MenuOS kernel
+ * PROJECT:         ReactOS kernel
  * FILE:            drivers/base/kdvm/kdvbox.c
  * PURPOSE:         VBOX data exchange function for kdvbox
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)

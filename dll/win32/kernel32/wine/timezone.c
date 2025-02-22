@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/wine/timezone.c
  * PURPOSE:         Time conversion functions
  * PROGRAMMER:      Ariadne

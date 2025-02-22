@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Console Server DLL
+ * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/include/conio.h
  * PURPOSE:         Public Console I/O Interface
- * PROGRAMMERS:     GÃ© van Geldorp
+ * PROGRAMMERS:     Gé van Geldorp
  *                  Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */

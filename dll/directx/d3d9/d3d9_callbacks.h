@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS ReactX
+ * PROJECT:         ReactOS ReactX
  * FILE:            dll/directx/d3d9/d3d9_callbacks.h
  * PURPOSE:         Direct3D9's callback structs and constants
  * PROGRAMERS:      Gregor Gullwi <gbrunmar (dot) ros (at) gmail (dot) com>

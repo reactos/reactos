@@ -29,10 +29,10 @@
 // --------------------------------------------------------------------
 //
 // 1999 February (Emanuele Aliberti)
-//      Adapted for MenuOS and lcc-win32.
+//      Adapted for ReactOS and lcc-win32.
 //
 // 1999 April (Emanuele Aliberti)
-//      Adapted for MenuOS and egcs.
+//      Adapted for ReactOS and egcs.
 //
 // 2003 April (Casper S. Hornstrup)
 //      Reintegration.
@@ -378,7 +378,7 @@ int wmain(int argc, WCHAR *argv[])
         L"\n"
         L"Formatx v1.0 by Mark Russinovich\n"
         L"Systems Internals - http://www.sysinternals.com\n"
-        L"MenuOS adaptation 1999 by Emanuele Aliberti\n\n");
+        L"ReactOS adaptation 1999 by Emanuele Aliberti\n\n");
 
 #ifndef FMIFS_IMPORT_DLL
     //

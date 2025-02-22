@@ -48,7 +48,7 @@ MIDIERR_STILLPLAYING, 		"Amíg az eszköz használatban van ez nem elérhető. I
 MIDIERR_NOMAP, 			"A MIDI térképet nem találom. Probléma lehet a meghajtóprogrammal, vagy a MIDIMAP.CFG fájl hiányzik, vagy sérült."
 MIDIERR_NOTREADY, 		"Az adat küldése az eszköz felé folyamatban van. Várd meg amíg minden megérkezik, és csak utána próbáld újra."
 MIDIERR_NODEVICE, 		"A jelenlegi MIDI Mapper beállítások egy olyan MIDI eszközre hivatkoznak ami nincs a rendszerben jelenleg. Használd a MIDI Mappert az új beállításokhoz."
-MIDIERR_INVALIDSETUP, 		"A mostani MIDI beállítások megsérültek. Másold az eredeti MIDIMAP.CFG fájlt a MenuOS SYSTEM könyvtárába, majd próbáld újra."
+MIDIERR_INVALIDSETUP, 		"A mostani MIDI beállítások megsérültek. Másold az eredeti MIDIMAP.CFG fájlt a ReactOS SYSTEM könyvtárába, majd próbáld újra."
 
 /* MCI errors */
 MCIERR_INVALID_DEVICE_ID, 	"Valótlan MCI ID. Használd az MCI eszköz megnyitásakor kapott ID-t."
@@ -69,7 +69,7 @@ MCIERR_MISSING_PARAMETER, 	"A megadott utasítás paramétert vár."
 MCIERR_UNSUPPORTED_FUNCTION, 	"Az eszköz nem támogatja ezt a parancsot."
 MCIERR_FILE_NOT_FOUND, 		"Nem találom a megadott fájlt. Ellenőrizd az elérési útvonalat, és a fájl létezését."
 MCIERR_DEVICE_NOT_READY, 	"A meghajtóprogram nem áll készen."
-MCIERR_INTERNAL, 		"MCI inicializálása közben hiba történt. Próbáld újraindítani a MenuOS -t."
+MCIERR_INTERNAL, 		"MCI inicializálása közben hiba történt. Próbáld újraindítani a ReactOS -t."
 MCIERR_DRIVER, 			"Valami gond van a meghajtóprogrammal. Kilépett, a hibát nem sikerült kiderítenem."
 MCIERR_CANNOT_USE_ALL, 		"Nem használhatod 'all'-t mint eszköznevet a megadott paranccsal."
 MCIERR_MULTIPLE, 		"Több eszköznél is hibák léptek fel. Az eszközöknek egyesével küldd ki a parancsokat, hogy megtudd melyiknél áll fenn a probléma."

@@ -1,5 +1,5 @@
 /*
- * MenuOS ATL
+ * ReactOS ATL
  *
  * Copyright 2016 Mark Jansen
  *

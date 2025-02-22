@@ -1,6 +1,6 @@
 /*
  * Convert debug output from running the regression tests
- * on MenuOS to an xml document.
+ * on ReactOS to an xml document.
  * Casper S. Hornstrup <chorns@users.sourceforge.net>
  */
 

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API tests
+ * PROJECT:     ReactOS API tests
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     Test for RedrawWindow
  * COPYRIGHT:   Copyright 2018 Thomas Faber <thomas.faber@reactos.org>

@@ -233,7 +233,7 @@ NTSTATUS CAC97MiniportTopology::GetDBValues
         case NODE_AUX_VOLUME:
         case NODE_WAVEOUT_VOLUME:
 #ifdef __REACTOS__
-        // MenuOS change: use the same Decibel range as for WaveOut,
+        // ReactOS change: use the same Decibel range as for WaveOut,
         // to fix incorrect volume level change scaling. CORE-14780
         case NODE_MASTEROUT_VOLUME:
 #endif

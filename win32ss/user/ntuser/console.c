@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS Win32k subsystem
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Console support functions for CONSRV
  * FILE:             win32ss/user/ntuser/console.c
  * PROGRAMMER:       Hermes Belusca-Maito (hermes.belusca@sfr.fr)

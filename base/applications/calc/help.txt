@@ -1,6 +1,6 @@
-MenuOS Calc is a programme for evaluating mathematical, financial and statistical calculations.
+ReactOS Calc is a programme for evaluating mathematical, financial and statistical calculations.
 
-MenuOS Calc has several features including:
+ReactOS Calc has several features including:
 - Internal precision with 17 decimal numbers (standard IEEE math library).
 - Up to 512 bits of internal precision and 64 decimal digits displayed in the output display (with GNU multi-precision libraries).
 - Robust RPN (reverse polish notation) engine which allows a virtually unlimited number of arithmetic and algebraic sub-expressions.
@@ -26,7 +26,7 @@ PERCENT MODE
 
 HOW TO INPUT NUMBERS
 --------------------
-The MenuOS Calc provides some buttons for typing numbers and expressions.
+The ReactOS Calc provides some buttons for typing numbers and expressions.
 However, some of them are available only into Standard, Conversion or Scientific modes, or when the calculator is in a specific state.
 [0], [1], [2], [3], [4], [5], [6], [7], [8], [9]
 Digit buttons: they are used for entering digits into the display.
@@ -77,7 +77,7 @@ The error condition is cleared using the [ C ] button.
 
 ARITHMETIC FUNCTIONS
 --------------------
-MenuOS Calc implements the standard arithmetic rules with the following operators:
+ReactOS Calc implements the standard arithmetic rules with the following operators:
 [+]
 Addition
 [-]
@@ -114,7 +114,7 @@ It inverts all bits of the number shown into the output display.
 
 ALGEBRAIC FUNCTIONS
 -------------------
-MenuOS Calc implements the most commonly used algebraic functions.
+ReactOS Calc implements the most commonly used algebraic functions.
 [Int]
 It isolates the integer part of the number shown into the output display.
 [Inv]+[Int]
@@ -141,7 +141,7 @@ The calculation is defined within these limits:
 0 <= n <= 170
 [ln]
 Natural logarithm. It calculates the natural logarithm of the current number.
-MenuOS Calc assumes the Nepero's constant to be:
+ReactOS Calc assumes the Nepero's constant to be:
 e=2.7182818284590452354
 The calculation is defined for x > 0.
 [Inv]+[ln]
@@ -154,7 +154,7 @@ Decimal anti-logarithm. It calculates the power of 10 to the current number.
 
 TRIGONOMETRIC FUNCTIONS
 -----------------------
-MenuOS Calc allows the calculation of three types of trigonometric functions with their inverse operations.
+ReactOS Calc allows the calculation of three types of trigonometric functions with their inverse operations.
 These functions can be used with three different angular units of measurement: degrees, radians or gradians.
 The angular mode does not affect the non trigonometric functions.
 Please note that the degree type uses decimal degrees and not angles in the degree-minute-second form.
@@ -174,11 +174,11 @@ THE PI BUTTON
 For helping the calculations with trigonometric functions, it's possible to load the value of 'Pi' into the output display.
 The function is called by pressing the [PI] button.
 If the [Inv] modifier is activated, then the output display will be loaded with 2*PI.
-In MenuOS Calc, Pi has the value 3.14159265358979323846
+In ReactOS Calc, Pi has the value 3.14159265358979323846
 
 HYPERBOLIC FUNCTIONS
 --------------------
-MenuOS Calc allows the calculation of three types of hyperbolic functions with their inverse operations.
+ReactOS Calc allows the calculation of three types of hyperbolic functions with their inverse operations.
 Those functions are activated by the same buttons used for trigonometric functions; the hyperbolic context is enabled by activating the [Hyp] modifier. The inverse functions are activated by the [Inv] modifier.
 [sin]+[Hyp]
 Hyperbolic sine
@@ -221,10 +221,10 @@ Note: when the statistical box is closed, its content is lost.
 
 MEMORY FUNCTION
 ---------------
-MenuOS Calc reserves for the user a memory region for storing data.
+ReactOS Calc reserves for the user a memory region for storing data.
 With this feature, the user can store frequently used numbers (typically, these numbers are constants) and recall them at any time, without the need to re-enter them manually.
 If the memory function is currently in use, the text "M" will appear in the right box underneath the base change option set.
-The memory is preserved when switching between standard, conversion and scientific modes, but its content is lost when MenuOS Calc application is closed.
+The memory is preserved when switching between standard, conversion and scientific modes, but its content is lost when ReactOS Calc application is closed.
 Four keys are available with memory function support.
 [MC]
 Memory Clear: clears the content of the memory.
@@ -245,7 +245,7 @@ The [dms] button with [Inv] modifier will convert degree-minute-second angles in
 
 FIXED SCIENTIFIC NOTATION
 -------------------------
-When working with MenuOS Calc, it is possible to select a temporary scientific notation (activated by [Exp] button) or a fixed scientific notation.
+When working with ReactOS Calc, it is possible to select a temporary scientific notation (activated by [Exp] button) or a fixed scientific notation.
 Fixed scientific notation will be turned on by pressing [F-E] button.
 When fixed scientific notation is active, all results will be displayed with scientific notation even for small numbers.
 The calculator will be restored to normal mode by pressing [F-E] button again or by pressing the [ C ] button.

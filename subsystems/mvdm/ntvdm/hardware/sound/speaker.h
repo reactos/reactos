@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         MenuOS Virtual DOS Machine
+ * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/hardware/sound/speaker.h
  * PURPOSE:         PC Speaker emulation
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS kernel
+ * PROJECT:          ReactOS kernel
  * PURPOSE:          Menus
  * FILE:             win32ss/user/ntuser/menu.c
  * PROGRAMER:        Thomas Weidenmueller (w3seek@users.sourceforge.net)
@@ -4116,11 +4116,11 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
             }
             else
             {
-                /* MenuOS Checks */
+                /* ReactOS Checks */
                 if (!VerifyWnd(mt.OwnerWnd)                            ||
                     !ValidateHwndNoErr(mt.CurrentMenu->hWnd)           ||
                      //pti->MessageQueue->QF_flags & QF_ACTIVATIONCHANGE || // See CORE-17338
-                     capture_win != IntGetCapture() ) // Should not happen, but this is MenuOS...
+                     capture_win != IntGetCapture() ) // Should not happen, but this is ReactOS...
                 {
                    ErrorExit = TRUE; // Do not wait on dead windows, now win test_capture_4 works.
                    break;

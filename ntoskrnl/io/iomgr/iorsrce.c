@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Kernel
+ * PROJECT:     ReactOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Hardware resource management
  * COPYRIGHT:   Copyright 1998 David Welch <welch@mcmail.com>

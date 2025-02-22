@@ -1,6 +1,6 @@
 /*++ NDK Version: 0098
 
-Copyright (c) MenuOS Portable Systems Group.  All rights reserved.
+Copyright (c) ReactOS Portable Systems Group.  All rights reserved.
 
 Header Name:
 
@@ -12,7 +12,7 @@ Abstract:
 
 Author:
 
-    MenuOS Portable Systems Group (ros.arm@reactos.org) - Created - 27-Jun-2010
+    ReactOS Portable Systems Group (ros.arm@reactos.org) - Created - 27-Jun-2010
 
 --*/
 

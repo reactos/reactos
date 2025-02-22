@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API Tests
+ * PROJECT:     ReactOS API Tests
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     Test for IOCTL_AFD_SEND/IOCTL_AFD_SEND_DATAGRAM
  * COPYRIGHT:   Copyright 2015 Thomas Faber (thomas.faber@reactos.org)

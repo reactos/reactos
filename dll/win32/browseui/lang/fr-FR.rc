@@ -90,7 +90,7 @@ BEGIN
     END
     POPUP "&Aide", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "À &propos de MenuOS", IDM_HELP_ABOUT
+        MENUITEM "À &propos de ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -353,6 +353,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARSE_ADDR_ERR_TITLE "Explorateur MenuOS"
-    IDS_PARSE_ADDR_ERR_TEXT "MenuOS ne parvient pas à trouver '%1'. Vérifiez l'orthographe et réessayer."
+    IDS_PARSE_ADDR_ERR_TITLE "Explorateur ReactOS"
+    IDS_PARSE_ADDR_ERR_TEXT "ReactOS ne parvient pas à trouver '%1'. Vérifiez l'orthographe et réessayer."
 END

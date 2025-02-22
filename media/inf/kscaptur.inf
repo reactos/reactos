@@ -4,7 +4,7 @@ Signature   = "$Windows NT$"
 LayoutFile  = layout.inf
 Class       = Media
 ClassGUID   = {4d36e96c-e325-11ce-bfc1-08002be10318}
-Provider    = %MenuOS%
+Provider    = %ReactOS%
 DriverVer=07/01/2001,5.1.2600.3264
 
 [DestinationDirs]
@@ -38,13 +38,13 @@ msyuv.dll
 tsbyuv.dll
 
 [VfWWDM]
-HKLM,%MediaResourcesMSVideo%\MSVideo.VFWWDM,"Description",,"MenuOS WDM Image Capture"
-HKLM,%MediaResourcesMSVideo%\MSVideo.VFWWDM,"FriendlyName",,"MenuOS WDM Image Capture"
+HKLM,%MediaResourcesMSVideo%\MSVideo.VFWWDM,"Description",,"ReactOS WDM Image Capture"
+HKLM,%MediaResourcesMSVideo%\MSVideo.VFWWDM,"FriendlyName",,"ReactOS WDM Image Capture"
 HKLM,%MediaResourcesMSVideo%\MSVideo.VFWWDM,"Driver",,"vfwwdm.drv"
 
 [VfWWDM.NT]
-HKLM,%MediaResourcesMSVideo%\MSVideo.VFWWDM,"Description",,"MenuOS WDM Image Capture (Win32)"
-HKLM,%MediaResourcesMSVideo%\MSVideo.VFWWDM,"FriendlyName",,"MenuOS WDM Image Capture (Win32)"
+HKLM,%MediaResourcesMSVideo%\MSVideo.VFWWDM,"Description",,"ReactOS WDM Image Capture (Win32)"
+HKLM,%MediaResourcesMSVideo%\MSVideo.VFWWDM,"FriendlyName",,"ReactOS WDM Image Capture (Win32)"
 HKLM,%MediaResourcesMSVideo%\MSVideo.VFWWDM,"Driver",,"vfwwdm32.dll"
 
 [VfWWDM.AddReg.NT]
@@ -243,7 +243,7 @@ HKLM,%RunOnce%,"NDISIP0",,"rundll32.exe streamci,StreamingDeviceSetup %NdisIP.De
 
 [Strings]
 ; Non-localizable
-MenuOS = "MenuOS Project"
+ReactOS = "ReactOS Project"
 
 ActiveMovieCategories="CLSID\{da4e3da0-d07d-11d0-bd50-00a0c911ce86}\Instance"
 GUID.TvTuner="{A799A800-A46D-11d0-A18C-00A02401DCD4}"

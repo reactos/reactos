@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS DNS Shared Library
+ * PROJECT:     ReactOS DNS Shared Library
  * FILE:        lib/dnslib/precomp.h
  * PURPOSE:     DNSLIB Precompiled Header
  */

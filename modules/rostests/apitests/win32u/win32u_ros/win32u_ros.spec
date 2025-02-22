@@ -1,7 +1,7 @@
 ;
-; MenuOS Operating System
+; ReactOS Operating System
 ;
-; This file contains all win32k native api functions from MenuOS
+; This file contains all win32k native api functions from ReactOS
 ; Unsupported functions are commented out
 ;
 

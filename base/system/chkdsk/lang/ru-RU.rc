@@ -17,7 +17,7 @@ BEGIN
     IDS_ABOUT "\n\
 Chkdskx v1.0.1 от Марка Руссиновича\n\
 Systems Internals - http://www.sysinternals.com\n\
-Адаптация для MenuOS от Эмануэля Алиберти в 1999 году\n\n"
+Адаптация для ReactOS от Эмануэля Алиберти в 1999 году\n\n"
 END
 
 STRINGTABLE

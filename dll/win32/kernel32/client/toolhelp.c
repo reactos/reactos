@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/client/toolhelp.c
  * PURPOSE:         Toolhelp functions
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>

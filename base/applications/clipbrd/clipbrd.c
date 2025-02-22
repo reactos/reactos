@@ -1,7 +1,7 @@
 /*
- * PROJECT:     MenuOS Clipboard Viewer
+ * PROJECT:     ReactOS Clipboard Viewer
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Provides a view of the contents of the MenuOS clipboard.
+ * PURPOSE:     Provides a view of the contents of the ReactOS clipboard.
  * COPYRIGHT:   Copyright 2015-2018 Ricardo Hanke
  *              Copyright 2015-2018 Hermes Belusca-Maito
  */

@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS API Tests
+ * PROJECT:         ReactOS API Tests
  * LICENSE:         See COPYING in the top level directory
  * PURPOSE:         Test for CRT process handling.
  * PROGRAMMER:      Andreas Maier <andy1.m@gmx.de>

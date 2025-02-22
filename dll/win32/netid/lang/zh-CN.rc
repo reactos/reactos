@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Network ID Page
+ * PROJECT:     ReactOS Network ID Page
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2015 Henry Tang Ih <henrytang2@hotmail.com>
@@ -15,7 +15,7 @@ CAPTION "计算机名"
 FONT 9, "宋体"
 BEGIN
     ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT "MenuOS 使用以下信息在网络中标识这台计算机。", IDC_STATIC, 40, 5, 204, 20
+    LTEXT "ReactOS 使用以下信息在网络中标识这台计算机。", IDC_STATIC, 40, 5, 204, 20
     LTEXT "计算机描述：", IDC_STATIC, 7, 40, 90, 9
     EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "完整的计算机名：", IDC_STATIC, 7, 68, 85, 9
@@ -75,7 +75,7 @@ BEGIN
     4 "计算机名称更改"
     5 "工作组："
     6 "域："
-    7 "域名“%1”虽然是合法的 MenuOS 域名称，但不符合 Internet 域名服务标准。您必须为非标准的名称使用 MenuOS DNS 服务器。"
+    7 "域名“%1”虽然是合法的 ReactOS 域名称，但不符合 Internet 域名服务标准。您必须为非标准的名称使用 ReactOS DNS 服务器。"
     8 "域名“%1”格式不正确。使用句点（.）分隔域名。每段域名最长为 63 字符。如：domain-1.reactos.org。"
     10 "新的计算机名“%1”过长。名称不能多于 63 个字符。"
     11 "新的计算机名格式不正确。标准的名称可包含字母（a-z、A-Z）、数字（0-9）和连字符（-），而不能包含空白字符或句点。名称不能只包含数字。"

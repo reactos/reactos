@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS DNS Shared Library
+ * PROJECT:     ReactOS DNS Shared Library
  * FILE:        lib/dnslib/dnsaddr.c
  * PURPOSE:     Functions dealing with DNS_ADDRESS and DNS_ARRAY addresses.
  */

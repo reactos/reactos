@@ -278,10 +278,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRESS_INFO_START "MenuOS usiłuje uruchomić następującą usługę"
-    IDS_PROGRESS_INFO_STOP "MenuOS usiłuje zatrzymać następującą usługę"
-    IDS_PROGRESS_INFO_PAUSE "MenuOS usiłuje wstrzymać następującą usługę"
-    IDS_PROGRESS_INFO_RESUME "MenuOS usiłuje wznowić następującą usługę"
+    IDS_PROGRESS_INFO_START "ReactOS usiłuje uruchomić następującą usługę"
+    IDS_PROGRESS_INFO_STOP "ReactOS usiłuje zatrzymać następującą usługę"
+    IDS_PROGRESS_INFO_PAUSE "ReactOS usiłuje wstrzymać następującą usługę"
+    IDS_PROGRESS_INFO_RESUME "ReactOS usiłuje wznowić następującą usługę"
     IDS_CREATE_SUCCESS "Usługa utworzona pomyślnie"
     IDS_DELETE_SUCCESS "Usługa skasowana pomyślnie"
     IDS_CREATE_REQ "Pola oznaczone gwiazdkami\nsą obowiązkowe"
@@ -328,7 +328,7 @@ END
 /* Application title */
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "Menedżer usług MenuOS"
+    IDS_APPNAME "Menedżer usług ReactOS"
     IDS_APPAUTHORS "Copyright (C) 2005-2007 by Ged Murphy (gedmurphy@reactos.org)"
 END
 

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS InPort (Bus) Mouse Driver
+ * PROJECT:     ReactOS InPort (Bus) Mouse Driver
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     WMI support
  * COPYRIGHT:   Copyright 2020 Dmitry Borisov (di.sean@protonmail.com)

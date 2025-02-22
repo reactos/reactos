@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Calc
+ * PROJECT:     ReactOS Calc
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Indonesian resource file
  * TRANSLATORS: Copyright 2022 Wilson Simanjuntak <wilsontulus5@gmail.com>
@@ -336,7 +336,7 @@ BEGIN
     BEGIN
         MENUITEM "&Topik Bantuan", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Tentang Kalkulator MenuOS", IDM_HELP_ABOUT
+        MENUITEM "&Tentang Kalkulator ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -369,7 +369,7 @@ BEGIN
     BEGIN
         MENUITEM "&Topik Bantuan", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Tentang Kalkulator MenuOS", IDM_HELP_ABOUT
+        MENUITEM "&Tentang Kalkulator ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -392,7 +392,7 @@ BEGIN
     BEGIN
         MENUITEM "&Topik Bantuan", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Tentang Kalkulator MenuOS", IDM_HELP_ABOUT
+        MENUITEM "&Tentang Kalkulator ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -407,7 +407,7 @@ END
 /* About */
 STRINGTABLE
 BEGIN
-    IDS_CALC_NAME "Kalkulator MenuOS"
+    IDS_CALC_NAME "Kalkulator ReactOS"
     IDS_AUTHOR "Dibuat oleh Carlo Bramini"
 END
 

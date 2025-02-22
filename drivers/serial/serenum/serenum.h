@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Serial enumerator driver
+ * PROJECT:         ReactOS Serial enumerator driver
  * FILE:            drivers/bus/serenum/serenum.h
  * PURPOSE:         Serial enumerator driver header
  *
- * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #ifndef _SERENUM_PCH_

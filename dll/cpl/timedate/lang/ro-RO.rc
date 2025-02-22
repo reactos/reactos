@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Timedate Control Panel
+ * PROJECT:     ReactOS Timedate Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011 Ștefan Fulea <stefan.fulea@mail.com>
@@ -60,7 +60,7 @@ BEGIN
     IDS_TIMEZONEUNKNOWN "Necunoscut"
     IDS_INETTIMESUCSYNC "Ora a fost sincronizată cu succes %s pe %s la %s"
     IDS_INETTIMENEXTSYNC "Următoarea sincronizare: %s la %s"
-    IDS_INETTIMESYNCING "Aşteptaţi până când MenuOS se sincronizează cu %s"
+    IDS_INETTIMESYNCING "Aşteptaţi până când ReactOS se sincronizează cu %s"
     IDS_INETTIMEERROR "A apărut o eroare la sincronizarea cu %s"
     IDS_INETTIMESUCFILL "Scrie numele serverului NTP pentru a sincroniza timpul"
     IDS_INETTIMEWELCOME "Selectați un server NTP din listă sau scrieți numele serverului NTP pentru a sincroniza timpul calculatorului"

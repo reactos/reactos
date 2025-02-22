@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS SDK
+ * PROJECT:     ReactOS SDK
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Helper functions to debug RTL_BITMAP
  * COPYRIGHT:   Copyright 2024 Timo Kreuzer <timo.kreuzer@reactos.org>

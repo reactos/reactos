@@ -1,5 +1,5 @@
 /*
-* PROJECT:    MenuOS Client/Server Runtime subsystem
+* PROJECT:    ReactOS Client/Server Runtime subsystem
 * LICENSE:    GPL - See COPYING in the top level directory
 * FILE:       win32ss/user/winsrv/usersrv/lang/it-IT.rc
 * PURPOSE:    Italian Translation of subsystems/win32/csrss/win32csr/lang/en-US.rc
@@ -27,7 +27,7 @@ BEGIN
     DEFPUSHBUTTON "Annulla", IDCANCEL, 142, 98, 43, 17
     PUSHBUTTON "T&ermina ora", IDC_END_NOW, 78, 98, 43, 17
     LTEXT "Il programma non risponde.", IDC_STATIC, 7, 7, 178, 8
-    LTEXT "Per tornare a MenuOS e controllare lo stato del programma, selezionare Annulla.", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "Per tornare a ReactOS e controllare lo stato del programma, selezionare Annulla.", IDC_STATIC, 7, 26, 178, 16
     LTEXT "Se si sceglie di terminare il programma immediatamente, si perderanno tutti i dati non salvati. Per terminare il programma ora, selezionare Termina ora.", IDC_STATIC, 7, 53, 178, 26
 END
 

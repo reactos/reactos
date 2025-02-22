@@ -2,7 +2,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "MenuOS Timeout Werkzeug\n\
+    IDS_USAGE "ReactOS Timeout Werkzeug\n\
 \n\
 TIMEOUT [/?] [/T] Zeit [/NOBREAK]\n\
 \n\

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS CRT library
+ * PROJECT:     ReactOS CRT library
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Integer to float conversion (__i64tod/u64tod/i64tos/u64tos)
  * COPYRIGHT:   Copyright 2021 Roman Masanin <36927roma@gmail.com>

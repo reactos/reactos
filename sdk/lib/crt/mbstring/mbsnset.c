@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS system libraries
+ * PROJECT:     ReactOS system libraries
  * FILE:        lib/sdk/crt/mbstring/mbsnset.c
  * PURPOSE:     Fills a string with a multibyte character
  * PROGRAMER:   Ariadne

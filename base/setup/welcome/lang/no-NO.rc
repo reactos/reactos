@@ -5,9 +5,9 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 /* Default settings */
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "MenuOS - Velkommen"
-    IDS_DEFAULT_TOPIC_TITLE "MenuOS"
-    IDS_DEFAULT_TOPIC_DESC "Velkommen til MenuOS Operativsystem.\n\nTrykk et emne til venstre."
+    IDS_APPTITLE "ReactOS - Velkommen"
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Velkommen til ReactOS Operativsystem.\n\nTrykk et emne til venstre."
     IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Vis denne dialoget igjen"
     IDS_CLOSETEXT "&Avslutt"
@@ -16,7 +16,7 @@ END
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_BUTTON0 "&Innstaller MenuOS"
+    IDS_TOPIC_BUTTON0 "&Innstaller ReactOS"
     IDS_TOPIC_BUTTON1 "&Utforsk denne CD"
     IDS_TOPIC_BUTTON2 "&Avslutt"
 END
@@ -24,7 +24,7 @@ END
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_TITLE0 "Innstaller MenuOS"
+    IDS_TOPIC_TITLE0 "Innstaller ReactOS"
     IDS_TOPIC_TITLE1 "Utforsk denne CD"
     IDS_TOPIC_TITLE2 "Avslutt"
 END
@@ -32,7 +32,7 @@ END
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_DESC0 "Opprett en ny MenuOS innstallasjon på din datamaskin eller oppgrader eksisterende innstallasjon."
+    IDS_TOPIC_DESC0 "Opprett en ny ReactOS innstallasjon på din datamaskin eller oppgrader eksisterende innstallasjon."
     IDS_TOPIC_DESC1 "Utforsk CDen."
     IDS_TOPIC_DESC2 "Trykk avslutt for å avslutte denne applikasjonen."
 END

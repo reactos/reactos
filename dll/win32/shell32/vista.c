@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            Copied from advapi32/reg/reg.c
  * PURPOSE:         Registry functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)

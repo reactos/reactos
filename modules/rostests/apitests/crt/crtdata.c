@@ -1,5 +1,5 @@
 /*
-* PROJECT:         MenuOS CRT API tests
+* PROJECT:         ReactOS CRT API tests
 * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
 * PURPOSE:         Tests for crt data exports
 * COPYRIGHT:       Copyright 2021 Timo Kreuzer <timo.kreuzer@reactos.org>

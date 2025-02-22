@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Version Program
+ * PROJECT:         ReactOS Version Program
  * FILE:            base/applications/winver/winver.c
  */
 
@@ -27,7 +27,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     if (!Winver_GetOSInfo(&OSInfo))
     {
         /* OS info is not available, display the default contents */
-        StringCchCopyW(OSInfo.szName, _countof(OSInfo.szName), L"MenuOS");
+        StringCchCopyW(OSInfo.szName, _countof(OSInfo.szName), L"ReactOS");
         OSInfo.szCompatInfo[0] = UNICODE_NULL;
     }
 

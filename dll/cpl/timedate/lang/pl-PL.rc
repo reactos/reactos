@@ -62,7 +62,7 @@ BEGIN
     IDS_TIMEZONEUNKNOWN "Nieznana"
     IDS_INETTIMESUCSYNC "Zegar został pomyślnie zsynchronizowany z %s w dniu %s o %s"
     IDS_INETTIMENEXTSYNC "Następna synchronizacja w dniu %s o %s"
-    IDS_INETTIMESYNCING "Proszę czekać, gdy MenuOS zsynchronizuje czas z %s"
+    IDS_INETTIMESYNCING "Proszę czekać, gdy ReactOS zsynchronizuje czas z %s"
     IDS_INETTIMEERROR "Wystąpił błąd podczas próby synchronizacji czasu z %s"
     IDS_INETTIMESUCFILL "Wpisz nazwę serwera NTP, aby zsynchronizować czas"
     IDS_INETTIMEWELCOME "Wybierz serwer NTP z listy lub wpisz nazwę serwera NTP, aby zsynchronizować czas komputera"

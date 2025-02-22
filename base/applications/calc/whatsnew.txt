@@ -3,7 +3,7 @@
 * Fixed bug 12.37 13/06/2009 into multiprecision display (unicode only).
 * Added support for average of squares and mean of squares into statistical functions.
 * pop() and push() functions in RPN engines now work with nodes instead of stack units.
-* Updated translations from MenuOS' repository.
+* Updated translations from ReactOS' repository.
 * Added support for new conversion units:
    - ANGLE: 'minute of arc', 'second of arc'.
    - AREA: 'mu', 'rai'.
@@ -29,7 +29,7 @@
 
 1.11 (20090404)
 =======================
-* Updated translations (thanks to the friends at MenuOS' community).
+* Updated translations (thanks to the friends at ReactOS' community).
 * Added DS_SHELLFONT to some dialogs into various translations (sometimes it was specified, sometimes it was not).
 * Added support for newer conversion units.
 * Fixed mistake into english translation (lenghts -> lengths).
@@ -45,7 +45,7 @@
 * Fixed some unsignaled overflow errors.
 * Fixed conversion method, now scientific notation is recognized too.
 * Added compilation for UNICODE executables.
-* Plain MINGW toolchain does not support wWinMain function, so I switched to old WinMain if it is not under MenuOS' build tree.
+* Plain MINGW toolchain does not support wWinMain function, so I switched to old WinMain if it is not under ReactOS' build tree.
 * Detect error if UNICODE version is launched into Win9x (avoid the lock).
 
 1.09 (20080630)
@@ -61,7 +61,7 @@
 * It is possible to change the numeric base (hex/oct/bin/dec) during a calculation.
 * Conversion layout has been implemented (HTML Help documentation is fixed too).
 * Corrected precision underflow/overflow when working with trigonometric functions.
-* cbrt() function is not used if compiling into MenuOS build system.
+* cbrt() function is not used if compiling into ReactOS build system.
 * Resources are moved into /res directory.
 * Added new (partial) support for other languages: bulgarian, spanish, german, dutch, polish, russian, slovak, ukrainian.
 * Decimal precision of number with standard layout has been limited to 16 digits because the output display is smaller here (GMP version only).
@@ -72,7 +72,7 @@
 
 1.07 (20071219)
 =======================
-* Added support for GNU multi-precision libraries. LibGMP and LibMPFR are required for compiling MenuOS Calc with big number support.
+* Added support for GNU multi-precision libraries. LibGMP and LibMPFR are required for compiling ReactOS Calc with big number support.
 * When calculating the standard deviation, the population can be 'n' or 'n-1' as the true Microsoft Calculator does.
 * Unified language support: just one executable for all.
 * Fixed type bug into CopyMemToClipboard() when compiled with WideChar support.
@@ -82,7 +82,7 @@
 * Fixed bug signaled by remi-aldo about a the precision issue.
 * Fixed bug into shortcuts from keyboard: modulo shortcut was missing.
 * Implemented coloured buttons.
-* MenuOS Calc has been compiled for working with x86-64 (still untested on the real hardware).
+* ReactOS Calc has been compiled for working with x86-64 (still untested on the real hardware).
 
 1.06 (20070518)
 =======================

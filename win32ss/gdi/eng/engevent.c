@@ -1,10 +1,10 @@
 /*
- * PROJECT:         MenuOS Win32K
+ * PROJECT:         ReactOS Win32K
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            win32ss/gdi/eng/engevent.c
  * PURPOSE:         Event Support Routines
  * PROGRAMMERS:     Aleksey Bragin <aleksey@reactos.org>
- *                  MenuOS Portable Systems Group
+ *                  ReactOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/

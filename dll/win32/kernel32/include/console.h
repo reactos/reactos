@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS System Libraries
+ * PROJECT:         ReactOS System Libraries
  * FILE:            dll/win32/kernel32/include/console.h
  * PURPOSE:         Console API Client Definitions
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

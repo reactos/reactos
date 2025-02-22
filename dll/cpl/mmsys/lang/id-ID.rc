@@ -27,7 +27,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Suara"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Skema suara adalah sejumlah suara yang diterapkan pada peristiwa dalam MenuOS dan program. Anda dapat memilih skema yang ada atau menyimpan salah satu skema yang telah dimodifikasi.", -1, 8, 7, 230, 30
+    LTEXT "Skema suara adalah sejumlah suara yang diterapkan pada peristiwa dalam ReactOS dan program. Anda dapat memilih skema yang ada atau menyimpan salah satu skema yang telah dimodifikasi.", -1, 8, 7, 230, 30
     LTEXT "S&kema Suara:", -1, 8, 42, 150, 9
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Simpan &Sebagai...", IDC_SAVEAS_BTN, 134, 70, 50, 15
@@ -123,7 +123,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Kinerja"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Setelan di bawah ini mengontrol bagaimana MenuOS memainkan audio. Mungkin ini bisa membantu anda mengatasi masalah terkait dengan audio.", 8492, 34, 7, 218, 23
+    LTEXT "Setelan di bawah ini mengontrol bagaimana ReactOS memainkan audio. Mungkin ini bisa membantu anda mengatasi masalah terkait dengan audio.", 8492, 34, 7, 218, 23
     GROUPBOX "Pemutaran audio", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
     LTEXT "A&kselerasi perangkat keras:", 8495, 13, 56, 111, 14
@@ -144,7 +144,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Kinerja"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Setelan ini mengontrol bagaimana MenuOS merekam audio. Mungkin ini bisa membantu anda mengatasi masalah terkait dengan audio.", 8492, 34, 7, 217, 20
+    LTEXT "Setelan ini mengontrol bagaimana ReactOS merekam audio. Mungkin ini bisa membantu anda mengatasi masalah terkait dengan audio.", 8492, 34, 7, 217, 20
     GROUPBOX "Perekaman audio", 8494, 7, 29, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
     LTEXT "A&kselerasi perangkat keras:", 8495, 13, 46, 103, 9
@@ -165,13 +165,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Penyetelan"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "MenuOS Audio", 10243, 7, 5, 213, 192
+    GROUPBOX "ReactOS Audio", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "Komputer ini tidak bisa memutar audio karena layanan Audio MenuOS belum dinyalakan.", 10245, 60, 25, 150, 40
-    AUTOCHECKBOX "&Nyalakan MenuOS Audio", 10253, 60, 68, 150, 9
+    LTEXT "Komputer ini tidak bisa memutar audio karena layanan Audio ReactOS belum dinyalakan.", 10245, 60, 25, 150, 40
+    AUTOCHECKBOX "&Nyalakan ReactOS Audio", 10253, 60, 68, 150, 9
     LTEXT "Catatan", 10246, 58, 87, 150, 11
     LTEXT "1. Anda harus menjadi administrator untuk menyalakan layanan ini. jika anda tidak masuk sebagai administrator, anda akan diminta memasukkan nama administrator beserta kata sandinya.", 10247, 60, 100, 150, 40
-    LTEXT "2. Setelah menyalakan MenuOS Audio anda akan diminta untuk memulai ulang komputer.", 10248, 60, 140, 150, 40
+    LTEXT "2. Setelah menyalakan ReactOS Audio anda akan diminta untuk memulai ulang komputer.", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOGEX 0, 0, 227, 218
@@ -221,11 +221,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Penyetelan"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "MenuOS Audio", 10259, 7, 5, 213, 192
+    GROUPBOX "ReactOS Audio", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "Layanan MenuOS Audio telah dinyalakan. Bagaimanapun, audio mungkin tidak berfungsi semestinya sampai MenuOS dimulai ulang. Jika anda ingin memulai ulang sekarang, simpan semua pekerjaan dan tutup semua program terlebih dahulu.", 10261, 60, 25, 150, 50
-    LTEXT "Untuk memulai ulang MenuOS, klik OK.", 10262, 60, 75, 150, 20
-    LTEXT "Jika anda membatalkan, memulai ulang ulang akan dibutuhkan agar MenuOS Audio berfungsi semestinya.", 10263, 60, 100, 150, 40
+    LTEXT "Layanan ReactOS Audio telah dinyalakan. Bagaimanapun, audio mungkin tidak berfungsi semestinya sampai ReactOS dimulai ulang. Jika anda ingin memulai ulang sekarang, simpan semua pekerjaan dan tutup semua program terlebih dahulu.", 10261, 60, 25, 150, 50
+    LTEXT "Untuk memulai ulang ReactOS, klik OK.", 10262, 60, 75, 150, 20
+    LTEXT "Jika anda membatalkan, memulai ulang ulang akan dibutuhkan agar ReactOS Audio berfungsi semestinya.", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
@@ -262,15 +262,15 @@ BEGIN
     5843 "Penting"
     5844 "Suara asli"
     5845 "Seruan"
-    5846 "Menonaktifkan MenuOS"
+    5846 "Menonaktifkan ReactOS"
     5847 "Berhenti dengan Kritis"
     5848 "Pemberitahuan Sistem"
     5849 "Pertanyaan"
-    5850 "Memulai MenuOS"
+    5850 "Memulai ReactOS"
     5851 "Menu Mulai"
-    IDS_REACTOS_LOGOFF "Keluar MenuOS"
-    IDS_REACTOS_LOGON "Masuk MenuOS"
-    5854 "Penjelajah MenuOS"
+    IDS_REACTOS_LOGOFF "Keluar ReactOS"
+    IDS_REACTOS_LOGON "Masuk ReactOS"
+    5854 "Penjelajah ReactOS"
     IDS_BROWSE_FOR_SOUND "Cari suara baru"
     IDS_WAVE_FILES_FILTER "Berkas Wave (*.wav)|*.wav|"
 END

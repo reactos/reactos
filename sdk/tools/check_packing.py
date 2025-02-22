@@ -1,5 +1,5 @@
 '''
-PROJECT:     MenuOS code linter
+PROJECT:     ReactOS code linter
 LICENSE:     MIT (https://spdx.org/licenses/MIT)
 PURPOSE:     Verifies that there are no headers included where packing is modified
 COPYRIGHT:   Copyright 2021 Mark Jansen <mark.jansen@reactos.org>

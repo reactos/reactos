@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS HTTP Daemon
+ * PROJECT:     ReactOS HTTP Daemon
  * FILE:        list.cpp
  * PURPOSE:     A doubly linked list implementation
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

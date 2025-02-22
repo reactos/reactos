@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/config/cmparse.c
  * PURPOSE:         Configuration Manager - Object Manager Parse Interface
@@ -1807,7 +1807,7 @@ CmpBuildHashStackAndLookupCache(
      * FIXME: It is possible we can catch a fake key from the cache
      * when we did the lookup, in such case we should not do any
      * locking as such KCB does not point to any real information.
-     * Currently MenuOS doesn't create fake KCBs so we are good
+     * Currently ReactOS doesn't create fake KCBs so we are good
      * for now.
      */
     if (RemainingSubkeysInTotal == MatchRemainingSubkeys)

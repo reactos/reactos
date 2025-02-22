@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS text-mode setup
+ * PROJECT:         ReactOS text-mode setup
  * PURPOSE:         Device installation
- * PROGRAMMER:      HervÃ© Poussineau (hpoussin@reactos.org)
+ * PROGRAMMER:      Hervé Poussineau (hpoussin@reactos.org)
  *                  Hermes Belusca-Maito
  */
 

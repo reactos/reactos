@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Application compatibility module
+ * PROJECT:     ReactOS Application compatibility module
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Sdb low level glue layer
  * COPYRIGHT:   Copyright 2011 André Hentschel

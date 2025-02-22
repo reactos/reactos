@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS api tests
+ * PROJECT:         ReactOS api tests
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
  * PURPOSE:         Tests for PathUnExpandEnvStringsForUser
  * PROGRAMMERS:     Katayama Hirofumi MZ

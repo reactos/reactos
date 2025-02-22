@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS HAL
+ * PROJECT:         ReactOS HAL
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            hal/halx86/legacy/bussupp.c
  * PURPOSE:         HAL Legacy Bus Support Code
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/
@@ -1233,7 +1233,7 @@ HalpInitializePciBus(VOID)
                     /* Check for USB controllers that generate SMIs */
                     if (HackFlags & HAL_PCI_CHIP_HACK_USB_SMI_DISABLE)
                     {
-                        DbgPrint("This chipset has a USB controller which generates SMIs. MenuOS will likely fail to boot!\n\n");
+                        DbgPrint("This chipset has a USB controller which generates SMIs. ReactOS will likely fail to boot!\n\n");
                         continue;
                     }
                 }

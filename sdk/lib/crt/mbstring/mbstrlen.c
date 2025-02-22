@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS system libraries
+ * PROJECT:     ReactOS system libraries
  * FILE:        lib/sdk/crt/mbstring/mbstrlen.c
  * PURPOSE:      Determines the length of a multi byte string, current locale
  * PROGRAMERS:

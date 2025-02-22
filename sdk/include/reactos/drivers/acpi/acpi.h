@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS PCI Bus Driver
+ * PROJECT:         ReactOS PCI Bus Driver
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            include/reactos/drivers/acpi/acpi.h
  * PURPOSE:         ACPI Tables and NT Registry Data
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 //

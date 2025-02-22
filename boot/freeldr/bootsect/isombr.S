@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS MBR Boot Sector for ISO file system ("isohybrid mode")
+ * PROJECT:     ReactOS MBR Boot Sector for ISO file system ("isohybrid mode")
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Providing an MBR Boot Sector that enables an ISO to be booted from a disk
  * COPYRIGHT:   Copyright 2017 Colin Finck (colin@reactos.org)

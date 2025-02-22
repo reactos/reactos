@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS PSDK extensions
+ * PROJECT:         ReactOS PSDK extensions
  * FILE:            include/reactos/rosioctl.h
  * PURPOSE:         Additional partition types
  *                  (partition types not covered by winioctl.h of PSDK)

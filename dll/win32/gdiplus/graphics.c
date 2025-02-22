@@ -42,7 +42,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
-/* Mike "tamlin" Nordell 2012-09-14 for MenuOS:
+/* Mike "tamlin" Nordell 2012-09-14 for ReactOS:
  * NOTE: Wine uses per-GpGraphics id's ('contid' starting from zero in
  * every GpGraphics). Windows seems to use process-global id's, or at
  * least more unique id's.
@@ -60,7 +60,7 @@ static volatile LONG g_priv_contid = GDIP_CONTID_STEP;
    (UINT)(InterlockedExchangeAdd(&g_priv_contid,GDIP_CONTID_STEP))
 
 
-/* MenuOS FIXME: Inspect */
+/* ReactOS FIXME: Inspect */
 #define fmax max
 
 /* looks-right constants */

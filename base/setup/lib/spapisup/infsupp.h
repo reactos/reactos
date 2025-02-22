@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Setup Library
+ * PROJECT:         ReactOS Setup Library
  * FILE:            base/setup/lib/infsupp.h
  * PURPOSE:         Interfacing with Setup* API .INF Files support functions
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

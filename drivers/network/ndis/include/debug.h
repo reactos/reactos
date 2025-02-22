@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS NDIS library
+ * PROJECT:     ReactOS NDIS library
  * FILE:        include/debug.h
  * PURPOSE:     Debugging support macros
  * DEFINES:     DBG     - Enable debug output

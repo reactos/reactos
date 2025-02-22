@@ -762,7 +762,7 @@ LRESULT CMenuDeskBar::_OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
 
 LRESULT CMenuDeskBar::_OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    // BUG in MenuOS: WM_ACTIVATE/WA_INACTIVE makes no sense with lParam==hWnd
+    // BUG in ReactOS: WM_ACTIVATE/WA_INACTIVE makes no sense with lParam==hWnd
     if (LOWORD(wParam) != 0 || reinterpret_cast<HWND>(lParam) == m_hWnd)
     {
         return 0;

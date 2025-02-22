@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS NTFS Information tool
+ * PROJECT:         ReactOS NTFS Information tool
  * FILE:            rosinternals/nfi/nfi.c
  * PURPOSE:         Query information from NTFS volume using FSCTL
  * PROGRAMMERS:     Pierre Schweitzer <pierre@reactos.org>

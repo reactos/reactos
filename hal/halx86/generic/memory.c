@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS HAL
+ * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            hal/halx86/generic/memory.c
  * PURPOSE:         HAL memory management
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 /* INCLUDES ******************************************************************/

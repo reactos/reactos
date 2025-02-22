@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Base API Server DLL
+ * PROJECT:         ReactOS Base API Server DLL
  * FILE:            subsystems/win/basesrv/vdm.c
  * PURPOSE:         Virtual DOS Machines (VDM) Support
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

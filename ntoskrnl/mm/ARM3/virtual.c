@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/mm/ARM3/virtual.c
  * PURPOSE:         ARM Memory Manager Virtual Memory Management
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/
@@ -5035,7 +5035,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     }
 
     //
-    // This is a specific MenuOS check because we only use normal VADs
+    // This is a specific ReactOS check because we only use normal VADs
     //
     ASSERT(FoundVad->u.VadFlags.VadType == VadNone);
 
@@ -5394,7 +5394,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     ASSERT(Vad->u.VadFlags.NoChange == 0);
 
     //
-    // Finally, make sure there is a MenuOS Mm MEMORY_AREA for this allocation
+    // Finally, make sure there is a ReactOS Mm MEMORY_AREA for this allocation
     // and that is is an ARM3 memory area, and not a section view, as we currently
     // don't support freeing those though this interface.
     //
@@ -5492,7 +5492,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                                                                 Vad,
                                                                 Process);
                     Vad->u.VadFlags.CommitCharge -= CommitReduction;
-                    // For MenuOS: shrink the corresponding memory area
+                    // For ReactOS: shrink the corresponding memory area
                     ASSERT(Vad->StartingVpn == MemoryArea->VadNode.StartingVpn);
                     ASSERT(Vad->EndingVpn == MemoryArea->VadNode.EndingVpn);
                     Vad->StartingVpn = (EndingAddress + 1) >> PAGE_SHIFT;
@@ -5526,7 +5526,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                                                                 Vad,
                                                                 Process);
                     Vad->u.VadFlags.CommitCharge -= CommitReduction;
-                    // For MenuOS: shrink the corresponding memory area
+                    // For ReactOS: shrink the corresponding memory area
                     ASSERT(Vad->StartingVpn == MemoryArea->VadNode.StartingVpn);
                     ASSERT(Vad->EndingVpn == MemoryArea->VadNode.EndingVpn);
                     Vad->EndingVpn = (StartingAddress - 1) >> PAGE_SHIFT;
@@ -5584,7 +5584,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
 
                     //
                     // Adjust the end of the original VAD (first chunk).
-                    // For MenuOS: shrink the corresponding memory area
+                    // For ReactOS: shrink the corresponding memory area
                     //
                     ASSERT(Vad->StartingVpn == MemoryArea->VadNode.StartingVpn);
                     ASSERT(Vad->EndingVpn == MemoryArea->VadNode.EndingVpn);
@@ -5594,7 +5594,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                     //
                     // Now the addresses for both VADs are consistent,
                     // so insert the new one.
-                    // MenuOS: This will take care of creating a second MEMORY_AREA.
+                    // ReactOS: This will take care of creating a second MEMORY_AREA.
                     //
                     MiInsertVad(NewVad, &Process->VadRoot);
 

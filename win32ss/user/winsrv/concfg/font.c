@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Console Server DLL
+ * PROJECT:     ReactOS Console Server DLL
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Console GDI Fonts Management.
  * COPYRIGHT:   Copyright 2017-2022 Hermès Bélusca-Maïto
@@ -815,7 +815,7 @@ IsValidConsoleFont2(
      */
 
     /*
-     * In MenuOS we relax some of the criteria:
+     * In ReactOS we relax some of the criteria:
      * - We allow fixed-pitch FF_MODERN (Monospace) TrueType fonts
      *   that can be italic or have negative A or C space.
      * - If it is not a TrueType font, it can be from another character set

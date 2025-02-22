@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         LGPL, see LGPL.txt in the top level directory
- * PROJECT:           MenuOS Win32 subsystem
+ * PROJECT:           ReactOS Win32 subsystem
  * PURPOSE:           FLOATOBJ floating point emulation functions for x86
  * FILE:              win32ss/gdi/eng/i386/floatobj.S
  * PROGRAMMER:        Timo Kreuzer

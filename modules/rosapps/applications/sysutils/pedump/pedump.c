@@ -3987,7 +3987,7 @@ main (
 	       "%s - PE/COFF file dumper\n"
 	       "Copyright (c) 1993 Randy Kath (MSDN Technology Group)\n"
       "Copyright (c) 1997 Sang Cho (CS & Engineering - Chongju University)\n"
-      "Copyright (c) 2000 Emanuele Aliberti (MenuOS Development Team)\n\n",
+      "Copyright (c) 2000 Emanuele Aliberti (ReactOS Development Team)\n\n",
 	       argv[0]
 	);
       printf (

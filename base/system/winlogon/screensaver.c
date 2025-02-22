@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Winlogon
+ * PROJECT:         ReactOS Winlogon
  * FILE:            base/system/winlogon/screensaver.c
  * PURPOSE:         Screen saver management
- * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/

@@ -1,7 +1,7 @@
 # Set the default behavior, in case people don't have core.autocrlf set.
 * text=auto
 
-# Files with these extensions are accepted source files inside the MenuOS
+# Files with these extensions are accepted source files inside the ReactOS
 # tree. They should have native line endings of the OS.
 *.acf text
 *.asm text
@@ -30,7 +30,7 @@
 *.TXT text
 *.y text
 
-# Files with these extensions end up in the built MenuOS system, so they
+# Files with these extensions end up in the built ReactOS system, so they
 # need to have CRLF line endings.
 *.bat text eol=crlf
 *.cmd text eol=crlf
@@ -51,7 +51,7 @@
 *.vcxproj text eol=crlf
 *.xml text eol=crlf
 
-# Files with these extensions are accepted binary files inside the MenuOS
+# Files with these extensions are accepted binary files inside the ReactOS
 # tree. Git must not tamper with them at all!
 *.avi binary
 *.bin binary

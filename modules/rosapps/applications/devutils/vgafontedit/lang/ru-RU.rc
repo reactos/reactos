@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS VGA Font Editor
+ * PROJECT:     ReactOS VGA Font Editor
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Russian resource file
  * COPYRIGHT:   Copyright 2008 Colin Finck (colin@reactos.org)
@@ -14,7 +14,7 @@ CAPTION "О программе"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON           IDI_MAIN,                          IDC_STATIC, 10, 10, 20, 20
-    LTEXT          "Редактор VGA-шрифтов MenuOS",    IDC_STATIC, 37, 10, 93, 10
+    LTEXT          "Редактор VGA-шрифтов ReactOS",    IDC_STATIC, 37, 10, 93, 10
     LTEXT          "Авторские права 2008 Колин Финк", IDC_STATIC, 37, 20, 93, 17
     DEFPUSHBUTTON  "OK",                              IDCANCEL,   40, 44, 55, 15
 END
@@ -81,7 +81,7 @@ BEGIN
     IDS_UNSUPPORTEDPSF, "Неподдерживаемый PSF-формат шрифта! Редактор поддерживает только шрифты размером 8x8 без специальных режимов."
     IDS_DOCNAME, "Шрифт %1!u!"
     IDS_SAVEPROMPT, "Файл ""%1"" был изменен и изменения не были сохранены.\n\nСохранить?"
-    IDS_APPTITLE, "Редактор VGA-шрифтов MenuOS"
+    IDS_APPTITLE, "Редактор VGA-шрифтов ReactOS"
     IDS_CLOSEEDIT, "Пожалуйста, закройте сначала все открытые окна редактирования!"
 
     IDS_TOOLTIP_NEW, "Новый"

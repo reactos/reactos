@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS Services
+ * PROJECT:          ReactOS Services
  * FILE:             base/services/wkssvc/info.c
  * PURPOSE:          Workstation service
  * PROGRAMMER:       Eric Kohl

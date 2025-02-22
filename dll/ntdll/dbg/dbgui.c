@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS NT Layer/System API
+ * PROJECT:         ReactOS NT Layer/System API
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/ntdll/dbg/dbgui.c
  * PURPOSE:         Native Wrappers for the NT Debug Implementation

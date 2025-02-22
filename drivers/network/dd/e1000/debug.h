@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS Intel PRO/1000 Driver
+ * PROJECT:     ReactOS Intel PRO/1000 Driver
  * FILE:        include/debug.h
  * PURPOSE:     Debugging support macros
  * DEFINES:     DBG     - Enable debug output

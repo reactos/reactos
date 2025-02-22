@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS System Libraries
+ * PROJECT:         ReactOS System Libraries
  * FILE:            lib/rtl/rtl.h
  * PURPOSE:         Run-Time Libary Header
  * PROGRAMMER:      Alex Ionescu

@@ -1,9 +1,9 @@
 /*
- * PROJECT:     MenuOS Drivers
+ * PROJECT:     ReactOS Drivers
  * LICENSE:     BSD - See COPYING.ARM in the top level directory
  * FILE:        drivers/sac/driver/concmd.c
  * PURPOSE:     Driver for the Server Administration Console (SAC) for EMS
- * PROGRAMMERS: MenuOS Portable Systems Group
+ * PROGRAMMERS: ReactOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/

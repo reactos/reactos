@@ -163,7 +163,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Otomatik Çevirme ve Kapatma"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "MenuOS, ne kadar bilgi gönderiliyor ve alınıyor olduğuna bağlı olarak aygıtları otomatik çevirebilir ve kapatabilir.", 1085, 9, 7, 253, 30
+    LTEXT "ReactOS, ne kadar bilgi gönderiliyor ve alınıyor olduğuna bağlı olarak aygıtları otomatik çevirebilir ve kapatabilir.", 1085, 9, 7, 253, 30
     GROUPBOX "Otomatik çevirme", -1, 6, 38, 249, 71
     LTEXT "Bu bağlantı aşağıdaki şartların ikisiyle karşılaştığında başka bir hattı çevir:", 1083, 16, 51, 237, 16, NOT WS_GROUP
     LTEXT "&En az etkinlik:", -1, 16, 73, 100, 8
@@ -626,7 +626,7 @@ BEGIN
     AUTORADIOBUTTON "&Gelişmiş (özel ayarlar)", 1541, 14, 102, 198, 8, BS_NOTIFY
     LTEXT "&Kimliğimi aşağıdaki gibi onayla:", 1537, 26, 29, 187, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "&MenuOS oturum açma adımı ve şifremi otomatik kullan (eğer varsa etki alanını da)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&ReactOS oturum açma adımı ve şifremi otomatik kullan (eğer varsa etki alanını da)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&Veri sıkıştırmasını gerektir (eğer yoksa bağlantıyı kes)", 1169, 26, 82, 183, 10, BS_TOP | BS_MULTILINE
     LTEXT "Bu ayarları kullanmak güvenlik iletişim protokollerini bilmeyi gerektirir.", 1539, 15, 114, 134, 20
     PUSHBUTTON "&Ayarlar...", 1180, 151, 115, 60, 14
@@ -683,7 +683,7 @@ BEGIN
     GROUPBOX "Çevirme seçenekleri", 1289, 7, 2, 213, 64
     AUTOCHECKBOX "&Bağlanırken ilerlemeyi göster", 1284, 16, 14, 201, 10
     AUTOCHECKBOX "&Ad ve şifre, sertifika ve benzerini iste", 1554, 16, 27, 201, 10
-    AUTOCHECKBOX "&MenuOS oturum açma etki alanını ekle", 1555, 16, 39, 201, 10
+    AUTOCHECKBOX "&ReactOS oturum açma etki alanını ekle", 1555, 16, 39, 201, 10
     AUTOCHECKBOX "&Telefon numarasını iste", 1285, 16, 52, 200, 10, BS_TOP | BS_MULTILINE
     GROUPBOX "Yeniden çevirme seçenekleri", 1290, 6, 72, 213, 79
     LTEXT "&Yeniden çevirme denemeleri:", 1300, 16, 87, 123, 8
@@ -881,7 +881,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Bağlan: %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "MenuOS, belirttiğiniz kullanıcı adını ve şifreyi kullanan ağa bağlanamadı. Lütfen kullanıcı adını ve şifreyi yeniden giriniz.", 1396, 7, 6, 206, 36
+    LTEXT "ReactOS, belirttiğiniz kullanıcı adını ve şifreyi kullanan ağa bağlanamadı. Lütfen kullanıcı adını ve şifreyi yeniden giriniz.", 1396, 7, 6, 206, 36
     LTEXT "&Kullanıcı adı:", 1399, 8, 51, 49, 8
     EDITTEXT 1394, 66, 46, 143, 14, ES_AUTOHSCROLL
     LTEXT "&Şifre:", 1397, 8, 70, 49, 8, NOT WS_GROUP
@@ -897,7 +897,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Bağlan: %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "MenuOS, belirttiğiniz kullanıcı adını ve şifreyi kullanan ağa bağlanamadı. Lütfen kullanıcı adını ve şifreyi yeniden giriniz.", 1396, 7, 6, 209, 26
+    LTEXT "ReactOS, belirttiğiniz kullanıcı adını ve şifreyi kullanan ağa bağlanamadı. Lütfen kullanıcı adını ve şifreyi yeniden giriniz.", 1396, 7, 6, 209, 26
     LTEXT "&Kullanıcı adı:", 1399, 7, 72, 44, 8
     EDITTEXT 1394, 97, 69, 115, 14, ES_AUTOHSCROLL
     LTEXT "&Şifre:", 1397, 7, 90, 45, 8, NOT WS_GROUP
@@ -1274,7 +1274,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Yeni Bağlantı Sihirbazı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Aşağıdaki metin kutusuna hizmetinizin adını yazınız. Metin kutusunu boş bırakırsanız MenuOS, bağlandığınızda hizmetinizi otomatik algılayacak ve yapılandıracaktır.", -1, 10, 7, 301, 25
+    LTEXT "Aşağıdaki metin kutusuna hizmetinizin adını yazınız. Metin kutusunu boş bırakırsanız ReactOS, bağlandığınızda hizmetinizi otomatik algılayacak ve yapılandıracaktır.", -1, 10, 7, 301, 25
     LTEXT "&Hizmet Adı (Seçimlik):", -1, 22, 32, 229, 8
     EDITTEXT 1593, 22, 44, 275, 14, ES_AUTOHSCROLL
 END
@@ -1299,7 +1299,7 @@ BEGIN
     AUTORADIOBUTTON "&Gelişmiş (özel ayarlar)", 1541, 14, 100, 197, 8, BS_NOTIFY
     LTEXT "&Kimliğimi aşağıdaki gibi onayla:", 1537, 26, 29, 183, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "&MenuOS oturum açma adımı ve şifremi otomatik Kullan (eğer varsa etki alanını da)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&ReactOS oturum açma adımı ve şifremi otomatik Kullan (eğer varsa etki alanını da)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&Veri sıkıştırmasını gerektir (eğer yoksa bağlantıyı kes)", 1169, 26, 83, 182, 10, BS_TOP | BS_MULTILINE
     LTEXT "Bu ayarları kullanmak güvenlik iletişim protokollerini bilmeyi gerektirir.", 1539, 26, 111, 136, 20
     PUSHBUTTON "&Ayarlar...", 1180, 151, 134, 60, 14
@@ -1458,7 +1458,7 @@ BEGIN
     LTEXT "&Hedefin anabilgisayar adı ya da IP adresi (reactos.org ya da 145.52.0.1 gibi.):", 1430, 7, 5, 217, 18
     EDITTEXT 1427, 7, 25, 215, 14, ES_AUTOHSCROLL
     GROUPBOX "İlk Bağlantı", 1431, 9, 48, 213, 78
-    LTEXT "Bu sanal bağlantıyı kurmayı denemeden önce MenuOS, Genel Ağ gibi ağlara bağlanabilir.", 1432, 17, 63, 199, 24
+    LTEXT "Bu sanal bağlantıyı kurmayı denemeden önce ReactOS, Genel Ağ gibi ağlara bağlanabilir.", 1432, 17, 63, 199, 24
     AUTOCHECKBOX "Ö&nce başka bir bağlantı çevir:", 1428, 19, 89, 183, 10
     COMBOBOX 1429, 29, 103, 182, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "&Bağlandığında bildirim alanında simge göster", 1120, 10, 192, 213, 13
@@ -1472,7 +1472,7 @@ BEGIN
     GROUPBOX "Çevirme seçenekleri", 1289, 8, 7, 214, 56
     AUTOCHECKBOX "&Bağlanırken ilerlemeyi göster", 1284, 16, 17, 199, 10
     AUTOCHECKBOX "&Ad ve şifre, sertifika ve benzerini iste", 1554, 16, 32, 199, 10
-    AUTOCHECKBOX "&MenuOS oturum açma etki alanını ekle", 1555, 16, 47, 178, 10
+    AUTOCHECKBOX "&ReactOS oturum açma etki alanını ekle", 1555, 16, 47, 178, 10
     GROUPBOX "Yeniden çevirme seçenekleri", 1290, 8, 68, 214, 89
     LTEXT "&Yeniden çevirme denemeleri:", 1300, 16, 81, 121, 8
     EDITTEXT 1287, 140, 77, 70, 14, ES_AUTOHSCROLL | ES_NUMBER
@@ -1497,7 +1497,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Yeni Bağlantı Sihirbazı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "MenuOS, sanal bağlantıyı kurmadan önce, Genel Ağ'a ya da başka bir ağa ilk bağlantıyı otomatik çevirebilir.", -1, 10, 6, 275, 24
+    LTEXT "ReactOS, sanal bağlantıyı kurmadan önce, Genel Ağ'a ya da başka bir ağa ilk bağlantıyı otomatik çevirebilir.", -1, 10, 6, 275, 24
     AUTORADIOBUTTON "&İlk bağlantıyı çevirme", 1509, 32, 31, 271, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     AUTORADIOBUTTON "&Bu ilk bağlantıyı otomatik çevir:", 1510, 32, 45, 269, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     COMBOBOX 1435, 43, 62, 253, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
@@ -1799,7 +1799,7 @@ BEGIN
     AUTORADIOBUTTON "&Sanal özel bağlantılara izin Ver", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "S&anal özel bağlantılara izin verme", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     LTEXT "Bu bilgisayara sanal özel bağlantılara izin vermek istiyor musunuz?", -1, 17, 49, 275, 8
-    LTEXT "VPN bağlantılarına izin verirseniz MenuOS, bilgisayarınızın VPN paketlerini göndermesine ve almasına izin vermek için Genel Ağ Bağlantı Güvenlik Duvarı'nı değiştirecektir.", -1, 10, 25, 293, 25
+    LTEXT "VPN bağlantılarına izin verirseniz ReactOS, bilgisayarınızın VPN paketlerini göndermesine ve almasına izin vermek için Genel Ağ Bağlantı Güvenlik Duvarı'nı değiştirecektir.", -1, 10, 25, 293, 25
 END
 
 7055 DIALOGEX 0, 0, 317, 143
@@ -1888,7 +1888,7 @@ BEGIN
     244 "Bu bağlantı şimdilik etkin olduğundan, onu bir dahaki çevirmenize kadar bazı ayarlar etkin olmayacaktır.\0"
     245 "Tüm kullanıcılar için bir bağlantı yok. Çevirmeden önce oturum açmalısınız.\0"
     246 "Telefon defteri boş.\n\nBir girdi eklemek için Tamam'a basınız.\0"
-    247 "Alma veya verme kısıtlamalarından dolayı veri şifrelemesi MenuOS'un bu sürümünde yok.\0"
+    247 "Alma veya verme kısıtlamalarından dolayı veri şifrelemesi ReactOS'un bu sürümünde yok.\0"
     248 "Lütfen bir sonraki ekranda bir X.25 adresi giriniz.\0"
     249 "Hata %1: %2\0"
     250 "%1\n\nHata %2: %3\0"
@@ -2111,7 +2111,7 @@ BEGIN
     501 "VPN sunucusunun adı ya da adresi ne?\0"
     502 "İsteğe bağlı çevirme devre dışı bırakılamıyor.\0"
     503 "Genel Ağ\0"
-    504 "MenuOS, önce Genel Ağ'ın bağlandığına emin olabilir.\0"
+    504 "ReactOS, önce Genel Ağ'ın bağlandığına emin olabilir.\0"
     505 "VPN1\0"
     506 "Genel Ağ Bağlantısı Paylaşımı\0"
     507 "Bu çevirmeli bağlantıdan, bir yerel ağın kaynaklara erişmesine izin verebilirsiniz.\0"
@@ -2237,8 +2237,8 @@ BEGIN
     1611 "Geniş Bant Bağlantı\0"
     1612 "Bir önceden paylaşılmış anahtar kullanmayı seçtiniz ancak birini girmediniz.\nLütfen bir önceden paylaşılmış anahtar giriniz.\0"
     1613 "Kimlik Bilgileri İşlenemez\0"
-    1634 "Windows Yönetim Araçları (WMI) hizmeti devre dışı olduğundan dolayı, MenuOS bu bağlantının ya da ev ağının özelliklerini görüntüleyemiyor.\n\nBu bağlantının ya da ev ağınızın özelliklerini yapılandırmak için ilk önce WMI hizmetini etkinleştirmelisiniz. Bunu yapmak için Yönetim Araçları'nda Hizmetler'e çift tıklayınız, Windows Yönetim Araçları'na sağ tıklayınız ve sonra Başlat'a tıklayınız.\0"
-    1635 "MenuOS, bu bağlantının özelliklerini görüntüleyemiyor. Windows Yönetim Araçları (WMI) bilgisi bozulmuş olabilir. Bunu düzeltmek için, MenuOS'u, geri yükleme noktası olarak adlandırılan daha erken bir zamana geri yüklemek için Sistem Geri Yükleme'yi kullanınız. Sistem Geri Yükleme, Donatılar'da Sistem Araçları dizininde bulunur.\0"
+    1634 "Windows Yönetim Araçları (WMI) hizmeti devre dışı olduğundan dolayı, ReactOS bu bağlantının ya da ev ağının özelliklerini görüntüleyemiyor.\n\nBu bağlantının ya da ev ağınızın özelliklerini yapılandırmak için ilk önce WMI hizmetini etkinleştirmelisiniz. Bunu yapmak için Yönetim Araçları'nda Hizmetler'e çift tıklayınız, Windows Yönetim Araçları'na sağ tıklayınız ve sonra Başlat'a tıklayınız.\0"
+    1635 "ReactOS, bu bağlantının özelliklerini görüntüleyemiyor. Windows Yönetim Araçları (WMI) bilgisi bozulmuş olabilir. Bunu düzeltmek için, ReactOS'u, geri yükleme noktası olarak adlandırılan daha erken bir zamana geri yüklemek için Sistem Geri Yükleme'yi kullanınız. Sistem Geri Yükleme, Donatılar'da Sistem Araçları dizininde bulunur.\0"
     1646 "Gelen ECHO isteğine izin ver\0"
     1647 "Gelen zaman damgası isteğine izin ver\0"
     1648 "Gelen maske isteğine izin ver\0"
@@ -2351,7 +2351,7 @@ BEGIN
     7385 "İletişim Bağlantı Noktası (%s)\0"
     7386 "Ağ Bağlantıları, Yerel Kullanıcı Yöneticisi veya Uzaktan Erişim İlkesi konsolları kullanılarak ayarlanmış gelen bağlantılar için bazı özelleştirilmiş seçenekleri görüntülemez. Gelen bağlantılar üzerine eksiksiz ve doğru bilgi için bu konsolları kullanmanız gereklidir.\0"
     7387 "Seçtiğiniz kullanıcı geri arama kipi, geçerli bir geri arama numarası girmenizi gerektirir.\0"
-    7388 "MenuOS işlemi bitirmek için yeniden başlamalıdır. Şimdi yeniden başlatılsın mı?\0"
+    7388 "ReactOS işlemi bitirmek için yeniden başlamalıdır. Şimdi yeniden başlatılsın mı?\0"
     7389 "Şimdi seçilen aygıtın var olan yapılandırma seçenekleri yok.\0"
     7390 "Geçersiz Aralık\0"
     7391 "%1'in Gelen Bağlantılar için devre dışı bırakılmasını istediniz. Bunu devre dışı bırakmak için 'Sunucu' hizmetini durdurmalısınız. Durdurulduğunda, bu bilgisayardaki tüm paylaşılan dizinler ve yazıcılar bir başka bilgisayar için artık kullanılabilir olmayacaktır. 'Sunucu' hizmetini durdurmanızı sağlayacak bir sistem konsolu getirmek ister misiniz?\r\n\nBilgisayar Yönetimi altında Sistem Araçları'na tıklayınız ve sonra Hizmetler'e tıklayınız. Sağ bölmede Sunucu'ya sağ tıklayınız ve Durdur'u tıklayınız.\0"

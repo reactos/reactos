@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS msgina.dll
+ * PROJECT:         ReactOS msgina.dll
  * FILE:            dll/win32/msgina/dimmedwindow.cpp
  * PURPOSE:         Implementation of ShellDimScreen
  * PROGRAMMER:      Mark Jansen
@@ -15,7 +15,7 @@
 
 CComModule gModule;
 
-// Please note: The INIT_TIMER is a workaround because MenuOS does not redraw the desktop in time,
+// Please note: The INIT_TIMER is a workaround because ReactOS does not redraw the desktop in time,
 //              so the start menu is still visible on the dimmed screen.
 #define INIT_TIMER_ID   0x112233
 #define FADE_TIMER_ID   0x12345

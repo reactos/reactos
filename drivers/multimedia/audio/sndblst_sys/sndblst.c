@@ -1,7 +1,7 @@
 /*
  *
  * COPYRIGHT:           See COPYING in the top level directory
- * PROJECT:             MenuOS Sound System
+ * PROJECT:             ReactOS Sound System
  * FILE:                drivers/multimedia/audio/sndblst/sndblst.c
  * PURPOSE:             Sound Blaster / Pro / 16 driver
  * PROGRAMMER:          Andrew Greenwood (silverblade@reactos.org)

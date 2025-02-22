@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS User32
+ * PROJECT:          ReactOS User32
  * PURPOSE:          Built-in control registration
  * FILE:             win32ss/user/user32/include/regcontrol.h
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)

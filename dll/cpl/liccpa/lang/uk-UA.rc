@@ -1,5 +1,5 @@
 /*
- * PROJECT:    MenuOS License Manager Control Panel Applet
+ * PROJECT:    ReactOS License Manager Control Panel Applet
  * LICENSE:    GPL - See COPYING in the top level directory
  * FILE:       dll/cpl/liccpa/lang/uk-UA.rc
  * PURPOSE:    Ukraianian Language File for License Manager Control Panel Applet
@@ -31,5 +31,5 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "Менеджер ліцензій"
     IDS_CPLDESCRIPTION_1 "Менеджер ліцензій"
-    IDS_REACTOS "MenuOS - Вільне ПЗ"
+    IDS_REACTOS "ReactOS - Вільне ПЗ"
 END

@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS api tests
+ * PROJECT:         ReactOS api tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Tests for Tunnel Cache
  * PROGRAMMER:      Pierre Schweitzer <pierre.schweitzer@reactos.org>
@@ -61,7 +61,7 @@ Test_VeryLongTests(void)
     CloseHandle(hFile);
 
     /* Wait a least 10ms (resolution of FAT) */
-    /* XXX: Increased to 1s for MenuOS... */
+    /* XXX: Increased to 1s for ReactOS... */
     Sleep(1000);
 
     hFile = CreateFile("file2",
@@ -151,7 +151,7 @@ Test_LongTests(void)
     CloseHandle(hFile);
 
     /* Wait a least 10ms (resolution of FAT) */
-    /* XXX: Increased to 1s for MenuOS... */
+    /* XXX: Increased to 1s for ReactOS... */
     Sleep(1000);
 
     hFile = CreateFile("file2",

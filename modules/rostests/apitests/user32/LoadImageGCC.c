@@ -1,11 +1,11 @@
 /*
- * PROJECT:     MenuOS API tests
+ * PROJECT:     ReactOS API tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Test for LoadImageW using DLL compiled with MSVC
  * COPYRIGHT:   Copyright 2024 Doug Lyons <douglyons@douglyons.com>
  *
  * NOTES:
- * Works on MenuOS, but not on Windows 2003 Server SP2.
+ * Works on ReactOS, but not on Windows 2003 Server SP2.
  */
 
 #include "precomp.h"

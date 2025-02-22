@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Display Control Panel
+ * PROJECT:         ReactOS Display Control Panel
  * FILE:            dll/cpl/desk/devsett.c
- * PURPOSE:         MenuOS Display Control Panel Shell Extension Support
+ * PURPOSE:         ReactOS Display Control Panel Shell Extension Support
  */
 
 #include "desk.h"

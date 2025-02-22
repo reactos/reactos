@@ -1,5 +1,5 @@
 /*
- * MenuOS Management Console
+ * ReactOS Management Console
  * Copyright (C) 2006 - 2007 Thomas Weidenmueller
  *
  * This library is free software; you can redistribute it and/or

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Explorer
+ * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Portuguese (Portugal) resource file
  * TRANSLATORS: Copyright 2011-2012 Matheus Macabu <mkbu95@gmail.com>
@@ -120,7 +120,7 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Personalizar Notificações"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT            "O MenuOS mostra icones para as notificações activas e urgentes, e oculta as inactivas. Pode modificar este comportamento para os items na lista abaixo.", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "O ReactOS mostra icones para as notificações activas e urgentes, e oculta as inactivas. Pode modificar este comportamento para os items na lista abaixo.", IDC_STATIC, 6, 6, 220, 30
     LTEXT            "Seleccione um item, e em seguida escolha o seu comportamento de notificação:", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 80, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS

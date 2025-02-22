@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS headers
+ * PROJECT:     ReactOS headers
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Declarations for IMM32
  * COPYRIGHT:   Copyright (C) the Wine project

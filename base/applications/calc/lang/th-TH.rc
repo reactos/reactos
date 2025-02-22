@@ -329,7 +329,7 @@ BEGIN
     BEGIN
         MENUITEM "ข้อมูลช่วยเหลือ", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "เกี่ยวกับ MenuOS Calc", IDM_HELP_ABOUT
+        MENUITEM "เกี่ยวกับ ReactOS Calc", IDM_HELP_ABOUT
     END
 END
 
@@ -362,7 +362,7 @@ BEGIN
     BEGIN
         MENUITEM "ข้อมูลช่วยเหลือ", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "เกี่ยวกับ MenuOS Calc", IDM_HELP_ABOUT
+        MENUITEM "เกี่ยวกับ ReactOS Calc", IDM_HELP_ABOUT
     END
 END
 
@@ -385,7 +385,7 @@ BEGIN
     BEGIN
         MENUITEM "ข้อมูลช่วยเหลือ", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "เกี่ยวกับ MenuOS Calc", IDM_HELP_ABOUT
+        MENUITEM "เกี่ยวกับ ReactOS Calc", IDM_HELP_ABOUT
     END
 END
 
@@ -400,7 +400,7 @@ END
 /* About */
 STRINGTABLE
 BEGIN
-    IDS_CALC_NAME "เครื่องคิดเลข MenuOS"
+    IDS_CALC_NAME "เครื่องคิดเลข ReactOS"
     IDS_AUTHOR "Written by Carlo Bramini"
 END
 

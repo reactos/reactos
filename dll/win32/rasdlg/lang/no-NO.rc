@@ -67,7 +67,7 @@ BEGIN
     AUTOCHECKBOX "Godta eldre MS-CHAP versjon for &Win 95 servere", 200, 46, 162, 198, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "M&icrosoft CHAP Versjon 2 (MS-CHAP v2)", 1492, 28, 176, 200, 10, BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 28, 189, 208, 1
-    AUTOCHECKBOX "&For MS-CHAP basert protokoller, automatisk bruk min MenuOS pålogging navn og passord (og domene)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&For MS-CHAP basert protokoller, automatisk bruk min ReactOS pålogging navn og passord (og domene)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "OK", 1, 127, 232, 60, 14
     PUSHBUTTON "Avbryt", 2, 192, 232, 60, 14
 END
@@ -161,7 +161,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Automatisk nummerslåing og samtaleavslutting"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "MenuOS kan automatisk ringe og avslutte enheter kommer an på hvor mye informasjon som har blitt sendt og motatt.", 1085, 9, 7, 253, 30
+    LTEXT "ReactOS kan automatisk ringe og avslutte enheter kommer an på hvor mye informasjon som har blitt sendt og motatt.", 1085, 9, 7, 253, 30
     GROUPBOX "Automatic dialing", -1, 6, 38, 249, 71
     LTEXT "Ring andre linjer når denne tilkoblingen møter begge av disse betingelsene:", 1083, 16, 51, 237, 16, NOT WS_GROUP
     LTEXT "Aktivitet brukte &minst:", -1, 16, 73, 100, 8
@@ -624,7 +624,7 @@ BEGIN
     AUTORADIOBUTTON "A&vansert (tilpasset innstillinger)", 1541, 14, 102, 198, 8, BS_NOTIFY
     LTEXT "&Godkjenne min identitet som følgende:", 1537, 26, 29, 187, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "A&utomatisk bruk min MenuOS pålogging navn og passord (og domene)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "A&utomatisk bruk min ReactOS pålogging navn og passord (og domene)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&Krever data kryptering (frakopling hvis ingen)", 1169, 26, 82, 183, 10, BS_TOP | BS_MULTILINE
     LTEXT "Bruk disse innstillingene som trenger en erfaring av sikkerhet protokoller.", 1539, 15, 114, 134, 20
     PUSHBUTTON "&Innstillinger...", 1180, 151, 115, 60, 14
@@ -681,7 +681,7 @@ BEGIN
     GROUPBOX "Ringing valg", 1289, 7, 2, 213, 64
     AUTOCHECKBOX "&Vis progressen mens tilkobling", 1284, 16, 14, 201, 10
     AUTOCHECKBOX "&Påminnelse for navn og passord, sertifikat, osv.", 1554, 16, 27, 201, 10
-    AUTOCHECKBOX "Inkluder &MenuOS pålogging domene", 1555, 16, 39, 201, 10
+    AUTOCHECKBOX "Inkluder &ReactOS pålogging domene", 1555, 16, 39, 201, 10
     AUTOCHECKBOX "Påminnelse for telefon&nummer", 1285, 16, 52, 200, 10, BS_TOP | BS_MULTILINE
     GROUPBOX "Gjenringing valg", 1290, 6, 72, 213, 79
     LTEXT "&Gjenringing forsøk:", 1300, 16, 87, 123, 8
@@ -879,7 +879,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Koble til %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "MenuOS klarte ikke å koble til nettverk med brukernavn og passord som du brukte. Vennligst skriv inn brukernavnet og passordet på nytt.", 1396, 7, 6, 206, 36
+    LTEXT "ReactOS klarte ikke å koble til nettverk med brukernavn og passord som du brukte. Vennligst skriv inn brukernavnet og passordet på nytt.", 1396, 7, 6, 206, 36
     LTEXT "&Brukernavn:", 1399, 8, 51, 49, 8
     EDITTEXT 1394, 66, 46, 143, 14, ES_AUTOHSCROLL
     LTEXT "&Passord:", 1397, 8, 70, 49, 8, NOT WS_GROUP
@@ -895,7 +895,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Koble til %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "MenuOS klarte ikke å koble til nettverk med brukernavn og passord som du brukte. Vennligst skriv inn brukernavnet og passordet på nytt.", 1396, 7, 6, 209, 26
+    LTEXT "ReactOS klarte ikke å koble til nettverk med brukernavn og passord som du brukte. Vennligst skriv inn brukernavnet og passordet på nytt.", 1396, 7, 6, 209, 26
     LTEXT "&Brukernavn:", 1399, 7, 72, 44, 8
     EDITTEXT 1394, 97, 69, 115, 14, ES_AUTOHSCROLL
     LTEXT "&Passord:", 1397, 7, 90, 45, 8, NOT WS_GROUP
@@ -1272,7 +1272,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ny tilkobling veiviser"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Skriv inn navnet på din tjeneste i følgende tekstboks. Hvis du lar tekstboksen stå tom, MenuOS vil automatisk oppdage og konfigurere din tjeneste når du kobler til.", -1, 10, 7, 301, 25
+    LTEXT "Skriv inn navnet på din tjeneste i følgende tekstboks. Hvis du lar tekstboksen stå tom, ReactOS vil automatisk oppdage og konfigurere din tjeneste når du kobler til.", -1, 10, 7, 301, 25
     LTEXT "&Tjeneste navn (valgfri):", -1, 22, 32, 229, 8
     EDITTEXT 1593, 22, 44, 275, 14, ES_AUTOHSCROLL
 END
@@ -1297,7 +1297,7 @@ BEGIN
     AUTORADIOBUTTON "A&vansert (tilpasset innstillinger)", 1541, 14, 100, 197, 8, BS_NOTIFY
     LTEXT "&Godkjenne min identitet som følgende:", 1537, 26, 29, 183, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "A&utomatisk bruk mitt MenuOS pålogging navn og passord (og domene)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "A&utomatisk bruk mitt ReactOS pålogging navn og passord (og domene)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "kre&ver data kryptering (frakoplet hvis ingen)", 1169, 26, 83, 182, 10, BS_TOP | BS_MULTILINE
     LTEXT "Bruk disse innstillingene kreves en erfaring av sikkerhet protokoller.", 1539, 26, 111, 136, 20
     PUSHBUTTON "&Innstillinger...", 1180, 151, 134, 60, 14
@@ -1456,7 +1456,7 @@ BEGIN
     LTEXT "&Host navn eller IP addressen for plasseringen (som reactos.org eller 145.52.0.1):", 1430, 7, 5, 217, 18
     EDITTEXT 1427, 7, 25, 215, 14, ES_AUTOHSCROLL
     GROUPBOX "Første tilkoblingen", 1431, 9, 48, 213, 78
-    LTEXT "MenuOS kan først koble til offentlig nettverk, sånn som internett, før du prøver å opprette denne virtuelle tilkoblingen.", 1432, 17, 63, 199, 24
+    LTEXT "ReactOS kan først koble til offentlig nettverk, sånn som internett, før du prøver å opprette denne virtuelle tilkoblingen.", 1432, 17, 63, 199, 24
     AUTOCHECKBOX "&Ring en annen tilkobling først:", 1428, 19, 89, 183, 10
     COMBOBOX 1429, 29, 103, 182, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "Vi&s ikon i notification area når tilkoblet", 1120, 10, 192, 213, 13
@@ -1470,7 +1470,7 @@ BEGIN
     GROUPBOX "Ringing valg", 1289, 8, 7, 214, 56
     AUTOCHECKBOX "&Vis prosessen når tilkobling", 1284, 16, 17, 199, 10
     AUTOCHECKBOX "&Påminnelse for navn og passord, sertifikat, osv.", 1554, 16, 32, 199, 10
-    AUTOCHECKBOX "Inkluder &MenuOS pålogging domene", 1555, 16, 47, 178, 10
+    AUTOCHECKBOX "Inkluder &ReactOS pålogging domene", 1555, 16, 47, 178, 10
     GROUPBOX "Gjenringing valg", 1290, 8, 68, 214, 89
     LTEXT "&Gjenringing forsøk:", 1300, 16, 81, 121, 8
     EDITTEXT 1287, 140, 77, 70, 14, ES_AUTOHSCROLL | ES_NUMBER
@@ -1495,7 +1495,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ny tilkobling veiviser"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "MenuOS kan automatisk ringe innledende tilkobling til internett eller andre offentlige nettverk, før du oppretter virtuelt tilkobling.", -1, 10, 6, 275, 24
+    LTEXT "ReactOS kan automatisk ringe innledende tilkobling til internett eller andre offentlige nettverk, før du oppretter virtuelt tilkobling.", -1, 10, 6, 275, 24
     AUTORADIOBUTTON "&Ikke ring innledende tilkoblingen.", 1509, 32, 31, 271, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     AUTORADIOBUTTON "&Automatisk ring denne innledende tilkoblingen:", 1510, 32, 45, 269, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     COMBOBOX 1435, 43, 62, 253, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
@@ -1797,7 +1797,7 @@ BEGIN
     AUTORADIOBUTTON "&Godta virtuelt privat tilkoblinger", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Ikke godta virtuelle privat tilkoblinger", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     LTEXT "Ønsker du å godta virtuelle privat tilkoblinger til denne datamaskinen?", -1, 17, 49, 275, 8
-    LTEXT " Hvis du godtar VPN tilkobling, MenuOS vil modifisere Internett tilkobling brannmur for å godta din datamaskin å sende og motta VPN pakker.", -1, 10, 25, 293, 25
+    LTEXT " Hvis du godtar VPN tilkobling, ReactOS vil modifisere Internett tilkobling brannmur for å godta din datamaskin å sende og motta VPN pakker.", -1, 10, 25, 293, 25
 END
 
 7055 DIALOGEX 0, 0, 317, 143
@@ -1886,7 +1886,7 @@ BEGIN
     244 "Siden denne tilkoblingen er nå aktiv, noen innstillinger vil ikke ta effekt til neste gangen du ringer denne.\0"
     245 "Det er ingen tilkoblinger tilgjengelig for alle brukere. Du må logge på før du ringer.\0"
     246 "Telefonboken er tom.\n\nTrykk OK for å legge til enheter.\0"
-    247 "Direkte å importere/ekportere restriksjoner, data kryptering er ikke tilgjengelig for denne versjonen av MenuOS.\0"
+    247 "Direkte å importere/ekportere restriksjoner, data kryptering er ikke tilgjengelig for denne versjonen av ReactOS.\0"
     248 "Venligst sett inn en X.25 addresse på neste skjermbildet.\0"
     249 "Feil %1: %2\0"
     250 "%1\n\nFeil %2: %3\0"
@@ -2109,7 +2109,7 @@ BEGIN
     501 "What is the name or address of the VPN server?\0"
     502 "Cannot disable on-demand dialing.\0"
     503 "Public Network\0"
-    504 "MenuOS can make sure the public network is connected first.\0"
+    504 "ReactOS can make sure the public network is connected first.\0"
     505 "VPN1\0"
     506 "Internett tilkobling deling\0"
     507 "You can let a local network access resources through this dial-up connection.\0"
@@ -2235,8 +2235,8 @@ BEGIN
     1611 "Bredbånd tilkobling\0"
     1612 "You have selected to use a preshared key but you have not entered one.\nPlease enter a preshared key.\0"
     1613 "Cannot Commit Credentials\0"
-    1634 "Because the Windows Management Instrumentation (WMI) service has been disabled, MenuOS cannot display the properties of this connection or the home network.\n\nTo configure the properties of this connection or your home network, you must first enable the WMI service. To do this, in the Administrative Tools control panel, double-click Services, right-click Windows Management Instrumentation, and then click Start.\0"
-    1635 "MenuOS cannot display the properties of this connection. The Windows Management Instrumentation (WMI) information might be corrupted. To correct this, use System Restore to restore MenuOS to an earlier time (called a restore point). System Restore is located in the System Tools folder in Accessories.\0"
+    1634 "Because the Windows Management Instrumentation (WMI) service has been disabled, ReactOS cannot display the properties of this connection or the home network.\n\nTo configure the properties of this connection or your home network, you must first enable the WMI service. To do this, in the Administrative Tools control panel, double-click Services, right-click Windows Management Instrumentation, and then click Start.\0"
+    1635 "ReactOS cannot display the properties of this connection. The Windows Management Instrumentation (WMI) information might be corrupted. To correct this, use System Restore to restore ReactOS to an earlier time (called a restore point). System Restore is located in the System Tools folder in Accessories.\0"
     1646 "Godta innkommende echo request\0"
     1647 "Godta innkommende timestamp request\0"
     1648 "Godta innkommende mask request\0"
@@ -2349,7 +2349,7 @@ BEGIN
     7385 "Komminikasjon Port (%s)\0"
     7386 "Nettverk tilkoblinger viser ikke noen spesielle valg for inngående tilkoblinger som har blitt satt ved å bruke Lokal bruker behandling eller Fjern tilgang Policy konsoll. For riktig og rette informasjon på innkommende tilkoblinger, trenger du å bruke disse konsollene.\0"
     7387 "Brukeren tilbakeringing modus som du har valg trenger at du skriver inn et gyldig tilbakeringing nummer.\0"
-    7388 "MenuOS må starte på nytt for å fullføre oppgaven. Er det greit å starte på nytt?\0"
+    7388 "ReactOS må starte på nytt for å fullføre oppgaven. Er det greit å starte på nytt?\0"
     7389 "Nåværende valgte enhet har ingen konfigurasjon valg tilgjengelig.\0"
     7390 "Ugyldig rekke\0"
     7391 "Du har spurt om at '%1' skal være deaktivert for innkommende tilkoblinger. For å deaktivere denne, må du stoppe 'Server' tjenesten. Mens den er stoppet, alle delte mapper eller skrivere på denne datamaskinen vil ikke lenger bli tilgjengelig for alle andre datamaskiner. Ønsker du å bringe opp en system konsoll slik at det vil la deg stoppe 'Server' tjenesten?\r\n\nUnder datamaskin behandling, trykk på Systemverktøy også trykk på tjenester. På høyre side, høyre-klikk Server også trykk på stopp knappen.\0"

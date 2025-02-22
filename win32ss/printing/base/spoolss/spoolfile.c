@@ -1,8 +1,8 @@
 /*
- * PROJECT:     MenuOS Spooler Router
+ * PROJECT:     ReactOS Spooler Router
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions related to Spool File
- * COPYRIGHT:   Copyright 1998-2022 MenuOS
+ * COPYRIGHT:   Copyright 1998-2022 ReactOS
  */
 
 #include "precomp.h"

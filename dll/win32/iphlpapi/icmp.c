@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS IP Helper API
+ * PROJECT:         ReactOS IP Helper API
  * LICENSE:         LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:         ICMP functions
  * COPYRIGHT:       2016 Tim Crawford (crawfxrd@gmail.com)

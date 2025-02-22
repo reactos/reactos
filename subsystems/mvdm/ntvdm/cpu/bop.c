@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         MenuOS Virtual DOS Machine
+ * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/cpu/bop.c
  * PURPOSE:         BIOS Operation Handlers
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Kernel Streaming
+ * PROJECT:         ReactOS Kernel Streaming
  * FILE:            drivers/ksfilter/ks/connectivity.c
  * PURPOSE:         KS Pin functions
  * PROGRAMMER:      Johannes Anderwald

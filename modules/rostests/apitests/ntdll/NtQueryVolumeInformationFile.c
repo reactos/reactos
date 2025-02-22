@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS API Tests
+ * PROJECT:         ReactOS API Tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         NtQueryVolumeInformationFile tests
  * PROGRAMMER:      Víctor Martínez Calvo <vicmarcal@gmail.com>

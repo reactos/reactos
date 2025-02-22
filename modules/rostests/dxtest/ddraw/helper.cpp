@@ -22,7 +22,7 @@ HWND CreateBasicWindow (VOID)
 	wndclass.lpszClassName = "DDrawTest";
 	RegisterClass(&wndclass);
 
-	return CreateWindow("DDrawTest", "MenuOS DirectDraw Test", WS_POPUP, 0, 0, 10, 10, NULL, NULL, GetModuleHandle(NULL), NULL);
+	return CreateWindow("DDrawTest", "ReactOS DirectDraw Test", WS_POPUP, 0, 0, 10, 10, NULL, NULL, GetModuleHandle(NULL), NULL);
 }
 
 BOOL CreateSurface(LPDIRECTDRAWSURFACE7* pSurface)

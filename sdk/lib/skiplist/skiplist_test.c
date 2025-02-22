@@ -1,5 +1,5 @@
 /*
- * PROJECT:     Skiplist implementation for the MenuOS Project
+ * PROJECT:     Skiplist implementation for the ReactOS Project
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     A simple program for testing the Skiplist implementation
  * COPYRIGHT:   Copyright 2015 Colin Finck (colin@reactos.org)

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS VGA Font Editor
+ * PROJECT:     ReactOS VGA Font Editor
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Dialog for editing a glyph
  * COPYRIGHT:   Copyright 2008 Colin Finck (colin@reactos.org)
@@ -14,7 +14,7 @@ CAPTION "Informazioni su"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON           IDI_MAIN,                     IDC_STATIC, 10, 10, 20, 20
-    LTEXT          "MenuOS VGA Font Editor",    IDC_STATIC, 37, 10, 93, 10
+    LTEXT          "ReactOS VGA Font Editor",    IDC_STATIC, 37, 10, 93, 10
     LTEXT          "Copyright 2008 Colin Finck", IDC_STATIC, 37, 20, 93, 10
     DEFPUSHBUTTON  "OK",                         IDCANCEL,   40, 44, 55, 15
 END
@@ -81,7 +81,7 @@ BEGIN
     IDS_UNSUPPORTEDPSF, "Formato font PSF non supportato! L'editor supporta esclusivamente i font 8x8 senza modi speciali."
     IDS_DOCNAME, "Font %1!u!"
     IDS_SAVEPROMPT, "Il file ""%1"" è stato modificato, ma non salvato.\n\nVolete salvarlo ora?"
-    IDS_APPTITLE, "MenuOS VGA Font Editor"
+    IDS_APPTITLE, "ReactOS VGA Font Editor"
     IDS_CLOSEEDIT, "Prima chiudere tutte le finestre di Edit!"
 
     IDS_TOOLTIP_NEW, "Nuovo"

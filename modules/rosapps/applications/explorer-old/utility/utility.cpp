@@ -61,7 +61,7 @@ void CenterWindow(HWND hwnd)
 	if (owner)
 		GetWindowRect(owner, &prt);
 	else
-		SystemParametersInfo(SPI_GETWORKAREA, 0, &prt, 0);	//@@ GetDesktopWindow() w√§re auch hilfreich.
+		SystemParametersInfo(SPI_GETWORKAREA, 0, &prt, 0);	//@@ GetDesktopWindow() w‰re auch hilfreich.
 
 	SetWindowPos(hwnd, 0, (prt.left+prt.right+rt.left-rt.right)/2,
 					   (prt.top+prt.bottom+rt.top-rt.bottom)/2, 0,0, SWP_NOACTIVATE|SWP_NOSIZE|SWP_NOZORDER);
@@ -260,8 +260,8 @@ String get_windows_version_str()
 
 	switch(osvi.dwPlatformId) {
 	  case VER_PLATFORM_WIN32_NT:
-#ifdef __REACTOS__	// This work around can be removed if MenuOS gets a unique version number.
-		str = TEXT("MenuOS");
+#ifdef __REACTOS__	// This work around can be removed if ReactOS gets a unique version number.
+		str = TEXT("ReactOS");
 #else
 		if (osvi.dwMajorVersion <= 4)
 			str = TEXT("Microsoft Windows NT");

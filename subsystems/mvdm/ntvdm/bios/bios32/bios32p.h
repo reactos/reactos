@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         MenuOS Virtual DOS Machine
+ * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/bios/bios32/bios32p.h
  * PURPOSE:         VDM 32-bit BIOS
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>

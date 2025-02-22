@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS FS utility tool
+ * PROJECT:         ReactOS FS utility tool
  * FILE:            base/applications/cmdutils/volume.c
  * PURPOSE:         FSutil volumes management
  * PROGRAMMERS:     Pierre Schweitzer <pierre@reactos.org>

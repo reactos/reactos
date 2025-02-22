@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Local Spooler API Tests Injected DLL
+ * PROJECT:     ReactOS Local Spooler API Tests Injected DLL
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Tests for fpGetPrintProcessorDirectory
  * COPYRIGHT:   Copyright 2016-2017 Colin Finck (colin@reactos.org)

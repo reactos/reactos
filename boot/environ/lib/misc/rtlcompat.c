@@ -1,6 +1,6 @@
 /*
 * COPYRIGHT:       See COPYING.ARM in the top level directory
-* PROJECT:         MenuOS UEFI Boot Manager
+* PROJECT:         ReactOS UEFI Boot Manager
 * FILE:            boot/environ/lib/misc/rtlcompat.c
 * PURPOSE:         RTL Library Compatibility Routines
 * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)

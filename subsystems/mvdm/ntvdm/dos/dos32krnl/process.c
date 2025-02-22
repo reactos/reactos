@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         MenuOS Virtual DOS Machine
+ * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/dos/dos32krnl/process.c
  * PURPOSE:         DOS32 Processes
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
@@ -858,7 +858,7 @@ WORD DosCreateProcess(IN LPCSTR ProgramName,
 
                 DisplayMessage(L"Trying to load '%S'.\n"
                                L"WOW16 applications are not supported internally by NTVDM at the moment.\n"
-                               L"Consider installing WineVDM from the MenuOS Applications Manager in\n'%S'.\n\n"
+                               L"Consider installing WineVDM from the ReactOS Applications Manager in\n'%S'.\n\n"
                                L"Click on OK to continue.",
                                ProgramName, ExpName);
             }

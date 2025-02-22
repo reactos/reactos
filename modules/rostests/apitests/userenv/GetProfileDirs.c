@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS api tests
+ * PROJECT:         ReactOS api tests
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
  * PURPOSE:         Tests for Get[AllUsers|DefaultUser|User]Profile[s]Directory APIs.
  * PROGRAMMERS:     Hermes Belusca-Maito

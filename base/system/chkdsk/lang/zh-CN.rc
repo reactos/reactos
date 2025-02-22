@@ -18,7 +18,7 @@ Usage: %s [drive:] [-F] [-V] [-R] [-C]\n\n\
     IDS_ABOUT "\n\
 Chkdskx v1.0.1 by Mark Russinovich\n\
 Systems Internals - http://www.sysinternals.com\n\
-MenuOS 于 1999 年由 Emanuele Aliberti 改编"
+ReactOS 于 1999 年由 Emanuele Aliberti 改编"
 END
 
 STRINGTABLE

@@ -199,7 +199,7 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7);
 /*
    Use this macro if you want debug in visual studio or
    if you have a program to look at the _INT struct from
-   MenuOS ddraw.dll or ms ddraw.dll, so you can see what
+   ReactOS ddraw.dll or ms ddraw.dll, so you can see what
    value ms are being setup.
 
    This macro will create allot warnings and can not be help when you compile
@@ -214,7 +214,7 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7);
 
 /*
    use this if want doing a trace from a program
-   like a game and MenuOS ddraw.dll in windows
+   like a game and ReactOS ddraw.dll in windows
    so you can figout what going wrong and what
    api are being call or if it hel or is it hal
 

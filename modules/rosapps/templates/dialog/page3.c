@@ -1,5 +1,5 @@
 /*
- *  MenuOS Standard Dialog Application Template
+ *  ReactOS Standard Dialog Application Template
  *
  *  page3.c
  *

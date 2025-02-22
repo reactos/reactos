@@ -7,7 +7,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Uyumluluk"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "MenuOS'ta bu programı çalıştırırken sorun yaşıyorsanız, MenuOS'un uygulamaya bildireceği bir işletim sistemi seçiniz.\nŞu an üzerinde çalışılan bir özelliktir, bunu göz önünde bulundurunuz.", IDC_EXPLANATION, 7, 7, 210, 31
+    LTEXT "ReactOS'ta bu programı çalıştırırken sorun yaşıyorsanız, ReactOS'un uygulamaya bildireceği bir işletim sistemi seçiniz.\nŞu an üzerinde çalışılan bir özelliktir, bunu göz önünde bulundurunuz.", IDC_EXPLANATION, 7, 7, 210, 31
     GROUPBOX "Uyumluluk modu", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "Bu programı şu uyumluluk modunda çalıştır:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
@@ -40,5 +40,5 @@ STRINGTABLE
 BEGIN
     IDS_COMPAT_TITLE "Uyumluluk"
     IDS_FAILED_NETWORK "Bir ağ sürücüsü üzerinde olduğundan bu programda uyumluluk modları ayarlanamaz."
-    IDS_FAILED_PROTECTED "MenuOS'un bir parçası olduğundan bu programda uyumluluk modları ayarlanamaz."
+    IDS_FAILED_PROTECTED "ReactOS'un bir parçası olduğundan bu programda uyumluluk modları ayarlanamaz."
 END

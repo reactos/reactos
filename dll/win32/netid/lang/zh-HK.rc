@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Network ID Page
+ * PROJECT:     ReactOS Network ID Page
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Hong Kong) resource file
  * TRANSLATORS: Copytight 2020-2022 Chan Chilung <eason066@gmail.com>
@@ -14,7 +14,7 @@ CAPTION "電腦名稱"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT "MenuOS 使用以下資訊來標識您在網絡上的電腦。", IDC_STATIC, 40, 5, 204, 20
+    LTEXT "ReactOS 使用以下資訊來標識您在網絡上的電腦。", IDC_STATIC, 40, 5, 204, 20
     LTEXT "電腦描述：", IDC_STATIC, 7, 40, 90, 9
     EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "完整的電腦名稱：", IDC_STATIC, 7, 68, 85, 9
@@ -74,7 +74,7 @@ BEGIN
     4 "更改電腦名稱"
     5 "工作群組："
     6 "網域："
-    7 "雖然網域名稱「%1」是合法的 MenuOS 名稱，但是它不符合互聯網網域名稱服務規格。如果名稱不符合標準，請使用 MenuOS DNS 伺服器。"
+    7 "雖然網域名稱「%1」是合法的 ReactOS 名稱，但是它不符合互聯網網域名稱服務規格。如果名稱不符合標準，請使用 ReactOS DNS 伺服器。"
     8 "網域名稱「%1」的格式不正確。句點（.）則是用來分隔網域。每個網域均不能超過 63 個字元。例如：domain-1.reactos.org。"
     10 "輸入的新電腦名稱「%1」過長了。電腦名稱不可以超過 63 個字元。"
     11 "輸入的新電腦名稱格式不正確。標準的電腦名稱可以包含字母（a-z, A-Z）、數字（0-9）、和連字號，但不可以有空格或句點（.）。名稱不能完全只由數字所組成。"

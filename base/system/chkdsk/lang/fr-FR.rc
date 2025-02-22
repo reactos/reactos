@@ -16,7 +16,7 @@ Utilisation : %s [lecteur:] [-F] [-V] [-R] [-C]\n\n\
     IDS_ABOUT "\n\
 Chkdskx v1.0.1 par Mark Russinovich\n\
 Systems Internals - http://www.sysinternals.com\n\
-Adaptation pour MenuOS en 1999 par Emanuele Aliberti\n\n"
+Adaptation pour ReactOS en 1999 par Emanuele Aliberti\n\n"
 END
 
 STRINGTABLE

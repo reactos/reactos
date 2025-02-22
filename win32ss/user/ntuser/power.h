@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Win32k subsystem
+ * PROJECT:         ReactOS Win32k subsystem
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         Power management of the Win32 kernel-mode subsystem
  * COPYRIGHT:       Copyright 2024 George Bișoc <george.bisoc@reactos.org>

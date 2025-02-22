@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Timedate Control Panel
+ * PROJECT:     ReactOS Timedate Control Panel
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Queries the NTP server
  * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>

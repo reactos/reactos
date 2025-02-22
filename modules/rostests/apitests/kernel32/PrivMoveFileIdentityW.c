@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS api tests
+ * PROJECT:         ReactOS api tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Test for PrivMoveFileIdentityW
  * PROGRAMMER:      Pierre Schweitzer <pierre@reactos.org>

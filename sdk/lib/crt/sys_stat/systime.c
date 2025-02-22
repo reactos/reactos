@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS system libraries
+ * PROJECT:     ReactOS system libraries
  * FILE:        lib/sdk/crt/sys_stat/systime.c
  * PURPOSE:     Unknown
  * PROGRAMER:   Unknown

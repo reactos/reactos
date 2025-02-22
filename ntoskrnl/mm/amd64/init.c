@@ -1,11 +1,11 @@
 /*
  * COPYRIGHT:       GPL, See COPYING in the top level directory
- * PROJECT:         MenuOS kernel
+ * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/amd64/init.c
  * PURPOSE:         Memory Manager Initialization for amd64
  *
  * PROGRAMMERS:     Timo kreuzer (timo.kreuzer@reactos.org)
- *                  MenuOS Portable Systems Group
+ *                  ReactOS Portable Systems Group
  */
 
 /* INCLUDES ***************************************************************/

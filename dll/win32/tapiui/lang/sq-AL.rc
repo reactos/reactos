@@ -281,7 +281,7 @@ CAPTION "Informacione Vendndodhja"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 10, 10, 88, 155
-    LTEXT "Para se ju mund të bëni ndonjë telefonatë ose lidhjeve modemi, MenuOS ka nevojë për informacionin e mëposhtëm në lidhje me vendndodhjen tuaj të tanishme.", 2000, 107, 15, 188, 25
+    LTEXT "Para se ju mund të bëni ndonjë telefonatë ose lidhjeve modemi, ReactOS ka nevojë për informacionin e mëposhtëm në lidhje me vendndodhjen tuaj të tanishme.", 2000, 107, 15, 188, 25
     LTEXT "&Cili Shtet/rajoni jeni në tani?", -1, 107, 43, 189, 10
     COMBOBOX 1006, 107, 55, 180, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "Çfarë pre-fiks zone(ose kodi qytetit) jeni në tani?", -1, 107, 74, 189, 10
@@ -302,7 +302,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 0, 0, 88, 155
-    LTEXT "Para se ju mund të bëni ndonjë telefonatë ose lidhjeve modemi, MenuOS ka nevojë për informacionin e mëposhtëm në lidhje me vendndodhjen tuaj të tanishme.", 2000, 95, 2, 188, 25
+    LTEXT "Para se ju mund të bëni ndonjë telefonatë ose lidhjeve modemi, ReactOS ka nevojë për informacionin e mëposhtëm në lidhje me vendndodhjen tuaj të tanishme.", 2000, 95, 2, 188, 25
     LTEXT "&Cili Shtet/rajoni jeni në tani?", -1, 95, 30, 188, 10
     COMBOBOX 1006, 95, 41, 177, 68, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "Çfarë pre-fiks zone(ose kodi qytetit) jeni në tani?", -1, 95, 61, 188, 10
@@ -316,7 +316,7 @@ END
 
 500 DIALOGEX 0, 0, 235, 88
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "MenuOS Eksplorues"
+CAPTION "ReactOS Eksplorues"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 504, 501, 13, 14, 21, 20
@@ -410,7 +410,7 @@ BEGIN
     80 "Jeni te sigurte qe doni te fshini këtë rregull të kodit të zonës?"
     81 "Ju duhet të fusni në shifra të thirrni."
     82 "Emri kartës thirrëse që ju keni futur është tashmë në përdorim. Ju lutem shkruani një emër të veçantë."
-    83 "MenuOS ka nevojë për informacion në lidhje me vendndodhjen e telefonit nga të cilat ju do të formoni numrin. Nëse anuloni pa dhënë këtë informacion, ky program nuk mund të funksionojë si duhet, kur formoni numrin. Përveç kësaj, disa aplikacione i përgjigjen anulimit tuaj këtë kuti dialogu nga menjëherë ri-postim atë.\nJeni te sigurte qe doni te anuloni?"
+    83 "ReactOS ka nevojë për informacion në lidhje me vendndodhjen e telefonit nga të cilat ju do të formoni numrin. Nëse anuloni pa dhënë këtë informacion, ky program nuk mund të funksionojë si duhet, kur formoni numrin. Përveç kësaj, disa aplikacione i përgjigjen anulimit tuaj këtë kuti dialogu nga menjëherë ri-postim atë.\nJeni te sigurte qe doni te anuloni?"
     84 "Konfirmo Anulimin"
     85 "Vendndodhja e mia"
     86 "<nuk ka ofruesit të shërbimeve që janë në dispozicion për instalim>"

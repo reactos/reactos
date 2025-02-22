@@ -13,7 +13,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Fournit des informations d'aide pour les commandes de MenuOS.\n\n\
+    IDS_USAGE "Fournit des informations d'aide pour les commandes de ReactOS.\n\n\
 HELP [commande]\n\n\
   commande - Affiche des informations d'aide sur cette commande.\n"
     IDS_HELP1 "Liste de toutes les commandes disponibles (+ description)\n\n\
@@ -28,7 +28,7 @@ CD       Affiche ou change le répertoire courant.\n\
 CHCP     Affiche ou définit le numéro de page de codes.\n\
 CHOICE   Attend après l'utilisateur pour un choix parmi un ensemble de propositions.\n\
 CLS      Efface l'écran.\n\
-CMD      Démarre une nouvelle instance de l'interpréteur de commandes de MenuOS.\n\
+CMD      Démarre une nouvelle instance de l'interpréteur de commandes de ReactOS.\n\
 COLOR    Définit les couleurs par défaut pour le premier plan et l'arrière-plan de la console.\n\
 COPY     Copie un ou plusieurs fichiers vers une autre destination.\n\
 DATE     Affiche ou définit la date.\n\
@@ -39,9 +39,9 @@ ERASE    Supprime un ou plusieurs fichiers.\n\
 EXIT     Quitte le programme CMD.EXE (interpréteur de commandes).\n\
 FOR      Lance une commande spécifique pour chaque fichier d'un ensemble de fichiers.\n\
 FREE     Espace disque (libre).\n\
-GOTO     Dirige l'interpréteur de commandes de MenuOS vers une ligne nommée\n\
+GOTO     Dirige l'interpréteur de commandes de ReactOS vers une ligne nommée\n\
          dans un script batch.\n\
-HELP     Fournit des informations d'aide pour les commandes de MenuOS.\n\
+HELP     Fournit des informations d'aide pour les commandes de ReactOS.\n\
 HISTORY  Liste toutes les commandes qui ont été utilisées\n\
 IF       Exécute un traitement conditionnel dans des programmes batch.\n\
 LABEL    Crée, change, ou supprime le nom de volume d'un disque.\n\
@@ -63,7 +63,7 @@ RENAME   Renomme un ou plusieurs fichiers.\n\
 REPLACE  Remplace un fichier.\n\
 RMDIR    Supprime un répertoire.\n\
 SCREEN   Déplace le curseur, optionnellement affiche du texte.\n\
-SET      Affiche, définit, ou supprime des variables d'environnement de MenuOS.\n\
+SET      Affiche, définit, ou supprime des variables d'environnement de ReactOS.\n\
 SHIFT    Déplace la position des paramètres remplacables dans un fichier batch.\n\
 START    Démarre une fenêtre séparée pour lancer un programme spécifié ou une commande.\n\
          Exécute la commande.\n\
@@ -71,8 +71,8 @@ TIME     Affiche ou définit l'heure du système.\n\
 TIMER    Permet l'utilisation de dix chronomètres.\n\
 TITLE    Définit le titre de la fenêtre pour une session de CMD.EXE.\n\
 TYPE     Affiche le contenu d'un fichier texte.\n\
-VER      Affiche la version de MenuOS.\n\
-VERIFY   Spécifie à MenuOS s'il faut vérifier que les fichiers sont correctement\n\
+VER      Affiche la version de ReactOS.\n\
+VERIFY   Spécifie à ReactOS s'il faut vérifier que les fichiers sont correctement\n\
          écrit sur un disque.\n\
 VOL      Affiche le nom de volume d'un disque et son numéro de série.\n"
 END

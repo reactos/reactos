@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Base API Server DLL
+ * PROJECT:         ReactOS Base API Server DLL
  * FILE:            subsystems/win/basesrv/proc.c
  * PURPOSE:         Process and Thread Management
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)

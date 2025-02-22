@@ -268,10 +268,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRESS_INFO_START "MenuOS essaye de démarrer le service suivant"
-    IDS_PROGRESS_INFO_STOP "MenuOS essaye d'arrêter le service suivant"
-    IDS_PROGRESS_INFO_PAUSE "MenuOS essaye de suspendre le service suivant"
-    IDS_PROGRESS_INFO_RESUME "MenuOS essaye de relancer le service suivant"
+    IDS_PROGRESS_INFO_START "ReactOS essaye de démarrer le service suivant"
+    IDS_PROGRESS_INFO_STOP "ReactOS essaye d'arrêter le service suivant"
+    IDS_PROGRESS_INFO_PAUSE "ReactOS essaye de suspendre le service suivant"
+    IDS_PROGRESS_INFO_RESUME "ReactOS essaye de relancer le service suivant"
     IDS_CREATE_SUCCESS "Service créé"
     IDS_DELETE_SUCCESS "Service supprimé avec succès"
     IDS_CREATE_REQ "Les champs marqués d'une astérisque\nsont obligatoires"
@@ -306,7 +306,7 @@ BEGIN
     IDS_HINT_DETAILS " Afficher les informations sur chaque élément dans une fenêtre."
     IDS_HINT_CUST " Personnaliser l'affichage."
     IDS_HINT_HELP " Affiche la fenêtre d'aide."
-    IDS_HINT_ABOUT " À propos du gestionnaire de Services MenuOS."
+    IDS_HINT_ABOUT " À propos du gestionnaire de Services ReactOS."
     IDS_HINT_SYS_RESTORE " Restaurer la taille de la fenêtre."
     IDS_HINT_SYS_MOVE " Déplacer la fenêtre."
     IDS_HINT_SYS_SIZE " Retailler la fenêtre."
@@ -318,7 +318,7 @@ END
 /* Application title */
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "Gestionnaire de Services MenuOS"
+    IDS_APPNAME "Gestionnaire de Services ReactOS"
     IDS_APPAUTHORS "Copyright (C) 2005-2007 by Ged Murphy (gedmurphy@reactos.org)"
 END
 

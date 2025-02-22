@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Services Manager
+ * PROJECT:     ReactOS Services Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
@@ -276,10 +276,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRESS_INFO_START "MenuOS 正在嘗試啟動以下服務"
-    IDS_PROGRESS_INFO_STOP "MenuOS 正在嘗試停止以下服務"
-    IDS_PROGRESS_INFO_PAUSE "MenuOS 正在嘗試暫停以下服務"
-    IDS_PROGRESS_INFO_RESUME "MenuOS 正在嘗試恢復以下服務"
+    IDS_PROGRESS_INFO_START "ReactOS 正在嘗試啟動以下服務"
+    IDS_PROGRESS_INFO_STOP "ReactOS 正在嘗試停止以下服務"
+    IDS_PROGRESS_INFO_PAUSE "ReactOS 正在嘗試暫停以下服務"
+    IDS_PROGRESS_INFO_RESUME "ReactOS 正在嘗試恢復以下服務"
     IDS_CREATE_SUCCESS "成功建立服務"
     IDS_DELETE_SUCCESS "成功刪除服務"
     IDS_CREATE_REQ "標記有\n星號（*）的欄位是必需的"
@@ -314,7 +314,7 @@ BEGIN
     IDS_HINT_DETAILS " 在視窗中顯示每個條目的資訊。"
     IDS_HINT_CUST " 自訂視圖。"
     IDS_HINT_HELP " 顯示說明視窗。"
-    IDS_HINT_ABOUT " 關於 MenuOS 服務管理員。"
+    IDS_HINT_ABOUT " 關於 ReactOS 服務管理員。"
     IDS_HINT_SYS_RESTORE " 將這個視窗恢復到普通大小。"
     IDS_HINT_SYS_MOVE " 移動這個視窗。"
     IDS_HINT_SYS_SIZE " 調整這個視窗的大小。"
@@ -326,7 +326,7 @@ END
 /* Application title */
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "MenuOS 服務管理員"
+    IDS_APPNAME "ReactOS 服務管理員"
     IDS_APPAUTHORS "Copyright (C) 2005-2007 by Ged Murphy (gedmurphy@reactos.org)"
 END
 

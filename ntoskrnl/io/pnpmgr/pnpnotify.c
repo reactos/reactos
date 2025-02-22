@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Kernel
+ * PROJECT:     ReactOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Plug & Play notification functions
  * COPYRIGHT:   Copyright 2003 Filip Navara <xnavara@volny.cz>

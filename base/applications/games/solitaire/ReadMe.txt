@@ -1,4 +1,4 @@
-Solitaire for MenuOS
+Solitaire for ReactOS
 
 /*****************************************
 A complete working example of the CardLib

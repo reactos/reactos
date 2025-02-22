@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              MenuOS DirectX
+ * PROJECT:              ReactOS DirectX
  * FILE:                 dll/directx/ddraw/Palette/createpalette.c
  * PURPOSE:              IDirectDrawPalette Creation
- * PROGRAMMER:           JÃ©rÃ´me Gardou
+ * PROGRAMMER:           Jérôme Gardou
  *
  */
 #include "rosdraw.h"

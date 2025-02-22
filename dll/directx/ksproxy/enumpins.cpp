@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Network Provider for MPEG2 based networks
+ * PROJECT:         ReactOS Network Provider for MPEG2 based networks
  * FILE:            dll/directx/ksproxy/enumpins.cpp
  * PURPOSE:         IEnumPins interface
  *

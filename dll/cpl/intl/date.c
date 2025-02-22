@@ -1,6 +1,6 @@
 /*
- *  MenuOS
- *  Copyright (C) 2004 MenuOS Team
+ *  ReactOS
+ *  Copyright (C) 2004 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
- * PROJECT:         MenuOS International Control Panel
+ * PROJECT:         ReactOS International Control Panel
  * FILE:            dll/cpl/intl/date.c
  * PURPOSE:         Date property page
  * PROGRAMMERS:     Eric Kohl

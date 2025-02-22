@@ -13,7 +13,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Сумісність"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Якщо у Вас виникли проблеми із запуском цієї програми у MenuOS, виберіть режим сумісності з потрібною версією ОС.\nPlease note that this is a work in progress.", IDC_EXPLANATION, 7, 7, 210, 31
+    LTEXT "Якщо у Вас виникли проблеми із запуском цієї програми у ReactOS, виберіть режим сумісності з потрібною версією ОС.\nPlease note that this is a work in progress.", IDC_EXPLANATION, 7, 7, 210, 31
     GROUPBOX "Режим сумісності", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "Запускати програму в режимі сумісності для:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
@@ -46,5 +46,5 @@ STRINGTABLE
 BEGIN
     IDS_COMPAT_TITLE "Сумісність"
     IDS_FAILED_NETWORK "Режим сумісності не может бути встановленим для цієї програми, бо вона знаходиться на мережевому диску."
-    IDS_FAILED_PROTECTED "Режим сумісності не может бути використаний для компонентів MenuOS."
+    IDS_FAILED_PROTECTED "Режим сумісності не может бути використаний для компонентів ReactOS."
 END

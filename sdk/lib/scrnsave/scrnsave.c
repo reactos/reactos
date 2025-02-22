@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Screen Saver Library
+ * PROJECT:         ReactOS Screen Saver Library
  * LICENSE:         GPL v2 or any later version
  * FILE:            lib/sdk/scrnsave/scrnsave.c
  * PURPOSE:         Library for writing screen savers, compatible with

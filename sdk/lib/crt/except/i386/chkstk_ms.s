@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS kernel
+ * PROJECT:           ReactOS kernel
  * PURPOSE:           Stack checker
  * PROGRAMERS:        KJK::Hyperion <noog@libero.it>
  *                    Richard Henderson <rth@redhat.com>

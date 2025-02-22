@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Win32 BrowseUI
+ * PROJECT:     ReactOS Win32 BrowseUI
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Spanish locale file
  * COPYRIGHT:   Ismael Ferreras Morezuelas
@@ -81,7 +81,7 @@ BEGIN
     END
     POPUP "&Ayuda", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "&Acerca de MenuOS", IDM_HELP_ABOUT
+        MENUITEM "&Acerca de ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -344,6 +344,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARSE_ADDR_ERR_TITLE "MenuOS Explorer"
-    IDS_PARSE_ADDR_ERR_TEXT "MenuOS Explorer cannot find '%1'. Check the spelling and try again."
+    IDS_PARSE_ADDR_ERR_TITLE "ReactOS Explorer"
+    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Explorer cannot find '%1'. Check the spelling and try again."
 END

@@ -1,6 +1,6 @@
 /*
- * MenuOS MARTA provider
- * Copyright (C) 2005 - 2006 MenuOS Team
+ * ReactOS MARTA provider
+ * Copyright (C) 2005 - 2006 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,9 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 /*
- * PROJECT:         MenuOS MARTA provider
+ * PROJECT:         ReactOS MARTA provider
  * FILE:            lib/ntmarta/ntmarta.c
- * PURPOSE:         MenuOS MARTA provider
+ * PURPOSE:         ReactOS MARTA provider
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *
  * UPDATE HISTORY:

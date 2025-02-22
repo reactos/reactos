@@ -1,6 +1,6 @@
 /*
- *  MenuOS
- *  Copyright (C) 2004 MenuOS Team
+ *  ReactOS
+ *  Copyright (C) 2004 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,9 +18,9 @@
  */
 /*
  *
- * PROJECT:         MenuOS Software Control Panel
+ * PROJECT:         ReactOS Software Control Panel
  * FILE:            dll/cpl/joy/joy.c
- * PURPOSE:         MenuOS Software Control Panel
+ * PURPOSE:         ReactOS Software Control Panel
  * PROGRAMMER:      Dmitry Chapyshev (lentind@yandex.ru)
  * UPDATE HISTORY:
  *    10-18-2007  Created

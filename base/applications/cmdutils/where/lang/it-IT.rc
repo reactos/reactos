@@ -1,5 +1,5 @@
 /* 
- * PROJECT:     MenuOS WHERE command
+ * PROJECT:     ReactOS WHERE command
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Italian resource file
  * TRANSLATOR:  Copyright 2023 Carlo Bramini
@@ -41,7 +41,7 @@ Esempi:\n\
     WHERE myfile*.exe\n\
     WHERE /F /T mspaint\n\
     WHERE $WINDIR:notepad myfile???\n\
-    WHERE C:\\MenuOS;C:\\MenuOS\\system32:exp*.exe\n\
+    WHERE C:\\ReactOS;C:\\ReactOS\\system32:exp*.exe\n\
     WHERE /R ""C:\\Program Files"" *.dll\n"
 
     IDS_BAD_ARG "ERRORE: argomento non valido - '%ls'.\n"

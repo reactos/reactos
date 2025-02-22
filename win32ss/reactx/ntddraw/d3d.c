@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS kernel
+ * PROJECT:          ReactOS kernel
  * PURPOSE:          Native DirectDraw implementation
  * FILE:             win32ss/reactx/ntddraw/d3d.c
  * PROGRAMER:        Magnus olsen (magnus@greatlord.com)

@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS Shell
+ * PROJECT:          ReactOS Shell
  * FILE:             base/services/shsvcs/shsvcs.c
- * PURPOSE:          MenuOS Shell Services
+ * PURPOSE:          ReactOS Shell Services
  * PROGRAMMER:       Giannis Adamopoulos
  */
 

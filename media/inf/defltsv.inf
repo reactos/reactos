@@ -1,5 +1,5 @@
 ; defltsv.inf
-; Default security settings for MenuOS Server
+; Default security settings for ReactOS Server
 
 [Version]
 Signature = "$Windows NT$"

@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/inbv/inbvport.c
  * PURPOSE:         Serial Port Boot Driver for Headless Terminal Support
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 /* INCLUDES ******************************************************************/

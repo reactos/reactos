@@ -1,7 +1,7 @@
 /*
  * lmrepl.h
  *
- * This file is part of the MenuOS PSDK package.
+ * This file is part of the ReactOS PSDK package.
  *
  * THIS SOFTWARE IS NOT COPYRIGHTED
  *

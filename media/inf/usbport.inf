@@ -8,7 +8,7 @@ Signature  = "$Windows NT$"
 LayoutFile = layout.inf
 Class      = USB
 ClassGUID  = {36FC9E60-C465-11CF-8056-444553540000}
-Provider   = %MenuOS%
+Provider   = %ReactOS%
 DriverVer  = 10/19/1999,5.00.2157.1
 
 [DestinationDirs]
@@ -117,7 +117,7 @@ LoadOrderGroup = Base
 
 [Strings]
 ; Non-localizable
-MenuOS = "MenuOS Project"
+ReactOS = "ReactOS Project"
 
 IntelMfg = "Intel"
 

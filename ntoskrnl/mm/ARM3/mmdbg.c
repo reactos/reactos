@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/mm/ARM3/mmdbg.c
  * PURPOSE:         Memory Manager support routines for the Kernel Debugger

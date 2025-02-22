@@ -1,5 +1,5 @@
 /* 
- * PROJECT:     MenuOS DiskPart
+ * PROJECT:     ReactOS DiskPart
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Turkish resource file
  * TRANSLATORS: Copyright 2015 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
@@ -13,7 +13,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 /* Basic application information */
 STRINGTABLE
 BEGIN
-    IDS_APP_HEADER "MenuOS DiskPart"
+    IDS_APP_HEADER "ReactOS DiskPart"
     IDS_APP_USAGE "\nDisk Bölümlendirme Yorumlayıcısı.\n\n\
 Kullanım: DISKPART [/S dosya adı] [/T zaman aşımı] [/?]\n\n\
 /S dosya adı\tVerilen betiği çalıştırır.\n\

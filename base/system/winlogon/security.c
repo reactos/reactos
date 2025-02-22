@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Winlogon
+ * PROJECT:         ReactOS Winlogon
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         Security utility infrastructure implementation of Winlogon
  * COPYRIGHT:       Copyright 2022 George Bișoc <george.bisoc@reactos.org>

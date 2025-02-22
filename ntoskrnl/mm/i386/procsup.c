@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD-3-Clause (https://spdx.org/licenses/BSD-3-Clause)
  * FILE:            ntoskrnl/mm/i386/procsup.c
  * PURPOSE:         Process handling for i386 architecture

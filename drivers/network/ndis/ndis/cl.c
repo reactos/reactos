@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS NDIS library
+ * PROJECT:     ReactOS NDIS library
  * FILE:        ndis/cl.c
  * PURPOSE:     Services for connectionless NDIS drivers
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

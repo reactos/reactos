@@ -1,6 +1,6 @@
 /*
- *  MenuOS kernel
- *  Copyright (C) 2006 MenuOS Team
+ *  ReactOS kernel
+ *  Copyright (C) 2006 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,11 +18,11 @@
  */
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS hive maker
+ * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/cmi.c
  * PURPOSE:         Registry file manipulation routines
- * PROGRAMMERS:     HervÃ© Poussineau
- *                  HermÃ¨s BÃ©lusca-MaÃ¯to
+ * PROGRAMMERS:     Hervé Poussineau
+ *                  Hermès Bélusca-Maïto
  */
 
 /* INCLUDES *****************************************************************/

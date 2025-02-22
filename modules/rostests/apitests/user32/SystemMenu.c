@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API tests
+ * PROJECT:     ReactOS API tests
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     Tests for system menu messages, based on msg.c Wine test
  * COPYRIGHT:   Copyright 1999 Ove Kaaven <ovek@transgaming.com>

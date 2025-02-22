@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/client/except.c
  * PURPOSE:         Exception functions
  * PROGRAMMER:      Ariadne (ariadne@xs4all.nl)
@@ -357,7 +357,7 @@ UnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
             return RetValue;
     }
 
-    /* MenuOS-specific: DPRINT a stack trace */
+    /* ReactOS-specific: DPRINT a stack trace */
     PrintStackTrace(ExceptionInfo);
 
     /*
@@ -479,7 +479,7 @@ UnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
         NtClose(KeyHandle);
     }
 
-    // TODO: Start a MenuOS Fault Reporter (unimplemented!)
+    // TODO: Start a ReactOS Fault Reporter (unimplemented!)
     //
     // For now we are doing the "old way" (aka Win2k), that is also the fallback
     // case for Windows XP/2003 in case it does not find faultrep.dll to display
@@ -525,7 +525,7 @@ UnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
     if (!NT_SUCCESS(Status) || (ErrorResponse != ResponseCancel) || IsSecondChance)
         goto Quit;
 
-    /* If the exception comes from a CSR Server, kill it (this will lead to MenuOS shutdown) */
+    /* If the exception comes from a CSR Server, kill it (this will lead to ReactOS shutdown) */
     if (BaseRunningInServerProcess)
     {
         IsSecondChance = TRUE;
@@ -731,7 +731,7 @@ RaiseException(
                       nNumberOfArguments * sizeof(ULONG_PTR));
     }
 
-    /* Better handling of Delphi Exceptions... a MenuOS Hack */
+    /* Better handling of Delphi Exceptions... a ReactOS Hack */
     if (dwExceptionCode == 0xeedface || dwExceptionCode == 0xeedfade)
     {
         DPRINT1("Delphi Exception at address: %p\n", ExceptionRecord.ExceptionInformation[0]);

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API Tests
+ * PROJECT:     ReactOS API Tests
  * LICENSE:     GPL - See COPYING in the top level directory
  * PURPOSE:     Test for recv
  * COPYRIGHT:   Copyright 2008 Colin Finck (colin@reactos.org)
@@ -16,7 +16,7 @@
 
 #define RECV_BUF   4
 
-/* For valid test results, the MenuOS Website needs to return at least 8 bytes on a "GET / HTTP/1.0" request.
+/* For valid test results, the ReactOS Website needs to return at least 8 bytes on a "GET / HTTP/1.0" request.
    Also the first 4 bytes and the last 4 bytes need to be different.
    Both factors usually apply on standard HTTP responses. */
 

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS api tests
+ * PROJECT:     ReactOS api tests
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Test for Shell Hook
  * COPYRIGHT:   Copyright 2020-2024 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
@@ -248,7 +248,7 @@ static const TEST_ENTRY s_entries1[] =
 static HHOOK s_hShellHook = NULL;
 static UINT s_cCreated = 0;
 static UINT s_cDestroyed = 0;
-static WCHAR s_szName[] = L"MenuOS ShellHook testcase";
+static WCHAR s_szName[] = L"ReactOS ShellHook testcase";
 static HWND s_hwndParent = NULL;
 static HWND s_hwndTarget = NULL;
 static HWND s_hwndMain = NULL;

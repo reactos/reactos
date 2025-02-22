@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         MenuOS Virtual DOS Machine
+ * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/ntvdm.h
  * PURPOSE:         Header file to define commonly used stuff
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>

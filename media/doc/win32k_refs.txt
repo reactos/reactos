@@ -39,7 +39,7 @@ NtUser/NtGdi/win32k syscalls
 A process and/or thread automatically gets converted to a GUI thread /
 process when the first syscall from the shadow service table is called (ie.
 any NtUser* or NtGdi* call). GUI threads have bigger kernel stack (FIXME:
-not the case on MenuOS yet) and have associated storage for the Win32
+not the case on ReactOS yet) and have associated storage for the Win32
 structures. The conversion itself happens in the syscall handler and the
 win32k callbacks (registered with PsEstablishWin32Callouts) are called
 accordingly.

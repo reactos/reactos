@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS kernel
+ * PROJECT:          ReactOS kernel
  * PURPOSE:          User Atom helper routines
  * FILE:             win32ss/user/ntuser/useratom.c
  * PROGRAMER:        Filip Navara <xnavara@volny.cz>

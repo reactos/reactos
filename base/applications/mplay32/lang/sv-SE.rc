@@ -1,5 +1,5 @@
 /*
- * PROJECT:    MenuOS MPlay32
+ * PROJECT:    ReactOS MPlay32
  * FILE:       base/applications/mplay32/lang/sv-SE.rc
  * PURPOSE:    Swedish resource file
  * TRANSLATOR: Jaix Bly
@@ -68,7 +68,7 @@ BEGIN
     IDS_TOOLTIP_SEEKFORW "Sök framåt"
     IDS_TOOLTIP_FORWARD "Spola fremåt"
     IDS_TOOLTIP_PAUSE "Pause"
-    IDS_APPTITLE "MenuOS Multimediaspelare"
+    IDS_APPTITLE "ReactOS Multimediaspelare"
     IDS_PLAY "Play"
     IDS_DEFAULTMCIERRMSG "No description is available for this error."
 END

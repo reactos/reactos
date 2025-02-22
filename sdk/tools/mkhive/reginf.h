@@ -1,6 +1,6 @@
 /*
- *  MenuOS kernel
- *  Copyright (C) 2006 MenuOS Team
+ *  ReactOS kernel
+ *  Copyright (C) 2006 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,10 +18,10 @@
  */
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS hive maker
+ * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/reginf.h
  * PURPOSE:         Inf file import code
- * PROGRAMMER:      HervÃ© Poussineau
+ * PROGRAMMER:      Hervé Poussineau
  */
 
 #pragma once

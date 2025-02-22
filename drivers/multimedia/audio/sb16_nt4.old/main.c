@@ -1,5 +1,5 @@
 /*
-    MenuOS
+    ReactOS
     Sound Blaster driver
 
     Programmers:

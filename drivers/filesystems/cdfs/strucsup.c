@@ -167,7 +167,7 @@ CdDeleteFcbNonpaged (
 RTL_GENERIC_COMPARE_ROUTINE CdFcbTableCompare;
 
 RTL_GENERIC_COMPARE_RESULTS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFcbTableCompare (
     _In_ PRTL_GENERIC_TABLE FcbTable,
     _In_ PVOID Fid1,
@@ -178,7 +178,7 @@ CdFcbTableCompare (
 RTL_GENERIC_ALLOCATE_ROUTINE CdAllocateFcbTable;
 
 PVOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdAllocateFcbTable (
     _In_ PRTL_GENERIC_TABLE FcbTable,
     _In_ CLONG ByteSize
@@ -188,7 +188,7 @@ CdAllocateFcbTable (
 RTL_GENERIC_FREE_ROUTINE CdDeallocateFcbTable;
 
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdDeallocateFcbTable (
     _In_ PRTL_GENERIC_TABLE FcbTable,
     _In_ __drv_freesMem(Mem) _Post_invalid_ PVOID Buffer
@@ -2292,7 +2292,7 @@ RetryReadToc:
 
         if (!UseReadToc &&
             ((Status == STATUS_INVALID_DEVICE_REQUEST) ||
-             (Status == STATUS_NOT_IMPLEMENTED) || /* MenuOS Change: we return STATUS_NOT_IMPLEMENTED for IOCTL_CDROM_READ_TOC_EX */
+             (Status == STATUS_NOT_IMPLEMENTED) || /* ReactOS Change: we return STATUS_NOT_IMPLEMENTED for IOCTL_CDROM_READ_TOC_EX */
              (Status == STATUS_INVALID_PARAMETER))) {
 
             UseReadToc = TRUE;
@@ -2511,7 +2511,7 @@ Return Value:
             Vcb->PathTableFcb = NULL;
         }
 
-        CdDeallocateFcbIndex( IrpContext, *(PVOID*)&Fcb );/* MenuOS Change: GCC "passing argument 1 from incompatible pointer type" */
+        CdDeallocateFcbIndex( IrpContext, *(PVOID*)&Fcb );/* ReactOS Change: GCC "passing argument 1 from incompatible pointer type" */
         break;
 
     case CDFS_NTC_FCB_DATA :
@@ -2529,7 +2529,7 @@ Return Value:
             Vcb->VolumeDasdFcb = NULL;
         }
 
-        CdDeallocateFcbData( IrpContext, *(PVOID*)&Fcb );/* MenuOS Change: GCC "passing argument 1 from incompatible pointer type" */
+        CdDeallocateFcbData( IrpContext, *(PVOID*)&Fcb );/* ReactOS Change: GCC "passing argument 1 from incompatible pointer type" */
     }
 
     //
@@ -2633,7 +2633,7 @@ Return Value:
 
     ExDeleteResourceLite( &FcbNonpaged->FcbResource );
 
-    CdDeallocateFcbNonpaged( IrpContext, *(PVOID*)&FcbNonpaged );/* MenuOS Change: GCC "passing argument 1 from incompatible pointer type" */
+    CdDeallocateFcbNonpaged( IrpContext, *(PVOID*)&FcbNonpaged );/* ReactOS Change: GCC "passing argument 1 from incompatible pointer type" */
 
     return;
 }
@@ -2644,7 +2644,7 @@ Return Value:
 //
 
 RTL_GENERIC_COMPARE_RESULTS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFcbTableCompare (
     _In_ PRTL_GENERIC_TABLE FcbTable,
     _In_ PVOID Fid1,
@@ -2702,7 +2702,7 @@ Return Value:
 //
 
 PVOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdAllocateFcbTable (
     _In_ PRTL_GENERIC_TABLE FcbTable,
     _In_ CLONG ByteSize
@@ -2739,7 +2739,7 @@ Return Value:
 //  Local support routine
 //
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdDeallocateFcbTable (
     _In_ PRTL_GENERIC_TABLE FcbTable,
     _In_ __drv_freesMem(Mem) _Post_invalid_ PVOID Buffer

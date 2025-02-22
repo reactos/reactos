@@ -1,5 +1,5 @@
 ; defltwk.inf
-; Default security settings for MenuOS Workstation
+; Default security settings for ReactOS Workstation
 
 [Version]
 Signature = "$Windows NT$"

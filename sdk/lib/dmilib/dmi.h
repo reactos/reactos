@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS DMI/SMBIOS Library
+ * PROJECT:     ReactOS DMI/SMBIOS Library
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dmi.h
  * PURPOSE:     SMBIOS table parsing functions

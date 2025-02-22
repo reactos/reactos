@@ -27,5 +27,5 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "Menaxher License"
     IDS_CPLDESCRIPTION_1 "Menaxher License"
-    IDS_REACTOS "MenuOS - ProgramFalas"
+    IDS_REACTOS "ReactOS - ProgramFalas"
 END

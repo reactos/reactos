@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Win32k subsystem
+ * PROJECT:         ReactOS Win32k subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            win32ss/user/ntuser/kbdlayout.c
  * PURPOSE:         Keyboard layout management

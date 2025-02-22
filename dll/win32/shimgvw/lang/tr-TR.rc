@@ -4,7 +4,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "MenuOS Resim ve Faks Görüntüleyicisi"
+    IDS_APPTITLE "ReactOS Resim ve Faks Görüntüleyicisi"
     IDS_SETASDESKBG "Masaüstü Arka Planı Olarak Ayarla"
     IDS_NOPREVIEW "Kullanılabilir önizleme yok."
     IDS_PREVIEW "Önizleme"

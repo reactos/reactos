@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS DNS Shared Library
+ * PROJECT:     ReactOS DNS Shared Library
  * FILE:        lib/dnslib/flatbuf.c
  * PURPOSE:     Functions for managing the Flat Buffer Implementation (FLATBUF)
  */

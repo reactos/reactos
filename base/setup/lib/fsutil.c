@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Setup Library
+ * PROJECT:     ReactOS Setup Library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Filesystem Format and ChkDsk support functions
  * COPYRIGHT:   Copyright 2003-2019 Casper S. Hornstrup <chorns@users.sourceforge.net>
@@ -155,7 +155,7 @@ typedef struct _FILE_SYSTEM
     PULIB_CHKDSK ChkdskFunc;
 } FILE_SYSTEM, *PFILE_SYSTEM;
 
-/* The list of file systems on which we can install MenuOS */
+/* The list of file systems on which we can install ReactOS */
 static FILE_SYSTEM RegisteredFileSystems[] =
 {
     /* NOTE: The FAT formatter will automatically

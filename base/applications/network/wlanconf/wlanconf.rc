@@ -4,7 +4,7 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-#define REACTOS_STR_FILE_DESCRIPTION   "MenuOS WLAN Configuration Tool"
+#define REACTOS_STR_FILE_DESCRIPTION   "ReactOS WLAN Configuration Tool"
 #define REACTOS_STR_INTERNAL_NAME      "wlanconf"
 #define REACTOS_STR_ORIGINAL_FILENAME  "wlanconf.exe"
 #define REACTOS_STR_ORIGINAL_COPYRIGHT "Cameron Gutman (cameron.gutman@reactos.org)"

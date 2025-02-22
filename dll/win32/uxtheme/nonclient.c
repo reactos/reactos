@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS uxtheme.dll
+ * PROJECT:         ReactOS uxtheme.dll
  * FILE:            dll/win32/uxtheme/nonclient.c
  * PURPOSE:         uxtheme non client area management
  * PROGRAMMER:      Giannis Adamopoulos

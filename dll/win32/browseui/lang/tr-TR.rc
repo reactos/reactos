@@ -74,7 +74,7 @@ BEGIN
     END
     POPUP "Ya&rdım", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "&MenuOS Hakkında", IDM_HELP_ABOUT
+        MENUITEM "&ReactOS Hakkında", IDM_HELP_ABOUT
     END
 END
 
@@ -337,6 +337,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARSE_ADDR_ERR_TITLE "MenuOS Gezgini"
-    IDS_PARSE_ADDR_ERR_TEXT "MenuOS Gezgini '%1' ögesini bulamadı. Girdiğiniz değeri kontrol edin ve yeniden arayın."
+    IDS_PARSE_ADDR_ERR_TITLE "ReactOS Gezgini"
+    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Gezgini '%1' ögesini bulamadı. Girdiğiniz değeri kontrol edin ve yeniden arayın."
 END

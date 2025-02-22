@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS ComPort Library for NEC PC-98 series
+ * PROJECT:         ReactOS ComPort Library for NEC PC-98 series
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         Provides a serial port library for KDCOM, INIT, and FREELDR
  * COPYRIGHT:       Copyright 2020 Dmitry Borisov (di.sean@protonmail.com)
@@ -306,7 +306,7 @@ ComPortTest1(IN PUCHAR Address)
         /* Set all modem output bits */
         WRITE_PORT_UCHAR((PUCHAR)SER2_IO_o_MODEM_CONTROL,
                          SER2_MCR_OUT_1 | SER2_MCR_LOOPBACK); // Windows
-/* MenuOS
+/* ReactOS
         WRITE_PORT_UCHAR((PUCHAR)SER2_IO_o_MODEM_CONTROL,
                          SER2_MCR_DTR_STATE | SER2_MCR_RTS_STATE |
                          SER2_MCR_OUT_1 | SER2_MCR_OUT_2 | SER2_MCR_LOOPBACK);
@@ -320,7 +320,7 @@ ComPortTest1(IN PUCHAR Address)
          * equal to the lower nibble of the MCR (modem input bits).
          */
         if (Msr & SER_MSR_RI) // Windows
-        // if (Msr & (SER_MSR_CTS | SER_MSR_DSR | SER_MSR_RI | SER_MSR_DCD) == 0xF0) // MenuOS
+        // if (Msr & (SER_MSR_CTS | SER_MSR_DSR | SER_MSR_RI | SER_MSR_DCD) == 0xF0) // ReactOS
         {
             RetVal = TRUE;
         }

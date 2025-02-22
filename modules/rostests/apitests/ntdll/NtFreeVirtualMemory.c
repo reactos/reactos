@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API Tests
+ * PROJECT:     ReactOS API Tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Test for NtFreeVirtualMemory
  * COPYRIGHT:   Copyright 2011 Jérôme Gardou <jerome.gardou@reactos.org>

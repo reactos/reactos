@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Shell32
+ * PROJECT:     ReactOS Shell32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Estonian resource file
  * TRANSLATOR:  Copyright 2018 Joann Mõndresku <joannmondresku@gmail.com>
@@ -152,9 +152,9 @@ BEGIN
     LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10, SS_NOPREFIX
     LTEXT "Autoriõigus 1996-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
-    LTEXT " MenuOS Team\0", IDC_STATIC, 105, 75, 53, 10
+    LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20, SS_NOPREFIX
-    LTEXT "See MenuOS versioon on registreeritud üksusele:", IDC_ABOUT_REG_TO, 35, 115, 180, 10
+    LTEXT "See ReactOS versioon on registreeritud üksusele:", IDC_ABOUT_REG_TO, 35, 115, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10, SS_NOPREFIX
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10, SS_NOPREFIX
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
@@ -168,7 +168,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "MenuOS'i on teile toonud:", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "ReactOS'i on teile toonud:", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -178,7 +178,7 @@ CAPTION "Käivitus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "Kirjuta programmi, kausta, dokumendi või Interneti-ressursi nimi ja MenuOS avab selle.", 12289, 36, 11, 185, 18
+    LTEXT "Kirjuta programmi, kausta, dokumendi või Interneti-ressursi nimi ja ReactOS avab selle.", 12289, 36, 11, 185, 18
     LTEXT "&Ava:", 12305, 7, 39, 24, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 184, 100
     DEFPUSHBUTTON "OK", IDOK, 36, 70, 59, 14
@@ -428,7 +428,7 @@ BEGIN
     GROUPBOX "Toimingud", -1, 7, 10, 249, 40
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
     AUTORADIOBUTTON "Näita kaustades tavalisi &toiminguid", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP //FIXME: accelerator collision &T
-    AUTORADIOBUTTON "Kasuta MenuOS'i klassikalisi &kaustu", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
+    AUTORADIOBUTTON "Kasuta ReactOS'i klassikalisi &kaustu", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
     GROUPBOX "Kaustade sirvimine", -1, 7, 60, 249, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "Ava iga kaust &samas aknas", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
@@ -498,7 +498,7 @@ END
 
 IDD_LOG_OFF DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Logi MenuOS'ist välja"
+CAPTION "Logi ReactOS'ist välja"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
@@ -516,14 +516,14 @@ BEGIN
     PUSHBUTTON "&Switch User", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
     PUSHBUTTON "&Logi välja", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Loobu", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
-    LTEXT "Logi MenuOS'ist välja", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 165, 19
+    LTEXT "Logi ReactOS'ist välja", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 165, 19
     CTEXT "Switch User", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
     CTEXT "Logi välja", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
 END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Ühenda MenuOS lahti"
+CAPTION "Ühenda ReactOS lahti"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
@@ -537,7 +537,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLIN
 CAPTION "Automaatesitus"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Valige sisutüüp. Seejärel valige toiming, mille MenuOS automaatselt sooritab, kui selles seadmes kasutatakse seda tüüpi:", 1000, 7, 7, 215, 20
+    LTEXT "&Valige sisutüüp. Seejärel valige toiming, mille ReactOS automaatselt sooritab, kui selles seadmes kasutatakse seda tüüpi:", 1000, 7, 7, 215, 20
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
     GROUPBOX "Toimingud", -1, 7, 45, 212, 146
     AUTORADIOBUTTON "Valige sooritatav &toiming:", 1005, 14, 54, 202, 10, WS_GROUP
@@ -553,7 +553,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
     LTEXT "See plaat või seade sisladab rohkem kui üht tüüpi faile.", 1001, 32, 7, 191, 20
-    LTEXT "Mida soovite MenuOS'il teha lasta?", 1002, 32, 31, 188, 8
+    LTEXT "Mida soovite ReactOS'il teha lasta?", 1002, 32, 31, 188, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
     DEFPUSHBUTTON "OK", IDOK, 96, 186, 60, 14
     PUSHBUTTON "Loobu", IDCANCEL, 160, 186, 60, 14
@@ -565,10 +565,10 @@ CAPTION "Segasisu"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "MenuOS saab sooritada sama toimigut, kui selles seadmes kasutatakse seda tüüpi:", 1001, 30, 7, 193, 20
+    LTEXT "ReactOS saab sooritada sama toimigut, kui selles seadmes kasutatakse seda tüüpi:", 1001, 30, 7, 193, 20
     ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
     EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Mida soovite MenuOS'il teha lasta?", 1002, 32, 41, 190, 8
+    LTEXT "Mida soovite ReactOS'il teha lasta?", 1002, 32, 41, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
     AUTOCHECKBOX "Valige sooritatav toiming.", 1004, 32, 171, 190, 10
     DEFPUSHBUTTON "OK", IDOK, 96, 185, 60, 14
@@ -581,8 +581,8 @@ CAPTION "Automaatesitus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "MenuOS saab automaatselt sooritada sama toimingut iga kord kui ühendate seda seadet.", 1001, 32, 7, 190, 22
-    LTEXT "&Mida soovite MenuOS'il teha lasta?", 1002, 32, 31, 190, 8
+    LTEXT "ReactOS saab automaatselt sooritada sama toimingut iga kord kui ühendate seda seadet.", 1001, 32, 7, 190, 22
+    LTEXT "&Mida soovite ReactOS'il teha lasta?", 1002, 32, 31, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
     AUTOCHECKBOX "&Valige toiming", 1004, 32, 143, 190, 8
     DEFPUSHBUTTON "OK", IDOK, 94, 160, 60, 14
@@ -591,7 +591,7 @@ END
 
 IDD_SHUTDOWN DIALOGEX 0, 0, 211, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Sulge MenuOS"
+CAPTION "Sulge ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
@@ -861,7 +861,7 @@ BEGIN
 
     /* Warning format system drive dialog strings */
     IDS_NO_FORMAT_TITLE "Cannot format this volume"
-    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for MenuOS to run."
+    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Ei saanud kuvada Run faili dialoogiboksi (sisemine viga)"
@@ -947,8 +947,8 @@ BEGIN
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Kaust"
-    IDS_BAT_FILE "MenuOS Batch Fail"
-    IDS_CMD_FILE "MenuOS Command Skript"
+    IDS_BAT_FILE "ReactOS Batch Fail"
+    IDS_CMD_FILE "ReactOS Command Skript"
     IDS_COM_FILE "DOS Rakendus"
     IDS_CPL_FILE "Juhtpaneeli üksus"
     IDS_CUR_FILE "Kursor"
@@ -990,7 +990,7 @@ BEGIN
     IDS_DEFAULT_CLUSTER_SIZE "Vaikimisi jaotusühik"
     IDS_COPY_OF "Koopia üksusest"
 
-    IDS_SHLEXEC_NOASSOC "Ühtegi MenuOS'i programmi ei ole seadistatud seda tüüpi failide avamiseks."
+    IDS_SHLEXEC_NOASSOC "Ühtegi ReactOS'i programmi ei ole seadistatud seda tüüpi failide avamiseks."
 
     IDS_FILE_DETAILS "Üksikasjad '%s' laienduse kohta"
     IDS_FILE_DETAILSADV "Faili, mille laiend on '%s', on tüübiga '%s'. Kõiki '%s'-tüüpi faile mõjutavate sätete muutmiseks klõpsa nuppu Täpsemalt."
@@ -1069,7 +1069,7 @@ BEGIN
     IDS_SYSTEMFOLDER "System Folder"
 
     /* For IDD_LOG_OFF_FANCY */
-    IDS_LOG_OFF_DESC "Closes your programs and ends your MenuOS session."
+    IDS_LOG_OFF_DESC "Closes your programs and ends your ReactOS session."
     IDS_SWITCH_USER_DESC "Lets another user log on while your programs and files remain open.\r\n\r\n(You can also switch users by pressing the Windows logo key + L.)"
     IDS_LOG_OFF_TITLE "Logi välja"
     IDS_SWITCH_USER_TITLE "Switch User"

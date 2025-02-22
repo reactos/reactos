@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS PSDK
+ * PROJECT:     ReactOS PSDK
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Standard Annotation Language (SAL) definitions - GCC overrides
  * COPYRIGHT:   2021 - Jérôme Gardou

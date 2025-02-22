@@ -1,8 +1,8 @@
 /*
- * PROJECT:     MenuOS Composite Battery Driver
+ * PROJECT:     ReactOS Composite Battery Driver
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Plug-and-Play IOCTL/IRP Handling
- * COPYRIGHT:   Copyright 2010 MenuOS Portable Systems Group <ros.arm@reactos.org>
+ * COPYRIGHT:   Copyright 2010 ReactOS Portable Systems Group <ros.arm@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/

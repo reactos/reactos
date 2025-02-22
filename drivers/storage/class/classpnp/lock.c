@@ -111,7 +111,7 @@ Return Value:
 
 --*/
 ULONG
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassAcquireRemoveLockEx(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PVOID Tag,
@@ -247,7 +247,7 @@ Return Value:
 
 --*/
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassReleaseRemoveLock(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_opt_ PIRP Tag
@@ -397,7 +397,7 @@ Return Value:
 
 --*/
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassCompleteRequest(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp,
@@ -446,7 +446,7 @@ ClassCompleteRequest(
 
 
 RTL_GENERIC_COMPARE_RESULTS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 RemoveTrackingCompareRoutine(
     PRTL_GENERIC_TABLE Table,
     PVOID FirstStruct,
@@ -473,7 +473,7 @@ RemoveTrackingCompareRoutine(
 }
 
 PVOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 RemoveTrackingAllocateRoutine(
     PRTL_GENERIC_TABLE Table,
     CLONG ByteSize
@@ -485,7 +485,7 @@ RemoveTrackingAllocateRoutine(
 }
 
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 RemoveTrackingFreeRoutine(
     PRTL_GENERIC_TABLE Table,
     PVOID Buffer

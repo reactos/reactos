@@ -4,7 +4,7 @@ Signature  = "$Windows NT$"
 LayoutFile = layout.inf
 Class      = Processor
 ClassGUID  = {50127DC3-0F36-415e-A6CC-4CB3BE910B65}
-Provider   = %MenuOS%
+Provider   = %ReactOS%
 DriverVer  = 09/27/2007,1.00
 
 [ControlFlags]
@@ -121,7 +121,7 @@ LoadOrderGroup = Extended Base
 
 [Strings]
 ; Non-localizable
-MenuOS = "MenuOS Project"
+ReactOS = "ReactOS Project"
 
 CyrixMfg = "Cyrix"
 IntelMfg = "Intel"

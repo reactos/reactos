@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Timedate Control Panel
+ * PROJECT:     ReactOS Timedate Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2012 yinwh <yinwh79@163.com>
@@ -61,8 +61,8 @@ BEGIN
     IDS_TIMEZONEUNKNOWN "未知"
     IDS_INETTIMESUCSYNC "时间已成功与 %s 同步，%s %s"
     IDS_INETTIMENEXTSYNC "下次同步：%s %s"
-    IDS_INETTIMESYNCING "请稍候，MenuOS 正在同步 %s"
-    IDS_INETTIMEERROR "在 MenuOS 同步时发生了一个错误。%s"
+    IDS_INETTIMESYNCING "请稍候，ReactOS 正在同步 %s"
+    IDS_INETTIMEERROR "在 ReactOS 同步时发生了一个错误。%s"
     IDS_INETTIMESUCFILL "请输入一个 NTP 服务器的名称来同步时间"
     IDS_INETTIMEWELCOME "从列表中选择一个 NTP 服务器的名称来同步该计算机的时间"
 END

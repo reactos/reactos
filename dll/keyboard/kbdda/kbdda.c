@@ -1,6 +1,6 @@
 /*
  * Danish Keyboard layout
- * Copyright (C) 2004 MenuOS Development Team
+ * Copyright (C) 2004 ReactOS Development Team
  */
 #define WIN32_NO_STATUS
 #include <stdarg.h>
@@ -162,11 +162,11 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { '1',           0, {'1',      '!'} },
   /* Ctrl-2 generates NUL */
   { VK_OEM_PLUS,   0, {'+',      '?'} },
-  { VK_OEM_6,      CAPLOK,   {0xe5,     0xc5} }, /* Ã… */
+  { VK_OEM_6,      CAPLOK,   {0xe5,     0xc5} }, /* Å */
 
   /* Specials */
-  { VK_OEM_7,	     CAPLOK,   {0xf8,     0xd8} }, /* Ã˜ */
-  { VK_OEM_3,	     CAPLOK,   {0xe6,     0xc6} }, /* Ã† */
+  { VK_OEM_7,	     CAPLOK,   {0xf8,     0xd8} }, /* Ø */
+  { VK_OEM_3,	     CAPLOK,   {0xe6,     0xc6} }, /* Æ */
 
   { VK_OEM_COMMA,  CAPLOK,   {',',      ';'} },
   { VK_OEM_PERIOD, CAPLOK,   {'.',      ':'} },
@@ -353,10 +353,10 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x51, L"PAGE DOWN" },
   { 0x52, L"INS" },
   { 0x53, L"DEL" },
-  { 0x54, L"<MenuOS>" },
+  { 0x54, L"<ReactOS>" },
   { 0x56, L"HELP" },
-  { 0x5b, L"VENSTRE <MenuOS>" },
-  { 0x5c, L"H\x00D8JRE <MenuOS>" },
+  { 0x5b, L"VENSTRE <ReactOS>" },
+  { 0x5c, L"H\x00D8JRE <ReactOS>" },
   { 0x5d, L"Program" },
   { 0, NULL }
 };
@@ -373,7 +373,7 @@ ROSDATA DEADKEY_LPWSTR dead_key_names[] = {
 #define DEADTRANS(ch, accent, comp, flags) MAKELONG(ch, accent), comp, flags
 
 ROSDATA DEADKEY dead_key[] = {
-  /* Â¨ */
+  /* ¨ */
   { DEADTRANS(0x0061, 0x00a8, 0x00e4, 0x0000) },
   { DEADTRANS(0x0065, 0x00a8, 0x00eb, 0x0000) },
   { DEADTRANS(0x0069, 0x00a8, 0x00ef, 0x0000) },
@@ -409,7 +409,7 @@ ROSDATA DEADKEY dead_key[] = {
   { DEADTRANS(0x004e, 0x007e, 0x00d1, 0x0000) },
   { DEADTRANS(0x0020, 0x007e, 0x007e, 0x0000) },
 
-  /* Â´ */
+  /* ´ */
   { DEADTRANS(0x0061, 0x00b4, 0x00e1, 0x0000) },
   { DEADTRANS(0x0065, 0x00b4, 0x00e9, 0x0000) },
   { DEADTRANS(0x0069, 0x00b4, 0x00ed, 0x0000) },

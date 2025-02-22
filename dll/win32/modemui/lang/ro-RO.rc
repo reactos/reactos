@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Modem Properties
+ * PROJECT:     ReactOS Modem Properties
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2018 Ștefan Fulea <stefan.fulea@mail.com>
@@ -372,7 +372,7 @@ BEGIN
     3053 "Imposibil de afişat proprietăţile modemului deoarece modemul nu este disponibil.\n\nReporniţi sistemul şi încercaţi din nou."
     3054 "Proprietăţi pentru modemuri"
     3060 "Sigur eliminaţi din sistem modemurile selectate?"
-    3061 "MenuOS nu a reuşit să elimine modemul '%1' din %2."
+    3061 "ReactOS nu a reuşit să elimine modemul '%1' din %2."
     3062 "Modem"
     3069 "Memorie insuficientă pentru a deschide panoul de control al modemului.\n\nÎnchideţi unele programe şi încercaţi din nou."
     3073 "Pentru a instala un modem trebuie să fiţi administrator al sistemului."

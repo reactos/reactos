@@ -180,7 +180,7 @@ uint64_t def_incompat_flags = BTRFS_INCOMPAT_FLAGS_EXTENDED_IREF | BTRFS_INCOMPA
 uint16_t def_csum_type = CSUM_TYPE_CRC32C;
 
 #ifndef __REACTOS__
-// the following definitions come from fmifs.h in MenuOS
+// the following definitions come from fmifs.h in ReactOS
 
 typedef struct {
     ULONG Lines;

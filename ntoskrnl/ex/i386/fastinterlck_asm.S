@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS kernel
+ * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/i386/fastinterlck_asm.S
  * PURPOSE:         FASTCALL Interlocked Functions
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)

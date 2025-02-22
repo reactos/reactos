@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS kernel
+ * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/zone.c
  * PURPOSE:         Implements zone buffers
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)

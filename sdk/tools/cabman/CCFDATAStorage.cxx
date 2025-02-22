@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS cabinet manager
+ * PROJECT:     ReactOS cabinet manager
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     CCFDATAStorage class implementation
  * COPYRIGHT:   Copyright 2017 Casper S. Hornstrup (chorns@users.sourceforge.net)

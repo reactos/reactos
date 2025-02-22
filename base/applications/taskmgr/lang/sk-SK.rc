@@ -417,7 +417,7 @@ BEGIN
     IDS_MENU_CPUHISTORY "&História procesora"
     IDS_MENU_SHOWKERNELTIMES "&Zobraziť časy jadra"
     IDS_CREATENEWTASK "Vytvoriť novú úlohu"
-    IDS_CREATENEWTASK_DESC "Zadajte názov programu, priečinka, dokumentu alebo internetového zdroja a systém MenuOS ho otvorí."
+    IDS_CREATENEWTASK_DESC "Zadajte názov programu, priečinka, dokumentu alebo internetového zdroja a systém ReactOS ho otvorí."
     IDS_MSG_ACCESSPROCESSAFF "Nie je možné sprístupniť afinitu procesu"
     IDS_MSG_PROCESSONEPRO "Proces musí mať afinitu aspoň k jednému procesoru."
     IDS_MSG_INVALIDOPTION "Neplatná možnosť"

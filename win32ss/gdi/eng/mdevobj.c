@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS kernel
+ * PROJECT:          ReactOS kernel
  * PURPOSE:          Support for meta devices
  * FILE:             win32ss/gdi/eng/mdevobj.c
  * PROGRAMER:        Hervé Poussineau

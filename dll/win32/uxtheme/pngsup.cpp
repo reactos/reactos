@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS uxtheme.dll
+ * PROJECT:     ReactOS uxtheme.dll
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Support for PNG images in visual styles
  * COPYRIGHT:   Copyright 2023 Ethan Rodensky <splitwirez@gmail.com>

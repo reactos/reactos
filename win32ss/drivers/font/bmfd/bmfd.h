@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS win32 subsystem
+ * PROJECT:         ReactOS win32 subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         GDI font driver for bitmap fonts
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)

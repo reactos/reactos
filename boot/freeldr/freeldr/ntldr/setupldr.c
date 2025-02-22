@@ -533,7 +533,7 @@ LoadReactOSSetup(
     /* Let the user know we started loading */
     UiDrawBackdrop();
     UiDrawStatusText("Setup is loading...");
-    UiDrawProgressBarCenter("Loading MenuOS Setup...");
+    UiDrawProgressBarCenter("Loading ReactOS Setup...");
 
     /* Retrieve the system path */
     *BootPath = ANSI_NULL;

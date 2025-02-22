@@ -5,9 +5,9 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 /* Default settings */
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "MenuOS - Vítejte"
-    IDS_DEFAULT_TOPIC_TITLE "MenuOS"
-    IDS_DEFAULT_TOPIC_DESC "Vítejte v operačním systému MenuOS.\n\nKlepněte na tlačítko v levém sloupci."
+    IDS_APPTITLE "ReactOS - Vítejte"
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Vítejte v operačním systému ReactOS.\n\nKlepněte na tlačítko v levém sloupci."
     IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Zobrazit dialog znovu"
     IDS_CLOSETEXT "&Konec"
@@ -16,7 +16,7 @@ END
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_BUTTON0 "&Instalovat MenuOS"
+    IDS_TOPIC_BUTTON0 "&Instalovat ReactOS"
     IDS_TOPIC_BUTTON1 "&Prohlížet toto CD"
     IDS_TOPIC_BUTTON2 "&Konec"
 END
@@ -24,7 +24,7 @@ END
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_TITLE0 "Instalovat MenuOS"
+    IDS_TOPIC_TITLE0 "Instalovat ReactOS"
     IDS_TOPIC_TITLE1 "Prohlížet toto CD"
     IDS_TOPIC_TITLE2 "Konec"
 END
@@ -32,7 +32,7 @@ END
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_DESC0 "Nainstaluje MenuOS na Váš počítač nebo zaktualizuje existující systém."
+    IDS_TOPIC_DESC0 "Nainstaluje ReactOS na Váš počítač nebo zaktualizuje existující systém."
     IDS_TOPIC_DESC1 "Prohlížet toto CD."
     IDS_TOPIC_DESC2 "Klepněte pro ukončení tohoto programu."
 END

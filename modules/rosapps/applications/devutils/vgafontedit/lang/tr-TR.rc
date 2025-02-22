@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS VGA Font Editor
+ * PROJECT:     ReactOS VGA Font Editor
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Turkish resource file
  * TRANSLATOR:  Copyright 2022 Süleyman Poyraz <zaryob.dev@gmail.com>
@@ -13,7 +13,7 @@ CAPTION "About"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON           IDI_MAIN,                     IDC_STATIC, 10, 10, 20, 20
-    LTEXT          "MenuOS VGA Yazı Tipi Düzenleyici",    IDC_STATIC, 37, 10, 93, 10
+    LTEXT          "ReactOS VGA Yazı Tipi Düzenleyici",    IDC_STATIC, 37, 10, 93, 10
     LTEXT          "Telif Hakkı 2008 Colin Finck", IDC_STATIC, 37, 20, 93, 10
     DEFPUSHBUTTON  "TAMAM",                         IDCANCEL,   40, 44, 55, 15
 END
@@ -80,7 +80,7 @@ BEGIN
     IDS_UNSUPPORTEDPSF, "Desklenmeyen PSF font formatı! Düzenleyici, özel modlar olmadan yalnızca 8x8 yazı tiplerini destekler."
     IDS_DOCNAME, "Font %1!u!"
     IDS_SAVEPROMPT, """%1"" dosyası değiştirildi, ancak kaydedilmedi.\n\nKaydetmek istiyor musunuz?"
-    IDS_APPTITLE, "MenuOS VGA Yazı Tipi Düzenleyici"
+    IDS_APPTITLE, "ReactOS VGA Yazı Tipi Düzenleyici"
     IDS_CLOSEEDIT, "Lütfen önce tüm açık Düzenleme pencerelerini kapatın!"
 
     IDS_TOOLTIP_NEW, "Yeni"

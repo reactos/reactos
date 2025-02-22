@@ -1,5 +1,5 @@
 /*
- * PROJECT:     PAINT for MenuOS
+ * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Czech resource file
  * TRANSLATORS: Copyright 2009-2010 Radek Liška aka Black_Fox <radekliska@gmail.com>
@@ -235,7 +235,7 @@ STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Malování"
     IDS_WINDOWTITLE "%s - Malování"
-    IDS_INFOTITLE "MenuOS Malování"
+    IDS_INFOTITLE "ReactOS Malování"
     IDS_INFOTEXT "Dostupné pod licencí GNU Lesser General Public License (LGPL, viz. www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Chcete uložit provedené změny v %s?"
     IDS_DEFAULTFILENAME "Bez názvu"

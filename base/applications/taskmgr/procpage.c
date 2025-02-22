@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Task Manager
+ * PROJECT:     ReactOS Task Manager
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Processes Page
  * COPYRIGHT:   Copyright 1999-2001 Brian Palmer <brianp@reactos.org>
@@ -1249,7 +1249,7 @@ void ProcessPage_OnOpenFileLocation(void)
     StringCchPrintfW(pszCmdLine, dwLength, szCmdFormat, pszExePath);
 
     /* Call the shell to open the file location and select it. If Explorer shell
-     * is not available, use MenuOS's alternative file browser instead. */
+     * is not available, use ReactOS's alternative file browser instead. */
     ShellExecuteW(NULL, L"open",
                   GetShellWindow() ? L"explorer.exe" : L"filebrowser.exe",
                   pszCmdLine, NULL, SW_SHOWNORMAL);

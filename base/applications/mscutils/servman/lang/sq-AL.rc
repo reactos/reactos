@@ -273,10 +273,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRESS_INFO_START "MenuOS është duke u përpjekur për të filluar shërbimin e mëposhtme"
-    IDS_PROGRESS_INFO_STOP "MenuOS është duke u përpjekur për të Ndaluar shërbimin e mëposhtme"
-    IDS_PROGRESS_INFO_PAUSE "MenuOS është duke u përpjekur për të pushuar shërbimin e mëposhtme"
-    IDS_PROGRESS_INFO_RESUME "MenuOS është duke u përpjekur për të rifilluar shërbimin e mëposhtme"
+    IDS_PROGRESS_INFO_START "ReactOS është duke u përpjekur për të filluar shërbimin e mëposhtme"
+    IDS_PROGRESS_INFO_STOP "ReactOS është duke u përpjekur për të Ndaluar shërbimin e mëposhtme"
+    IDS_PROGRESS_INFO_PAUSE "ReactOS është duke u përpjekur për të pushuar shërbimin e mëposhtme"
+    IDS_PROGRESS_INFO_RESUME "ReactOS është duke u përpjekur për të rifilluar shërbimin e mëposhtme"
     IDS_CREATE_SUCCESS "Shërbimi u kriju me sukses"
     IDS_DELETE_SUCCESS "Shërbimi i fshi me sukses"
     IDS_CREATE_REQ "Fushat e markuara me an\nasterix janë të detyrushme"
@@ -311,7 +311,7 @@ BEGIN
     IDS_HINT_DETAILS " Shfaq informacionet e secilit send ne nje dritare."
     IDS_HINT_CUST " Modifiko veshtruesin."
     IDS_HINT_HELP " Shfaq dritaren e ndihmës."
-    IDS_HINT_ABOUT " Rreth Menaxherit të shërbimeve të MenuOS."
+    IDS_HINT_ABOUT " Rreth Menaxherit të shërbimeve të ReactOS."
     IDS_HINT_SYS_RESTORE " Kthe kete dritare ne mase normale."
     IDS_HINT_SYS_MOVE " Leviz kete dritare."
     IDS_HINT_SYS_SIZE " Ndryshon permasen e dritares."
@@ -323,7 +323,7 @@ END
 /* Application title */
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "Menaxhues i shërbimeve të MenuOS"
+    IDS_APPNAME "Menaxhues i shërbimeve të ReactOS"
     IDS_APPAUTHORS "Copyright (C) 2005-2007 by Ged Murphy (gedmurphy@reactos.org)"
 END
 

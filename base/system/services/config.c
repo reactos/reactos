@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Service Control Manager
+ * PROJECT:     ReactOS Service Control Manager
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/system/services/config.c
  * PURPOSE:     Service configuration interface

@@ -1,7 +1,7 @@
 /*
- * PROJECT:     MenuOS system libraries
+ * PROJECT:     ReactOS system libraries
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     MenuOS Extended RunOnce processing with UI.
+ * PURPOSE:     ReactOS Extended RunOnce processing with UI.
  * COPYRIGHT:   Copyright 2013-2016 Robert Naumann
  *              Copyright 2021 He Yang <1160386205@qq.com>
  */

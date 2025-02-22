@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS NDIS library
+ * PROJECT:     ReactOS NDIS library
  * FILE:        ndis/miniport.c
  * PURPOSE:     Routines used by NDIS miniport drivers
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

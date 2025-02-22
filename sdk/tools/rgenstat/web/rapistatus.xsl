@@ -9,14 +9,14 @@
 		<HTML>
 			<HEAD>
 				<TITLE>
-					MenuOS API Status
+					ReactOS API Status
 				</TITLE>
 				<SCRIPT src="rapistatus.js"></SCRIPT>
 				<LINK rel="stylesheet" type="text/css" href="rapistatus.css"></LINK>
 			</HEAD>
 			<BODY onLoad="onLoad();">
 				<P>
-					<H1>MenuOS API Status</H1>
+					<H1>ReactOS API Status</H1>
 				</P>
 				<P>
 					<TABLE>

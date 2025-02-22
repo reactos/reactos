@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Console Server DLL
+ * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/frontends/gui/guisettings.c
  * PURPOSE:         GUI Terminal Front-End Settings Management
  * PROGRAMMERS:     Johannes Anderwald

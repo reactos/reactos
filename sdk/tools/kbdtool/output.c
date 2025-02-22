@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS Build Tools [Keyboard Layout Compiler]
+ * PROJECT:         ReactOS Build Tools [Keyboard Layout Compiler]
  * LICENSE:         BSD - See COPYING.BSD in the top level directory
  * FILE:            tools/kbdtool/output.c
  * PURPOSE:         Output Logic (Source Builder)
- * PROGRAMMERS:     MenuOS Foundation
+ * PROGRAMMERS:     ReactOS Foundation
  */
 
 /* INCLUDES *******************************************************************/
@@ -218,7 +218,7 @@ kbd_h(IN PLAYOUT Layout)
             "/****************************** Module Header ******************************\\\n"
             "* Module Name: %s\n*\n* keyboard layout header\n"
             "*\n"
-            "* Copyright (c) 2009, MenuOS Foundation\n"
+            "* Copyright (c) 2009, ReactOS Foundation\n"
             "*\n"
             "* Various defines for use by keyboard input code.\n*\n* History:\n"
             "*\n"
@@ -404,8 +404,8 @@ kbd_rc(IN PKEYNAME DescriptionData,
             InternalName,
             gVersion,
             gSubVersion,
-            "Created by MenuOS KbdTool",
-            "Created by MenuOS KbdTool",
+            "Created by ReactOS KbdTool",
+            "Created by ReactOS KbdTool",
             gCopyright,
             InternalName,
             gVersion,
@@ -586,7 +586,7 @@ kbd_c(IN ULONG StateCount,
             "/***************************************************************************\\\n"
             "* Module Name: %s\n*\n* keyboard layout\n"
             "*\n"
-            "* Copyright (c) 2009, MenuOS Foundation\n"
+            "* Copyright (c) 2009, ReactOS Foundation\n"
             "*\n"
             "* History:\n"
             "* KBDTOOL v%d.%02d - Created  %s"

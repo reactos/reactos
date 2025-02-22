@@ -57,7 +57,7 @@ BEGIN
     IDS_PREPARETOSTANDBY "Trwa przygotowywanie do przejścia w stan wstrzymania..."
     IDS_PREPARETOHIBERNATE "Trwa przygotowywanie do hibernacji..."
     IDS_SAVEYOURSETTINGS "Trwa zapisywanie ustawień..."
-    IDS_REACTOSISSTARTINGUP "Trwa uruchamianie systemu MenuOS..."
+    IDS_REACTOSISSTARTINGUP "Trwa uruchamianie systemu ReactOS..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d dni"
 END

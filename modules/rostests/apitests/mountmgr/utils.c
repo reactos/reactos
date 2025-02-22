@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API Tests
+ * PROJECT:     ReactOS API Tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Utility functions
  * COPYRIGHT:   Copyright 2025 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS PSDK
+ * PROJECT:     ReactOS PSDK
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Support for markers for documenting the semantics of APIs
  * COPYRIGHT:   Microsoft Corporation.

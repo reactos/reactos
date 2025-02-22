@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Setup Library
+ * PROJECT:     ReactOS Setup Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Generic list functions
  * COPYRIGHT:   Copyright 2008-2018 Christoph von Wittich <christoph at reactos.org>

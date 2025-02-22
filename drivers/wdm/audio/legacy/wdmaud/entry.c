@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Kernel Streaming
+ * PROJECT:         ReactOS Kernel Streaming
  * FILE:            drivers/wdm/audio/legacy/wdmaud/main.c
  * PURPOSE:         System Audio graph builder
  * PROGRAMMER:      Andrew Greenwood

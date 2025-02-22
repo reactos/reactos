@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Display Control Panel
+ * PROJECT:         ReactOS Display Control Panel
  * FILE:            dll/cpl/desk/background.c
  * PURPOSE:         Background property page
  *
@@ -275,7 +275,7 @@ AddWallpapersFromDirectory(UINT uCounter, HWND hwndBackgroundList, BackgroundIte
 }
 
 
-/* Add the images in the C:\MenuOS, the wallpaper directory and the current wallpaper if any */
+/* Add the images in the C:\ReactOS, the wallpaper directory and the current wallpaper if any */
 static VOID
 AddListViewItems(HWND hwndDlg, PBACKGROUND_DATA pData)
 {
@@ -436,7 +436,7 @@ AddListViewItems(HWND hwndDlg, PBACKGROUND_DATA pData)
         RegCloseKey(regKey);
     }
 
-    /* Add all the images in the C:\MenuOS directory. */
+    /* Add all the images in the C:\ReactOS directory. */
     if (GetWindowsDirectory(szSearchPath, MAX_PATH))
     {
         i = AddWallpapersFromDirectory(i, hwndBackgroundList, backgroundItem, pData, wallpaperFilename, szSearchPath);

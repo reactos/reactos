@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              MenuOS DirectX
+ * PROJECT:              ReactOS DirectX
  * FILE:                 dll/directx/ddraw/Surface/createsurface.c
  * PURPOSE:              IDirectDrawSurface Creation
  * PROGRAMMER:           Magnus Olsen

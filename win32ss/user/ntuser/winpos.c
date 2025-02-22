@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS kernel
+ * PROJECT:     ReactOS kernel
  * PURPOSE:     Windows
  * PROGRAMER:   Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
@@ -459,7 +459,7 @@ done:
 
    if (gpqForeground && (!gpqForeground->spwndActive || Wnd == gpqForeground->spwndActive))
    {
-      /* MenuOS can pass WndTo = NULL to co_IntSetForegroundWindow and returns FALSE. */
+      /* ReactOS can pass WndTo = NULL to co_IntSetForegroundWindow and returns FALSE. */
       //ERR("WinPosActivateOtherWindow Set FG 0x%p hWnd %p\n", WndTo, WndTo ? UserHMGetHandle(WndTo) : NULL);
       if (co_IntSetForegroundWindow(WndTo))
       {
@@ -794,7 +794,7 @@ WinPosFindIconPos(PWND Window, POINT *Pos)
    if (UserIsDesktopWindow(pwndParent))
    {
       ERR("FIXME: Parent is Desktop, Min off screen!\n");
-      /* FIXME: MenuOS doesn't support iconic minimize to desktop */
+      /* FIXME: ReactOS doesn't support iconic minimize to desktop */
       Pos->x = Pos->y = -32000;
       Window->InternalPos.flags |= WPF_MININIT;
       Window->InternalPos.IconPos.x = Pos->x;
@@ -1350,7 +1350,7 @@ co_WinPosDoWinPosChanging(PWND Window,
  *
  * FIXME: hide/show owned popups when owner visibility changes.
  *
- * MenuOS: See bug CORE-6129 and CORE-6554.
+ * ReactOS: See bug CORE-6129 and CORE-6554.
  *
  */
  ////
@@ -2195,7 +2195,7 @@ co_WinPosSetWindowPos(
                         /*
                          * Check if we have these specific windows style bits set/reset.
                          * FIXME: There may be other combinations of styles that need this handling as well.
-                         * This fixes the MenuOS Calculator buttons disappearing in CORE-16827.
+                         * This fixes the ReactOS Calculator buttons disappearing in CORE-16827.
                          */
                         if ((Window->style & WS_CLIPSIBLINGS) && !(Window->style & (WS_POPUP | WS_CLIPCHILDREN | WS_SIZEBOX)))
                         {

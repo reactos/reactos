@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS System Setup Library
+ * PROJECT:     ReactOS System Setup Library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Slovak resource file
  * TRANSLATORS: Copyright 2008-2009 Mário Kačmár aka Kario <kario@szm.sk>
@@ -9,28 +9,28 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Inštalátor systému MenuOS"
+CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Vitajte v sprievodcovi inštalácie systému MenuOS.", IDC_WELCOMETITLE, 115, 9, 189, 31
-    LTEXT "Tento sprievodca nainštaluje systém MenuOS na Váš počítač. Sprievodca potrebuje získať niektoré informácie o Vás a Vašom počítači aby mohol systém MenuOS správne nastaviť.", IDC_STATIC, 115, 50, 189, 100
+    LTEXT "Vitajte v sprievodcovi inštalácie systému ReactOS.", IDC_WELCOMETITLE, 115, 9, 189, 31
+    LTEXT "Tento sprievodca nainštaluje systém ReactOS na Váš počítač. Sprievodca potrebuje získať niektoré informácie o Vás a Vašom počítači aby mohol systém ReactOS správne nastaviť.", IDC_STATIC, 115, 50, 189, 100
     LTEXT "Kliknutím na Ďalej pokračujte v inštalácii.", IDC_STATIC, 115, 160, 189, 31
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Inštalátor systému MenuOS"
+CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Vývojári systému MenuOS by sa chceli poďakovať nasledujúcim Open Source projektom, ktoré (alebo časti ktorých) boli použité pri vývoji systému MenuOS:", IDC_STATIC, 15, 7, 286, 19
+    LTEXT "Vývojári systému ReactOS by sa chceli poďakovať nasledujúcim Open Source projektom, ktoré (alebo časti ktorých) boli použité pri vývoji systému ReactOS:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "Systém MenuOS je vydaný pod licenciou GPL. Pokiaľ chcete systém (alebo jeho časti) použiť alebo redistribuovať, musíte rešpektovať GPL.", IDC_STATIC, 15, 110, 228, 22
+    LTEXT "Systém ReactOS je vydaný pod licenciou GPL. Pokiaľ chcete systém (alebo jeho časti) použiť alebo redistribuovať, musíte rešpektovať GPL.", IDC_STATIC, 15, 110, 228, 22
     PUSHBUTTON "&Zobraziť GPL...", IDC_VIEWGPL, 245, 110, 56, 19
     LTEXT "Kliknutím na Ďalej pokračujte v inštalácii.", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
-CAPTION "MenuOS Setup"
+CAPTION "ReactOS Setup"
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -45,7 +45,7 @@ END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Inštalátor systému MenuOS"
+CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
@@ -58,7 +58,7 @@ END
 
 IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Inštalátor systému MenuOS"
+CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
@@ -76,7 +76,7 @@ END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Inštalátor systému MenuOS"
+CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
@@ -93,7 +93,7 @@ END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Inštalátor systému MenuOS"
+CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
@@ -107,7 +107,7 @@ END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS Setup"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_THEMEPICKER, "SysListView32", LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_TABSTOP, 18, 8, 288, 130
@@ -115,7 +115,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Inštalátor systému MenuOS"
+CAPTION "Inštalátor systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Registrujem súčasti", IDC_TASKTEXT1, 65, 27, 232, 8
@@ -128,11 +128,11 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Dokončenie inštalácie systému MenuOS"
+CAPTION "Dokončenie inštalácie systému ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Dokončenie sprievodcu inštaláciou systému MenuOS", IDC_FINISHTITLE, 115, 9, 195, 37
-    LTEXT "Sprievodca inštaláciou systému MenuOS bol úspešne dokončený.\n\nPo kliknutí na Dokončiť sa počítač reštartuje.", IDC_STATIC, 115, 58, 195, 100
+    LTEXT "Dokončenie sprievodcu inštaláciou systému ReactOS", IDC_FINISHTITLE, 115, 9, 195, 37
+    LTEXT "Sprievodca inštaláciou systému ReactOS bol úspešne dokončený.\n\nPo kliknutí na Dokončiť sa počítač reštartuje.", IDC_STATIC, 115, 58, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "Ak je v mechanike inštalačné médium, vyberte ho. Potom kliknutím na Dokončiť reštartujte počítač.", IDC_STATIC, 115, 160, 195, 31
 END
@@ -178,13 +178,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Poďakovanie"
-    IDS_ACKSUBTITLE "Čo je systém MenuOS a informácie o licencii"
+    IDS_ACKSUBTITLE "Čo je systém ReactOS a informácie o licencii"
     IDS_OWNERTITLE "Prispôsobte si softvér"
-    IDS_OWNERSUBTITLE "Inštalátor použije tieto informácie pre prispôsobenie systému MenuOS."
+    IDS_OWNERSUBTITLE "Inštalátor použije tieto informácie pre prispôsobenie systému ReactOS."
     IDS_COMPUTERTITLE "Názov počítača a heslo účtu Administrator."
     IDS_COMPUTERSUBTITLE "Zadajte meno a heslo pre účet Administrator."
     IDS_LOCALETITLE "Regionálne nastavenia"
-    IDS_LOCALESUBTITLE "Systém MenuOS môžete prispôsobiť rôznym regiónom a jazykom."
+    IDS_LOCALESUBTITLE "Systém ReactOS môžete prispôsobiť rôznym regiónom a jazykom."
     IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
     IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Dátum a čas"
@@ -197,7 +197,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP "Inštalátor systému MenuOS"
+    IDS_REACTOS_SETUP "Inštalátor systému ReactOS"
     IDS_UNKNOWN_ERROR "Neznáma chyba"
     IDS_LOADLIBRARY_FAILED "LoadLibrary zlyhal: "
     IDS_GETPROCADDR_FAILED "GetProcAddr zlyhal: "
@@ -257,8 +257,8 @@ STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Product Options"
     IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behavior of the system."
-    IDS_PRODUCTSERVERNAME "MenuOS Server"
-    IDS_PRODUCTWORKSTATIONNAME "MenuOS Workstation"
+    IDS_PRODUCTSERVERNAME "ReactOS Server"
+    IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
     IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."
     IDS_PRODUCTWORKSTATIONINFO "The system will be recognized as a workstation. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents""."
     IDS_DEFAULT "(Default)"

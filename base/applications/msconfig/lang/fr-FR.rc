@@ -148,7 +148,7 @@ BEGIN
     IDS_TOOLS_CMD_DESCR "Ouvre la console."
     IDS_TOOLS_CMD_CMD "cmd.exe"
     IDS_TOOLS_INFO_NAME "Version"
-    IDS_TOOLS_INFO_DESCR "Affiche la version de MenuOS."
+    IDS_TOOLS_INFO_DESCR "Affiche la version de ReactOS."
     IDS_TOOLS_INFO_CMD "winver.exe"
     IDS_TOOLS_REGEDIT_NAME "Editeur du Registre"
     IDS_TOOLS_REGEDIT_DESCR "Ouvre l'éditeur du Registre"

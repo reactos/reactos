@@ -1,5 +1,5 @@
 /*
-* PROJECT:     MenuOS Device Manager
+* PROJECT:     ReactOS Device Manager
 * LICENSE:     GPL - See COPYING in the top level directory
 * FILE:        dll/win32/devmgr/devmgmt/RootNode.cpp
 * PURPOSE:     Root object for

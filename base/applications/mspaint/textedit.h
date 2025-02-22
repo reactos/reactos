@@ -1,5 +1,5 @@
 /*
- * PROJECT:    PAINT for MenuOS
+ * PROJECT:    PAINT for ReactOS
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:    Text editor and font chooser for the text tool
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>

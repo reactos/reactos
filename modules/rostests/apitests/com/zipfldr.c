@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API tests
+ * PROJECT:     ReactOS API tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     COM interface test for zipfldr classes
  * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)

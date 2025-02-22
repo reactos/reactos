@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Mouse class driver
+ * PROJECT:         ReactOS Mouse class driver
  * FILE:            drivers/input/mouclass/misc.c
  * PURPOSE:         Miscellaneous operations
  *
- * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #include "mouclass.h"

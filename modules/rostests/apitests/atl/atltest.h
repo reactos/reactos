@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS api tests
+ * PROJECT:     ReactOS api tests
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Testing
  * COPYRIGHT:   Copyright 2019-2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)

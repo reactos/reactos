@@ -928,7 +928,7 @@ NTSTATUS SubmitTransferPacket(PTRANSFER_PACKET Pkt)
 
 
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 TransferPktComplete(IN PDEVICE_OBJECT NullFdo, IN PIRP Irp, IN PVOID Context)
 {
     PTRANSFER_PACKET pkt = (PTRANSFER_PACKET)Context;
@@ -1587,7 +1587,7 @@ VOID SetupDriveCapacityTransferPacket(   TRANSFER_PACKET *Pkt,
 
 
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CleanupTransferPacketToWorkingSetSizeWorker(
     _In_ PVOID Fdo,
     _In_opt_ PVOID Context,

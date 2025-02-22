@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Software Control Panel
+ * PROJECT:     ReactOS Software Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Portuguese (Portugal) resource file
  * TRANSLATORS: Copyright 2012 Matheus Macabu <mkbu95@gmail.com>
@@ -66,7 +66,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Instalador Wine Gecko "
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "O MenuOS não consegue encontrar o pacote Wine Gecko que é necessário para que as aplicações HTML funcionem correctamente. O MenuOS pode fazer o download automático e instalar por si.",
+    CONTROL "O ReactOS não consegue encontrar o pacote Wine Gecko que é necessário para que as aplicações HTML funcionem correctamente. O ReactOS pode fazer o download automático e instalar por si.",
           ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
     CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
     DEFPUSHBUTTON "&Instalar", ID_DWL_INSTALL, 144, 76, 50, 14

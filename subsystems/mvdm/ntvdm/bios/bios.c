@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         MenuOS Virtual DOS Machine
+ * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/bios/bios.c
  * PURPOSE:         VDM BIOS Support Library
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
@@ -52,7 +52,7 @@ WinNtVdmBiosReset(LPWORD Stack)
     DisplayMessage(L"You are loading Windows NTVDM BIOS!\n");
     // Bios32Post(Stack);
 
-    DisplayMessage(L"MenuOS NTVDM doesn't support Windows NTVDM BIOS at the moment. The VDM will shut down.");
+    DisplayMessage(L"ReactOS NTVDM doesn't support Windows NTVDM BIOS at the moment. The VDM will shut down.");
     EmulatorTerminate();
 }
 

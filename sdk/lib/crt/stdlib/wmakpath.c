@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS CRT library
+ * PROJECT:     ReactOS CRT library
  * LICENSE:     See COPYING in the top level directory
  * FILE:        lib/sdk/crt/stdlib/wmakpath.c
  * PURPOSE:     Creates a unicode path

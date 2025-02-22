@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         GNU GPL - See COPYING in the top level directory
- * PROJECT:           MenuOS Run-Time Library
+ * PROJECT:           ReactOS Run-Time Library
  * PURPOSE:           
  * FILE:              lib/rtl/i386/res_asm.s
  * PROGRAMER:         

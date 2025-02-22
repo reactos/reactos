@@ -57,7 +57,7 @@ void PrintSystemInfo(FILE* output, DumpData& data)
 {
     SYSTEMTIME LocalTime;
     GetLocalTime(&LocalTime);
-    xfprintf(output, NEWLINE "MenuOS " KERNEL_VERSION_STR " DrWtsn32" NEWLINE NEWLINE);
+    xfprintf(output, NEWLINE "ReactOS " KERNEL_VERSION_STR " DrWtsn32" NEWLINE NEWLINE);
     xfprintf(output, "Application exception occurred:" NEWLINE);
     xfprintf(output, "    App: %ls (pid=%d, tid=0x%x)" NEWLINE, data.ProcessName.c_str(), data.ProcessID, data.ThreadID);
     xfprintf(output, "    When: %d/%d/%d @ %02d:%02d:%02d.%d" NEWLINE,

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Spooler API
+ * PROJECT:     ReactOS Spooler API
  * LICENSE:     This file is in the public domain
  * PURPOSE:     WIDL-compatible interface definition for the Spooler API
  * AUTHORS:     Colin Finck <colin@reactos.org>

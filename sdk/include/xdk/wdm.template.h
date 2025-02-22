@@ -3,7 +3,7 @@
  *
  * Windows NT WDM Driver Developer Kit
  *
- * This file is part of the MenuOS DDK package.
+ * This file is part of the ReactOS DDK package.
  *
  * Contributors:
  *   Amine Khaldi (amine.khaldi@reactos.org)
@@ -86,7 +86,7 @@ $define(USHORT=USHORT)
 #define NTHALAPI
 #endif
 
-/* For MenuOS */
+/* For ReactOS */
 #if !defined(_NTOSKRNL_) && !defined(_BLDR_) && !defined(_NTSYSTEM_)
 #define NTKERNELAPI DECLSPEC_IMPORT
 #else

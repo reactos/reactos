@@ -277,7 +277,7 @@ CAPTION "Información de Ubicación"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 10, 10, 88, 155
-    LTEXT "Before you can make any phone or modem connections, MenuOS needs the following information about your current location.", 2000, 107, 15, 188, 25
+    LTEXT "Before you can make any phone or modem connections, ReactOS needs the following information about your current location.", 2000, 107, 15, 188, 25
     LTEXT "¿En &qué país o región te encuentras ahora?", -1, 107, 43, 189, 10
     COMBOBOX 1006, 107, 55, 180, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "¿En qué &código de área (o código de ciudad) te encuentras ahora?", -1, 107, 74, 189, 10
@@ -298,7 +298,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 0, 0, 88, 155
-    LTEXT "Before you can make any phone or modem connections, MenuOS needs the following information about your current location.", 2000, 95, 2, 188, 25
+    LTEXT "Before you can make any phone or modem connections, ReactOS needs the following information about your current location.", 2000, 95, 2, 188, 25
     LTEXT "¿En &qué país o región te encuentras ahora?", -1, 95, 30, 188, 10
     COMBOBOX 1006, 95, 41, 177, 68, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "¿En qué &código de área (o código de ciudad) te encuentras ahora?", -1, 95, 61, 188, 10
@@ -312,7 +312,7 @@ END
 
 500 DIALOGEX 0, 0, 235, 88
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Explorador de MenuOS"
+CAPTION "Explorador de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 504, 501, 13, 14, 21, 20
@@ -406,7 +406,7 @@ BEGIN
     80 "Are you sure you want to delete this area code rule?"
     81 "You must enter the digits to dial."
     82 "The calling card name you have entered is already in use.  Please enter a unique name."
-    83 "MenuOS needs telephone information about the location from which you will be dialing. If you cancel without providing this information, this program may not function correctly when dialing. In addition, some applications respond to your canceling this dialog box by immediately re-posting it.\nAre you sure you want to cancel?"
+    83 "ReactOS needs telephone information about the location from which you will be dialing. If you cancel without providing this information, this program may not function correctly when dialing. In addition, some applications respond to your canceling this dialog box by immediately re-posting it.\nAre you sure you want to cancel?"
     84 "Confirm Cancel"
     85 "Mi Ubicación"
     86 "<no service providers are available for installation>"

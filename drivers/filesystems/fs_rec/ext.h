@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS File System Recognizer
+ * PROJECT:          ReactOS File System Recognizer
  * FILE:             drivers/filesystems/fs_rec/ext.h
  * PURPOSE:          EXT Header File
  * PROGRAMMER:       Pierre Schweitzer (pierre@reactos.org)

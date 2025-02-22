@@ -25,5 +25,5 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "Lisans Yöneticisi"
     IDS_CPLDESCRIPTION_1 "Lisans Yöneticisi"
-    IDS_REACTOS "MenuOS - Özgür Yazılım"
+    IDS_REACTOS "ReactOS - Özgür Yazılım"
 END

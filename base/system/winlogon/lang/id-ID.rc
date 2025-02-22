@@ -51,7 +51,7 @@ BEGIN
     IDS_PREPARETOSTANDBY "Menyiapkan untuk Standby..."
     IDS_PREPARETOHIBERNATE "Menyiapkan untuk Tidur..."
     IDS_SAVEYOURSETTINGS "Menyimpan setelan anda..."
-    IDS_REACTOSISSTARTINGUP "MenuOS dimulai..."
+    IDS_REACTOSISSTARTINGUP "ReactOS dimulai..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d hari"
 END

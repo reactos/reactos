@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS VFAT filesystem library
+ * PROJECT:     ReactOS VFAT filesystem library
  * FILE:        fat12.c
  * PURPOSE:     Fat12 support
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

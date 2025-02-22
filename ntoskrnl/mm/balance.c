@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS kernel
+ * PROJECT:     ReactOS kernel
  * PURPOSE:     kernel memory management functions
  * PROGRAMMERS: David Welch <welch@cwcom.net>
  *              Cameron Gutman <cameron.gutman@reactos.org>

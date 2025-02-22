@@ -57,7 +57,7 @@ enum BASEFLAGS
 {
     BASEFLAG_LOOKASIDE = 0x80,
 
-    /* MenuOS specific: */
+    /* ReactOS specific: */
     BASEFLAG_READY_TO_DIE = 0x1000
 };
 

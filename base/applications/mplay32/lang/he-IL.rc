@@ -61,7 +61,7 @@ BEGIN
     IDS_TOOLTIP_SEEKFORW "חפש קדימה"
     IDS_TOOLTIP_FORWARD "דלג קדימה"
     IDS_TOOLTIP_PAUSE "השהה"
-    IDS_APPTITLE "נגן המולטימדיה של MenuOS"
+    IDS_APPTITLE "נגן המולטימדיה של ReactOS"
     IDS_PLAY "נגן"
     IDS_DEFAULTMCIERRMSG "אין תיאור זמין עבור שגיאה זו."
 END

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS System Libraries
+ * PROJECT:         ReactOS System Libraries
  * FILE:            dll/ntdll/def/ntdll.rc
  * PURPOSE:         Native Library Resource File
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)

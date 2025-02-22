@@ -289,7 +289,7 @@ EnumClientServiceProtocol(HKEY hKey, const GUID * pGuid, NetCfgComponentItem ** 
 
             if (FAILED(CLSIDFromString(szName, &pCurrent->InstanceId)))
             {
-                /// MenuOS tcpip guid is not yet generated
+                /// ReactOS tcpip guid is not yet generated
                 //CoTaskMemFree(pCurrent);
                 //return E_FAIL;
             }

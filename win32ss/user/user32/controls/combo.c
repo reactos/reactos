@@ -38,7 +38,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(combo);
 #define CB_HASSTRINGS( lphc ) ((lphc)->dwStyle & CBS_HASSTRINGS)
 #define CB_HWND( lphc )       ((lphc)->self)
 #ifndef __REACTOS__
-/* MenuOS already define in include/controls.h We have it here as a sync note. */
+/* ReactOS already define in include/controls.h We have it here as a sync note. */
 #define CB_GETTYPE( lphc )    ((lphc)->dwStyle & (CBS_DROPDOWNLIST))
 #endif
 

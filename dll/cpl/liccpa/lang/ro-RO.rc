@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS License Manager
+ * PROJECT:     ReactOS License Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
@@ -31,5 +31,5 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "Manager de licențe"
     IDS_CPLDESCRIPTION_1 "Manager de licențe"
-    IDS_REACTOS "MenuOS - S.O. Public"
+    IDS_REACTOS "ReactOS - S.O. Public"
 END

@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              MenuOS DirectX
+ * PROJECT:              ReactOS DirectX
  * FILE:                 dll/directx/ddraw/Palette/palette.c
  * PURPOSE:              IDirectDrawPalette Implementation
- * PROGRAMMER:           JÃ©rÃ´me Gardou
+ * PROGRAMMER:           Jérôme Gardou
  *
  */
 

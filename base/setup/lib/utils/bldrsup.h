@@ -1,8 +1,8 @@
 /*
- * PROJECT:     MenuOS Setup Library
+ * PROJECT:     ReactOS Setup Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Boot Stores Management functionality, with support for
- *              NT 5.x family (MS Windows <= 2003, and MenuOS) bootloaders.
+ *              NT 5.x family (MS Windows <= 2003, and ReactOS) bootloaders.
  * COPYRIGHT:   Copyright 2017-2018 Hermes Belusca-Maito
  */
 
@@ -12,7 +12,7 @@
 
 typedef enum _BOOT_STORE_TYPE
 {
-    FreeLdr,    // MenuOS' FreeLoader
+    FreeLdr,    // ReactOS' FreeLoader
     NtLdr,      // Windows <= 2k3 NT "FlexBoot" OS Loader NTLDR
 //  BootMgr,    // Vista+ BCD-oriented BOOTMGR
     BldrTypeMax
@@ -82,7 +82,7 @@ typedef struct _BOOT_STORE_ENTRY
  */
 } BOOT_STORE_ENTRY, *PBOOT_STORE_ENTRY;
 
-/* "NTOS" (aka. MenuOS or MS Windows NT) <= 5.x options */
+/* "NTOS" (aka. ReactOS or MS Windows NT) <= 5.x options */
 typedef struct _NTOS_OPTIONS
 {
     UCHAR Signature[8];     // "NTOS_5\0\0"

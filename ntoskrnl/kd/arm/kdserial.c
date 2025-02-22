@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/kd/arm/kdbg.c
  * PURPOSE:         Serial Port Kernel Debugging Transport Library
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/

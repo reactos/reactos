@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS NDIS User I/O driver
+ * PROJECT:     ReactOS NDIS User I/O driver
  * FILE:        main.c
  * PURPOSE:     Driver entry point and protocol initialization
  * PROGRAMMERS: Cameron Gutman (cameron.gutman@reactos.org)

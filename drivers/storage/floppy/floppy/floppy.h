@@ -1,5 +1,5 @@
 /*
- *  MenuOS Floppy Driver
+ *  ReactOS Floppy Driver
  *  Copyright (C) 2004, Vizzini (vizzini@plasmic.com)
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -16,7 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * PROJECT:         MenuOS Floppy Driver
+ * PROJECT:         ReactOS Floppy Driver
  * FILE:            floppy.h
  * PURPOSE:         Header for Main floppy driver routines
  * PROGRAMMER:      Vizzini (vizzini@plasmic.com)

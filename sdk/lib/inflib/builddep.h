@@ -54,7 +54,7 @@ BOOLEAN NTAPI RtlIsTextUnicode( PVOID buf, INT len, INT *pf );
 
 #else /* ! defined(INFLIB_HOST) */
 
-/* MenuOS definitions */
+/* ReactOS definitions */
 
 #define UNICODE
 #define _UNICODE

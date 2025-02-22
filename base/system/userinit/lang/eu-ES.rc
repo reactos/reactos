@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Userinit Logon Application
+ * PROJECT:     ReactOS Userinit Logon Application
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Spanish (Basque) resource file
  * TRANSLATOR:  Copyright 2021 Julen Urizar Compains <julenuri@hotmail.com>
@@ -9,7 +9,7 @@ LANGUAGE LANG_BASQUE, SUBLANG_NEUTRAL
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS LiveCD-a"
+CAPTION "ReactOS LiveCD-a"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "IDB_LOGO", IDC_LOCALELOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 4, 290, 99
@@ -26,12 +26,12 @@ END
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS LiveCD-a"
+CAPTION "ReactOS LiveCD-a"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "IDB_LOGO", IDC_STARTLOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 4, 290, 99
-    DEFPUSHBUTTON "Hasi MenuOS &Live CD-a", IDC_RUN, 71, 108, 175, 21
-    PUSHBUTTON "&Instalatu MenuOS", IDC_INSTALL, 71, 136, 175, 21
+    DEFPUSHBUTTON "Hasi ReactOS &Live CD-a", IDC_RUN, 71, 108, 175, 21
+    PUSHBUTTON "&Instalatu ReactOS", IDC_INSTALL, 71, 136, 175, 21
 
     // LTEXT "", IDC_STATIC, 7, 152, 300, 8
 
@@ -44,7 +44,7 @@ STRINGTABLE
 BEGIN
     IDS_SHELL_FAIL "¡Userinit no pudo iniciar el shell con éxito!"
     IDS_INSTALLER_FAIL "¡Userinit no pudo iniciar el instalador!"
-    IDS_CANCEL_CONFIRM "¿Seguro que quieres salir de LiveCD de MenuOS?\nSi es así, tu equipo se reiniciará."
+    IDS_CANCEL_CONFIRM "¿Seguro que quieres salir de LiveCD de ReactOS?\nSi es así, tu equipo se reiniciará."
 END
 
 STRINGTABLE

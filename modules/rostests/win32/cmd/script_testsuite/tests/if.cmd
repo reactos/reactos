@@ -1,5 +1,5 @@
 ::
-:: PROJECT:     MenuOS CMD Testing Suite
+:: PROJECT:     ReactOS CMD Testing Suite
 :: LICENSE:     GPL v2 or any later version
 :: FILE:        tests/if.cmd
 :: PURPOSE:     Tests for the "if" command

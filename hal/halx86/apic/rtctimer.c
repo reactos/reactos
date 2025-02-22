@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS HAL
+ * PROJECT:         ReactOS HAL
  * LICENSE:         GNU GPL - See COPYING in the top level directory
  * FILE:            hal/halx86/apic/rtctimer.c
  * PURPOSE:         HAL APIC Management and Control Code

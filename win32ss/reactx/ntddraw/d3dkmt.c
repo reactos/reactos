@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS kernel
+ * PROJECT:          ReactOS kernel
  * PURPOSE:          Native DirectDraw implementation
  * FILE:             win32ss/reactx/ntddraw/d3dkmt.c
  * PROGRAMER:        Sebastian Gasiorek (sebastian.gasiorek@reactos.com)

@@ -89,7 +89,7 @@ Return Value:
     Status = FsRtlCheckOplock( CdGetFcbOplock(Fcb),
                                Irp,
                                IrpContext,
-                               (PVOID)CdOplockComplete,/* MenuOS Change: GCC "assignment from incompatible pointer type" */
+                               (PVOID)CdOplockComplete,/* ReactOS Change: GCC "assignment from incompatible pointer type" */
                                NULL );
 
     //
@@ -138,7 +138,7 @@ Return Value:
 
 
 BOOLEAN
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastLock (
     _In_ PFILE_OBJECT FileObject,
     _In_ PLARGE_INTEGER FileOffset,
@@ -290,7 +290,7 @@ Return Value:
 
 
 BOOLEAN
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastUnlockSingle (
     _In_ PFILE_OBJECT FileObject,
     _In_ PLARGE_INTEGER FileOffset,
@@ -433,7 +433,7 @@ Return Value:
 
 
 BOOLEAN
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastUnlockAll (
     _In_ PFILE_OBJECT FileObject,
     _In_ PEPROCESS ProcessId,
@@ -558,7 +558,7 @@ Return Value:
 
 
 BOOLEAN
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFastUnlockAllByKey (
     _In_ PFILE_OBJECT FileObject,
     _In_ PVOID ProcessId,

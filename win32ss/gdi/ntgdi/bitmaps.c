@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        GNU GPL, See COPYING in the top level directory
- * PROJECT:          MenuOS kernel
+ * PROJECT:          ReactOS kernel
  * PURPOSE:          Bitmap functions
  * FILE:             win32ss/gdi/ntgdi/bitmaps.c
  * PROGRAMERS:       Timo Kreuzer <timo.kreuzer@reactos.org>

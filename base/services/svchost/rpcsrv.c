@@ -1,9 +1,9 @@
 /*
- * PROJECT:     MenuOS Service Host
+ * PROJECT:     ReactOS Service Host
  * LICENSE:     BSD - See COPYING.ARM in the top level directory
  * FILE:        base/services/svchost/rpcsrv.c
  * PURPOSE:     RPC Service Support
- * PROGRAMMERS: MenuOS Portable Systems Group
+ * PROGRAMMERS: ReactOS Portable Systems Group
  */
 
 /* INCLUDES ******************************************************************/

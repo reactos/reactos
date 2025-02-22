@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS api tests
+ * PROJECT:     ReactOS api tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Test showing that RtlImageDirectoryEntryToData accepts 32 and 64 bit images
  * COPYRIGHT:   Copyright 2020 Mark Jansen <mark.jansen@reactos.org>

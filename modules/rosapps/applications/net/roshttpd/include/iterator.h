@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS HTTP Daemon
+ * PROJECT:     ReactOS HTTP Daemon
  * FILE:        include/iterator.h
  */
 #ifndef __ITERATOR_H

@@ -8,7 +8,7 @@ Signature  = "$Windows NT$"
 LayoutFile = layout.inf
 Class      = Net
 ClassGUID  = {4D36E972-E325-11CE-BFC1-08002BE10318}
-Provider   = %MenuOS%
+Provider   = %ReactOS%
 DriverVer  = 07/03/2013,1.00
 
 [DestinationDirs]
@@ -68,7 +68,7 @@ LoadOrderGroup = NDIS
 
 [Strings]
 ; Non-localizable
-MenuOS = "MenuOS Project"
+ReactOS = "ReactOS Project"
 
 RealtekMfg = "Realtek"
 AcctonMfg = "Accton"

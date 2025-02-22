@@ -7,9 +7,9 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 /* Default settings */
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "MenuOS - Välkommen"
-    IDS_DEFAULT_TOPIC_TITLE "MenuOS"
-    IDS_DEFAULT_TOPIC_DESC "Välkommen till MenuOS Operating System.\n\nKlicka på ett avsnitt till vänster."
+    IDS_APPTITLE "ReactOS - Välkommen"
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Välkommen till ReactOS Operating System.\n\nKlicka på ett avsnitt till vänster."
     IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Show this dialog again"
     IDS_CLOSETEXT "&Avsluta"
@@ -18,7 +18,7 @@ END
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_BUTTON0 "&Installera MenuOS"
+    IDS_TOPIC_BUTTON0 "&Installera ReactOS"
     IDS_TOPIC_BUTTON1 "&Utforska skivan"
     IDS_TOPIC_BUTTON2 "&Avsluta"
 END
@@ -26,7 +26,7 @@ END
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_TITLE0 "Installera MenuOS"
+    IDS_TOPIC_TITLE0 "Installera ReactOS"
     IDS_TOPIC_TITLE1 "Utforska skivan"
     IDS_TOPIC_TITLE2 "Avsluta"
 END
@@ -34,7 +34,7 @@ END
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_DESC0 "Skapa en ny MenuOS installation på den här datorn eller uppgradera en befintlig."
+    IDS_TOPIC_DESC0 "Skapa en ny ReactOS installation på den här datorn eller uppgradera en befintlig."
     IDS_TOPIC_DESC1 "Utforska skivan."
     IDS_TOPIC_DESC2 "Avsluta det här programmet."
 END

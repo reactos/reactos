@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS HAL
+ * PROJECT:         ReactOS HAL
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            hal/halarm/generic/drive.c
  * PURPOSE:         HAL Stubs for Disk I/O Routines
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 /* INCLUDES ******************************************************************/

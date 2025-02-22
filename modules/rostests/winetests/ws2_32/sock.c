@@ -40,7 +40,7 @@
 #include <stdio.h>
 #include "wine/test.h"
 
-// MenuOS: Wine has this in mstcpip.h, but it doesn't belong there
+// ReactOS: Wine has this in mstcpip.h, but it doesn't belong there
 #define WSA_CMSG_ALIGN(len)     (((len) + sizeof(SIZE_T) - 1) & ~(sizeof(SIZE_T) - 1))
 
 #define MAX_CLIENTS 4      /* Max number of clients */
@@ -7206,7 +7206,7 @@ static void test_write_watch(void)
 #ifdef __REACTOS__
     if (!base)
     {
-        skip("VirtualAlloc(MEM_WRITE_WATCH) is not supported yet on MenuOS\n");
+        skip("VirtualAlloc(MEM_WRITE_WATCH) is not supported yet on ReactOS\n");
         skip("Skipping tests due to hang. See ROSTESTS-385\n");
         return;
     }
@@ -11826,7 +11826,7 @@ START_TEST( sock )
 #ifdef __REACTOS__
     if (!winetest_interactive)
     {
-        skip("WSPAcceptEx(), WSPConnectEx() and WSPDisconnectEx() are UNIMPLEMENTED on MenuOS\n");
+        skip("WSPAcceptEx(), WSPConnectEx() and WSPDisconnectEx() are UNIMPLEMENTED on ReactOS\n");
         skip("Skipping tests due to hang. See ROSTESTS-385\n");
     }
     else

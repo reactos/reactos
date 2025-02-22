@@ -8,7 +8,7 @@ Signature  = "$Windows NT$"
 LayoutFile = layout.inf
 Class      = Ports
 ClassGUID  = {4D36E978-E325-11CE-BFC1-08002BE10318}
-Provider   = %MenuOS%
+Provider   = %ReactOS%
 DriverVer  = 10/08/2005,1.01.0.0
 
 [DestinationDirs]
@@ -91,7 +91,7 @@ LoadOrderGroup = PNP Filter
 
 [Strings]
 ; Non-localizable
-MenuOS = "MenuOS Project"
+ReactOS = "ReactOS Project"
 
 ; Localizable
 PortsClassName = "Serial and parallel ports"

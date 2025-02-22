@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Picture and Fax Viewer
+ * PROJECT:     ReactOS Picture and Fax Viewer
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011 Ștefan Fulea <stefan.fulea@mail.com>
@@ -10,7 +10,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "Vizualizator MenuOS de imagini şi fax"
+    IDS_APPTITLE "Vizualizator ReactOS de imagini şi fax"
     IDS_SETASDESKBG "&Stabilire ca fundal pentru desktop"
     IDS_NOPREVIEW "Examinarea nu e disponibilă."
     IDS_PREVIEW "E&xaminare"

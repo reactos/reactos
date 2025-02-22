@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS NT-Compatible Session Manager
+ * PROJECT:     ReactOS NT-Compatible Session Manager
  * LICENSE:     BSD 2-Clause License (https://spdx.org/licenses/BSD-2-Clause)
  * PURPOSE:     SMSS Client (SB and SM) Message Format
  * COPYRIGHT:   Copyright 2012-2013 Alex Ionescu <alex.ionescu@reactos.org>

@@ -52,8 +52,8 @@ BEGIN
     IDS_TIMEZONEUNKNOWN "ไม่ทราบค่า"
     IDS_INETTIMESUCSYNC "เวลาได้รับการปรับเทียบเวลาสำเร็จแล้วภายใน %s ของ %s ใน %s"
     IDS_INETTIMENEXTSYNC "การปรับเทียบต่อไป: %s ใน %s"
-    IDS_INETTIMESYNCING "โปรดรอ MenuOS กำลังปรับเทียบเวลาภายใน %s"
-    IDS_INETTIMEERROR "เกิดการผิดพลาดในขณะที่ MenuOS กำลังปรับเทียบเวลาภายใน %s"
+    IDS_INETTIMESYNCING "โปรดรอ ReactOS กำลังปรับเทียบเวลาภายใน %s"
+    IDS_INETTIMEERROR "เกิดการผิดพลาดในขณะที่ ReactOS กำลังปรับเทียบเวลาภายใน %s"
     IDS_INETTIMESUCFILL "Please type an NTP server name in order to synchronize the time"
     IDS_INETTIMEWELCOME "Select an NTP server from the list or type an NTP server name to synchronize the computer's time"
 END

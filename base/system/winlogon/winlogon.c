@@ -1,11 +1,11 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Winlogon
+ * PROJECT:         ReactOS Winlogon
  * FILE:            base/system/winlogon/winlogon.c
  * PURPOSE:         Logon
  * PROGRAMMERS:     Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *                  Filip Navara
- *                  HervÃ© Poussineau (hpoussin@reactos.org)
+ *                  Hervé Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/

@@ -1,7 +1,7 @@
 /*
- * PROJECT:     MenuOS apisets
+ * PROJECT:     ReactOS apisets
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Resolving the apiset to a MenuOS system dll
+ * PURPOSE:     Resolving the apiset to a ReactOS system dll
  * COPYRIGHT:   Copyright 2024 Mark Jansen <mark.jansen@reactos.org>
  */
 

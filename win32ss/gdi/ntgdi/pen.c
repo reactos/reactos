@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS kernel
+ * PROJECT:           ReactOS kernel
  * PURPOSE:           Pen functiona
  * FILE:              win32ss/gdi/ntgdi/pen.c
  * PROGRAMER:

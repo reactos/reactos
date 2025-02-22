@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   LGPL, See LGPL.txt in the top level directory
- * PROJECT:     MenuOS CRT library
+ * PROJECT:     ReactOS CRT library
  * FILE:        lib/sdk/crt/time/bitsfixup.h
  * PURPOSE:     definitions for different time_t versions
  * PROGRAMERS:  Timo Kreuzer

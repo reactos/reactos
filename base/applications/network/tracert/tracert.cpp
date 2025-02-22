@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS trace route utility
+ * PROJECT:     ReactOS trace route utility
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Trace network paths through networks
  * COPYRIGHT:   Copyright 2018 Ged Murphy <gedmurphy@reactos.org>

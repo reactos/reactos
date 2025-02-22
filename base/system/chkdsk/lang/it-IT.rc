@@ -23,7 +23,7 @@ Uso: %s [drive:] [-F] [-V] [-R] [-C]\n\n\
     IDS_ABOUT "\n\
 Chkdskx v1.0.1 di Mark Russinovich\n\
 Systems Internals - http://www.sysinternals.com\n\
-Adattamento MenuOS nel 1999 di Emanuele Aliberti\n\n"
+Adattamento ReactOS nel 1999 di Emanuele Aliberti\n\n"
 END
 
 STRINGTABLE

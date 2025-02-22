@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Explorer
+ * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Ukrainian resource file
  * TRANSLATORS: Copyright 2007 Artem Reznikov <temarez@yandex.ru>
@@ -122,7 +122,7 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Налаштувати сповіщення"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT            "MenuOS відображає іконки для активних і термінових повідомлень і приховує неактивні. Ви можете змінити цю поведінку для елементів у списку нижче.", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "ReactOS відображає іконки для активних і термінових повідомлень і приховує неактивні. Ви можете змінити цю поведінку для елементів у списку нижче.", IDC_STATIC, 6, 6, 220, 30
     LTEXT            "Виберіть елемент, а потім виберіть поведінку його сповіщення:", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS

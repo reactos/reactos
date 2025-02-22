@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Sound System "MME Buddy" Library
+ * PROJECT:     ReactOS Sound System "MME Buddy" Library
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        lib/drivers/sound/mmebuddy/wave/streaming.c
  *

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Shell32
+ * PROJECT:     ReactOS Shell32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Defining shell policy data
  * COPYRIGHT:   Copyright 2022 Hermès Bélusca-Maïto

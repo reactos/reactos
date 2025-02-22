@@ -1,5 +1,5 @@
 /*
- * MenuOS Calc (Math functions, IEEE-754 engine)
+ * ReactOS Calc (Math functions, IEEE-754 engine)
  *
  * Copyright 2007-2017, Carlo Bramini
  *

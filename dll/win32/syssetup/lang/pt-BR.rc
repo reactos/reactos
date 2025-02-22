@@ -2,28 +2,28 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalação do MenuOS"
+CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bem-vindo ao assistente de instalação do MenuOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Este assistente instala o MenuOS no seu computador. Ele precisa reunir algumas informações sobre você e seu computador para instalar o MenuOS devidamente.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Bem-vindo ao assistente de instalação do ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Este assistente instala o ReactOS no seu computador. Ele precisa reunir algumas informações sobre você e seu computador para instalar o ReactOS devidamente.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Clique Avançar para continuar a instalação.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalação do MenuOS"
+CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Os desenvolvedores do MenuOS gostariam de agradecer aos seguintes projetos Open Source, cujo partes foram utilizadas para criar o MenuOS:", IDC_STATIC, 15, 7, 286, 19
+    LTEXT "Os desenvolvedores do ReactOS gostariam de agradecer aos seguintes projetos Open Source, cujo partes foram utilizadas para criar o ReactOS:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "MenuOS está licenciado sob a GPL, se você deseja reutilizar ou redistribuir (partes) (d)ele você deve respeitar a GPL.", IDC_STATIC, 15, 110, 224, 19
+    LTEXT "ReactOS está licenciado sob a GPL, se você deseja reutilizar ou redistribuir (partes) (d)ele você deve respeitar a GPL.", IDC_STATIC, 15, 110, 224, 19
     PUSHBUTTON "&Visualizar GPL...", IDC_VIEWGPL, 243, 110, 58, 19
     LTEXT "Clique Avançar para continuar com a instalação.", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
-CAPTION "MenuOS Setup"
+CAPTION "ReactOS Setup"
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -38,7 +38,7 @@ END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalação do MenuOS"
+CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
@@ -51,7 +51,7 @@ END
 
 IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalação do MenuOS"
+CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
@@ -69,7 +69,7 @@ END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalação do MenuOS"
+CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
@@ -86,7 +86,7 @@ END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalação do MenuOS"
+CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
@@ -100,7 +100,7 @@ END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS Setup"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_THEMEPICKER, "SysListView32", LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_TABSTOP, 18, 8, 288, 130
@@ -108,7 +108,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalação do MenuOS"
+CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Registrando componentes", IDC_TASKTEXT1, 65, 27, 232, 8
@@ -121,11 +121,11 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Finalizando a instalação do MenuOS"
+CAPTION "Finalizando a instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Finalizando o Assistente de Instalação do MenuOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Você completou a instalação do MenuOS com sucesso.\n\nQuando você clicar em Finalizar, o computador será reiniciado.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Finalizando o Assistente de Instalação do ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "Você completou a instalação do ReactOS com sucesso.\n\nQuando você clicar em Finalizar, o computador será reiniciado.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "Se houver um cd em algum drive, remova-o. Depois, para reiniciar seu computador, clique Finalizar.", IDC_STATIC, 115, 169, 195, 17
 END
@@ -171,13 +171,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Agradecimentos"
-    IDS_ACKSUBTITLE "Os ombros nos quais o MenuOS se apoia e informações de licença"
+    IDS_ACKSUBTITLE "Os ombros nos quais o ReactOS se apoia e informações de licença"
     IDS_OWNERTITLE "Personalize seu Software"
-    IDS_OWNERSUBTITLE "A Instalação utiliza esta sua informação para personalizar o MenuOS."
+    IDS_OWNERSUBTITLE "A Instalação utiliza esta sua informação para personalizar o ReactOS."
     IDS_COMPUTERTITLE "Nome do computador e senha do administrador"
     IDS_COMPUTERSUBTITLE "Você deve fornecer um nome e senha de administrador para o seu computador."
     IDS_LOCALETITLE "Configurações Regionais"
-    IDS_LOCALESUBTITLE "Você pode personalizar o MenuOS para diferentes regiões e línguas."
+    IDS_LOCALESUBTITLE "Você pode personalizar o ReactOS para diferentes regiões e línguas."
     IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
     IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Data e Hora"
@@ -190,7 +190,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP "Instalação do MenuOS"
+    IDS_REACTOS_SETUP "Instalação do ReactOS"
     IDS_UNKNOWN_ERROR "Erro Desconhecido"
     IDS_LOADLIBRARY_FAILED "LoadLibrary falhou: "
     IDS_GETPROCADDR_FAILED "GetProcAddr falhou: "
@@ -250,8 +250,8 @@ STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Product Options"
     IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behavior of the system."
-    IDS_PRODUCTSERVERNAME "MenuOS Server"
-    IDS_PRODUCTWORKSTATIONNAME "MenuOS Workstation"
+    IDS_PRODUCTSERVERNAME "ReactOS Server"
+    IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
     IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."
     IDS_PRODUCTWORKSTATIONINFO "The system will be recognized as a workstation. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents""."
     IDS_DEFAULT "(Default)"

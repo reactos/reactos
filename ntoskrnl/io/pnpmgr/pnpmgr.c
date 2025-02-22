@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/io/pnpmgr/pnpmgr.c
  * PURPOSE:         Initializes the PnP manager

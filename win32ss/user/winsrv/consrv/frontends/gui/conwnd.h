@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Console Server DLL
+ * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/frontends/gui/conwnd.h
  * PURPOSE:         GUI Console Window Class
- * PROGRAMMERS:     GÃ© van Geldorp
+ * PROGRAMMERS:     Gé van Geldorp
  *                  Johannes Anderwald
  *                  Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)

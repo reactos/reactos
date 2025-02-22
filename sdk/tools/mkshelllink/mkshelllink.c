@@ -1,5 +1,5 @@
 /* COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Shell Link maker
+ * PROJECT:         ReactOS Shell Link maker
  * FILE:            tools/mkshelllink/mkshelllink.c
  * PURPOSE:         Shell Link maker
  * PROGRAMMER:      Rafal Harabien

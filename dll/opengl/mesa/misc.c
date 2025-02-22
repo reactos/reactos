@@ -312,7 +312,7 @@ void gl_Clear( GLcontext *ctx, GLbitfield mask )
 const GLubyte *gl_GetString( GLcontext *ctx, GLenum name )
 {
    static char renderer[1000];
-   static char *vendor = "Brian Paul & MenuOS Developers";
+   static char *vendor = "Brian Paul & ReactOS Developers";
    static char *version = "1.1.0";
    static char *extensions = "GL_EXT_paletted_texture GL_EXT_bgra GL_WIN_swap_hint";
 

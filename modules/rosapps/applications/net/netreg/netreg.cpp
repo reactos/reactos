@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS test application
+ * PROJECT:     ReactOS test application
  * FILE:        apps/net/netreg/netreg.cpp
  * PURPOSE:     HTTP Registry Server
  * PROGRAMMERS: Art Yerkes (arty@users.sf.net)

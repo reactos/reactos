@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * PURPOSE:         Handle table
  * FILE:            lib/rtl/handle.c
  * PROGRAMMER:      Eric Kohl

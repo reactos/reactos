@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API Tests
+ * PROJECT:     ReactOS API Tests
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Test for NtQueryObject
  * COPYRIGHT:   Copyright 2024 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>

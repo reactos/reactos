@@ -1,5 +1,5 @@
 /*
- * PROJECT:     PAINT for MenuOS
+ * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Turkish resource file
  * TRANSLATORS: Copyright 2013-2016, 2019 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
@@ -236,7 +236,7 @@ STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Paint"
     IDS_WINDOWTITLE "%s - Paint"
-    IDS_INFOTITLE "MenuOS için Paint"
+    IDS_INFOTITLE "ReactOS için Paint"
     IDS_INFOTEXT "GNU Kısıtlı Genel Kamu Lisansı (LGPL, bakınız: www.gnu.org) altındadır."
     IDS_SAVEPROMPTTEXT "%s için yapılan değişiklikleri kaydetmek ister misiniz?"
     IDS_DEFAULTFILENAME "Adsız"

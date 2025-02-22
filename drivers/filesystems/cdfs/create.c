@@ -170,7 +170,7 @@ Return Value:
 
     PFILE_OBJECT FileObject;
 
-    COMPOUND_PATH_ENTRY CompoundPathEntry = {{0}};/* MenuOS Change: GCC "missing braces around initializer" */
+    COMPOUND_PATH_ENTRY CompoundPathEntry = {{0}};/* ReactOS Change: GCC "missing braces around initializer" */
     BOOLEAN CleanupCompoundPathEntry = FALSE;
 
     FILE_ENUM_CONTEXT FileContext = {0};
@@ -231,7 +231,7 @@ Return Value:
     PUNICODE_STRING FileName;
     PUNICODE_STRING RelatedFileName = NULL;
 
-    CD_NAME RemainingName = {{0}};/* MenuOS Change: GCC "missing braces around initializer" */
+    CD_NAME RemainingName = {{0}};/* ReactOS Change: GCC "missing braces around initializer" */
     CD_NAME FinalName;
     PCD_NAME MatchingName = NULL;
 
@@ -1538,7 +1538,7 @@ Return Value:
     FILE_ENUM_CONTEXT FileContext;
     BOOLEAN CleanupFileContext = FALSE;
 
-    COMPOUND_PATH_ENTRY CompoundPathEntry = {{0}};/* MenuOS Change: GCC "missing braces around initializer" */
+    COMPOUND_PATH_ENTRY CompoundPathEntry = {{0}};/* ReactOS Change: GCC "missing braces around initializer" */
     BOOLEAN CleanupCompoundPathEntry = FALSE;
 
     FILE_ID FileId;
@@ -2813,8 +2813,8 @@ Return Value:
                 OplockStatus = FsRtlCheckOplock( CdGetFcbOplock(Fcb),
                                                  IrpContext->Irp,
                                                  IrpContext,
-                                                 (PVOID)CdOplockComplete,   /* MenuOS Change: GCC "assignment from incompatible pointer type" */
-                                                 (PVOID)CdPrePostIrp );   /* MenuOS Change: GCC "assignment from incompatible pointer type" */
+                                                 (PVOID)CdOplockComplete,   /* ReactOS Change: GCC "assignment from incompatible pointer type" */
+                                                 (PVOID)CdPrePostIrp );   /* ReactOS Change: GCC "assignment from incompatible pointer type" */
 
                 if (OplockStatus == STATUS_PENDING) {
 
@@ -2845,8 +2845,8 @@ Return Value:
             OplockStatus = FsRtlCheckOplock( CdGetFcbOplock(Fcb),
                                              IrpContext->Irp,
                                              IrpContext,
-                                             (PVOID)CdOplockComplete,/* MenuOS Change: GCC "assignment from incompatible pointer type" */
-                                             (PVOID)CdPrePostIrp );/* MenuOS Change: GCC "assignment from incompatible pointer type" */
+                                             (PVOID)CdOplockComplete,/* ReactOS Change: GCC "assignment from incompatible pointer type" */
+                                             (PVOID)CdPrePostIrp );/* ReactOS Change: GCC "assignment from incompatible pointer type" */
 
             if (OplockStatus == STATUS_PENDING) {
 

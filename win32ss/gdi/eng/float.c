@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS kernel
+ * PROJECT:           ReactOS kernel
  * PURPOSE:           Engine floating point functions
  * FILE:              win32ss/gdi/eng/float.c
  * PROGRAMER:         David Welch

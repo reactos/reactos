@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Kernel
+ * PROJECT:     ReactOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Configuration Manager Library - Registry Syncing & Hive/Log/Alternate Writing
  * COPYRIGHT:   Copyright 2001 - 2005 Eric Kohl
@@ -121,7 +121,7 @@ HvpWriteLog(
 
     /*
      * FIXME: We must set a new file size for this log
-     * here but MenuOS lacks the necessary code implementation
+     * here but ReactOS lacks the necessary code implementation
      * that manages the growing and shrinking of a hive's log
      * size. So for now don't set any new size for the log.
      */
@@ -162,7 +162,7 @@ HvpWriteLog(
     Ptr += sizeof(HV_LOG_DIRTY_SIGNATURE);
 
     /*
-     * FIXME: In MenuOS a vector contains one bit per block
+     * FIXME: In ReactOS a vector contains one bit per block
      * whereas in Windows each bit within a vector is per
      * sector. Furthermore, the dirty blocks within a respective
      * hive has to be marked as such in an appropriate function

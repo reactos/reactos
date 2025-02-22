@@ -8,5 +8,5 @@ STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "Cylinders fractal"
     IDS_TITLE       "Čo je ..."
-    IDS_TEXT        "Cylinders fractal od unC0Rr.\nŠpeciálne pre systém MenuOS."
+    IDS_TEXT        "Cylinders fractal od unC0Rr.\nŠpeciálne pre systém ReactOS."
 END

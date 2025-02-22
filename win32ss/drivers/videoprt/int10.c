@@ -1,7 +1,7 @@
 /*
  * VideoPort driver
  *
- * Copyright (C) 2002, 2003, 2004 MenuOS Team
+ * Copyright (C) 2002, 2003, 2004 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -96,7 +96,7 @@ IntInitializeVideoAddressSpace(VOID)
     CHAR IVTAndBda[1024 + 256];
 #endif // _M_IX86
 
-    /* Free the 1MB pre-reserved region. In reality, MenuOS should simply support us mapping the view into the reserved area, but it doesn't. */
+    /* Free the 1MB pre-reserved region. In reality, ReactOS should simply support us mapping the view into the reserved area, but it doesn't. */
     BaseAddress = 0;
     ViewSize = 1024 * 1024;
     Status = ZwFreeVirtualMemory(NtCurrentProcess(),

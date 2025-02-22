@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS simple TCP/IP services
+ * PROJECT:     ReactOS simple TCP/IP services
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/services/tcpsvcs/chargen.c
  * PURPOSE:     Sends continuous lines of chars to the client

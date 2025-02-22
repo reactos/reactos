@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS CRT library
+ * PROJECT:     ReactOS CRT library
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Implementation of __rt_sdiv64
  * COPYRIGHT:   Copyright 2015 Timo Kreuzer <timo.kreuzer@reactos.org>

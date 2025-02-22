@@ -312,7 +312,7 @@ END
 
 500 DIALOGEX 0, 0, 235, 88
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "MenuOS Explorer"
+CAPTION "ReactOS Explorer"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 504, 501, 13, 14, 21, 20
@@ -406,7 +406,7 @@ BEGIN
     80 "Sind Sie sicher, dass diese Vorwahlregel gelöscht werden soll?"
     81 "Sie müssen die zu wählenden Ziffern eingeben."
     82 "Der eingegebene Callingcardname wird bereits verwendet. Geben Sie einen eindeutigen Namen ein."
-    83 "MenuOS benötigt Telefoninformation bezüglich des Standorts, von dem aus gewählt werden soll. Wenn Sie diese Informationen nicht angeben, kann das Programm eventuell nicht korrekt wählen. Zusätzlich kann es sein, dass dieser Dialog sofort wieder angezeigt wird, wenn Sie versuchen, ihn abzubrechen.\nSind Sie sicher, dass Sie den Vorgang abbrechen möchten?"
+    83 "ReactOS benötigt Telefoninformation bezüglich des Standorts, von dem aus gewählt werden soll. Wenn Sie diese Informationen nicht angeben, kann das Programm eventuell nicht korrekt wählen. Zusätzlich kann es sein, dass dieser Dialog sofort wieder angezeigt wird, wenn Sie versuchen, ihn abzubrechen.\nSind Sie sicher, dass Sie den Vorgang abbrechen möchten?"
     84 "Abbrechen bestätigen"
     85 "Eigener Standort"
     86 "<keine Dienstanbieter für die Installation verfügbar>"

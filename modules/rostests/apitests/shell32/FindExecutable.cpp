@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS api tests
+ * PROJECT:     ReactOS api tests
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Test for FindExecutable
  * COPYRIGHT:   Copyright 2021-2024 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)

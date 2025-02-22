@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Safer functions
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>

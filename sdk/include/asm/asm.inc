@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * FILE:            include/asm/asm.inc
  * PURPOSE:         ASM macros for GAS and MASM/ML64
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)

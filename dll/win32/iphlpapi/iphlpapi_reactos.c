@@ -1,8 +1,8 @@
 /*
- * PROJECT:     MenuOS Networking
+ * PROJECT:     ReactOS Networking
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/win32/iphlpapi/iphlpapi_reactos.c
- * PURPOSE:     DHCP helper functions for MenuOS
+ * PURPOSE:     DHCP helper functions for ReactOS
  * PROGRAMMERS: Pierre Schweitzer <pierre@reactos.org>
  */
 

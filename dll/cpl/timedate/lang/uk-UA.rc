@@ -60,7 +60,7 @@ BEGIN
     IDS_TIMEZONEUNKNOWN "Невідомий"
     IDS_INETTIMESUCSYNC "Час було успішно синхронізовано з %s на %s в %s"
     IDS_INETTIMENEXTSYNC "Наступна синхронізація: %s в %s"
-    IDS_INETTIMESYNCING "Будь ласка зачекайте, поки MenuOS синхронізує час з %s"
+    IDS_INETTIMESYNCING "Будь ласка зачекайте, поки ReactOS синхронізує час з %s"
     IDS_INETTIMEERROR "Помилка під час синхронізації з %s"
     IDS_INETTIMESUCFILL "Please type an NTP server name in order to synchronize the time"
     IDS_INETTIMEWELCOME "Select an NTP server from the list or type an NTP server name to synchronize the computer's time"

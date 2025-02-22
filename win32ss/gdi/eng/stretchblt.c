@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS Win32k subsystem
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          GDI stretch blt functions
  * FILE:             win32ss/gdi/eng/stretchblt.c
  * PROGRAMERS:       Jason Filby

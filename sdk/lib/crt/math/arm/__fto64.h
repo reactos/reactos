@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS CRT library
+ * PROJECT:     ReactOS CRT library
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Float to integer conversion (__dtoi64/dtou64/stoi64/stou64)
  * COPYRIGHT:   Copyright 2021 Roman Masanin <36927roma@gmail.com>

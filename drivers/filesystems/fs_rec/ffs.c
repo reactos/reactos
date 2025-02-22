@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS File System Recognizer
+ * PROJECT:          ReactOS File System Recognizer
  * FILE:             drivers/filesystems/fs_rec/ffs.c
  * PURPOSE:          FFS Recognizer
  * PROGRAMMER:       Peter Hater

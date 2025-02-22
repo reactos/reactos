@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS host tools
+ * PROJECT:     ReactOS host tools
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Tokenizer class implementation
  * COPYRIGHT:   Copyright 2021 Timo Kreuzer <timo.kreuzer@reactos.org>

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Printing Stack Marshalling Functions
+ * PROJECT:     ReactOS Printing Stack Marshalling Functions
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Marshalling definitions for PORT_INFO_*
  * COPYRIGHT:   Copyright 2015-2018 Colin Finck (colin@reactos.org)

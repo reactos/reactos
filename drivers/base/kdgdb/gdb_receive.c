@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL, see COPYING in the top level directory
- * PROJECT:         MenuOS kernel
+ * PROJECT:         ReactOS kernel
  * FILE:            drivers/base/kddll/gdb_receive.c
  * PURPOSE:         Base functions for the kernel debugger.
  */

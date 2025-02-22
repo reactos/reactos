@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Font Substitute Editor
+ * PROJECT:     ReactOS Font Substitute Editor
  * LICENSE:     CC0-1.0 (https://spdx.org/licenses/CC0-1.0)
  * PURPOSE:     Turkish resource file
  * TRANSLATOR:  Copyright 2022 Süleyman Poyraz <zaryob.dev@gmail.com>
@@ -65,7 +65,7 @@ BEGIN
     IDS_QUERYDELETE,    "Bu öğeyi gerçekten silmek istiyor musunuz?"
     IDS_CANTOPENKEY,    "Kayıt defteri anahtarı açılamadı."
     IDS_REBOOTNOW,      "Kayıt güncellendi. Sistemi şimdi yeniden başlat?"
-    IDS_ABOUT,          "FontSub (Font Substitute Editor) Sürüm 0.5\r\nKatayama Hirofumi MZ ve MenuOS Ekibi tarafından\r\n\r\nBu yazılım CC0 1.0 lisansı altında yayınlandı."
+    IDS_ABOUT,          "FontSub (Font Substitute Editor) Sürüm 0.5\r\nKatayama Hirofumi MZ ve ReactOS Ekibi tarafından\r\n\r\nBu yazılım CC0 1.0 lisansı altında yayınlandı."
 END
 
 IDD_ADD DIALOGEX 0, 0, 315, 65

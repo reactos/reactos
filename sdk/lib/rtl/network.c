@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS Runtime Library
+ * PROJECT:           ReactOS Runtime Library
  * PURPOSE:           Network Address Translation implementation
  * PROGRAMMER:        Alex Ionescu (alexi@tinykrnl.org)
  *                    Thomas Faber (thomas.faber@reactos.org)

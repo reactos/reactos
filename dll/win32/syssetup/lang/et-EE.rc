@@ -2,28 +2,28 @@ LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS'i paigaldus"
+CAPTION "ReactOS'i paigaldus"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Tere tulemast MenuOS'i häälestusviisardisse.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Selle viisardi abil paigaldatakse MenuOS Teie arvutisse. Selleks peab esmalt koguma natuke andmeid Teie ja Te arvuti kohta.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Tere tulemast ReactOS'i häälestusviisardisse.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Selle viisardi abil paigaldatakse ReactOS Teie arvutisse. Selleks peab esmalt koguma natuke andmeid Teie ja Te arvuti kohta.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Vajuta Edasi paigaldamise jätkamiseks.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS'i paigaldus"
+CAPTION "ReactOS'i paigaldus"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "MenuOS'i arendajad sooviksid tunnustada järgmisi avatud lähtekoodiga projekte, mida kasutati MenuOS'i loomisel:", IDC_STATIC, 15, 7, 286, 19
+    LTEXT "ReactOS'i arendajad sooviksid tunnustada järgmisi avatud lähtekoodiga projekte, mida kasutati ReactOS'i loomisel:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "MenuOS'i litsentsiks on GPL, seega kui soovite MenuOS'i (või selle osasid) kasutada või levitada, peab see toimuma GPL litsentsiga kooskõlas.", IDC_STATIC, 15, 110, 220, 24
+    LTEXT "ReactOS'i litsentsiks on GPL, seega kui soovite ReactOS'i (või selle osasid) kasutada või levitada, peab see toimuma GPL litsentsiga kooskõlas.", IDC_STATIC, 15, 110, 220, 24
     PUSHBUTTON "&Vaata GPL litsentsi...", IDC_VIEWGPL, 230, 110, 71, 19
     LTEXT "Vajuta Edasi paigaldamise jätkamiseks.", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
-CAPTION "MenuOS Setup"
+CAPTION "ReactOS Setup"
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -38,7 +38,7 @@ END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS'i paigaldus"
+CAPTION "ReactOS'i paigaldus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
@@ -51,7 +51,7 @@ END
 
 IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS'i paigaldus"
+CAPTION "ReactOS'i paigaldus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
@@ -69,7 +69,7 @@ END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS'i paigaldus"
+CAPTION "ReactOS'i paigaldus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
@@ -86,7 +86,7 @@ END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS'i paigaldus"
+CAPTION "ReactOS'i paigaldus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
@@ -100,7 +100,7 @@ END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS'i paigaldus"
+CAPTION "ReactOS'i paigaldus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_THEMEPICKER, "SysListView32", LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_TABSTOP, 18, 8, 288, 130
@@ -108,7 +108,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS'i paigaldus"
+CAPTION "ReactOS'i paigaldus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Komponentide registreerimine", IDC_TASKTEXT1, 65, 27, 232, 8
@@ -121,11 +121,11 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS'i paigalduse lõpetamine"
+CAPTION "ReactOS'i paigalduse lõpetamine"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "MenuOS'i paigalduse lõpetamine", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "MenuOS on edukalt paigaldatud.\n\nPärast Lõpeta vajutamist taaskäivitatakse arvuti.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "ReactOS'i paigalduse lõpetamine", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "ReactOS on edukalt paigaldatud.\n\nPärast Lõpeta vajutamist taaskäivitatakse arvuti.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "Kui CD on veel draivis, siis eemaldage see. Seejärel vajuta taaskäivitamiseks Lõpeta.", IDC_STATIC, 115, 169, 195, 17
 END
@@ -171,13 +171,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Tänusõnad"
-    IDS_ACKSUBTITLE "Kellele MenuOS toetub ja informatsioon litsentsi kohta"
+    IDS_ACKSUBTITLE "Kellele ReactOS toetub ja informatsioon litsentsi kohta"
     IDS_OWNERTITLE "Tee tarkvara isikupäraseks"
-    IDS_OWNERSUBTITLE "Seda informatsiooni kasutatakse MenuOS'i isikupäraseks tegemiseks."
+    IDS_OWNERSUBTITLE "Seda informatsiooni kasutatakse ReactOS'i isikupäraseks tegemiseks."
     IDS_COMPUTERTITLE "Arvuti nimi ja administraatori parool"
     IDS_COMPUTERSUBTITLE "Arvutile tuleb anda nimi ja administraatori parool."
     IDS_LOCALETITLE "Regionaalsed seaded"
-    IDS_LOCALESUBTITLE "MenuOS'i saab kohandada erinevatele regioonidele ja keeltele vastavaks."
+    IDS_LOCALESUBTITLE "ReactOS'i saab kohandada erinevatele regioonidele ja keeltele vastavaks."
     IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
     IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Kuupäev ja kellaaeg"
@@ -190,7 +190,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP "MenuOS'i paigaldus"
+    IDS_REACTOS_SETUP "ReactOS'i paigaldus"
     IDS_UNKNOWN_ERROR "Tundmatu viga"
     IDS_LOADLIBRARY_FAILED "LoadLibrary ebaõnnestus: "
     IDS_GETPROCADDR_FAILED "GetProcAddr ebaõnnestus: "
@@ -250,8 +250,8 @@ STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Product Options"
     IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behavior of the system."
-    IDS_PRODUCTSERVERNAME "MenuOS Server"
-    IDS_PRODUCTWORKSTATIONNAME "MenuOS Workstation"
+    IDS_PRODUCTSERVERNAME "ReactOS Server"
+    IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
     IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."
     IDS_PRODUCTWORKSTATIONINFO "The system will be recognized as a workstation. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents""."
     IDS_DEFAULT "(Default)"

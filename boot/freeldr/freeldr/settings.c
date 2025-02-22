@@ -3,7 +3,7 @@
  * LICENSE:     BSD - See COPYING.ARM in the top level directory
  *              or MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Command-line parsing and global settings management
- * COPYRIGHT:   Copyright 2008-2010 MenuOS Portable Systems Group <ros.arm@reactos.org>
+ * COPYRIGHT:   Copyright 2008-2010 ReactOS Portable Systems Group <ros.arm@reactos.org>
  *              Copyright 2015-2024 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 

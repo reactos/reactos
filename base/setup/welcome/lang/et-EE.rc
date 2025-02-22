@@ -5,9 +5,9 @@ LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
 /* Default settings */
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "MenuOS - Tere tulemast"
-    IDS_DEFAULT_TOPIC_TITLE "MenuOS"
-    IDS_DEFAULT_TOPIC_DESC "Tere tulemast operatsioonisüsteemi MenuOS.\n\nVali teema vasakult."
+    IDS_APPTITLE "ReactOS - Tere tulemast"
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "Tere tulemast operatsioonisüsteemi ReactOS.\n\nVali teema vasakult."
     IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Näita seda dialoogi veel"
     IDS_CLOSETEXT "&Välju"
@@ -16,7 +16,7 @@ END
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_BUTTON0 "&Paigalda MenuOS"
+    IDS_TOPIC_BUTTON0 "&Paigalda ReactOS"
     IDS_TOPIC_BUTTON1 "&Sirvi CD sisu"
     IDS_TOPIC_BUTTON2 "&Välju"
 END
@@ -24,7 +24,7 @@ END
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_TITLE0 "Paigalda MenuOS"
+    IDS_TOPIC_TITLE0 "Paigalda ReactOS"
     IDS_TOPIC_TITLE1 "Sirvi CD sisu"
     IDS_TOPIC_TITLE2 "Välju"
 END
@@ -32,7 +32,7 @@ END
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_DESC0 "Paigalda MenuOS oma arvutisse või uuenda olemasolevat installatsiooni."
+    IDS_TOPIC_DESC0 "Paigalda ReactOS oma arvutisse või uuenda olemasolevat installatsiooni."
     IDS_TOPIC_DESC1 "Sirvi CD sisu."
     IDS_TOPIC_DESC2 "Vajuta, et väljuda."
 END

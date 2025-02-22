@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Accessibility Control Panel
+ * PROJECT:     ReactOS Accessibility Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
@@ -39,7 +39,7 @@ CAPTION "Sunet"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "SantinelăSunet", -1, 6, 11, 234, 98
-    LTEXT "Utilizaţi SantinelăSunet dacă doriţi ca MenuOS să genereze avertismente vizuale atunci când sistemul emite un sunet.",
+    LTEXT "Utilizaţi SantinelăSunet dacă doriţi ca ReactOS să genereze avertismente vizuale atunci când sistemul emite un sunet.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Utilizare &SantinelăSunet", IDC_SENTRY_BOX, 12, 49, 140, 14
     LTEXT "Alegeţi metoda de avertizare vizuală:", IDC_SENTRY_TEXT, 12, 72, 222, 11
@@ -57,7 +57,7 @@ CAPTION "Afişare"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Contrast Înalt", -1, 6, 11, 234, 62
-    LTEXT "Utilizaţi această opţiune dacă doriţi ca MenuOS să utilizeze culori şi fonturi proiectate pentru o citire mai uşoară.",
+    LTEXT "Utilizaţi această opţiune dacă doriţi ca ReactOS să utilizeze culori şi fonturi proiectate pentru o citire mai uşoară.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Utilizare Contrast Înalt", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Setări", IDC_CONTRAST_BUTTON, 144, 49, 90, 14
@@ -95,7 +95,7 @@ CAPTION "General"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Revenire automată", -1, 6, 11, 234, 47
-    AUTOCHECKBOX "Se a&plică modificările doar pentru această sesiune MenuOS",
+    AUTOCHECKBOX "Se a&plică modificările doar pentru această sesiune ReactOS",
                  IDC_RESET_BOX, 12, 18, 222, 14
     COMBOBOX IDC_RESET_COMBO, 24, 38, 60, 47,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP

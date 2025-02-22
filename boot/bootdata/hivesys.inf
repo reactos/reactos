@@ -253,7 +253,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\{4D36E980-E325-11CE-BFC1
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\{71A27CDD-812A-11D0-BEC7-08002BE2092F}","",0x00000000,"Volume"
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\{745A17A0-74D3-11D0-B6FE-00A0C90F57DA}","",0x00000000,"Human Interface Devices"
 
-; MenuOS specific - required to load in Safe Mode and for debugging in Safe Mode (until vga.sys and vgasave.sys are implemented)
+; ReactOS specific - required to load in Safe Mode and for debugging in Safe Mode (until vga.sys and vgasave.sys are implemented)
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Minimal\Debug","",0x00000000,"Driver Group"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot\Network\Debug","",0x00000000,"Driver Group"
@@ -1399,9 +1399,9 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Print\Providers",,0x00000010
 
 HKLM,"SYSTEM\CurrentControlSet\Control\ProductOptions","ProductType",2,"ServerNT"
 HKLM,"SYSTEM\CurrentControlSet\Control\ProductOptions","ProductSuite",0x00010002,"Terminal Server"
-; MenuOS specific - by default we report ourselves as Server for the user,
+; ReactOS specific - by default we report ourselves as Server for the user,
 ; but we can also report as Workstation if some application needs it.
-HKLM,"SYSTEM\CurrentControlSet\Control\MenuOS\Settings\Version","ReportAsWorkstation",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Control\ReactOS\Settings\Version","ReportAsWorkstation",0x00010001,0x00000000
 ; Some installers check for SP2
 HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDReleaseType",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x00000200
@@ -2110,7 +2110,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","ObjectName",0x00000000,"LocalS
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Type",0x00010001,0x00000020
 
-; MenuOS Telnet Service
+; ReactOS Telnet Service
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Description",0x00000000,%TELNETD_SERVICE_DESCRIPTION%
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","DisplayName",0x00000000,%TELNETD_SERVICE%
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","ErrorControl",0x00010001,0x00000001
@@ -2135,7 +2135,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Themes","Type",0x00010001,0x00000020
 HKLM,"SYSTEM\CurrentControlSet\Services\Themes\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\shsvcs.dll"
 HKLM,"SYSTEM\CurrentControlSet\Services\Themes\Parameters","ServiceMain",0x00000000,"ThemeServiceMain"
 
-; MenuOS Installer Service
+; ReactOS Installer Service
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIServer","DependOnService",0x00010000,"RPCSS"
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIServer","DisplayName",0x00000000,%MSISERVER_SERVICE%
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIServer","Description",0x00000000,%MSISERVER_SERVICE_DESCRIPTION%
@@ -2260,7 +2260,7 @@ DCOMLAUNCH_SERVICE_DESCRIPTION="DcomLaunch service stub."
 EVENTLOG_SERVICE="Event Logger"
 EVENTLOG_SERVICE_DESCRIPTION="Logs events or messages sent by the operating system in a database accessible via the event log viewer."
 
-MSISERVER_SERVICE="MenuOS Installer"
+MSISERVER_SERVICE="ReactOS Installer"
 MSISERVER_SERVICE_DESCRIPTION="Controls installation, maintenance, and removal of software packaged as an MSI (Windows Installer)."
 
 NETLOGON_SERVICE="Net Logon"
@@ -2290,13 +2290,13 @@ SPOOLER_SERVICE_DESCRIPTION="Loads files to memory for later printing."
 TCPSVCS_SERVICE="Simple TCP/IP Services"
 TCPSVCS_SERVICE_DECRIPTION="Supports the following TCP/IP services: Chargen, Daytime, Discard, Echo, QOTD."
 
-TELNETD_SERVICE="MenuOS Telnet Service"
-TELNETD_SERVICE_DESCRIPTION="MenuOS Telnet Service"
+TELNETD_SERVICE="ReactOS Telnet Service"
+TELNETD_SERVICE_DESCRIPTION="ReactOS Telnet Service"
 
 THEMES_SERVICE="Themes"
 THEMES_SERVICE_DESCRIPTION="Themes support"
 
-WINMGMT_SERVICE="MenuOS Management Infrastructure"
+WINMGMT_SERVICE="ReactOS Management Infrastructure"
 WINMGMT_SERVICE_DESCRIPTION="Provides interface to system management information."
 
 WLANSVC_SERVICE="WLAN Service"
@@ -2401,7 +2401,7 @@ VIETNAMESE = "Vietnamese"
 [Strings.000A]
 
 ; Services names and descriptions
-AUDIO_SERVICE="Audio de MenuOS"
+AUDIO_SERVICE="Audio de ReactOS"
 AUDIO_SERVICE_DESCRIPTION="Proporciona facilidades de audio para las aplicaciones."
 
 BITS_SERVICE="Servicio de transferencia inteligente en segundo plano (BITS)"
@@ -2416,7 +2416,7 @@ DCOMLAUNCH_SERVICE_DESCRIPTION="Servicio simulado del iniciador Dcom."
 EVENTLOG_SERVICE="Registrador de Eventos"
 EVENTLOG_SERVICE_DESCRIPTION="Registro de eventos o mensajes enviados por el sistema operativo en una base de datos accesible desde el Visor de Eventos."
 
-MSISERVER_SERVICE="Instalador MSI de MenuOS"
+MSISERVER_SERVICE="Instalador MSI de ReactOS"
 MSISERVER_SERVICE_DESCRIPTION="Controla la instalación, mantenimiento y desinstalado del software empaquetado en un MSI (Windows Installer)."
 
 NETLOGON_SERVICE="Net Logon"
@@ -2446,13 +2446,13 @@ SPOOLER_SERVICE_DESCRIPTION="Carga los archivos a la memoria para una posterior 
 TCPSVCS_SERVICE="Servicios sencillos TCP/IP"
 TCPSVCS_SERVICE_DECRIPTION="Soporta los siguientes servicios de TCP/IP: Chargen, Daytime, Discard, Echo, QOTD."
 
-TELNETD_SERVICE="Servicio Telnet de MenuOS"
-TELNETD_SERVICE_DESCRIPTION="Servicio Telnet de MenuOS."
+TELNETD_SERVICE="Servicio Telnet de ReactOS"
+TELNETD_SERVICE_DESCRIPTION="Servicio Telnet de ReactOS."
 
 THEMES_SERVICE="Temas"
 THEMES_SERVICE_DESCRIPTION="Soporte para los diferentes Temas."
 
-WINMGMT_SERVICE="Instrumental de administración de MenuOS"
+WINMGMT_SERVICE="Instrumental de administración de ReactOS"
 WINMGMT_SERVICE_DESCRIPTION="Proporciona una interfaz para la gestión de la información del sistema (winmgmt)."
 
 WLANSVC_SERVICE="Servicio de WLAN"
@@ -2572,7 +2572,7 @@ DCOMLAUNCH_SERVICE_DESCRIPTION="Namiastka usługi DcomLaunch"
 EVENTLOG_SERVICE="Dziennik zdarzeń"
 EVENTLOG_SERVICE_DESCRIPTION="Zapisuje zdarzenia lub wiadomości wysyłane przez system operacyjny do bazy danych dostępnej za pomocą podglądu zdarzeń."
 
-MSISERVER_SERVICE="Instalator MenuOS"
+MSISERVER_SERVICE="Instalator ReactOS"
 MSISERVER_SERVICE_DESCRIPTION="Dodaje, modyfikuje i usuwa aplikacje dostarczane jako pakiet MSI (Windows Installer)."
 
 NETLOGON_SERVICE="Logowanie do sieci"
@@ -2602,13 +2602,13 @@ SPOOLER_SERVICE_DESCRIPTION="Ładuje pliki do pamięci w celu późniejszego wyd
 TCPSVCS_SERVICE="Podstawowe usługi TCP/IP"
 TCPSVCS_SERVICE_DECRIPTION="Oferuje następujące usługi TCP/IP: Chargen, Daytime, Discard, Echo, QOTD."
 
-TELNETD_SERVICE="Usługa MenuOS Telnet"
-TELNETD_SERVICE_DESCRIPTION="Usługa MenuOS Telnet"
+TELNETD_SERVICE="Usługa ReactOS Telnet"
+TELNETD_SERVICE_DESCRIPTION="Usługa ReactOS Telnet"
 
 THEMES_SERVICE="Motywy"
 THEMES_SERVICE_DESCRIPTION="Oferuje wsparcie dla motywów."
 
-WINMGMT_SERVICE="Infrastruktura zarządzania MenuOS"
+WINMGMT_SERVICE="Infrastruktura zarządzania ReactOS"
 WINMGMT_SERVICE_DESCRIPTION="Dostarcza interfejs w celu uzyskiwania dostępu do informacji zarządzania o systemie operacyjnym, urządzeniach, aplikacjach i usługach."
 
 WLANSVC_SERVICE="Usługa WLAN"
@@ -2713,7 +2713,7 @@ VIETNAMESE = "Wietnamski"
 [Strings.0016]
 
 ; Services names and descriptions
-AUDIO_SERVICE="Serviços de Audio do MenuOS"
+AUDIO_SERVICE="Serviços de Audio do ReactOS"
 AUDIO_SERVICE_DESCRIPTION="Fornece recursos de áudio para aplicações"
 
 BITS_SERVICE="Serviço de transferência inteligente em segundo plano"
@@ -2728,7 +2728,7 @@ DCOMLAUNCH_SERVICE_DESCRIPTION="Fornece funcionalidades de lançamento para serv
 EVENTLOG_SERVICE="Registo de Eventos"
 EVENTLOG_SERVICE_DESCRIPTION="Regista eventos ou mensagens enviadas pelo sistema operativo num banco de dados acessíveis através do visualizador de eventos."
 
-MSISERVER_SERVICE="Instalador do MenuOS"
+MSISERVER_SERVICE="Instalador do ReactOS"
 MSISERVER_SERVICE_DESCRIPTION="Controla a instalação, manutenção e remoção de software empacotado como um MSI (Instalador do Windows)."
 
 NETLOGON_SERVICE="Inicio de sessão de rede"
@@ -2758,13 +2758,13 @@ SPOOLER_SERVICE_DESCRIPTION="Carrega ficheiros na memória para impressão poste
 TCPSVCS_SERVICE="Serviços TCP/IP simples"
 TCPSVCS_SERVICE_DECRIPTION="Soporta os seguintes serviços TCP/IP: Chargen, Daytime, Discard, Echo, QOTD."
 
-TELNETD_SERVICE="Serviço Telnet do MenuOS"
+TELNETD_SERVICE="Serviço Telnet do ReactOS"
 TELNETD_SERVICE_DESCRIPTION="Permite que um utilizador remoto inicie sessão e execute programas neste computador."
 
 THEMES_SERVICE="Temas"
 THEMES_SERVICE_DESCRIPTION="Fornece a gestão de temas por parte dos utilizadores.."
 
-WINMGMT_SERVICE="Infra-estrutura de gestão do MenuOS"
+WINMGMT_SERVICE="Infra-estrutura de gestão do ReactOS"
 WINMGMT_SERVICE_DESCRIPTION="Fornece interface para informações de gestão do sistema."
 
 WLANSVC_SERVICE="Serviço WLAN"
@@ -2774,7 +2774,7 @@ WORKSTATION_SERVICE="Estação de trabalho"
 WORKSTATION_SERVICE_DESCRIPTION="Cria e mantém cliente de ligações de rede a servidores remotos."
 
 WUAUSERV_SERVICE="Actualizações automáticas"
-WUAUSERV_SERVICE_DESCRIPTION="Permite a transferência e instalação de actualizações do MenuOS."
+WUAUSERV_SERVICE_DESCRIPTION="Permite a transferência e instalação de actualizações do ReactOS."
 
 ; Keyboard layouts
 ALBANIAN = "Albanês"
@@ -2881,7 +2881,7 @@ DCOMLAUNCH_SERVICE_DESCRIPTION="Serviciu simulat de lansare Dcom."
 EVENTLOG_SERVICE="Jurnal de evenimente"
 EVENTLOG_SERVICE_DESCRIPTION="Jurnalizează mesajele sau evenimentele transmise de sistemul de operare într-o bază de date accesibilă cu instrumentul „observator de evenimente”."
 
-MSISERVER_SERVICE="Instalare MenuOS"
+MSISERVER_SERVICE="Instalare ReactOS"
 MSISERVER_SERVICE_DESCRIPTION="Controlează instalarea, mentenanța, și eliminarea de programe de instalare MSI (Windows Installer)."
 
 NETLOGON_SERVICE="Autentificare în rețea"
@@ -2912,7 +2912,7 @@ TCPSVCS_SERVICE="Servicii TCP/IP simple"
 TCPSVCS_SERVICE_DECRIPTION="Permite următoarele servicii (protocoale) TCP/IP: Chargen, Daytime, Discard, Echo, QOTD."
 
 TELNETD_SERVICE="Serviciu Telnet"
-TELNETD_SERVICE_DESCRIPTION="Serviciul Telnet al MenuOS."
+TELNETD_SERVICE_DESCRIPTION="Serviciul Telnet al ReactOS."
 
 THEMES_SERVICE="Teme"
 THEMES_SERVICE_DESCRIPTION="Permite teme pentru interfața grafică de utilizare."
@@ -3037,7 +3037,7 @@ DCOMLAUNCH_SERVICE_DESCRIPTION="DcomLaunch service stub."
 EVENTLOG_SERVICE="Журнал событий"
 EVENTLOG_SERVICE_DESCRIPTION="Регистрирует события или сообщения, отправленные операционной системой в базе данных, доступной через средство просмотра журнала событий."
 
-MSISERVER_SERVICE="Установщик MenuOS"
+MSISERVER_SERVICE="Установщик ReactOS"
 MSISERVER_SERVICE_DESCRIPTION="Управляет установкой, изменением и удалением программ, упакованных в MSI (установщик Windows)."
 
 NETLOGON_SERVICE="Сетевой вход в систему"
@@ -3067,13 +3067,13 @@ SPOOLER_SERVICE_DESCRIPTION="Загружает файлы в память дл�
 TCPSVCS_SERVICE="Простые службы TCP/IP"
 TCPSVCS_SERVICE_DECRIPTION="Поддержка следующих служб TCP/IP: Chargen, Daytime, Discard, Echo, QOTD."
 
-TELNETD_SERVICE="Служба MenuOS Telnet"
-TELNETD_SERVICE_DESCRIPTION="Служба MenuOS Telnet"
+TELNETD_SERVICE="Служба ReactOS Telnet"
+TELNETD_SERVICE_DESCRIPTION="Служба ReactOS Telnet"
 
 THEMES_SERVICE="Темы"
 THEMES_SERVICE_DESCRIPTION="Поддержка тем оформления."
 
-WINMGMT_SERVICE="Инструментарий управления MenuOS"
+WINMGMT_SERVICE="Инструментарий управления ReactOS"
 WINMGMT_SERVICE_DESCRIPTION="Предоставляет общий интерфейс для доступа к информации об управлении операционной системой."
 
 WLANSVC_SERVICE="Беспроводная локальная сеть (WLAN)"
@@ -3193,7 +3193,7 @@ DCOMLAUNCH_SERVICE_DESCRIPTION="DcomLaunch hizmetinin taslağı."
 EVENTLOG_SERVICE="Olay Günlüğü"
 EVENTLOG_SERVICE_DESCRIPTION="İşletim sisteminin gönderdiği olayları veya iletileri, olay görüntüsü ile erişilebilen bir veritabanına kaydeder."
 
-MSISERVER_SERVICE="MenuOS Yükleyicisi"
+MSISERVER_SERVICE="ReactOS Yükleyicisi"
 MSISERVER_SERVICE_DESCRIPTION="MSI (Windows Yükleyicisi) olarak paketlenmiş yazılımların yüklenmesini, bakımını ve kaldırılmasını denetler."
 
 NETLOGON_SERVICE="Ağda Oturum Açma"
@@ -3223,13 +3223,13 @@ SPOOLER_SERVICE_DESCRIPTION="Dosyaları, sonra yazdırılması için belleğe y�
 TCPSVCS_SERVICE="Basit TCP/IP Hizmetleri"
 TCPSVCS_SERVICE_DECRIPTION="Şu TCP/IP hizmetlerini destekler: Güçlendirme, Günışığı, Kesme, Yankı ve QOTD."
 
-TELNETD_SERVICE="MenuOS Telnet Hizmeti"
-TELNETD_SERVICE_DESCRIPTION="MenuOS Telnet Hizmeti"
+TELNETD_SERVICE="ReactOS Telnet Hizmeti"
+TELNETD_SERVICE_DESCRIPTION="ReactOS Telnet Hizmeti"
 
 THEMES_SERVICE="Temalar"
 THEMES_SERVICE_DESCRIPTION="Tema desteği"
 
-WINMGMT_SERVICE="MenuOS Yönetim Altyapısı"
+WINMGMT_SERVICE="ReactOS Yönetim Altyapısı"
 WINMGMT_SERVICE_DESCRIPTION="Sistem yönetim bilgisine arayüz sağlar."
 
 WLANSVC_SERVICE="WLAN Hizmeti"

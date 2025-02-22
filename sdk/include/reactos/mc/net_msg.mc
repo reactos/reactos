@@ -2117,7 +2117,7 @@ NET HELP command | MORE displays Help one screen at a time.
 Language=Polish
 NET SHARE udostępnia zasoby serwera użytkownikom sieci. Użyte
 bez opcji wyświetla informacje o wszystkich zasobach udostępnionych
-na komputerze. Dla każdego zasobu, system MenuOS zgłasza
+na komputerze. Dla każdego zasobu, system ReactOS zgłasza
 nazwa_urządzenia lub nazwa_ścieżki i powiązany z nim komentarz opisowy.
 
 nazwa_udziału

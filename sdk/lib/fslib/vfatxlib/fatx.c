@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS VFATX filesystem library
+ * PROJECT:     ReactOS VFATX filesystem library
  * FILE:        fatx.c
  * PURPOSE:     Fatx support
  * PROGRAMMERS:

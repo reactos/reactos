@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Add hardware control panel
+ * PROJECT:     ReactOS Add hardware control panel
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Chinese (Hong Kong) resource file
  * TRANSLATORS: Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
@@ -137,7 +137,7 @@ BEGIN
     LTEXT "無法繼續新增硬件精靈", IDC_FINISHTITLE, 114, 8, 203, 28
     LTEXT "如要繼續，請將這個硬件連接至電腦。", -1, 114, 40, 193, 16
     AUTOCHECKBOX "按下［完成］時關閉電腦；這樣，我可以開啟電腦並連接硬件(&T)。", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "在大多數情況下，MenuOS 在硬件和電腦連接後自動將其安裝。如果 MenuOS 找不到這個硬件，您可以重新開啟這個精靈，安裝支援軟件。", -1, 114, 98, 193, 32
+    LTEXT "在大多數情況下，ReactOS 在硬件和電腦連接後自動將其安裝。如果 ReactOS 找不到這個硬件，您可以重新開啟這個精靈，安裝支援軟件。", -1, 114, 98, 193, 32
     LTEXT "要關閉這個精靈，請按［完成］。", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 

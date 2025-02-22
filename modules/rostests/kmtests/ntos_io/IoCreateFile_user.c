@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS kernel-mode tests
+ * PROJECT:         ReactOS kernel-mode tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Kernel-Mode Test Suite Reparse points test user-mode part
  * PROGRAMMER:      Pierre Schweitzer <pierre@reactos.org>

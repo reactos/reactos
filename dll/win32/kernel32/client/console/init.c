@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/client/console/init.c
  * PURPOSE:         Console API Client Initialization
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
@@ -25,7 +25,7 @@ RTL_CRITICAL_SECTION ConsoleLock;
 BOOLEAN ConsoleInitialized = FALSE;
 extern HANDLE InputWaitHandle;
 
-static const PWSTR DefaultConsoleTitle = L"MenuOS Console";
+static const PWSTR DefaultConsoleTitle = L"ReactOS Console";
 
 /* FUNCTIONS ******************************************************************/
 

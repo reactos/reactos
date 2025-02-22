@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS win32 kernel mode subsystem
+ * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            win32ss/gdi/ntgdi/text.c
  * PURPOSE:         Text/Font
@@ -17,11 +17,11 @@
 /*
    This is a hack. See CORE-1091.
 
-   It is needed because MenuOS does not support raster fonts now.
+   It is needed because ReactOS does not support raster fonts now.
    After Raster Font support is added, then it can be removed.
    Find the current font's logfont for testing its lf.lfFaceName.
 
-   The ftGdiGetTextMetricsW function currently in MenuOS will always return a Truetype font
+   The ftGdiGetTextMetricsW function currently in ReactOS will always return a Truetype font
    because we cannot yet handle raster fonts. So it will return flags
    TMPF_VECTOR and TMPF_TRUETYPE, which can cause problems in edit boxes.
  */

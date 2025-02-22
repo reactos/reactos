@@ -65,32 +65,32 @@ HKR,,EventMessageFile,%REG_EXPAND_SZ%,"%%SystemRoot%%\System32\IoLogMsg.dll"
 HKR,,TypesSupported,%REG_DWORD%,7
 
 [Strings]
-ROS                     = "MenuOS"
+ROS                     = "ReactOS"
 DeviceDesc              = "AHCI SATA Driver"
 SATA_AHCI.DeviceDesc    = "Standard SATA AHCI Controller"
 
 [Strings.0404]
-ROS                     = "MenuOS"
+ROS                     = "ReactOS"
 DeviceDesc              = "AHCI SATA 驅動程式"
 SATA_AHCI.DeviceDesc    = "標準 SATA AHCI 控制器"
 
 [Strings.0418]
-ROS                     = "MenuOS"
+ROS                     = "ReactOS"
 DeviceDesc              = "Driver SATA AHCI"
 SATA_AHCI.DeviceDesc    = "Dispozitiv de control standard AHCI SATA"
 
 [Strings.041f]
-ROS                     = "MenuOS"
+ROS                     = "ReactOS"
 DeviceDesc              = "AHCI SATA Sürücüsü"
 SATA_AHCI.DeviceDesc    = "Ölçünlü SATA AHCI Denetleyicisi"
 
 [Strings.0804]
-ROS                     = "MenuOS"
+ROS                     = "ReactOS"
 DeviceDesc              = "AHCI SATA 驱动程序"
 SATA_AHCI.DeviceDesc    = "标准 SATA AHCI 控制器"
 
 [Strings.0c04]
-ROS                     = "MenuOS"
+ROS                     = "ReactOS"
 DeviceDesc              = "AHCI SATA 驅動程式"
 SATA_AHCI.DeviceDesc    = "標準 SATA AHCI 控制器"
 

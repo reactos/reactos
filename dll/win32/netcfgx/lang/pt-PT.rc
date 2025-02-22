@@ -227,7 +227,7 @@ BEGIN
     IDS_DHCPACTIVE "DHCP habilitado"
     IDS_AUTOMATIC "Automatico"
     IDS_NOITEMSEL "Você não seleccionou um item. Seleccione um primeiro."
-    IDS_TCPIP "MenuOS-TCP/IP"
+    IDS_TCPIP "ReactOS-TCP/IP"
     IDS_ADD "Adicionar"
     IDS_MOD "OK"
     IDS_TCP_PORTS "Portas TCP"

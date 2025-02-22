@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS kernel
+ * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI WNDOBJ Functions
  * FILE:              win32ss/gdi/eng/engwindow.c
  * PROGRAMER:         Gregor Anich

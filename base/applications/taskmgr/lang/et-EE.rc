@@ -1,5 +1,5 @@
 /*
- * PROJECT:     Task Manager for MenuOS
+ * PROJECT:     Task Manager for ReactOS
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Estonian Language resource file
  * TRANSLATOR:  Joann Mõndresku <joannmondresku@gmail.com>
@@ -421,7 +421,7 @@ BEGIN
     IDS_MENU_CPUHISTORY "&CPU ajalugu"
     IDS_MENU_SHOWKERNELTIMES "Näita &tuumaaegu"
     IDS_CREATENEWTASK "Loo uus tegum"
-    IDS_CREATENEWTASK_DESC "Sisetage programmi, kausta, dokumendi või Interneti-ressursi nimi ja MenuOS avab selle."
+    IDS_CREATENEWTASK_DESC "Sisetage programmi, kausta, dokumendi või Interneti-ressursi nimi ja ReactOS avab selle."
     IDS_MSG_ACCESSPROCESSAFF "Ei saa ligi ega sätestada protsessi ühtivust"
     IDS_MSG_PROCESSONEPRO "Protsessil peab olema ühtivus vähemalt ühe protsessoriga."
     IDS_MSG_INVALIDOPTION "Sobimatu suvand"

@@ -1,5 +1,5 @@
 /*
- * PROJECT:   SORT - Adapted for MenuOS
+ * PROJECT:   SORT - Adapted for ReactOS
  * LICENSE:   GPL - See COPYING in the top level directory
  * PURPOSE:   Reads line of a file and sorts them in order
  * COPYRIGHT: Copyright 1995 Jim Lynch

@@ -21,7 +21,7 @@
  */
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS GDI32
+ * PROJECT:          ReactOS GDI32
  * PURPOSE:          LineDDA Function
  * FILE:             win32ss/gdi/gdi32/objects/linedda.c
  * PROGRAMER:        Steven Edwards

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS System Control Panel Applet
+ * PROJECT:     ReactOS System Control Panel Applet
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/cpl/sysdm/userprofile.c
  * PURPOSE:     Computer settings for networking

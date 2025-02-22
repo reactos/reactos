@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS system libraries
+ * PROJECT:     ReactOS system libraries
  * FILE:        lib/sdk/crt/string/strset.c
  * PURPOSE:     Implementation of _strnset and _strset
  * PROGRAMER:   Unknown

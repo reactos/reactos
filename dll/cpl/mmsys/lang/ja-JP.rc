@@ -27,7 +27,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "音量"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "音声スキームは、MenuOSとプログラムでイベントに適用される音声のセットです。すでに存在するスキーム、あるいは変更を保存したスキームを選択できます。", -1, 8, 7, 230, 30
+    LTEXT "音声スキームは、ReactOSとプログラムでイベントに適用される音声のセットです。すでに存在するスキーム、あるいは変更を保存したスキームを選択できます。", -1, 8, 7, 230, 30
     LTEXT "音声スキーム(&C):", -1, 8, 42, 150, 9
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "保存(&E)...", IDC_SAVEAS_BTN, 134, 70, 50, 15
@@ -123,7 +123,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "パフォーマンス"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "これらの設定は、MenuOSがどのようにオーディオを再生するかを制御します。これらはオーディオ関連の問題のトラブルシューティングを助けます。", 8492, 34, 7, 218, 23
+    LTEXT "これらの設定は、ReactOSがどのようにオーディオを再生するかを制御します。これらはオーディオ関連の問題のトラブルシューティングを助けます。", 8492, 34, 7, 218, 23
     GROUPBOX "オーディオ プレイバック", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
     LTEXT "ハードウェア アクセラレーション(&H):", 8495, 13, 56, 111, 14
@@ -144,7 +144,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "パフォーマンス"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "これらの設定は、MenuOSがどのようにオーディオを録音するかを制御します。これらはオーディオ関連の問題のトラブルシューティングを助けます。", 8492, 34, 7, 217, 20
+    LTEXT "これらの設定は、ReactOSがどのようにオーディオを録音するかを制御します。これらはオーディオ関連の問題のトラブルシューティングを助けます。", 8492, 34, 7, 217, 20
     GROUPBOX "オーディオ録音", 8494, 7, 29, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
     LTEXT "ハードウェア アクセラレーション(&H):", 8495, 13, 46, 103, 9
@@ -165,13 +165,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
-    GROUPBOX "MenuOSオーディオ", 10243, 7, 5, 213, 192
+    GROUPBOX "ReactOSオーディオ", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "このコンピューターは、MenuOSオーディオサービスが有効でないため、オーディオを再生できません。", 10245, 60, 25, 150, 40
-    AUTOCHECKBOX "MenuOSオーディオを有効にする(&E)", 10253, 60, 68, 150, 9
+    LTEXT "このコンピューターは、ReactOSオーディオサービスが有効でないため、オーディオを再生できません。", 10245, 60, 25, 150, 40
+    AUTOCHECKBOX "ReactOSオーディオを有効にする(&E)", 10253, 60, 68, 150, 9
     LTEXT "注意", 10246, 58, 87, 150, 11
     LTEXT "1. このサービスを有効にするには管理者権限が必要です。もし管理者としてログオンしていなければ、管理者の名前とパスワードを要求されるでしょう。", 10247, 60, 100, 150, 40
-    LTEXT "2. MenuOSオーディオを有効にした後、コンピューター再起動する必要があります。", 10248, 60, 140, 150, 40
+    LTEXT "2. ReactOSオーディオを有効にした後、コンピューター再起動する必要があります。", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOGEX 0, 0, 227, 218
@@ -221,11 +221,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
-    GROUPBOX "MenuOSオーディオ", 10259, 7, 5, 213, 192
+    GROUPBOX "ReactOSオーディオ", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "現在、MenuOSオーディオ サービスは有効です。しかし、MenuOSを再起動するまでオーディオは正常に機能しません。もし今すぐ再起動したければ、あなたの作業内容を保存し、すべてのプログラムを閉じて下さい。", 10261, 60, 25, 150, 50
-    LTEXT "MenuOSを再起動するには、OKをクリックして下さい。", 10262, 60, 75, 150, 20
-    LTEXT "もしキャンセルすれば、MenuOSオーディオを正常に機能させるために、後で再起動する必要があります。", 10263, 60, 100, 150, 40
+    LTEXT "現在、ReactOSオーディオ サービスは有効です。しかし、ReactOSを再起動するまでオーディオは正常に機能しません。もし今すぐ再起動したければ、あなたの作業内容を保存し、すべてのプログラムを閉じて下さい。", 10261, 60, 25, 150, 50
+    LTEXT "ReactOSを再起動するには、OKをクリックして下さい。", 10262, 60, 75, 150, 20
+    LTEXT "もしキャンセルすれば、ReactOSオーディオを正常に機能させるために、後で再起動する必要があります。", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
@@ -262,15 +262,15 @@ BEGIN
     5843 "アスタリスク"
     5844 "既定の音声"
     5845 "感嘆符"
-    5846 "MenuOSの終了"
+    5846 "ReactOSの終了"
     5847 "重大な停止"
     5848 "システム通知"
     5849 "質問"
-    5850 "MenuOSの開始"
+    5850 "ReactOSの開始"
     5851 "メニューの開始"
-    IDS_REACTOS_LOGOFF "MenuOSログオフ"
-    IDS_REACTOS_LOGON "MenuOSログオン"
-    5854 "MenuOSエクスプローラー"
+    IDS_REACTOS_LOGOFF "ReactOSログオフ"
+    IDS_REACTOS_LOGON "ReactOSログオン"
+    5854 "ReactOSエクスプローラー"
     IDS_BROWSE_FOR_SOUND "新しい音声を探す"
     IDS_WAVE_FILES_FILTER "音声ファイル (*.wav)|*.wav|"
 END

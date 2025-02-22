@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS System File Checker
+ * PROJECT:     ReactOS System File Checker
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * FILE:        dll/win32/sfcfiles/sfcfiles.c
  * PURPOSE:     List of protected files

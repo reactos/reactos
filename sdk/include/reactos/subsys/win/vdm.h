@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Base API Server DLL
+ * PROJECT:         ReactOS Base API Server DLL
  * FILE:            include/reactos/subsys/win/vdm.h
  * PURPOSE:         Public definitions for the Virtual Dos Machine
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>

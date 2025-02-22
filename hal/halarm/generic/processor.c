@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS HAL
+ * PROJECT:         ReactOS HAL
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            hal/halarm/generic/processor.c
  * PURPOSE:         HAL Processor Routines
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/

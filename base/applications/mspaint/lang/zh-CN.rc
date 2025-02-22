@@ -1,5 +1,5 @@
 /*
- * PROJECT:     PAINT for MenuOS
+ * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2011 Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
@@ -237,7 +237,7 @@ STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "画图"
     IDS_WINDOWTITLE "%s - 画图"
-    IDS_INFOTITLE "MenuOS 画图"
+    IDS_INFOTITLE "ReactOS 画图"
     IDS_INFOTEXT "GNU LGPL 许可证下发布的（详见 www.gnu.org）"
     IDS_SAVEPROMPTTEXT "您想把改变保存到 %s 吗？"
     IDS_DEFAULTFILENAME "未命名"

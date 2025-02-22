@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Spooler API
+ * PROJECT:     ReactOS Spooler API
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions related to Printers and printing
  * COPYRIGHT:   Copyright 2015-2018 Colin Finck (colin@reactos.org)
@@ -12,7 +12,7 @@
 
 extern HINSTANCE hinstWinSpool;
 //
-// See winddiui.h, MenuOS version is limited.
+// See winddiui.h, ReactOS version is limited.
 // Loading from XyzUI.dll part of XyzDRV.dll set. example TTYUI.DLL or UniDrvUI.DLL.
 //
 typedef DWORD (WINAPI *DEVICECAPABILITIES) (HANDLE,PWSTR,WORD,PVOID,PDEVMODEW);
@@ -947,13 +947,13 @@ DocumentPropertySheets( PPROPSHEETUI_INFO pCPSUIInfo, LPARAM lparam )
                 else
                 {
                     //
-                    // MenuOS backup!!! Currently no supporting UI driver.
+                    // ReactOS backup!!! Currently no supporting UI driver.
                     //
                     PRINTER_INFO_9W * pi9 = get_devmodeW( pdphdr->hPrinter );
                     if ( pi9 )
                     {
                         Result = pi9->pDevMode->dmSize + pi9->pDevMode->dmDriverExtra;
-                        FIXME("IDPS : Using MenuOS backup!!! DevMode Size %d\n",Result);
+                        FIXME("IDPS : Using ReactOS backup!!! DevMode Size %d\n",Result);
                         HeapFree(hProcessHeap, 0, pi9);
                     }
                 }

@@ -52,8 +52,8 @@ BEGIN
     IDS_TIMEZONEUNKNOWN "Tidak dikenal"
     IDS_INETTIMESUCSYNC "Jam berhasil diselaraskan dengan %s pada %s di %s"
     IDS_INETTIMENEXTSYNC "Penyelarasan berikutnya: %s pada %s"
-    IDS_INETTIMESYNCING "Harap menunggu saat MenuOS menyelaraskan waktu dengan %s"
-    IDS_INETTIMEERROR "Kesalahan terjadi ketika MenuOS menyelaraskan dengan %s"
+    IDS_INETTIMESYNCING "Harap menunggu saat ReactOS menyelaraskan waktu dengan %s"
+    IDS_INETTIMEERROR "Kesalahan terjadi ketika ReactOS menyelaraskan dengan %s"
     IDS_INETTIMESUCFILL "Harap tulis nama server NTP untuk menyinkronkan waktu"
     IDS_INETTIMEWELCOME "Pilih server NTP dari daftar atau tuliskan nama server NTP untuk menyinkronkan waktu komputer"
 END

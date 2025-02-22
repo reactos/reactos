@@ -170,7 +170,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath
@@ -207,7 +207,7 @@ Return Value:
 _IRQL_requires_max_(PASSIVE_LEVEL)
 _Must_inspect_result_
 ULONG
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassInitialize(
     _In_  PVOID            Argument1,
     _In_  PVOID            Argument2,
@@ -517,7 +517,7 @@ Return Value:
 _IRQL_requires_max_(PASSIVE_LEVEL)
 _Must_inspect_result_
 ULONG
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassInitializeEx(
     _In_  PDRIVER_OBJECT   DriverObject,
     _In_  LPGUID           Guid,
@@ -760,7 +760,7 @@ Status:
 
 --*/
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassUnload(
     IN PDRIVER_OBJECT DriverObject
     )
@@ -847,7 +847,7 @@ NTSTATUS
 #ifdef _MSC_VER
 #pragma prefast(suppress:28152, "We expect the class driver to clear the DO_DEVICE_INITIALIZING flag in its AddDevice routine.")
 #endif
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassAddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject
@@ -890,7 +890,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassDispatchPnp(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -2427,7 +2427,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassReadWrite(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
@@ -2738,7 +2738,7 @@ Return Value:
 --*/
 _Must_inspect_result_
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassReadDriveCapacity(_In_ PDEVICE_OBJECT Fdo)
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExt = Fdo->DeviceExtension;
@@ -3067,7 +3067,7 @@ Return Value:
 
 --*/
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassSendStartUnit(
     _In_ PDEVICE_OBJECT Fdo
     )
@@ -3242,7 +3242,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassAsynchronousCompletion(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -3764,7 +3764,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassIoComplete(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP Irp,
@@ -4038,7 +4038,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassSendSrbSynchronous(
     _In_ PDEVICE_OBJECT Fdo,
     _Inout_ PSCSI_REQUEST_BLOCK _Srb,
@@ -4448,7 +4448,7 @@ Return Value:
 
 --*/
 BOOLEAN
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassInterpretSenseInfo(
     _In_ PDEVICE_OBJECT Fdo,
     _In_ PSCSI_REQUEST_BLOCK _Srb,
@@ -6633,7 +6633,7 @@ Return Value:
 
 --*/
 ULONG
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassModeSense(
     _In_ PDEVICE_OBJECT Fdo,
     _In_reads_bytes_(Length) PCHAR ModeSenseBuffer,
@@ -6652,7 +6652,7 @@ ClassModeSense(
 
 
 ULONG
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassModeSenseEx(
     _In_ PDEVICE_OBJECT Fdo,
     _In_reads_bytes_(Length) PCHAR ModeSenseBuffer,
@@ -6794,7 +6794,7 @@ Return Value:
 
 --*/
 PVOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassFindModePage(
     _In_reads_bytes_(Length) PCHAR ModeSenseBuffer,
     _In_ ULONG Length,
@@ -6869,7 +6869,7 @@ ClassFindModePage(
 
 
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassModeSelect(
     _In_ PDEVICE_OBJECT Fdo,
     _In_reads_bytes_(Length) PCHAR ModeSelectBuffer,
@@ -7018,7 +7018,7 @@ Return Value:
 --*/
 _Success_(return == STATUS_PENDING)
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassSendSrbAsynchronous(
     _In_ PDEVICE_OBJECT Fdo,
     _Inout_ __on_failure(__drv_freesMem(Mem)) __drv_aliasesMem PSCSI_REQUEST_BLOCK _Srb,
@@ -7254,7 +7254,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassDeviceControlDispatch(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp
@@ -7313,7 +7313,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassDeviceControl(
     _In_ PDEVICE_OBJECT DeviceObject,
     _Inout_ PIRP Irp
@@ -8769,7 +8769,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassShutdownFlush(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -8933,7 +8933,7 @@ _Must_inspect_result_
 _Post_satisfies_(return <= 0)
 SCSIPORT_API
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassCreateDeviceObject(
     _In_ PDRIVER_OBJECT     DriverObject,
     _In_z_ PCCHAR           ObjectNameBuffer,
@@ -9264,7 +9264,7 @@ Return Value:
 --*/
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassClaimDevice(
     _In_ PDEVICE_OBJECT LowerDeviceObject,
     _In_ BOOLEAN Release
@@ -9390,7 +9390,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassInternalIoControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -9464,7 +9464,7 @@ Return Value:
 --*/
 _IRQL_requires_max_(PASSIVE_LEVEL)
 ULONG
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassQueryTimeOutRegistryValue(
     _In_ PDEVICE_OBJECT DeviceObject
     )
@@ -9574,7 +9574,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassCheckVerifyComplete(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP Irp,
@@ -9644,7 +9644,7 @@ Return Value:
 --*/
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassGetDescriptor(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PSTORAGE_PROPERTY_ID PropertyId,
@@ -9795,7 +9795,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassSignalCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -9894,7 +9894,7 @@ Return Value:
 --*/
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassMarkChildrenMissing(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION Fdo
     )
@@ -9948,7 +9948,7 @@ Return Value:
 --*/
 _IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassMarkChildMissing(
     _In_ PPHYSICAL_DEVICE_EXTENSION Child,
     _In_ BOOLEAN AcquireChildLock
@@ -10241,7 +10241,7 @@ Return Value:
 --*/
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassInvalidateBusRelations(
     _In_ PDEVICE_OBJECT Fdo
     )
@@ -10301,7 +10301,7 @@ Return Value:
 --*/
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassRemoveDevice(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ UCHAR RemoveType
@@ -10630,7 +10630,7 @@ Return Value:
 __drv_aliasesMem
 _IRQL_requires_max_(DISPATCH_LEVEL)
 PCLASS_DRIVER_EXTENSION
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassGetDriverExtension(
     _In_ PDRIVER_OBJECT DriverObject
     )
@@ -10659,7 +10659,7 @@ Return Value:
 
 --*/
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClasspStartIo(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -10729,7 +10729,7 @@ Return Value:
 --*/
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassUpdateInformationInRegistry(
     _In_ PDEVICE_OBJECT   Fdo,
     _In_ PCHAR            DeviceName,
@@ -10921,7 +10921,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClasspSendSynchronousCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -11061,7 +11061,7 @@ Return Value:
 
 --*/
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassSendDeviceIoControlSynchronous(
     _In_ ULONG IoControlCode,
     _In_ PDEVICE_OBJECT TargetDeviceObject,
@@ -11339,7 +11339,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassForwardIrpSynchronous(
     _In_ PCOMMON_DEVICE_EXTENSION CommonExtension,
     _In_ PIRP Irp
@@ -11369,7 +11369,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassSendIrpSynchronous(
     _In_ PDEVICE_OBJECT TargetDeviceObject,
     _In_ PIRP Irp
@@ -11469,7 +11469,7 @@ Return Value:
 
 --*/
 PVPB
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassGetVpb(
     _In_ PDEVICE_OBJECT DeviceObject
     )
@@ -11585,7 +11585,7 @@ Return Value:
 
 --*/
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassReleaseQueue(
     _In_ PDEVICE_OBJECT Fdo
     )
@@ -11894,7 +11894,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassReleaseQueueCompletion(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -11972,7 +11972,7 @@ Return Value:
 --*/
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassAcquireChildLock(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -12015,7 +12015,7 @@ Return Value:
 
 --*/
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassReleaseChildLock(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -12190,7 +12190,7 @@ ClassRemoveChild(
 
 --*/
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClasspRetryRequestDpc(
     IN PKDPC Dpc,
     IN PVOID DeferredContext,
@@ -12630,7 +12630,7 @@ ClasspInitializeHotplugInfo(
 }
 
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClasspScanForClassHacks(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN ULONG_PTR Data
@@ -12777,7 +12777,7 @@ Return Value:
 --*/
 
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClasspUpdateDiskProperties(
     IN PDEVICE_OBJECT Fdo,
     IN PVOID Context

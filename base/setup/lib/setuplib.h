@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Setup Library
+ * PROJECT:     ReactOS Setup Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Public header
  * COPYRIGHT:   Copyright 2017-2018 Hermes Belusca-Maito
@@ -120,7 +120,7 @@ typedef struct _USETUP_DATA
      */
     UNICODE_STRING SystemRootPath;
 
-    /* Path to the installation directory inside the MenuOS boot partition */
+    /* Path to the installation directory inside the ReactOS boot partition */
     UNICODE_STRING DestinationArcPath;  /** Equivalent of 'NTOS_INSTALLATION::SystemArcPath' **/
     UNICODE_STRING DestinationPath;     /** Equivalent of 'NTOS_INSTALLATION::SystemNtPath' **/
     UNICODE_STRING DestinationRootPath;

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Kernel Streaming
+ * PROJECT:         ReactOS Kernel Streaming
  * FILE:            drivers/ksfilter/ks/bag.c
  * PURPOSE:         KS Object Bag functions
  * PROGRAMMER:      Johannes Anderwald

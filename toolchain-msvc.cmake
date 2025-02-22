@@ -47,7 +47,7 @@ if(USE_CLANG_CL)
     endif()
 
     # Avoid wrapping RC compiler with cmcldeps utility for clang-cl.
-    # Otherwise it breaks cross-compilation (32bit MenuOS cannot be compiled by 64bit LLVM),
+    # Otherwise it breaks cross-compilation (32bit ReactOS cannot be compiled by 64bit LLVM),
     # target architecture is not passed properly
     set(CMAKE_NINJA_CMCLDEPS_RC OFF)
 else()

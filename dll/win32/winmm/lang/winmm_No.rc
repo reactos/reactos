@@ -51,7 +51,7 @@ MIDIERR_STILLPLAYING, 		  "Kan ikke utføre denne Operasjonen mens Media data fo
 MIDIERR_NOMAP, 			      "En MIDI liste ble ikke funnet. Det kan være et problem med Driveren eller MIDIMAP.CFG filen kan være korrupt eller mangler."
 MIDIERR_NOTREADY, 		      "Porten overfører allerede data til enheten. Vent til overføringen er ferdig og prøv igjen."
 MIDIERR_NODEVICE, 		      "Innstillingen for gjeldende MIDI-tilordning viser til en MIDI-enhet som ikke er installert. Bruk MIDI-tilordning til å redigere innstillingen."
-MIDIERR_INVALIDSETUP, 		  "Den gjeldene MIDI instillingen er skadet. Kopier den Orginale MIDIMAP.CFG filen til MenuOS system mappen og prøv igjen."
+MIDIERR_INVALIDSETUP, 		  "Den gjeldene MIDI instillingen er skadet. Kopier den Orginale MIDIMAP.CFG filen til ReactOS system mappen og prøv igjen."
 
 /* MCI errors */
 MCIERR_INVALID_DEVICE_ID, 	  "Ugyldig MCI enhets-ID. Bruk ID som ble returnert når MCI-enheten ble åpnet."
@@ -72,7 +72,7 @@ MCIERR_MISSING_PARAMETER, 	  "Den angitte Kommandoen krever en parameter. Oppgi 
 MCIERR_UNSUPPORTED_FUNCTION,  "MCI-enheten du bruker støtter ikke angitt kommando."
 MCIERR_FILE_NOT_FOUND, 		  "Kan ikke finne den angitte filen. Kontroller at banen og filnavnet er riktig."
 MCIERR_DEVICE_NOT_READY,      "Enhetsdriveren er ikke klar."
-MCIERR_INTERNAL,              "Et problem oppstod under initialisering av MCI. Prøv og restarte MenuOS."
+MCIERR_INTERNAL,              "Et problem oppstod under initialisering av MCI. Prøv og restarte ReactOS."
 MCIERR_DRIVER,                "Det er et Problem med enhets-driveren. Driveren ble avsluttet. Cannot access error."
 MCIERR_CANNOT_USE_ALL,        "Kan ikke bruke 'alt' som enhetsnavn sammen med angitt kommando."
 MCIERR_MULTIPLE,              "Det har oppstått feil på flere enheter. Skriv inn kommando og enhet hver for seg for å finne ut hvilke enheter det er feil på."

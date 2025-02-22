@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS CRT
+ * PROJECT:         ReactOS CRT
  * FILE:            lib/crt/misc/i386/seh.S
  * PURPOSE:         SEH Support for the CRT
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)

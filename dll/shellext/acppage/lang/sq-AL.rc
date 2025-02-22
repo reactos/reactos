@@ -9,7 +9,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Pajtueshmëri"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Nëse keni probleme ne ekzekutimin e këtij programi në MenuOS, përzgjidhni një sistem operativ MenuOS duhet të raportojë për zbatimin.\nPlease note that this is a work in progress.", IDC_EXPLANATION, 7, 7, 210, 31
+    LTEXT "Nëse keni probleme ne ekzekutimin e këtij programi në ReactOS, përzgjidhni një sistem operativ ReactOS duhet të raportojë për zbatimin.\nPlease note that this is a work in progress.", IDC_EXPLANATION, 7, 7, 210, 31
     GROUPBOX "Mjeti Pajtueshmërise", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "Ekzekuto kete program ne menyre pajtueshmerie per:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
@@ -42,5 +42,5 @@ STRINGTABLE
 BEGIN
     IDS_COMPAT_TITLE "Pajtueshmëri"
     IDS_FAILED_NETWORK "Compatibility modes cannot be set on this program because it is on a network drive."
-    IDS_FAILED_PROTECTED "Compatibility modes cannot be set on this program because it is a part of MenuOS."
+    IDS_FAILED_PROTECTED "Compatibility modes cannot be set on this program because it is a part of ReactOS."
 END

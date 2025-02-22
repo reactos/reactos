@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Console Server DLL
+ * PROJECT:         ReactOS Console Server DLL
  * FILE:            include/reactos/subsys/win/conmsg.h
  * PURPOSE:         Public definitions for communication
  *                  between Console API Clients and Servers

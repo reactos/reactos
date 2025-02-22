@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Explorer
+ * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Turkish resource file
  * TRANSLATORS: Copyright 2013-2015 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
@@ -120,7 +120,7 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Bildirimleri Özelleştir"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT            "MenuOS, etkin ve acil bildirimler için simgeleri görüntüler ve devre dışı olanları gizler. Aşağıdaki listede ögeler için bu davranışı değiştirebilirsiniz.", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "ReactOS, etkin ve acil bildirimler için simgeleri görüntüler ve devre dışı olanları gizler. Aşağıdaki listede ögeler için bu davranışı değiştirebilirsiniz.", IDC_STATIC, 6, 6, 220, 30
     LTEXT            "Bir öge seçiniz, sonra onun bildirim davranışını seçiniz:", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS

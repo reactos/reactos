@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Service Control Manager
+ * PROJECT:     ReactOS Service Control Manager
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/system/services/rpcserver.c
  * PURPOSE:     RPC server interface for the advapi32 calls

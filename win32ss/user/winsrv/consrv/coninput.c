@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Console Server DLL
+ * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/coninput.c
  * PURPOSE:         Console Input functions
  * PROGRAMMERS:     Jeffrey Morlan
@@ -375,7 +375,7 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
     ReadControl.dwControlKeyState = ReadConsoleRequest->ControlKeyState;
 
     /*
-     * For optimization purposes, Windows (and hence MenuOS, too, for
+     * For optimization purposes, Windows (and hence ReactOS, too, for
      * compatibility reasons) uses a static buffer if no more than eighty
      * bytes are read. Otherwise a new buffer is used.
      * The client-side expects that we know this behaviour.
@@ -515,7 +515,7 @@ ReadInputBuffer(IN PGET_INPUT_INFO InputInfo,
     PINPUT_RECORD InputRecord;
 
     /*
-     * For optimization purposes, Windows (and hence MenuOS, too, for
+     * For optimization purposes, Windows (and hence ReactOS, too, for
      * compatibility reasons) uses a static buffer if no more than five
      * input records are read. Otherwise a new buffer is used.
      * The client-side expects that we know this behaviour.
@@ -592,7 +592,7 @@ CON_API(SrvReadConsole,
     DPRINT("SrvReadConsole\n");
 
     /*
-     * For optimization purposes, Windows (and hence MenuOS, too, for
+     * For optimization purposes, Windows (and hence ReactOS, too, for
      * compatibility reasons) uses a static buffer if no more than eighty
      * bytes are read. Otherwise a new buffer is used.
      * The client-side expects that we know this behaviour.
@@ -662,7 +662,7 @@ CON_API(SrvGetConsoleInput,
     }
 
     /*
-     * For optimization purposes, Windows (and hence MenuOS, too, for
+     * For optimization purposes, Windows (and hence ReactOS, too, for
      * compatibility reasons) uses a static buffer if no more than five
      * input records are read. Otherwise a new buffer is used.
      * The client-side expects that we know this behaviour.
@@ -730,7 +730,7 @@ CON_API(SrvWriteConsoleInput,
     PINPUT_RECORD InputRecord;
 
     /*
-     * For optimization purposes, Windows (and hence MenuOS, too, for
+     * For optimization purposes, Windows (and hence ReactOS, too, for
      * compatibility reasons) uses a static buffer if no more than five
      * input records are written. Otherwise a new buffer is used.
      * The client-side expects that we know this behaviour.

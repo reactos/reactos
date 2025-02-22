@@ -78,20 +78,20 @@ END
 
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Установка MenuOS"
+CAPTION "Установка ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Выберите режим настройки сети:", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "Обычный режим настройки", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Расширенный режим настройки", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
-    LTEXT "Создает сетевые соединения, используя клиент для сетей MenuOS, Общие файлы и принтеры для сетей MenuOS и транспортный протокол TCP/IP с автоматической адресацией.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "Создает сетевые соединения, используя клиент для сетей ReactOS, Общие файлы и принтеры для сетей ReactOS и транспортный протокол TCP/IP с автоматической адресацией.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Позволяет вам настроить сетевые компоненты вручную.", IDC_STATIC, 65, 90, 243, 20
 END
 
 IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Установка MenuOS"
+CAPTION "Установка ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Оборудование:", IDC_STATIC, 33, 2, 100, 20
@@ -106,7 +106,7 @@ END
 
 IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Установка MenuOS"
+CAPTION "Установка ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Вы хотите, чтобы этот компьютер был частью сетевого домена?\n\
@@ -171,6 +171,6 @@ BEGIN
     IDS_NETWORKCOMPONENTSUBTITLE "Определяет, какие сетевые компоненты используются на вашем компьютере. Чтобы добавить новые, нажмите кнопку Установить."
     IDS_NETWORKDOMAINTITLE "Рабочая группа или сетевой домен"
     IDS_NETWORKDOMAINSUBTITLE "Укажите, как будет использоваться компьютер - в составе рабочей группы или как часть сетевого домена."
-    IDS_REACTOS_SETUP "Установка MenuOS"
+    IDS_REACTOS_SETUP "Установка ReactOS"
     IDS_WZD_DOMAIN_NAME "Невозможно продолжить установку, т.к. вы\nне ввели имя вашей рабочей группы или домена."
 END

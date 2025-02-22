@@ -19,7 +19,7 @@ endfunction()
 
 function(add_dependency_header)
     if(GENERATE_DEPENDENCY_GRAPH)
-        file(WRITE ${REACTOS_BINARY_DIR}/dependencies.graphml "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<graphml>\n  <graph id=\"MenuOS dependencies\" edgedefault=\"directed\">\n")
+        file(WRITE ${REACTOS_BINARY_DIR}/dependencies.graphml "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<graphml>\n  <graph id=\"ReactOS dependencies\" edgedefault=\"directed\">\n")
     endif()
 endfunction()
 

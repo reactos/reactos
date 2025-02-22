@@ -1,5 +1,5 @@
 /*
- * MenuOS Calc (Math functions, GMP/MPFR engine)
+ * ReactOS Calc (Math functions, GMP/MPFR engine)
  *
  * Copyright 2007-2017, Carlo Bramini
  *

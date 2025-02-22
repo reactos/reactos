@@ -723,7 +723,7 @@
 @ fastcall -arch=i386,arm KefReleaseSpinLockFromDpcLevel(ptr)
 @ stdcall -arch=i386 Kei386EoiHelper()
 @ cdecl -arch=x86_64 -private KfRaiseIrql(long) KxRaiseIrql
-@ fastcall -arch=i386 KiEoiHelper(ptr) #MenuOS-Specific
+@ fastcall -arch=i386 KiEoiHelper(ptr) #ReactOS-Specific
 @ fastcall -arch=i386,arm KiAcquireSpinLock(ptr)
 @ extern KiBugCheckData
 @ stdcall KiCheckForKernelApcDelivery()

@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            lib/cmlib/cmvalue.c
  * PURPOSE:         Configuration Manager Library - Cell Values

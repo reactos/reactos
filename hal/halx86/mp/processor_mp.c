@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS kernel
+ * PROJECT:         ReactOS kernel
  * FILE:            hal/halx86/mp/processor_mp.c
  * PURPOSE:         Intel MultiProcessor specification support
  * PROGRAMMER:      David Welch (welch@cwcom.net)

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS system libraries
+ * PROJECT:           ReactOS system libraries
  * FILE:              lib/rtl/rangelist.c
  * PURPOSE:           Range list implementation
  * PROGRAMMERS:       No programmer listed.

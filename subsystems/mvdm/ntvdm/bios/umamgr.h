@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPLv2+ - See COPYING in the top level directory
- * PROJECT:         MenuOS Virtual DOS Machine
+ * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/bios/umamgr.h
  * PURPOSE:         Upper Memory Area Manager
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

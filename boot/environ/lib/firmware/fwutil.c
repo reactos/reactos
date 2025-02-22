@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
- * PROJECT:         MenuOS UEFI Boot Library
+ * PROJECT:         ReactOS UEFI Boot Library
  * FILE:            boot/environ/lib/firmware/fwutil.c
  * PURPOSE:         Boot Library Firmware Utility Functions
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)

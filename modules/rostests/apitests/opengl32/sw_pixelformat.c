@@ -1,8 +1,8 @@
 /*
- * PROJECT:         MenuOS api tests
+ * PROJECT:         ReactOS api tests
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * PURPOSE:         Tests pixel formats exposed by the software implementation
- * PROGRAMMERS:     JÃ©rÃ´me Gardou
+ * PROGRAMMERS:     Jérôme Gardou
  */
 
 #include <windows.h>

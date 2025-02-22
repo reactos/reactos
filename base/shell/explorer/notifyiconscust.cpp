@@ -1,5 +1,5 @@
 /*
- * MenuOS Explorer
+ * ReactOS Explorer
  *
  * Copyright 2015 Jared Smudde <computerwhiz02@hotmail.com>
  *

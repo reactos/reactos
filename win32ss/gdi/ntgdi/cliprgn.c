@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        GNU GPL, See COPYING in the top level directory
- * PROJECT:          MenuOS Win32k subsystem
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Clip region functions
  * FILE:             win32ss/gdi/ntgdi/cliprgn.c
  * PROGRAMER:        Unknown
@@ -745,7 +745,7 @@ CLIPPING_UpdateGCRegion(PDC pDC)
 
     /* Must have VisRgn set to a valid state! */
     ASSERT (pDC->prgnVis);
-#if 0 // (w2k3) This works with limitations. (w7u) MenuOS relies on Rao.
+#if 0 // (w2k3) This works with limitations. (w7u) ReactOS relies on Rao.
     if ( !pDC->dclevel.prgnClip &&
          !pDC->dclevel.prgnMeta &&
          !pDC->prgnAPI)

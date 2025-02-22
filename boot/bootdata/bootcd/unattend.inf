@@ -6,10 +6,10 @@ Signature = "$ReactOS$"
 ; no - unattend setup disabled
 UnattendSetupEnabled = no
 
-; Install to \Device\Harddisk0\Partition1\MenuOS
+; Install to \Device\Harddisk0\Partition1\ReactOS
 DestinationDiskNumber = 0
 DestinationPartitionNumber = 1
-InstallationDirectory=MenuOS
+InstallationDirectory=ReactOS
 
 ; BootLoaderLocation=0  Skip installation
 ; BootLoaderLocation=1  Install on removable media (floppy)
@@ -55,8 +55,8 @@ DisableGeckoInst = no
 LocaleID = 409
 
 ; set product option
-; 0: MenuOS Server
-; 1: MenuOS Workstation
+; 0: ReactOS Server
+; 1: ReactOS Workstation
 ProductOption = 0
 
 ; enable this section to automatically launch programs

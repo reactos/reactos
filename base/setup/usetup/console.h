@@ -1,6 +1,6 @@
 /*
- *  MenuOS kernel
- *  Copyright (C) 2002 MenuOS Team
+ *  ReactOS kernel
+ *  Copyright (C) 2002 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS text-mode setup
+ * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/console.h
  * PURPOSE:         Console support functions
  * PROGRAMMER:

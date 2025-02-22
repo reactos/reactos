@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Kernel Streaming
+ * PROJECT:         ReactOS Kernel Streaming
  * FILE:            drivers/ksfilter/ks/event.c
  * PURPOSE:         KS property handling functions
  * PROGRAMMER:      Johannes Anderwald

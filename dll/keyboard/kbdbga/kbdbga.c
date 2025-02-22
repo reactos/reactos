@@ -1,7 +1,7 @@
 /*
  * Arda - Bulgarian keyboard layout
- * ГЂГ°Г¤Г  -ГЃГєГ«ГЈГ Г°Г±ГЄГ  ГЄГ«Г ГўГЁГ ГІГіГ°Г­Г  ГЇГ®Г¤Г°ГҐГ¤ГЎГ  'Г·ГёГҐГ°ГІГє' Г§Г  ГђГҐГ ГЄГІГЋГ‘
- * Copyright (C) 2007 MenuOS
+ * Арда -Българска клавиатурна подредба 'чшертъ' за РеактОС
+ * Copyright (C) 2007 ReactOS
  * License: LGPL, see: LGPL.txt
  *
  * Thanks to: http://www.barcodeman.com/altek/mule/scandoc.php
@@ -31,7 +31,7 @@
 #define KMEXT     KBDEXT|KBDMULTIVK    /* Multi + ext */
 
 ROSDATA USHORT scancode_to_vk[] = {
-  /* Numbers Row Г–ГЁГґГ°Г®Гў Г°ГҐГ¤*/
+  /* Numbers Row Цифров ред*/
   /* - 00 - */
   /* 1 ...         2 ...         3 ...         4 ... */
   VK_EMPTY,     VK_ESCAPE,    '1',          '2',
@@ -39,20 +39,20 @@ ROSDATA USHORT scancode_to_vk[] = {
   '7',          '8',          '9',          '0',
   VK_OEM_MINUS, VK_OEM_PLUS,  VK_BACK,
   /* - 0f - */
-  /* First Letters Row ГЏГєГ°ГўГЁ ГЎГіГЄГўГҐГ­ Г°ГҐГ¤*/
+  /* First Letters Row Първи буквен ред*/
   VK_TAB,       'Q',          'W',          'E',
   'R',          'T',          'Y',          'U',
   'I',          'O',          'P',
   VK_OEM_4,     VK_OEM_6,     VK_RETURN,
   /* - 1d - */
-  /* Second Letters Row Г‚ГІГ®Г°ГЁ ГЎГіГЄГўГҐГ­ Г°ГҐГ¤*/
+  /* Second Letters Row Втори буквен ред*/
   VK_LCONTROL,
   'A',          'S',          'D',          'F',
   'G',          'H',          'J',          'K',
   'L',          VK_OEM_1,     VK_OEM_7,     VK_OEM_3,
   VK_LSHIFT,    VK_OEM_5,
   /* - 2c - */
-  /* Third letters row Г’Г°ГҐГІГЁ ГЎГіГЄГўГҐГ­ Г°ГҐГ¤*/
+  /* Third letters row Трети буквен ред*/
   'Z',          'X',          'C',          'V',
   'B',          'N',          'M',          VK_OEM_COMMA,
   VK_OEM_PERIOD,VK_OEM_2,     VK_RSHIFT | KBDEXT,
@@ -69,7 +69,7 @@ ROSDATA USHORT scancode_to_vk[] = {
   VK_NUMLOCK | KMEXT,
   VK_SCROLL | KBDMULTIVK,
   /* - 47 - */
-  /* Number-Pad Г–ГЁГґГ°Г®ГўГ  ГЇГ®Г¤Г«Г®Г¦ГЄГ  */
+  /* Number-Pad Цифрова подложка */
   VK_HOME | KNUMS,      VK_UP | KNUMS,         VK_PRIOR | KNUMS, VK_SUBTRACT,
   VK_LEFT | KNUMS,      VK_CLEAR | KNUMS,      VK_RIGHT | KNUMS, VK_ADD,
   VK_END | KNUMS,       VK_DOWN | KNUMS,       VK_NEXT | KNUMS,
@@ -162,62 +162,62 @@ ROSDATA MODIFIERS modifier_bits = {
   { 0, 1, 2, 3 }
 };
 
-/* Г–ГЁГґГ°Г®Гў Г°ГҐГ¤ */
-/* VK_OEM_3 = Г·Г— */
+/* Цифров ред */
+/* VK_OEM_3 = чЧ */
 
 ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
-  {VK_OEM_3,     CAPLOK, {0x44e, 0x42e} }, //ГѕГћ
+  {VK_OEM_3,     CAPLOK, {0x44e, 0x42e} }, //юЮ
   { '1',         0, {'1', '!'} },
   { '2',         0, {'2', '@'} },
-  { '3',         0, {'3', 0x2116} }, //3В№
+  { '3',         0, {'3', 0x2116} }, //3№
   { '4',         0, {'4', '$'} },
   { '5',         0, {'5', '%'} },
-  { '6',         0, {'6', 0x20AC} }, //6Л†
+  { '6',         0, {'6', 0x20AC} }, //6€
   { '7',         0, {'7', 0xA7} }, //7
   { '8',         0, {'8', '*'} },
   { '9',         0, {'9', '('} },
   { '0',         0, {'0', ')'} },
   { VK_OEM_PLUS, 0, {'=', '+'} },
 
-  /* First letter row ГЏГєГ°ГўГЁ Г°ГҐГ¤ ГЎГіГЄГўГЁ ГїГўГҐГ°ГІГєГіГЁГ®ГЇГёГ№*/
-  { 'Q',         CAPLOK,   {0x447, 0x427} }, //Г·Г—
-  { 'W',         CAPLOK,   {0x448, 0x428} }, //ГёГ
-  { 'E',         CAPLOK,   {0x435, 0x415} }, //ГҐГ…
-  { 'R',         CAPLOK,   {0x440, 0x420} }, //Г°Гђ
-  { 'T',         CAPLOK,   {0x442, 0x422} }, //ГІГ’
-  { 'Y',         CAPLOK,   {0x44a, 0x42a} }, //ГєГљ
-  { 'U',         CAPLOK,   {0x443, 0x423} }, //ГіГ“
-  { 'I',         CAPLOK,   {0x438, 0x418} }, //ГЁГ€
-  { 'O',         CAPLOK,   {0x43e, 0x41e} }, //Г®ГЋ
-  { 'P',         CAPLOK,   {0x43f, 0x41f} }, //ГЇГЏ
-  { VK_OEM_4,    CAPLOK,   {0x44f, 0x42f} }, //ГїГџ
-  { VK_OEM_6,    CAPLOK,   {0x449, 0x429} }, //Г№Г™
+  /* First letter row Първи ред букви явертъуиопшщ*/
+  { 'Q',         CAPLOK,   {0x447, 0x427} }, //чЧ
+  { 'W',         CAPLOK,   {0x448, 0x428} }, //шШ
+  { 'E',         CAPLOK,   {0x435, 0x415} }, //еЕ
+  { 'R',         CAPLOK,   {0x440, 0x420} }, //рР
+  { 'T',         CAPLOK,   {0x442, 0x422} }, //тТ
+  { 'Y',         CAPLOK,   {0x44a, 0x42a} }, //ъЪ
+  { 'U',         CAPLOK,   {0x443, 0x423} }, //уУ
+  { 'I',         CAPLOK,   {0x438, 0x418} }, //иИ
+  { 'O',         CAPLOK,   {0x43e, 0x41e} }, //оО
+  { 'P',         CAPLOK,   {0x43f, 0x41f} }, //пП
+  { VK_OEM_4,    CAPLOK,   {0x44f, 0x42f} }, //яЯ
+  { VK_OEM_6,    CAPLOK,   {0x449, 0x429} }, //щЩ
 
-  /* Second letter row Г‚ГІГ®Г°ГЁ Г°ГҐГ¤ ГЎГіГЄГўГЁ Г Г±Г¤ГґГЈГµГ©ГЄГ« ;:'" */
-  { 'A',         CAPLOK,   {0x430, 0x410} }, //Г ГЂ
-  { 'S',         CAPLOK,   {0x441, 0x421} }, //Г±Г‘
-  { 'D',         CAPLOK,   {0x434, 0x414} }, //Г¤Г„
-  { 'F',         CAPLOK,   {0x444, 0x424} }, //ГґГ”
-  { 'G',         CAPLOK,   {0x433, 0x413} }, //ГЈГѓ
-  { 'H',         CAPLOK,   {0x445, 0x425} }, //ГµГ•
-  { 'J',         CAPLOK,   {0x439, 0x419} }, //Г©Г‰
-  { 'K',         CAPLOK,   {0x43a, 0x41a} }, //ГЄГЉ
-  { 'L',         CAPLOK,   {0x43b, 0x41b} }, //Г«Г‹
+  /* Second letter row Втори ред букви асдфгхйкл ;:'" */
+  { 'A',         CAPLOK,   {0x430, 0x410} }, //аА
+  { 'S',         CAPLOK,   {0x441, 0x421} }, //сС
+  { 'D',         CAPLOK,   {0x434, 0x414} }, //дД
+  { 'F',         CAPLOK,   {0x444, 0x424} }, //фФ
+  { 'G',         CAPLOK,   {0x433, 0x413} }, //гГ
+  { 'H',         CAPLOK,   {0x445, 0x425} }, //хХ
+  { 'J',         CAPLOK,   {0x439, 0x419} }, //йЙ
+  { 'K',         CAPLOK,   {0x43a, 0x41a} }, //кК
+  { 'L',         CAPLOK,   {0x43b, 0x41b} }, //лЛ
   { VK_OEM_1,    0, {';', ':'} },
   { VK_OEM_7,    0, {'\'','\"'} },
 
-  /* Third letter row Г’Г°ГҐГІГЁ Г°ГҐГ¤ ГЎГіГЄГўГЁ */
-  { 'Z',         CAPLOK,   {0x437, 0x417} }, //Г§Г‡
-  { 'X',         CAPLOK,   {0x436, 0x416} }, //Г¦Г†
-  { 'C',         CAPLOK,   {0x446, 0x426} }, //Г¶Г–
-  { 'V',         CAPLOK,   {0x432, 0x412} }, //ГўГ‚
-  { 'B',         CAPLOK,   {0x431, 0x411} }, //ГЎГЃ
-  { 'N',         CAPLOK,   {0x43d, 0x41d} }, //Г­ГЌ
-  { 'M',         CAPLOK,   {0x43c, 0x41c} }, //Г¬ГЊ
+  /* Third letter row Трети ред букви */
+  { 'Z',         CAPLOK,   {0x437, 0x417} }, //зЗ
+  { 'X',         CAPLOK,   {0x436, 0x416} }, //жЖ
+  { 'C',         CAPLOK,   {0x446, 0x426} }, //цЦ
+  { 'V',         CAPLOK,   {0x432, 0x412} }, //вВ
+  { 'B',         CAPLOK,   {0x431, 0x411} }, //бБ
+  { 'N',         CAPLOK,   {0x43d, 0x41d} }, //нН
+  { 'M',         CAPLOK,   {0x43c, 0x41c} }, //мМ
 /*  { VK_OEM_COMMA,CAPLOK,   {0x431, 0x411} }, */
-  { VK_OEM_COMMA,   0, {',', 0x84} }, //,вЂћ
+  { VK_OEM_COMMA,   0, {',', 0x84} }, //,„
 /*  { VK_OEM_PERIOD,CAPLOK,  {0x44e, 0x42e} }, */
-  { VK_OEM_PERIOD,  0, {'.', 0x94} }, //.вЂќ
+  { VK_OEM_PERIOD,  0, {'.', 0x94} }, //.”
 /*  { VK_OEM_2,	0,    {'.', ','} }, */
   { VK_OEM_2,       0,    {'/', '?'} },
 
@@ -235,7 +235,7 @@ ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
   /* Normal, Shifted, Ctrl */
   /* Legacy (telnet-style) ascii escapes */
 /* { VK_OEM_5, 0, {0x5c, 0x2f, 0x1c} },  */
-  { VK_OEM_5, CAPLOK, {0x44c, 0x42c} }, //ГјГњ
+  { VK_OEM_5, CAPLOK, {0x44c, 0x42c} }, //ьЬ
   { VK_OEM_102, 0, {0x5c, 0x7c} },
   { VK_BACK, 0, {0x8, 0x8, 0x7f} },
   { VK_ESCAPE, 0, {0x1b, 0x1b, 0x1b} },
@@ -353,10 +353,10 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x51, L"Page Down" },
   { 0x52, L"Insert" },
   { 0x53, L"Delete" },
-  { 0x54, L"<MenuOS>" },
+  { 0x54, L"<ReactOS>" },
   { 0x56, L"Help" },
-  { 0x5b, L"Left <MenuOS>" },
-  { 0x5c, L"Right <MenuOS>" },
+  { 0x5b, L"Left <ReactOS>" },
+  { 0x5c, L"Right <ReactOS>" },
   { 0x5d, L"Application" },
   { 0, NULL }
 };

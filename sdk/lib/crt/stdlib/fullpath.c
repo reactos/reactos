@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS CRT library
+ * PROJECT:     ReactOS CRT library
  * FILE:        lib/sdk/crt/stdlib/fullpath.c
  * PURPOSE:     Gets the fullpathname
  * PROGRAMER:   Pierre Schweitzer (pierre.schweitzer@reactos.org)

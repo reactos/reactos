@@ -1,7 +1,7 @@
 /*
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:         MenuOS NT kernel pool allocation tags
+ * PURPOSE:         ReactOS NT kernel pool allocation tags
  * COPYRIGHT:       Copyright 2005 Steven Edwards <sedwards@reactos.com>
  *                  Copyright 2006 Alex Ionescu <alex.ionescu@reactos.org>
  *                  Copyright 2015 Thomas Faber <thomas.faber@reactos.org>

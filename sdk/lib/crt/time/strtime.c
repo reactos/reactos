@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS system libraries
+ * PROJECT:     ReactOS system libraries
  * FILE:        lib/sdk/crt/time/strtime.c
  * PURPOSE:     Fills a buffer with a formatted time representation
  * PROGRAMER:   Ariadne

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL, see COPYING in the top level directory
- * PROJECT:         MenuOS kernel
+ * PROJECT:         ReactOS kernel
  * FILE:            drivers/base/kddll/kdcom.c
  * PURPOSE:         COM port functions for the kernel debugger.
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)

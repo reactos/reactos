@@ -1,8 +1,8 @@
 /*
- * PROJECT:     MenuOS Setup Library
+ * PROJECT:     ReactOS Setup Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Boot Stores Management functionality, with support for
- *              NT 5.x family (MS Windows <= 2003, and MenuOS) bootloaders.
+ *              NT 5.x family (MS Windows <= 2003, and ReactOS) bootloaders.
  * COPYRIGHT:   Copyright 2017-2018 Hermes Belusca-Maito
  */
 
@@ -340,7 +340,7 @@ FreeLdrMigrateBootDrivePart(
         /* Check for boot type to migrate */
         if (!IniGetKey(OsIniSection, L"BootType", &KeyData) || !KeyData)
         {
-            /* Certainly not a MenuOS installation */
+            /* Certainly not a ReactOS installation */
             DPRINT1("No BootType value present\n");
             continue;
         }
@@ -392,7 +392,7 @@ CreateCommonFreeLdrSections(
     IniSection = IniAddSection(BootStore->IniCache, L"Display");
 
     /* TitleText and MinimalUI */
-    IniAddKey(IniSection, L"TitleText", L"MenuOS Boot Manager");
+    IniAddKey(IniSection, L"TitleText", L"ReactOS Boot Manager");
     IniAddKey(IniSection, L"MinimalUI", L"Yes");
 
     /*
@@ -1483,7 +1483,7 @@ FreeLdrEnumerateBootEntries(
         /* Check for supported boot type */
         if (!IniGetKey(OsIniSection, L"BootType", &KeyData) || !KeyData)
         {
-            /* Certainly not a MenuOS installation */
+            /* Certainly not a ReactOS installation */
             DPRINT1("No BootType value present\n");
             goto DoEnum;
         }

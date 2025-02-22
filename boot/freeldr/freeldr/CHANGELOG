@@ -1,7 +1,7 @@
 Changes in v3.0+ (01/05/2015) (hbelusca)
 
 - Remove support for special value "LiveCD" of SystemPath option
-  for loading MenuOS since now we treat non-ARC SystemPath as
+  for loading ReactOS since now we treat non-ARC SystemPath as
   a path relative to the boot path.
 
 Changes in v3.0.0 (11/12/2007) (fball)
@@ -24,7 +24,7 @@ Changes in v2.1.0 (??/??/2006) (ion)
 
 Changes in v2.0.0 (02/07/2005) (ion)
 
-- Remove Multi-boot booting of MenuOS
+- Remove Multi-boot booting of ReactOS
 
 Changes in v1.8.26 (10/30/2004) (chorns)
 
@@ -62,7 +62,7 @@ Changes in v1.8.21 (21/05/2004) (navaraf)
 Changes in v1.8.20 (21/05/2004) (navaraf)
 
 - Added support for special value "LiveCD" of SystemPath option
-  for loading MenuOS. It uses the known boot drive information
+  for loading ReactOS. It uses the known boot drive information
   as the boot path.
 
 Changes in v1.8.19 (12/20/2003) (ekohl)
@@ -93,7 +93,7 @@ Changes in v1.8.15 (8/29/2003) (chorns)
 
 Changes in v1.8.14 (8/10/2003) (chorns)
 
-- Clear screen to black when booting MenuOS
+- Clear screen to black when booting ReactOS
 
 Changes in v1.8.13 (6/05/2003) (brianp)
 
@@ -345,7 +345,7 @@ Changes in v1.01 (4/28/2002)
 Changes in v1.0 (4/24/2002)
 
 - FreeLoader version 1.0!
-- Supports booting MenuOS
+- Supports booting ReactOS
 - Supports booting Linux bzImage kernels
 - No initrd support (yet)
 - No zImage support (yet)

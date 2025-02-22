@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS kernel
+ * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/connect.c
  * PURPOSE:          Ancillary functions driver
  * PROGRAMMER:       Art Yerkes (ayerkes@speakeasy.net)

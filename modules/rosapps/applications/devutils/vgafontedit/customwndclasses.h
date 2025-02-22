@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS VGA Font Editor
+ * PROJECT:     ReactOS VGA Font Editor
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Header for custom defined window classes (needed by "precomp.h" and the resource files)
  * COPYRIGHT:   Copyright 2008 Colin Finck (colin@reactos.org)

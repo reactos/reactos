@@ -1,5 +1,5 @@
 /*
- * PROJECT:     PAINT for MenuOS
+ * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Swedish resource file
  * TRANSLATORS: Copyright 2011 Michael Wu (Witch) <im.allergic.2.mailing.lists@gmail.com>
@@ -235,7 +235,7 @@ STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Paint"
     IDS_WINDOWTITLE "%s - Paint"
-    IDS_INFOTITLE "Paint för MenuOS"
+    IDS_INFOTITLE "Paint för ReactOS"
     IDS_INFOTEXT "Tillgänglig under GNU Lesser General Public License (LGPL, se www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Vill du spara ändringarna till %s?"
     IDS_DEFAULTFILENAME "Namnlös"

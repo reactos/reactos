@@ -7,7 +7,7 @@ Signature  = "$Windows NT$"
 LayoutFile = layout.inf
 Class      = Ramdisk
 ClassGUID  = {9D6D66A6-0B0C-4563-9077-A0E9A7955AE4}
-Provider   = %MenuOS%
+Provider   = %ReactOS%
 DriverVer  = 06/29/2008,1.00
 
 [DestinationDirs]
@@ -21,7 +21,7 @@ HKR, , ,               0, %RamdiskClassName%
 HKR, , Icon,           0, "-5"
 
 [Manufacturer]
-%MenuOS% = RamdiskDevice
+%ReactOS% = RamdiskDevice
 
 [RamdiskDevice]
 %RamdiskBus.Desc% = RamdiskBus_Inst, Ramdisk, DetectedInternal\Ramdisk, Detected\Ramdisk
@@ -56,28 +56,28 @@ AddService = , 2
 
 [Strings]
 ; Non-localizable
-MenuOS = "MenuOS Project"
+ReactOS = "ReactOS Project"
 
 ; Localizable
 RamdiskClassName = "Ramdisk"
 RamdiskBus.Desc = "RAM disk controller"
 RamdiskVolume.Desc = "RAM disk device (volume)"
-Ramdisk.ServiceDesc = "MenuOS RAM Disk Driver"
+Ramdisk.ServiceDesc = "ReactOS RAM Disk Driver"
 
 [Strings.040C]
 RamdiskClassName = "Ramdisk"
 RamdiskBus.Desc = "Controleur de disque virtuel"
 RamdiskVolume.Desc = "Disque virtuel (volume)"
-Ramdisk.ServiceDesc = "Pilote de disque virtuel MenuOS"
+Ramdisk.ServiceDesc = "Pilote de disque virtuel ReactOS"
 
 [Strings.0415]
 RamdiskClassName = "Ramdisk"
 RamdiskBus.Desc = "Kontroler dysku RAM"
 RamdiskVolume.Desc = "Urządzenie dysku RAM (wolumin)"
-Ramdisk.ServiceDesc = "Sterownik dysku RAM systemu MenuOS"
+Ramdisk.ServiceDesc = "Sterownik dysku RAM systemu ReactOS"
 
 [Strings.0419]
 RamdiskClassName = "RAM-диски"
 RamdiskBus.Desc = "Контроллер RAM-диска"
 RamdiskVolume.Desc = "Устройство RAM-диска (том)"
-Ramdisk.ServiceDesc = "Драйвер RAM-диска MenuOS"
+Ramdisk.ServiceDesc = "Драйвер RAM-диска ReactOS"

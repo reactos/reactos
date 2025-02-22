@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS winsta.dll
+ * PROJECT:         ReactOS winsta.dll
  * FILE:            lib/winsta/ws.c
  * PURPOSE:         WinStation
  * PROGRAMMER:      Samuel Serapión

@@ -9,6 +9,6 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "MenuOS Crash Reporter"
+    IDS_APP_TITLE "ReactOS Crash Reporter"
     IDS_USER_ALERT_MESSAGE "L'application %ls a cessé de fonctionner. Des informations à propos de ce dysfonctionnement ont été enregistrées ici :\n\n%ls"
 END

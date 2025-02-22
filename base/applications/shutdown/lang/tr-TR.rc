@@ -32,7 +32,7 @@ END
 /* Information and error messages */
 STRINGTABLE
 BEGIN
-    IDS_USAGE "MenuOS Kapatma Aracı\n\
+    IDS_USAGE "ReactOS Kapatma Aracı\n\
 \n\
 Kullanım: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
        [/m \\\\bilgisayar][/t xxx][/d [p|u:]xx:yy [/c ""açıklama""]]\n\

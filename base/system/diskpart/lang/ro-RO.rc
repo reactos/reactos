@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Diskpart
+ * PROJECT:     ReactOS Diskpart
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
@@ -11,7 +11,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 /* Basic application information */
 STRINGTABLE
 BEGIN
-    IDS_APP_HEADER "MenuOS DiskPart"
+    IDS_APP_HEADER "ReactOS DiskPart"
     IDS_APP_USAGE "Interpretor pentru partiționare discuri.\n\n\
 Utilizare: DISKPART [/S numefișier] [/T timplimită] [/?]\n\n\
 /S numefișier\tExecută scriptul din fișierul dat.\n\

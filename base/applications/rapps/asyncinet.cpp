@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Applications Manager
+ * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Async Internet operation using WinINet
  * COPYRIGHT:   Copyright 2020 He Yang (1160386205@qq.com)

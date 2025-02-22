@@ -1,5 +1,5 @@
 /*
-    MenuOS Sound System
+    ReactOS Sound System
     Device naming & creation helper routines
 
     Author:

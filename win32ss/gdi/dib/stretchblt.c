@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Win32k subsystem
+ * PROJECT:         ReactOS Win32k subsystem
  * LICENSE:         See COPYING in the top level directory
  * FILE:            win32ss/gdi/dib/stretchblt.c
  * PURPOSE:         StretchBlt implementation suitable for all bit depths

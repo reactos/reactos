@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Automatic Testing Utility
+ * PROJECT:     ReactOS Automatic Testing Utility
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Class implementing functions for handling Wine tests
  * COPYRIGHT:   Copyright 2009-2019 Colin Finck (colin@reactos.org)
@@ -371,7 +371,7 @@ CWineTest::Run()
     /* The virtual test list is of course faster, so it should be preferred over
        the journaled one.
        Enable the journaled one only in case ...
-          - we're running under MenuOS (as the journal is only useful in conjunction with sysreg2)
+          - we're running under ReactOS (as the journal is only useful in conjunction with sysreg2)
           - we shall keep information for Crash Recovery
           - and the user didn't specify a module (then doing Crash Recovery doesn't really make sense) */
     if(Configuration.IsReactOS() && Configuration.DoCrashRecovery() && Configuration.GetModule().empty())

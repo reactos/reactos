@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Console Driver
+ * PROJECT:         ReactOS Console Driver
  * FILE:            include/reactos/drivers/condrv/ntddcon.h
  * PURPOSE:         Console Driver IOCTL Interface
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

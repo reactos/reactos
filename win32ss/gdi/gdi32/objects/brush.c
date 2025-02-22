@@ -299,7 +299,7 @@ SetBrushOrgEx(HDC hdc,
         }
         if (pLDC->iType == LDC_EMFLDC)
         {
-            return EMFDRV_SetBrushOrg(hdc, nXOrg, nYOrg); // MenuOS only.
+            return EMFDRV_SetBrushOrg(hdc, nXOrg, nYOrg); // ReactOS only.
         }
         return FALSE;
     }

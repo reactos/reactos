@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS HAL
+ * PROJECT:         ReactOS HAL
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            hal/halarm/generic/portio.c
  * PURPOSE:         I/O Functions for access to ports
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/

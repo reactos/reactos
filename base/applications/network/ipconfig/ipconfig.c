@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS ipconfig utility
+ * PROJECT:     ReactOS ipconfig utility
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Display IP info for net adapters
  * COPYRIGHT:   Copyright 2005-2006 Ged Murphy <gedmurphy@gmail.com>

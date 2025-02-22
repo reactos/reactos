@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS Win32k subsystem
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Cursor and icon functions
  * FILE:             win32ss/user/ntuser/cursoricon.c
- * PROGRAMER:        MenuOS Team
+ * PROGRAMER:        ReactOS Team
  */
 /*
  * We handle two types of cursors/icons:

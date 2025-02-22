@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Services
+ * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/servman/mainwnd.c
  * PURPOSE:     Main window message handler

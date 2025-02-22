@@ -26,7 +26,7 @@ STRINGTABLE
     IDS_TITLEFORMAT     "Conectare la %s"
     IDS_MESSAGEFORMAT   "Conectare la %s"
     IDS_INCORRECTPASSWORDTITLE  "Log on nu a reuşit:"
-    IDS_INCORRECTPASSWORD       "MenuOS nu vă acceptă Log on.\nAsiguraţi-vă că numele de utilizator şi\nparola sunt corecte."
+    IDS_INCORRECTPASSWORD       "ReactOS nu vă acceptă Log on.\nAsiguraţi-vă că numele de utilizator şi\nparola sunt corecte."
     IDS_CAPSLOCKONTITLE "Tasta Caps Lock activă:"
     IDS_CAPSLOCKON      "Dacă aveţi tasta Caps Lock activată există posibilitatea să\nintroduceţi parola incorect.\n\nDezactivaţi tasta Caps Lock\nînainte de a introduce parola."
 }

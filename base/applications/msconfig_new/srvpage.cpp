@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Applications
+ * PROJECT:     ReactOS Applications
  * LICENSE:     LGPL - See COPYING in the top level directory
  * FILE:        base/applications/msconfig_new/srvpage.cpp
  * PURPOSE:     Services page message handler
@@ -248,7 +248,7 @@ static void AddService(SC_HANDLE hSCManager, LPENUM_SERVICE_STATUS_PROCESS Servi
 #endif
     }
 
-    // ...and display or not the Microsoft / MenuOS services.
+    // ...and display or not the Microsoft / ReactOS services.
     BOOL bContinue = TRUE;
     if (bHideOSVendorServices)
     {

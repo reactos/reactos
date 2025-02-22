@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API Tests
+ * PROJECT:     ReactOS API Tests
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Unit Tests for acpi!Bus_PDO_EvalMethod (IOCTL_ACPI_EVAL_METHOD handler)
  * COPYRIGHT:   Copyright 2024 Dmitry Borisov (di.sean@protonmail.com)

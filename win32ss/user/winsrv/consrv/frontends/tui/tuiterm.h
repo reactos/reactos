@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Console Server DLL
+ * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/frontends/tui/tuiterm.h
  * PURPOSE:         TUI Terminal Front-End
  * PROGRAMMERS:     David Welch
- *                  GÃ© van Geldorp
+ *                  Gé van Geldorp
  *                  Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */

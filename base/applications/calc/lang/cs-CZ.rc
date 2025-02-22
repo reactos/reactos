@@ -333,7 +333,7 @@ BEGIN
     BEGIN
         MENUITEM "Témata nápovědy", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "O MenuOS kalkulačce", IDM_HELP_ABOUT
+        MENUITEM "O ReactOS kalkulačce", IDM_HELP_ABOUT
     END
 END
 
@@ -366,7 +366,7 @@ BEGIN
     BEGIN
         MENUITEM "Témata nápovědy", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "O MenuOS kalkulačce", IDM_HELP_ABOUT
+        MENUITEM "O ReactOS kalkulačce", IDM_HELP_ABOUT
     END
 END
 
@@ -389,7 +389,7 @@ BEGIN
     BEGIN
         MENUITEM "Témata nápovědy", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "O MenuOS kalkulačce", IDM_HELP_ABOUT
+        MENUITEM "O ReactOS kalkulačce", IDM_HELP_ABOUT
     END
 END
 
@@ -404,7 +404,7 @@ END
 /* About */
 STRINGTABLE
 BEGIN
-    IDS_CALC_NAME "MenuOS Kalkulačka"
+    IDS_CALC_NAME "ReactOS Kalkulačka"
     IDS_AUTHOR "Autor: Carlo Bramini"
 END
 

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS msctf.dll
+ * PROJECT:     ReactOS msctf.dll
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Text Framework Services
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>

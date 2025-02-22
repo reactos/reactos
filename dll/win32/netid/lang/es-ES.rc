@@ -8,7 +8,7 @@ CAPTION "Nombre de equipo"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT "MenuOS usa la siguiente información para identificar su equipo en la red.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT "ReactOS usa la siguiente información para identificar su equipo en la red.", IDC_STATIC, 40, 5, 204, 20
     LTEXT "Descripción del equipo:", IDC_STATIC, 7, 40, 85, 9
     EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "Nombre completo del equipo:", IDC_STATIC, 7, 66, 64, 16
@@ -68,7 +68,7 @@ BEGIN
     4 "Cambios en el nombre del equipo"
     5 "Grupo de trabajo:"
     6 "Dominio:"
-    7 "The domain name ""%1"" does not conform to Internet Domain Name Service specifications, although it is a legal MenuOS name. You must use MenuOS DNS server for non-standard names."
+    7 "The domain name ""%1"" does not conform to Internet Domain Name Service specifications, although it is a legal ReactOS name. You must use ReactOS DNS server for non-standard names."
     8 "The domain name ""%1"" is not properly formatted. Periods (.) are used to separate domains. Each domain is limited to 63 characters. Example: domain-1.reactos.org."
     10 "The new computer name ""%1"" is too long. The name may not be longer than 63 characters."
     11 "The new computer name entered is not properly formatted. Standard names may contain letters (a-z, A-Z), numbers (0-9), and hyphens (-), but no spaces or periods (.). The name may not consist entirely of digits."

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Shell
+ * PROJECT:     ReactOS Shell
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Implements the Connect/Disconnect Network places dialogs
  * COPYRIGHT:   Copyright 2018 Jared Smudde (computerwhiz02@hotmail.com)

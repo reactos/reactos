@@ -1,7 +1,7 @@
 
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS kernel
+ * PROJECT:          ReactOS kernel
  * PURPOSE:          Native driver for dxg implementation
  * FILE:             win32ss/reactx/dxapi/main.c
  * PROGRAMER:        Magnus olsen (magnus@greatlord.com)

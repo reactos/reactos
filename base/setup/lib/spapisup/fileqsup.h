@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Setup Library
+ * PROJECT:         ReactOS Setup Library
  * FILE:            base/setup/lib/fileqsup.h
  * PURPOSE:         Interfacing with Setup* API File Queue support functions
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)

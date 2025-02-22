@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING.LIB in the top level directory
- * PROJECT:     MenuOS system libraries
+ * PROJECT:     ReactOS system libraries
  * PURPOSE:     Resets FPU state to the default
  * PROGRAMER:   Thomas Faber <thomas.faber@reactos.org>
  */

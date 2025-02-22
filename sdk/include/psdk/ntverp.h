@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS
+ * PROJECT:         ReactOS
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            include/psdk/ntverp.h
  * PURPOSE:         Master Version File.
@@ -144,8 +144,8 @@
 // Company and Trademarks
 //
 #define VER_COMPANYNAME_STR                 \
-    "MenuOS Project"
+    "ReactOS Project"
 #define VER_PRODUCTNAME_STR                 \
-    "MenuOS Operating System"
+    "ReactOS Operating System"
 #define VER_LEGALTRADEMARKS_STR             \
-    "MenuOS is a registered trademark of MenuOS Deutschland e.V."
+    "ReactOS is a registered trademark of ReactOS Deutschland e.V."

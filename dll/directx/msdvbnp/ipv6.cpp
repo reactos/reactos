@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS BDA Proxy
+ * PROJECT:         ReactOS BDA Proxy
  * FILE:            dll/directx/msdvbnp/ipv6.cpp
  * PURPOSE:         IBDA_IPV6Filter interface
  *

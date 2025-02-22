@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Setup Library
+ * PROJECT:     ReactOS Setup Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     INI file parser that caches contents of INI file in memory.
  * COPYRIGHT:   Copyright 2002-2018 Royce Mitchell III

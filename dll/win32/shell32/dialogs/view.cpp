@@ -403,7 +403,7 @@ ViewTree_LoadTree(HKEY hKey, LPCWSTR pszKeyName, DWORD dwParentID)
         pEntry->bChecked = (Value == pEntry->dwCheckedValue);
     }
 
-    // Grayed (MenuOS extension)
+    // Grayed (ReactOS extension)
     Size = sizeof(Value);
     Value = FALSE;
     RegQueryValueExW(hKey, L"Grayed", NULL, NULL, LPBYTE(&Value), &Size);

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Font Shell Extension
+ * PROJECT:     ReactOS Font Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     font list cache handling
  * COPYRIGHT:   Copyright 2019-2021 Mark Jansen <mark.jansen@reactos.org>

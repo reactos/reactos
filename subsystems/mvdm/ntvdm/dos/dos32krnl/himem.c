@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPLv2+ - See COPYING in the top level directory
- * PROJECT:         MenuOS Virtual DOS Machine
+ * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/dos/dos32krnl/himem.c
  * PURPOSE:         DOS XMS Driver and UMB Provider
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>

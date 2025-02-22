@@ -21,7 +21,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "<A HREF=""https://reactos.org/"">MenuOS Ana Sayfa</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    CONTROL "<A HREF=""https://reactos.org/"">ReactOS Ana Sayfa</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "&Lisansı Göster...", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -70,7 +70,7 @@ CAPTION "Sistem Ayarları"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Sürüm Bilgisi",IDC_STATIC, 6, 3, 210, 73
-    LTEXT "MenuOS, bir sunucu işletim sistemi olarak yapılmıştır ve öyle bildirilir. Yalnızca uygulamalar için, bunu değiştirmek için bu kutucuğu işaretleyiniz.", IDC_STATIC, 15, 15, 183, 41
+    LTEXT "ReactOS, bir sunucu işletim sistemi olarak yapılmıştır ve öyle bildirilir. Yalnızca uygulamalar için, bunu değiştirmek için bu kutucuğu işaretleyiniz.", IDC_STATIC, 15, 15, 183, 41
     CONTROL "İş istasyonu olarak bildir", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     PUSHBUTTON "Tamam", IDOK, 166, 83, 50, 14
 END
@@ -91,7 +91,7 @@ BEGIN
     PUSHBUTTON "&Yeniden Adlandır", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
     PUSHBUTTON "&Sil", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
     GROUPBOX "Donanım Profilleri Seçimi", IDC_STATIC, 7, 130, 240, 75
-    LTEXT "MenuOS başladığında:", IDC_STATIC, 14, 142, 210, 8
+    LTEXT "ReactOS başladığında:", IDC_STATIC, 14, 142, 210, 8
     AUTORADIOBUTTON "&bir donanım profili seçene kadar bekle.", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
     AUTORADIOBUTTON "bi&r profil seçmezsem listelenen ilk profili seç:", IDC_HRDPROFSELECT, 14, 173, 190, 8
     LTEXT "saniye sonra", IDC_STATIC, 65, 187, 35, 8
@@ -119,7 +119,7 @@ BEGIN
     AUTORADIOBUTTON "Bi&lgisayar Dock İstasyonuna Yerleştirilniş", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
     AUTORADIOBUTTON "Bilgi&sayar Dock İstasyonuna Yerleştirilmemiş", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
     GROUPBOX "Donanım Profilleri Seçimi", IDC_STATIC, 10, 138, 192, 42
-    AUTOCHECKBOX "&MenuOS başladığında bu profili bir seçenek olarak her zaman dahil et", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
+    AUTOCHECKBOX "&ReactOS başladığında bu profili bir seçenek olarak her zaman dahil et", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
 END
 
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS NT User-Mode DLL
+ * PROJECT:         ReactOS NT User-Mode DLL
  * FILE:            lib/ntdll/rtl/uilist.c
  * PURPOSE:         RTL UI to API network computers list conversion.
  *                  Helper for NETAPI32.DLL

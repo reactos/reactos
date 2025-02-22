@@ -20,7 +20,7 @@
 
 #pragma once
 
-// This is needed because headers define wrong one for MenuOS
+// This is needed because headers define wrong one for ReactOS
 #undef KIP0PCRADDRESS
 #define KIP0PCRADDRESS                      0xffdff000
 

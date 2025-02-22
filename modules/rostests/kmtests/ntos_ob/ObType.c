@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS kernel-mode tests
+ * PROJECT:         ReactOS kernel-mode tests
  * LICENSE:         LGPLv2+ - See COPYING.LIB in the top level directory
  * PURPOSE:         Kernel-Mode Test Suite Ob Regressions KM-Test
  * PROGRAMMER:      Aleksey Bragin <aleksey@reactos.org>

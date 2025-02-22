@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS TCP/IP protocol driver
+ * PROJECT:     ReactOS TCP/IP protocol driver
  * FILE:        tcpip/info.c
  * PURPOSE:     TDI query and set information routines
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

@@ -1,7 +1,7 @@
 /*
- * PROJECT:    MenuOS Calculator
+ * PROJECT:    ReactOS Calculator
  * LICENSE:    GPL - See COPYING in the top level directory
- * PURPOSE:    Hungarian Language File for MenuOS Calc
+ * PURPOSE:    Hungarian Language File for ReactOS Calc
  * TRANSLATOR: Nagy Tibor <xnagytibor@gmail.com>
  */
 
@@ -336,7 +336,7 @@ BEGIN
     BEGIN
         MENUITEM "&Témakörök", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "A MenuOS &Számológépről", IDM_HELP_ABOUT
+        MENUITEM "A ReactOS &Számológépről", IDM_HELP_ABOUT
     END
 END
 
@@ -369,7 +369,7 @@ BEGIN
     BEGIN
         MENUITEM "&Témakörök", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "A MenuOS &Számológépről", IDM_HELP_ABOUT
+        MENUITEM "A ReactOS &Számológépről", IDM_HELP_ABOUT
     END
 END
 
@@ -392,7 +392,7 @@ BEGIN
     BEGIN
         MENUITEM "&Témakörök", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "A MenuOS &Számológépről", IDM_HELP_ABOUT
+        MENUITEM "A ReactOS &Számológépről", IDM_HELP_ABOUT
     END
 END
 
@@ -407,7 +407,7 @@ END
 /* About */
 STRINGTABLE
 BEGIN
-    IDS_CALC_NAME "MenuOS Számológép"
+    IDS_CALC_NAME "ReactOS Számológép"
     IDS_AUTHOR "Írta Carlo Bramini"
 END
 

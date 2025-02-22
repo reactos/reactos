@@ -329,7 +329,7 @@ BEGIN
     BEGIN
         MENUITEM "&Help Topics", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&About MenuOS Calc", IDM_HELP_ABOUT
+        MENUITEM "&About ReactOS Calc", IDM_HELP_ABOUT
     END
 END
 
@@ -362,7 +362,7 @@ BEGIN
     BEGIN
         MENUITEM "&Help Topics", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&About MenuOS Calc", IDM_HELP_ABOUT
+        MENUITEM "&About ReactOS Calc", IDM_HELP_ABOUT
     END
 END
 
@@ -385,7 +385,7 @@ BEGIN
     BEGIN
         MENUITEM "&Help Topics", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&About MenuOS Calc", IDM_HELP_ABOUT
+        MENUITEM "&About ReactOS Calc", IDM_HELP_ABOUT
     END
 END
 
@@ -400,7 +400,7 @@ END
 /* About */
 STRINGTABLE
 BEGIN
-    IDS_CALC_NAME "MenuOS Calculator"
+    IDS_CALC_NAME "ReactOS Calculator"
     IDS_AUTHOR "Written by Carlo Bramini"
 END
 

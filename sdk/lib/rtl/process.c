@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS system libraries
+ * PROJECT:           ReactOS system libraries
  * FILE:              lib/rtl/process.c
  * PURPOSE:           Process functions
  * PROGRAMMER:        Alex Ionescu (alex@relsoft.net)

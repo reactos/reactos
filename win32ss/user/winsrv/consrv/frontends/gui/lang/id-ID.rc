@@ -20,7 +20,7 @@ BEGIN
     IDS_SCROLLUP "Gulung Naik"
     IDS_SCROLLDOWN "Gulung Turun"
 */
-    IDS_TERMINAL_TITLE "Konsol MenuOS"
+    IDS_TERMINAL_TITLE "Konsol ReactOS"
 END
 
 STRINGTABLE

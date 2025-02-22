@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Client/Server Runtime SubSystem
+ * PROJECT:     ReactOS Client/Server Runtime SubSystem
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Public definitions for CSR Clients
  * COPYRIGHT:   Copyright 2005 Alex Ionescu <alex@relsoft.net>

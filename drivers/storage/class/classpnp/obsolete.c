@@ -57,7 +57,7 @@ typedef struct _CSCAN_LIST_ENTRY {
  *      We map it to our new read/write handler.
  */
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassSplitRequest(_In_ PDEVICE_OBJECT Fdo, _In_ PIRP Irp, _In_ ULONG MaximumBytes)
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExt = Fdo->DeviceExtension;
@@ -107,7 +107,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassIoCompleteAssociated(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP Irp,
@@ -501,7 +501,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassBuildRequest(
     _In_ PDEVICE_OBJECT Fdo,
     _In_ PIRP Irp
@@ -955,7 +955,7 @@ Return Value:
 --*/
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassDeleteSrbLookasideList(_Inout_ PCOMMON_DEVICE_EXTENSION CommonExtension)
 {
     PAGED_CODE();
@@ -1001,7 +1001,7 @@ Note:
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassInitializeSrbLookasideList(   _Inout_ PCOMMON_DEVICE_EXTENSION CommonExtension,
                                         _In_ ULONG NumberElements)
 {

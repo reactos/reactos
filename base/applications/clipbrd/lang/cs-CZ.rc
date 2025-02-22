@@ -36,7 +36,7 @@ BEGIN
     STRING_CLIPFILE  "Prvek schránky"
     STRING_DELETE_MSG "Vymazat obsah stránky?"
     STRING_DELETE_TITLE "Vymazat schránku"
-    STRING_FORMAT_NT "Soubory schránky systému MenuOS (*.clp)"
+    STRING_FORMAT_NT "Soubory schránky systému ReactOS (*.clp)"
     STRING_FORMAT_GEN "Soubory schránky (*.clp)"
 END
 

@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Configuration of network devices
+ * PROJECT:         ReactOS Configuration of network devices
  * FILE:            dll/win32/netcfgx/netcfgx.c
  * PURPOSE:         Network devices installer
  *
- * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #include "precomp.h"

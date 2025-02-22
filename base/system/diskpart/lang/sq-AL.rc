@@ -7,7 +7,7 @@ LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
 /* Basic application information */
 STRINGTABLE
 BEGIN
-    IDS_APP_HEADER "MenuOS DiskPart"
+    IDS_APP_HEADER "ReactOS DiskPart"
     IDS_APP_USAGE "\nDisk Partitioning Interpreter.\n\n\
 Usage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
 /S filename\tRuns the given script.\n\

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS IMM32
+ * PROJECT:     ReactOS IMM32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Implementing IME manipulation of IMM32
  * COPYRIGHT:   Copyright 1998 Patrik Stridvall

@@ -3,7 +3,7 @@
  *
  * System setup API, native interface
  *
- * This file is part of the MenuOS Operating System.
+ * This file is part of the ReactOS Operating System.
  *
  * Contributors:
  *  Created by Eric Kohl

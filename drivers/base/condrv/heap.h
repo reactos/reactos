@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Console Driver
+ * PROJECT:         ReactOS Console Driver
  * FILE:            drivers/base/condrv/heap.h
  * PURPOSE:         Heap Helpers
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Timedate Control Panel
+ * PROJECT:     ReactOS Timedate Control Panel
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/cpl/timedate/monthcal.c
  * PURPOSE:     Calander implementation

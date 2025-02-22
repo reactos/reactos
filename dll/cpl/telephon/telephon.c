@@ -1,8 +1,8 @@
 /*
  *
- * PROJECT:         MenuOS Software Control Panel
+ * PROJECT:         ReactOS Software Control Panel
  * FILE:            dll/cpl/telephon/telephon.c
- * PURPOSE:         MenuOS Software Control Panel
+ * PURPOSE:         ReactOS Software Control Panel
  * PROGRAMMER:      Dmitry Chapyshev (dmitry@reactos.org)
  * UPDATE HISTORY:
  *    10-19-2007  Created

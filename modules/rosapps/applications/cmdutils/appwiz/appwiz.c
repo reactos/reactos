@@ -2,7 +2,7 @@
  *
  * PROJECT:                 Add or Remove Programs (Console Version)
  * FILE:                    rosapps/applications/cmdutils/appwiz/appwiz.c
- * PURPOSE:                 MenuOS Software Control Panel
+ * PURPOSE:                 ReactOS Software Control Panel
  * PROGRAMMERS:             Dmitry Chapyshev (dmitry@reactos.org)
  * UPDATE HISTORY:
  *    07-28-2008  Created

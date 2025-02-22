@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Boot Video Driver
+ * PROJECT:     ReactOS Boot Video Driver
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Font Data
  * COPYRIGHT:   Copyright 2016 Roy Tam <roytam@gmail.com>

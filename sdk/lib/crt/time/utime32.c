@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   LGPL, See LGPL.txt in the top level directory
- * PROJECT:     MenuOS CRT library
+ * PROJECT:     ReactOS CRT library
  * FILE:        lib/sdk/crt/time/utime32.c
  * PURPOSE:     Implementation of _utime32
  * PROGRAMERS:  Timo Kreuzer

@@ -663,7 +663,7 @@ Language=English
 An internal error occurred.
 .
 Language=Polish
-Wystąpił wewnętrzny błąd systemu MenuOS.
+Wystąpił wewnętrzny błąd systemu ReactOS.
 .
 Language=Romanian
 An internal error occurred.
@@ -8841,7 +8841,7 @@ Language=English
 This version of the operating system cannot be joined to a domain.
 .
 Language=Polish
-Tej wersji systemu MenuOS nie można przyłączyć do domeny.
+Tej wersji systemu ReactOS nie można przyłączyć do domeny.
 .
 Language=Romanian
 This version of the operating system cannot be joined to a domain.
@@ -13856,7 +13856,7 @@ administrator.
 .
 Language=Polish
 Nie powiodło się uwierzytelnienie tego komputera przez %2 - kontroler domeny\n
-MenuOS dla domeny %1, i dlatego ten komputer może odmawiać żądaniom logowania.\n
+ReactOS dla domeny %1, i dlatego ten komputer może odmawiać żądaniom logowania.\n
 Ta niezdolność do uwierzytelnienia może być spowodowana używaniem tej samej\n
 nazwy przez inny komputer znajdujący się w tej samej sieci lub nierozpoznaniem\n
 hasła dla konta tego komputera. Jeśli ten komunikat będzie się powtarzał\n
@@ -16141,7 +16141,7 @@ Language=English
 More data is available than can be returned by the operating\nsystem.
 .
 Language=Polish
-Dostępnych jest więcej danych niż może zwrócić system MenuOS.
+Dostępnych jest więcej danych niż może zwrócić system ReactOS.
 .
 Language=Romanian
 More data is available than can be returned by the operating\nsystem.
@@ -16199,7 +16199,7 @@ Language=English
 The command can be used only on a Domain Controller.
 .
 Language=Polish
-Tego polecenia można używać tylko na kontrolerze domeny systemu MenuOS.
+Tego polecenia można używać tylko na kontrolerze domeny systemu ReactOS.
 .
 Language=Romanian
 The command can be used only on a Domain Controller.
@@ -16228,7 +16228,7 @@ Language=English
 This command cannot be used on a Domain Controller.
 .
 Language=Polish
-Tego polecenia nie można używać na kontrolerze domeny systemu MenuOS.
+Tego polecenia nie można używać na kontrolerze domeny systemu ReactOS.
 .
 Language=Romanian
 This command cannot be used on a Domain Controller.
@@ -16257,7 +16257,7 @@ Language=English
 These services are started:
 .
 Language=Polish
-Uruchomiono następujące usługi systemu MenuOS:
+Uruchomiono następujące usługi systemu ReactOS:
 .
 Language=Romanian
 These services are started:
@@ -17360,7 +17360,7 @@ Language=English
 The Workstation service is already running. The operating system will ignore command options for the workstation.
 .
 Language=Polish
-Usługa Stacja robocza jest już uruchomiona.  System MenuOS będzie ignorował opcje poleceń dla stacji roboczej.
+Usługa Stacja robocza jest już uruchomiona.  System ReactOS będzie ignorował opcje poleceń dla stacji roboczej.
 .
 Language=Romanian
 The Workstation service is already running. The operating system will ignore command options for the workstation.
@@ -19821,7 +19821,7 @@ Language=English
 %1 is not a valid Windows network message number.
 .
 Language=Polish
-%1 nie jest prawidłowym numerem komunikatu sieciowego systemu MenuOS.
+%1 nie jest prawidłowym numerem komunikatu sieciowego systemu ReactOS.
 .
 Language=Romanian
 %1 is not a valid Windows network message number.
@@ -24941,28 +24941,28 @@ Severity=Success
 Facility=System
 SymbolicName=APPERR2_4454
 Language=English
-MenuOS root directory%0
+ReactOS root directory%0
 .
 Language=Polish
-Katalog główny systemu MenuOS%0
+Katalog główny systemu ReactOS%0
 .
 Language=Romanian
-MenuOS root directory%0
+ReactOS root directory%0
 .
 Language=Russian
-MenuOS root directory%0
+ReactOS root directory%0
 .
 Language=Spanish
-MenuOS root directory%0
+ReactOS root directory%0
 .
 Language=Turkish
-MenuOS root directory%0
+ReactOS root directory%0
 .
 Language=Chinese
-MenuOS root directory%0
+ReactOS root directory%0
 .
 Language=Taiwanese
-MenuOS root directory%0
+ReactOS root directory%0
 .
 
 MessageId=4455
@@ -25405,28 +25405,28 @@ Severity=Success
 Facility=System
 SymbolicName=APPERR2_4470
 Language=English
-MenuOS%0
+ReactOS%0
 .
 Language=Polish
-MenuOS%0
+ReactOS%0
 .
 Language=Romanian
-MenuOS%0
+ReactOS%0
 .
 Language=Russian
-MenuOS%0
+ReactOS%0
 .
 Language=Spanish
-MenuOS%0
+ReactOS%0
 .
 Language=Turkish
-MenuOS%0
+ReactOS%0
 .
 Language=Chinese
-MenuOS%0
+ReactOS%0
 .
 Language=Taiwanese
-MenuOS%0
+ReactOS%0
 .
 
 MessageId=4481
@@ -25579,28 +25579,28 @@ Severity=Success
 Facility=System
 SymbolicName=APPERR2_4486
 Language=English
-MenuOS%0
+ReactOS%0
 .
 Language=Polish
-MenuOS%0
+ReactOS%0
 .
 Language=Romanian
-MenuOS%0
+ReactOS%0
 .
 Language=Russian
-MenuOS%0
+ReactOS%0
 .
 Language=Spanish
-MenuOS%0
+ReactOS%0
 .
 Language=Turkish
-MenuOS%0
+ReactOS%0
 .
 Language=Chinese
-MenuOS%0
+ReactOS%0
 .
 Language=Taiwanese
-MenuOS%0
+ReactOS%0
 .
 
 MessageId=4487
@@ -25637,28 +25637,28 @@ Severity=Success
 Facility=System
 SymbolicName=APPERR2_4488
 Language=English
-MenuOS Server%0
+ReactOS Server%0
 .
 Language=Polish
-Serwer MenuOS%0
+Serwer ReactOS%0
 .
 Language=Romanian
-MenuOS Server%0
+ReactOS Server%0
 .
 Language=Russian
-MenuOS Server%0
+ReactOS Server%0
 .
 Language=Spanish
-MenuOS Server%0
+ReactOS Server%0
 .
 Language=Turkish
-MenuOS Server%0
+ReactOS Server%0
 .
 Language=Chinese
-MenuOS Server%0
+ReactOS Server%0
 .
 Language=Taiwanese
-MenuOS Server%0
+ReactOS Server%0
 .
 
 MessageId=4489
@@ -28226,28 +28226,28 @@ Severity=Success
 Facility=System
 SymbolicName=APPERR2_4696
 Language=English
-MenuOS Server
+ReactOS Server
 .
 Language=Polish
-MenuOS Server
+ReactOS Server
 .
 Language=Romanian
-MenuOS Server
+ReactOS Server
 .
 Language=Russian
-MenuOS Server
+ReactOS Server
 .
 Language=Spanish
-MenuOS Server
+ReactOS Server
 .
 Language=Turkish
-MenuOS Server
+ReactOS Server
 .
 Language=Chinese
-MenuOS Server
+ReactOS Server
 .
 Language=Taiwanese
-MenuOS Server
+ReactOS Server
 .
 
 MessageId=4697
@@ -28255,28 +28255,28 @@ Severity=Success
 Facility=System
 SymbolicName=APPERR2_4697
 Language=English
-MenuOS Workstation
+ReactOS Workstation
 .
 Language=Polish
-MenuOS Workstation
+ReactOS Workstation
 .
 Language=Romanian
-MenuOS Workstation
+ReactOS Workstation
 .
 Language=Russian
-MenuOS Workstation
+ReactOS Workstation
 .
 Language=Spanish
-MenuOS Workstation
+ReactOS Workstation
 .
 Language=Turkish
-MenuOS Workstation
+ReactOS Workstation
 .
 Language=Chinese
-MenuOS Workstation
+ReactOS Workstation
 .
 Language=Taiwanese
-MenuOS Workstation
+ReactOS Workstation
 .
 
 MessageId=4698
@@ -38789,7 +38789,7 @@ The operating system could not be started as configured.\n
 A previous working configuration was used instead.
 .
 Language=Polish
-Nie można uruchomić systemu MenuOS zgodnie z aktualną konfiguracją.\n
+Nie można uruchomić systemu ReactOS zgodnie z aktualną konfiguracją.\n
 Zamiast niej użyto poprzedniej działającej konfiguracji.
 .
 Language=Romanian
@@ -42250,11 +42250,11 @@ registered in DNS.\n\n
 %n%nUSER ACTION\n\n
 %nDetermine what might have caused this failure, resolve the problem, and initiate\n
 registration of the DNS records by the domain controller. To determine what might\n
-have caused this failure, run DCDiag.exe. You can find this program on the MenuOS\n
+have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
 Server installation CD in Support\\Tools\\support.cab. To learn more about\n
 DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by\n
 this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain\n
-controller or restart Net Logon service. Nltest.exe is available in the MenuOS Server\n
+controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
 Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
 recommended.\n\n
 %n%nADDITIONAL DATA\n
@@ -42270,12 +42270,12 @@ mogli lokalizować ten kontroler domeny.\n\n
 %n%nAKCJA UŻYTKOWNIKA\n\n
 %nOkreśl przyczynę tego błędu, rozwiąż problem i zainicjuj rejestrację rekordów DNS\n
 przez kontroler domeny. Aby określić przyczynę tego błędu, uruchom program\n
-DCDiag.exe. Można go znaleźć na dysku instalacyjnym CD systemu MenuOS Server\n
+DCDiag.exe. Można go znaleźć na dysku instalacyjnym CD systemu ReactOS Server\n
 w pliku Support\\Tools\\support.cab. Aby dowiedzieć się więcej o programie\n
 DCDiag.exe, zajrzyj do Centrum pomocy i obsługi technicznej. Aby zainicjować\n
 rejestrację rekordów DNS przez ten kontroler domeny, uruchom polecenie\n
 'nltest.exe /dsregdns' z wiersza polecenia na kontrolerze domeny lub uruchom ponownie\n
-usługę Net Logon. Program Nltest.exe jest dostępny na dysku CD Microsoft MenuOS Server\n
+usługę Net Logon. Program Nltest.exe jest dostępny na dysku CD Microsoft ReactOS Server\n
 Resource Kit. %n  Lub można ręcznie dodać ten rekord do systemu DNS, choć nie jest to\n
 zalecane.\n\n
 %n%nDANE DODATKOWE\n
@@ -42291,11 +42291,11 @@ registered in DNS.\n\n
 %n%nUSER ACTION\n\n
 %nDetermine what might have caused this failure, resolve the problem, and initiate\n
 registration of the DNS records by the domain controller. To determine what might\n
-have caused this failure, run DCDiag.exe. You can find this program on the MenuOS\n
+have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
 Server installation CD in Support\\Tools\\support.cab. To learn more about\n
 DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by\n
 this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain\n
-controller or restart Net Logon service. Nltest.exe is available in the MenuOS Server\n
+controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
 Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
 recommended.\n\n
 %n%nADDITIONAL DATA\n
@@ -42311,11 +42311,11 @@ registered in DNS.\n\n
 %n%nUSER ACTION\n\n
 %nDetermine what might have caused this failure, resolve the problem, and initiate\n
 registration of the DNS records by the domain controller. To determine what might\n
-have caused this failure, run DCDiag.exe. You can find this program on the MenuOS\n
+have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
 Server installation CD in Support\\Tools\\support.cab. To learn more about\n
 DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by\n
 this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain\n
-controller or restart Net Logon service. Nltest.exe is available in the MenuOS Server\n
+controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
 Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
 recommended.\n\n
 %n%nADDITIONAL DATA\n
@@ -42331,11 +42331,11 @@ registered in DNS.\n\n
 %n%nUSER ACTION\n\n
 %nDetermine what might have caused this failure, resolve the problem, and initiate\n
 registration of the DNS records by the domain controller. To determine what might\n
-have caused this failure, run DCDiag.exe. You can find this program on the MenuOS\n
+have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
 Server installation CD in Support\\Tools\\support.cab. To learn more about\n
 DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by\n
 this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain\n
-controller or restart Net Logon service. Nltest.exe is available in the MenuOS Server\n
+controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
 Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
 recommended.\n\n
 %n%nADDITIONAL DATA\n
@@ -42351,11 +42351,11 @@ registered in DNS.\n\n
 %n%nUSER ACTION\n\n
 %nDetermine what might have caused this failure, resolve the problem, and initiate\n
 registration of the DNS records by the domain controller. To determine what might\n
-have caused this failure, run DCDiag.exe. You can find this program on the MenuOS\n
+have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
 Server installation CD in Support\\Tools\\support.cab. To learn more about\n
 DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by\n
 this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain\n
-controller or restart Net Logon service. Nltest.exe is available in the MenuOS Server\n
+controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
 Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
 recommended.\n\n
 %n%nADDITIONAL DATA\n
@@ -42371,11 +42371,11 @@ registered in DNS.\n\n
 %n%nUSER ACTION\n\n
 %nDetermine what might have caused this failure, resolve the problem, and initiate\n
 registration of the DNS records by the domain controller. To determine what might\n
-have caused this failure, run DCDiag.exe. You can find this program on the MenuOS\n
+have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
 Server installation CD in Support\\Tools\\support.cab. To learn more about\n
 DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by\n
 this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain\n
-controller or restart Net Logon service. Nltest.exe is available in the MenuOS Server\n
+controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
 Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
 recommended.\n\n
 %n%nADDITIONAL DATA\n
@@ -42391,11 +42391,11 @@ registered in DNS.\n\n
 %n%nUSER ACTION\n\n
 %nDetermine what might have caused this failure, resolve the problem, and initiate\n
 registration of the DNS records by the domain controller. To determine what might\n
-have caused this failure, run DCDiag.exe. You can find this program on the MenuOS\n
+have caused this failure, run DCDiag.exe. You can find this program on the ReactOS\n
 Server installation CD in Support\\Tools\\support.cab. To learn more about\n
 DCDiag.exe, see Help and Support Center. To initiate registration of the DNS records by\n
 this domain controller, run 'nltest.exe /dsregdns' from the command prompt on the domain\n
-controller or restart Net Logon service. Nltest.exe is available in the MenuOS Server\n
+controller or restart Net Logon service. Nltest.exe is available in the ReactOS Server\n
 Resource Kit CD. %n  Or, you can manually add this record to DNS, but it is not\n
 recommended.\n\n
 %n%nADDITIONAL DATA\n
@@ -42730,7 +42730,7 @@ domain) or as an LDAP server (if the specified domain is an application partitio
 %n%nUSER ACTION\n\n
 %nFix possible misconfiguration(s) specified above and initiate registration or deletion of\n
 the DNS records by running 'nltest.exe /dsregdns' from the command prompt or by restarting\n
-Net Logon service. Nltest.exe is available in the MenuOS Server Resource Kit CD.
+Net Logon service. Nltest.exe is available in the ReactOS Server Resource Kit CD.
 .
 Language=Polish
 Nie można dynamicznie zarejestrować lub usunąć co najmniej jednego rekordu DNS\n
@@ -42746,7 +42746,7 @@ serwera jako kontrolera domeny (jeżeli określona domena jest domeną usługi A
 %n%nAKCJA UŻYTKOWNIKA\n\n
 %nPopraw możliwe błędy konfiguracji określone powyżej i zainicjuj rejestrację lub usuwanie\n
 rekordów DNS, uruchamiając polecenie 'nltest.exe /dsregdns' z wiersza polecenia lub uruchamiając ponownie\n
-usługę Net Logon. Program Nltest.exe jest dostępny na dysku CD MenuOS Server Resource Kit.
+usługę Net Logon. Program Nltest.exe jest dostępny na dysku CD ReactOS Server Resource Kit.
 .
 Language=Romanian
 Dynamic registration or deletion of one or more DNS records associated with DNS\n
@@ -42762,7 +42762,7 @@ domain) or as an LDAP server (if the specified domain is an application partitio
 %n%nUSER ACTION\n\n
 %nFix possible misconfiguration(s) specified above and initiate registration or deletion of\n
 the DNS records by running 'nltest.exe /dsregdns' from the command prompt or by restarting\n
-Net Logon service. Nltest.exe is available in the MenuOS Server Resource Kit CD.
+Net Logon service. Nltest.exe is available in the ReactOS Server Resource Kit CD.
 .
 Language=Russian
 Dynamic registration or deletion of one or more DNS records associated with DNS\n
@@ -42778,7 +42778,7 @@ domain) or as an LDAP server (if the specified domain is an application partitio
 %n%nUSER ACTION\n\n
 %nFix possible misconfiguration(s) specified above and initiate registration or deletion of\n
 the DNS records by running 'nltest.exe /dsregdns' from the command prompt or by restarting\n
-Net Logon service. Nltest.exe is available in the MenuOS Server Resource Kit CD.
+Net Logon service. Nltest.exe is available in the ReactOS Server Resource Kit CD.
 .
 Language=Spanish
 Dynamic registration or deletion of one or more DNS records associated with DNS\n
@@ -42794,7 +42794,7 @@ domain) or as an LDAP server (if the specified domain is an application partitio
 %n%nUSER ACTION\n\n
 %nFix possible misconfiguration(s) specified above and initiate registration or deletion of\n
 the DNS records by running 'nltest.exe /dsregdns' from the command prompt or by restarting\n
-Net Logon service. Nltest.exe is available in the MenuOS Server Resource Kit CD.
+Net Logon service. Nltest.exe is available in the ReactOS Server Resource Kit CD.
 .
 Language=Turkish
 Dynamic registration or deletion of one or more DNS records associated with DNS\n
@@ -42810,7 +42810,7 @@ domain) or as an LDAP server (if the specified domain is an application partitio
 %n%nUSER ACTION\n\n
 %nFix possible misconfiguration(s) specified above and initiate registration or deletion of\n
 the DNS records by running 'nltest.exe /dsregdns' from the command prompt or by restarting\n
-Net Logon service. Nltest.exe is available in the MenuOS Server Resource Kit CD.
+Net Logon service. Nltest.exe is available in the ReactOS Server Resource Kit CD.
 .
 Language=Chinese
 Dynamic registration or deletion of one or more DNS records associated with DNS\n
@@ -42826,7 +42826,7 @@ domain) or as an LDAP server (if the specified domain is an application partitio
 %n%nUSER ACTION\n\n
 %nFix possible misconfiguration(s) specified above and initiate registration or deletion of\n
 the DNS records by running 'nltest.exe /dsregdns' from the command prompt or by restarting\n
-Net Logon service. Nltest.exe is available in the MenuOS Server Resource Kit CD.
+Net Logon service. Nltest.exe is available in the ReactOS Server Resource Kit CD.
 .
 Language=Taiwanese
 Dynamic registration or deletion of one or more DNS records associated with DNS\n
@@ -42842,7 +42842,7 @@ domain) or as an LDAP server (if the specified domain is an application partitio
 %n%nUSER ACTION\n\n
 %nFix possible misconfiguration(s) specified above and initiate registration or deletion of\n
 the DNS records by running 'nltest.exe /dsregdns' from the command prompt or by restarting\n
-Net Logon service. Nltest.exe is available in the MenuOS Server Resource Kit CD.
+Net Logon service. Nltest.exe is available in the ReactOS Server Resource Kit CD.
 .
 
 MessageId=5782

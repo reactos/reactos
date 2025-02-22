@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Console Server DLL
+ * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/console.h
  * PURPOSE:         Console Initialization Functions
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

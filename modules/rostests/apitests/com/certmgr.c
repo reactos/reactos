@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API tests
+ * PROJECT:     ReactOS API tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     COM interface test for certmgr classes
  * COPYRIGHT:   Copyright 2021 Mark Jansen <mark.jansen@reactos.org>

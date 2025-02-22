@@ -72,7 +72,7 @@ END
 
 STRINGTABLE
 {
-STID_WINE_HELP, 	"Справка MenuOS"
+STID_WINE_HELP, 	"Справка ReactOS"
 STID_WHERROR, 		"ОШИБКА"
 STID_WARNING,  		"ВНИМАНИЕ"
 STID_INFO,  		"Информация"

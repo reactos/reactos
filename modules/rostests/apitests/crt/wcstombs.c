@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS api tests
+ * PROJECT:         ReactOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Test for wcstombs
  */
@@ -11,8 +11,8 @@
 #include <stdlib.h>
 #include <specstrings.h>
 
-#define LStrROS L"MenuOS"
-#define StrROS "MenuOS"
+#define LStrROS L"ReactOS"
+#define StrROS "ReactOS"
 
 START_TEST(wcstombs)
 {

@@ -1,10 +1,10 @@
-MenuOS Courier New fonts are based on FreeMono fonts of GNU FreeFont, released
+ReactOS Courier New fonts are based on FreeMono fonts of GNU FreeFont, released
 under the terms of GNU GENERAL PUBLIC LICENSE Version 3 with a special exception.
 
 Copyright 2002, 2003, 2005, 2008, 2009, 2010, 2012 GNU Freefont contributors.
 Copyright (c) 2019 Katayama Hirofumi MZ.
 
-MenuOS Courier New fonts are free software; you can redistribute it and/or
+ReactOS Courier New fonts are free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License as published
 by the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.

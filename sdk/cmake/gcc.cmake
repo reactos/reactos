@@ -379,7 +379,7 @@ function(set_image_base MODULE IMAGE_BASE)
 endfunction()
 
 function(set_module_type_toolchain MODULE TYPE)
-    # Set the PE image version numbers from the NT OS version MenuOS is based on
+    # Set the PE image version numbers from the NT OS version ReactOS is based on
     target_link_options(${MODULE} PRIVATE
         -Wl,--major-image-version,5 -Wl,--minor-image-version,01 -Wl,--major-os-version,5 -Wl,--minor-os-version,01)
 

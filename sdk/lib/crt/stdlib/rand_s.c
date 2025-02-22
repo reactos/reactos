@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS CRT library
+ * PROJECT:     ReactOS CRT library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     rand_s implementation
  * COPYRIGHT:   Copyright 2010 Sylvain Petreolle <spetreolle@yahoo.fr>

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Display Control Panel
+ * PROJECT:     ReactOS Display Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
@@ -85,7 +85,7 @@ CAPTION "Setări avansate"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "Dacă selectaţi o temă alta decât MenuOS clasic, va suprascrie următoarele setări, cu excepţia unor programe mai vechi.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
+    LTEXT "Dacă selectaţi o temă alta decât ReactOS clasic, va suprascrie următoarele setări, cu excepţia unor programe mai vechi.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
     LTEXT "&Element", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP

@@ -3,7 +3,7 @@
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            tools/nandflash/main.c
  * PURPOSE:         Flashes OmapLDR, FreeLDR and a Root FS into a NAND image
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/

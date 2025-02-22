@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Tests
+ * PROJECT:         ReactOS Tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            queuetest.c
  * PURPOSE:         Usermode QueueUserWorkItem() testing

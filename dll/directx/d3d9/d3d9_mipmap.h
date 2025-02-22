@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS ReactX
+ * PROJECT:         ReactOS ReactX
  * FILE:            dll/directx/d3d9/d3d9_mipmap.h
  * PURPOSE:         d3d9.dll internal mip map surface structures
  * PROGRAMERS:      Gregor Gullwi <gbrunmar (dot) ros (at) gmail (dot) com>

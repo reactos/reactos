@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/client/file/disk.c
  * PURPOSE:         Disk and Drive functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)

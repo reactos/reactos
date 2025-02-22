@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS api tests
+ * PROJECT:         ReactOS api tests
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
  * PURPOSE:         Test for PrivateExtractIcons
  * PROGRAMMER:      Hermes Belusca-Maito
@@ -77,7 +77,7 @@ static struct
     /* Executable without icon groups */
     {L"%SystemRoot%\\System32\\autochk.exe", 0, 0, FALSE},
 
-    /* Existing file (shell32 has 233 icon groups in MenuOS only) */
+    /* Existing file (shell32 has 233 icon groups in ReactOS only) */
     {L"%SystemRoot%\\System32\\shell32.dll", 1, 233, TRUE},
 
     /* Non-existing files */

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            lib/secur32/lsa.c
  * PURPOSE:         Client-side LSA functions
  * UPDATE HISTORY:

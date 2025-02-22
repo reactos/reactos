@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Win32 Base API
+ * PROJECT:     ReactOS Win32 Base API
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     NT6+ Firmware API
  * COPYRIGHT:   Copyright 2023-2024 Ratin Gao <ratin@knsoft.org>

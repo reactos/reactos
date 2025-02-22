@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Event Log Viewer
+ * PROJECT:     ReactOS Event Log Viewer
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Türkish resource file
  * TRANSLATORS: Copyright 2013-2017 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
@@ -123,7 +123,7 @@ BEGIN
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "K&ayıt Dosyası:", IDC_STATIC, 7, 41, 60, 8//FIXME: accelerator collision &A
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-// The following 4 IDC_STATIC shall have accels in MenuOS, although MS doesn't have accels for them.
+// The following 4 IDC_STATIC shall have accels in ReactOS, although MS doesn't have accels for them.
 // Translation note: First fill out ALL accels that MS has in this dialog for your language,
 // and only then as a final step use some remaining unused letters for those 4 controls!
     LTEXT "&Boyut:", IDC_STATIC, 7, 57, 60, 8
@@ -173,7 +173,7 @@ END
 STRINGTABLE
 BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
-    IDS_USAGE "MenuOS Olay Göstericisi\n\
+    IDS_USAGE "ReactOS Olay Göstericisi\n\
 \n\
 EventVwr [bilgisayar adı] [/L:<etkinlik günlüğü dosyası>] [/?]\n\
 \n\

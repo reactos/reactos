@@ -69,7 +69,7 @@ BEGIN
     AUTOCHECKBOX "允许使用旧的 Windows 95 服务器的 MS-CHAP 版本(&W)", 200, 46, 162, 198, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "微软 CHAP 版本 2 (MS-CHAP v2)(&I)", 1492, 28, 176, 200, 10, BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 28, 189, 208, 1
-    AUTOCHECKBOX "对基于 MS-CHAP 的协议，自动使用我的 MenuOS 登录名称和密码（如果有域的话，还有域名）(&F)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "对基于 MS-CHAP 的协议，自动使用我的 ReactOS 登录名称和密码（如果有域的话，还有域名）(&F)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "确定", 1, 127, 232, 60, 14
     PUSHBUTTON "取消", 2, 192, 232, 60, 14
 END
@@ -163,7 +163,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "自动拨号和挂断"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "MenuOS 可以根据正在发送和接收的信息数量来自动拨号和挂断。", 1085, 9, 7, 253, 30
+    LTEXT "ReactOS 可以根据正在发送和接收的信息数量来自动拨号和挂断。", 1085, 9, 7, 253, 30
     GROUPBOX "自动拨号", -1, 6, 38, 249, 71
     LTEXT "当此连接满足两个以下的条件时，拨另一个号码：", 1083, 16, 51, 237, 16, NOT WS_GROUP
     LTEXT "至少活动时间：(&L)", -1, 16, 73, 100, 8
@@ -626,7 +626,7 @@ BEGIN
     AUTORADIOBUTTON "高级（自定义设置）(&D)", 1541, 14, 102, 198, 8, BS_NOTIFY
     LTEXT "按如下配置验证我的身份(&V)：", 1537, 26, 29, 187, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "自动使用我的 MenuOS 登录名称和密码（如果有域的话，还有域名）(&U)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "自动使用我的 ReactOS 登录名称和密码（如果有域的话，还有域名）(&U)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "要求数据加密（没有则断开连接）(&I)", 1169, 26, 82, 183, 10, BS_TOP | BS_MULTILINE
     LTEXT "使用这些设置需要对安全协议有所了解。", 1539, 15, 114, 134, 20
     PUSHBUTTON "设置...(&S)", 1180, 151, 115, 60, 14
@@ -683,7 +683,7 @@ BEGIN
     GROUPBOX "拨号选项", 1289, 7, 2, 213, 64
     AUTOCHECKBOX "连接时显示连接进度(&D)", 1284, 16, 14, 201, 10
     AUTOCHECKBOX "提示名称、密码、证书等。(&P)", 1554, 16, 27, 201, 10
-    AUTOCHECKBOX "包括 &MenuOS 登录域", 1555, 16, 39, 201, 10
+    AUTOCHECKBOX "包括 &ReactOS 登录域", 1555, 16, 39, 201, 10
     AUTOCHECKBOX "提示输入电话号码(&N)", 1285, 16, 52, 200, 10, BS_TOP | BS_MULTILINE
     GROUPBOX "重拨选项", 1290, 6, 72, 213, 79
     LTEXT "重拨次数(&R)：", 1300, 16, 87, 123, 8
@@ -881,7 +881,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "连接 %1"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "MenuOS 无法使用您提供的用户名和密码连接到网络。请重新输入用户名和密码。", 1396, 7, 6, 206, 36
+    LTEXT "ReactOS 无法使用您提供的用户名和密码连接到网络。请重新输入用户名和密码。", 1396, 7, 6, 206, 36
     LTEXT "用户名(&U)：", 1399, 8, 51, 49, 8
     EDITTEXT 1394, 66, 46, 143, 14, ES_AUTOHSCROLL
     LTEXT "密码(&P)：", 1397, 8, 70, 49, 8, NOT WS_GROUP
@@ -897,7 +897,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "连接 %1"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "MenuOS 无法使用您提供的用户名和密码连接到网络。请重新输入用户名和密码。", 1396, 7, 6, 209, 26
+    LTEXT "ReactOS 无法使用您提供的用户名和密码连接到网络。请重新输入用户名和密码。", 1396, 7, 6, 209, 26
     LTEXT "用户名称(&U)：", 1399, 7, 72, 44, 8
     EDITTEXT 1394, 97, 69, 115, 14, ES_AUTOHSCROLL
     LTEXT "密码(&P)：", 1397, 7, 90, 45, 8, NOT WS_GROUP
@@ -1274,7 +1274,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "新建连接向导"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "在下面的文本框中输入您的服务的名称。如果将文本框留空，则MenuOS会在您连接时自动检测并配置您的服务。", -1, 10, 7, 301, 25
+    LTEXT "在下面的文本框中输入您的服务的名称。如果将文本框留空，则ReactOS会在您连接时自动检测并配置您的服务。", -1, 10, 7, 301, 25
     LTEXT "服务名称（可选）(&S)：", -1, 22, 32, 229, 8
     EDITTEXT 1593, 22, 44, 275, 14, ES_AUTOHSCROLL
 END
@@ -1299,7 +1299,7 @@ BEGIN
     AUTORADIOBUTTON "高级（自定义设置）(&D)", 1541, 14, 100, 197, 8, BS_NOTIFY
     LTEXT "按如下配置验证我的身份(&V)：", 1537, 26, 29, 183, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "自动使用我的 MenuOS 登录名称和密码（如果有域的话，还有域名）(&U)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "自动使用我的 ReactOS 登录名称和密码（如果有域的话，还有域名）(&U)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "要求数据加密（没有则断开连接）(&I)", 1169, 26, 83, 182, 10, BS_TOP | BS_MULTILINE
     LTEXT "使用这些设置，需要对安全协议有所了解。", 1539, 26, 111, 136, 20
     PUSHBUTTON "设置...(&S)", 1180, 151, 134, 60, 14
@@ -1458,7 +1458,7 @@ BEGIN
     LTEXT "目标的主机名或 IP 地址（如 reactos.org 或 145.52.0.1）(&H)：", 1430, 7, 5, 217, 18
     EDITTEXT 1427, 7, 25, 215, 14, ES_AUTOHSCROLL
     GROUPBOX "第一次连接", 1431, 9, 48, 213, 78
-    LTEXT "MenuOS 可以在建立此虚拟连接前先连接到公共的网络（比如互联网）。", 1432, 17, 63, 199, 24
+    LTEXT "ReactOS 可以在建立此虚拟连接前先连接到公共的网络（比如互联网）。", 1432, 17, 63, 199, 24
     AUTOCHECKBOX "先拨另一个连接(&D)：", 1428, 19, 89, 183, 10
     COMBOBOX 1429, 29, 103, 182, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "连接后在通知区域显示图标(&W)", 1120, 10, 192, 213, 13
@@ -1472,7 +1472,7 @@ BEGIN
     GROUPBOX "拨号选项", 1289, 8, 7, 214, 56
     AUTOCHECKBOX "连接时显示连接进度(&D)", 1284, 16, 17, 199, 10
     AUTOCHECKBOX "提示名称、密码、证书等。(&P)", 1554, 16, 32, 199, 10
-    AUTOCHECKBOX "包括 &MenuOS 登录域", 1555, 16, 47, 178, 10
+    AUTOCHECKBOX "包括 &ReactOS 登录域", 1555, 16, 47, 178, 10
     GROUPBOX "重拨选项", 1290, 8, 68, 214, 89
     LTEXT "重拨次数(&R)：", 1300, 16, 81, 121, 8
     EDITTEXT 1287, 140, 77, 70, 14, ES_AUTOHSCROLL | ES_NUMBER
@@ -1497,7 +1497,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "新建连接向导"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "MenuOS 可以在建立此虚拟连接前先拨通一个初始连接。", -1, 10, 6, 275, 24
+    LTEXT "ReactOS 可以在建立此虚拟连接前先拨通一个初始连接。", -1, 10, 6, 275, 24
     AUTORADIOBUTTON "不拨初始连接。(&D)", 1509, 32, 31, 271, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     AUTORADIOBUTTON "自动拨此初始连接(&A)：", 1510, 32, 45, 269, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     COMBOBOX 1435, 43, 62, 253, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
@@ -1799,7 +1799,7 @@ BEGIN
     AUTORADIOBUTTON "允许虚拟专用连接(&A)", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "不允许虚拟专用连接(&D)", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     LTEXT "你想要允许连接到这台计算机的虚拟专用连接吗？", -1, 17, 49, 275, 8
-    LTEXT "如果你允许 VPN 连接，MenuOS 将会修改互联网连接防火墙，以允许您的计算机发送和接收 VPN 数据包。", -1, 10, 25, 293, 25
+    LTEXT "如果你允许 VPN 连接，ReactOS 将会修改互联网连接防火墙，以允许您的计算机发送和接收 VPN 数据包。", -1, 10, 25, 293, 25
 END
 
 7055 DIALOGEX 0, 0, 317, 143
@@ -1888,7 +1888,7 @@ BEGIN
     244 "因为此连接当前处于活动状态，某些设置需要等到下一次拨号时才能生效。\0"
     245 "没有可供所有用户使用的连接。您在拨号前必须先登录。\0"
     246 "通讯簿是空的。\n\n单击确定来添加条目。\0"
-    247 "由于导入/导出限制，数据加密在此版本的 MenuOS 中不可用。\0"
+    247 "由于导入/导出限制，数据加密在此版本的 ReactOS 中不可用。\0"
     248 "请在下一页输入一个 X.25 地址。\0"
     249 "错误 %1：%2\0"
     250 "%1\n\n错误 %2：%3\0"
@@ -2111,7 +2111,7 @@ BEGIN
     501 "VPN 服务器的名称或地址是什么？\0"
     502 "无法禁用按需拨号。\0"
     503 "公用网络\0"
-    504 "MenuOS 可以确保公用网络最先连接。\0"
+    504 "ReactOS 可以确保公用网络最先连接。\0"
     505 "VPN1\0"
     506 "互联网连接共享\0"
     507 "你可以让一个本地网络通过这个拨号连接访问资源。\0"
@@ -2237,8 +2237,8 @@ BEGIN
     1611 "宽带连接\0"
     1612 "您选择了使用预共享的密钥，但没有输入密钥。\n请输入预共享的密钥。\0"
     1613 "不能提交凭据\0"
-    1634 "因为 Windows 管理规范（WMI）服务已被禁用，MenuOS 不能显示此连接或家庭网络的属性。\n\n若要配置此连接或家庭网络的属性，必须首先启用 WMI 服务。要更正此问题，请在控制面板的管理工具中，双击“服务”，用鼠标右键单击“Windows 管理规范”，然后单击“开始”。\0"
-    1635 "MenuOS 不能显示此连接的属性。Windows 管理规范（WMI）信息可能已损坏。要更正此问题，请使用系统还原将 MenuOS 还原到较早的时间（还原点）。 系统还原位于系统工具文件夹中配件。\0"
+    1634 "因为 Windows 管理规范（WMI）服务已被禁用，ReactOS 不能显示此连接或家庭网络的属性。\n\n若要配置此连接或家庭网络的属性，必须首先启用 WMI 服务。要更正此问题，请在控制面板的管理工具中，双击“服务”，用鼠标右键单击“Windows 管理规范”，然后单击“开始”。\0"
+    1635 "ReactOS 不能显示此连接的属性。Windows 管理规范（WMI）信息可能已损坏。要更正此问题，请使用系统还原将 ReactOS 还原到较早的时间（还原点）。 系统还原位于系统工具文件夹中配件。\0"
     1646 "允许传入的回显请求\0"
     1647 "允许传入时间戳请求\0"
     1648 "允许传入掩码请求\0"
@@ -2351,7 +2351,7 @@ BEGIN
     7385 "通讯端口（%s）\0"
     7386 "网络连接不会显示一些专门的选项来使用远程访问策略或本地用户管理器的控制台已设置的入站连接。有关传入连接的完整和正确的信息，您需要使用相应的控制台。\0"
     7387 "你所选择的用户回拨模式需要您输入有效的回拨号码。\0"
-    7388 "MenuOS 必须重新启动才能完成操作。现在可以立即重新启动吗？\0"
+    7388 "ReactOS 必须重新启动才能完成操作。现在可以立即重新启动吗？\0"
     7389 "当前所选的设备没有可用的配置选项。\0"
     7390 "范围无效\0"
     7391 "您请求禁用传入连接“%1”。要禁用它，你必须停止“服务器”服务。一旦停止，此计算机上的任何共享目录或打印机将不再提供给任何其他计算机。你想打开系统控制台来停止服务器服务吗？\r\n\n在“计算机在管理”中，单击“系统工具”，然后单击“服务”。在右铡窗格中右键单击服务器，并单击停止。\0"

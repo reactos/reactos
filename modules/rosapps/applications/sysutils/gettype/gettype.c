@@ -1,9 +1,9 @@
 /*
- * MenuOS Win32 Applications
- * Copyright (C) 2005 MenuOS Team
+ * ReactOS Win32 Applications
+ * Copyright (C) 2005 ReactOS Team
  *
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS arp utility
+ * PROJECT:     ReactOS arp utility
  * FILE:        apps/utils/gettype/gettype.c
  * PURPOSE:
  * PROGRAMMERS: Brandon Turner (turnerb7@msu.edu)

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Local Spooler
+ * PROJECT:     ReactOS Local Spooler
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions for printer driver information
  * COPYRIGHT:   Copyright 2018 Mark Jansen (mark.jansen@reactos.org)

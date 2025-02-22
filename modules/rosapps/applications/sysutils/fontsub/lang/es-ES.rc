@@ -70,7 +70,7 @@ BEGIN
     IDS_QUERYDELETE,    "¿Quiere realmente eliminar este elemento?"
     IDS_CANTOPENKEY,    "No se puede abrir la Clave del Registro."
     IDS_REBOOTNOW,      "El Registro ha sido actualizado. ¿Reiniciar el sistema ahora?"
-    IDS_ABOUT,          "FontSub (Font Substitute Editor) Version 0.5\r\npor Katayama Hirofumi MZ y The MenuOS Team\r\n\r\nEste software ha sido publicado bajo la licencia CC0 1.0."
+    IDS_ABOUT,          "FontSub (Font Substitute Editor) Version 0.5\r\npor Katayama Hirofumi MZ y The ReactOS Team\r\n\r\nEste software ha sido publicado bajo la licencia CC0 1.0."
 END
 
 IDD_ADD DIALOGEX 0, 0, 315, 65

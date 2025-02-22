@@ -5,7 +5,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "互換性"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
-    LTEXT "もしMenuOSでプログラムを実行中に問題があれば、そのアプリに報告すべきOSを選択して下さい。\n注意: これは試験的な機能です。", IDC_EXPLANATION, 7, 7, 210, 31
+    LTEXT "もしReactOSでプログラムを実行中に問題があれば、そのアプリに報告すべきOSを選択して下さい。\n注意: これは試験的な機能です。", IDC_EXPLANATION, 7, 7, 210, 31
     GROUPBOX "互換性モード", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "このプログラムを次の設定の互換性モードで実行:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
@@ -38,5 +38,5 @@ STRINGTABLE
 BEGIN
     IDS_COMPAT_TITLE "互換性"
     IDS_FAILED_NETWORK "このプログラムはネットワークドライブにあるので互換性モードは設定できません。"
-    IDS_FAILED_PROTECTED "このプログラムは MenuOS の一部なので互換性モードは設定できません。"
+    IDS_FAILED_PROTECTED "このプログラムは ReactOS の一部なので互換性モードは設定できません。"
 END

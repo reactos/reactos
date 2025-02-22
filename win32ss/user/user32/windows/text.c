@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS user32.dll
+ * PROJECT:     ReactOS user32.dll
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Text processing functions
  * COPYRIGHT:   Copyright 2001-2004 Casper S. Hornstrup <chorns@users.sourceforge.net>

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Accessibility Control Panel
+ * PROJECT:     ReactOS Accessibility Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Portuguese (Portugal) resource file
  * TRANSLATOR:  Copyright 2019-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
@@ -18,7 +18,7 @@ BEGIN
     AUTOCHECKBOX "Utilizar ""Teclas &presas""", IDC_STICKY_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Definições", IDC_STICKY_BUTTON, 144, 49, 90, 14
     GROUPBOX "Teclas lentas", -1, 6, 79, 234, 62
-    LTEXT "Utilize as ""Teclas lentas"" para que o MenuOS ignore os batimentos breves ou repetidos de teclas ou diminua a taxa de repetição.",
+    LTEXT "Utilize as ""Teclas lentas"" para que o ReactOS ignore os batimentos breves ou repetidos de teclas ou diminua a taxa de repetição.",
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "Utilizar ""Teclas &lentas""", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "D&efinições", IDC_FILTER_BUTTON, 144, 121, 90, 14
@@ -37,7 +37,7 @@ CAPTION "Som"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Sons visuais", -1, 6, 11, 234, 98
-    LTEXT "Utilize ""Sons visuais"" se pretender que o MenuOS crie avisos visuais quando o sistema emitir um som.",
+    LTEXT "Utilize ""Sons visuais"" se pretender que o ReactOS crie avisos visuais quando o sistema emitir um som.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Utilizar ""&Sons visuais""", IDC_SENTRY_BOX, 12, 49, 90, 14
     LTEXT "Escolha o aviso visual:", IDC_SENTRY_TEXT, 12, 72, 222, 11
@@ -55,7 +55,7 @@ CAPTION "Visualização"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Alto contraste", -1, 6, 11, 234, 62
-    LTEXT "Utilize esta opção se pretender que o MenuOS utilize cores e tipos de letra concebidos para uma leitura fácil.",
+    LTEXT "Utilize esta opção se pretender que o ReactOS utilize cores e tipos de letra concebidos para uma leitura fácil.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Utilizar ""Alto contraste""", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Definições", IDC_CONTRAST_BUTTON, 144, 49, 90, 14

@@ -1,6 +1,6 @@
 /*
 * COPYRIGHT:       See COPYING.ARM in the top level directory
-* PROJECT:         MenuOS Boot Configuration Data
+* PROJECT:         ReactOS Boot Configuration Data
 * FILE:            boot/environ/include/bcd.h
 * PURPOSE:         BCD Main Header
 * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)

@@ -16,8 +16,8 @@ BEGIN
     IDS_PUMPKIN "Dynia"
     IDS_RAIN "Deszczowy Dzień"
     IDS_RWB "Czerwony, Biały, i Niebieski"
-    IDS_CLASSIC "Klasyczny MenuOS"
-    IDS_STANDARD "Podstawowy MenuOS"
+    IDS_CLASSIC "Klasyczny ReactOS"
+    IDS_STANDARD "Podstawowy ReactOS"
     IDS_ROSE "Róża"
     IDS_SAND "Piasek" //Desert
     IDS_SLATE "Łupek"

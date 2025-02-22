@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Applications Manager
+ * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     German resource file
  * TRANSLATORS: Copyright 2009-2010 Matthias Kupfer <mkupfer@reactos.org>
@@ -173,9 +173,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "MenuOS-Anwendungsmanager"
+    IDS_APPTITLE "ReactOS-Anwendungsmanager"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_WELCOME_TITLE "Willkommen im MenuOS-Anwendungsmanager!"
+    IDS_WELCOME_TITLE "Willkommen im ReactOS-Anwendungsmanager!"
     IDS_WELCOME_TEXT "Wählen Sie links eine Kategorie und dann eine Anwendung um sie zu installieren oder zu deinstallieren.\nReactOS-Webseite: "
     IDS_WELCOME_URL "https://reactos.org"
 

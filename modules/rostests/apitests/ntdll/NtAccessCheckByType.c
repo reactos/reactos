@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS API tests
+ * PROJECT:         ReactOS API tests
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         Tests for the NtAccessCheckByType API
  * COPYRIGHT:       Copyright 2023 George Bișoc <george.bisoc@reactos.org>
@@ -252,7 +252,7 @@ ParamsValidationTests(VOID)
      * On newer versions of Windows such as 10 the principal SID is validated
      * after the security descriptor so it will always trigger an invalid
      * descriptor case. On Windows Server 2003 the principal SID is captured
-     * before the security descriptor. MenuOS currently follows the Windows
+     * before the security descriptor. ReactOS currently follows the Windows
      * 10's behavior.
      */
     ok(Status == STATUS_ACCESS_VIOLATION || Status == STATUS_INVALID_SECURITY_DESCR,

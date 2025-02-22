@@ -1,4 +1,4 @@
-// PROJECT:        MenuOS ATL CTime, CFileTime, CTimeSpan, CFileTimeSpan
+// PROJECT:        ReactOS ATL CTime, CFileTime, CTimeSpan, CFileTimeSpan
 // LICENSE:        Public Domain
 // PURPOSE:        Provides compatibility to Microsoft ATL
 // PROGRAMMERS:    Benedikt Freisen

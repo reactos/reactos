@@ -19,7 +19,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "<A HREF=""https://reactos.org/"">MenuOS ホームページ</A>へ行く", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 150, 10
+    CONTROL "<A HREF=""https://reactos.org/"">ReactOS ホームページ</A>へ行く", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 150, 10
     PUSHBUTTON "ライセンスを表示(&L)...", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -68,7 +68,7 @@ CAPTION "システムの設定"
 FONT 9, "MS UI Gothic", 0, 0, 0x1
 BEGIN
     GROUPBOX "バージョン情報", IDC_STATIC, 6, 3, 210, 73
-    LTEXT "MenuOS はサーバ OS としてビルドされているため、サーバとしてふるまいます。これを変更するにはこのボックスにチェックしてください。ただしアプリケーションに対してのみ有効です。", IDC_STATIC, 15, 15, 198, 41
+    LTEXT "ReactOS はサーバ OS としてビルドされているため、サーバとしてふるまいます。これを変更するにはこのボックスにチェックしてください。ただしアプリケーションに対してのみ有効です。", IDC_STATIC, 15, 15, 198, 41
     CONTROL "ワークステーションとしてふるまう", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
 END
@@ -89,7 +89,7 @@ BEGIN
     PUSHBUTTON "名前の変更(&R)", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
     PUSHBUTTON "削除(&D)", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
     GROUPBOX "ハードウェア プロファイルの選択", IDC_STATIC, 7, 130, 240, 75
-    LTEXT "MenuOS 起動時の動作:", IDC_STATIC, 14, 142, 210, 8
+    LTEXT "ReactOS 起動時の動作:", IDC_STATIC, 14, 142, 210, 8
     AUTORADIOBUTTON "ハードウェア プロファイルが選択されるまで待つ(&W)", IDC_HRDPROFWAIT, 14, 158, 163, 8, WS_GROUP
     AUTORADIOBUTTON "次の時間内に選択されない場合、リストの一番上を選択する(&S):", IDC_HRDPROFSELECT, 14, 173, 190, 8
     LTEXT "秒", IDC_STATIC, 65, 187, 35, 8
@@ -117,7 +117,7 @@ BEGIN
     AUTORADIOBUTTON "コンピュータはドッキングされています(&D)", IDC_HWPPROP_DOCKED, 22, 97, 260, 10
     AUTORADIOBUTTON "コンピューターはドッキングされていません(&U)", IDC_HWPPROP_UNDOCKED, 22, 109, 280, 10
     GROUPBOX "ハードウェア プロファイルの選択", IDC_STATIC, 10, 138, 192, 42
-    AUTOCHECKBOX "常にMenuOSの起動時にオプションとしてこのプロファイルを含める", IDC_HWPPROP_INCLUDE, 17, 150, 264, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
+    AUTOCHECKBOX "常にReactOSの起動時にオプションとしてこのプロファイルを含める", IDC_HWPPROP_INCLUDE, 17, 150, 264, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
 END
 
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52

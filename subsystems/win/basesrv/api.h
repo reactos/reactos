@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Base API Server DLL
+ * PROJECT:         ReactOS Base API Server DLL
  * FILE:            subsystems/win/basesrv/api.h
  * PURPOSE:         Public server APIs definitions
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

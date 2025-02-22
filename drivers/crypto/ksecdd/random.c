@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Drivers
+ * PROJECT:         ReactOS Drivers
  * PURPOSE:         Kernel Security Support Provider Interface Driver
  *
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)

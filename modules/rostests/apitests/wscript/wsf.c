@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API tests
+ * PROJECT:     ReactOS API tests
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     Tests for wscript.exe
  * COPYRIGHT:   Whindmar Saksit (whindsaks@proton.me)

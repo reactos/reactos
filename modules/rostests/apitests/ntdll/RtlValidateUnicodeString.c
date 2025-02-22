@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API Tests
+ * PROJECT:     ReactOS API Tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Test for RtlValidateUnicodeString
  * COPYRIGHT:   Copyright 2020 Hermes Belusca-Maito

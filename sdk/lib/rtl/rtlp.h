@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS System Libraries
+ * PROJECT:         ReactOS System Libraries
  * FILE:            lib/rtl/rtlp.h
  * PURPOSE:         Run-Time Libary Internal Header
  * PROGRAMMER:      Alex Ionescu
@@ -263,7 +263,7 @@ RtlpDowncaseUnicodeChar(IN WCHAR Source);
 
 #ifndef _BLDR_
 
-/* MenuOS only */
+/* ReactOS only */
 VOID
 NTAPI
 LdrpInitializeProcessCompat(PVOID pProcessActctx, PVOID* pOldShimData);

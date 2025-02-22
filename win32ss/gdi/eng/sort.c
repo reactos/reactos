@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:          MenuOS win32 subsystem
+ * PROJECT:          ReactOS win32 subsystem
  * PURPOSE:
  * FILE:             win32ss/gdi/eng/sort.c
- * PROGRAMER:        MenuOS Team
+ * PROGRAMER:        ReactOS Team
  */
 
 #include <win32k.h>

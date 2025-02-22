@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS nVidia nForce Ethernet Controller Driver
+ * PROJECT:     ReactOS nVidia nForce Ethernet Controller Driver
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Miniport initialization helper routines
  * COPYRIGHT:   Copyright 2021-2022 Dmitry Borisov <di.sean@protonmail.com>

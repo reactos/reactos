@@ -84,7 +84,7 @@ void ExplorerGlobals::init(HINSTANCE hInstance)
 void ExplorerGlobals::read_persistent()
 {
     // read configuration file
-    _cfg_dir.printf(TEXT("%s\\MenuOS"), (LPCTSTR)SpecialFolderFSPath(CSIDL_APPDATA,0));
+    _cfg_dir.printf(TEXT("%s\\ReactOS"), (LPCTSTR)SpecialFolderFSPath(CSIDL_APPDATA,0));
     _cfg_path.printf(TEXT("%s\\ros-explorer-cfg.xml"), _cfg_dir.c_str());
 
     if (!_cfg.read_file(_cfg_path)) {

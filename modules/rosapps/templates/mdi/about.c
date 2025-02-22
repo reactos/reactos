@@ -1,5 +1,5 @@
 /*
- *  MenuOS About Dialog Box
+ *  ReactOS About Dialog Box
  *
  *  Copyright (C) 2002 Robert Dickenson <robd@reactos.org>
  *

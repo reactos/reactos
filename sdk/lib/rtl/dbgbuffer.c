@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS system libraries
+ * PROJECT:     ReactOS system libraries
  * LICENSE:     GPL-2.0 (https://spdx.org/licenses/GPL-2.0)
  * PURPOSE:     RTL_DEBUG_INFORMATION implementation
  * COPYRIGHT:   Copyright James Tabor

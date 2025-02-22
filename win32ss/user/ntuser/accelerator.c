@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS kernel
+ * PROJECT:          ReactOS kernel
  * PURPOSE:          Window accelerator
  * FILE:             win32ss/user/ntuser/accelerator.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)

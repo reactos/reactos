@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/client/file/dir.c
  * PURPOSE:         Directory functions
  * PROGRAMMER:      Pierre Schweitzer (pierre@reactos.org)

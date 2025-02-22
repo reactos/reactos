@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Win32 Base API
+ * PROJECT:         ReactOS Win32 Base API
  * LICENSE:         See COPYING in the top level directory
  * FILE:            dll/win32/kernel32/client/handle.c
  * PURPOSE:         Object Handle Functions
@@ -217,7 +217,7 @@ DWORD
 WINAPI
 GetHandleContext(IN HANDLE Handle)
 {
-    /* This is Windows behavior, not a MenuOS Stub */
+    /* This is Windows behavior, not a ReactOS Stub */
     DbgPrintEx(0, 0, "Unsupported API - kernel32!GetHandleContext() called\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
@@ -230,7 +230,7 @@ HANDLE
 WINAPI
 CreateSocketHandle(VOID)
 {
-    /* This is Windows behavior, not a MenuOS Stub */
+    /* This is Windows behavior, not a ReactOS Stub */
     DbgPrintEx(0, 0, "Unsupported API - kernel32!CreateSocketHandle() called\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
@@ -244,7 +244,7 @@ WINAPI
 SetHandleContext(IN HANDLE Handle,
                  IN DWORD Context)
 {
-    /* This is Windows behavior, not a MenuOS Stub */
+    /* This is Windows behavior, not a ReactOS Stub */
     DbgPrintEx(0, 0, "Unsupported API - kernel32!SetHandleContext() called\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;

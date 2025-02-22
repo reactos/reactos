@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Spooler Router API Tests
+ * PROJECT:     ReactOS Spooler Router API Tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Tests for PackStrings
  * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)

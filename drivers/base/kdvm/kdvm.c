@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL, see COPYING in the top level directory
- * PROJECT:         MenuOS kernel
+ * PROJECT:         ReactOS kernel
  * FILE:            drivers/base/kdvm/kdvm.c
  * PURPOSE:         VM independent function for kdvbox/kd
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)

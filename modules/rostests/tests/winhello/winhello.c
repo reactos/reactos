@@ -1,5 +1,5 @@
 /*
- *  MenuOS Winhello - Not So Simple Win32 Windowing test
+ *  ReactOS Winhello - Not So Simple Win32 Windowing test
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -645,8 +645,8 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	 case WM_PAINT:
 	  hDC = BeginPaint(hWnd, &ps);
-	  TextOut(hDC, 10, 10, "Hello World from MenuOS!",
-			strlen("Hello World from MenuOS!"));
+	  TextOut(hDC, 10, 10, "Hello World from ReactOS!",
+			strlen("Hello World from ReactOS!"));
 	  TextOut(hDC, 10, 80, "Press Ctrl+C or Ctrl+Alt+F1 to test Hotkey support.",
 			strlen("Press Ctrl+C or Ctrl+Alt+F1 to test Hotkey support."));
           GetClientRect(hWnd, &clr);

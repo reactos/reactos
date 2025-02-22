@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Spooler Router
+ * PROJECT:     ReactOS Spooler Router
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions related to Printer Configuration Data
  * COPYRIGHT:   Copyright 2017 Colin Finck (colin@reactos.org)
@@ -118,7 +118,7 @@ GetPrinterDataExW(HANDLE hPrinter, LPCWSTR pKeyName, LPCWSTR pValueName, LPDWORD
 DWORD WINAPI
 GetPrinterDataW(HANDLE hPrinter, LPWSTR pValueName, LPDWORD pType, LPBYTE pData, DWORD nSize, LPDWORD pcbNeeded)
 {
-    // The MenuOS Printing Stack forwards all GetPrinterData calls to GetPrinterDataEx as soon as possible.
+    // The ReactOS Printing Stack forwards all GetPrinterData calls to GetPrinterDataEx as soon as possible.
     // This function may only be called if spoolss.dll is used together with Windows Printing Stack components.
     WARN("This function should never be called!\n");
     return GetPrinterDataExW(hPrinter, L"PrinterDriverData", pValueName, pType, pData, nSize, pcbNeeded);
@@ -145,7 +145,7 @@ SetPrinterDataExW(HANDLE hPrinter, LPCWSTR pKeyName, LPCWSTR pValueName, DWORD T
 DWORD WINAPI
 SetPrinterDataW(HANDLE hPrinter, PWSTR pValueName, DWORD Type, PBYTE pData, DWORD cbData)
 {
-    // The MenuOS Printing Stack forwards all SetPrinterData calls to SetPrinterDataEx as soon as possible.
+    // The ReactOS Printing Stack forwards all SetPrinterData calls to SetPrinterDataEx as soon as possible.
     // This function may only be called if spoolss.dll is used together with Windows Printing Stack components.
     WARN("This function should never be called!\n");
     return SetPrinterDataExW(hPrinter, L"PrinterDriverData", pValueName, Type, pData, cbData);

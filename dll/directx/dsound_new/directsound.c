@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Configuration of network devices
+ * PROJECT:         ReactOS Configuration of network devices
  * FILE:            dll/directx/dsound_new/directsound.c
  * PURPOSE:         Handles IDirectSound interface
  *

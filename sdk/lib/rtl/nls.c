@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS system libraries
+ * PROJECT:           ReactOS system libraries
  * FILE:              lib/rtl/nls.c
  * PURPOSE:           National Language Support (NLS) functions
  * PROGRAMMERS:       Emanuele Aliberti

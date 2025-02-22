@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Winlogon
+ * PROJECT:         ReactOS Winlogon
  * FILE:            base/system/winlogon/sas.c
  * PURPOSE:         Secure Attention Sequence
  * PROGRAMMERS:     Thomas Weidenmueller (w3seek@users.sourceforge.net)
@@ -1000,7 +1000,7 @@ HandleShutdown(
     LSData->Session = Session;
 
     // FIXME: We may need to specify this flag to really force application kill
-    // (we are shutting down MenuOS, not just logging off so no hangs, etc...
+    // (we are shutting down ReactOS, not just logging off so no hangs, etc...
     // should be allowed).
     // LSData->Flags |= EWX_FORCE;
 
@@ -1115,7 +1115,7 @@ DoGenericAction(
             if (WLX_SHUTTINGDOWN(wlxAction))
             {
                 // FIXME: WlxShutdown should be done from inside HandleShutdown,
-                // after having displayed "MenuOS is shutting down" message.
+                // after having displayed "ReactOS is shutting down" message.
                 Session->Gina.Functions.WlxShutdown(Session->Gina.Context, wlxAction);
                 if (!NT_SUCCESS(HandleShutdown(Session, wlxAction)))
                 {

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Kernel Streaming
+ * PROJECT:         ReactOS Kernel Streaming
  * FILE:            drivers/wdm/audio/backpln/portcls/port_topology.cpp
  * PURPOSE:         Topology Port driver
  * PROGRAMMER:      Johannes Anderwald

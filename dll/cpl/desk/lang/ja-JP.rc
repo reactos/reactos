@@ -76,7 +76,7 @@ CAPTION "デザインの詳細"
 FONT 9, "MS UI Gothic"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "MenuOS クラシック以外を選択すると、いくつかの古いプログラムを除いて次の設定が上書きされます。", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 23, BS_MULTILINE
+    LTEXT "ReactOS クラシック以外を選択すると、いくつかの古いプログラムを除いて次の設定が上書きされます。", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 23, BS_MULTILINE
     LTEXT "設定要素(&E):", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Graphics Subsystem
+ * PROJECT:         ReactOS Graphics Subsystem
  * FILE:            win32ss/win32kp.h
  * PURPOSE:         Internal Win32K Header
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)

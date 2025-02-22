@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS SDK
+ * PROJECT:     ReactOS SDK
  * LICENSE:     BSD Zero Clause License (https://spdx.org/licenses/0BSD)
  * PURPOSE:     Helper pragma implementation for pseh library (amd64)
  * COPYRIGHT:   Copyright 2021 Jérôme Gardou

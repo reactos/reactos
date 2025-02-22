@@ -2557,7 +2557,7 @@ Return Value:
                                         0,
                                         *IoFileObjectType,
                                         KernelMode,
-                                        (PVOID*)&FileToMarkBad, /* MenuOS Change: GCC "passing argument 5 of 'ObReferenceObjectByHandle' from incompatible pointer type" */
+                                        (PVOID*)&FileToMarkBad, /* ReactOS Change: GCC "passing argument 5 of 'ObReferenceObjectByHandle' from incompatible pointer type" */
                                         NULL );
 
     if (!NT_SUCCESS(Status)) {

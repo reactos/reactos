@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS system libraries
+ * PROJECT:     ReactOS system libraries
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Storage device properties
  * COPYRIGHT:   2020 Eric Kohl (eric.kohl@reactos.org)

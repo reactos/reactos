@@ -21,8 +21,8 @@ BEGIN
     IDS_PUMPKIN "Dovleac"
     IDS_RAIN "Zi ploioasă"
     IDS_RWB "Roșu, alb și albastru"
-    IDS_CLASSIC "MenuOS Clasic"
-    IDS_STANDARD "MenuOS Standard"
+    IDS_CLASSIC "ReactOS Clasic"
+    IDS_STANDARD "ReactOS Standard"
     IDS_ROSE "Trandafiriu"
     IDS_SAND "Nisip" //Desert
     IDS_SLATE "Ardezie"

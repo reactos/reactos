@@ -1,5 +1,5 @@
 /*
- * PROJECT:     PAINT for MenuOS
+ * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Norwegian resource file
  * TRANSLATOR:  Copyright 2009 Lars Martin Hambro (LMH1) <lars_martin4@hotmail.com>
@@ -234,7 +234,7 @@ STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Paint"
     IDS_WINDOWTITLE "%s - Paint"
-    IDS_INFOTITLE "Paint for MenuOS"
+    IDS_INFOTITLE "Paint for ReactOS"
     IDS_INFOTEXT "Tilgjengelig under GNU Lesser General Public License (LGPL, se http://www.gnu.org/home.nb.html)"
     IDS_SAVEPROMPTTEXT "Vil du lagre endringene til %s?"
     IDS_DEFAULTFILENAME "Utennavn"

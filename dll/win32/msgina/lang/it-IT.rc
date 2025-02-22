@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Console Configuration DLL
+ * PROJECT:     ReactOS Console Configuration DLL
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/win32/msgina/lang/it-IT.rc
  * PURPOSE:     Italian resource file
@@ -21,7 +21,7 @@ END
 
 IDD_WELCOME DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Benvenuti in MenuOS"
+CAPTION "Benvenuti in ReactOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -117,7 +117,7 @@ END
 
 IDD_LOGOFF DIALOGEX 0, 0, 188, 60
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP
-CAPTION "Disconetti da MenuOS"
+CAPTION "Disconetti da ReactOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOGOFF, IDC_STATIC, 7, 7, 20, 20
@@ -128,13 +128,13 @@ END
 
 IDD_SHUTDOWN DIALOGEX 0, 0, 275, 146
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Spegnimento di MenuOS"
+CAPTION "Spegnimento di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     CONTROL IDI_BAR, IDC_BAR, "Static", SS_BITMAP, 0, 44, 275, 4
     ICON IDI_SHUTDOWN, IDC_STATIC, 9, 57, 21, 20, WS_GROUP
-    LTEXT "&Cosa volete che faccia MenuOS?", IDC_STATIC, 39, 57, 167, 10
+    LTEXT "&Cosa volete che faccia ReactOS?", IDC_STATIC, 39, 57, 167, 10
     COMBOBOX IDC_SHUTDOWN_ACTION, 39, 70, 165, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 187, 27
     DEFPUSHBUTTON "OK", IDOK, 143, 122, 55, 14, WS_GROUP
@@ -148,12 +148,12 @@ END
 IDD_SHUTDOWN_REASON DIALOGEX 0, 0, 275, 297
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 // STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Spegnimento di MenuOS"
+CAPTION "Spegnimento di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_SHUTDOWN, IDC_STATIC, 9, 57, 21, 20, WS_GROUP
-    LTEXT "&Cosa volete che faccia MenuOS?", IDC_STATIC, 39, 57, 167, 10
+    LTEXT "&Cosa volete che faccia ReactOS?", IDC_STATIC, 39, 57, 167, 10
     COMBOBOX IDC_SHUTDOWN_ACTION, 39, 70, 190, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 190, 27
     GROUPBOX "Shutdown Event Tracker", IDC_STATIC, 9, 122, 257, 146
@@ -192,7 +192,7 @@ BEGIN
     PUSHBUTTON "&Spegni", IDC_BUTTON_SHUTDOWN, 93, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "&Riavvia", IDC_BUTTON_REBOOT, 150, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Annulla", IDCANCEL, 162, 103, 40, 12, BS_FLAT | WS_GROUP
-    LTEXT "Spegnimento di MenuOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
+    LTEXT "Spegnimento di ReactOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
     CTEXT "Sospendi", IDC_SLEEP_STATIC, 22, 70, 51, 11
     CTEXT "Spegni", IDC_SHUTDOWN_STATIC, 79, 70, 51, 11
     CTEXT "Riavvia", IDC_RESTART_STATIC, 136, 70, 51, 11
@@ -209,7 +209,7 @@ BEGIN
     PUSHBUTTON "&Spegni", IDC_BUTTON_SHUTDOWN, 150, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "&Riavvia", IDC_BUTTON_REBOOT, 207, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Annulla", IDCANCEL, 218, 103, 40, 12, BS_FLAT | WS_GROUP
-    LTEXT "Shut Down MenuOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
+    LTEXT "Shut Down ReactOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
     CTEXT "Ibernazione", IDC_HIBERNATE_STATIC, 22, 70, 51, 11
     CTEXT "Sospendi", IDC_SLEEP_STATIC, 79, 70, 51, 11
     CTEXT "Spegni", IDC_SHUTDOWN_STATIC, 136, 70, 51, 11
@@ -243,7 +243,7 @@ BEGIN
     IDS_INVALIDLOGONHOURS "Your account has time restrictions that prevent you from logging on at this time. Please try again later."
     IDS_INVALIDWORKSTATION "Your account is configured to prevent you from using this computer. Please try another computer."
     IDS_ACCOUNTRESTRICTION "Unable to log you on because of an account restriction."
-    IDS_EMERGENCYLOGOFFTITLE "Log Off MenuOS"
+    IDS_EMERGENCYLOGOFFTITLE "Log Off ReactOS"
     IDS_EMERGENCYLOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
     IDS_EMERGENCYRESTARTTITLE "Emergency restart"
     IDS_EMERGENCYRESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."

@@ -400,7 +400,7 @@ END
 /* About */
 STRINGTABLE
 BEGIN
-    IDS_CALC_NAME "MenuOS Rechner"
+    IDS_CALC_NAME "ReactOS Rechner"
     IDS_AUTHOR "Geschrieben von Carlo Bramini"
 END
 

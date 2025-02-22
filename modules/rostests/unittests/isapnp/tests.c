@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API Tests
+ * PROJECT:     ReactOS API Tests
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Unit Tests for the ISA PnP bus driver (device discovery and resource tests)
  * COPYRIGHT:   Copyright 2024 Dmitry Borisov <di.sean@protonmail.com>

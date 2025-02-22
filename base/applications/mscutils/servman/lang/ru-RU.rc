@@ -268,10 +268,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRESS_INFO_START "MenuOS запускает службу"
-    IDS_PROGRESS_INFO_STOP "MenuOS останавливает службу"
-    IDS_PROGRESS_INFO_PAUSE "MenuOS приостанавливает службу"
-    IDS_PROGRESS_INFO_RESUME "MenuOS возобновляет службу"
+    IDS_PROGRESS_INFO_START "ReactOS запускает службу"
+    IDS_PROGRESS_INFO_STOP "ReactOS останавливает службу"
+    IDS_PROGRESS_INFO_PAUSE "ReactOS приостанавливает службу"
+    IDS_PROGRESS_INFO_RESUME "ReactOS возобновляет службу"
     IDS_CREATE_SUCCESS "Создание службы успешно завершено"
     IDS_DELETE_SUCCESS "Удаление службы успешно завершено"
     IDS_CREATE_REQ "* = обязательные поля"
@@ -306,7 +306,7 @@ BEGIN
     IDS_HINT_DETAILS " Отображение информации о каждом элементе в окне."
     IDS_HINT_CUST " Настройка вида."
     IDS_HINT_HELP " Показать окно справки."
-    IDS_HINT_ABOUT " О Диспетчере служб MenuOS."
+    IDS_HINT_ABOUT " О Диспетчере служб ReactOS."
     IDS_HINT_SYS_RESTORE " Восстановить нормальный размер окна."
     IDS_HINT_SYS_MOVE " Переместить это окно."
     IDS_HINT_SYS_SIZE " Изменить размер этого окна."
@@ -318,7 +318,7 @@ END
 /* Application title */
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "Диспетчер служб MenuOS"
+    IDS_APPNAME "Диспетчер служб ReactOS"
     IDS_APPAUTHORS "Copyright (C) 2005-2007 by Ged Murphy (gedmurphy@reactos.org)"
 END
 

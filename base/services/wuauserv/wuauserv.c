@@ -1,5 +1,5 @@
 /*
-* PROJECT:          MenuOS Update Service
+* PROJECT:          ReactOS Update Service
 * LICENSE:          GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
 * PURPOSE:          Automatic Updates service stub.
 *                   Stub is required for some application at the installation phase.

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS system libraries
+ * PROJECT:           ReactOS system libraries
  * PURPOSE:           Rtl user thread functions
  * FILE:              lib/rtl/i386/thread.c
  * PROGRAMERS:

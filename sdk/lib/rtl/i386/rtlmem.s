@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         GNU GPL - See COPYING in the top level directory
- * PROJECT:           MenuOS Run-Time Library
+ * PROJECT:           ReactOS Run-Time Library
  * PURPOSE:           Memory functions
  * FILE:              lib/rtl/i386/rtlmem.s
  * PROGRAMER:         Alex Ionescu (alex.ionescu@reactos.org)

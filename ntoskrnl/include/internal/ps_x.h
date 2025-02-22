@@ -1,5 +1,5 @@
 /*
-* PROJECT:         MenuOS Kernel
+* PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
 * FILE:            ntoskrnl/include/internal/ps_x.h
 * PURPOSE:         Internal Inlined Functions for the Process Manager

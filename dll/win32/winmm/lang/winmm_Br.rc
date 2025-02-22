@@ -48,7 +48,7 @@ MIDIERR_STILLPLAYING, 		"Esta operação não pode ser executada enquanto os dad
 MIDIERR_NOMAP, 			"Um mapa MIDI não foi encontrado. É possível que haja um problema com o driver, ou arquivo MIDIMAP.CFG pode estar corrompido ou ausente."
 MIDIERR_NOTREADY, 		"A porta está transmitindo dados para o dispositivo. Espere até que os dados tenham sido transmitidos e tente novamente."
 MIDIERR_NODEVICE, 		"A configuração atual do MIDI Mapper refere-se a um dispositivo MIDI que não está instalado no sistema. Use o MIDI Mapper para editar a configuração."
-MIDIERR_INVALIDSETUP, 		"A configuração atual de MIDI está corrompida. Copie o arquivo MIDIMAP.CFG original para o diretório SYSTEM do MenuOS e tente novamente."
+MIDIERR_INVALIDSETUP, 		"A configuração atual de MIDI está corrompida. Copie o arquivo MIDIMAP.CFG original para o diretório SYSTEM do ReactOS e tente novamente."
 
 /* MCI errors */
 MCIERR_INVALID_DEVICE_ID, 	"ID do dispositivo MCI inválido. Use o ID retornado ao abrir o dispositivo MCI."
@@ -69,7 +69,7 @@ MCIERR_MISSING_PARAMETER, 	"O comando especificado requer um parâmetro. Por fav
 MCIERR_UNSUPPORTED_FUNCTION, 	"O dispositivo MCI que você está utilizando não suporta o comando especificado."
 MCIERR_FILE_NOT_FOUND, 		"Não foi possível encontrar o arquivo especificado. Certifique-se de que o caminho e nome de arquivo estejam corretos."
 MCIERR_DEVICE_NOT_READY, 	"O driver do dispositivo não está pronto."
-MCIERR_INTERNAL, 		"Houve um problema ao inicializar o MCI. Tente reiniciar o MenuOS."
+MCIERR_INTERNAL, 		"Houve um problema ao inicializar o MCI. Tente reiniciar o ReactOS."
 MCIERR_DRIVER, 			"Há um problema com o driver de dispositivo. O driver foi fechado. Não é possível acessar o erro."
 MCIERR_CANNOT_USE_ALL, 		"Não é possível utilizar 'all' como nome de dispositivo no comando especificado."
 MCIERR_MULTIPLE, 		"Erros ocorreram em mais de um dispositivo. Especifique cada comando e dispositivo separadamente para determinar qual dispositivo causou o erro."

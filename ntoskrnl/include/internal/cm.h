@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/include/internal/cm.h
  * PURPOSE:         Internal header for the Configuration Manager
@@ -239,7 +239,7 @@ typedef struct _CM_KEY_BODY
     HANDLE ProcessID;
     LIST_ENTRY KeyBodyList;
 
-    /* MenuOS specific -- boolean flag to avoid recursive locking of the KCB */
+    /* ReactOS specific -- boolean flag to avoid recursive locking of the KCB */
     BOOLEAN KcbLocked;
 } CM_KEY_BODY, *PCM_KEY_BODY;
 

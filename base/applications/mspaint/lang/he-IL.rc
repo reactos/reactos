@@ -1,5 +1,5 @@
 /*
- * PROJECT:     PAINT for MenuOS
+ * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Hebrew resource file
  * TRANSLATOR:  Copyright 2013-2018 Baruch Rutman <peterooch@gmail.com>
@@ -237,7 +237,7 @@ STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "צייר"
     IDS_WINDOWTITLE "%s - צייר"
-    IDS_INFOTITLE "צייר עבור MenuOS"
+    IDS_INFOTITLE "צייר עבור ReactOS"
     IDS_INFOTEXT "Available under the GNU Lesser General Public License (LGPL, see www.gnu.org)"
     IDS_SAVEPROMPTTEXT "האם ברצונך לשמור את השינויים של %s?"
     IDS_DEFAULTFILENAME "ללא שם"

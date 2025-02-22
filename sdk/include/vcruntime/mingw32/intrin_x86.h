@@ -1,6 +1,6 @@
 /*
 	Compatibility <intrin_x86.h> header for GCC -- GCC equivalents of intrinsic
-	Microsoft Visual C++ functions. Originally developed for the MenuOS
+	Microsoft Visual C++ functions. Originally developed for the ReactOS
 	(<https://reactos.org/>) and TinyKrnl (<http://www.tinykrnl.org/>)
 	projects.
 

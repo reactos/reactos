@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS PSDK
+ * PROJECT:     ReactOS PSDK
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Standard Annotation Language (SAL) definitions
  * COPYRIGHT:   Microsoft Corporation.

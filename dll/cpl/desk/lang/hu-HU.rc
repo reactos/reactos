@@ -78,7 +78,7 @@ CAPTION "Haladó megjelenés"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "Ha a MenuOS classic-tól eltérő témát választ, az alábbi beállításokat felül fogja bírálni, kivéve néhány régebbi programnál.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
+    LTEXT "Ha a ReactOS classic-tól eltérő témát választ, az alábbi beállításokat felül fogja bírálni, kivéve néhány régebbi programnál.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
     LTEXT "Elem", 8, 5, 160, 50, 9//FIXME: add accel. I used "&Elem" for the backport
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP

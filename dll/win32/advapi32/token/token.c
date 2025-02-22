@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            lib/advapi32/token/token.c
  * PURPOSE:         Token functions
  * PROGRAMMER:      Ariadne (ariadne@xs4all.nl)

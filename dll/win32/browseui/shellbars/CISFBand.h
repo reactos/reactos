@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS shell extensions
+ * PROJECT:     ReactOS shell extensions
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/shellext/qcklnch/CISFBand.h
  * PURPOSE:     Quick Launch Toolbar (Taskbar Shell Extension)

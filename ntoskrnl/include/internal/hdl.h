@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/include/internal/hdl.h
  * PURPOSE:         Internal header for the Configuration Manager
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 #define _HDL_
 #include <cportlib/cportlib.h>
@@ -56,7 +56,7 @@ typedef enum _HEADLESS_LOG_MESSAGE
     HeadlessLogGroupOrderListFailed,
     HeadlessLogGroupTableFailed
     //
-    // There are more, but not applicable to MenuOS, I believe
+    // There are more, but not applicable to ReactOS, I believe
     //
 } HEADLESS_LOG_MESSAGE;
 

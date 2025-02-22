@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS SDK
+ * PROJECT:     ReactOS SDK
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Intrinsics for the SSE2 instruction set
  * COPYRIGHT:   Copyright 2024 Timo Kreuzer (timo.kreuzer@reactos.org)

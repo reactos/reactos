@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Drivers
+ * PROJECT:         ReactOS Drivers
  * COPYRIGHT:       See COPYING in the top level directory
  * PURPOSE:         Kernel Security Support Provider Interface Driver
  *

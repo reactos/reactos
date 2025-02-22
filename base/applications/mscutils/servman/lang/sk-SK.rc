@@ -273,10 +273,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRESS_INFO_START "MenuOS is attempting to start the following service"
-    IDS_PROGRESS_INFO_STOP "MenuOS is attempting to stop the following service"
-    IDS_PROGRESS_INFO_PAUSE "MenuOS is attempting to pause the following service"
-    IDS_PROGRESS_INFO_RESUME "MenuOS is attempting to resume the following service"
+    IDS_PROGRESS_INFO_START "ReactOS is attempting to start the following service"
+    IDS_PROGRESS_INFO_STOP "ReactOS is attempting to stop the following service"
+    IDS_PROGRESS_INFO_PAUSE "ReactOS is attempting to pause the following service"
+    IDS_PROGRESS_INFO_RESUME "ReactOS is attempting to resume the following service"
     IDS_CREATE_SUCCESS "Služba bola úspešne vytvorená"
     IDS_DELETE_SUCCESS "Služba bola úspešne odstránená"
     IDS_CREATE_REQ "Fields marked with an\nasterix are mandatory"
@@ -311,7 +311,7 @@ BEGIN
     IDS_HINT_DETAILS " Display information about each item in a window."
     IDS_HINT_CUST " Customizes the view."
     IDS_HINT_HELP " Display help window."
-    IDS_HINT_ABOUT " Čo je Manažér služieb systému MenuOS."
+    IDS_HINT_ABOUT " Čo je Manažér služieb systému ReactOS."
     IDS_HINT_SYS_RESTORE " Obnoví veľkosť tohto okna na normálnu."
     IDS_HINT_SYS_MOVE " Presunie toto okno."
     IDS_HINT_SYS_SIZE " Zmení veľkosť tohto okna."
@@ -323,7 +323,7 @@ END
 /* Application title */
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "Manažér služieb systému MenuOS"
+    IDS_APPNAME "Manažér služieb systému ReactOS"
     IDS_APPAUTHORS "Copyright (C) 2005-2007 by Ged Murphy (gedmurphy@reactos.org)"
 END
 

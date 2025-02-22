@@ -1,5 +1,5 @@
 /*
-* PROJECT:     MenuOS Spooler API
+* PROJECT:     ReactOS Spooler API
 * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
 * PURPOSE:     Utility Functions related to Print Processors
 * COPYRIGHT:   Copyright 2020 Doug Lyons (douglyons@douglyons.com)

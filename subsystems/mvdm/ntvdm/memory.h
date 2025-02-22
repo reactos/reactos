@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPLv2+ - See COPYING in the top level directory
- * PROJECT:         MenuOS Virtual DOS Machine
+ * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/memory.h
  * PURPOSE:         Memory Management
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>

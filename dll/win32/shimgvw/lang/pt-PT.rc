@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Picture and Fax Viewer
+ * PROJECT:     ReactOS Picture and Fax Viewer
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Portuguese (Portugal) resource file
  * TRANSLATOR:  Copyright 2019-2025 Jose Carlos Jesus <zecarlos1957@hotmail.com>
@@ -9,7 +9,7 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "Visualizador de imagens e faxes do MenuOS"
+    IDS_APPTITLE "Visualizador de imagens e faxes do ReactOS"
     IDS_SETASDESKBG "Definir como plano de fundo da área de trabalho"
     IDS_NOPREVIEW "Nenhuma pré-visualização disponível."
     IDS_PREVIEW "Pré-visualizar"

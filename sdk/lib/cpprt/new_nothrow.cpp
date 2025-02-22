@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS C++ runtime library
+ * PROJECT:         ReactOS C++ runtime library
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
  * PURPOSE:         nothrow version of the new operators
  * PROGRAMMER:      Thomas Faber (thomas.faber@reactos.org)

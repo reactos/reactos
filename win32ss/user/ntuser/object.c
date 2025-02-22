@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS kernel
+ * PROJECT:          ReactOS kernel
  * PURPOSE:          User handle manager
  * FILE:             win32ss/user/ntuser/object.c
  * PROGRAMER:        Copyright (C) 2001 Alexandre Julliard
@@ -222,7 +222,7 @@ static PVOID AllocSysObjectCB(
 
     /* Allocate the clipboard data */
     // FIXME: This allocation should be done on the current session pool;
-    // however MenuOS' MM doesn't support session pool yet.
+    // however ReactOS' MM doesn't support session pool yet.
     Object = ExAllocatePoolZero(/* SESSION_POOL_MASK | */ PagedPool, Size, USERTAG_CLIPBOARD);
     if (!Object)
     {

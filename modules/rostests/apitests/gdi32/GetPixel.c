@@ -1,8 +1,8 @@
 /*
- * PROJECT:         MenuOS api tests
+ * PROJECT:         ReactOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Test for GetPixel
- * PROGRAMMERS:     JÃ©rÃ´me Gardou
+ * PROGRAMMERS:     Jérôme Gardou
  */
 
 #include "precomp.h"

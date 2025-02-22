@@ -1,7 +1,7 @@
 /*
- * PROJECT:         MenuOS Multimedia Control Panel
+ * PROJECT:         ReactOS Multimedia Control Panel
  * FILE:            dll/cpl/mmsys/speakervolume.c
- * PURPOSE:         MenuOS Multimedia Control Panel
+ * PURPOSE:         ReactOS Multimedia Control Panel
  * PROGRAMMER:      Eric Kohl <eric.kohl@reactos.com>
  */
 

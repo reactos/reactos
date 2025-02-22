@@ -12,7 +12,7 @@ END
 
 IDD_WELCOME DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Selamat datang di MenuOS"
+CAPTION "Selamat datang di ReactOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -108,7 +108,7 @@ END
 
 IDD_LOGOFF DIALOGEX 0, 0, 188, 60
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP
-CAPTION "Keluar MenuOS"
+CAPTION "Keluar ReactOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOGOFF, IDC_STATIC, 7, 7, 20, 20
@@ -119,7 +119,7 @@ END
 
 IDD_SHUTDOWN DIALOGEX 0, 0, 275, 146
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Nonaktifkan MenuOS"
+CAPTION "Nonaktifkan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -139,7 +139,7 @@ END
 IDD_SHUTDOWN_REASON DIALOGEX 0, 0, 275, 297
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 // STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Nonaktifkan MenuOS"
+CAPTION "Nonaktifkan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -183,7 +183,7 @@ BEGIN
     PUSHBUTTON "&Nonaktifkan", IDC_BUTTON_SHUTDOWN, 93, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Mulai &Ulang", IDC_BUTTON_REBOOT, 150, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Batal", IDCANCEL, 162, 103, 40, 12, BS_FLAT | WS_GROUP
-    LTEXT "Nonaktifkan MenuOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
+    LTEXT "Nonaktifkan ReactOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
     CTEXT "Tidur", IDC_SLEEP_STATIC, 22, 70, 51, 11
     CTEXT "Nonaktifkan", IDC_SHUTDOWN_STATIC, 79, 70, 51, 11
     CTEXT "Mulai Ulang", IDC_RESTART_STATIC, 136, 70, 51, 11
@@ -200,7 +200,7 @@ BEGIN
     PUSHBUTTON "&Nonaktifkan", IDC_BUTTON_SHUTDOWN, 150, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Mulai &Ulang", IDC_BUTTON_REBOOT, 207, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Batal", IDCANCEL, 218, 103, 40, 12, BS_FLAT | WS_GROUP
-    LTEXT "Nonaktifkan MenuOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
+    LTEXT "Nonaktifkan ReactOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
     CTEXT "Hibernasi", IDC_HIBERNATE_STATIC, 22, 70, 51, 11
     CTEXT "Tidur", IDC_SLEEP_STATIC, 79, 70, 51, 11
     CTEXT "Nonaktifkan", IDC_SHUTDOWN_STATIC, 136, 70, 51, 11
@@ -234,7 +234,7 @@ BEGIN
     IDS_INVALIDLOGONHOURS "Akun anda memiliki pembatasan waktu sehingga mencegah untuk masuk saat ini. Mohon coba lagi nanti."
     IDS_INVALIDWORKSTATION "Akun anda disetel untuk mencegah masuk di komputer ini. Mohon coba gunakan komputer lain."
     IDS_ACCOUNTRESTRICTION "Tidak bisa masuk karena pembatasan akun."
-    IDS_EMERGENCYLOGOFFTITLE "Log Off MenuOS"
+    IDS_EMERGENCYLOGOFFTITLE "Log Off ReactOS"
     IDS_EMERGENCYLOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
     IDS_EMERGENCYRESTARTTITLE "Emergency restart"
     IDS_EMERGENCYRESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."

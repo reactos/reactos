@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top directory
- * PROJECT:         MenuOS kernel
+ * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/rmap.c
  * PURPOSE:         Kernel memory management functions
  *

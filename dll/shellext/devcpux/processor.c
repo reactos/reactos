@@ -1,9 +1,9 @@
 /*
- * PROJECT:     MenuOS Shell Extensions
+ * PROJECT:     ReactOS Shell Extensions
  * LICENSE:     LGPL - See COPYING in the top level directory
  * FILE:        dll/shellext/devcpux/processor.c
  * PURPOSE:
- * COPYRIGHT:   Copyright 2007 Christoph von Wittich <Christoph_vW@MenuOS.org>
+ * COPYRIGHT:   Copyright 2007 Christoph von Wittich <Christoph_vW@ReactOS.org>
  *
  */
 

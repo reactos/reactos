@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS api tests
+ * PROJECT:         ReactOS api tests
  * LICENSE:         GNU GPLv2 only as published by the Free Software Foundation
  * PURPOSE:         Test for mailslot (CORE-10188)
  * PROGRAMMER:      Nikita Pechenkin (n.pechenkin@mail.ru)

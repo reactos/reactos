@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Storage Stack
+ * PROJECT:         ReactOS Storage Stack
  * LICENSE:         DDK - see license.txt in the root dir
  * FILE:            drivers/storage/atapi/atapi.h
  * PURPOSE:         ATAPI IDE miniport driver

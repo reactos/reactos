@@ -1,8 +1,8 @@
 /*
- * MenuOS Greek ASCII Keyboard layout
- * Copyright (C) 2005 MenuOS
+ * ReactOS Greek ASCII Keyboard layout
+ * Copyright (C) 2005 ReactOS
  * License: LGPL, see: LGPL.txt
- * author: Apostolos Alexiadis (Dj ApalÂ®)
+ * author: Apostolos Alexiadis (Dj Apal®)
  *
  * Thanks to: http://www.barcodeman.com/altek/mule/scandoc.php
  * and http://win.tue.nl/~aeb/linux/kbd/scancodes-1.html
@@ -374,7 +374,7 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x51, L"Page Down" },
   { 0x52, L"Insert" },
   { 0x53, L"Delete" },
-  { 0x54, L"<MenuOS>" },
+  { 0x54, L"<ReactOS>" },
   { 0x55, L"Help" },
   { 0x56, L"Left Windows" },
   { 0x5b, L"Right Windows" },

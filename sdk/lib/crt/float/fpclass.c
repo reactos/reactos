@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS system libraries
+ * PROJECT:     ReactOS system libraries
  * FILE:        lib/sdk/crt/float/fpclass.c
  * PURPOSE:     Floating-point classes
  * PROGRAMER:   Pierre Schweitzer (pierre@reactos.org)

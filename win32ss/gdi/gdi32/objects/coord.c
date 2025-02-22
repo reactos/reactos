@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS System Libraries
+ * PROJECT:         ReactOS System Libraries
  * FILE:            win32ss/gdi/gdi32/objects/coord.c
  * PURPOSE:         Functions for coordinate transformation
  * PROGRAMMER:

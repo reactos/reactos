@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS user32.dll
+ * PROJECT:         ReactOS user32.dll
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * FILE:            win32ss/user/user32/windows/class.c
  * PURPOSE:         Window classes
@@ -390,7 +390,7 @@ GetClassInfoExW(
         IS_ATOM(lpszClass) ? lpszClass : 0,
         lpwcx);
 
-    /* From wine, for speed only, MenuOS supports the correct return in
+    /* From wine, for speed only, ReactOS supports the correct return in
      * Win32k. cbSize is ignored.
      */
     if (!lpwcx)

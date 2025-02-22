@@ -27,7 +27,7 @@
  * If you discover missing features, or bugs, please note them below.
  *
  * TODO:
- *    - LBS_NODATA        MenuOS
+ *    - LBS_NODATA        ReactOS
  */
 
 #include <user32.h>
@@ -2494,7 +2494,7 @@ static LRESULT LISTBOX_HandleChar( LB_DESCR *descr, WCHAR charW )
     return 0;
 }
 
-/* MenuOS Retrieve the UI state for the control */
+/* ReactOS Retrieve the UI state for the control */
 static BOOL LISTBOX_update_uistate(LB_DESCR *descr)
 {
     LONG prev_flags;
@@ -2553,7 +2553,7 @@ static BOOL LISTBOX_Create( HWND hwnd, LPHEADCOMBO lphc )
 
     SetWindowLongPtrW( descr->self, 0, (LONG_PTR)descr );
 
-    LISTBOX_update_uistate(descr); // MenuOS
+    LISTBOX_update_uistate(descr); // ReactOS
 
 /*    if (wnd->dwExStyle & WS_EX_NOPARENTNOTIFY) descr->style &= ~LBS_NOTIFY;
  */
@@ -2561,7 +2561,7 @@ static BOOL LISTBOX_Create( HWND hwnd, LPHEADCOMBO lphc )
     if (descr->style & LBS_MULTICOLUMN) descr->style &= ~LBS_OWNERDRAWVARIABLE;
     if (descr->style & LBS_OWNERDRAWVARIABLE) descr->style |= LBS_NOINTEGRALHEIGHT;
 
-    //// MenuOS
+    //// ReactOS
     /* A no-data list box must also have the LBS_OWNERDRAWFIXED style, but must
        not have the LBS_SORT or LBS_HASSTRINGS style. */
     if ( descr->style & LBS_NODATA &&
@@ -3246,7 +3246,7 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
     case WM_NCACTIVATE:
         if (lphc) return 0;
 	break;
-// MenuOS
+// ReactOS
     case WM_UPDATEUISTATE:
         if (unicode)
             DefWindowProcW(descr->self, msg, wParam, lParam);

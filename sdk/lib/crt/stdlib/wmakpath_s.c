@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS CRT library
+ * PROJECT:     ReactOS CRT library
  * LICENSE:     See COPYING in the top level directory
  * FILE:        lib/sdk/crt/stdlib/wmakpath_s.c
  * PURPOSE:     Creates a path

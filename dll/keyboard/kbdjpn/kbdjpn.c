@@ -1,6 +1,6 @@
 /*
- * MenuOS Japanese (JIS 106) keyboard layout
- * Copyright (C) 2003 MenuOS
+ * ReactOS Japanese (JIS 106) keyboard layout
+ * Copyright (C) 2003 ReactOS
  * License: LGPL, see: LGPL.txt
  *
  * Thanks to: http://www.barcodeman.com/altek/mule/scandoc.php
@@ -350,9 +350,9 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x51, L"Page Down" },
   { 0x52, L"Insert" },
   { 0x53, L"Delete" },
-  { 0x54, L"<MenuOS>" },
-  { 0x5b, L"Left <MenuOS>" },
-  { 0x5c, L"Right <MenuOS>" },
+  { 0x54, L"<ReactOS>" },
+  { 0x5b, L"Left <ReactOS>" },
+  { 0x5c, L"Right <ReactOS>" },
   { 0x5d, L"Application" },
   { 0, NULL },
 };

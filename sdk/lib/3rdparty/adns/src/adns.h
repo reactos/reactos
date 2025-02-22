@@ -366,7 +366,7 @@ typedef struct {
 ADNS_API int adns_init(adns_state *newstate_r, adns_initflags flags,
 	      FILE *diagfile /*0=>stderr*/);
 
-/* MenuOS addition */
+/* ReactOS addition */
 ADNS_API void adns_addserver(adns_state state, struct in_addr server);
 ADNS_API void adns_ccf_search(adns_state state,
                               const char *fn,

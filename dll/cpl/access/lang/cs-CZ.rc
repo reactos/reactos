@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Accessibility Control Panel
+ * PROJECT:     ReactOS Accessibility Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Czech resource file
  * TRANSLATORS: Copyright 2007 Kamil Horníček <hornik1@fel.cvut.cz>
@@ -19,7 +19,7 @@ BEGIN
     AUTOCHECKBOX "Používat funkci &Jedním prstem", IDC_STICKY_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Nastavení", IDC_STICKY_BUTTON, 144, 49, 90, 14
     GROUPBOX "Filtrování kláves", -1, 6, 79, 234, 62
-    LTEXT "Použijte funkci Filtrování kláves, pokud chcete, aby MenuOS ignoroval náhodná nebo opakovaná stisknutí kláves.",
+    LTEXT "Použijte funkci Filtrování kláves, pokud chcete, aby ReactOS ignoroval náhodná nebo opakovaná stisknutí kláves.",
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "Používat funkci &Filtrování kláves", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "N&astavení", IDC_FILTER_BUTTON, 144, 121, 90, 14
@@ -38,7 +38,7 @@ CAPTION "Zvuk"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Funkce Popis zvuku", -1, 6, 11, 234, 98
-    LTEXT "Použijte funkci Zobrazení zvuku, pokud chcete aby MenuOS vizuálně upozorňoval na každý zvuk vydaný systémem.",
+    LTEXT "Použijte funkci Zobrazení zvuku, pokud chcete aby ReactOS vizuálně upozorňoval na každý zvuk vydaný systémem.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Používat funkci Popis zvuku", IDC_SENTRY_BOX, 12, 49, 120, 14
     LTEXT "Použít následující upozornění:", IDC_SENTRY_TEXT, 12, 72, 222, 11
@@ -56,7 +56,7 @@ CAPTION "Zobrazení"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Funkce Vysoký kontrast", -1, 6, 11, 234, 62
-    LTEXT "Vyberte tuto možnost pokud chcete, aby MenuOS používal barvy a písma určené pro snadnou čitelnost.",
+    LTEXT "Vyberte tuto možnost pokud chcete, aby ReactOS používal barvy a písma určené pro snadnou čitelnost.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Použít funkci Vysoký kontrast", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Nastavení", IDC_CONTRAST_BUTTON, 144, 49, 90, 14

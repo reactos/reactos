@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS KDBG Kernel Debugger Terminal Driver
+ * PROJECT:     ReactOS KDBG Kernel Debugger Terminal Driver
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     KD Terminal Driver public header
  * COPYRIGHT:   Copyright 2023 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>

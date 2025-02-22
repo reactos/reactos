@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS api tests
+ * PROJECT:     ReactOS api tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Test for CString
  * COPYRIGHT:   Copyright 2016-2017 Mark Jansen (mark.jansen@reactos.org)

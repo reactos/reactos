@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS Services
+ * PROJECT:          ReactOS Services
  * FILE:             base/services/schedsvc/job.c
  * PURPOSE:          Scheduling service
  * PROGRAMMER:       Eric Kohl <eric.kohl@reactos.org>

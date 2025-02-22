@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Bootsector
+ * PROJECT:         ReactOS Bootsector
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * FILE:            boot/freeldr/bootsect/fat32.S
  * PURPOSE:         Implementing boot sector for NTFS

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS kernel-mode tests
+ * PROJECT:     ReactOS kernel-mode tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Kernel mode tests for Save/Restore FPU state API kernel support
  * COPYRIGHT:   Copyright 2022 George Bișoc <george.bisoc@reactos.org>

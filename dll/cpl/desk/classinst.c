@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Display Control Panel
+ * PROJECT:         ReactOS Display Control Panel
  * FILE:            dll/cpl/desk/classinst.c
  * PURPOSE:         Class installers
  *
- * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #include "desk.h"

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Kernel
+ * PROJECT:     ReactOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Header File for SMP support
  * COPYRIGHT:   Copyright 2021 Justin Miller <justinmiller100@gmail.com>

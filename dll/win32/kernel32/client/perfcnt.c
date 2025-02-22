@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              MenuOS Win32 Base API
+ * PROJECT:              ReactOS Win32 Base API
  * FILE:                 dll/win32/kernel32/client/perfcnt.c
  * PURPOSE:              Performance Counter
  * PROGRAMMER:           Eric Kohl

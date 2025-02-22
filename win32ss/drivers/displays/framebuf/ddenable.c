@@ -1,5 +1,5 @@
 /*
- * MenuOS Generic Framebuffer display driver directdraw interface
+ * ReactOS Generic Framebuffer display driver directdraw interface
  *
  * Copyright (C) 2006 Magnus Olsen
  *

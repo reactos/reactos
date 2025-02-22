@@ -1,5 +1,5 @@
 /*
- *  MenuOS ps - process list console viewer
+ *  ReactOS ps - process list console viewer
  *
  *  ps.c
  *

@@ -62,7 +62,7 @@ CdPnpCancelRemove (
 IO_COMPLETION_ROUTINE CdPnpCompletionRoutine;
 
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdPnpCompletionRoutine (
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp,
@@ -815,7 +815,7 @@ Return Value:
 //
 
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdPnpCompletionRoutine (
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp,

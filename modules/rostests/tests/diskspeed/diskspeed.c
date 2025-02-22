@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2004 MenuOS Team
+ * Copyright (C) 2004 ReactOS Team
  *
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS diskspeed.exe
+ * PROJECT:         ReactOS diskspeed.exe
  * FILE:            apps/tests/diskspeed/diskspeed.c
  * PURPOSE:         Determines disk transfer rates
  * PROGRAMMER:

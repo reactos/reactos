@@ -1,7 +1,7 @@
-MenuOS command line interpreter CMD
+ReactOS command line interpreter CMD
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The MenuOS command line interpreter CMD is derived from FreeCOM, the
+The ReactOS command line interpreter CMD is derived from FreeCOM, the
 FreeDOS command line interpreter.
 
 We are shooting mainly to be just like 2000/XP cmd.exe.  They are very close and only a small number(none that i can recall off the top of my head, so maybe 0) differences have been found between those two.  It has been reported that ROS cmd.exe does not work on nt4 because of a missing api.  I'm hoping to fix this at some point.
@@ -40,7 +40,7 @@ FreeDOS developers:
    John P. Price <linux-guru@gcfl.net>
    Hans B Pufal <hansp@digiweb.com>
 
-MenuOS developers:
+ReactOS developers:
    Eric Kohl
    Emanuele Aliberti <ea@iol.it>
    Paolo Pantaleo <paolopan@freemail.it>
@@ -50,4 +50,4 @@ MenuOS developers:
 Bugs
 ~~~~
 There are still many bugs ;)
-Please report bugs to MenuOS team <ros-dev@reactos.org> or to JIRA at www.reactos.org
+Please report bugs to ReactOS team <ros-dev@reactos.org> or to JIRA at www.reactos.org

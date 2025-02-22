@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS Boot Loader
+ * PROJECT:         ReactOS Boot Loader
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            boot/freeldr/freeldr/windows/headless.c
  * PURPOSE:         Provides support for Windows Emergency Management Services
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/

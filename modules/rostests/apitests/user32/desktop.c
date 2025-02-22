@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS api tests
+ * PROJECT:         ReactOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Test for desktop objects
  * PROGRAMMERS:     Giannis Adamopoulos

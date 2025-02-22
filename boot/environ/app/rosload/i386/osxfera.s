@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
- * PROJECT:         MenuOS UEFI OS Loader
+ * PROJECT:         ReactOS UEFI OS Loader
  * FILE:            boot/environ/i386/osxfera.asm
  * PURPOSE:         OS Loader i386 Transfer Functions
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)

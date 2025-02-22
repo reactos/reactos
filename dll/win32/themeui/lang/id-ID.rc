@@ -16,8 +16,8 @@ BEGIN
     IDS_PUMPKIN "Labu"
     IDS_RAIN "Hari Hujan"
     IDS_RWB "Merah, Putih, dan Biru"
-    IDS_CLASSIC "MenuOS Klasik"
-    IDS_STANDARD "MenuOS Standar"
+    IDS_CLASSIC "ReactOS Klasik"
+    IDS_STANDARD "ReactOS Standar"
     IDS_ROSE "Mawar"
     IDS_SAND "Pasir" //Desert
     IDS_SLATE "Batu Tulis"

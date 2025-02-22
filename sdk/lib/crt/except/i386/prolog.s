@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS CRT
+ * PROJECT:         ReactOS CRT
  * FILE:            lib/sdk/crt/except/i386/prolog.s
  * PURPOSE:         SEH Support for the CRT
  * PROGRAMMERS:     Wine Development Team

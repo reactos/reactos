@@ -1,9 +1,9 @@
 /*
- * PROJECT:     MenuOS i8042 (ps/2 keyboard-mouse controller) driver
+ * PROJECT:     ReactOS i8042 (ps/2 keyboard-mouse controller) driver
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        drivers/input/i8042prt/misc.c
  * PURPOSE:     Miscellaneous operations
- * PROGRAMMERS: Copyright 2006-2007 HervÃ© Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS: Copyright 2006-2007 Hervé Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/

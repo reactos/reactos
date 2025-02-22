@@ -6,7 +6,7 @@ CAPTION "Nom de l'ordinateur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT "MenuOS utilise les informations suivantes pour identifier votre ordinateur sur le réseau.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT "ReactOS utilise les informations suivantes pour identifier votre ordinateur sur le réseau.", IDC_STATIC, 40, 5, 204, 20
     LTEXT "Description de l'ordinateur :", IDC_STATIC, 7, 40, 95, 9
     EDITTEXT IDC_COMPDESC, 103, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "Nom complet de l'ordinateur :", IDC_STATIC, 7, 68, 95, 9
@@ -66,7 +66,7 @@ BEGIN
     4 "Changement du nom de l'ordinateur"
     5 "Groupe de travail :"
     6 "Domaine :"
-    7 "Le nom de domaine ""%1"" n'est pas conforme à l'Internet Domain Name Service Specifications, même si c'est un nom valide pour MenuOS. Vous devez utiliser le serveur DNS de MenuOS pour les noms non-standards."
+    7 "Le nom de domaine ""%1"" n'est pas conforme à l'Internet Domain Name Service Specifications, même si c'est un nom valide pour ReactOS. Vous devez utiliser le serveur DNS de ReactOS pour les noms non-standards."
     8 "Le nom de domaine ""%1"" n'est pas correctement formaté. Les points (.) sont utilisés pour séparer les domaines. Chaque domaine est limité à 63 caractères. Exemple : domain-1.reactos.org."
     10 "Le nouveau nom d'ordinateur ""%1"" est trop long. Le nom ne doit pas être plus long que 63 caractères."
     11 "Le nouveau nom d'ordinateur est mal formaté. Les noms standards ne contiennent que des caractères alphanumériques (a-z, A-Z, 0-9), des tirets (-), mais pas d'espaces ni de points (.) et ne peut être constitué de chiffres seulement."

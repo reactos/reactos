@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Bootsector for ISO file system
+ * PROJECT:         ReactOS Bootsector for ISO file system
  * PURPOSE:         Normal DOS boot sector
  *                  Ported to NASM from FreeDOS fdisk 1.2.0 by:
  * PROGRAMMERS:     Casper Hornstrup (chorns@users.sourceforge.net)

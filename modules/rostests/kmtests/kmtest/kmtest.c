@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS kernel-mode tests
+ * PROJECT:     ReactOS kernel-mode tests
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     Kernel-Mode Test Suite loader application
  * COPYRIGHT:   Copyright 2011-2018 Thomas Faber <thomas.faber@reactos.org>
@@ -17,7 +17,7 @@
 
 #define SERVICE_NAME        L"Kmtest"
 #define SERVICE_PATH        L"kmtest_drv.sys"
-#define SERVICE_DESCRIPTION L"MenuOS Kernel-Mode Test Suite Driver"
+#define SERVICE_DESCRIPTION L"ReactOS Kernel-Mode Test Suite Driver"
 
 #define RESULTBUFFER_SIZE   (1024 * 1024)
 

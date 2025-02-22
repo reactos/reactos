@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Kernel Streaming
+ * PROJECT:         ReactOS Kernel Streaming
  * FILE:            lib/drivers/sound/mmixer/filter.c
  * PURPOSE:         Mixer Filter Functions
  * PROGRAMMER:      Johannes Anderwald

@@ -1,5 +1,5 @@
 /*
- * PROJECT:  MKISOFS for the MenuOS Build System
+ * PROJECT:  MKISOFS for the ReactOS Build System
  * LICENSE:  GNU GPLv2 as published by the Free Software Foundation
  * AUTHORS:  Colin Finck <colin@reactos.org>
  */

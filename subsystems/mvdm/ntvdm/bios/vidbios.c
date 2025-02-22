@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         MenuOS Virtual DOS Machine
+ * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/bios/vidbios.c
  * PURPOSE:         VDM 32-bit Video BIOS Support Library
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
@@ -44,7 +44,7 @@
 static const CHAR BiosInfo[] =
     "00000000000 Emulation of IBM VGA Compatible ROM\0"
     "CL-GD5434 VGA BIOS Version 1.41  \r\n"
-    "Copyright (C) MenuOS Team 1996-"COPYRIGHT_YEAR"\r\n"
+    "Copyright (C) ReactOS Team 1996-"COPYRIGHT_YEAR"\r\n"
     "The original CL-GD5434 card was created by Cirrus Logic, Inc.\r\n\0"
     "BIOS Date: 06/17/13\0";
 
@@ -484,7 +484,7 @@ static CONST COLORREF EgaPalette__HiRes[VGA_MAX_COLORS / 4] =
  */
 #if defined(USE_REACTOS_COLORS)
 
-// MenuOS colors
+// ReactOS colors
 static CONST COLORREF VgaPalette[VGA_MAX_COLORS] =
 {
     RGB(0x00, 0x00, 0x00), RGB(0x00, 0x00, 0xAA), RGB(0x00, 0xAA, 0x00), RGB(0x00, 0xAA, 0xAA),

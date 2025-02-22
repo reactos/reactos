@@ -67,13 +67,13 @@ BEGIN
     BEGIN
         BLOCK "040704b0"
         BEGIN
-            VALUE "CompanyName", "MenuOS WDM Streaming ActiveMovie Proxy"
-            VALUE "FileDescription", "MenuOS WDM Streaming ActiveMovie Proxy"
+            VALUE "CompanyName", "ReactOS WDM Streaming ActiveMovie Proxy"
+            VALUE "FileDescription", "ReactOS WDM Streaming ActiveMovie Proxy"
             VALUE "FileVersion", "5, 3, 2600, 3264"
             VALUE "InternalName", "ksproxy"
             VALUE "LegalCopyright", "Copyright (C) 2010"
             VALUE "OriginalFilename", "ksproxy.dll"
-            VALUE "ProductName", "MenuOS WDM Streaming ActiveMovie Proxy"
+            VALUE "ProductName", "ReactOS WDM Streaming ActiveMovie Proxy"
             VALUE "ProductVersion", "5, 3, 2600, 3264"
         END
     END

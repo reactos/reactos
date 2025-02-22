@@ -283,7 +283,7 @@ VersionLieInfo g_WinVistaSP1 = { 0x17710006, 6, 0, 6001, VER_PLATFORM_WIN32_NT, 
 VersionLieInfo g_WinVistaSP2 = { 0x17720006, 6, 0, 6002, VER_PLATFORM_WIN32_NT, 2, 0 };
 
 VersionLieInfo g_Win7RTM = { 0x1db00106, 6, 1, 7600, VER_PLATFORM_WIN32_NT, 0, 0 };
-VersionLieInfo g_Win7SP1 = { 0x1db10106, 6, 1, 7601, VER_PLATFORM_WIN32_NT, 1, 0 }; /* MenuOS specific. Windows does not have  this version lie */
+VersionLieInfo g_Win7SP1 = { 0x1db10106, 6, 1, 7601, VER_PLATFORM_WIN32_NT, 1, 0 }; /* ReactOS specific. Windows does not have  this version lie */
 
 VersionLieInfo g_Win8RTM = { 0x23f00206, 6, 2, 9200, VER_PLATFORM_WIN32_NT, 0, 0 };
 VersionLieInfo g_Win81RTM = { 0x25800306, 6, 3, 9600, VER_PLATFORM_WIN32_NT, 0, 0 };
@@ -407,10 +407,10 @@ START_TEST(versionlie)
     run_test("VistaSP1VersionLie", &g_WinVistaSP1);
     run_test("VistaSP2VersionLie", &g_WinVistaSP2);
     run_test("Win7RTMVersionLie", &g_Win7RTM);
-    run_test("Win7SP1VersionLie", &g_Win7SP1);    /* MenuOS specific. Windows does not have this version lie */
+    run_test("Win7SP1VersionLie", &g_Win7SP1);    /* ReactOS specific. Windows does not have this version lie */
     run_test("Win8RTMVersionLie", &g_Win8RTM);
     run_test("Win81RTMVersionLie", &g_Win81RTM);
-    run_test("Win10RTMVersionLie", &g_Win10RTM);    /* MenuOS specific. Windows does not have this version lie */
-    run_test("Win2k16RTMVersionLie", &g_Win2k16RTM);    /* MenuOS specific. Windows does not have this version lie */
-    run_test("Win2k19RTMVersionLie", &g_Win2k19RTM);    /* MenuOS specific. Windows does not have this version lie */
+    run_test("Win10RTMVersionLie", &g_Win10RTM);    /* ReactOS specific. Windows does not have this version lie */
+    run_test("Win2k16RTMVersionLie", &g_Win2k16RTM);    /* ReactOS specific. Windows does not have this version lie */
+    run_test("Win2k19RTMVersionLie", &g_Win2k19RTM);    /* ReactOS specific. Windows does not have this version lie */
 }

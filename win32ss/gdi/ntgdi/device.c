@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS kernel
+ * PROJECT:           ReactOS kernel
  * PURPOSE:           Functions for creation and destruction of DCs
  * FILE:              win32ss/gdi/ntgdi/device.c
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@rectos.org)

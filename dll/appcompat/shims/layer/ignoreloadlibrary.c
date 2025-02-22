@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS 'Layers' Shim library
+ * PROJECT:     ReactOS 'Layers' Shim library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     IgnoreLoadLibrary shim
  * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)

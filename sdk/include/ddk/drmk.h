@@ -1,5 +1,5 @@
 /*
-    MenuOS Kernel Streaming
+    ReactOS Kernel Streaming
     Digital Rights Management
 
     Author: Andrew Greenwood

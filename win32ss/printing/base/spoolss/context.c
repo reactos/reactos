@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Spooler Router
+ * PROJECT:     ReactOS Spooler Router
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions related to switching between security contexts
  * COPYRIGHT:   Copyright 2015 Colin Finck (colin@reactos.org)

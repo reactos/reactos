@@ -1,5 +1,5 @@
 /*
- * PROJECT:        MenuOS Generic CPU Driver
+ * PROJECT:        ReactOS Generic CPU Driver
  * LICENSE:        GNU GPLv2 only as published by the Free Software Foundation
  * FILE:           drivers/processor/processr/processr.h
  * PURPOSE:        Common header file

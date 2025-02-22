@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS kernel-mode tests
+ * PROJECT:         ReactOS kernel-mode tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         File system mini-filter support routines
  * PROGRAMMER:      Ged Murphy <gedmurphy@reactos.org>

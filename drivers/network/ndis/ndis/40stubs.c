@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS NDIS library
+ * PROJECT:     ReactOS NDIS library
  * FILE:        ndis/40stubs.c
  * PURPOSE:     NDIS 4.0 stubs
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

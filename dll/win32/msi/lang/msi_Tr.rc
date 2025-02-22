@@ -32,8 +32,8 @@ STRINGTABLE
     14 "Şuradan özellik:"
     15 "%s içeren dizini seçiniz."
 #ifdef __REACTOS__
-    34 "MenuOS Yükleyicisi Paketi"
-    35 "MenuOS Installer Patch"
+    34 "ReactOS Yükleyicisi Paketi"
+    35 "ReactOS Installer Patch"
     36 "Yükle" //FIXME: add accel
     37 "Onar" //FIXME: add accel
     38 "Kaldır" //FIXME: add accel

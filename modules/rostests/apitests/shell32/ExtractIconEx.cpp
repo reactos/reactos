@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API Tests
+ * PROJECT:     ReactOS API Tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Tests for ExtractIconEx routine
  * COPYRIGHT:   Copyright 2019 George Bișoc (george.bisoc@reactos.org)

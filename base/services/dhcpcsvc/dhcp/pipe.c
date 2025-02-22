@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS kernel
+ * PROJECT:          ReactOS kernel
  * FILE:             subsys/system/dhcp/pipe.c
  * PURPOSE:          DHCP client pipe
  * PROGRAMMER:       arty

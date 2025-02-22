@@ -35,7 +35,7 @@ Revision History:
          Chuck Park (ChuckP)
 
     Some parts of code were taken from FreeBSD 4.3-6.1 ATA driver by
-         SÃ¸ren Schmidt, Copyright (c) 1998-2007
+         Søren Schmidt, Copyright (c) 1998-2007
 
     All parts of code are significantly changed/updated by
          Alter, Copyright (c) 2002-2014:
@@ -901,7 +901,7 @@ AtapiSoftReset(
         }
 
         i = 30 * 1000;
-        // MenuOS modification: Already stop looping when we know that the drive has finished resetting.
+        // ReactOS modification: Already stop looping when we know that the drive has finished resetting.
         // Not all controllers clear the IDE_STATUS_BUSY flag (e.g. not the VMware one), so ensure that
         // the maximum waiting time (30 * i = 0.9 seconds) does not exceed the one of the original
         // implementation. (which is around 1 second)
@@ -10757,7 +10757,7 @@ DriverEntry(
     if(!SavedDriverObject) {
         SavedDriverObject = (PDRIVER_OBJECT)DriverObject;
 #ifdef USE_REACTOS_DDK
-        KdPrint(("UniATA Init: OS should be MenuOS\n"));
+        KdPrint(("UniATA Init: OS should be ReactOS\n"));
         MajorVersion=0x04;
         MinorVersion=0x01;
         BuildNumber=1;
@@ -10942,7 +10942,7 @@ DriverEntry(
             // Note: this call may (but not 'must' or 'can') cause IO resource
             // reallocation and switch to native mode if HAL supports this
             newStatus = (ULONG)UniataClaimLegacyPCIIDE(i);
-            // Special check for NT3.51/NT4 (not MenuOS !!!)
+            // Special check for NT3.51/NT4 (not ReactOS !!!)
             if(((NTSTATUS)newStatus == STATUS_CONFLICTING_ADDRESSES) &&
                //(BMList[i].ChanInitOk & 0x40) &&
                /*CPU_num > 1 &&*/
@@ -10950,7 +10950,7 @@ DriverEntry(
                 // Some NT3/4 SMP (but not only) HALs cannot reallocate IO resources of
                 // BusMaster PCI controller
                 // Since nobody claimed Primary/Secondary yet, try init and claim them
-                // However it is not 100% safe way, especially under MenuOS, which doesn't resolve
+                // However it is not 100% safe way, especially under ReactOS, which doesn't resolve
                 // conflicts yet.
                 // We relay on ScsiPort internal checks
                 KdPrint2((PRINT_PREFIX "Can't acquire PCI part of BusMaster on SMP NT3/4 system, try init anyway.\n"));
@@ -11117,7 +11117,7 @@ DriverEntry(
             // It stops scanning PCI bus when reaches empty PCI Function inside Slot
             // However, this PCI Slot may have higher non-empty Functions
             // UniATA will perform all staff instead of ScsiPort under NT,
-            // but for MenuOS it is better to patch ScsiPort.
+            // but for ReactOS it is better to patch ScsiPort.
             KdPrint2((PRINT_PREFIX "STATUS_DEVICE_DOES_NOT_EXIST, try workaround\n"));
             hwInitializationData.comm.AdapterInterfaceType = Isa;
             newStatus = ScsiPortInitialize(DriverObject,

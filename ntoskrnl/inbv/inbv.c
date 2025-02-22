@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Kernel
+ * PROJECT:     ReactOS Kernel
  * LICENSE:     BSD - See COPYING.ARM in the top level directory
  * PURPOSE:     Boot Video Driver support
  * COPYRIGHT:   Copyright 2007 Alex Ionescu (alex.ionescu@reactos.org)

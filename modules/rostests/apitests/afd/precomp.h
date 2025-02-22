@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API Tests
+ * PROJECT:     ReactOS API Tests
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     Precompiled header for afd_apitest
  * COPYRIGHT:   Copyright 2018 Thomas Faber (thomas.faber@reactos.org)

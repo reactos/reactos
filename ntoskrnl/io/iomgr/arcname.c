@@ -1,5 +1,5 @@
 /*
-* PROJECT:         MenuOS Kernel
+* PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
 * FILE:            ntoskrnl/io/iomgr/arcname.c
 * PURPOSE:         ARC Path Initialization Functions
@@ -183,7 +183,7 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
      * Currently, Windows 2003 provides an ARC names creation based
      * on both enabled drives and not enabled drives (lack from
      * the driver).
-     * Given the current MenuOS state, that's good for us.
+     * Given the current ReactOS state, that's good for us.
      * To sum up, this is NOT a hack or whatsoever.
      */
     Status = IopFetchConfigurationInformation(&SymbolicLinkList,

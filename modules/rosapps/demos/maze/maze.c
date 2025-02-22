@@ -2,7 +2,7 @@
  * [ maze ] ...
  *
  * modified:  [ 03-08-15 ] Ge van Geldorp <ge@gse.nl>
- *		ported to MenuOS
+ *		ported to ReactOS
  * modified:  [ 94-10-8 ] Ge van Geldorp <Ge.vanGeldorp@lr.tudelft.nl>
  *		ported to MS Windows
  * modified:  [ 3-7-93 ]  Jamie Zawinski <jwz@lucid.com>
@@ -513,7 +513,7 @@ begin_solve_maze()                             /* solve it with graphical feedba
   (void) memcpy(pbmi->bmiColors, argbq, sizeof(argbq));
   (void) memcpy(pbmi->bmiColors + 2, grayPattern, sizeof(grayPattern));
 #if 0
-  /* FIXME Pattern brushes not yet implemented in MenuOS */
+  /* FIXME Pattern brushes not yet implemented in ReactOS */
   hBrushDead = CreateDIBPatternBrushPt(pbmi, DIB_RGB_COLORS);
 #else
   hBrushDead = CreateSolidBrush(RGB(255, 0, 0));

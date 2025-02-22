@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS-on-MenuOS-16bit (aka. RoR16 or WoW16)
+ * PROJECT:     ReactOS-on-ReactOS-16bit (aka. RoR16 or WoW16)
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     16-bit USER stub module
  * COPYRIGHT:   Copyright 2017-2018 Hermes Belusca-Maito

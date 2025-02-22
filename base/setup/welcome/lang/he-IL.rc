@@ -7,7 +7,7 @@ LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
  * in front of the FileDescription value of the version stamping.
  */
 #undef REACTOS_STR_FILE_DESCRIPTION
-#define REACTOS_STR_FILE_DESCRIPTION    L"\x200e\x200e" L"MenuOS-Welcome"
+#define REACTOS_STR_FILE_DESCRIPTION    L"\x200e\x200e" L"ReactOS-Welcome"
 #include <reactos/version.rc>
 
 /* String Tables */
@@ -15,9 +15,9 @@ LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 /* Default settings */
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ברוכים הבאים - MenuOS"
-    IDS_DEFAULT_TOPIC_TITLE "MenuOS"
-    IDS_DEFAULT_TOPIC_DESC "ברוכים הבאים למערכת ההפעלה MenuOS,\nבחר נושא מצד ימין"
+    IDS_APPTITLE "ברוכים הבאים - ReactOS"
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "ברוכים הבאים למערכת ההפעלה ReactOS,\nבחר נושא מצד ימין"
     IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "הראה חלון זה שוב"
     IDS_CLOSETEXT "יציאה"
@@ -26,7 +26,7 @@ END
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_BUTTON0 "התקנת MenuOS"
+    IDS_TOPIC_BUTTON0 "התקנת ReactOS"
     IDS_TOPIC_BUTTON1 "סייר בתוכן הדיסק"
     IDS_TOPIC_BUTTON2 "יציאה"
 END
@@ -34,7 +34,7 @@ END
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_TITLE0 "התקנת MenuOS"
+    IDS_TOPIC_TITLE0 "התקנת ReactOS"
     IDS_TOPIC_TITLE1 "סייר בתוכן הדיסק"
     IDS_TOPIC_TITLE2 "יציאה"
 END
@@ -42,7 +42,7 @@ END
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_DESC0 "צור התקנה חדשה של MenuOS במחשבך או שדרג את ההתקנה הנוכחית."
+    IDS_TOPIC_DESC0 "צור התקנה חדשה של ReactOS במחשבך או שדרג את ההתקנה הנוכחית."
     IDS_TOPIC_DESC1 "סייר בתוכן הדיסק."
     IDS_TOPIC_DESC2 "לחץ כדי לסגור יישום זה."
 END

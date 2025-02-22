@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS CRT
+ * PROJECT:     ReactOS CRT
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Tests for _wsystem()
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>

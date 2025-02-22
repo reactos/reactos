@@ -1,6 +1,6 @@
 /*
  *  COPYRIGHT:        See COPYING in the top level directory
- *  PROJECT:          MenuOS Win32k subsystem
+ *  PROJECT:          ReactOS Win32k subsystem
  *  PURPOSE:          Window stations
  *  FILE:             win32ss/user/ntuser/winsta.c
  *  PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)

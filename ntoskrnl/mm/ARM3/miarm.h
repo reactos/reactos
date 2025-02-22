@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/mm/ARM3/miarm.h
  * PURPOSE:         ARM Memory Manager Header
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 #pragma once
@@ -156,7 +156,7 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 
 //
 // Some internal SYSTEM_PTE_MISUSE bugcheck subcodes
-// These names were created by Oleg Dubinskiy and Doug Lyons for MenuOS. For reference, see
+// These names were created by Oleg Dubinskiy and Doug Lyons for ReactOS. For reference, see
 // https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/bug-check-0xda--system-pte-misuse
 //
 #define PTE_MAPPING_NONE                0x100
@@ -1707,7 +1707,7 @@ MiReferenceProbedPageAndBumpLockCount(IN PMMPFN Pfn1)
     /* Does ARM3 own the page? */
     if (MI_IS_ROS_PFN(Pfn1))
     {
-        /* MenuOS Mm doesn't track share count */
+        /* ReactOS Mm doesn't track share count */
         ASSERT(Pfn1->u3.e1.PageLocation == ActiveAndValid);
     }
     else

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS uxtheme.dll
+ * PROJECT:     ReactOS uxtheme.dll
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     UXTHEME error reporting helpers
  * COPYRIGHT:   Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>

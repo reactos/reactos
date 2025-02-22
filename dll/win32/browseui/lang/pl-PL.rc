@@ -1,6 +1,6 @@
 /*
  *    Translated by Caemyr - Olaf Siejka (May, 2011)
- *    Use MenuOS forum PM or IRC to contact me
+ *    Use ReactOS forum PM or IRC to contact me
  *    https://reactos.org
  *    IRC: irc.freenode.net #reactos-pl;
  *    UTF-8 conversion by Caemyr (May, 2011)
@@ -81,7 +81,7 @@ BEGIN
     END
     POPUP "Pomo&c", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "&MenuOS - informacje", IDM_HELP_ABOUT
+        MENUITEM "&ReactOS - informacje", IDM_HELP_ABOUT
     END
 END
 
@@ -344,6 +344,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARSE_ADDR_ERR_TITLE "Eksplorator MenuOS"
-    IDS_PARSE_ADDR_ERR_TEXT "Eksplorator systemu MenuOS nie może znaleźć elementu '%1'. Sprawdź pisownię i ponów próbę."
+    IDS_PARSE_ADDR_ERR_TITLE "Eksplorator ReactOS"
+    IDS_PARSE_ADDR_ERR_TEXT "Eksplorator systemu ReactOS nie może znaleźć elementu '%1'. Sprawdź pisownię i ponów próbę."
 END

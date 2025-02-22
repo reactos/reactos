@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Application compatibility module
+ * PROJECT:     ReactOS Application compatibility module
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     SDB Debug heap functionality
  * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)

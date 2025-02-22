@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/userenv/profile.c
  * PURPOSE:         User profile code
  * PROGRAMMERS:     Eric Kohl
- *                  HervÃ© Poussineau
+ *                  Hervé Poussineau
  */
 
 #include "precomp.h"

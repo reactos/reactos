@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS shell32
+ * PROJECT:     ReactOS shell32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Shell Icon Cache (SIC)
  * COPYRIGHT:   Copyright 1998, 1999 Juergen Schmied

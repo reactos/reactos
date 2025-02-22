@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS WinSock 2 Helper DLL
+ * PROJECT:     ReactOS WinSock 2 Helper DLL
  * FILE:        dll/win32/ws2help/precomp.h
  * PURPOSE:     WinSock 2 Helper DLL
  */

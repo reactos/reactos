@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API Tests
+ * PROJECT:     ReactOS API Tests
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     Test for AFD_INFO_RECEIVE_WINDOW_SIZE/AFD_INFO_SEND_WINDOW_SIZE
  * COPYRIGHT:   Copyright 2019 Pierre Schweitzer (pierre@reactos.org)

@@ -866,7 +866,7 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, void *reserved)
          * that window, it would return to unmapped memory and die. Apparently
          * this is supposed to work on Windows. */
 
-        /* MenuOS r61844: Comment out usage of GET_MODULE_HANDLE_EX_FLAG_PIN because it doesn't work */
+        /* ReactOS r61844: Comment out usage of GET_MODULE_HANDLE_EX_FLAG_PIN because it doesn't work */
         if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS /*| GET_MODULE_HANDLE_EX_FLAG_PIN*/,
                 (const WCHAR *)&ddraw_self, &ddraw_self))
             ERR("Failed to get own module handle.\n");

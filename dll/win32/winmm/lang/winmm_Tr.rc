@@ -47,7 +47,7 @@ MIDIERR_STILLPLAYING,        	"Ortam verisi yürütülürken bu işlem yürütü
 MIDIERR_NOMAP, 		        	"Bir MIDI haritası bulunamadı. Sürücüyle ilgili bir sorun olabilir ya da MIDIMAP.CFG dosyası bozuk veya eksik olabilir."
 MIDIERR_NOTREADY, 	        	"Giriş, aygıta veri gönderiyor. Veri gönderilene dek bekleyiniz, sonra yeniden deneyiniz."
 MIDIERR_NODEVICE,        		"Şimdiki MIDI Haritalayıcısı kurulumu sisteminizde kurulmamış bir MIDI aygıtını belirtiyor. Kurulumu düzenlemek için MIDI Haritalayıcısı'nı kullanınız."
-MIDIERR_INVALIDSETUP,       	"Şimdiki MIDI kurulumu bozuk. Özgün MIDIMAP.CFG dosyasını MenuOS'un SYSTEM dizinine kopyalayınız, sonra yeniden deneyiniz."
+MIDIERR_INVALIDSETUP,       	"Şimdiki MIDI kurulumu bozuk. Özgün MIDIMAP.CFG dosyasını ReactOS'un SYSTEM dizinine kopyalayınız, sonra yeniden deneyiniz."
 
 /* MCI errors */
 MCIERR_INVALID_DEVICE_ID, 	    "Geçersiz MCI aygıtı kimliği. MCI aygıtı açıldığında döndürülen kimliği kullanınız."
@@ -68,7 +68,7 @@ MCIERR_MISSING_PARAMETER, 	    "Belirtilen komut bir değişken gerektiriyor. L�
 MCIERR_UNSUPPORTED_FUNCTION, 	"Kullandığınız MCI aygıtı belirtilen komutu desteklemiyor."
 MCIERR_FILE_NOT_FOUND, 	    	"Belirtilen dosya bulunamıyor. Yolun ve dosya adının doğru olduğundan emin olunuz."
 MCIERR_DEVICE_NOT_READY,    	"Aygıt sürücüsü hazır değil."
-MCIERR_INTERNAL,     	    	"MCI'yı başlatmada bir sorun oluştu. MenuOS'u yeniden başlatmayı deneyiniz."
+MCIERR_INTERNAL,     	    	"MCI'yı başlatmada bir sorun oluştu. ReactOS'u yeniden başlatmayı deneyiniz."
 MCIERR_DRIVER, 		    	    "Aygıt sürücüsüyle ilgili bir sorun var. Sürücü kapatıldı. Erişilememe hatası."
 MCIERR_CANNOT_USE_ALL, 		    "Belirtilen komutla aygıt adı olarak ""all"" kullanılamıyor."
 MCIERR_MULTIPLE, 	        	"Birden çok aygıtta hatalar oluştu. Hangi aygıtların hataya neden olduğunu belirlemek için tüm komutları ve tüm aygıtları ayrı ayrı belirtiniz."

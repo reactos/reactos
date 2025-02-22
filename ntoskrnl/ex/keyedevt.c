@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/ex/keyedevt.c
  * PURPOSE:         Support for keyed events
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)

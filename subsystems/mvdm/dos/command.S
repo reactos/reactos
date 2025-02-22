@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Virtual DOS Machine
+ * PROJECT:     ReactOS Virtual DOS Machine
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     DOS32 command.com for NTVDM
  * COPYRIGHT:   Copyright 2015-2018 Hermes Belusca-Maito
@@ -270,8 +270,8 @@ BaseStack:
 
 #ifndef NDEBUG
 WelcomeMsg:
-    .ascii "MenuOS DOS32 Command", CR, LF, \
-           "Copyright (C) MenuOS Team 2015" , CR, LF, "$"
+    .ascii "ReactOS DOS32 Command", CR, LF, \
+           "Copyright (C) ReactOS Team 2015" , CR, LF, "$"
 #endif
 
 VerErrMsg:

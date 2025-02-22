@@ -268,10 +268,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRESS_INFO_START "Το MenuOS προσπαθεί να εκκινήσει την παρακάτω υπηρεσία"
-    IDS_PROGRESS_INFO_STOP "Το MenuOS προσπαθεί να σταματήσει την παρακάτω υπηρεσία"
-    IDS_PROGRESS_INFO_PAUSE "Το MenuOS προσπαθεί να παύσει την παρακάτω υπηρεσία"
-    IDS_PROGRESS_INFO_RESUME "Το MenuOS προσπαθεί να συνεχίσει την παρακάτω υπηρεσία"
+    IDS_PROGRESS_INFO_START "Το ReactOS προσπαθεί να εκκινήσει την παρακάτω υπηρεσία"
+    IDS_PROGRESS_INFO_STOP "Το ReactOS προσπαθεί να σταματήσει την παρακάτω υπηρεσία"
+    IDS_PROGRESS_INFO_PAUSE "Το ReactOS προσπαθεί να παύσει την παρακάτω υπηρεσία"
+    IDS_PROGRESS_INFO_RESUME "Το ReactOS προσπαθεί να συνεχίσει την παρακάτω υπηρεσία"
     IDS_CREATE_SUCCESS "Η υπηρεσία δημιουργήθηκε επιτυχώς"
     IDS_DELETE_SUCCESS "Η υπηρεσία διαγράφηκε επιτυχώς"
     IDS_CREATE_REQ "Τα πεδία με έναν\nαστερίσκο είναι υποχρεωτικά"
@@ -306,7 +306,7 @@ BEGIN
     IDS_HINT_DETAILS " Εμφάνιση λεπτομερειών για κάθε αντικείμενο σε ένα παράθυρο."
     IDS_HINT_CUST " Παραμετροποίηση εμφάνισης."
     IDS_HINT_HELP " Εμφάνιση παραθύρου βοήθειας."
-    IDS_HINT_ABOUT " Σχετικά με τον Διαχειριστή Υπηρεσιών του MenuOS."
+    IDS_HINT_ABOUT " Σχετικά με τον Διαχειριστή Υπηρεσιών του ReactOS."
     IDS_HINT_SYS_RESTORE " Restores this window to normal size."
     IDS_HINT_SYS_MOVE " Μετακινεί αυτό το παράθυρο."
     IDS_HINT_SYS_SIZE " Αλλάζει το μέγεθος αυτού του παραθύρου."
@@ -318,7 +318,7 @@ END
 /* Application title */
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "Διαχειριστής Υπηρεσιών του MenuOS"
+    IDS_APPNAME "Διαχειριστής Υπηρεσιών του ReactOS"
     IDS_APPAUTHORS "Copyright (C) 2005-2007 by Ged Murphy (gedmurphy@reactos.org)"
 END
 

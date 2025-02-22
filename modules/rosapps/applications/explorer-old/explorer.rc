@@ -188,7 +188,7 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "explorer.exe.manifest"
     #include "explorer-zh.rc"
 #endif
 
-#define REACTOS_STR_FILE_DESCRIPTION  "MenuOS Explorer"
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Explorer"
 #define REACTOS_STR_INTERNAL_NAME     "explorer"
 #define REACTOS_STR_ORIGINAL_FILENAME "explorer.exe"
 #include <reactos/version.rc>
@@ -203,5 +203,5 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_VERSION_STR REACTOS_STR_PRODUCT_VERSION
-    IDS_EXPLORER_VERSION_STR "MenuOS %s Explorer"
+    IDS_EXPLORER_VERSION_STR "ReactOS %s Explorer"
 END

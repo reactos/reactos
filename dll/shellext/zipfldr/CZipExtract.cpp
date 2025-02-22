@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Zip Shell Extension
+ * PROJECT:     ReactOS Zip Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Zip extraction
  * COPYRIGHT:   Copyright 2017-2019 Mark Jansen (mark.jansen@reactos.org)
@@ -599,7 +599,7 @@ public:
 
             // We use SHPathPrepareForWrite for this path.
             // SHPathPrepareForWrite will prepare the necessary directories.
-            // Windows and MenuOS SHPathPrepareForWrite do not support '/'.
+            // Windows and ReactOS SHPathPrepareForWrite do not support '/'.
             FullPath.m_strPath.Replace(L'/', L'\\');
 
         Retry:

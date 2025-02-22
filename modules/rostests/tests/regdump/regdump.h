@@ -1,5 +1,5 @@
 /*
- *  MenuOS
+ *  ReactOS
  *
  *  regdump.h
  *

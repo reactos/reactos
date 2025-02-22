@@ -1,8 +1,8 @@
 /*
- * PROJECT:     MenuOS Boot Video Driver for ARM devices
+ * PROJECT:     ReactOS Boot Video Driver for ARM devices
  * LICENSE:     BSD - See COPYING.ARM in root directory
  * PURPOSE:     PrimeCell Color LCD Controller (PL110) definitions
- * COPYRIGHT:   Copyright 2008 MenuOS Portable Systems Group <ros.arm@reactos.org>
+ * COPYRIGHT:   Copyright 2008 ReactOS Portable Systems Group <ros.arm@reactos.org>
  */
 
 #pragma once

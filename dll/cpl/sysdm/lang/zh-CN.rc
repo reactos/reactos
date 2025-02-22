@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS System Control Panel Applet
+ * PROJECT:     ReactOS System Control Panel Applet
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2009 Jingjing Fu <jingjingf@188.com>
@@ -28,7 +28,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "访问<A HREF=""https://reactos.org/"">MenuOS 主页</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    CONTROL "访问<A HREF=""https://reactos.org/"">ReactOS 主页</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "许可证(&L)...", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -77,7 +77,7 @@ CAPTION "系统设置"
 FONT 9, "宋体", 0, 0, 0x1
 BEGIN
     GROUPBOX "版本信息", IDC_STATIC, 6, 3, 210, 73
-    LTEXT "MenuOS 作为服务器操作系统被构建，并如此被报告。选中此框可更改（仅对于应用程序有效）。", IDC_STATIC, 15, 15, 183, 41
+    LTEXT "ReactOS 作为服务器操作系统被构建，并如此被报告。选中此框可更改（仅对于应用程序有效）。", IDC_STATIC, 15, 15, 183, 41
     CONTROL "报告为工作站(&R)", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     PUSHBUTTON "确定", IDOK, 166, 83, 50, 14
 END
@@ -98,7 +98,7 @@ BEGIN
     PUSHBUTTON "重命名(&R)", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
     PUSHBUTTON "删除(&D)", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
     GROUPBOX "硬件配置文件选择", IDC_STATIC, 7, 130, 240, 75
-    LTEXT "启动 MenuOS 时：", IDC_STATIC, 14, 142, 210, 8
+    LTEXT "启动 ReactOS 时：", IDC_STATIC, 14, 142, 210, 8
     AUTORADIOBUTTON "等待用户选定硬件配置文件(&W)", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
     AUTORADIOBUTTON "秒内还没有选定配置文件，就请从列出的文件中选择第一个(&S)", IDC_HRDPROFSELECT, 14, 173, 190, 8
     LTEXT "编辑", IDC_STATIC, 65, 187, 35, 8

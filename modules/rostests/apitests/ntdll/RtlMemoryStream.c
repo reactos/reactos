@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS api tests
+ * PROJECT:         ReactOS api tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Test for the Rtl*MemoryStream* series of functions
  * PROGRAMMER:      David Quintana <gigaherz@gmail.com>

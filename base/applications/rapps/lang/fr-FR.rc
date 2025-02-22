@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Applications Manager
+ * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     French resource file
  * TRANSLATORS: Copyright 2011 Jason Toscano (JanusMagnus) <jasongenie@gmail.com>
@@ -173,10 +173,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "Gestionnaire d'applications MenuOS"
+    IDS_APPTITLE "Gestionnaire d'applications ReactOS"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_WELCOME_TITLE "Bienvenue dans MenuOS Applications Manager !"
-    IDS_WELCOME_TEXT "Choisissez une catégorie à gauche, ensuite choisissez une application à installer ou désinstaller.\nSite internet de MenuOS : "
+    IDS_WELCOME_TITLE "Bienvenue dans ReactOS Applications Manager !"
+    IDS_WELCOME_TEXT "Choisissez une catégorie à gauche, ensuite choisissez une application à installer ou désinstaller.\nSite internet de ReactOS : "
     IDS_WELCOME_URL "https://reactos.org"
 
     IDS_APPWIZ_TITLE "Ajout/Suppression de programmes" // "Ajouter/Supprimer des Programmes"

@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS api tests
+ * PROJECT:         ReactOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Test for GetMessage/PeekMessage
  * PROGRAMMERS:     Thomas Faber <thomas.faber@reactos.org>

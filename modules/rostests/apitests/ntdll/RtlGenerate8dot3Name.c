@@ -2,7 +2,7 @@
 // code7bit: https://github.com/katahiromz/code7bit
 // To revert conversion, please execute "code7bit -r <file>".
 /*
- * PROJECT:     MenuOS API tests
+ * PROJECT:     ReactOS API tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Test for RtlGenerate8dot3Name
  * COPYRIGHT:   Copyright 2015-2016 Pierre Schweitzer <pierre@reactos.org>

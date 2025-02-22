@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS ReactX
+ * PROJECT:         ReactOS ReactX
  * FILE:            dll/directx/d3d9/d3d9_impl.c
  * PURPOSE:         IDirect3D9 implementation
  * PROGRAMERS:      Gregor Brunmar <gregor (dot) brunmar (at) home (dot) se>

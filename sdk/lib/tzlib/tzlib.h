@@ -1,8 +1,8 @@
 /*
- * PROJECT:     MenuOS TimeZone Utilities Library
+ * PROJECT:     ReactOS TimeZone Utilities Library
  * LICENSE:     GPL-2.0 (https://spdx.org/licenses/GPL-2.0)
  * PURPOSE:     Provides time-zone utility wrappers around Win32 functions,
- *              that are used by different MenuOS modules such as
+ *              that are used by different ReactOS modules such as
  *              timedate.cpl, syssetup.dll.
  * COPYRIGHT:   Copyright 2004-2005 Eric Kohl
  *              Copyright 2016 Carlo Bramini

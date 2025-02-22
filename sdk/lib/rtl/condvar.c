@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS system libraries
+ * PROJECT:           ReactOS system libraries
  * PURPOSE:           Condition Variable Routines
  * PROGRAMMERS:       Thomas Weidenmueller <w3seek@reactos.com>
  *                    Stephan A. R�ger

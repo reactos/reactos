@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS system libraries
+ * PROJECT:           ReactOS system libraries
  * PURPOSE:           Implementation of fmod
  * FILE:              lib/sdk/crt/math/amd64/fmod.S
  * PROGRAMMER:        Timo Kreuzer (timo.kreuzer@reactos.org)

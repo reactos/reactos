@@ -1,6 +1,6 @@
 /*
 * COPYRIGHT:         See COPYING in the top level directory
-* PROJECT:           MenuOS win32 subsystem
+* PROJECT:           ReactOS win32 subsystem
 * PURPOSE:           Flood filling support
 * FILE:              win32ss/gdi/dib/floodfill.c
 * PROGRAMMER:        Gregor Schneider <grschneider AT gmail DOT com>

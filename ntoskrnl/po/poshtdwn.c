@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/po/poshtdwn.c
  * PURPOSE:         Power Manager Shutdown Code
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 /* INCLUDES ******************************************************************/
@@ -211,7 +211,7 @@ PopShutdownSystem(IN POWER_ACTION SystemAction)
             /* Call shutdown handler */
             //PopInvokeSystemStateHandler(PowerStateShutdownOff, NULL);
 
-            /* MenuOS Hack */
+            /* ReactOS Hack */
             PopSetSystemPowerState(PowerSystemShutdown, SystemAction);
             PopShutdownHandler();
 

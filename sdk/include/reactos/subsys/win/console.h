@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Console Server DLL
+ * PROJECT:         ReactOS Console Server DLL
  * FILE:            include/reactos/subsys/win/console.h
  * PURPOSE:         Public definitions for Console API Clients
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

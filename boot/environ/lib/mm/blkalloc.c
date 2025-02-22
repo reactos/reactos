@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
- * PROJECT:         MenuOS UEFI Boot Library
+ * PROJECT:         ReactOS UEFI Boot Library
  * FILE:            boot/environ/lib/mm/blkalloc.c
  * PURPOSE:         Boot Library Memory Manager Block Allocator
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)

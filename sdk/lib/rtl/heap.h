@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS System Libraries
+ * PROJECT:         ReactOS System Libraries
  * FILE:            lib/rtl/heap.h
  * PURPOSE:         Run-Time Libary Heap Manager header
  * PROGRAMMER:      Aleksey Bragin

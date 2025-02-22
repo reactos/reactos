@@ -25,7 +25,7 @@ CD       Zeigt den Namen des aktuellen Verzeichnisses an bzw. ändert diesen.\n\
 CHCP     Zeigt die aktive Codepagenummer an bzw. legt diese fest.\n\
 CHOICE   Lässt den Benutzer eine Auswahl aus vorgegebenen Optionen treffen.\n\
 CLS      Löscht den Bildschirminhalt.\n\
-CMD      Startet eine neue Instanz des MenuOS-Befehlsinterpreters.\n\
+CMD      Startet eine neue Instanz des ReactOS-Befehlsinterpreters.\n\
 COLOR    Legt die Farben für Hinter- und Vordergrund der Konsole fest.\n\
 COPY     Kopiert eine oder mehrere Dateien an eine andere Stelle.\n\
 DATE     Zeigt das Datum an bzw. legt dieses fest.\n\
@@ -37,7 +37,7 @@ EXIT     Beendet das Programm CMD.EXE (Befehlsinterpreter).\n\
 FOR      Führt einen angegebenen Befehl für jede Datei in einem Dateiensatz\n\
          aus.\n\
 FREE     Zeigt die aktuelle Speicherausnutzung für Laufwerke an.\n\
-GOTO     Setzt den MenuOS-Befehlsinterpreter auf eine markierte Zeile in\n\
+GOTO     Setzt den ReactOS-Befehlsinterpreter auf eine markierte Zeile in\n\
          einem Batchprogramm.\n\
 HELP     Zeigt die Hilfe für Kommandozeilenbefehle an.\n\
 HISTORY  Listet alle Befehle auf, welche sich im Speicher befinden.\n\
@@ -69,7 +69,7 @@ TIME     Zeigt die Systemzeit an bzw. legt sie fest.\n\
 TIMER    Erlaubt die Benutzung von bis zu 10 Stoppuhren.\n\
 TITLE    Legt den Fenstertitel für das Eingabeaufforderungsfenster fest.\n\
 TYPE     Zeigt den Inhalt einer Textdatei an.\n\
-VER      Zeigt die MenuOS-Version an.\n\
+VER      Zeigt die ReactOS-Version an.\n\
 VERIFY   Legt fest, ob das ordnungsgemäße Schreiben von Dateien auf den\n\
          Datenträger überprüft werden soll.\n\
 VOL      Zeigt die Datenträgervolumebezeichnung und die Seriennummer an.\n"

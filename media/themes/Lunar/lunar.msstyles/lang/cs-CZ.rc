@@ -2,12 +2,12 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-1000, "MenuOS"
+1000, "ReactOS"
 }
 
 STRINGTABLE
 {
-2000, "Lunar MenuOS"
+2000, "Lunar ReactOS"
 }
 
 STRINGTABLE
@@ -28,11 +28,11 @@ STRINGTABLE
 {
 5000, "Lunar"
 5001, "Vizuální styl"
-5002, "MenuOS Project"
+5002, "ReactOS Project"
 5003, "Cernodile & Illen, založeno na stylu Lautus"
 5004, "Vydáno pod licencí GNU/GPL 2.0, 2019"
 5005, "https://reactos.org/"
 5006, "1.1"
-5007, "Vizuální styl pro MenuOS"
+5007, "Vizuální styl pro ReactOS"
 }
 

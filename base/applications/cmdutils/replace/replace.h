@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Replace Command
+ * PROJECT:     ReactOS Replace Command
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Main header
  * COPYRIGHT:   Copyright Samuel Erdtman (samuel@erdtman.se)

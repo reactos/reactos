@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS DNS Shared Library
+ * PROJECT:     ReactOS DNS Shared Library
  * FILE:        lib/dnslib/utf8.c
  * PURPOSE:     Functions for doing UTF8 string conversion and manipulation.
  */

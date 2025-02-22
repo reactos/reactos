@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Network Provider for MPEG2 based networks
+ * PROJECT:         ReactOS Network Provider for MPEG2 based networks
  * FILE:            dll/directx/msdvbnp/msdvbnp.cpp
  * PURPOSE:         COM Initialization
  *
@@ -15,7 +15,7 @@ const GUID KSCATEGORY_BDA_NETWORK_PROVIDER = {0x71985f4b, 0x1ca1, 0x11d3, {0x9c,
 
 static INTERFACE_TABLE InterfaceTable[] =
 {
-    {&CLSID_DVBTNetworkProvider, CNetworkProvider_fnConstructor, L"MenuOS DVBT Network Provider"},
+    {&CLSID_DVBTNetworkProvider, CNetworkProvider_fnConstructor, L"ReactOS DVBT Network Provider"},
     {NULL, NULL, NULL}
 };
 

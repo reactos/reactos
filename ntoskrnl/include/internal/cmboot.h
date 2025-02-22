@@ -1,8 +1,8 @@
 /*
- * PROJECT:     MenuOS Kernel
+ * PROJECT:     ReactOS Kernel
  * LICENSE:     BSD - See COPYING.ARM in the top level directory
  * PURPOSE:     Configuration Manager - Boot Initialization Internal header
- * COPYRIGHT:   Copyright 2010 MenuOS Portable Systems Group
+ * COPYRIGHT:   Copyright 2010 ReactOS Portable Systems Group
  *
  * NOTE: This module is shared by both the kernel and the bootloader.
  */

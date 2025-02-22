@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS kernel
+ * PROJECT:          ReactOS kernel
  * FILE:             base/services/wlansvc/wlansvc.c
  * PURPOSE:          WLAN Service
  * PROGRAMMER:       Christoph von Wittich

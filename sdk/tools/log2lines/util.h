@@ -1,5 +1,5 @@
 /*
- * MenuOS log2lines
+ * ReactOS log2lines
  * Written by Jan Roeloffzen
  *
  * - Misc utils

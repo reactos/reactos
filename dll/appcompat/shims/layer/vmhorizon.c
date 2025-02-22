@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS 'Layers' Shim library
+ * PROJECT:     ReactOS 'Layers' Shim library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Shim for VMWare Horizon setup
  * COPYRIGHT:   Copyright 2017 Thomas Faber (thomas.faber@reactos.org)

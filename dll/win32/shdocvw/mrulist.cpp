@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS shdocvw
+ * PROJECT:     ReactOS shdocvw
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Implement MRU List of shdocvw.dll
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>

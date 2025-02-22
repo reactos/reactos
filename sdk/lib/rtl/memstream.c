@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            lib/rtl/memstream.c
  * PURPOSE:         MemoryStream functions
  * PROGRAMMER:      David Quintana (gigaherz@gmail.com)

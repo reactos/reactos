@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS kernel
+ * PROJECT:          ReactOS kernel
  * FILE:             base/services/thmsvc/thmserver.c
  * PURPOSE:          Themes server
  * PROGRAMMER:       Giannis Adamopoulos

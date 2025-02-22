@@ -1,5 +1,5 @@
 /*
- *  MenuOS Floppy Driver
+ *  ReactOS Floppy Driver
  *  Copyright (C) 2004, Vizzini (vizzini@plasmic.com)
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -16,7 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * PROJECT:         MenuOS Floppy Driver
+ * PROJECT:         ReactOS Floppy Driver
  * FILE:            readwrite.c
  * PURPOSE:         Read/Write handler routines
  * PROGRAMMER:      Vizzini (vizzini@plasmic.com)
@@ -553,7 +553,7 @@ ReadWritePassive(PDRIVE_INFO DriveInfo, PIRP Irp)
      * (which is (almost) always the case on x86).  Note well: this address is only valid in the
      * process context that you initially built the MDL from.  The physical pages that make up
      * the MDL might perhaps be mapped in other process contexts too (or even in the system space,
-     * above 0x80000000 (default; 0xc0000000 on current MenuOS or /3GB Windows)), but it will
+     * above 0x80000000 (default; 0xc0000000 on current ReactOS or /3GB Windows)), but it will
      * (possibly) be mapped at a different address.
      *
      * The second parameter is the ByteOffset.  Given an original buffer address of 0x12345678,

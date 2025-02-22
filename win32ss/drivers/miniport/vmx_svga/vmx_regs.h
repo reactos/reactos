@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS Boot Loader
+ * PROJECT:         ReactOS Boot Loader
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            win32ss/drivers/miniport/vmx_svga/vmx_regs.h
  * PURPOSE:         VMWARE SVGA-II Card Registers and Definitions
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 //

@@ -540,7 +540,7 @@ static BOOL pe_load_dwarf(struct module* module)
 /******************************************************************
  *		pe_load_rsym
  *
- * look for MenuOS's own rsym format
+ * look for ReactOS's own rsym format
  */
 static BOOL pe_load_rsym(struct module* module)
 {

@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS HAL
+ * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            hal/halx86/apic/tsc.c
  * PURPOSE:         HAL Routines for TSC handling

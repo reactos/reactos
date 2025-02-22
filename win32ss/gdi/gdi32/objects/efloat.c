@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS System Libraries
+ * PROJECT:         ReactOS System Libraries
  * FILE:            win32ss/gdi/gdi32/objects/efloat.c
  * PURPOSE:         Functions to convert between FLOAT and EFLOAT
  * PROGRAMMER:      James Tabor

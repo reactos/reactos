@@ -1,6 +1,6 @@
 /*
- * MenuOS Hungarian keyboard layout
- * Copyright (C) 2003 - 2019 MenuOS
+ * ReactOS Hungarian keyboard layout
+ * Copyright (C) 2003 - 2019 ReactOS
  * License: LGPL, see: LGPL.txt
  * Author: Tibor Lajos Füzi
  *
@@ -349,7 +349,7 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x51, L"Page Down" },
   { 0x52, L"Insert" },
   { 0x53, L"Delete" },
-  { 0x54, L"<MenuOS>" },
+  { 0x54, L"<ReactOS>" },
   { 0x55, L"Help" },
   { 0x56, L"Left Windows" },
   { 0x5b, L"Right Windows" },

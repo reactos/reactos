@@ -34,7 +34,7 @@ BEGIN
     LTEXT           "[03-03-93] Jim Randell - UnHacked für X11",IDC_STATIC,7,47,215,8
     LTEXT           "[03-07-93] Jamie Zawinski - Bereinigung und Codesauberkeit",IDC_STATIC,7,56,215,8
     LTEXT           "[10-08-94] Ge van Geldorp - Portierung auf Windows",IDC_STATIC,7,65,215,8
-    LTEXT           "[08-15-03] Ge van Geldorp - Portierung auf MenuOS",IDC_STATIC,7,74,215,8
+    LTEXT           "[08-15-03] Ge van Geldorp - Portierung auf ReactOS",IDC_STATIC,7,74,215,8
     CTEXT           "R.I.P. Ge van Geldorp, wir vermissen dich!",IDC_STATIC,7,87,215,10,SS_SUNKEN
     DEFPUSHBUTTON   "OK",IDOK,87,100,56,14
 END

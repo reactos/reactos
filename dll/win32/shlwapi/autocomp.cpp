@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS shlwapi
+ * PROJECT:     ReactOS shlwapi
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Implement SHAutoComplete
  * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)

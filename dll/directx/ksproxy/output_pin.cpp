@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS WDM Streaming ActiveMovie Proxy
+ * PROJECT:         ReactOS WDM Streaming ActiveMovie Proxy
  * FILE:            dll/directx/ksproxy/output_pin.cpp
  * PURPOSE:         OutputPin of Proxy Filter
  *

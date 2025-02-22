@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS Win32k subsystem
+ * PROJECT:         ReactOS Win32k subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            win32ss/user/ntuser/windc.c
  * PURPOSE:         Window DC management
- * COPYRIGHT:       Copyright 2007 MenuOS Team
+ * COPYRIGHT:       Copyright 2007 ReactOS Team
  */
 
 #include <win32k.h>
@@ -744,7 +744,7 @@ DceFreeWindowDCE(PWND Window)
                * this should be a TRACE. But this is best left as an ERR
                * because the 'application error' is likely to come from
                * another part of Wine (i.e. it's our fault after all).
-               * We should change this to TRACE when MenuOS is more stable
+               * We should change this to TRACE when ReactOS is more stable
                * (for 1.0?).
                */
               ERR("[%p] GetDC() without ReleaseDC()!\n", UserHMGetHandle(Window));

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS user32.dll
+ * PROJECT:     ReactOS user32.dll
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Window ghosting feature
  * COPYRIGHT:   Copyright 2018 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)

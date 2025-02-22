@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS system libraries
+ * PROJECT:     ReactOS system libraries
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/win32/syssetup/proppage.c
  * PURPOSE:     Property page providers

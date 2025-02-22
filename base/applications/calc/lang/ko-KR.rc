@@ -331,7 +331,7 @@ BEGIN
     BEGIN
         MENUITEM "도움말 항목", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "MenuOS 계산기 정보", IDM_HELP_ABOUT
+        MENUITEM "ReactOS 계산기 정보", IDM_HELP_ABOUT
     END
 END
 
@@ -364,7 +364,7 @@ BEGIN
     BEGIN
         MENUITEM "도움말 항목", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "MenuOS 계산기 정보", IDM_HELP_ABOUT
+        MENUITEM "ReactOS 계산기 정보", IDM_HELP_ABOUT
     END
 END
 
@@ -387,7 +387,7 @@ BEGIN
     BEGIN
         MENUITEM "도움말 항목", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "MenuOS 계산기 정보", IDM_HELP_ABOUT
+        MENUITEM "ReactOS 계산기 정보", IDM_HELP_ABOUT
     END
 END
 
@@ -402,7 +402,7 @@ END
 /* About */
 STRINGTABLE
 BEGIN
-    IDS_CALC_NAME "MenuOS 계산기"
+    IDS_CALC_NAME "ReactOS 계산기"
     IDS_AUTHOR "Carlo Bramini에 의해 쓰여짐"
 END
 

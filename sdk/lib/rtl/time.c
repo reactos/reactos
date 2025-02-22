@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS system libraries
+ * PROJECT:           ReactOS system libraries
  * FILE:              lib/rtl/time.c
  * PURPOSE:           Conversion between Time and TimeFields
  * PROGRAMMER:        Rex Jolliff (rex@lvcablemodem.com)

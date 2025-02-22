@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API tests
+ * PROJECT:     ReactOS API tests
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Validate the apiset lookup in ApiSetResolveToHost
  * COPYRIGHT:   Copyright 2024 Mark Jansen <mark.jansen@reactos.org>

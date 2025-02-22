@@ -30,7 +30,7 @@ Abstract:
 IO_COMPLETION_ROUTINE CdDevCtrlCompletionRoutine;
 
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdDevCtrlCompletionRoutine (
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp,
@@ -173,7 +173,7 @@ Return Value:
 //
 
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdDevCtrlCompletionRoutine (
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp,

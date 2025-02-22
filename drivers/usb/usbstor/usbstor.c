@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Universal Serial Bus Bulk Storage Driver
+ * PROJECT:     ReactOS Universal Serial Bus Bulk Storage Driver
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     USB block storage device driver.
  * COPYRIGHT:   2005-2006 James Tabor

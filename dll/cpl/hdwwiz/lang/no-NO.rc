@@ -129,7 +129,7 @@ BEGIN
     LTEXT "Kan ikke fortsette veiviseren for å legge til maskinvare", IDC_FINISHTITLE, 114, 8, 203, 28
     LTEXT "For å fortsette, koble til maskinvaren til din datamaskin.", -1, 114, 40, 193, 16
     AUTOCHECKBOX "&Slå av datamaskinen når jeg trykker på Fullført når jeg trykker på Fullført slik at jeg kan slå på datamaskinen og koble til maskinvaren.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "I de fleste tilfeller MenuOS vil automatisk installere din maskinvare etter at den tilkobles. Hvis MenuOS ikke finner maskinvaren, kan du åpne denne veiviseren for å installere programvaren til maskinvaren.", -1, 114, 98, 193, 32
+    LTEXT "I de fleste tilfeller ReactOS vil automatisk installere din maskinvare etter at den tilkobles. Hvis ReactOS ikke finner maskinvaren, kan du åpne denne veiviseren for å installere programvaren til maskinvaren.", -1, 114, 98, 193, 32
     LTEXT "For å avslutte veiviseren, trykk på Fullført.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 

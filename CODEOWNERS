@@ -1,22 +1,22 @@
-##   List of maintainers for the MenuOS project
+##   List of maintainers for the ReactOS project
 
 ## This file purpose is to give newcomers to the project the responsible
 ## developers when submitting a pull request on GitHub, or opening a bug
 ## report on Jira.
 
 ## This file will notably establish who is responsible for a specific
-## area of MenuOS. Being a maintainer means the following:
+## area of ReactOS. Being a maintainer means the following:
 ##  - that person has good knownledge in the area
 ##  - that person is able to enforce consistency in the area
 ##  - that person may be available for giving help in the area
 ##  - that person has push access on the repository
 ## Being a maintainer does not mean the following:
 ##  - that person is dedicated to the area
-##  - that person is working full-time on the area/on MenuOS
+##  - that person is working full-time on the area/on ReactOS
 ##  - that person is paid
 ##  - that person is always available
 
-## We have no supported (paid) areas in MenuOS.
+## We have no supported (paid) areas in ReactOS.
 
 ## When submitting a pull request on GitHub and looking for reviewers,
 ## look at that file and ask for a review from some of the people (M, R
@@ -220,14 +220,14 @@
 #   S: Maintained
 /win32ss/printing/ @ColinFinck
 
-# MenuOS API Tests
+# ReactOS API Tests
 #   M:
 #   R: learn-more, learn_more, Mark Jansen
 #   R: ThFabba, Thomas Faber
 #   S: Maintained
 /modules/rostests/apitests/
 
-# MenuOS Kernel-Mode Tests
+# ReactOS Kernel-Mode Tests
 #   M: ThFabba, Thomas Faber
 #   S: Maintained
 /modules/rostests/kmtests/  @ThFabba
@@ -339,7 +339,7 @@ amd64/                                      @tkreuzer
 /boot/freeldr/freeldr/arch/realmode/amd64.S @tkreuzer
 
 # Translations
-# This is the list of translation teams in MenuOS GitHub organization.
+# This is the list of translation teams in ReactOS GitHub organization.
 # If you want to be part of one - hit us at https://chat.reactos.org/
 de-DE.*    @reactos/lang-german
 es-ES.*    @reactos/lang-spanish

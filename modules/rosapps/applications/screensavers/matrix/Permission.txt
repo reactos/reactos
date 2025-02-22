@@ -1,4 +1,4 @@
-Matrrix2 screensaver for MenuOS
+Matrrix2 screensaver for ReactOS
 
 /*****************************************
 

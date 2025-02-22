@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS
+ * PROJECT:     ReactOS
  * LICENSE:     GPL - See COPYING in the top level directory
  * PURPOSE:     Audio Service
  * COPYRIGHT:   Copyright 2007 Andrew Greenwood

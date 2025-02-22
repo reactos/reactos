@@ -1,7 +1,7 @@
 /*
- * PROJECT:     MenuOS Shell
+ * PROJECT:     ReactOS Shell
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     MenuOS Networking Configuration
+ * PURPOSE:     ReactOS Networking Configuration
  * COPYRIGHT:   Copyright 2016 Eric Kohl
  */
 
@@ -412,7 +412,7 @@ NetworkDomainPageDlgProc(
                     {
                         if (0 == LoadStringW(netshell_hInstance, IDS_REACTOS_SETUP, Title, sizeof(Title) / sizeof(Title[0])))
                         {
-                            wcscpy(Title, L"MenuOS Setup");
+                            wcscpy(Title, L"ReactOS Setup");
                         }
                         if (0 == LoadStringW(netshell_hInstance, IDS_WZD_DOMAIN_NAME, ErrorName, sizeof(ErrorName) / sizeof(ErrorName[0])))
                         {

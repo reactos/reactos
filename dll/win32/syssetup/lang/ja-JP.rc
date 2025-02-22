@@ -2,28 +2,28 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS セットアップ"
+CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "MenuOSセットアップ ウィザードへようこそ。", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "このウィザードでは、MenuOS をコンピュータにインストールします。MenuOS を正しくセットアップするために、ユーザーとコンピュータに関する情報を集める必要があります。", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "ReactOSセットアップ ウィザードへようこそ。", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "このウィザードでは、ReactOS をコンピュータにインストールします。ReactOS を正しくセットアップするために、ユーザーとコンピュータに関する情報を集める必要があります。", IDC_STATIC, 115, 40, 195, 100
     LTEXT "セットアップを続行するには [次へ] をクリックして下さい。", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS セットアップ"
+CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
-    LTEXT "MenuOS の開発者より、下記のオープンソース プロジェクトに感謝の意を表明します。これらのすべてまたは一部は MenuOS の開発に利用されました。", IDC_STATIC, 15, 7, 286, 19
+    LTEXT "ReactOS の開発者より、下記のオープンソース プロジェクトに感謝の意を表明します。これらのすべてまたは一部は ReactOS の開発に利用されました。", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "MenuOS は GPL の下にライセンスされており、すべてまたは一部を再利用、 再配布する場合は GPL に従う必要があります。", IDC_STATIC, 15, 110, 227, 19
+    LTEXT "ReactOS は GPL の下にライセンスされており、すべてまたは一部を再利用、 再配布する場合は GPL に従う必要があります。", IDC_STATIC, 15, 110, 227, 19
     PUSHBUTTON "GPLを表示(&V)...", IDC_VIEWGPL, 251, 110, 50, 19
     LTEXT "セットアップを続行するには [次へ] をクリックして下さい。", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
-CAPTION "MenuOS セットアップ"
+CAPTION "ReactOS セットアップ"
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
@@ -38,7 +38,7 @@ END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS セットアップ"
+CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
@@ -51,7 +51,7 @@ END
 
 IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS セットアップ"
+CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
@@ -69,7 +69,7 @@ END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS セットアップ"
+CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
@@ -86,7 +86,7 @@ END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS セットアップ"
+CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
@@ -100,7 +100,7 @@ END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS セットアップ"
+CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
     CONTROL "", IDC_THEMEPICKER, "SysListView32", LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_TABSTOP, 18, 8, 288, 130
@@ -108,7 +108,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS セットアップ"
+CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
     LTEXT "コンポーネントを登録しています", IDC_TASKTEXT1, 65, 27, 232, 8
@@ -121,11 +121,11 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS セットアップの完了"
+CAPTION "ReactOS セットアップの完了"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "MenuOS セットアップ ウィザードの完了", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "MenuOS セットアップが正常に完了しました。\n\n[完了] をクリックすると、コンピュータを再起動します。", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "ReactOS セットアップ ウィザードの完了", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "ReactOS セットアップが正常に完了しました。\n\n[完了] をクリックすると、コンピュータを再起動します。", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "ドライブに CD がある場合は取り出して下さい。再起動するには [完了] をクリックして下さい。", IDC_STATIC, 115, 169, 195, 17
 END
@@ -171,13 +171,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE "承認"
-    IDS_ACKSUBTITLE "MenuOS が利用しているプロジェクトとライセンスに関する情報"
+    IDS_ACKSUBTITLE "ReactOS が利用しているプロジェクトとライセンスに関する情報"
     IDS_OWNERTITLE "ソフトウェアの個人用設定"
-    IDS_OWNERSUBTITLE "この情報は、MenuOS の個人用設定に用いられます。"
+    IDS_OWNERSUBTITLE "この情報は、ReactOS の個人用設定に用いられます。"
     IDS_COMPUTERTITLE "コンピュータ名と Administrator パスワード"
     IDS_COMPUTERSUBTITLE "コンピュータ名と Administrator パスワードを入力する必要があります。"
     IDS_LOCALETITLE "地域の設定"
-    IDS_LOCALESUBTITLE "MenuOS を様々な地域と言語にあわせてカスタマイズすることができます。"
+    IDS_LOCALESUBTITLE "ReactOS を様々な地域と言語にあわせてカスタマイズすることができます。"
     IDS_LOCALETEXT "標準と形式は %s に、場所は %s に設定されています。"
     IDS_LAYOUTTEXT "デフォルトのテキスト入力言語と方法は次のとおりです: %s キーボード レイアウト"
     IDS_DATETIMETITLE "日付と時刻"
@@ -190,7 +190,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP "MenuOS セットアップ"
+    IDS_REACTOS_SETUP "ReactOS セットアップ"
     IDS_UNKNOWN_ERROR "不明なエラー"
     IDS_LOADLIBRARY_FAILED "LoadLibrary に失敗: "
     IDS_GETPROCADDR_FAILED "GetProcAddr に失敗: "
@@ -250,8 +250,8 @@ STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "製品オプション"
     IDS_PRODUCTSUBTITLE "システムのふるまいに影響する製品オプションを選べます。"
-    IDS_PRODUCTSERVERNAME "MenuOS Server"
-    IDS_PRODUCTWORKSTATIONNAME "MenuOS Workstation"
+    IDS_PRODUCTSERVERNAME "ReactOS Server"
+    IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
     IDS_PRODUCTSERVERINFO "システムはサーバとして認識されます。個人用フォルダ ""マイ ピクチャ""、""マイ ビデオ""、""マイ ミュージック"" は ""マイ ドキュメント"" から独立しています。"
     IDS_PRODUCTWORKSTATIONINFO "システムはワークステーションとして認識されます。個人用フォルダ ""マイ ピクチャ""、""マイ ビデオ""、""マイ ミュージック"" は、""マイ ドキュメント"" の中にあります。"
     IDS_DEFAULT "(既定)"

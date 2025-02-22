@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Winlogon
+ * PROJECT:     ReactOS Winlogon
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Spanish (Basque) resource file
  * TRANSLATOR:  Copyright 2021 Julen Urizar Compains <julenuri@hotmail.com>
@@ -56,7 +56,7 @@ BEGIN
     IDS_PREPARETOSTANDBY "Preparando para entrar en estado de espera (Standby)..."
     IDS_PREPARETOHIBERNATE "Preparando para hibernar..."
     IDS_SAVEYOURSETTINGS "Gordetzen zure pertsonal konfigurazioa..."
-    IDS_REACTOSISSTARTINGUP "Itzaron, MenuOS hasi da..."
+    IDS_REACTOSISSTARTINGUP "Itzaron, ReactOS hasi da..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d egunak"
 END

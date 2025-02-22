@@ -1,5 +1,5 @@
 /*
-    MenuOS Sound System
+    ReactOS Sound System
     Sound Blaster DSP support
     Version routine
 

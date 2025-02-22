@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/cache/cachesub.c
  * PURPOSE:         Logging and configuration routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)

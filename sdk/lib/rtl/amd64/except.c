@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Run-Time Library
+ * PROJECT:     ReactOS Run-Time Library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     User-mode exception support for AMD64
  * COPYRIGHT:   Copyright 2018-2021 Timo Kreuzer <timo.kreuzer@reactos.org>

@@ -5,7 +5,7 @@
 #include <shlwapi.h>
 #include <strsafe.h>
 
-/* What is the uninstallation command line of "MenuOS JPN Package"? */
+/* What is the uninstallation command line of "ReactOS JPN Package"? */
 BOOL GetJapaneseUninstallCmdLine(HWND hwnd, LPWSTR pszCmdLine, SIZE_T cchCmdLine)
 {
     HKEY hKey;
@@ -36,7 +36,7 @@ BOOL GetJapaneseUninstallCmdLine(HWND hwnd, LPWSTR pszCmdLine, SIZE_T cchCmdLine
     return TRUE;
 }
 
-/* Is there any installed "MenuOS JPN Package"? */
+/* Is there any installed "ReactOS JPN Package"? */
 BOOL HasJapanesePackage(HWND hwnd)
 {
     WCHAR szPath[MAX_PATH];

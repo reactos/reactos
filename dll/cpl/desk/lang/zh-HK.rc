@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Display Control Panel
+ * PROJECT:     ReactOS Display Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Hong Kong) resource file
  * TRANSLATORS: Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
@@ -84,7 +84,7 @@ CAPTION "進階外觀"
 FONT 9, "新細明體"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "如果您選擇 MenuOS 經典配色以外的視窗和按鈕設定，它會強制覆寫以下設定值，但某些較舊的程式除外。", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
+    LTEXT "如果您選擇 ReactOS 經典配色以外的視窗和按鈕設定，它會強制覆寫以下設定值，但某些較舊的程式除外。", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
     LTEXT "項目(&E)：", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP

@@ -135,7 +135,7 @@ Return Value:
 _Requires_lock_held_(_Global_critical_region_)
 _When_(return!=0, _Acquires_shared_lock_(*Fcb->Resource))
 BOOLEAN
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdAcquireForCache (
     _Inout_ PFCB Fcb,
     _In_ BOOLEAN Wait
@@ -179,7 +179,7 @@ Return Value:
 _Requires_lock_held_(_Global_critical_region_)
 _Releases_lock_(*Fcb->Resource)
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdReleaseFromCache (
     _Inout_ PFCB Fcb
     )
@@ -214,7 +214,7 @@ Return Value:
 
 
 BOOLEAN
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdNoopAcquire (
     _In_ PVOID Fcb,
     _In_ BOOLEAN Wait
@@ -250,7 +250,7 @@ Return Value:
 
 
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdNoopRelease (
     _In_ PVOID Fcb
     )
@@ -281,7 +281,7 @@ Return Value:
 
 _Requires_lock_held_(_Global_critical_region_)
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFilterCallbackAcquireForCreateSection (
     _In_ PFS_FILTER_CALLBACK_DATA CallbackData,
     _Unreferenced_parameter_ PVOID *CompletionContext
@@ -366,7 +366,7 @@ Return Value:
 _Function_class_(FAST_IO_RELEASE_FILE)
 _Requires_lock_held_(_Global_critical_region_)
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdReleaseForCreateSection (
     _In_ PFILE_OBJECT FileObject
     )

@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            include/reactos/drivers/ntddrdsk.h
  * PURPOSE:         Constants and types for accessing the RAM disk device
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 #ifndef _NTDDRDSK_H_
 #define _NTDDRDSK_H_

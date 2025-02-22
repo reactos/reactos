@@ -497,7 +497,7 @@ num_put<_CharT, _OutputIter>::do_put(_OutputIter __s, ios_base& __f, _CharT /*__
 #  pragma warning (disable : 4311) //pointer truncation from 'const void*' to 'unsigned long'
 #endif
   _OutputIter result =
-#ifdef _WIN64 // MenuOS, compilation with 64 bit gcc
+#ifdef _WIN64 // ReactOS, compilation with 64 bit gcc
 _STLP_PRIV __do_put_integer(__s, __f, __c_type.widen('0'), __REINTERPRET_CAST(unsigned _STLP_LONG_LONG,__val));
 #else
 #ifdef _STLP_LONG_LONG

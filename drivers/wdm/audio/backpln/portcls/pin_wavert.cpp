@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Kernel Streaming
+ * PROJECT:         ReactOS Kernel Streaming
  * FILE:            drivers/wdm/audio/backpln/portcls/pin_wavert.cpp
  * PURPOSE:         WaveRT IRP Audio Pin
  * PROGRAMMER:      Johannes Anderwald

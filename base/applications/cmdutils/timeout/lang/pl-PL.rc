@@ -2,7 +2,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Narzędzie Timeout systemu MenuOS\n\
+    IDS_USAGE "Narzędzie Timeout systemu ReactOS\n\
 \n\
 TIMEOUT [/?] [/T] limit_czasu [/NOBREAK]\n\
 \n\

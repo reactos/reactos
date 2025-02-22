@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS Win32k subsystem
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Callback to usermode support
  * FILE:             win32ss/user/ntuser/callback.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)

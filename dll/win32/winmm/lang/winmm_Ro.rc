@@ -70,7 +70,7 @@ MCIERR_MISSING_PARAMETER,         "Comanda specificată solicită un parametru. 
 MCIERR_UNSUPPORTED_FUNCTION,      "Dispozitivul MCI utilizat nu acceptă comanda specificată."
 MCIERR_FILE_NOT_FOUND,            "Imposibil de găsit fişierul specificat. Asiguraţi-vă că numele fişier şi calea sunt corecte."
 MCIERR_DEVICE_NOT_READY,          "Driverul dispozitivului nu este gata."
-MCIERR_INTERNAL,                  "Problemă la iniţializarea MCI. Încercați repornirea MenuOS."
+MCIERR_INTERNAL,                  "Problemă la iniţializarea MCI. Încercați repornirea ReactOS."
 MCIERR_DRIVER,                    "Problemă cu driverul dispozitivului. Driverul a închis. Imposibil de accesat eroarea."
 MCIERR_CANNOT_USE_ALL,            "Imposibil de utilizat 'toate' ca numele dispozitivului cu comanda specificată."
 MCIERR_MULTIPLE,                  "Erori la mai multe dispozitive. Specificaţi separat fiecare comandă şi dispozitiv pentru a determina la care dintre dispozitive s-au înregistrat erori."

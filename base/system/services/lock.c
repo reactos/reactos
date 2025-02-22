@@ -1,9 +1,9 @@
 /*
- * PROJECT:     MenuOS Service Control Manager
+ * PROJECT:     ReactOS Service Control Manager
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/system/services/lock.c
  * PURPOSE:     User-side Services Start Serialization Lock functions
- * COPYRIGHT:   Copyright 2012 HermÃ¨s BÃ©lusca
+ * COPYRIGHT:   Copyright 2012 Hermès Bélusca
  */
 
 /* INCLUDES *****************************************************************/

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Device Management
+ * PROJECT:     ReactOS Device Management
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/servman/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for devmgmt
@@ -276,10 +276,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRESS_INFO_START "MenuOS намагається запустити наступну службу"
-    IDS_PROGRESS_INFO_STOP "MenuOS намагається зупинити наступну службу"
-    IDS_PROGRESS_INFO_PAUSE "MenuOS намагається призупинити наступну службу"
-    IDS_PROGRESS_INFO_RESUME "MenuOS намагається продовжити наступну службу"
+    IDS_PROGRESS_INFO_START "ReactOS намагається запустити наступну службу"
+    IDS_PROGRESS_INFO_STOP "ReactOS намагається зупинити наступну службу"
+    IDS_PROGRESS_INFO_PAUSE "ReactOS намагається призупинити наступну службу"
+    IDS_PROGRESS_INFO_RESUME "ReactOS намагається продовжити наступну службу"
     IDS_CREATE_SUCCESS "Служба успішно створена"
     IDS_DELETE_SUCCESS "Служба успішно видалена"
     IDS_CREATE_REQ "Поля, відмічені зірочкою\nє обов'язковими"
@@ -314,7 +314,7 @@ BEGIN
     IDS_HINT_DETAILS " Показ інформації про кожен елемент у вікні."
     IDS_HINT_CUST " Настройка вигляду."
     IDS_HINT_HELP " Відображення вікна довідки."
-    IDS_HINT_ABOUT " Про програму Диспетчер керування службами MenuOS."
+    IDS_HINT_ABOUT " Про програму Диспетчер керування службами ReactOS."
     IDS_HINT_SYS_RESTORE " Відновлення вихідних розмірів вікна."
     IDS_HINT_SYS_MOVE " Зміна розташування вікна."
     IDS_HINT_SYS_SIZE " Зміна розмірів вікна."
@@ -326,7 +326,7 @@ END
 /* Application title */
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "Диспетчер керування службами MenuOS"
+    IDS_APPNAME "Диспетчер керування службами ReactOS"
     IDS_APPAUTHORS "Copyright (C) 2005-2007 by Ged Murphy (gedmurphy@reactos.org)"
 END
 

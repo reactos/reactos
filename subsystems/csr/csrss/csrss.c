@@ -1,10 +1,10 @@
 /*
  * LICENSE:         BSD - See COPYING.ARM in root directory
- * PROJECT:         MenuOS Client/Server Runtime SubSystem
+ * PROJECT:         ReactOS Client/Server Runtime SubSystem
  * FILE:            subsystems/win32/csrss/csrss.c
  * PURPOSE:         CSRSS Process Main Executable Code
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- *                  MenuOS Portable Systems Group
+ *                  ReactOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/

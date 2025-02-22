@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS api tests
+ * PROJECT:         ReactOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Tests for SetLayout and its effects on other gdi functions
  *                  such as StretchBlt, BitBlt, LPtoDP, DPtoLP

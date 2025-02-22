@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Storage Stack / SCSIPORT storage port library
+ * PROJECT:     ReactOS Storage Stack / SCSIPORT storage port library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     PnP power handlers
  * COPYRIGHT:   Copyright 2016 Thomas Faber <thomas.faber@reactos.org>

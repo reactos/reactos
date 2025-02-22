@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS msutb.dll
+ * PROJECT:     ReactOS msutb.dll
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Language Bar (Tipbar)
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>

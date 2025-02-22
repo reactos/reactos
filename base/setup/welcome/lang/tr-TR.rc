@@ -11,9 +11,9 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 /* Default settings */
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "MenuOS - Hoş Geldiniz"
-    IDS_DEFAULT_TOPIC_TITLE "MenuOS"
-    IDS_DEFAULT_TOPIC_DESC "MenuOS İşletim Sistemi'ne hoş geldiniz.\n\nSoldaki bir konuya tıklayınız."
+    IDS_APPTITLE "ReactOS - Hoş Geldiniz"
+    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
+    IDS_DEFAULT_TOPIC_DESC "ReactOS İşletim Sistemi'ne hoş geldiniz.\n\nSoldaki bir konuya tıklayınız."
     IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Bu iletiyi yine göster."
     IDS_CLOSETEXT "&Çıkış"
@@ -22,7 +22,7 @@ END
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_BUTTON0 "&MenuOS Kur"
+    IDS_TOPIC_BUTTON0 "&ReactOS Kur"
     IDS_TOPIC_BUTTON1 "&Bu CD'ye göz atın"
     IDS_TOPIC_BUTTON2 "&Çıkış"
 END
@@ -30,7 +30,7 @@ END
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_TITLE0 "MenuOS Kur"
+    IDS_TOPIC_TITLE0 "ReactOS Kur"
     IDS_TOPIC_TITLE1 "Bu CD'ye göz atın"
     IDS_TOPIC_TITLE2 "Çıkış"
 END
@@ -38,7 +38,7 @@ END
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_DESC0 "Bilgisayarınıza yeni bir MenuOS yükleyiniz ya da var olan bir yüklemeyi yükseltiniz."
+    IDS_TOPIC_DESC0 "Bilgisayarınıza yeni bir ReactOS yükleyiniz ya da var olan bir yüklemeyi yükseltiniz."
     IDS_TOPIC_DESC1 "Bu CD'ye göz atın."
     IDS_TOPIC_DESC2 "Bu uygulamadan çıkmak için tıklayınız."
 END

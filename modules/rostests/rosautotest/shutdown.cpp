@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Automatic Testing Utility
+ * PROJECT:     ReactOS Automatic Testing Utility
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Helper function for shutting down the system
  * COPYRIGHT:   Copyright 2008-2009 Colin Finck (colin@reactos.org)

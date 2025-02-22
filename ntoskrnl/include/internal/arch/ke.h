@@ -1,6 +1,6 @@
 /*
- *  MenuOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 MenuOS Team
+ *  ReactOS kernel
+ *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

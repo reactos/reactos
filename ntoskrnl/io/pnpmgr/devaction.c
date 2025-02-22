@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Kernel
+ * PROJECT:     ReactOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     PnP manager device manipulation functions
  * COPYRIGHT:   Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -759,7 +759,7 @@ PiCallDriverAddDevice(
         driverEntry = CONTAINING_RECORD(listEntry, ADD_DEV_DRIVERS_LIST, ListEntry);
         PDRIVER_OBJECT driverObject = driverEntry->DriverObject;
 
-        // FIXME: MenuOS is not quite ready for this assert
+        // FIXME: ReactOS is not quite ready for this assert
         // (legacy drivers should not have AddDevice routine)
         // ASSERT(!(DriverObject->Flags & DRVO_LEGACY_DRIVER));
 
@@ -778,7 +778,7 @@ PiCallDriverAddDevice(
         else
         {
             // HACK: the driver doesn't have a AddDevice routine. We shouldn't be here,
-            // but MenuOS' PnP stack is not that correct yet
+            // but ReactOS' PnP stack is not that correct yet
             DeviceNode->Flags |= DNF_LEGACY_DRIVER;
             Status = STATUS_UNSUCCESSFUL;
         }

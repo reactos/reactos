@@ -85,7 +85,7 @@
  *        on or off. (marked with "JPP 19980708")
  *
  *    07-Dec-1998 (Eric Kohl)
- *        First MenuOS release.
+ *        First ReactOS release.
  *        Extended length of commandline buffers to 512.
  *
  *    13-Dec-1998 (Eric Kohl)
@@ -114,7 +114,7 @@
  *        Restore window title after program/batch execution
  *
  *    03-Feb-2001 (Eric Kohl)
- *        Workaround because argc[0] is NULL under MenuOS
+ *        Workaround because argc[0] is NULL under ReactOS
  *
  *    23-Feb-2001 (Carl Nettelblad <cnettel@hem.passagen.se>)
  *        %envvar% replacement conflicted with for.
@@ -1134,7 +1134,7 @@ GetEnhancedVar(
     }
 
     /* Next step is to change the path to fix letter case (e.g.
-     * C:\ReAcToS -> C:\MenuOS) and, if requested with the S modifier,
+     * C:\ReAcToS -> C:\ReactOS) and, if requested with the S modifier,
      * replace long filenames with short. */
 
     In = FullPath;
@@ -2142,7 +2142,7 @@ Initialize(VOID)
     /* Get version information */
     InitOSVersion();
 
-    /* Some people like to run MenuOS cmd.exe on Win98, it helps in the
+    /* Some people like to run ReactOS cmd.exe on Win98, it helps in the
      * build process. So don't link implicitly against ntdll.dll, load it
      * dynamically instead */
     NtDllModule = GetModuleHandle(TEXT("ntdll.dll"));

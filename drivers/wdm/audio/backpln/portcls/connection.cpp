@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Kernel Streaming
+ * PROJECT:         ReactOS Kernel Streaming
  * FILE:            drivers/wdm/audio/backpln/portcls/connection.c
  * PURPOSE:         portcls physical connection registration
  * PROGRAMMER:      Johannes Anderwald

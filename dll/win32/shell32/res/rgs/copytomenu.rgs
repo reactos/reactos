@@ -2,7 +2,7 @@ HKCR
 {
 	NoRemove CLSID
 	{
-		ForceRemove {C2FBB630-2971-11D1-A18C-00C04FD75D13} = s 'MenuOS CopyTo Object Service'
+		ForceRemove {C2FBB630-2971-11D1-A18C-00C04FD75D13} = s 'ReactOS CopyTo Object Service'
 		{
 			val flags = d '1'
 			InprocServer32 = s '%MODULE%'

@@ -5,10 +5,10 @@
  * COPYRIGHT:   2020 Victor Perevertkin (victor.perevertkin@reactos.org)
  */
 
-/* The Partition Manager Driver in MenuOS complements disk.sys/classpnp.sys drivers
+/* The Partition Manager Driver in ReactOS complements disk.sys/classpnp.sys drivers
  * (which are derived from Windows 10 drivers) so does not do exactly what Windows 2003 partmgr.sys
  * does. Here is acts like both partition and volume manager, because volmgr.sys does not (yet)
- * exist in MenuOS. Thus handles some IOCTL_VOLUME_*, and IOCTL_MOUNTMGR_* IOCTLs.
+ * exist in ReactOS. Thus handles some IOCTL_VOLUME_*, and IOCTL_MOUNTMGR_* IOCTLs.
  */
 
 #include "partmgr.h"

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Configuration of network devices
+ * PROJECT:     ReactOS Configuration of network devices
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Turkish resource file
  * TRANSLATORS: Copytight 2014-2018 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
@@ -233,7 +233,7 @@ BEGIN
     IDS_DHCPACTIVE "DHCP Etkin"
     IDS_AUTOMATIC "Otomatik"
     IDS_NOITEMSEL "Bir öge seçmediniz. İlk önce birini seçiniz."
-    IDS_TCPIP "MenuOS TCP/IP"
+    IDS_TCPIP "ReactOS TCP/IP"
     IDS_ADD "Ekle"
     IDS_MOD "Tamam"
     IDS_TCP_PORTS "TCP Bağlantı Noktaları"

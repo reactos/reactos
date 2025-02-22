@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Display Control Panel
+ * PROJECT:     ReactOS Display Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Desktop customization property page
  * COPYRIGHT:   Copyright 2018-2022 Stanislav Motylkov <x86corez@gmail.com>

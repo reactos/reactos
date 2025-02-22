@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS
+ * PROJECT:         ReactOS
  * FILE:            drivers/wdm/audio/backpln/portcls/irp.cpp
  * PURPOSE:         Port Class driver / IRP Handling
  * PROGRAMMER:      Andrew Greenwood

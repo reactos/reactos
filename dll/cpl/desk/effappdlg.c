@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Display Control Panel
+ * PROJECT:         ReactOS Display Control Panel
  * PURPOSE:         Effects appearance dialog
  * PROGRAMMERS:     Jan Roeloffzen <jroeloffzen@hotmail.com>
  *                  Ismael Ferreras Morezuelas <swyterzone+reactos@gmail.com>

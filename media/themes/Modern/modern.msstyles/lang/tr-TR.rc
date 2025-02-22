@@ -32,10 +32,10 @@ STRINGTABLE
 {
 5000, "Modern"
 5001, "Görsel Biçim"
-5002, "MenuOS Vakfı"
+5002, "ReactOS Vakfı"
 5003, "Polar, Win10 tabanlı"
 5004, "GNU/GPL 3.0 altında yayımlanmıştır, 2018"
 5005, "https://reactos.org/"
 5006, "1.0"
-5007, "MenuOS İçin Görsel Biçim"
+5007, "ReactOS İçin Görsel Biçim"
 }

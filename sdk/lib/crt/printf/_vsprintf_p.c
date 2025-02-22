@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
- * PROJECT:         MenuOS crt library
+ * PROJECT:         ReactOS crt library
  * FILE:            lib/sdk/crt/printf/_vsprintf_p.c
  * PURPOSE:         Implementation of _vsprintf_p
- * PROGRAMMER:      Samuel SerapiÃ³n
+ * PROGRAMMER:      Samuel Serapión
  */
 
 #define _sxprintf _vsprintf_p

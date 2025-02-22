@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS system properties, control panel applet
+ * PROJECT:     ReactOS system properties, control panel applet
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/cpl/sysdm/virtmem.c
  * PURPOSE:     Virtual memory control dialog

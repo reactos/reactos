@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS interoperability tests
+ * PROJECT:     ReactOS interoperability tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Formal locale verification tests
  * COPYRIGHT:   Copyright 2024 Stanislav Motylkov <x86corez@gmail.com>
@@ -304,7 +304,7 @@ static void TEST_LocaleTests(void)
     LPCWSTR pszFind = StrStrW(szBuffer, L"modules\\rostests\\unittests");
     if (pszFind)
     {
-        // We're running in MenuOS output folder
+        // We're running in ReactOS output folder
         WCHAR szNewDir[MAX_PATH];
 
         StringCchCopyNW(szNewDir, _countof(szNewDir), szBuffer, pszFind - szBuffer);

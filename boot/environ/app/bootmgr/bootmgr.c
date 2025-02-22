@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
- * PROJECT:         MenuOS UEFI Boot Manager
+ * PROJECT:         ReactOS UEFI Boot Manager
  * FILE:            boot/environ/app/bootmgr/bootmgr.cla
  * PURPOSE:         Boot Manager Entrypoint
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)
@@ -367,7 +367,7 @@ BmFwInitializeBootDirectoryPath (
     }
 
     /* Save the boot directory */
-    BootDirectory = L"\\EFI\\Boot"; /* Should be EFI\\MenuOS\\Boot */
+    BootDirectory = L"\\EFI\\Boot"; /* Should be EFI\\ReactOS\\Boot */
 
 Quickie:
     /* Free all the allocations we made */
@@ -2757,7 +2757,7 @@ BmMain (
     BOOLEAN BootOk;
     ULONG SequenceCount;
     BOOLEAN GetEntry;
-    EfiPrintf(L"MenuOS UEFI Boot Manager Initializing...\r\n");
+    EfiPrintf(L"ReactOS UEFI Boot Manager Initializing...\r\n");
 
     /* Reading the BCD can change this later on */
     RebootOnError = FALSE;

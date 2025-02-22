@@ -1,10 +1,10 @@
 /*
- * PROJECT:     MenuOS Console Utilities Library
+ * PROJECT:     ReactOS Console Utilities Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Provides simple abstraction wrappers around CRT streams or
  *              Win32 console API I/O functions, to deal with i18n + Unicode
  *              related problems.
- * COPYRIGHT:   Copyright 2017-2018 MenuOS Team
+ * COPYRIGHT:   Copyright 2017-2018 ReactOS Team
  *              Copyright 2017-2018 Hermes Belusca-Maito
  */
 
@@ -12,10 +12,10 @@
  * @file    conutils.h
  * @ingroup ConUtils
  *
- * @defgroup ConUtils   MenuOS Console Utilities Library
+ * @defgroup ConUtils   ReactOS Console Utilities Library
  *
  * @brief   This library contains common functions used in many places inside
- *          the MenuOS console utilities and the MenuOS Command-Line Interpreter.
+ *          the ReactOS console utilities and the ReactOS Command-Line Interpreter.
  *          Most of these functions are related with internationalisation and
  *          the problem of correctly displaying Unicode text on the console.
  *          Besides those, helpful functions for retrieving strings and messages

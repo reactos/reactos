@@ -4,7 +4,7 @@
  * FILE:            reactos/dll/win32/fmifs/query.c
  * PURPOSE:         Query volume information
  *
- * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #include "precomp.h"
@@ -71,7 +71,7 @@ QueryAvailableFileSystemFormat(
  * The returned information is mostly related to Sony Memory Stick devices.
  * On Vista+ the returned information is disk sector size and volume length in sectors,
  * regardless of the type of disk.
- * MenuOS implementation returns DEVICE_HOTPLUG flag if inspected device is a hotplug device
+ * ReactOS implementation returns DEVICE_HOTPLUG flag if inspected device is a hotplug device
  * as well as sector size and volume length of disk device.
  */
 BOOL

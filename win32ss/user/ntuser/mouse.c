@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS kernel
+ * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse functions
  * FILE:             win32ss/user/ntuser/mouse.c
  * PROGRAMERS:       Casper S. Hornstrup (chorns@users.sourceforge.net)

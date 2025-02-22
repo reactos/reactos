@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Win32 Graphical Subsystem (WIN32K)
+ * PROJECT:         ReactOS Win32 Graphical Subsystem (WIN32K)
  * FILE:            win32ss/include/ntgdityp.h
  * PURPOSE:         Win32 Shared GDI Types for NtGdi*
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
@@ -111,7 +111,7 @@ enum
     XFORM_FORMAT_LTOL = 0x20,
     XFORM_NO_TRANSLATION = 0x40,
 
-    /* MenuOS specific */
+    /* ReactOS specific */
     XFORM_INTEGER = 0x1000,
 };
 
@@ -660,8 +660,8 @@ typedef struct _DRIVER_FUNCTIONS
     PVOID                          Reserved10;
     PVOID                          Reserved11; /* 92 */
 
-    /* MenuOS specify */
-    PFN_DrvEnableDriver            EnableDriver; //MenuOS Extra
+    /* ReactOS specify */
+    PFN_DrvEnableDriver            EnableDriver; //ReactOS Extra
 } DRIVER_FUNCTIONS, *PDRIVER_FUNCTIONS;
 
 #define ASSERT_PFN(pfn) \

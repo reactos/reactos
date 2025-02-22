@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS kernel-mode tests
+ * PROJECT:     ReactOS kernel-mode tests
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     Test for GetFileAttributes/SetFileAttributes
  * COPYRIGHT:   Copyright 2017 Thomas Faber <thomas.faber@reactos.org>

@@ -20,7 +20,7 @@
  */
 
 /*
- * PROJECT:         MenuOS Program Manager
+ * PROJECT:         ReactOS Program Manager
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * FILE:            base/shell/progman/string.c
  * PURPOSE:         String utility functions

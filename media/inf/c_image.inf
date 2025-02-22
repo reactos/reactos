@@ -4,7 +4,7 @@ Signature = "$WINDOWS NT$"
 LayoutFile = layout.inf
 Class     = Image
 ClassGuid = {6bdd1fc6-810f-11d0-bec7-08002be2092f}
-Provider  = %MenuOS%
+Provider  = %ReactOS%
 DriverVer=02/28/2010,1.00
 
 [DestinationDirs]
@@ -25,7 +25,7 @@ HKR,,Installer32, 0,"sti_ci.dll,ClassInstall"
 
 [Strings]
 ; Non-localizable
-MenuOS = "MenuOS Project"
+ReactOS = "ReactOS Project"
 
 ; Localizable
 ImageClassName = "Image"

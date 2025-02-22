@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS TDI test driver
+ * PROJECT:     ReactOS TDI test driver
  * FILE:        include/debug.h
  * PURPOSE:     Debugging support macros
  * DEFINES:     DBG     - Enable debug output

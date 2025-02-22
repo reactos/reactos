@@ -4,41 +4,41 @@ LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Penyetelan MenuOS"
+CAPTION "Penyetelan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Selamat datang di Penuntun Penyetelan MenuOS", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "This wizard will install or upgrade MenuOS on your computer, \
+    LTEXT "Selamat datang di Penuntun Penyetelan ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "This wizard will install or upgrade ReactOS on your computer, \
 and prepare the second part of the setup.", IDC_STATIC, 115, 40, 195, 27
 ////
     GROUPBOX " IMPORTANT INFORMATION ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
-    LTEXT "MenuOS is in Alpha stage: it is not feature- complete and is \
+    LTEXT "ReactOS is in Alpha stage: it is not feature- complete and is \
 under heavy development. It is recommended to use it only for \
 evaluation and testing and not as your daily-usage OS.\n\
 It may corrupt your data or damage your hardware.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
     LTEXT "Backup your data or test on a secondary computer \
-if you attempt to run MenuOS on real hardware.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+if you attempt to run ReactOS on real hardware.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
 ////
     LTEXT "Klik Lanjut untuk melanjutkan Penyetelan.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Penyetelan MenuOS"
+CAPTION "Penyetelan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "&Pasang MenuOS", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "Pasang instalasi MenuOS yang baru. Ini tidak akan menjaga berkas, pengaturan, dan program Anda. Anda bisa membuat perubahan pada disk dan partisi.", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
-    AUTORADIOBUTTON "P&erbarui atau perbaiki MenuOS", IDC_UPDATE, 7, 80, 277, 10
-    LTEXT "Perbarui atau perbaiki salinan terpasang dari MenuOS. Pilihan ini tetap menyimpan berkas, Pengaturan dan program. Pilihan ini hanya tersedia jika MenuOS telah terpasang di komputer ini.", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "&Pasang ReactOS", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
+    LTEXT "Pasang instalasi ReactOS yang baru. Ini tidak akan menjaga berkas, pengaturan, dan program Anda. Anda bisa membuat perubahan pada disk dan partisi.", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "P&erbarui atau perbaiki ReactOS", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "Perbarui atau perbaiki salinan terpasang dari ReactOS. Pilihan ini tetap menyimpan berkas, Pengaturan dan program. Pilihan ini hanya tersedia jika ReactOS telah terpasang di komputer ini.", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Penyetelan MenuOS"
+CAPTION "Penyetelan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT       "Penyetelan MenuOS bisa meningkatkan pemasangan MenuOS yang tersedia di daftar berikut, atau jika pemasangan MenuOS gagal atau rusak, program penyetelan bisa mencoba memperbaikinya.", IDC_STATIC, 6, 6, 300, 18
+    LTEXT       "Penyetelan ReactOS bisa meningkatkan pemasangan ReactOS yang tersedia di daftar berikut, atau jika pemasangan ReactOS gagal atau rusak, program penyetelan bisa mencoba memperbaikinya.", IDC_STATIC, 6, 6, 300, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "&Jangan tingkatkan", IDC_SKIPUPGRADE, 230, 128, 80, 14
     LTEXT       "Klik lanjut meningkatkan pemasangan OS terplih, atau 'Jangan tingkatkan' untuk melanjutkan pemasangan tanpa meningkatkan.", IDC_STATIC, 7, 124, 222, 16
@@ -46,7 +46,7 @@ END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Penyetelan MenuOS"
+CAPTION "Penyetelan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Komputer:", IDC_STATIC, 20, 15, 80, 10
@@ -60,7 +60,7 @@ END
 
 IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Penyetelan MenuOS"
+CAPTION "Penyetelan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
@@ -108,7 +108,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Advanced Installation Options"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Choose the &directory where you want to install MenuOS:", IDC_STATIC, 7, 9, 291, 10
+    LTEXT "Choose the &directory where you want to install ReactOS:", IDC_STATIC, 7, 9, 291, 10
     EDITTEXT IDC_PATH, 7, 23, 291, 13
     GROUPBOX "Bootloader", IDC_STATIC, 7, 45, 291, 60
     LTEXT "Select the location where the FreeLoader\nbootloader should be installed.\n\nBy default, it is installed on the system partition of the boot disk (and either in the Master or the Volume Boot Record for BIOS-based computers).", IDC_STATIC, 13, 57, 279, 44
@@ -119,7 +119,7 @@ END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Penyetelan MenuOS"
+CAPTION "Penyetelan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Jenis pemasangan:", IDC_STATIC, 18, 5, 74, 11
@@ -145,7 +145,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Penyetelan MenuOS"
+CAPTION "Penyetelan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Pasang berkas...", IDC_ACTIVITY, 20, 50, 277, 10
@@ -155,11 +155,11 @@ END
 
 IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Menyelesaikan Penyetelan MenuOS"
+CAPTION "Menyelesaikan Penyetelan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Menyelesaikan Penuntun Penyetelan MenuOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Anda menyelesaikan tahap pertama Penyetelan MenuOS dengan berhasil.", IDC_STATIC, 115, 50, 195, 17
+    LTEXT "Menyelesaikan Penuntun Penyetelan ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "Anda menyelesaikan tahap pertama Penyetelan ReactOS dengan berhasil.", IDC_STATIC, 115, 50, 195, 17
     LTEXT "Ketika tombol Selesai ditekan, komputer akan memulai ulang.", IDC_STATIC, 115, 80, 195, 17
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
     LTEXT "Jika terdapat CD pada drive, keluarkan. Lalu, untuk memulai ulang komputer, klik Selesai.", IDC_STATIC, 115, 169, 195, 17
@@ -169,11 +169,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CAPTION "Penyetelan MenuOS"
+    IDS_CAPTION "Penyetelan ReactOS"
     IDS_TYPETITLE "Installation Type"
-    IDS_TYPESUBTITLE "You can setup a new MenuOS installation, or update/repair an existing installation."
-    IDS_UPDATETITLE "Update or Repair MenuOS"
-    IDS_UPDATESUBTITLE "Choose which existing MenuOS installation you want to update or repair."
+    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
+    IDS_UPDATETITLE "Update or Repair ReactOS"
+    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
     IDS_DEVICETITLE "Menyetel perangkat dasar"
     IDS_DEVICESUBTITLE "Setel pengaturan tampilan dan papan ketik."
     IDS_DRIVETITLE "Penyetelan pemasangan partisi dan folder sistem"
@@ -184,7 +184,7 @@ BEGIN
     IDS_PROCESSSUBTITLE "Buat dan format partisi, salin berkas, pasang dan setel bootloader."
     IDS_RESTARTTITLE "Penyetelan tahap pertama selesai"
     IDS_RESTARTSUBTITLE "Babak pertama dari penyetelan ini telah selesai, mulai ulang untuk meneruskan ke tahap kedua."
-    IDS_ABORTSETUP "MenuOS tidak sepenuhnya terpasang pada komputer ini. Jika kamu keluar dari penyetelan ini, kamu harus menjalankan lagi penyetelan ini untuk memasang MenuOS. Yakin ingin keluar?"
+    IDS_ABORTSETUP "ReactOS tidak sepenuhnya terpasang pada komputer ini. Jika kamu keluar dari penyetelan ini, kamu harus menjalankan lagi penyetelan ini untuk memasang ReactOS. Yakin ingin keluar?"
     IDS_ABORTSETUP2 "Gugurkan pemasangan?"
     IDS_NO_TXTSETUP_SIF "Tidak bisa menemukan 'txtsetup.sif'.\nPenyetelan tidak bisa dilanjutkan."
     IDS_INSTALLBTN "&Install"
@@ -266,7 +266,7 @@ alphanumericals (a-z, A-Z, 0-9), and\n . \\ - _\n\
 Spaces are not allowed."
 
     IDS_ERROR_DIRECTORY_NAME_TITLE "Invalid installation path"
-    IDS_ERROR_DIRECTORY_NAME "The MenuOS installation path must follow the DOS 8.3 naming scheme, \
+    IDS_ERROR_DIRECTORY_NAME "The ReactOS installation path must follow the DOS 8.3 naming scheme, \
 and only contain letters, digits, dashes and periods. Spaces are not allowed."
 
     IDS_ERROR_CREATE_PARTITION_TITLE "Create partition"
@@ -278,9 +278,9 @@ and only contain letters, digits, dashes and periods. Spaces are not allowed."
 
     IDS_ERROR_WRITE_PTABLE "Setup failed to write partition tables."
 
-    IDS_ERROR_SYSTEM_PARTITION "The MenuOS Setup could not find a supported system partition\n\
+    IDS_ERROR_SYSTEM_PARTITION "The ReactOS Setup could not find a supported system partition\n\
 on your system or could not create a new one. Without such a partition\n\
-the Setup program cannot install MenuOS.\
+the Setup program cannot install ReactOS.\
 \nClick on OK to return to the partition selection list."
 
     IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Unrecognized volume while attempting to format the partition."

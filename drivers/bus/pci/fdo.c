@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS PCI bus driver
+ * PROJECT:         ReactOS PCI bus driver
  * FILE:            fdo.c
  * PURPOSE:         PCI device object dispatch routines
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -157,7 +157,7 @@ FdoEnumerateDevices(
                     Device->IsDebuggingDevice = TRUE;
 
                     /*
-                     * MenuOS-specific: apply a hack
+                     * ReactOS-specific: apply a hack
                      * to prevent driver installation for the debugging device.
                      * NOTE: Nothing to do for IEEE 1394 devices; NT5.1 and NT5.2
                      * support IEEE 1394 debugging.

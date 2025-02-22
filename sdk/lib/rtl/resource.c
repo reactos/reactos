@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS system libraries
+ * PROJECT:           ReactOS system libraries
  * FILE:              lib/rtl/resource.c
  * PURPOSE:           Resource (multiple-reader-single-writer lock) functions
  * PROGRAMMER:        Partially takem from Wine:

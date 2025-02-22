@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Whoami
+ * PROJECT:     ReactOS Whoami
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/cmdutils/whoami/whoami.c
  * PURPOSE:     Displays information about the current local user, groups and privileges.
@@ -627,7 +627,7 @@ int WhoamiPriv(void)
 
 
         /* try to grab the size of the string, also, beware, as this call is
-           unimplemented in MenuOS/Wine at the moment */
+           unimplemented in ReactOS/Wine at the moment */
 
         LookupPrivilegeDisplayNameW(NULL, PrivName, NULL, &DispNameSize, &dwResult);
 

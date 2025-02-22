@@ -1,5 +1,5 @@
 --- C:/Users/CHRIST~1/AppData/Local/Temp/install.-rev47414.svn001.tmp.c	Sa Mai 29 16:46:40 2010
-+++ C:/Users/Christoph/Desktop/Projekte/MenuOS/dll/win32/mshtml/install.c	Sa Mai 29 16:43:49 2010
++++ C:/Users/Christoph/Desktop/Projekte/ReactOS/dll/win32/mshtml/install.c	Sa Mai 29 16:43:49 2010
 @@ -60,6 +60,11 @@
       '\\','W','i','n','e',
       '\\','M','S','H','T','M','L',0};

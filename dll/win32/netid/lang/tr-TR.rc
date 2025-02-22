@@ -8,7 +8,7 @@ CAPTION "Bilgisayar Adı"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT "MenuOS, ağda bilgisayarınızı tanımak için aşağıdaki bilgiyi kullanır.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT "ReactOS, ağda bilgisayarınızı tanımak için aşağıdaki bilgiyi kullanır.", IDC_STATIC, 40, 5, 204, 20
     LTEXT "Bilgisayar tanımı:", IDC_STATIC, 7, 40, 90, 9
     EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "Tam bilgisayar adı:", IDC_STATIC, 7, 68, 85, 9
@@ -68,7 +68,7 @@ BEGIN
     4 "Bilgisayar Adı Değişiklikleri"
     5 "Çalışma grubu:"
     6 "Etki alanı:"
-    7 """%1"" etki alanı adı, geçerli bir MenuOS adı olmasına rağmen Genel Ağ Etki Alanı Adı Hizmeti özelliklerine uymuyor. Standart olmayan adlar için MenuOS DNS sunucusunu kullanmalısınız. "
+    7 """%1"" etki alanı adı, geçerli bir ReactOS adı olmasına rağmen Genel Ağ Etki Alanı Adı Hizmeti özelliklerine uymuyor. Standart olmayan adlar için ReactOS DNS sunucusunu kullanmalısınız. "
     8 """%1"" etki alanı adı düzgün biçimlendirilmemiş. Alan adlarını ayırmak için noktalar (.) kullanılır. Her alan 63 karakterle sınırlıdır. Örnek: alan-1.reactos.org."
     10 "Yeni bilgisayar adı ""%1"" çok uzun. İsim 63 karakterden uzun olamaz."
     11 "Girilen yeni bilgisayar adı doğru biçimlendirilmemiş. Standart adlar harf (a-z, A-Z), sayı (0-9) ve kısa çizgi (-) içerebilir, ancak boşluk veya nokta (.) içeremez. Adlar tamamen rakamlardan oluşturulamaz. "

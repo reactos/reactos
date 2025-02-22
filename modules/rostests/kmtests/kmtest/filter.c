@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS kernel-mode tests
+ * PROJECT:         ReactOS kernel-mode tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         File system filter implementation of the original service.c file
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>

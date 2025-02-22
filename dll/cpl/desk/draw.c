@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Display Control Panel
+ * PROJECT:         ReactOS Display Control Panel
  * FILE:            dll/cpl/desk/draw.c
  * PURPOSE:         Providing drawing functions
  *

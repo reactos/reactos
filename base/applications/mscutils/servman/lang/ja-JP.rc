@@ -268,10 +268,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRESS_INFO_START "MenuOS は次のサービスを開始しようとしています"
-    IDS_PROGRESS_INFO_STOP "MenuOS は次のサービスを停止しようとしています"
-    IDS_PROGRESS_INFO_PAUSE "MenuOS は次のサービスを一時停止しようとしています"
-    IDS_PROGRESS_INFO_RESUME "MenuOS は次のサービスを再開しようとしています"
+    IDS_PROGRESS_INFO_START "ReactOS は次のサービスを開始しようとしています"
+    IDS_PROGRESS_INFO_STOP "ReactOS は次のサービスを停止しようとしています"
+    IDS_PROGRESS_INFO_PAUSE "ReactOS は次のサービスを一時停止しようとしています"
+    IDS_PROGRESS_INFO_RESUME "ReactOS は次のサービスを再開しようとしています"
     IDS_CREATE_SUCCESS "サービスの作成に成功しました"
     IDS_DELETE_SUCCESS "サービスの削除に成功しました"
     IDS_CREATE_REQ "アスタリスクのついて\nいる項目は必須です"
@@ -306,7 +306,7 @@ BEGIN
     IDS_HINT_DETAILS " 各アイテムの情報をウィンドウに表示します。"
     IDS_HINT_CUST " 表示をカスタマイズします。"
     IDS_HINT_HELP " ヘルプ ウィンドウを表示します。"
-    IDS_HINT_ABOUT " MenuOS サービス マネージャについて表示します。"
+    IDS_HINT_ABOUT " ReactOS サービス マネージャについて表示します。"
     IDS_HINT_SYS_RESTORE " このウィンドウを通常の大きさに復元します。"
     IDS_HINT_SYS_MOVE " このウィンドウを移動します。"
     IDS_HINT_SYS_SIZE " このウィンドウの大きさを変更します。"
@@ -318,7 +318,7 @@ END
 /* Application title */
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "MenuOS サービス マネージャ"
+    IDS_APPNAME "ReactOS サービス マネージャ"
     IDS_APPAUTHORS "Copyright (C) 2005-2007 by Ged Murphy (gedmurphy@reactos.org)"
 END
 

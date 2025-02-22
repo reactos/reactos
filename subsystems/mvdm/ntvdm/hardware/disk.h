@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         MenuOS Virtual DOS Machine
+ * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/hardware/disk.h
  * PURPOSE:         Generic Disk Controller (Floppy, Hard Disk, ...)
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

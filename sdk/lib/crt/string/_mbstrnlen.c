@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS CRT
+ * PROJECT:           ReactOS CRT
  * PURPOSE:           Implementation of _mbstrnlen
  * FILE:              lib/sdk/crt/string/_mbstrnlen.c
  * PROGRAMMER:        Timo Kreuzer

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS NTFS FS library
+ * PROJECT:     ReactOS NTFS FS library
  * FILE:        lib/fslib/ntfslib/ntfslib.c
  * PURPOSE:     NTFS lib
  * PROGRAMMERS: Pierre Schweitzer

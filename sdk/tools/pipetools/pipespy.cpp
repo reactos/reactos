@@ -1,10 +1,10 @@
 /*
  * PipeSpy
  * Copyright (c) 2004, Skywing (skywing@valhallalegends.com)
- * Released under the GNU GPL for the MenuOS project
+ * Released under the GNU GPL for the ReactOS project
  *
  * This program can be used to spy on a named pipe in Windows NT(+)
- * or MenuOS.  It is particularly intended to be used for
+ * or ReactOS.  It is particularly intended to be used for
  * understanding the remote kernel debugging protocol used
  * by windows kd.
  *
@@ -19,7 +19,7 @@
  *
  * NOTE:
  *
- * This program hasn't really been tested against MenuOS, and has only
+ * This program hasn't really been tested against ReactOS, and has only
  * been built with Visual Studio .NET 2003.
  */
 #include <process.h>

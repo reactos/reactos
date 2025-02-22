@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Printing Include files
+ * PROJECT:     ReactOS Printing Include files
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Provide a constant for the current Printing Processor Environment based on the architecture
  * COPYRIGHT:   Copyright 2016 Colin Finck (colin@reactos.org)

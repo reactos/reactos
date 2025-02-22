@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS shdocvw
+ * PROJECT:     ReactOS shdocvw
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Utility routines
  * COPYRIGHT:   Copyright 2024 Whindmar Saksit <whindsaks@proton.me>

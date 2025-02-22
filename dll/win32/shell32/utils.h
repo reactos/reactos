@@ -2,7 +2,7 @@
  * PROJECT:     shell32
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     Utility functions
- * COPYRIGHT:   MenuOS Team
+ * COPYRIGHT:   ReactOS Team
  */
 
 #pragma once

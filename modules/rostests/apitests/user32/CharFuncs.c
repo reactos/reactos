@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API tests
+ * PROJECT:     ReactOS API tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Tests for Char* functions
  * COPYRIGHT:   Copyright 2022 Stanislav Motylkov <x86corez@gmail.com>
@@ -41,13 +41,13 @@ typedef struct
 
 TESTS_CHARPREV TestCharPrev[] =
 {
-    {testLen, L"C:\\MenuOS", NULL, 0, 9, 9, TRUE, FALSE},
+    {testLen, L"C:\\ReactOS", NULL, 0, 9, 9, TRUE, FALSE},
     {testOffs, L"abcdefghijk", NULL, 11, 10, 10, TRUE, FALSE},
     {testOffs, L"test a´^~¯", NULL, 10, 9, 9, TRUE, FALSE},
     {testOffs, L"test å", NULL, 6, 5, 5, TRUE, FALSE},
-    {testBoth, L"C:\\MenuOS", L"", 0, -1, 0, FALSE, FALSE},
-    {testBoth, L"C:\\MenuOS\\", L"C:\\MenuOS", 0, -1, 0, FALSE, FALSE},
-    {testBoth, L"C:\\MenuOS\\", L"MenuOS", 0, -1, 0, FALSE, FALSE},
+    {testBoth, L"C:\\ReactOS", L"", 0, -1, 0, FALSE, FALSE},
+    {testBoth, L"C:\\ReactOS\\", L"C:\\ReactOS", 0, -1, 0, FALSE, FALSE},
+    {testBoth, L"C:\\ReactOS\\", L"ReactOS", 0, -1, 0, FALSE, FALSE},
 };
 
 TESTS_CHARPREV TestCharPrev_XP[] =
@@ -71,8 +71,8 @@ TESTS_CHARPREV TestCharPrev_Vista[] =
 };
 
 /* Static tests */
-static const WCHAR wszReactOS[] = L"C:\\MenuOS";
-static const CHAR szReactOS[] = "C:\\MenuOS";
+static const WCHAR wszReactOS[] = L"C:\\ReactOS";
+static const CHAR szReactOS[] = "C:\\ReactOS";
 static const WCHAR wszSpecial[] = L"test\0\0\0\0\0\0aa\t\t\t\r\n\r\n";
 static const CHAR szSpecial[] = "test\0\0\0\0\0\0aa\t\t\t\r\n\r\n";
 static const WCHAR wszMagic1[] = L"test a\x030a";

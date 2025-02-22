@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Network Shell
+ * PROJECT:     ReactOS Network Shell
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2011 Elton Chung aka MfldElton <elton328@gmail.com>
@@ -86,20 +86,20 @@ END
 
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS 安裝程式"
+CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "請問您想使用一般或自訂設定：", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "一般設定", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "自訂設定", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
-    LTEXT "使用 MenuOS 網路用戶端、MenuOS 網絡檔案和列印共享及具有自動指派位址功能的 TCP/IP 傳輸協議來建立網路連接。", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "使用 ReactOS 網路用戶端、ReactOS 網絡檔案和列印共享及具有自動指派位址功能的 TCP/IP 傳輸協議來建立網路連接。", IDC_STATIC, 65, 45, 240, 30
     LTEXT "可讓您手動更改網路元件。", IDC_STATIC, 65, 90, 243, 20
 END
 
 IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS 安裝程式"
+CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "裝置對象：", IDC_STATIC, 33, 2, 100, 20
@@ -114,7 +114,7 @@ END
 
 IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS 安裝程式"
+CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "您要讓這台電腦成為網域的成員嗎？\n\
@@ -179,6 +179,6 @@ BEGIN
     IDS_NETWORKCOMPONENTSUBTITLE "判斷您的電腦使用了哪些網路元件。要安裝新的元件，請按［安裝］。"
     IDS_NETWORKDOMAINTITLE "工作群組或電腦網域"
     IDS_NETWORKDOMAINSUBTITLE "網域是一組由網路管理員定義的電腦群組。工作群組是一組共同使用同一個工作群組名稱的電腦群組。"
-    IDS_REACTOS_SETUP "MenuOS 安裝程式"
+    IDS_REACTOS_SETUP "ReactOS 安裝程式"
     IDS_WZD_DOMAIN_NAME "除非您輸入網域或工作群組名稱，\n否則安裝程式無法繼續。"
 END

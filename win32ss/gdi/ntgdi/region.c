@@ -1,6 +1,6 @@
 /*
- *  MenuOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 MenuOS Team
+ *  ReactOS W32 Subsystem
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -113,7 +113,7 @@ SOFTWARE.
  * the y-x-banding that's so nice to have...
  */
 
-// X11 sources for MenuOS region processing.
+// X11 sources for ReactOS region processing.
 //
 // libX11/src/PolyReg.c
 // libX11/src/Region.c

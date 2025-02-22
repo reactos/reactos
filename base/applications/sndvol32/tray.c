@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS Sound Volume Control
+ * PROJECT:     ReactOS Sound Volume Control
  * FILE:        base/applications/sndvol32/tray.c
  * PROGRAMMERS: Eric Kohl <eric.kohl@reactos.org>
  */

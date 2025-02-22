@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Serial enumerator driver
+ * PROJECT:         ReactOS Serial enumerator driver
  * FILE:            drivers/bus/serenum/fdo.c
  * PURPOSE:         IRP_MJ_PNP operations for FDOs
  *
- * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #include "serenum.h"

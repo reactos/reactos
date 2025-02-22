@@ -1,5 +1,5 @@
 /*
- * PROJECT:    MenuOS Management Console
+ * PROJECT:    ReactOS Management Console
  * LICENSE:    GPL - See COPYING in the top level directory
  * FILE:       base/applications/mmc/lang/zh-TW.rc
  * PURPOSE:    Chinese (Traditional) Language File for Management Console
@@ -19,7 +19,7 @@ BEGIN
     END
     POPUP "說明(&H)"
     BEGIN
-        MENUITEM "關於 MenuOS 控制台(&A)", IDM_HELP_ABOUT
+        MENUITEM "關於 ReactOS 控制台(&A)", IDM_HELP_ABOUT
     END
 END
 
@@ -40,12 +40,12 @@ BEGIN
     END
     POPUP "說明(&H)"
     BEGIN
-        MENUITEM "關於 MenuOS 控制台(&A)", IDM_HELP_ABOUT
+        MENUITEM "關於 ReactOS 控制台(&A)", IDM_HELP_ABOUT
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "MenuOS 控制台"
+    IDS_APPTITLE "ReactOS 控制台"
     IDS_CONSOLETITLE "控制台%1!u!"
 END

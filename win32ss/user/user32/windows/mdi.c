@@ -123,7 +123,7 @@ typedef struct
     UINT      nTotalCreated;
     UINT      mdiFlags;
     UINT      sbRecalc;   /* SB_xxx flags for scrollbar fixup */
-    HBITMAP   hBmpClose; /* MenuOS modification */
+    HBITMAP   hBmpClose; /* ReactOS modification */
 } MDICLIENTINFO;
 
 //static HBITMAP hBmpClose   = 0;
@@ -879,7 +879,7 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
     TRACE("frame %p,child %p\n",frame,hChild);
 
     if( !menu ) return FALSE;
-//// MenuOS start
+//// ReactOS start
     /* if the system buttons already exist do not add them again */
     nItems = GetMenuItemCount(menu) - 1;
     iId = GetMenuItemID(menu,nItems) ;
@@ -1219,7 +1219,7 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
         ArrangeIconicWindows( hwnd );
 	ci->sbRecalc = SB_BOTH+1;
 #ifdef __REACTOS__
-	PostMessageA( hwnd, WM_MDICALCCHILDSCROLL, 0, 0 ); //// MenuOS: Post not send!
+	PostMessageA( hwnd, WM_MDICALCCHILDSCROLL, 0, 0 ); //// ReactOS: Post not send!
 #else
         SendMessageW( hwnd, WM_MDICALCCHILDSCROLL, 0, 0 );
 #endif
@@ -1279,7 +1279,7 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
         case WM_CREATE:
             if (GetWindowLongPtrW((HWND)lParam, GWL_EXSTYLE) & WS_EX_MDICHILD)
             {
-                // MenuOS See rev 33503
+                // ReactOS See rev 33503
                 if (!ci->child)
                     ci->child = HeapAlloc(GetProcessHeap(), 0, sizeof(HWND));
                 else
@@ -1813,7 +1813,7 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
     * because it is in client coordinates. The rectangles returned by
     * GetWindowRect are in screen coordinates to make this complicated.
     *
-    * Apparently (in MenuOS at least) the rcClient returned by GetWindowInfo
+    * Apparently (in ReactOS at least) the rcClient returned by GetWindowInfo
     * is in screen coordinates too.
     */
     WindowInfo.cbSize = sizeof(WindowInfo);

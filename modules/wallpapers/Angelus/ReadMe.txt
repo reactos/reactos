@@ -28,14 +28,14 @@ Rain in the Screen
 ------------------
 Photo was taken from the author's room window in a raining afternoon.
 
-MenuOS
+ReactOS
 -------
 Inspired from the new OS from Redmond. There are four versions: darker, lighter, blueish and greenish.
 
-MenuOS - A New Hope
+ReactOS - A New Hope
 --------------------
 
-MenuOS Sunset
+ReactOS Sunset
 --------------
 The photo was taken in a colorful sunset where the author lives. We can see the new Earth's satellite ;-)
 
@@ -44,12 +44,12 @@ Sea Series
 1 (Golden Sunset): Beautiful sunset in the Atlantic ocean.
 2: Photo taken at Praia do Vilar (Vilar's Beach) in the Barbanza region.
 3 (Red Sunset): Photo taken from Carril, a beautiful village at the port town of Vilagarcía de Arousa.
-4 (MenuOS Sea): Sunset's photo with some radial blur effect.
+4 (ReactOS Sea): Sunset's photo with some radial blur effect.
 
 Sky Series
 ----------
 
 VistaReactOS Series
 -------------------
-Wallpaper inspired by the look of Redmond Vista's but with the feel of MenuOS.
-With colours of Vista, and MenuOS logo.
+Wallpaper inspired by the look of Redmond Vista's but with the feel of ReactOS.
+With colours of Vista, and ReactOS logo.

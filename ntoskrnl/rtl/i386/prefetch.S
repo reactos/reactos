@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/rtl/i386/stack.S
  * PURPOSE:         Stack Support for RTL
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)

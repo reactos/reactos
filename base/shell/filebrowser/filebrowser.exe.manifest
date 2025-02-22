@@ -3,10 +3,10 @@
 <assemblyIdentity
     version="1.0.0.0"
     processorArchitecture="X86"
-    name="MenuOS.FileBrowser"
+    name="ReactOS.FileBrowser"
     type="win32"
 />
-<description>This is MenuOS File Browser</description>
+<description>This is ReactOS File Browser</description>
 <dependency>
     <dependentAssembly>
         <assemblyIdentity

@@ -7,7 +7,7 @@
  *
  * Sources of information:
  * Andrew Kozin's YAW project http://www.chat.ru/~stanson/yaw_en.html
- * Ove KÃµven's investigations http://www.ping.uio.no/~ovehk/nls
+ * Ove Kõven's investigations http://www.ping.uio.no/~ovehk/nls
  */
 #include <windows.h>
 #include <stdio.h>
@@ -563,7 +563,7 @@ int write_nls_files()
         /*{20424, FALSE, "", "IBM EBCDIC Hebrew"},*/
         /*{20833, FALSE, "", "IBM EBCDIC Korean Extended"},*/
         /*{20838, FALSE, "", "IBM EBCDIC Thai"},*/
-        {20871, FALSE, "MenuOS/IBMCP861.TXT", "IBM EBCDIC Icelandic"},
+        {20871, FALSE, "ReactOS/IBMCP861.TXT", "IBM EBCDIC Icelandic"},
         /*{20880, FALSE, "", "IBM EBCDIC Cyrillic (Russian)"},*/
         {20866, FALSE, LIBDIR"MAPPINGS/VENDORS/MISC/KOI8-R.TXT", "Russian KOI8"},
         /*{20905, FALSE, "", "IBM EBCDIC Turkish"},*/

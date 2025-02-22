@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS PCI Bus Driver
+ * PROJECT:         ReactOS PCI Bus Driver
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            drivers/bus/pci/pci/busno.c
  * PURPOSE:         Bus Number Management
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/

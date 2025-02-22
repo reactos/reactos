@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/winnls/string/lstring.c
  * PURPOSE:         Local string functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)

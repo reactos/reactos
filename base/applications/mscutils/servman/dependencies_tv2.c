@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Services
+ * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/servman/dependencies_tv2.c
  * PURPOSE:     Helper functions for service dependents

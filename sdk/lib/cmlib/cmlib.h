@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Kernel
+ * PROJECT:     ReactOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Configuration Manager Library - CMLIB header
  * COPYRIGHT:   Copyright 2001 - 2005 Eric Kohl
@@ -26,7 +26,7 @@
     #define NTDDI_VISTA                         NTDDI_WIN6
     #define NTDDI_WIN7                          0x06010000
 
-    #define NTDDI_VERSION   NTDDI_WS03SP4 // This is the MenuOS NT kernel version
+    #define NTDDI_VERSION   NTDDI_WS03SP4 // This is the ReactOS NT kernel version
 
     /* C_ASSERT Definition */
     #define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]

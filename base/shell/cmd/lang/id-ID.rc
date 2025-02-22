@@ -52,7 +52,7 @@ ERRORLEVEL disetel ke ofset tombol yang ditekan pengguna dalam pilihan.\n"
     STRING_CMD_HELP5 "  [pelengkapan nama file Bash]"
     STRING_CMD_HELP6 "  [tumpukan direktori]"
     STRING_CMD_HELP7 "  [pengalihan dan piping]"
-    STRING_CMD_HELP8 "Memulai instan baru dari interpreter baris perintah MenuOS.\n\n\
+    STRING_CMD_HELP8 "Memulai instan baru dari interpreter baris perintah ReactOS.\n\n\
 CMD [/[C|K] command][/P][/Q][/T:bf]\n\n\
   /C command  Menjalankan perintah yang ditetapkan dan mengakhirinya.\n\
   /K command  Menjalankan perintah yang ditetapkan dan tetap tinggal.\n\
@@ -414,7 +414,7 @@ untuk daftar penghargaan."
     STRING_VERSION_HELP5 "\nKirim laporan bug ke <ros-dev@reactos.org>.\n\
 Pemutakiran tersedia di: https://reactos.org"
     STRING_VERSION_HELP6 "\nVersi FreeDOS ditulis oleh:\n"
-    STRING_VERSION_HELP7 "\nVersi MenuOS ditulis oleh:\n"
+    STRING_VERSION_HELP7 "\nVersi ReactOS ditulis oleh:\n"
     STRING_VOL_HELP1 " Volume dalam drive %c adalah %s\n"
     STRING_VOL_HELP2 " Volume dalam drive %c tidak berlabel\n"
     STRING_VOL_HELP3 " Nomor Seri Volume adalah %04X-%04X\n"
@@ -498,10 +498,10 @@ title         judul baru\n"
     STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
     STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Variabel lingkungan '%s' tidak terdefinisi\n"
-    STRING_CMD_INFOLINE "  MenuOS Command Prompt                                      Type HELP = Help  "
-    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s MenuOS Team.\n"
-    STRING_REACTOS_VERSION "MenuOS [Versi %s %s]\n"
-    STRING_CMD_SHELLINFO "\nInterpreter Baris Perintah MenuOS\nVersi %s %s"
+    STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
+    STRING_REACTOS_VERSION "ReactOS [Versi %s %s]\n"
+    STRING_CMD_SHELLINFO "\nInterpreter Baris Perintah ReactOS\nVersi %s %s"
     STRING_VERSION_RUNNING_ON "Berjalan pada: "
     STRING_VERSION_RUNVER "%s [Versi %d.%d.%d] %s"
     STRING_COPY_FILE "        %d file di-copy\n"

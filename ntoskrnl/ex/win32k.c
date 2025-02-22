@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/ex/win32k.c
  * PURPOSE:         Executive Win32 Object Support (Desktop/WinStation)
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)

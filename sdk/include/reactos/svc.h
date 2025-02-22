@@ -1,8 +1,8 @@
 /*
- * PROJECT:     MenuOS Service Host
+ * PROJECT:     ReactOS Service Host
  * LICENSE:     BSD - See COPYING.ARM in the top level directory
  * PURPOSE:     Global Header for Service Host
- * PROGRAMMERS: MenuOS Portable Systems Group
+ * PROGRAMMERS: ReactOS Portable Systems Group
  *
  * REFERENCES:
  * https://www.geoffchappell.com/studies/windows/win32/services/svchost/process/globaldata.htm

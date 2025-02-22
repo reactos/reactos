@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Add hardware control panel
+ * PROJECT:     ReactOS Add hardware control panel
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Portuguese (Portugal) resource file
  * TRANSLATOR:  Copyright 2019 Jose Carlos Jesus <zecarlos1957@hotmail.com>
@@ -136,7 +136,7 @@ BEGIN
     LTEXT "Não é possível continuar com o 'Assistente'", IDC_FINISHTITLE, 114, 8, 203, 28
     LTEXT "Para continuar, ligue o novo hardware ao computador.", -1, 114, 40, 193, 16
     AUTOCHECKBOX "&Desligar o computador quando eu clico em 'Finalizar' para que possa abrir o computador e ligar o hardware.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "Na maioria dos casos, o MenuOS instala automaticamente o hardware após o ligar ao computador. Se o MenuOS não o encontrar poderá reabrir este assistente para instalar o software de suporte.", -1, 114, 98, 193, 32
+    LTEXT "Na maioria dos casos, o ReactOS instala automaticamente o hardware após o ligar ao computador. Se o ReactOS não o encontrar poderá reabrir este assistente para instalar o software de suporte.", -1, 114, 98, 193, 32
     LTEXT "Para fechar o assistente, clique em 'Finalizar'.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 

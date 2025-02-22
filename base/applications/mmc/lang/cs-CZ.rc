@@ -16,7 +16,7 @@ BEGIN
     END
     POPUP "&Nápověda"
     BEGIN
-        MENUITEM "&O konzoli řízení systému MenuOS", IDM_HELP_ABOUT
+        MENUITEM "&O konzoli řízení systému ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -37,12 +37,12 @@ BEGIN
     END
     POPUP "&Nápověda"
     BEGIN
-        MENUITEM "&O konzoli řízení systému MenuOS", IDM_HELP_ABOUT
+        MENUITEM "&O konzoli řízení systému ReactOS", IDM_HELP_ABOUT
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "Konzole řízení systému MenuOS"
+    IDS_APPTITLE "Konzole řízení systému ReactOS"
     IDS_CONSOLETITLE "Konzole%1!u!"
 END

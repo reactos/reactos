@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            win32ss/gdi/gdi32/objects/font.c
  * PURPOSE:
  * PROGRAMMER:

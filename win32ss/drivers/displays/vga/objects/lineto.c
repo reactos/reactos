@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS VGA display driver
+ * PROJECT:         ReactOS VGA display driver
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            win32ss/drivers/displays/vga/objects/lineto.c
  * PURPOSE:
- * PROGRAMMERS:     Copyright (C) 1998-2003 MenuOS Team
+ * PROGRAMMERS:     Copyright (C) 1998-2003 ReactOS Team
  */
 
 #include <vgaddi.h>

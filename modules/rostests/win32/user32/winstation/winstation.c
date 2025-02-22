@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Tests
+ * PROJECT:     ReactOS Tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Tests some aspects of the Window Station API.
  * COPYRIGHT:   Copyright 2018 Hermes Belusca-Maito

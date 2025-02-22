@@ -1,7 +1,7 @@
 /*
  *
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              MenuOS kernel
+ * PROJECT:              ReactOS kernel
  * FILE:                 services/dd/mpu401/settings.c
  * PURPOSE:              MPU-401 MIDI device driver setting management
  * PROGRAMMER:           Andrew Greenwood

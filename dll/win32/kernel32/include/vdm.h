@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS System Libraries
+ * PROJECT:         ReactOS System Libraries
  * FILE:            dll/win32/kernel32/include/vdm.h
  * PURPOSE:         Virtual DOS Machines (VDM) Support Definitions
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)

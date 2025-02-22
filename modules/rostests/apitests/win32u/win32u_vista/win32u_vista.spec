@@ -1,5 +1,5 @@
 ;
-; MenuOS Operating System
+; ReactOS Operating System
 ;
 ; This file contains all win32k native api functions from win vista
 ;

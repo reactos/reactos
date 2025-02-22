@@ -1,5 +1,5 @@
 ::
-:: PROJECT:     MenuOS CMD Testing Suite
+:: PROJECT:     ReactOS CMD Testing Suite
 :: LICENSE:     GPL v2 or any later version
 :: FILE:        run.cmd
 :: PURPOSE:     Runs the testing scripts
@@ -8,7 +8,7 @@
 
 @echo off
 cls
-echo MenuOS CMD Testing Suite
+echo ReactOS CMD Testing Suite
 echo ==========================
 echo.
 

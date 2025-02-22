@@ -104,7 +104,7 @@ echo --------- Testing Delayed Expansion ---------
 
 :: Checking exclamation point escaping
 set ENDV= ^(an open-source operating system^)
-echo This is MenuOS^^!%ENDV%
+echo This is ReactOS^^!%ENDV%
 echo Hello!
 echo Hello!!
 echo Hello!!!

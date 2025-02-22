@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Timedate Control Panel
+ * PROJECT:     ReactOS Timedate Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     German resource file
  * TRANSLATORS: Copyright 2008 Daniel Reimer <reimer.daniel@freenet.de>
@@ -61,7 +61,7 @@ BEGIN
     IDS_TIMEZONEUNKNOWN "Unbekannt"
     IDS_INETTIMESUCSYNC "Die Zeit wurde erfolgreich mit %s am %s um %s synchronisiert."
     IDS_INETTIMENEXTSYNC "Nächste Synchronisierung am %s um %s."
-    IDS_INETTIMESYNCING "Bitte warten Sie, während MenuOS die Zeit mit %s synchronisiert."
+    IDS_INETTIMESYNCING "Bitte warten Sie, während ReactOS die Zeit mit %s synchronisiert."
     IDS_INETTIMEERROR "Ein Fehler trat beim Synchronisieren mit %s auf."
     IDS_INETTIMESUCFILL "Bitte geben Sie den Namen eines NTP-Servers ein, um die Zeit zu synchronisieren"
     IDS_INETTIMEWELCOME "Wählen Sie einen NTP-Server aus der Liste aus oder geben Sie einen NTP-Servernamen ein, um die Uhrzeit des Computers zu synchronisieren"

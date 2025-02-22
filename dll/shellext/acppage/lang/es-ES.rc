@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Shell
+ * PROJECT:     ReactOS Shell
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Spanish locale file
  * COPYRIGHT:   Samuel Serapión Vega
@@ -13,7 +13,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Compatibilidad"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Si tiene problemas ejecutando este programa en MenuOS, seleccione el modo de compatibilidad que coincida con otro sistema operativo en el que funciona.\nPlease note that this is a work in progress.", IDC_EXPLANATION, 7, 7, 210, 31
+    LTEXT "Si tiene problemas ejecutando este programa en ReactOS, seleccione el modo de compatibilidad que coincida con otro sistema operativo en el que funciona.\nPlease note that this is a work in progress.", IDC_EXPLANATION, 7, 7, 210, 31
     GROUPBOX "Modo de compatibilidad", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "Ejecutar este programa en modo de compatibilidad para:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
@@ -46,5 +46,5 @@ STRINGTABLE
 BEGIN
     IDS_COMPAT_TITLE "Compatibilidad"
     IDS_FAILED_NETWORK "No se puede establecer modo de compatibilidad para este programa porque se encuentra en una unidad de red."
-    IDS_FAILED_PROTECTED "No se puede establecer modo de compatibilidad para este programa porque es parte de MenuOS."
+    IDS_FAILED_PROTECTED "No se puede establecer modo de compatibilidad para este programa porque es parte de ReactOS."
 END

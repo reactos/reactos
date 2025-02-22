@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS HAL
+ * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            hal/halx86/legacy/bus/pcibus.c
  * PURPOSE:         PCI Bus Support (Configuration Space, Resource Allocation)

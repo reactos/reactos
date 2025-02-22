@@ -133,7 +133,7 @@ BEGIN
     LTEXT "Nuk mund të vazhdohet Shtimi i Hardware me Magjistare", IDC_FINISHTITLE, 114, 8, 203, 28
     LTEXT "Për të vazhduar, lidhë këtë hardware në kompjuterin tuaj.", -1, 114, 40, 193, 16
     AUTOCHECKBOX "&Fik kompjuterin kur unë klikoj Finish në mënyrë që unë mund të hap kompjuterin dhe të lidhe hardware.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "Në shumicën e rasteve MenuOS automatikisht do të instalojë hardwarin tuaj, pasi ju lidhni atë. Nëse MenuOS nuk e ka gjetur atë, ju mund të rihapni këtë magjistar për të instaluar software mbështetës.", -1, 114, 98, 193, 32
+    LTEXT "Në shumicën e rasteve ReactOS automatikisht do të instalojë hardwarin tuaj, pasi ju lidhni atë. Nëse ReactOS nuk e ka gjetur atë, ju mund të rihapni këtë magjistar për të instaluar software mbështetës.", -1, 114, 98, 193, 32
     LTEXT "Për të mbyllur këtë magjistar, kliko Finish.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 

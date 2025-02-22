@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            dlls/win32/advapi32/misc/efs.c
  * PURPOSE:         Encrypted File System support
  * PROGRAMMER:      Christoph_vW

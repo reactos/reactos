@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS netapi32.dll API Tests
+ * PROJECT:     ReactOS netapi32.dll API Tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Test list
  * COPYRIGHT:   Copyright 2017 Colin Finck (colin@reactos.org)

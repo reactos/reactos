@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/kd64/kdinit.c
  * PURPOSE:         KD64 Initialization Code
@@ -92,7 +92,7 @@ KdpPrintBanner(VOID)
     SIZE_T MemSizeMBs = KdpGetMemorySizeInMBs(KeLoaderBlock);
 
     DPRINT1("-----------------------------------------------------\n");
-    DPRINT1("MenuOS " KERNEL_VERSION_STR " (Build " KERNEL_VERSION_BUILD_STR ") (Commit " KERNEL_VERSION_COMMIT_HASH ")\n");
+    DPRINT1("ReactOS " KERNEL_VERSION_STR " (Build " KERNEL_VERSION_BUILD_STR ") (Commit " KERNEL_VERSION_COMMIT_HASH ")\n");
     DPRINT1("%u System Processor [%u MB Memory]\n", KeNumberProcessors, MemSizeMBs);
 
     if (KeLoaderBlock)
@@ -403,7 +403,7 @@ KdInitSystem(
         /* Let user-mode know that it's enabled as well */
         SharedUserData->KdDebuggerEnabled = TRUE;
 
-        /* Display separator + MenuOS version at the start of the debug log */
+        /* Display separator + ReactOS version at the start of the debug log */
         KdpPrintBanner();
 
         /* Check if the debugger should be disabled initially */

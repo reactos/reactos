@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Base API Server DLL
+ * PROJECT:         ReactOS Base API Server DLL
  * FILE:            subsystems/win/basesrv/init.c
  * PURPOSE:         Initialization
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
@@ -494,7 +494,7 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
      * being queried twice, the first time as a ULONG!
      *
      * Somehow, in Windows this doesn't cause a buffer overflow, but it might
-     * in MenuOS, so this code is disabled until someone figures out WTF.
+     * in ReactOS, so this code is disabled until someone figures out WTF.
      */
     BaseStaticServerData->CSDNumber = 0;
     BaseStaticServerData->RCNumber = 0;

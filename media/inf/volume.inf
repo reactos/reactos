@@ -8,7 +8,7 @@ Signature  = "$Windows NT$"
 LayoutFile = layout.inf
 Class      = Volume
 ClassGUID  = {71A27CDD-812A-11D0-BEC7-08002BE2092F}
-Provider   = %MenuOS%
+Provider   = %ReactOS%
 DriverVer  = 09/10/2008,1.0.0.0
 
 [DestinationDirs]
@@ -40,7 +40,7 @@ HKR, , SilentInstall,   0, "1"
 
 [Strings]
 ; Non-localizable
-MenuOS = "MenuOS Project"
+ReactOS = "ReactOS Project"
 
 ; Localizable
 VolumeClassName = "Storage volumes"

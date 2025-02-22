@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS winsta.dll
+ * PROJECT:         ReactOS winsta.dll
  * FILE:            dll/win32/winsta/winsta.h
  * PURPOSE:         WinStation
  * PROGRAMMER:      Aleksey Bragin

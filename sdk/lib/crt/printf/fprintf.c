@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
- * PROJECT:         MenuOS crt library
+ * PROJECT:         ReactOS crt library
  * FILE:            lib/sdk/crt/printf/fprintf.c
  * PURPOSE:         Implementation of fprintf
  * PROGRAMMER:      Timo Kreuzer

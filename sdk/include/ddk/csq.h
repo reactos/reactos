@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  *
- * This header defines the interface to the MenuOS Cancel-Safe Queue library.
+ * This header defines the interface to the ReactOS Cancel-Safe Queue library.
  * This interface is based on and is similar to the Microsoft Cancel-Safe
  * Queue interface.
  *

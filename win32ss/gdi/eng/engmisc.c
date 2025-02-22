@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS Win32k subsystem
+ * PROJECT:           ReactOS Win32k subsystem
  * PURPOSE:           ENG misc Functions
  * FILE:              win32ss/gdi/eng/engmisc.c
- * PROGRAMER:         MenuOS Team
+ * PROGRAMER:         ReactOS Team
  */
 
 #include <win32k.h>

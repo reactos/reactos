@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS kernel
+ * PROJECT:           ReactOS kernel
  * PURPOSE:           Window event handlers
  * PROGRAMER:         James Tabor <james.tabor@reactos.org>
  */

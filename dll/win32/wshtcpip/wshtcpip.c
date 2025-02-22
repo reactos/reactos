@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS WinSock Helper DLL for TCP/IP
+ * PROJECT:     ReactOS WinSock Helper DLL for TCP/IP
  * FILE:        wshtcpip.c
  * PURPOSE:     DLL entry
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

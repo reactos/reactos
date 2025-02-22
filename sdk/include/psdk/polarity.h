@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:            This file is in the public domain.
- * PROJECT:              MenuOS kernel
+ * PROJECT:              ReactOS kernel
  * FILE:                 include/psdk/polarity.h
  * PURPOSE:
  * PROGRAMMER:           Magnus Olsen (greatlrd)

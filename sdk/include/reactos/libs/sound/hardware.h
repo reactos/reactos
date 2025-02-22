@@ -1,5 +1,5 @@
 /*
-    MenuOS Sound System
+    ReactOS Sound System
     Legacy support
     Hardware interaction helper
 

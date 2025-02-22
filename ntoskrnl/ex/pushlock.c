@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/ex/pushlock.c
  * PURPOSE:         Pushlock and Cache-Aware Pushlock Implementation
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.com)

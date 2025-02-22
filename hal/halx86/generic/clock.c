@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Hardware Abstraction Layer
+ * PROJECT:         ReactOS Hardware Abstraction Layer
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         PIT rollover table
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)

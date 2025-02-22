@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Display Control Panel
+ * PROJECT:         ReactOS Display Control Panel
  * PURPOSE:         Settings property page
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
  *                  Hervé Poussineau (hpoussin@reactos.org)

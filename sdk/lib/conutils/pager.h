@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Console Utilities Library
+ * PROJECT:     ReactOS Console Utilities Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Console/terminal paging functionality.
  * COPYRIGHT:   Copyright 2017-2021 Hermes Belusca-Maito

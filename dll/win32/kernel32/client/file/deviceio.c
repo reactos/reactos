@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/win32/kernel32/client/file/deviceio.c
  * PURPOSE:         Device I/O Base Client Functionality

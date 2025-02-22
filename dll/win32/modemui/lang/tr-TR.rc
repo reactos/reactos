@@ -366,7 +366,7 @@ BEGIN
     3053 "Modemin erişilir olmamasından dolayı modem seçenekleri görüntülenemiyor.\n\nSistemi yeniden başlatınız ve yeniden deneyiniz."
     3054 "Modemler İçin Seçenekler"
     3060 "Seçilen modemi ya da modemleri sistemden kaldırmak istediğinizden emin misiniz?"
-    3061 "MenuOS, ""%1"" modemini ""%2""den kaldıramadı."
+    3061 "ReactOS, ""%1"" modemini ""%2""den kaldıramadı."
     3062 "Modem"
     3069 "Modem denetim masasını açmak için yeterli bellek yok.\n\nBazı programları kapatınız ve yeniden deneyiniz."
     3073 "Bir modem kurmak için bir sistem yöneticisi olmanız gerekir."

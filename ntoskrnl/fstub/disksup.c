@@ -1,5 +1,5 @@
 /*
-* PROJECT:         MenuOS Kernel
+* PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
 * FILE:            ntoskrnl/fstub/disksup.c
 * PURPOSE:         I/O HAL Routines for Disk Access

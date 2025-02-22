@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS kernel
+ * PROJECT:     ReactOS kernel
  * FILE:        include/reactos/version.h.cmake
  * PURPOSE:     Defines the current version
  * PROGRAMMER:  David Welch (welch@mcmail.com)

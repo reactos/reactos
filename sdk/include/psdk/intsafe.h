@@ -3,7 +3,7 @@
  *
  * \brief Windows helper functions for integer overflow prevention
  *
- * \package This file is part of the MenuOS PSDK package.
+ * \package This file is part of the ReactOS PSDK package.
  *
  * \author
  *   Timo Kreuzer (timo.kreuzer@reactos.org)

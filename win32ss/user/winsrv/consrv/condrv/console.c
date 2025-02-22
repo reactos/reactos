@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Console Driver DLL
+ * PROJECT:         ReactOS Console Driver DLL
  * FILE:            win32ss/user/winsrv/consrv/condrv/console.c
  * PURPOSE:         Console Management Functions
- * PROGRAMMERS:     GÃ© van Geldorp
+ * PROGRAMMERS:     Gé van Geldorp
  *                  Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)

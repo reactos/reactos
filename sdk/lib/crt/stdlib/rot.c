@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS system libraries
+ * PROJECT:     ReactOS system libraries
  * FILE:        lib/sdk/crt/stdlib/rot.c
  * PURPOSE:     Performs a bitwise rotation
  * PROGRAMER:   Ariadne

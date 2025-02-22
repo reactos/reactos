@@ -131,7 +131,7 @@ BEGIN
     LTEXT "Donanım Ekleme Sihirbazı Devam Edemiyor", IDC_FINISHTITLE, 114, 8, 203, 28
     LTEXT "Devam etmek için bu donanımı bilgisayarınıza bağlayınız.", -1, 114, 40, 193, 16
     AUTOCHECKBOX """Bitir""e tıkladığınızda bilgisayarı kapat, böylece donanımı bağlayabilirsiniz ve bilgisayarı açabilirsiniz", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "Çoğu durumda MenuOS, siz donanımı bağladıktan sonra onu otomatik kuracaktır. Eğer MenuOS onu bulamazsa desteklenen yazılımı kurmak için bu sihirbazı yine açabilirsiniz.", -1, 114, 98, 193, 32
+    LTEXT "Çoğu durumda ReactOS, siz donanımı bağladıktan sonra onu otomatik kuracaktır. Eğer ReactOS onu bulamazsa desteklenen yazılımı kurmak için bu sihirbazı yine açabilirsiniz.", -1, 114, 98, 193, 32
     LTEXT "Bu yardımcıyı kapatmak için ""Bitir""e tıklayınız.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 

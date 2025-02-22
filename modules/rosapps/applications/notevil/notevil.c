@@ -19,7 +19,7 @@
  * Cambridge, MA 02139, USA.
  *
  * --------------------------------------------------------------------
- * MenuOS Coders Console Parade
+ * ReactOS Coders Console Parade
  *
  * 19990411 EA
  * 19990515 EA
@@ -100,7 +100,7 @@ GetNextString(LPWSTR Buffer,
 VOID
 DisplayTitle(VOID)
 {
-    LPWSTR szTitle = L"MenuOS Coders Console Parade";
+    LPWSTR szTitle = L"ReactOS Coders Console Parade";
     COORD  xy;
 
     xy.X = (ScreenBufferInfo.dwSize.X - (USHORT)wcslen(szTitle)) / 2;

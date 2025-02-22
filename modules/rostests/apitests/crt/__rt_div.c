@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS API tests
+ * PROJECT:         ReactOS API tests
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         Tests for statically linked __rt_sdiv/udiv/sdiv64/udiv64 on ARM
  * COPYRIGHT:       Copyright 2021 Stanislav Motylkov <x86corez@gmail.com>

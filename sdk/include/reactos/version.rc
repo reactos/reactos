@@ -16,11 +16,11 @@
 #include "buildno.h"
 
 /* Define some defaults (shouldn't be overwritten by applications */
-#define REACTOS_DEFAULT_STR_COMPANY_NAME    "MenuOS Project"
-#define REACTOS_DEFAULT_STR_DESCRIPTION     "MenuOS Core Component"
+#define REACTOS_DEFAULT_STR_COMPANY_NAME    "ReactOS Project"
+#define REACTOS_DEFAULT_STR_DESCRIPTION     "ReactOS Core Component"
 #define REACTOS_DEFAULT_STR_INTERNAL_NAME   ""
-#define REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT "(C) 1996-" COPYRIGHT_YEAR " MenuOS Project"
-#define REACTOS_DEFAULT_STR_PRODUCT_NAME    "MenuOS Operating System"
+#define REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT "(C) 1996-" COPYRIGHT_YEAR " ReactOS Project"
+#define REACTOS_DEFAULT_STR_PRODUCT_NAME    "ReactOS Operating System"
 
 /* Set defaults for everything, unless overridden */
 #ifndef REACTOS_FILEVERSION

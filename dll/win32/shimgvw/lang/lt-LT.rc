@@ -4,7 +4,7 @@ LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "MenuOS paveikslėlių ir faksogramų peržiūros programa"
+    IDS_APPTITLE "ReactOS paveikslėlių ir faksogramų peržiūros programa"
     IDS_SETASDESKBG "Nustatyti kaip darbalaukio foną"
     IDS_NOPREVIEW "No preview available."
     IDS_PREVIEW "Preview"

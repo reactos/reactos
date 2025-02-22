@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/config/cmdata.c
  * PURPOSE:         Configuration Manager - Global Configuration Data
@@ -874,7 +874,7 @@ DATA_SEG("INITDATA") CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     CM_DEBUG_PRINT_FILTER(DFSC),
     CM_DEBUG_PRINT_FILTER(WOW64),
 //
-// Components specified in Vista+, some of which we also use in MenuOS
+// Components specified in Vista+, some of which we also use in ReactOS
 //
     CM_DEBUG_PRINT_FILTER(ALPC),
     CM_DEBUG_PRINT_FILTER(WDI),

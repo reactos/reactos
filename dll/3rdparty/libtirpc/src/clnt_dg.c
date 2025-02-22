@@ -447,7 +447,7 @@ get_reply:
 #ifdef IP_RECVERR
 #error Not supported!
 #endif
-                /* MenuOS: use select instead of poll */
+                /* ReactOS: use select instead of poll */
                 FD_ZERO(&infd);
                 FD_SET(cu->cu_fd, &infd);
 

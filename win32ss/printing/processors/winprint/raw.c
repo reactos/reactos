@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Standard Print Processor
+ * PROJECT:     ReactOS Standard Print Processor
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Printing a job with RAW datatype
  * COPYRIGHT:   Copyright 2015 Colin Finck (colin@reactos.org)

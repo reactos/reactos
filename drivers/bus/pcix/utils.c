@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS PCI Bus Driver
+ * PROJECT:         ReactOS PCI Bus Driver
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            drivers/bus/pci/utils.c
  * PURPOSE:         Utility/Helper Support Code
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/
@@ -153,7 +153,7 @@ PciIsDatacenter(VOID)
     else
     {
         /* This scenario shouldn't happen yet, since SetupDD isn't used */
-        UNIMPLEMENTED_FATAL("MenuOS doesn't use SetupDD for its installation program. Therefore this scenario must not happen!\n");
+        UNIMPLEMENTED_FATAL("ReactOS doesn't use SetupDD for its installation program. Therefore this scenario must not happen!\n");
     }
 
     /* Return if this is Datacenter or not */
@@ -612,7 +612,7 @@ PciGetHackFlags(IN USHORT VendorId,
     ULONG LastWeight, MatchWeight;
     ULONG EntryFlags;
 
-    /* MenuOS SetupLDR Hack */
+    /* ReactOS SetupLDR Hack */
     if (!PciHackTable) return 0;
 
     /* Initialize the variables before looping */

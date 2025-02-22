@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS SDK
+ * PROJECT:     ReactOS SDK
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     CRT - ISA availability
  * COPYRIGHT:   Copyright 2024 Timo Kreuzer (timo.kreuzer@reactos.org)

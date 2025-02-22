@@ -3,9 +3,9 @@
  *
  * Windows NT native definitions for user mode
  *
- * This file is part of the MenuOS PSDK package.
+ * This file is part of the ReactOS PSDK package.
  *
- * This file is auto-generated from MenuOS XDK.
+ * This file is auto-generated from ReactOS XDK.
  *
  * THIS SOFTWARE IS NOT COPYRIGHTED
  *

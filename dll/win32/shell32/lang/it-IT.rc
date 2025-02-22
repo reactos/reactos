@@ -145,9 +145,9 @@ BEGIN
     LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10, SS_NOPREFIX
     LTEXT "Copyright 1996-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
-    LTEXT " MenuOS Team\0", IDC_STATIC, 105, 75, 53, 10
+    LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20, SS_NOPREFIX
-    LTEXT "Questa versione di MenuOS è registrata a nome di:", IDC_ABOUT_REG_TO, 35, 115, 180, 10
+    LTEXT "Questa versione di ReactOS è registrata a nome di:", IDC_ABOUT_REG_TO, 35, 115, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10, SS_NOPREFIX
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10, SS_NOPREFIX
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
@@ -161,7 +161,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "MenuOS è disponibile grazie a:", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "ReactOS è disponibile grazie a:", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -171,7 +171,7 @@ CAPTION "Run"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "Digitare il nome del programma, della cartella, del documento o della risorsa Internet, e MenuOS la aprirà.", 12289, 36, 11, 185, 18
+    LTEXT "Digitare il nome del programma, della cartella, del documento o della risorsa Internet, e ReactOS la aprirà.", 12289, 36, 11, 185, 18
     LTEXT "&Apri:", 12305, 7, 39, 24, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 184, 100
     DEFPUSHBUTTON "OK", IDOK, 62, 70, 50, 14
@@ -421,7 +421,7 @@ BEGIN
     GROUPBOX "Attività", -1, 7, 10, 249, 40
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
     AUTORADIOBUTTON "Mostrare le attività comuni nelle cartelle", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Utilizzare le cartelle nella forma 'MenuOS class&ic'", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
+    AUTORADIOBUTTON "Utilizzare le cartelle nella forma 'ReactOS class&ic'", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
     GROUPBOX "Sfoglia cartelle", -1, 7, 60, 249, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "Aprire ogni cartella nella stessa finestra", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
@@ -491,7 +491,7 @@ END
 
 IDD_LOG_OFF DIALOGEX 0, 0, 212, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Chiudi sessione di MenuOS"
+CAPTION "Chiudi sessione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
@@ -509,14 +509,14 @@ BEGIN
     PUSHBUTTON "&Switch User", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
     PUSHBUTTON "&Chiudi sessione", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Annulla", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
-    LTEXT "Chiudi sessione di MenuOS", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 165, 19
+    LTEXT "Chiudi sessione di ReactOS", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 165, 19
     CTEXT "Switch User", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
     CTEXT "Chiudi sessione", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
 END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Scollega MenuOS"
+CAPTION "Scollega ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
@@ -530,7 +530,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLIN
 CAPTION "Partenza automatica"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Selezionate un tipo di contenuto e poi un tipo di azione che MenuOS deve eseguire automaticamente quando quel tipo è usato in questo dispositivo:", 1000, 7, 7, 215, 20
+    LTEXT "&Selezionate un tipo di contenuto e poi un tipo di azione che ReactOS deve eseguire automaticamente quando quel tipo è usato in questo dispositivo:", 1000, 7, 7, 215, 20
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
     GROUPBOX "Azioni", -1, 7, 45, 212, 146
     AUTORADIOBUTTON "Selezionare una azione da &eseguire:", 1005, 14, 54, 202, 10, WS_GROUP
@@ -546,7 +546,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
     LTEXT "Questo disco o dispositivo contiene più di un tipo di contenuto.", 1001, 32, 7, 191, 20
-    LTEXT "Cosa volete che faccia MenuOS?", 1002, 32, 31, 188, 8
+    LTEXT "Cosa volete che faccia ReactOS?", 1002, 32, 31, 188, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
     DEFPUSHBUTTON "OK", IDOK, 96, 186, 60, 14
     PUSHBUTTON "Annulla", IDCANCEL, 160, 186, 60, 14
@@ -558,10 +558,10 @@ CAPTION "Contenuti misti"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "MenuOS può eseguire la stessa azione ogni volta che viene inserito un disco o connesso un dispositivo con questo tipo di file:", 1001, 30, 7, 193, 20
+    LTEXT "ReactOS può eseguire la stessa azione ogni volta che viene inserito un disco o connesso un dispositivo con questo tipo di file:", 1001, 30, 7, 193, 20
     ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
     EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Cosa volete che faccia MenuOS?", 1002, 32, 41, 190, 8
+    LTEXT "Cosa volete che faccia ReactOS?", 1002, 32, 41, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
     AUTOCHECKBOX "Esegui sempre l'azione selezionata.", 1004, 32, 171, 190, 10
     DEFPUSHBUTTON "OK", IDOK, 96, 185, 60, 14
@@ -574,8 +574,8 @@ CAPTION "Esecuzione automatica"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "MenuOS può eseguire la stessa azione ogni volta che collegate questo dispositivo.", 1001, 32, 7, 190, 22
-    LTEXT "&Cosa volete che faccia MenuOS?", 1002, 32, 31, 190, 8
+    LTEXT "ReactOS può eseguire la stessa azione ogni volta che collegate questo dispositivo.", 1001, 32, 7, 190, 22
+    LTEXT "&Cosa volete che faccia ReactOS?", 1002, 32, 31, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
     AUTOCHECKBOX "&Esegui sempre l'azione selezionata", 1004, 32, 143, 190, 8
     DEFPUSHBUTTON "OK", IDOK, 94, 160, 60, 14
@@ -584,11 +584,11 @@ END
 
 IDD_SHUTDOWN DIALOGEX 0, 0, 211, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Spegnimento di MenuOS"
+CAPTION "Spegnimento di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
-    LTEXT "Cosa volete che faccia MenuOS?", -1, 39, 7, 167, 10
+    LTEXT "Cosa volete che faccia ReactOS?", -1, 39, 7, 167, 10
     COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     LTEXT "Mantenere la vostra sessione, il computer acceso a bassa potenza con i dati in memoria. Il computer si riattiverà quando è premuto un taso o mosso il mouse.", 8225, 39, 40, 167, 37
     DEFPUSHBUTTON "OK", 1, 7, 82, 60, 14, WS_GROUP
@@ -854,7 +854,7 @@ BEGIN
 
     /* Warning format system drive dialog strings */
     IDS_NO_FORMAT_TITLE "Cannot format this volume"
-    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for MenuOS to run."
+    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Impossibile mostrare il dialogo Eseguire (errore interno)"
@@ -940,8 +940,8 @@ BEGIN
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Cartella"
-    IDS_BAT_FILE "File Batch MenuOS"
-    IDS_CMD_FILE "Script di comandi MenuOS"
+    IDS_BAT_FILE "File Batch ReactOS"
+    IDS_CMD_FILE "Script di comandi ReactOS"
     IDS_COM_FILE "Applicazione DOS"
     IDS_CPL_FILE "Elemento del pannello di controllo"
     IDS_CUR_FILE "Cursore"
@@ -1062,7 +1062,7 @@ BEGIN
     IDS_SYSTEMFOLDER "System Folder"
 
     /* For IDD_LOG_OFF_FANCY */
-    IDS_LOG_OFF_DESC "Closes your programs and ends your MenuOS session."
+    IDS_LOG_OFF_DESC "Closes your programs and ends your ReactOS session."
     IDS_SWITCH_USER_DESC "Lets another user log on while your programs and files remain open.\r\n\r\n(You can also switch users by pressing the Windows logo key + L.)"
     IDS_LOG_OFF_TITLE "Chiudi sessione"
     IDS_SWITCH_USER_TITLE "Switch User"

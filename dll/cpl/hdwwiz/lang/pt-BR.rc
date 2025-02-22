@@ -129,7 +129,7 @@ BEGIN
     LTEXT "Não é possível continuar o 'Assistente para adicionar hardware'", IDC_FINISHTITLE, 114, 8, 203, 28
     LTEXT "Para continuar, conecte este item de hardware ao computador.", -1, 114, 40, 193, 16
     AUTOCHECKBOX "&Desligar o computador quando eu clicar em 'Concluir' para que eu possa abrir o computador e conectar o hardware.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "Na maioria dos casos, o MenuOS irá instalar automaticamente o hardware depois que você o conectar. Se o hardware não for encontrado, você poderá abrir novamente o assistente para instalar o software de suporte.", -1, 114, 98, 193, 32
+    LTEXT "Na maioria dos casos, o ReactOS irá instalar automaticamente o hardware depois que você o conectar. Se o hardware não for encontrado, você poderá abrir novamente o assistente para instalar o software de suporte.", -1, 114, 98, 193, 32
     LTEXT "Para fechar o assistente, clique em 'Concluir'.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 

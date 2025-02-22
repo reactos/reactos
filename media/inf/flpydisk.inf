@@ -8,7 +8,7 @@ Signature  = "$Windows NT$"
 LayoutFile = layout.inf
 Class      = FloppyDisk
 ClassGuid  = {4D36E980-E325-11CE-BFC1-08002BE10318}
-Provider   = %MenuOS%
+Provider   = %ReactOS%
 DriverVer  = 08/15/2005,1.01.0.0
 
 [DestinationDirs]
@@ -58,7 +58,7 @@ AddService = , 0x00000002
 
 [Strings]
 ; Non-localizable
-MenuOS = "MenuOS Project"
+ReactOS = "ReactOS Project"
 
 ; Localizable
 FloppyClassName = "Floppy disk drives"

@@ -1,5 +1,5 @@
 #
-#  MenuOS shell
+#  ReactOS shell
 #
 #  Makefile
 #

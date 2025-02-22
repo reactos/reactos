@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Win32 BrowseUI
+ * PROJECT:     ReactOS Win32 BrowseUI
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Portuguese (Portugal) resource file
  * TRANSLATORS: Copyright 2019-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
@@ -80,7 +80,7 @@ BEGIN
     END
     POPUP "Aj&uda", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "So&bre o MenuOS", IDM_HELP_ABOUT
+        MENUITEM "So&bre o ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -343,6 +343,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARSE_ADDR_ERR_TITLE "Explorador do MenuOS"
-    IDS_PARSE_ADDR_ERR_TEXT "O Explorador do MenuOS não encontrou '%1'. Verifique a ortografia e tente novamente."
+    IDS_PARSE_ADDR_ERR_TITLE "Explorador do ReactOS"
+    IDS_PARSE_ADDR_ERR_TEXT "O Explorador do ReactOS não encontrou '%1'. Verifique a ortografia e tente novamente."
 END

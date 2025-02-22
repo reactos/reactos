@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Local Port Monitor
+ * PROJECT:     ReactOS Local Port Monitor
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions related to ports
  * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)

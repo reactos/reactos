@@ -12,7 +12,7 @@ END
 
 IDD_WELCOME DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Bem-vindo ao MenuOS"
+CAPTION "Bem-vindo ao ReactOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -108,7 +108,7 @@ END
 
 IDD_LOGOFF DIALOGEX 0, 0, 188, 60
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP
-CAPTION "Terminar sessão no MenuOS"
+CAPTION "Terminar sessão no ReactOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOGOFF, IDC_STATIC, 7, 7, 20, 20
@@ -235,7 +235,7 @@ BEGIN
     IDS_INVALIDLOGONHOURS "A sua conta tem restrições de horário que impedem o início de sessão no momento. Por favor, tente novamente mais tarde."
     IDS_INVALIDWORKSTATION "A sua conta está configurada para impedir que use este computador. Por favor, tente outro computador."
     IDS_ACCOUNTRESTRICTION "Não é possível iniciar sessão devido a uma restrição de conta."
-    IDS_EMERGENCYLOGOFFTITLE "Encerrar sessão no MenuOS"
+    IDS_EMERGENCYLOGOFFTITLE "Encerrar sessão no ReactOS"
     IDS_EMERGENCYLOGOFF "Clique em OK para encerrar a sessão imediatamente. Quaisquer dados não guardados serão perdidos. Utilize isto apenas como último recurso."
     IDS_EMERGENCYRESTARTTITLE "Reinício de emergência"
     IDS_EMERGENCYRESTART "Clique em OK para reiniciar imediatamente. Quaisquer dados não guardados serão perdidos. Utilize isto apenas como último recurso."

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS System Configuration Applet
+ * PROJECT:     ReactOS System Configuration Applet
  * LICENSE:     GPL - See COPYING in the top level directory
  * PURPOSE:     German language file for net.dll
  * PROGRAMMERS: Eric Kohl
@@ -14,7 +14,7 @@ CAPTION "Computername"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_COMPNAME, IDC_STATIC, 7, 7, 20, 20, SS_ICON
-    LTEXT "MenuOS benutzt folgende Informationen, um Ihren Computer im Netzwerk zu identifizieren.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT "ReactOS benutzt folgende Informationen, um Ihren Computer im Netzwerk zu identifizieren.", IDC_STATIC, 40, 5, 204, 20
     LTEXT "Computerbeschreibung:", IDC_STATIC, 7, 40, 80, 9
     EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "Computername:", IDC_STATIC, 7, 68, 64, 9
@@ -74,7 +74,7 @@ BEGIN
     4 "Computernamen ändern"
     5 "Arbeitsgruppe:"
     6 "Domäne:"
-    7 "Der Domänenname ""%1"" entspricht nicht den Internet-DNS-Richtlinien, obwohl er ein gültiger MenuOS-Name ist. Verwenden Sie den MenuOS DNS-Server für nicht standardmäßige Namen."
+    7 "Der Domänenname ""%1"" entspricht nicht den Internet-DNS-Richtlinien, obwohl er ein gültiger ReactOS-Name ist. Verwenden Sie den ReactOS DNS-Server für nicht standardmäßige Namen."
     8 "Der Domänenname ""%1"" ist nicht richtig formatiert. Domänen werden mit einem Punkt (.) abgetrennt. Jede Domäne ist auf 63 Zeichen begrenzt. Beispiel: domain-1.reactos.org."
     10 "Der neue Computername ""%1"" ist zu lang. Der Name darf nicht länger als 63 Zeichen sein."
     11 "Der neue Computername wurde nicht ordnungsgemäß formatiert. Standardnamen dürfen Buchstaben (a-z, A-Z), Zahlen (0-9) und Bindestriche (-), aber keine Leerzeichen oder Punkte (.) enthalten. Der Name darf nicht ausschließlich aus Ziffern bestehen."

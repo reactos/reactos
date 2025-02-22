@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS SerialUI DLL
+ * PROJECT:     ReactOS SerialUI DLL
  * FILE:        serialui.h
  * PURPOSE:     header file
  * PROGRAMMERS: Saveliy Tretiakov (saveliyt@mail.ru)

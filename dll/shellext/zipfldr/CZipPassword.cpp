@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Zip Shell Extension
+ * PROJECT:     ReactOS Zip Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Ask the user for a password
  * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)

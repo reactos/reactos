@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Services
+ * PROJECT:     ReactOS Services
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * FILE:        base/applications/sc/print.c
  * PURPOSE:     print service info

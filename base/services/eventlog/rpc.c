@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS EventLog Service
+ * PROJECT:         ReactOS EventLog Service
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/services/eventlog/rpc.c
  * PURPOSE:         RPC Port Interface support

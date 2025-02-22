@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS shutdown/logoff utility
+ * PROJECT:         ReactOS shutdown/logoff utility
  * FILE:            base/applications/shutdown/gui.c
  * PURPOSE:         Shows a GUI used for managing multiple remote shutdown/restarts
  * PROGRAMMERS:     Lee Schroeder

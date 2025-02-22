@@ -1,5 +1,5 @@
 /*
- *  MenuOS About Dialog Box
+ *  ReactOS About Dialog Box
  *
  *  about.h
  *

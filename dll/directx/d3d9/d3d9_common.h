@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS ReactX
+ * PROJECT:         ReactOS ReactX
  * FILE:            dll/directx/d3d9/d3d9_common.h
  * PURPOSE:         d3d9.dll common functions, defines and macros
  * PROGRAMERS:      Gregor Brunmar <gregor (dot) brunmar (at) home (dot) se>

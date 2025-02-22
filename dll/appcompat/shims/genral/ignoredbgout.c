@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS 'General' Shim library
+ * PROJECT:     ReactOS 'General' Shim library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Ignore debug output shim
  * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)

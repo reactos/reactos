@@ -1,4 +1,4 @@
-MenuOS "Franklin Gothic Medium" fonts are based on
+ReactOS "Franklin Gothic Medium" fonts are based on
 Alexei Vanyashin's "Libre Franklin" fonts.
 
 These font files are released under the terms of

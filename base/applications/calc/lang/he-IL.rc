@@ -335,7 +335,7 @@ BEGIN
     BEGIN
         MENUITEM "נושאי עזרה", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "אודות מחשבון MenuOS", IDM_HELP_ABOUT
+        MENUITEM "אודות מחשבון ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -368,7 +368,7 @@ BEGIN
     BEGIN
         MENUITEM "נושאי עזרה", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "אודות המחשבון MenuOS", IDM_HELP_ABOUT
+        MENUITEM "אודות המחשבון ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -391,7 +391,7 @@ BEGIN
     BEGIN
         MENUITEM "נושאי עזרה", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "אודות המחשבון MenuOS", IDM_HELP_ABOUT
+        MENUITEM "אודות המחשבון ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -406,7 +406,7 @@ END
 /* About */
 STRINGTABLE
 BEGIN
-    IDS_CALC_NAME "מחשבון MenuOS"
+    IDS_CALC_NAME "מחשבון ReactOS"
     IDS_AUTHOR "נכתב על ידי Carlo Bramini"
 END
 

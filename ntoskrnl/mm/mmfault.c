@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top directory
- * PROJECT:         MenuOS kernel
+ * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/mmfault.c
  * PURPOSE:         Kernel memory management functions
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
@@ -246,7 +246,7 @@ MmAccessFault(IN ULONG FaultCode,
         return MmArmAccessFault(FaultCode, Address, Mode, TrapInformation);
     }
 
-    /* Is there a MenuOS address space yet? */
+    /* Is there a ReactOS address space yet? */
     if (MmGetKernelAddressSpace())
     {
         if (Address > MM_HIGHEST_USER_ADDRESS)
@@ -290,7 +290,7 @@ MmAccessFault(IN ULONG FaultCode,
     }
 
 Retry:
-    /* Keep same old MenuOS Behaviour */
+    /* Keep same old ReactOS Behaviour */
     if (!MI_IS_NOT_PRESENT_FAULT(FaultCode))
     {
         /* Call access fault */

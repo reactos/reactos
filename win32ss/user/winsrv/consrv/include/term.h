@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Console Server DLL
+ * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/include/term.h
  * PURPOSE:         Internal Frontend Interface
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

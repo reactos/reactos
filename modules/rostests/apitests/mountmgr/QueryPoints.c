@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API Tests
+ * PROJECT:     ReactOS API Tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Test for IOCTL_MOUNTMGR_QUERY_POINTS
  * COPYRIGHT:   Copyright 2019 Pierre Schweitzer <pierre@reactos.org>

@@ -1,9 +1,9 @@
 /*
- * MenuOS rundll32
- * Copyright (C) 2003-2004 MenuOS Team
+ * ReactOS rundll32
+ * Copyright (C) 2003-2004 ReactOS Team
  *
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS rundll32.exe
+ * PROJECT:         ReactOS rundll32.exe
  * FILE:            base/system/rundll32/rundll32.c
  * PURPOSE:         Run a DLL as a program
  * PROGRAMMER:      ShadowFlare (blakflare@hotmail.com)

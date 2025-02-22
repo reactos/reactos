@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API Tests
+ * PROJECT:     ReactOS API Tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Small library with probing utilities for thread/process classes information
  * COPYRIGHT:   Copyright 2020 George Bișoc <george.bisoc@reactos.org>

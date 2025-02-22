@@ -1,5 +1,5 @@
 /*
-    MenuOS Kernel-Mode COM
+    ReactOS Kernel-Mode COM
     IUnknown implementations
 
     LICENSE

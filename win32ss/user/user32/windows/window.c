@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS user32.dll
+ * PROJECT:         ReactOS user32.dll
  * FILE:            win32ss/user/user32/windows/window.c
  * PURPOSE:         Window management
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)

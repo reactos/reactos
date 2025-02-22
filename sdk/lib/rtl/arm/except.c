@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS Run-Time Library
+ * PROJECT:           ReactOS Run-Time Library
  * PURPOSE:           User-mode exception support for IA-32
  * FILE:              lib/rtl/arm/except.c
  * PROGRAMERS:

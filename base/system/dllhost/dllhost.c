@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS DllHost
+ * PROJECT:     ReactOS DllHost
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     COM surrogate.
  * COPYRIGHT:   Copyright 2018 Eric Kohl

@@ -1,6 +1,6 @@
 /*
- *  MenuOS kernel
- *  Copyright (C) 2005 MenuOS Team
+ *  ReactOS kernel
+ *  Copyright (C) 2005 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
- * PROJECT:         MenuOS kernel
+ * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/kdbg/kdb_cli.c
  * PURPOSE:         Kernel debugger command line interface
  * PROGRAMMER:      Gregor Anich (blight@blight.eu.org)
@@ -274,7 +274,7 @@ ComponentTable[] =
     KD_DEBUG_PRINT_FILTER(DFSC),
     KD_DEBUG_PRINT_FILTER(WOW64),
 //
-// Components specified in Vista+, some of which we also use in MenuOS
+// Components specified in Vista+, some of which we also use in ReactOS
 //
     KD_DEBUG_PRINT_FILTER(ALPC),
     KD_DEBUG_PRINT_FILTER(WDI),

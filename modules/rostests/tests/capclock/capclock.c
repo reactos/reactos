@@ -1,6 +1,6 @@
 /*
  * DESCRIPTION: Simple Win32 Caption Clock
- * PROJECT    : MenuOS (test applications)
+ * PROJECT    : ReactOS (test applications)
  * AUTHOR     : Emanuele Aliberti
  * DATE       : 2003-09-03
  * LICENSE    : GNU GPL v2.0

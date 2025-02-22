@@ -1,4 +1,4 @@
-# These files are distributed with MenuOS.
+# These files are distributed with ReactOS.
 hosts text eol=crlf
 KDBinit text eol=crlf
 networks text eol=crlf

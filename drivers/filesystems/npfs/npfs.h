@@ -1,9 +1,9 @@
 /*
- * PROJECT:     MenuOS Named Pipe FileSystem
+ * PROJECT:     ReactOS Named Pipe FileSystem
  * LICENSE:     BSD - See COPYING.ARM in the top level directory
  * FILE:        drivers/filesystems/npfs/npfs.h
  * PURPOSE:     Named Pipe FileSystem Header
- * PROGRAMMERS: MenuOS Portable Systems Group
+ * PROGRAMMERS: ReactOS Portable Systems Group
  */
 
 #ifndef _NPFS_PCH_

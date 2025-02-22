@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS kernel-mode tests
+ * PROJECT:     ReactOS kernel-mode tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Kernel-Mode Test Suite Device Object Test Driver
  * COPYRIGHT:   Copyright 2009 Michael Martin (michael.martin@reactos.org)

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS apisets
+ * PROJECT:     ReactOS apisets
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Interface for resolving the apisets
  * COPYRIGHT:   Copyright 2024 Mark Jansen <mark.jansen@reactos.org>

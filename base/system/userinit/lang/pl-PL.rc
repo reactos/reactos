@@ -10,7 +10,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS LiveCD"
+CAPTION "ReactOS LiveCD"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "IDB_LOGO", IDC_LOCALELOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 4, 290, 99
@@ -27,12 +27,12 @@ END
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS LiveCD"
+CAPTION "ReactOS LiveCD"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "IDB_LOGO", IDC_STARTLOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 4, 290, 99
-    DEFPUSHBUTTON "Uruchom &LiveCD MenuOS", IDC_RUN, 71, 108, 175, 21
-    PUSHBUTTON "&Zainstaluj MenuOS", IDC_INSTALL, 71, 136, 175, 21
+    DEFPUSHBUTTON "Uruchom &LiveCD ReactOS", IDC_RUN, 71, 108, 175, 21
+    PUSHBUTTON "&Zainstaluj ReactOS", IDC_INSTALL, 71, 136, 175, 21
 
     // LTEXT "", IDC_STATIC, 7, 152, 300, 8
 
@@ -45,7 +45,7 @@ STRINGTABLE
 BEGIN
     IDS_SHELL_FAIL "Uruchomienie powłoki przez userinit nie powiodło się!"
     IDS_INSTALLER_FAIL "Rozpoczęcie instalatora przez userinit nie powiodło się!"
-    IDS_CANCEL_CONFIRM "Czy na pewno chcesz wyjść z MenuOS LiveCD?\nJeżeli wybierzesz tą opcję, komputer może uruchomić się ponownie."
+    IDS_CANCEL_CONFIRM "Czy na pewno chcesz wyjść z ReactOS LiveCD?\nJeżeli wybierzesz tą opcję, komputer może uruchomić się ponownie."
 END
 
 STRINGTABLE

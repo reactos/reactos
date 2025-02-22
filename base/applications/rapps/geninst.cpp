@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Applications Manager
+ * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Act as installer and uninstaller for applications distributed in archives
  * COPYRIGHT:   Copyright 2024 Whindmar Saksit <whindsaks@proton.me>
@@ -292,7 +292,7 @@ CreateMainShortcut(const CStringW &Target)
     }
 
     // SHPathPrepareForWrite will prepare the necessary directories.
-    // Windows and MenuOS SHPathPrepareForWrite do not support '/'.
+    // Windows and ReactOS SHPathPrepareForWrite do not support '/'.
     rel.Replace('/', '\\');
     path = BuildPath(path, rel.GetString());
     UINT SHPPFW = SHPPFW_DIRCREATE | SHPPFW_IGNOREFILENAME;

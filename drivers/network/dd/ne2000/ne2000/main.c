@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS Novell Eagle 2000 driver
+ * PROJECT:     ReactOS Novell Eagle 2000 driver
  * FILE:        ne2000/main.c
  * PURPOSE:     Driver entry point
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

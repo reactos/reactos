@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS help utility
+ * PROJECT:         ReactOS help utility
  * FILE:            base/applications/cmdutils/help/help.h
  * PURPOSE:         Provide help for command-line utilities
  * PROGRAMMERS:     Lee Schroeder (spaceseel at gmail dot com)

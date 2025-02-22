@@ -72,7 +72,7 @@ EVT_WDF_REQUEST_COMPLETION_ROUTINE RequestUnlockQueueCompletion;
                                 // triggering a false positive for this warning.
 
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 RequestProcessShutdownFlush(
     WDFDEVICE  Device,
     PIRP       Irp
@@ -145,7 +145,7 @@ Return Value:
 }
 
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 RequestProcessSetPower(
     WDFDEVICE  Device,
     PIRP       Irp
@@ -373,7 +373,7 @@ Return Value:
 }
 
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 RequestUnlockQueueCompletion (
     _In_ WDFREQUEST Request,
     _In_ WDFIOTARGET Target,
@@ -397,7 +397,7 @@ RequestUnlockQueueCompletion (
 }
 
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 RequestProcessPowerIrpCompletion(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp,
@@ -609,7 +609,7 @@ Return Value:
 _Function_class_(POWER_SETTING_CALLBACK)
 _IRQL_requires_same_
 NTSTATUS
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 DevicePowerSettingCallback(
     _In_ LPCGUID SettingGuid,
     _In_reads_bytes_(ValueLength) PVOID Value,

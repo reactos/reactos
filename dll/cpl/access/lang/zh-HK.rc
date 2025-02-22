@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Accessibility Control Panel
+ * PROJECT:     ReactOS Accessibility Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Hong Kong) resource file
  * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
@@ -19,7 +19,7 @@ BEGIN
     AUTOCHECKBOX "使用相黏鍵(&U)", IDC_STICKY_BOX, 12, 49, 126, 14
     PUSHBUTTON "設定(&S)", IDC_STICKY_BUTTON, 144, 49, 90, 14
     GROUPBOX "篩選鍵", -1, 6, 79, 234, 62
-    LTEXT "如果您希望 MenuOS 忽略短暫或重複的按鍵、或者減緩重複速度，請使用「篩選鍵」。",
+    LTEXT "如果您希望 ReactOS 忽略短暫或重複的按鍵、或者減緩重複速度，請使用「篩選鍵」。",
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "使用篩選鍵(&F)", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "設定(&E)", IDC_FILTER_BUTTON, 144, 121, 90, 14
@@ -38,7 +38,7 @@ CAPTION "聲音"
 FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
     GROUPBOX "聲音衛士", -1, 6, 11, 234, 98
-    LTEXT "如果您希望 MenuOS 能在系統發出聲音時發出可視警告，請使用「聲音衛士」。",
+    LTEXT "如果您希望 ReactOS 能在系統發出聲音時發出可視警告，請使用「聲音衛士」。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用聲音衛士(&S)", IDC_SENTRY_BOX, 12, 49, 90, 14
     LTEXT "選擇視覺警告:", IDC_SENTRY_TEXT, 12, 72, 222, 11
@@ -56,7 +56,7 @@ CAPTION "顯示"
 FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
     GROUPBOX "高對比度", -1, 6, 11, 234, 62
-    LTEXT "如果您希望 MenuOS 使用可讀性更好的顏色與字型，請使用「高對比度」。",
+    LTEXT "如果您希望 ReactOS 使用可讀性更好的顏色與字型，請使用「高對比度」。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用高對比度(&U)", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "設定(&S)", IDC_CONTRAST_BUTTON, 144, 49, 90, 14

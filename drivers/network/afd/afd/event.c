@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS Ancillary Function Driver
+ * PROJECT:     ReactOS Ancillary Function Driver
  * FILE:        afd/event.c
  * PURPOSE:     TDI event handlers
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

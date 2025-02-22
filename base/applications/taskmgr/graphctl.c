@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Task Manager
+ * PROJECT:     ReactOS Task Manager
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Graph Plotting controls.
  * COPYRIGHT:   Copyright 2002 Robert Dickenson <robd@reactos.org>

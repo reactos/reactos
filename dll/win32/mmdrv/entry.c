@@ -1,7 +1,7 @@
 /*
  *
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              MenuOS Multimedia
+ * PROJECT:              ReactOS Multimedia
  * FILE:                 dll/win32/mmdrv/entry.c
  * PURPOSE:              Multimedia User Mode Driver (DriverProc)
  * PROGRAMMER:           Andrew Greenwood

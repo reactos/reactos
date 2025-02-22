@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Network Shell
+ * PROJECT:     ReactOS Network Shell
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011 Petru Dimitriu <petrimetri@gmail.com>
@@ -87,20 +87,20 @@ END
 
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expert de instalare MenuOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Alegeți setările obișnuite sau pe cele particularizate:", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "Setări obișnuite", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Setări particularizate", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
-    LTEXT "Se crează conexiuni de rețea utilizând Clientul pentru rețele MenuOS, Partajarea de fișiere și imprimante pentru rețelele MenuOS și protocolul de transport TCP/IP pentru adresare automată.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "Se crează conexiuni de rețea utilizând Clientul pentru rețele ReactOS, Partajarea de fișiere și imprimante pentru rețelele ReactOS și protocolul de transport TCP/IP pentru adresare automată.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Vă permite să configurați manual componentele de rețea.", IDC_STATIC, 65, 90, 243, 20
 END
 
 IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expert de instalare MenuOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Pentru dispozitiv:", IDC_STATIC, 33, 2, 160, 20
@@ -115,7 +115,7 @@ END
 
 IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expert de instalare MenuOS"
+CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Doriți ca acest calculator să fie membru al unui domeniu?\n\
@@ -180,6 +180,6 @@ BEGIN
     IDS_NETWORKCOMPONENTSUBTITLE "Determină ce componente de rețea sunt folosite la calculatorul dvs. Pentru a adăuga noi componente, faceți clic pe Instalare."
     IDS_NETWORKDOMAINTITLE "Grup de lucru sau domeniu computer"
     IDS_NETWORKDOMAINSUBTITLE "Un grup de lucru este o colecție de computere care au acelaşi nume de grup de lucru. Un domeniu este o colecție de computere definită de un administrator de rețea."
-    IDS_REACTOS_SETUP "Expert de instalare MenuOS"
+    IDS_REACTOS_SETUP "Expert de instalare ReactOS"
     IDS_WZD_DOMAIN_NAME "Expertul nu poate continua până\ncând nu introduceți un nume de domeniu\nsau grupul de lucru."
 END

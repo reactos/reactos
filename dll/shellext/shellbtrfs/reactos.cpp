@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         BtrFS FSD for MenuOS
+ * PROJECT:         BtrFS FSD for ReactOS
  * FILE:            dll/shellext/shellbtrfs/reactos.cpp
- * PURPOSE:         MenuOS glue for Win8.1
+ * PURPOSE:         ReactOS glue for Win8.1
  * PROGRAMMERS:     Pierre Schweitzer <pierre@reactos.org>
  */
 

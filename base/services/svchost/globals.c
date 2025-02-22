@@ -1,9 +1,9 @@
 /*
- * PROJECT:     MenuOS Service Host
+ * PROJECT:     ReactOS Service Host
  * LICENSE:     BSD - See COPYING.ARM in the top level directory
  * FILE:        base/services/svchost/globals.c
  * PURPOSE:     Functions to initialize global settings and support
- * PROGRAMMERS: MenuOS Portable Systems Group
+ * PROGRAMMERS: ReactOS Portable Systems Group
  */
 
 /* INCLUDES ******************************************************************/

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS ReactX
+ * PROJECT:         ReactOS ReactX
  * FILE:            dll/directx/d3d9/format.c
  * PURPOSE:         d3d9.dll D3DFORMAT helper functions
  * PROGRAMERS:      Gregor Brunmar <gregor (dot) brunmar (at) home (dot) se>

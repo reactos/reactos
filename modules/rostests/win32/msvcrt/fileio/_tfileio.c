@@ -1,5 +1,5 @@
 /*
- *  MenuOS test program -
+ *  ReactOS test program -
  *
  *  _tfileio.c
  *

@@ -31,5 +31,5 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "许可证管理器"
     IDS_CPLDESCRIPTION_1 "许可证管理器"
-    IDS_REACTOS "MenuOS - 自由软件"
+    IDS_REACTOS "ReactOS - 自由软件"
 END

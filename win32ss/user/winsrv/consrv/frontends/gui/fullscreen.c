@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Console Server DLL
+ * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/frontends/gui/fullscreen.c
  * PURPOSE:         GUI Terminal Full-screen Mode
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

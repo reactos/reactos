@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              MenuOS DirectX
+ * PROJECT:              ReactOS DirectX
  * FILE:                 dll/directx/ddraw/Kernel/kernel_stubs.c
  * PURPOSE:              IDirectDrawKernel and IDirectDrawSurfaceKernel Implementation
  * PROGRAMMER:           Maarten Bosma

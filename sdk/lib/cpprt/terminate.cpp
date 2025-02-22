@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS C++ Runtime Library
+ * PROJECT:     ReactOS C++ Runtime Library
  * LICENSE:     CC0-1.0 (https://spdx.org/licenses/CC0-1.0)
  * PURPOSE:     __std_terminate implementation
  * COPYRIGHT:   Timo Kreuzer (timo.kreuzer@reactos.org)

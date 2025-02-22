@@ -1,4 +1,4 @@
-LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+﻿LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU
 BEGIN
@@ -268,10 +268,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRESS_INFO_START "MenuOS versucht den folgenden Dienst zu starten"
-    IDS_PROGRESS_INFO_STOP "MenuOS versucht den folgenden Dienst zu beenden"
-    IDS_PROGRESS_INFO_PAUSE "MenuOS versucht den folgenden Dienst zu pausieren"
-    IDS_PROGRESS_INFO_RESUME "MenuOS versucht den folgenden Dienst fortzusetzen"
+    IDS_PROGRESS_INFO_START "ReactOS versucht den folgenden Dienst zu starten"
+    IDS_PROGRESS_INFO_STOP "ReactOS versucht den folgenden Dienst zu beenden"
+    IDS_PROGRESS_INFO_PAUSE "ReactOS versucht den folgenden Dienst zu pausieren"
+    IDS_PROGRESS_INFO_RESUME "ReactOS versucht den folgenden Dienst fortzusetzen"
     IDS_CREATE_SUCCESS "Der Dienst wurde erfolgreich erstellt"
     IDS_DELETE_SUCCESS "Der Dienst wurde erfolgreich gelöscht"
     IDS_CREATE_REQ "Mit einem Stern (*) gekennzeichnete Felder sind erforderlich"
@@ -306,7 +306,7 @@ BEGIN
     IDS_HINT_DETAILS " Zeigt Informationen über jeden Dienst im Fenster an."
     IDS_HINT_CUST " Passt die Ansicht an."
     IDS_HINT_HELP " Öffnet die Hilfe."
-    IDS_HINT_ABOUT " Info über den MenuOS Dienst-Manager."
+    IDS_HINT_ABOUT " Info über den ReactOS Dienst-Manager."
     IDS_HINT_SYS_RESTORE " Stellt die Normalgröße dieses Fensters wieder her."
     IDS_HINT_SYS_MOVE " Verschiebt dieses Fenster."
     IDS_HINT_SYS_SIZE " Ändert die Größe dieses Fensters."
@@ -318,7 +318,7 @@ END
 /* Application title */
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "MenuOS Dienst-Manager"
+    IDS_APPNAME "ReactOS Dienst-Manager"
     IDS_APPAUTHORS "Copyright (C) 2005-2007 by Ged Murphy (gedmurphy@reactos.org)"
 END
 

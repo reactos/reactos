@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              MenuOS kernel
+ * PROJECT:              ReactOS kernel
  * FILE:                 services/dd/sound/sb16.c
  * PURPOSE:              SB16 device driver
  * PROGRAMMER:           Steven Edwards

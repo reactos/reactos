@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
- * PROJECT:         MenuOS UEFI Boot Library
+ * PROJECT:         ReactOS UEFI Boot Library
  * FILE:            boot/environ/lib/mm/mm.c
  * PURPOSE:         Boot Library Memory Manager Core
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)

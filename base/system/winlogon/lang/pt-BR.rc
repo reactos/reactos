@@ -51,7 +51,7 @@ BEGIN
     IDS_PREPARETOSTANDBY "Preparando para entrar em Modo de Espera..."
     IDS_PREPARETOHIBERNATE "Preparando para Hibernar..."
     IDS_SAVEYOURSETTINGS "Salvando suas configurações..."
-    IDS_REACTOSISSTARTINGUP "MenuOS está iniciando..."
+    IDS_REACTOSISSTARTINGUP "ReactOS está iniciando..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d days"
 END

@@ -49,7 +49,7 @@ BEGIN
     IDS_PREPARETOSTANDBY "Standby wordt voorbereid..."
     IDS_PREPARETOHIBERNATE "Slaapstand wordt voorbereid..."
     IDS_SAVEYOURSETTINGS "Persoonlijke instellingen worden opgeslagen..."
-    IDS_REACTOSISSTARTINGUP "MenuOS is aan het opstarten..."
+    IDS_REACTOSISSTARTINGUP "ReactOS is aan het opstarten..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d days"
 END

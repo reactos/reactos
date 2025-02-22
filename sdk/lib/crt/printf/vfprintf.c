@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
- * PROJECT:         MenuOS crt library
+ * PROJECT:         ReactOS crt library
  * FILE:            lib/sdk/crt/printf/vfprintf.c
  * PURPOSE:         Implementation of vfprintf
  * PROGRAMMER:      Timo Kreuzer

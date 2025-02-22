@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Console Driver DLL
+ * PROJECT:         ReactOS Console Driver DLL
  * FILE:            win32ss/user/winsrv/consrv/condrv/graphics.c
  * PURPOSE:         Console Output Functions for graphics-mode screen-buffers
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

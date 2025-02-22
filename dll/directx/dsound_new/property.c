@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Configuration of network devices
+ * PROJECT:         ReactOS Configuration of network devices
  * FILE:            dll/directx/dsound_new/property.c
  * PURPOSE:         Secondary IDirectSoundBuffer8 implementation
  *
@@ -186,7 +186,7 @@ KSPropertySetImpl_Get(
              WideCharToMultiByte(CP_ACP, 0, CapsOut.szPname, -1, Desc->DescriptionA, sizeof(Desc->DescriptionA), NULL, NULL);
          }
 
-          /* MenuOS doesnt support vxd or emulated */
+          /* ReactOS doesnt support vxd or emulated */
           Desc->Type = DIRECTSOUNDDEVICE_TYPE_WDM;
           Desc->ModuleA[0] = 0;
           Desc->ModuleW[0] = 0;

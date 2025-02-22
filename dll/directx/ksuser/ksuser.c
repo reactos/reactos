@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Kernel Streaming
+ * PROJECT:         ReactOS Kernel Streaming
  * FILE:            dll/directx/ksuser/ksuser.c
  * PURPOSE:         KS USER functions
  * PROGRAMMER:      Magnus Olsen and Dmitry Chapyshev and Johannes Anderwald

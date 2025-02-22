@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Userinit Logon Application
+ * PROJECT:     ReactOS Userinit Logon Application
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
@@ -10,7 +10,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS LiveCD"
+CAPTION "ReactOS LiveCD"
 FONT 9, "新細明體"
 BEGIN
     CONTROL "IDB_LOGO", IDC_LOCALELOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 4, 290, 99
@@ -27,12 +27,12 @@ END
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS LiveCD"
+CAPTION "ReactOS LiveCD"
 FONT 9, "新細明體"
 BEGIN
     CONTROL "IDB_LOGO", IDC_STARTLOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 4, 290, 99
-    DEFPUSHBUTTON "執行 MenuOS &Live CD", IDC_RUN, 71, 108, 175, 21
-    PUSHBUTTON "安裝 MenuOS(&I)", IDC_INSTALL, 71, 136, 175, 21
+    DEFPUSHBUTTON "執行 ReactOS &Live CD", IDC_RUN, 71, 108, 175, 21
+    PUSHBUTTON "安裝 ReactOS(&I)", IDC_INSTALL, 71, 136, 175, 21
 
     // LTEXT "", IDC_STATIC, 7, 152, 300, 8
 
@@ -45,7 +45,7 @@ STRINGTABLE
 BEGIN
     IDS_SHELL_FAIL "Userinit 無法啟動殼層！"
     IDS_INSTALLER_FAIL "Userinit 無法啟動安裝程式！"
-    IDS_CANCEL_CONFIRM "您確定要結束 MenuOS LiveCD 嗎？\n如果您選擇結束，您的電腦將會重新啟動。"
+    IDS_CANCEL_CONFIRM "您確定要結束 ReactOS LiveCD 嗎？\n如果您選擇結束，您的電腦將會重新啟動。"
 END
 
 STRINGTABLE

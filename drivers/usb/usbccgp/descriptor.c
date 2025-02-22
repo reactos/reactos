@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Universal Serial Bus Bulk Enhanced Host Controller Interface
+ * PROJECT:     ReactOS Universal Serial Bus Bulk Enhanced Host Controller Interface
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        drivers/usb/usbccgp/descriptor.c
  * PURPOSE:     USB  device driver.

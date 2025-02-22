@@ -1,7 +1,7 @@
 /*
- * PROJECT:     MenuOS Shim helper library
+ * PROJECT:     ReactOS Shim helper library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     MenuOS Shim Engine common functions / structures
+ * PURPOSE:     ReactOS Shim Engine common functions / structures
  * COPYRIGHT:   Copyright 2016-2019 Mark Jansen (mark.jansen@reactos.org)
  */
 

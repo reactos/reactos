@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   LGPL, See LGPL.txt in the top level directory
- * PROJECT:     MenuOS CRT library
+ * PROJECT:     ReactOS CRT library
  * FILE:        lib/sdk/crt/time/asctime.c
  * PURPOSE:     Implementation of asctime(), _asctime_s()
  * PROGRAMERS:  Timo Kreuzer

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS NDIS library
+ * PROJECT:     ReactOS NDIS library
  * FILE:        ndis/main.c
  * PURPOSE:     Driver entry point
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

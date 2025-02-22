@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS WinSock 2 API
+ * PROJECT:     ReactOS WinSock 2 API
  * FILE:        dll/win32/ws2_32/src/ioctl.c
  * PURPOSE:     Socket I/O Control Code support.
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)

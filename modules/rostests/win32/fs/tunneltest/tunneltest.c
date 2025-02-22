@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS Tests
+ * PROJECT:         ReactOS Tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            tunneltest.c
  * PURPOSE:         Usermode tunnel cache testing
@@ -88,7 +88,7 @@ int wmain(int argc, WCHAR * argv[])
     CloseHandle(hFile);
 
     /* Wait a least 10ms (resolution of FAT) */
-    /* XXX: Increased to 1s for MenuOS... */
+    /* XXX: Increased to 1s for ReactOS... */
     Sleep(1000);
 
     /* Create second file */

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   LGPL, See LGPL.txt in the top level directory
- * PROJECT:     MenuOS CRT library
+ * PROJECT:     ReactOS CRT library
  * FILE:        lib/sdk/crt/time/clock.c
  * PURPOSE:     Implementation of clock()
  * PROGRAMER:   Timo Kreuzer

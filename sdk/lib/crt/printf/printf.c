@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
- * PROJECT:         MenuOS crt library
+ * PROJECT:         ReactOS crt library
  * FILE:            lib/sdk/crt/printf/printf.c
  * PURPOSE:         Implementation of printf
  * PROGRAMMER:      Timo Kreuzer
- *                  Samuel SerapiÃ³n
+ *                  Samuel Serapión
  */
 
 #include <stdio.h>

@@ -1,7 +1,7 @@
 /*
- * PROJECT:         MenuOS msgina.dll
+ * PROJECT:         ReactOS msgina.dll
  * FILE:            dll/win32/msgina/gui.c
- * PURPOSE:         MenuOS Logon GINA DLL
+ * PURPOSE:         ReactOS Logon GINA DLL
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */

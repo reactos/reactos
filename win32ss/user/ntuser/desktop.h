@@ -33,7 +33,7 @@ typedef struct _DESKTOP
     RECT rcMouseHover;
     DWORD dwMouseHoverTime;
 
-    /* MenuOS */
+    /* ReactOS */
     /* Pointer to the active queue. */
     struct _USER_MESSAGE_QUEUE *ActiveMessageQueue;
     /* Handle of the desktop window. */

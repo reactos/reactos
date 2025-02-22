@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Kernel
+ * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/ex/mutant.c
  * PURPOSE:         Executive Management of Mutants
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)

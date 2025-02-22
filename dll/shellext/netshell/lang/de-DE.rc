@@ -78,20 +78,20 @@ END
 
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS Setup"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Wählen Sie, ob Standard- oder benutzerdefinierte Einstellungen verwendet werden sollen:", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "Standardeinstellungen", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Benutzerdefinierte Einstellungen", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
-    LTEXT "Erstellt Netzwerkverbindungen unter Verwendung des Clients für MenuOS-Netzwerke, Datei- und Druckerfreigabe für MenuOS-Netzwerke und des TCP/IP-Transportprotokolls mit automatischer Adressierung.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "Erstellt Netzwerkverbindungen unter Verwendung des Clients für ReactOS-Netzwerke, Datei- und Druckerfreigabe für ReactOS-Netzwerke und des TCP/IP-Transportprotokolls mit automatischer Adressierung.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Ermöglicht die manuelle Konfiguration von Netzwerkkomponenten.", IDC_STATIC, 65, 90, 243, 20
 END
 
 IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS Setup"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Für Gerät:", IDC_STATIC, 33, 2, 100, 20
@@ -106,7 +106,7 @@ END
 
 IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS Setup"
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Soll dieser Computer einer Domäne oder Arbeitsgruppe hinzugefügt werden?\n\
@@ -171,6 +171,6 @@ BEGIN
     IDS_NETWORKCOMPONENTSUBTITLE "Wählen Sie die Netzwerkkomponenten, die aktiviert werden sollen. Klicken Sie auf ""Installieren"", um eine Komponente hinzuzufügen."
     IDS_NETWORKDOMAINTITLE "Arbeitsgruppe oder Computerdomäne"
     IDS_NETWORKDOMAINSUBTITLE "Eine Arbeitsgruppe besteht aus Computern mit gleichem Arbeitsgruppennamen.\nEine Domäne ist eine vom Netzwerkadministrator vorgegebene Computergruppe."
-    IDS_REACTOS_SETUP "MenuOS Setup"
+    IDS_REACTOS_SETUP "ReactOS Setup"
     IDS_WZD_DOMAIN_NAME "Setup kann nicht fortgesetzt werden bevor Sie den Namen der Domäne oder Arbeitsgruppe festgelegt haben."
 END

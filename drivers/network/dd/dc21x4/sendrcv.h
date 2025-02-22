@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS DC21x4 Driver
+ * PROJECT:     ReactOS DC21x4 Driver
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Send and receive definitions
  * COPYRIGHT:   Copyright 2023 Dmitry Borisov <di.sean@protonmail.com>

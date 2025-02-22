@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS System Control Panel Applet
+ * PROJECT:     ReactOS System Control Panel Applet
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2016 Henry Tang <henrytang2@hotmail.com>
@@ -28,7 +28,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "請訪問 <A HREF=""https://reactos.org/"">MenuOS 首頁</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    CONTROL "請訪問 <A HREF=""https://reactos.org/"">ReactOS 首頁</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "查看著作權訊息(&L)...", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -77,7 +77,7 @@ CAPTION "系統設定"
 FONT 9, "新細明體", 0, 0, 0x1
 BEGIN
     GROUPBOX "版本資訊", IDC_STATIC, 6, 3, 210, 73
-    LTEXT "MenuOS 是以伺服器作業系統為基礎構建並以此報告。核取此方塊以變更（僅對應用程式有效）。", IDC_STATIC, 15, 15, 183, 41
+    LTEXT "ReactOS 是以伺服器作業系統為基礎構建並以此報告。核取此方塊以變更（僅對應用程式有效）。", IDC_STATIC, 15, 15, 183, 41
     CONTROL "報告為工作站(&R)", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     PUSHBUTTON "確定", IDOK, 166, 83, 50, 14
 END
@@ -98,7 +98,7 @@ BEGIN
     PUSHBUTTON "重新命名(&R)", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
     PUSHBUTTON "刪除(&D)", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
     GROUPBOX "選擇硬體設定檔", IDC_STATIC, 7, 130, 240, 75
-    LTEXT "啟動 MenuOS 時︰", IDC_STATIC, 14, 142, 210, 8
+    LTEXT "啟動 ReactOS 時︰", IDC_STATIC, 14, 142, 210, 8
     AUTORADIOBUTTON "等待使用者選定硬體設定檔(&W)", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
     AUTORADIOBUTTON "如果在指定時間內沒有選擇設定檔，就選擇第一個列出的設定檔(&S)", IDC_HRDPROFSELECT, 14, 173, 190, 8
     LTEXT "秒", IDC_STATIC, 65, 187, 35, 8

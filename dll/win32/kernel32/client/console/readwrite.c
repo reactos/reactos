@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/client/console/readwrite.c
  * PURPOSE:         Win32 Console Client read-write functions
  * PROGRAMMERS:     Emanuele Aliberti
@@ -78,7 +78,7 @@ IntReadConsole(IN HANDLE hConsoleInput,
     ReadConsoleRequest->NumBytes          = SizeBytes;
 
     /*
-     * For optimization purposes, Windows (and hence MenuOS, too, for
+     * For optimization purposes, Windows (and hence ReactOS, too, for
      * compatibility reasons) uses a static buffer if no more than eighty
      * bytes are read. Otherwise a new buffer is allocated.
      * This behaviour is also expected in the server-side.
@@ -266,7 +266,7 @@ IntGetConsoleInput(IN HANDLE hConsoleInput,
     GetInputRequest->Unicode       = bUnicode;
 
     /*
-     * For optimization purposes, Windows (and hence MenuOS, too, for
+     * For optimization purposes, Windows (and hence ReactOS, too, for
      * compatibility reasons) uses a static buffer if no more than five
      * input records are read. Otherwise a new buffer is allocated.
      * This behaviour is also expected in the server-side.
@@ -384,7 +384,7 @@ IntReadConsoleOutput(IN HANDLE hConsoleOutput,
     DPRINT("IntReadConsoleOutput: (%d x %d)\n", SizeX, SizeY);
 
     /*
-     * For optimization purposes, Windows (and hence MenuOS, too, for
+     * For optimization purposes, Windows (and hence ReactOS, too, for
      * compatibility reasons) uses a static buffer if no more than one
      * cell is read. Otherwise a new buffer is allocated.
      * This behaviour is also expected in the server-side.
@@ -522,7 +522,7 @@ IntReadConsoleOutputCode(IN HANDLE hConsoleOutput,
     SizeBytes = nLength * CodeSize;
 
     /*
-     * For optimization purposes, Windows (and hence MenuOS, too, for
+     * For optimization purposes, Windows (and hence ReactOS, too, for
      * compatibility reasons) uses a static buffer if no more than eighty
      * bytes are read. Otherwise a new buffer is allocated.
      * This behaviour is also expected in the server-side.
@@ -626,7 +626,7 @@ IntWriteConsole(IN HANDLE hConsoleOutput,
     WriteConsoleRequest->NumBytes = SizeBytes;
 
     /*
-     * For optimization purposes, Windows (and hence MenuOS, too, for
+     * For optimization purposes, Windows (and hence ReactOS, too, for
      * compatibility reasons) uses a static buffer if no more than eighty
      * bytes are written. Otherwise a new buffer is allocated.
      * This behaviour is also expected in the server-side.
@@ -729,7 +729,7 @@ IntWriteConsoleInput(IN HANDLE hConsoleInput,
     WriteInputRequest->AppendToEnd   = bAppendToEnd;
 
     /*
-     * For optimization purposes, Windows (and hence MenuOS, too, for
+     * For optimization purposes, Windows (and hence ReactOS, too, for
      * compatibility reasons) uses a static buffer if no more than five
      * input records are written. Otherwise a new buffer is allocated.
      * This behaviour is also expected in the server-side.
@@ -853,7 +853,7 @@ IntWriteConsoleOutput(IN HANDLE hConsoleOutput,
     DPRINT("IntWriteConsoleOutput: (%d x %d)\n", SizeX, SizeY);
 
     /*
-     * For optimization purposes, Windows (and hence MenuOS, too, for
+     * For optimization purposes, Windows (and hence ReactOS, too, for
      * compatibility reasons) uses a static buffer if no more than one
      * cell is written. Otherwise a new buffer is allocated.
      * This behaviour is also expected in the server-side.
@@ -1026,7 +1026,7 @@ IntWriteConsoleOutputCode(IN HANDLE hConsoleOutput,
     SizeBytes = nLength * CodeSize;
 
     /*
-     * For optimization purposes, Windows (and hence MenuOS, too, for
+     * For optimization purposes, Windows (and hence ReactOS, too, for
      * compatibility reasons) uses a static buffer if no more than eighty
      * bytes are written. Otherwise a new buffer is allocated.
      * This behaviour is also expected in the server-side.

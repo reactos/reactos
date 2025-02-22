@@ -36,7 +36,7 @@ BEGIN
     STRING_CLIPFILE  "クリップボードの要素"
     STRING_DELETE_MSG "クリップボードの内容をクリアしますか?"
     STRING_DELETE_TITLE "クリップボードのクリア"
-    STRING_FORMAT_NT "MenuOS 用のクリップボード ファイル (*.clp)"
+    STRING_FORMAT_NT "ReactOS 用のクリップボード ファイル (*.clp)"
     STRING_FORMAT_GEN "クリップボード ファイル (*.clp)"
 END
 

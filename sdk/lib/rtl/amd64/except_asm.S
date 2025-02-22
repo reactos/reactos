@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Runtime Library (RTL)
+ * PROJECT:         ReactOS Runtime Library (RTL)
  * FILE:            lib/rtl/amd64/except_asm.S
  * PURPOSE:         Exception support for AMD64
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)

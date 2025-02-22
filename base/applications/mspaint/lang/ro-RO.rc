@@ -1,5 +1,5 @@
 /*
- * PROJECT:     PAINT for MenuOS
+ * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
@@ -236,7 +236,7 @@ STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Paint"
     IDS_WINDOWTITLE "%s - Paint"
-    IDS_INFOTITLE "Paint pentru MenuOS"
+    IDS_INFOTITLE "Paint pentru ReactOS"
     IDS_INFOTEXT "Disponibilă sub licența GNU Lesser General Public (vedeți www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Doriți salvarea modificărilor din %s?"
     IDS_DEFAULTFILENAME "Fără titlu"

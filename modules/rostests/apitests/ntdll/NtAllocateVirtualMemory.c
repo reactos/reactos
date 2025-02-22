@@ -1,10 +1,10 @@
 /*
- * PROJECT:     MenuOS API Tests
+ * PROJECT:     ReactOS API Tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Test for NtAllocateVirtualMemory
  * COPYRIGHT:   Copyright 2011 Thomas Faber <thomas.faber@reactos.org>
  *              Copyright 2013 Timo Kreuzer <timo.kreuzer@reactos.org>
- *              Copyright 2015 JÃ©rÃ´me Gardou <jerome.gardou@reactos.org>
+ *              Copyright 2015 Jérôme Gardou <jerome.gardou@reactos.org>
  *              Copyright 2018 Serge Gautherie <reactos-git_serge_171003@gautherie.fr>
  */
 
@@ -678,7 +678,7 @@ CheckSomeDefaultAddresses(VOID)
                                      PAGE_READWRITE);
     if (NT_SUCCESS(Status))
     {
-        trace("Below 0x00400000 is available, as on MenuOS and Windows S03\n");
+        trace("Below 0x00400000 is available, as on ReactOS and Windows S03\n");
         // 0x003F0000, 64k: Free.
         ok_ntstatus(Status, STATUS_SUCCESS);
         Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
@@ -694,7 +694,7 @@ CheckSomeDefaultAddresses(VOID)
 
     /* Reserve memory at 0x00400000:
      * Windows NT legacy default DLL image base,
-     * (MenuOS and) Windows 95 new default executable image base */
+     * (ReactOS and) Windows 95 new default executable image base */
     BaseAddress = UlongToPtr(0x00400000);
     Size = 0x1000;
     Status = NtAllocateVirtualMemory(NtCurrentProcess(),

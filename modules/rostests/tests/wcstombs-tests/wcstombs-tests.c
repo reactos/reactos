@@ -1,5 +1,5 @@
 /*
- * PROJECT:    MenuOS wcstombs Test Suite
+ * PROJECT:    ReactOS wcstombs Test Suite
  * LICENSE:    GPL v2 or any later version
  * FILE:       tests/wcstombs-tests/wcstombs-tests.c
  * PURPOSE:    Application for testing the CRT API's (wcstombs and wctomb) and the Win32 API WideCharToMultiByte for the Unicode to MultiByte string conversion
@@ -121,7 +121,7 @@ void CRT_Tests()
 
     ret = wcstombs(mbs, wcs, sizeof(mbs));
     OK(ret == 4, "ret is %d", ret);
-    OK(!strcmp(mbs, "ThÃ°i"), "mbs is %s", mbs);
+    OK(!strcmp(mbs, "Thði"), "mbs is %s", mbs);
 
     ret = wctomb(&mbc, wc2);
     OK(ret == 1, "ret is %d", ret);
@@ -162,7 +162,7 @@ void CRT_Tests()
     SETLOCALE("Chinese");
     ret = wcstombs(mbs, dbwcs, sizeof(mbs));
     OK(ret == 4, "ret is %d", ret);
-    OK(!strcmp(mbs, "ÂµHÂ©Ã’"), "mbs is %s", mbs);
+    OK(!strcmp(mbs, "µH©Ò"), "mbs is %s", mbs);
     ZeroMemory(mbs, 5);
 
     /* Length-only tests */
@@ -291,7 +291,7 @@ void Win32_Tests(LPBOOL bUsedDefaultChar)
     /* Double-byte tests */
     ret = WideCharToMultiByte(950, 0, dbwcs, -1, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
     OK(ret == 5, "ret is %d", ret);
-    OK(!strcmp(mbs, "ÂµHÂ©Ã’"), "mbs is %s", mbs);
+    OK(!strcmp(mbs, "µH©Ò"), "mbs is %s", mbs);
     if(bUsedDefaultChar) OK(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d", *bUsedDefaultChar);
     OK(GetLastError() == 0xdeadbeef, "GetLastError() is %lu", GetLastError());
 
@@ -304,7 +304,7 @@ void Win32_Tests(LPBOOL bUsedDefaultChar)
 
     ret = WideCharToMultiByte(950, 0, dbwcs, 1, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
     OK(ret == 2, "ret is %d", ret);
-    OK(!strcmp(mbs, "ÂµH"), "mbs is %s", mbs);
+    OK(!strcmp(mbs, "µH"), "mbs is %s", mbs);
     if(bUsedDefaultChar) OK(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d", *bUsedDefaultChar);
     OK(GetLastError() == 0xdeadbeef, "GetLastError() is %lu", GetLastError());
 

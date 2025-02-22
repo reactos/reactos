@@ -19,7 +19,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_RENDERER_DEFAULT "По умолчанию"
-    IDS_RENDERER_RSWR "Програмная реализация MenuOS"
+    IDS_RENDERER_RSWR "Програмная реализация ReactOS"
     IDS_CPLNAME "Настройки OpenGL"
     IDS_CPLDESCRIPTION "Настройка драйвера вывода OpenGL."
     IDS_DEBUG_SET "Установить"

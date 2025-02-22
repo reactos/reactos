@@ -1,5 +1,5 @@
 /*
- * PROJECT:    MenuOS Magnifier
+ * PROJECT:    ReactOS Magnifier
  * LICENSE:    GPL - See COPYING in the top level directory
  * FILE:       base/applications/magnify/lang/zh-TW.rc
  * PURPOSE:    Chinese (Traditional) Language File for Magnifier
@@ -63,7 +63,7 @@ END
 
 IDD_WARNINGDIALOG DIALOGEX 0, 0, 250, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
-CAPTION "MenuOS 放大鏡"
+CAPTION "ReactOS 放大鏡"
 FONT 9, "新細明體", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "確定", IDOK, 193, 76, 50, 14

@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS VGA display driver
+ * PROJECT:         ReactOS VGA display driver
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            win32ss/drivers/displays/vga/main/enable.c
  * PURPOSE:

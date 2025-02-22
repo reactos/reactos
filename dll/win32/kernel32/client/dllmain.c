@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/client/dllmain.c
  * PURPOSE:         Initialization
  * PROGRAMMERS:     Ariadne (ariadne@xs4all.nl)

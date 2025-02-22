@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS shell32
+ * PROJECT:     ReactOS shell32
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Copy as Path Menu implementation
  * COPYRIGHT:   Copyright 2024 Whindmar Saksit <whindsaks@proton.me>

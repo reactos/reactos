@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Registry Editor
+ * PROJECT:     ReactOS Registry Editor
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Exporting registry data to a text file
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>

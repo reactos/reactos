@@ -24,7 +24,7 @@ Abstract:
 
 
 VOID
-NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 CdFspDispatch (
     _In_ PVOID Context
     )

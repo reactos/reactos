@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              MenuOS DirectX
+ * PROJECT:              ReactOS DirectX
  * FILE:                 dll/directx/ddraw/Ddraw/ddraw_setcooperativelevel.c
  * PURPOSE:              IDirectDraw7::SetCooperativeLevel Implementation
  * PROGRAMMER:           Magnus Olsen

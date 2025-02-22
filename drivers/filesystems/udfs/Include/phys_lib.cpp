@@ -2479,7 +2479,7 @@ UDFUseStandard(
 #endif //_CONSOLE
 
         LocalTrackCount = toc->Tracks.Last_TrackSes - toc->Tracks.First_TrackSes + 1;
-//        LocalTocLength = PtrOffset( toc, &(toc->TrackData[LocalTrackCount + 1]) );  /* FIXME MenuOS Assume PtrOffset is not changing it's arguments? */
+//        LocalTocLength = PtrOffset( toc, &(toc->TrackData[LocalTrackCount + 1]) );  /* FIXME ReactOS Assume PtrOffset is not changing it's arguments? */
 
         // Get out if there is an immediate problem with the TOC.
         if(toc->Tracks.First_TrackSes > toc->Tracks.Last_TrackSes) {
@@ -2720,7 +2720,7 @@ UDFGetBlockSize(
                 TRUE,NULL );
             if(!NT_SUCCESS(RC)) {
                 UDFPrint(("UDFGetBlockSize: IOCTL_DISK_GET_PARTITION_INFO failed\n"));
-                if(RC == STATUS_INVALID_DEVICE_REQUEST) /* MenuOS Code Change (was =) */
+                if(RC == STATUS_INVALID_DEVICE_REQUEST) /* ReactOS Code Change (was =) */
                     RC = STATUS_UNRECOGNIZED_VOLUME;
                 try_return(RC);
             }

@@ -1,6 +1,6 @@
 /*
- *  MenuOS applications
- *  Copyright (C) 2004-2008 MenuOS Team
+ *  ReactOS applications
+ *  Copyright (C) 2004-2008 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS GUI first stage setup application
+ * PROJECT:     ReactOS GUI first stage setup application
  * FILE:        base/setup/reactos/reactos.c
  * PROGRAMMERS: Matthias Kupfer
  *              Dmitry Chapyshev (dmitry@reactos.org)
@@ -330,7 +330,7 @@ StartDlgProc(
             /* Set title font */
             SetDlgItemFont(hwndDlg, IDC_STARTTITLE, pSetupData->hTitleFont, TRUE);
 
-            // TEMPTEMP: Set the MenuOS-Alpha information in bold.
+            // TEMPTEMP: Set the ReactOS-Alpha information in bold.
             // TODO: Remove once we reach 0.5/Beta :)
             SetDlgItemFont(hwndDlg, IDC_WARNTEXT1, pSetupData->hBoldFont, TRUE);
             SetDlgItemFont(hwndDlg, IDC_WARNTEXT2, pSetupData->hBoldFont, TRUE);
@@ -436,7 +436,7 @@ TypeDlgProc(
 
                 case PSN_QUERYINITIALFOCUS:
                 {
-                    /* Focus on "Install MenuOS" */
+                    /* Focus on "Install ReactOS" */
                     SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, (LONG_PTR)GetDlgItem(hwndDlg, IDC_INSTALL));
                     return TRUE;
                 }
@@ -1095,7 +1095,7 @@ SummaryDlgProc(
                     else
                     {
                         StringCchCopyW(CurrentItemText, ARRAYSIZE(CurrentItemText),
-                                       L"New MenuOS installation");
+                                       L"New ReactOS installation");
                     }
                     SetDlgItemTextW(hwndDlg, IDC_INSTALLTYPE, CurrentItemText);
 
@@ -2403,7 +2403,7 @@ BOOL LoadSetupData(
     pSetupData->USetupData.LanguageList = CreateLanguageList(pSetupData->USetupData.SetupInf, pSetupData->DefaultLanguage);
 
     /* If not unattended, overwrite language and locale with
-     * the current ones of the running MenuOS instance */
+     * the current ones of the running ReactOS instance */
     if (!IsUnattendedSetup)
     {
         LCID LocaleID = GetUserDefaultLCID();
@@ -2427,7 +2427,7 @@ BOOL LoadSetupData(
                                                                  pSetupData->DefaultKBLayout);
 
     /* If not unattended, overwrite keyboard layout with
-     * the current one of the running MenuOS instance */
+     * the current one of the running ReactOS instance */
     if (!IsUnattendedSetup)
     {
         C_ASSERT(_countof(pSetupData->DefaultKBLayout) >= KL_NAMELENGTH);

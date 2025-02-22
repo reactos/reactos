@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            win32ss/user/user32/controls/appswitch.c
  * PURPOSE:         app switching functionality
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)

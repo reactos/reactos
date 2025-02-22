@@ -821,7 +821,7 @@ const char *wine_dbgstr_longlong( ULONGLONG ll )
     char *res;
 
     res = get_temp_buffer( 20 );
-    if (/*sizeof(ll) > sizeof(unsigned long) &&*/ ll >> 32) /* ULONGLONG is always > long in MenuOS */
+    if (/*sizeof(ll) > sizeof(unsigned long) &&*/ ll >> 32) /* ULONGLONG is always > long in ReactOS */
         sprintf( res, "%lx%08lx", (unsigned long)(ll >> 32), (unsigned long)ll );
     else
         sprintf( res, "%lx", (unsigned long)ll );

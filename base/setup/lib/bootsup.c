@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Setup Library
+ * PROJECT:     ReactOS Setup Library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Bootloader support functions
  * COPYRIGHT:   ...
@@ -72,22 +72,22 @@ CreateFreeLoaderReactOSEntries(
 
     Options->OsLoadPath = ArcPath;
 
-    /* MenuOS */
-    // BootEntry->BootEntryKey = MAKESTRKEY(L"MenuOS");
-    BootEntry->FriendlyName = L"\"MenuOS\"";
+    /* ReactOS */
+    // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS");
+    BootEntry->FriendlyName = L"\"ReactOS\"";
     Options->OsLoadOptions  = L"/FASTDETECT";
-    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"MenuOS"));
+    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS"));
 
     /* ReactOS_Debug */
     // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_Debug");
-    BootEntry->FriendlyName = L"\"MenuOS (Debug)\"";
+    BootEntry->FriendlyName = L"\"ReactOS (Debug)\"";
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS";
     AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_Debug"));
 
 #ifdef _WINKD_
     /* ReactOS_VBoxDebug */
     // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_VBoxDebug");
-    BootEntry->FriendlyName = L"\"MenuOS (VBox Debug)\"";
+    BootEntry->FriendlyName = L"\"ReactOS (VBox Debug)\"";
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=VBOX /SOS";
     AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_VBoxDebug"));
 #endif
@@ -95,40 +95,40 @@ CreateFreeLoaderReactOSEntries(
 #ifndef _WINKD_
     /* ReactOS_KdSerial */
     // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_KdSerial");
-    BootEntry->FriendlyName = L"\"MenuOS (RosDbg)\"";
+    BootEntry->FriendlyName = L"\"ReactOS (RosDbg)\"";
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /KDSERIAL";
     AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_KdSerial"));
 #endif
 
     /* ReactOS_Screen */
     // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_Screen");
-    BootEntry->FriendlyName = L"\"MenuOS (Screen)\"";
+    BootEntry->FriendlyName = L"\"ReactOS (Screen)\"";
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=SCREEN /SOS";
     AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_Screen"));
 
     /* ReactOS_LogFile */
     // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_LogFile");
-    BootEntry->FriendlyName = L"\"MenuOS (Log file)\"";
+    BootEntry->FriendlyName = L"\"ReactOS (Log file)\"";
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=FILE /SOS";
     AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_LogFile"));
 
     /* ReactOS_Ram */
     // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_Ram");
-    BootEntry->FriendlyName = L"\"MenuOS (RAM Disk)\"";
-    Options->OsLoadPath     = L"ramdisk(0)\\MenuOS";
+    BootEntry->FriendlyName = L"\"ReactOS (RAM Disk)\"";
+    Options->OsLoadPath     = L"ramdisk(0)\\ReactOS";
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /RDPATH=reactos.img /RDIMAGEOFFSET=32256";
     AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_Ram"));
 
     /* ReactOS_EMS */
     // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_EMS");
-    BootEntry->FriendlyName = L"\"MenuOS (Emergency Management Services)\"";
+    BootEntry->FriendlyName = L"\"ReactOS (Emergency Management Services)\"";
     Options->OsLoadPath     = ArcPath;
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /redirect=com2 /redirectbaudrate=115200";
     AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_EMS"));
 #endif
 
 
-    /* DefaultOS=MenuOS */
+    /* DefaultOS=ReactOS */
 #if DBG && !defined(_WINKD_)
     if (IsUnattendedSetup)
     {
@@ -140,7 +140,7 @@ CreateFreeLoaderReactOSEntries(
 #if DBG
         BootOptions.NextBootEntryKey = MAKESTRKEY(L"ReactOS_Debug");
 #else
-        BootOptions.NextBootEntryKey = MAKESTRKEY(L"MenuOS");
+        BootOptions.NextBootEntryKey = MAKESTRKEY(L"ReactOS");
 #endif
     }
 
@@ -177,7 +177,7 @@ CreateFreeLoaderIniForReactOS(
     if (!NT_SUCCESS(Status))
         return Status;
 
-    /* Add the MenuOS entries */
+    /* Add the ReactOS entries */
     CreateFreeLoaderReactOSEntries(BootStoreHandle, ArcPath);
 
     /* Close the INI file */
@@ -272,7 +272,7 @@ CreateFreeLoaderIniForReactOSAndBootSector(
     if (!NT_SUCCESS(Status))
         return Status;
 
-    /* Add the MenuOS entries */
+    /* Add the ReactOS entries */
     CreateFreeLoaderReactOSEntries(BootStoreHandle, ArcPath);
 
     BootEntry->Version = FreeLdr;
@@ -297,7 +297,7 @@ CreateFreeLoaderIniForReactOSAndBootSector(
 
 //
 // I think this function can be generalizable as:
-// "find the corresponding 'MenuOS' boot entry in this loader config file
+// "find the corresponding 'ReactOS' boot entry in this loader config file
 // (here abstraction comes there), and if none, add a new one".
 //
 
@@ -332,7 +332,7 @@ EnumerateReactOSEntries(
                          RTL_FIELD_SIZE(NTOS_OPTIONS, Signature)) !=
                          RTL_FIELD_SIZE(NTOS_OPTIONS, Signature))
     {
-        /* This is not a MenuOS entry */
+        /* This is not a ReactOS entry */
         // DPRINT("    An installation '%S' of unsupported type '%S'\n",
                // BootEntry->FriendlyName, BootEntry->Version ? BootEntry->Version : L"n/a");
         DPRINT("    An installation '%S' of unsupported type %lu\n",
@@ -344,7 +344,7 @@ EnumerateReactOSEntries(
     /* BootType is Windows2003, now check OsLoadPath */
     if (!Options->OsLoadPath || !*Options->OsLoadPath)
     {
-        /* Certainly not a MenuOS installation */
+        /* Certainly not a ReactOS installation */
         DPRINT1("    A Win2k3 install '%S' without an ARC path?!\n", BootEntry->FriendlyName);
         /* Continue the enumeration */
         goto SkipThisEntry;
@@ -357,7 +357,7 @@ EnumerateReactOSEntries(
         if (!NT_SUCCESS(Status) || _wcsicmp(Options->OsLoadPath, SystemPath) != 0)
         {
             /*
-             * This entry is a MenuOS entry, but the SystemRoot
+             * This entry is a ReactOS entry, but the SystemRoot
              * does not match the one we are looking for.
              */
             /* Continue the enumeration */
@@ -385,7 +385,7 @@ SkipThisEntry:
         RtlStringCchPrintfW(Data->SectionName, ARRAYSIZE(Data->SectionName),
                             L"ReactOS_%lu", Data->i);
         RtlStringCchPrintfW(Data->OsName, ARRAYSIZE(Data->OsName),
-                            L"\"MenuOS %lu\"", Data->i);
+                            L"\"ReactOS %lu\"", Data->i);
         Data->i++;
     }
     return STATUS_SUCCESS;
@@ -414,8 +414,8 @@ UpdateFreeLoaderIni(
     Data.UseExistingEntry = TRUE;
     Data.i = 1;
     Data.ArcPath = ArcPath;
-    RtlStringCchCopyW(Data.SectionName, ARRAYSIZE(Data.SectionName), L"MenuOS");
-    RtlStringCchCopyW(Data.OsName, ARRAYSIZE(Data.OsName), L"\"MenuOS\"");
+    RtlStringCchCopyW(Data.SectionName, ARRAYSIZE(Data.SectionName), L"ReactOS");
+    RtlStringCchCopyW(Data.OsName, ARRAYSIZE(Data.OsName), L"\"ReactOS\"");
 
     //
     // FIXME: We temporarily use EnumerateBootStoreEntries, until
@@ -423,11 +423,11 @@ UpdateFreeLoaderIni(
     //
     Status = EnumerateBootStoreEntries(BootStoreHandle, EnumerateReactOSEntries, &Data);
 
-    /* Create a new "MenuOS" entry if there is none already existing that suits us */
+    /* Create a new "ReactOS" entry if there is none already existing that suits us */
     if (!Data.UseExistingEntry)
     {
         // RtlStringCchPrintfW(Data.SectionName, ARRAYSIZE(Data.SectionName), L"ReactOS_%lu", Data.i);
-        // RtlStringCchPrintfW(Data.OsName, ARRAYSIZE(Data.OsName), L"\"MenuOS %lu\"", Data.i);
+        // RtlStringCchPrintfW(Data.OsName, ARRAYSIZE(Data.OsName), L"\"ReactOS %lu\"", Data.i);
 
         BootEntry->Version = FreeLdr;
         BootEntry->BootFilePath = NULL;
@@ -476,8 +476,8 @@ UpdateBootIni(
     Data.UseExistingEntry = TRUE;
     // Data.i = 1;
     Data.ArcPath = EntryName;
-    // RtlStringCchCopyW(Data.SectionName, ARRAYSIZE(Data.SectionName), L"MenuOS");
-    RtlStringCchCopyW(Data.OsName, ARRAYSIZE(Data.OsName), L"\"MenuOS\"");
+    // RtlStringCchCopyW(Data.SectionName, ARRAYSIZE(Data.SectionName), L"ReactOS");
+    RtlStringCchCopyW(Data.OsName, ARRAYSIZE(Data.OsName), L"\"ReactOS\"");
 
     //
     // FIXME: We temporarily use EnumerateBootStoreEntries, until
@@ -1019,7 +1019,7 @@ InstallFatBootcodeToPartition(
         DPRINT1("Update 'boot.ini'\n");
         Status = UpdateBootIni(SystemRootPath->Buffer,
                                L"C:\\bootsect.ros",
-                               L"\"MenuOS\"");
+                               L"\"ReactOS\"");
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("UpdateBootIni() failed (Status %lx)\n", Status);
@@ -1657,7 +1657,7 @@ GetDeviceInfo(
  * The installation source, where to copy the FreeLdr boot manager from.
  *
  * @param[in]   DestinationArcPath
- * The MenuOS installation path in ARC format.
+ * The ReactOS installation path in ARC format.
  *
  * @param[in]   Options
  * For BIOS-based PCs:

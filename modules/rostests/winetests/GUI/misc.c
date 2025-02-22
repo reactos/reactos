@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API Test GUI
+ * PROJECT:     ReactOS API Test GUI
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        
  * PURPOSE:     miscallanous functions

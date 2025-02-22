@@ -1,8 +1,8 @@
 /*
  *
- * PROJECT:         MenuOS Multimedia Control Panel
+ * PROJECT:         ReactOS Multimedia Control Panel
  * FILE:            dll/cpl/mmsys/mmsys.c
- * PURPOSE:         MenuOS Multimedia Control Panel
+ * PURPOSE:         ReactOS Multimedia Control Panel
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *                  Dmitry Chapyshev <dmitry@reactos.org>
  * UPDATE HISTORY:
@@ -46,13 +46,13 @@ static EVENT_LABEL_ITEM EventLabels[] =
 {
     {
         L"WindowsLogon",
-        L"MenuOS Logon",
+        L"ReactOS Logon",
         IDS_REACTOS_LOGON,
         L"ReactOS_Logon.wav"
     },
     {
         L"WindowsLogoff",
-        L"MenuOS Logoff",
+        L"ReactOS Logoff",
         IDS_REACTOS_LOGOFF,
         L"ReactOS_Logoff.wav"
     },
@@ -68,7 +68,7 @@ static SYSTEM_SCHEME_ITEM SystemSchemes[] =
 {
     {
         L".Default",
-        L"MenuOS Standard",
+        L"ReactOS Standard",
         IDS_REACTOS_DEFAULT_SCHEME
     },
     {

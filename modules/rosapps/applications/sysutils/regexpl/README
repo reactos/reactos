@@ -1,5 +1,5 @@
 
-Registry Explorer is console mode tool for reading/writing MenuOS
+Registry Explorer is console mode tool for reading/writing ReactOS
 registry. Currently, access is provided only by means of interactive
 commands, but scrpting support is planned too. Some of features are:
  - Registry object name completion.
@@ -14,4 +14,4 @@ TODO:
 
 Notes:
  - Site at http://www.geocities.com/registryexplorer/ is discontinued.
-   For more info see this file and MenuOS site.
+   For more info see this file and ReactOS site.

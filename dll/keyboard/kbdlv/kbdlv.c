@@ -1,6 +1,6 @@
 /*
- * MenuOS latvian Keyboard layout
- * Copyright (C) 2008 MenuOS
+ * ReactOS latvian Keyboard layout
+ * Copyright (C) 2008 ReactOS
  * Author: Dmitry Chapyshev, Arthurs B.
  * License: LGPL, see: LGPL.txt
  *
@@ -345,7 +345,7 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x51, L"Page Down" },
   { 0x52, L"Insert" },
   { 0x53, L"Delete" },
-  { 0x54, L"<MenuOS>" },
+  { 0x54, L"<ReactOS>" },
   { 0x55, L"Help" },
   { 0x56, L"Left Windows" },
   { 0x5b, L"Right Windows" },

@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS bug regression tests
+ * PROJECT:         ReactOS bug regression tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            rostests/regtests/bugs/bug3481.c
  * PURPOSE:         Test for bug 3481

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Client/Server Runtime SubSystem
+ * PROJECT:         ReactOS Client/Server Runtime SubSystem
  * FILE:            include/reactos/subsys/csr/csrmsg.h
  * PURPOSE:         Public definitions for communication
  *                  between CSR Clients and Servers

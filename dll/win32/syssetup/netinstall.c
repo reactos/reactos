@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS system libraries
+ * PROJECT:           ReactOS system libraries
  * PURPOSE:           System setup
  * FILE:              dll/win32/syssetup/netinstall.c
  * PROGRAMER:         Eric Kohl

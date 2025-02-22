@@ -1,5 +1,5 @@
 /*
- * PROJECT:     PAINT for MenuOS
+ * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Italian resource file
  * TRANSLATORS: Copyright 2009 Gabriel Ilardi <gabrielilardi@hotmail.it>
@@ -236,7 +236,7 @@ STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Paint"
     IDS_WINDOWTITLE "%s - Paint"
-    IDS_INFOTITLE "Paint per MenuOS"
+    IDS_INFOTITLE "Paint per ReactOS"
     IDS_INFOTEXT "Disponibile sotto licenza GNU Lesser General Public (LGPL, vedi www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Si vuole salvare le modifiche a %s?"
     IDS_DEFAULTFILENAME "SenzaNome"

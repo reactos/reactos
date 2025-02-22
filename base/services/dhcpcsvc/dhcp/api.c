@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS kernel
+ * PROJECT:          ReactOS kernel
  * FILE:             subsys/system/dhcp/api.c
  * PURPOSE:          DHCP client api handlers
  * PROGRAMMER:       arty

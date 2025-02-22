@@ -2,7 +2,7 @@
 
 /* Copyright (C) 1994-2002, Jim Hall <jhall@freedos.org> */
 
-/* Adapted for MenuOS -Edited for Findstr.exe K'Williams */
+/* Adapted for ReactOS -Edited for Findstr.exe K'Williams */
 
 /*
    This program is free software; you can redistribute it and/or modify

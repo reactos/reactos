@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Hardware Abstraction Layer
+ * PROJECT:         ReactOS Hardware Abstraction Layer
  * FILE:            hal/halx86/include/hal.h
  * PURPOSE:         HAL Header
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)

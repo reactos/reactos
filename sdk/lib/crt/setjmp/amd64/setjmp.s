@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS system libraries
+ * PROJECT:           ReactOS system libraries
  * PURPOSE:           Implementation of _setjmp/longjmp
  * FILE:              lib/sdk/crt/setjmp/amd64/setjmp.s
  * PROGRAMMER:        Timo Kreuzer (timo.kreuzer@reactos.org)

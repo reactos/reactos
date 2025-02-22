@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS NDIS User I/O driver
+ * PROJECT:     ReactOS NDIS User I/O driver
  * FILE:        createclose.c
  * PURPOSE:     IRP_MJ_CREATE and IRP_MJ_CLOSE handling
  * PROGRAMMERS: Cameron Gutman (cameron.gutman@reactos.org)

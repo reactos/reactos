@@ -1,5 +1,5 @@
 /*
-    MenuOS Kernel Streaming
+    ReactOS Kernel Streaming
     Port Class
 
     This file is in the public domain.

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Network Shell
+ * PROJECT:     ReactOS Network Shell
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Portuguese (Portugal) resource file
  * TRANSLATOR:  Copyright 2019-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
@@ -85,20 +85,20 @@ END
 
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Programa de configuração do MenuOS"
+CAPTION "Programa de configuração do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Seleccione  configuração típica ou personalizada:", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "Configuração &típica", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Configuração &personalizada", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
-    LTEXT "Cria ligações de rede utilizando o ""Cliente para Redes MenuOS"". ""Partilha de ficheiros e de impressão para redes MenuOS"", e o protocolo TCP/IP com endereçamento automático.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "Cria ligações de rede utilizando o ""Cliente para Redes ReactOS"". ""Partilha de ficheiros e de impressão para redes ReactOS"", e o protocolo TCP/IP com endereçamento automático.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Permite configurar manualmente os componentes de rede.", IDC_STATIC, 65, 90, 243, 20
 END
 
 IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Programa de configuração do MenuOS"
+CAPTION "Programa de configuração do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Dispositivo:", IDC_STATIC, 33, 2, 100, 20
@@ -113,7 +113,7 @@ END
 
 IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Programa de configuração do MenuOS"
+CAPTION "Programa de configuração do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Deseja que este computador seja membro de um domínio?\n\
@@ -178,6 +178,6 @@ BEGIN
     IDS_NETWORKCOMPONENTSUBTITLE "Determina quais os componentes de rede a utilizar neste equipamento. Para adicionar novos componentes, clique em ""Instalar""."
     IDS_NETWORKDOMAINTITLE "Grupo de trabalho ou domínio"
     IDS_NETWORKDOMAINSUBTITLE "Um grupo de trabalho é um grupo de computadores que partilham o mesmo nome. Um domínio é um grupo de computadores gerido por um administrador de rede."
-    IDS_REACTOS_SETUP "Programa de configuração do MenuOS"
+    IDS_REACTOS_SETUP "Programa de configuração do ReactOS"
     IDS_WZD_DOMAIN_NAME "A instalação não pode continuar\naté que digite o nome do\n domínio ou grupo de trabalho."
 END

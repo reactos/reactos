@@ -268,10 +268,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRESS_INFO_START "MenuOS sedang mencoba untuk memulai layanan berikut"
-    IDS_PROGRESS_INFO_STOP "MenuOS sedang mencoba untuk menghentikan layanan berikut"
-    IDS_PROGRESS_INFO_PAUSE "MenuOS sedang mencoba menjeda layanan berikut"
-    IDS_PROGRESS_INFO_RESUME "MenuOS sedang mencoba melanjutkan layanan tersebut"
+    IDS_PROGRESS_INFO_START "ReactOS sedang mencoba untuk memulai layanan berikut"
+    IDS_PROGRESS_INFO_STOP "ReactOS sedang mencoba untuk menghentikan layanan berikut"
+    IDS_PROGRESS_INFO_PAUSE "ReactOS sedang mencoba menjeda layanan berikut"
+    IDS_PROGRESS_INFO_RESUME "ReactOS sedang mencoba melanjutkan layanan tersebut"
     IDS_CREATE_SUCCESS "Layanan Berhasil Dibuat"
     IDS_DELETE_SUCCESS "Layanan Berhasil Dihapus"
     IDS_CREATE_REQ "Kotak yang ditandai dengan\nbintang adalah penting"
@@ -306,7 +306,7 @@ BEGIN
     IDS_HINT_DETAILS " Menampilkan informasi mengenai setiap item dalam jendela."
     IDS_HINT_CUST " Mengkustomisasi tampilan."
     IDS_HINT_HELP " Menampilkan jendela bantuan."
-    IDS_HINT_ABOUT " Tentang Manajer Layanan MenuOS."
+    IDS_HINT_ABOUT " Tentang Manajer Layanan ReactOS."
     IDS_HINT_SYS_RESTORE " Mengembalikan jendela ini ke ukuran normal."
     IDS_HINT_SYS_MOVE " Memindahkan jendela ini."
     IDS_HINT_SYS_SIZE " Mengukur ulang jendela ini."
@@ -318,7 +318,7 @@ END
 /* Application title */
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "MenuOS Service Manager"
+    IDS_APPNAME "ReactOS Service Manager"
     IDS_APPAUTHORS "Copyright (C) 2005-2007 by Ged Murphy (gedmurphy@reactos.org)"
 END
 

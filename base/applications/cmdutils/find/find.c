@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Find Command
+ * PROJECT:     ReactOS Find Command
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Prints all lines of a file that contain a string.
  * COPYRIGHT:   Copyright 1994-2002 Jim Hall (jhall@freedos.org)

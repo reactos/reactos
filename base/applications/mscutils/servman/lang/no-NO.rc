@@ -268,10 +268,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRESS_INFO_START "MenuOS forsøker å starte følgende tjeneste"
-    IDS_PROGRESS_INFO_STOP "MenuOS forsøker å stoppe følgende tjeneste"
-    IDS_PROGRESS_INFO_PAUSE "MenuOS forsøker å pause følgende tjeneste"
-    IDS_PROGRESS_INFO_RESUME "MenuOS forsøker å fortsette følgende tjeneste"
+    IDS_PROGRESS_INFO_START "ReactOS forsøker å starte følgende tjeneste"
+    IDS_PROGRESS_INFO_STOP "ReactOS forsøker å stoppe følgende tjeneste"
+    IDS_PROGRESS_INFO_PAUSE "ReactOS forsøker å pause følgende tjeneste"
+    IDS_PROGRESS_INFO_RESUME "ReactOS forsøker å fortsette følgende tjeneste"
     IDS_CREATE_SUCCESS "Tjenesten ble opprettet"
     IDS_DELETE_SUCCESS "Tjenesten ble slettet"
     IDS_CREATE_REQ "Fields marked with an\nasterix are mandatory"
@@ -306,7 +306,7 @@ BEGIN
     IDS_HINT_DETAILS " Vis informasjon om hver element i et vindu."
     IDS_HINT_CUST " Tilpass bildet."
     IDS_HINT_HELP " Vis hjelp vinduet."
-    IDS_HINT_ABOUT " Om MenuOS Tjenestebehandler."
+    IDS_HINT_ABOUT " Om ReactOS Tjenestebehandler."
     IDS_HINT_SYS_RESTORE " Gjenopprett vinduet til normal størrelse."
     IDS_HINT_SYS_MOVE " Flytt dette vinduet."
     IDS_HINT_SYS_SIZE " Endre størrelsen på dette vinduet."
@@ -318,7 +318,7 @@ END
 /* Application title */
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "MenuOS Tjenestebehandler"
+    IDS_APPNAME "ReactOS Tjenestebehandler"
     IDS_APPAUTHORS "Copyright (C) 2005-2007 by Ged Murphy (gedmurphy@reactos.org)"
 END
 

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     PAINT for MenuOS
+ * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Japanese resource file
  * TRANSLATORS: Copyright 2009 pcds90net <ds200xnet-ros@yahoo.co.jp>
@@ -236,7 +236,7 @@ STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "ペイント"
     IDS_WINDOWTITLE "%s - ペイント"
-    IDS_INFOTITLE "MenuOS ペイント"
+    IDS_INFOTITLE "ReactOS ペイント"
     IDS_INFOTEXT "GNU Lesser General Public License (LGPL, 詳細は www.gnu.org) の下で利用可能です。"
     IDS_SAVEPROMPTTEXT "%s の変更内容を保存しますか？"
     IDS_DEFAULTFILENAME "無題"

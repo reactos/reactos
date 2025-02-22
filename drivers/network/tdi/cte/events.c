@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS TDI driver
+ * PROJECT:         ReactOS TDI driver
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            drivers/network/tdi/cte/events.c
  * PURPOSE:         CTE events support

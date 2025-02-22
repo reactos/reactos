@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Universal Serial Bus Bulk Storage Driver
+ * PROJECT:     ReactOS Universal Serial Bus Bulk Storage Driver
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        drivers/usb/usbstor/queue.c
  * PURPOSE:     USB block storage device driver.

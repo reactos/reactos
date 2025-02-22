@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS api tests
+ * PROJECT:     ReactOS api tests
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Tests for SHPropertyBag Read/Write
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
@@ -468,11 +468,11 @@ static void SHPropertyBag_OnRegKey(void)
     GUID guid;
     BYTE guid_and_extra[sizeof(GUID) + sizeof(GUID)];
 
-    // Create HKCU\Software\MenuOS registry key
-    error = RegCreateKeyW(HKEY_CURRENT_USER, L"Software\\MenuOS", &hKey);
+    // Create HKCU\Software\ReactOS registry key
+    error = RegCreateKeyW(HKEY_CURRENT_USER, L"Software\\ReactOS", &hKey);
     if (error)
     {
-        skip("FAILED to create HKCU\\Software\\MenuOS\n");
+        skip("FAILED to create HKCU\\Software\\ReactOS\n");
         return;
     }
 

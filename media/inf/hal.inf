@@ -8,7 +8,7 @@ Signature  = "$Windows NT$"
 LayoutFile = layout.inf
 Class      = Computer
 ClassGUID  = {4D36E966-E325-11CE-BFC1-08002BE10318}
-Provider   = %MenuOS%
+Provider   = %ReactOS%
 DriverVer  = 08/15/2011,1.00.0.0
 
 [DestinationDirs]
@@ -47,7 +47,7 @@ AddService = , 0x00000002
 
 [Strings]
 ; Non-localizable
-MenuOS = "MenuOS Project"
+ReactOS = "ReactOS Project"
 
 MsftMfg = "Microsoft"
 NecMfg = "NEC"

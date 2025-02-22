@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS CRT
+ * PROJECT:         ReactOS CRT
  * LICENSE:         See COPYING in the top level directory
  * PURPOSE:         CRT's ecvt
  * FILE:            lib/sdk/crt/stdlib/ecvt.c

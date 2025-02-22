@@ -225,7 +225,7 @@ PcMemCheckUsableMemorySize(VOID)
             __LINE__,
             "The BIOS reported a usable memory range up to 0x%lx, which is too small!\n"
             "Required size is 0x%lx\n\n"
-            "If you see this, please report to the MenuOS team!",
+            "If you see this, please report to the ReactOS team!",
             Size, RequiredSize);
     }
 }

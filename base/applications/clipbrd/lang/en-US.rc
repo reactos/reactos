@@ -36,7 +36,7 @@ BEGIN
     STRING_CLIPFILE  "Clipboard Element"
     STRING_DELETE_MSG "Clear contents of the Clipboard?"
     STRING_DELETE_TITLE "Clear Clipboard"
-    STRING_FORMAT_NT "Clipboard files for MenuOS (*.clp)"
+    STRING_FORMAT_NT "Clipboard files for ReactOS (*.clp)"
     STRING_FORMAT_GEN "Clipboard files (*.clp)"
 END
 

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Kernel
+ * PROJECT:     ReactOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Helper functions to parse CM_RESOURCE_LISTs
  * COPYRIGHT:   Copyright 2020 Timo Kreuzer (timo.kreuzer@reactos.org)

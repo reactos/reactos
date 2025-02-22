@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:          See COPYING in the top level directory
- * PROJECT:            MenuOS Kernel
+ * PROJECT:            ReactOS Kernel
  * FILE:               ntoskrnl/ex/work.c
  * PURPOSE:            Manage system work queues and worker threads
  * PROGRAMMER:         Alex Ionescu (alex@relsoft.net)

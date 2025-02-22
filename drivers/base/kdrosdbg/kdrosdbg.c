@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS kernel
+ * PROJECT:         ReactOS kernel
  * FILE:            drivers/base/kdcom/kdbg.c
  * PURPOSE:         Serial i/o functions for the kernel debugger.
  * PROGRAMMER:      Alex Ionescu
- *                  HervÃ© Poussineau
+ *                  Hervé Poussineau
  */
 
 /* INCLUDES *****************************************************************/

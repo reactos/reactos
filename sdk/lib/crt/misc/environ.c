@@ -1,7 +1,7 @@
 /*
  * environ.c
  *
- * MenuOS MSVCRT.DLL Compatibility Library
+ * ReactOS MSVCRT.DLL Compatibility Library
  */
 
 #include <precomp.h>

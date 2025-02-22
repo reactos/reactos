@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API Tests
+ * PROJECT:     ReactOS API Tests
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     Utility function declarations for calling AFD
  * COPYRIGHT:   Copyright 2015 Thomas Faber (thomas.faber@reactos.org)

@@ -1188,13 +1188,13 @@
 #define PACKAGE_BUGREPORT "ros-dev@reactos.org"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "MenuOS"
+#define PACKAGE_NAME "ReactOS"
 
 /* Define to the full name and version of this package. */
 #define PACKAGE_STRING PACKAGE_NAME " " PACKAGE_VERSION
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "MenuOS"
+#define PACKAGE_TARNAME "ReactOS"
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL "https://reactos.org/"

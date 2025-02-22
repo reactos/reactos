@@ -1,7 +1,7 @@
 /*
 *
 * COPYRIGHT:       See COPYING in the top level directory
-* PROJECT:         MenuOS devmgr.dll
+* PROJECT:         ReactOS devmgr.dll
 * FILE:            dll/win32/devmgr/api.cpp
 * PURPOSE:         devmgr.dll interface
 * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)

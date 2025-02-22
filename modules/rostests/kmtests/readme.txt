@@ -1,4 +1,4 @@
-This directory contains the MenuOS Kernel-Mode Test Suite.
+This directory contains the ReactOS Kernel-Mode Test Suite.
 
 The kmtest, kmtest_drv and include subdirectories contain the
 testing framework infrastructure, other directories contain tests.

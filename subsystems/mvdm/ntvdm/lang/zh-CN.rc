@@ -7,7 +7,7 @@ STRINGTABLE
 BEGIN
     IDS_CAPTURE_MOUSE, "捕获鼠标指针(&C)"
     IDS_RELEASE_MOUSE, "释放鼠标指针(&R)"
-    IDS_VDM_MENU     , "MenuOS DOS 虚拟机 (&V)"
+    IDS_VDM_MENU     , "ReactOS DOS 虚拟机 (&V)"
 END
 
 STRINGTABLE
@@ -16,7 +16,7 @@ BEGIN
     IDS_VDM_DUMPMEM_BIN,    "内存转储（二进制）(&B)"
     IDS_VDM_MOUNT_FLOPPY,   "在驱动器 %d 中插入软盘 <%s>..."
     IDS_VDM_EJECT_FLOPPY,   "弹出驱动器 %d 中的软盘"
-    IDS_VDM_QUIT       ,    "退出 MenuOS DOS 虚拟机 (&Q)"
+    IDS_VDM_QUIT       ,    "退出 ReactOS DOS 虚拟机 (&Q)"
 END
 
 STRINGTABLE

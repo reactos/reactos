@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS kernel
+ * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/iomgr/bootlog.c
  * PURPOSE:         Boot log file support
  *
@@ -313,7 +313,7 @@ IopSaveBootLogToFile(VOID)
         return;
     }
 
-    //Status = IopWriteLogFile(L"MenuOS "KERNEL_VERSION_STR);
+    //Status = IopWriteLogFile(L"ReactOS "KERNEL_VERSION_STR);
 
     if (!NT_SUCCESS(Status))
     {

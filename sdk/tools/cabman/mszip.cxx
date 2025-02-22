@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS cabinet manager
+ * PROJECT:     ReactOS cabinet manager
  * FILE:        tools/cabman/mszip.cxx
  * PURPOSE:     CAB codec for MSZIP compressed data
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

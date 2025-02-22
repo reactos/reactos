@@ -1,5 +1,5 @@
 /* 
- * PROJECT:     MenuOS DiskPart
+ * PROJECT:     ReactOS DiskPart
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
@@ -12,7 +12,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 /* Basic application information */
 STRINGTABLE
 BEGIN
-    IDS_APP_HEADER "MenuOS DiskPart"
+    IDS_APP_HEADER "ReactOS DiskPart"
     IDS_APP_USAGE "\n磁碟分區實用工具\n\n\
 Usage: DISKPART [/S 檔名] [/T 逾時] [/?]\n\n\
 /S <檔名>\t執行指定的指令碼。\n\

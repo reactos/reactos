@@ -1,6 +1,6 @@
 /*
- *  MenuOS applications
- *  Copyright (C) 2004-2008 MenuOS Team
+ *  ReactOS applications
+ *  Copyright (C) 2004-2008 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS GUI first stage setup application
+ * PROJECT:     ReactOS GUI first stage setup application
  * FILE:        base/setup/reactos/reactos.c
  * PROGRAMMERS: Matthias Kupfer
  *              Dmitry Chapyshev (dmitry@reactos.org)

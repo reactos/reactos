@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS VFAT filesystem library
+ * PROJECT:     ReactOS VFAT filesystem library
  * FILE:        lib\fslib\vfatlib\common.c
  * PURPOSE:     Common code for Fat support
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

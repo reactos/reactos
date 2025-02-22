@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Win32k tests
+ * PROJECT:     ReactOS Win32k tests
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Test for NtUserGetAsyncKeyState
  * COPYRIGHT:   Copyright 2022 Thomas Faber (thomas.faber@reactos.org)

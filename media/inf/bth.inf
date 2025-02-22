@@ -2,7 +2,7 @@
 Signature="$Windows NT$"
 Class=Bluetooth
 ClassGUID={e0cbf06c-cd8b-4647-bb8a-263b43f0f974}
-Provider=%MenuOS%
+Provider=%ReactOS%
 DriverVer=03/27/2012,1.0.0
 
 [DestinationDirs]
@@ -24,9 +24,9 @@ HKR, , Icon, 0, "201"
 bthci.dll
 
 [Manufacturer]
-%MenuOS%=MenuOS
+%ReactOS%=ReactOS
 
-[MenuOS]
+[ReactOS]
 %BTUSB.DeviceDesc%=FreeBT.Dev, USB\Class_E0&SubClass_01&Prot_01 ; Bluetooth class devices
 
 [FreeBT.Dev]
@@ -59,7 +59,7 @@ fbtusb.sys
 
 [Strings]
 ; Non-localizable
-MenuOS = "MenuOS Project"
+ReactOS = "ReactOS Project"
 
 ; Localizable
 BTUSB.DeviceDesc="Generic USB Bluetooth Radio"

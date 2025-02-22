@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              MenuOS DirectX
+ * PROJECT:              ReactOS DirectX
  * FILE:                 dll/directx/ddraw/Videoport/videoport_stubs.c
  * PURPOSE:              IDirectDrawVideoPort, DDVideoPortContainer and IDirectDrawVideoPortNotify Implementation
  * PROGRAMMER:           Maarten Bosma

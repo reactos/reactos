@@ -1,5 +1,5 @@
 /*
- * MenuOS Calc (main program)
+ * ReactOS Calc (main program)
  *
  * Copyright 2007-2017, Carlo Bramini
  *

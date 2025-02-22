@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS NDIS library
+ * PROJECT:     ReactOS NDIS library
  * FILE:        ndis/string.c
  * PURPOSE:     String management routines
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

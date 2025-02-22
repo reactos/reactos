@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * LICENSE:         GNU GPL - See COPYING in the top level directory
  *                  BSD - See COPYING.ARM in the top level directory
  * FILE:            lib/rtl/bitmap.c

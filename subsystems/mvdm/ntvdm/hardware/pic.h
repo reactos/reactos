@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         MenuOS Virtual DOS Machine
+ * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/hardware/pic.h
  * PURPOSE:         Programmable Interrupt Controller emulation
  *                  (Interrupt Controller Adapter (ICA) in Windows terminology)

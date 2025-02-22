@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS kernel
+ * PROJECT:           ReactOS kernel
  * PURPOSE:           Functions for creation and destruction of DCs
  * FILE:              win32ss/gdi/ntgdi/dclife.c
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@rectos.org)
@@ -910,7 +910,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
             DC_UnlockDc(DCToDelete);
             if(UserReleaseDC(NULL, hDC, FALSE))
             {
-                /* MenuOS feature: Call UserReleaseDC
+                /* ReactOS feature: Call UserReleaseDC
                  * I don't think Windows does it.
                  * Still, complain, no one should ever call DeleteDC
                  * on a window DC */

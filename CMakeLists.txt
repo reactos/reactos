@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.17.0)
 
-if(NOT CMAKE_VERSION MATCHES "MenuOS")
+if(NOT CMAKE_VERSION MATCHES "ReactOS")
     message(WARNING "Building with \"${CMAKE_COMMAND}\", which is not the custom CMake included in RosBE, might cause build issues...")
 endif()
 

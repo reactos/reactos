@@ -1,5 +1,5 @@
 /*
- * PROJECT:    MenuOS Netshell
+ * PROJECT:    ReactOS Netshell
  * LICENSE:    GPL - See COPYING in the top level directory
  * PURPOSE:    Chinese (Simplified) Language File
  * TRANSLATOR: 2011 Elton Chung aka MfldElton <elton328@gmail.com>
@@ -86,20 +86,20 @@ END
 
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS 安装程序"
+CAPTION "ReactOS 安装程序"
 FONT 9, "宋体"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "请选择使用典型设置还是自定义设置：", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "典型设置", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "自定义设置", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
-    LTEXT "使用 MenuOS 网络客户端，MenuOS 网络的文件和打印共享以及具有自动寻址功能的 TCP/IP 传输协议创建网络连接。", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "使用 ReactOS 网络客户端，ReactOS 网络的文件和打印共享以及具有自动寻址功能的 TCP/IP 传输协议创建网络连接。", IDC_STATIC, 65, 45, 240, 30
     LTEXT "允许您手动配置网络组件。", IDC_STATIC, 65, 90, 243, 20
 END
 
 IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS 安装程序"
+CAPTION "ReactOS 安装程序"
 FONT 9, "宋体"
 BEGIN
     LTEXT "设备：", IDC_STATIC, 33, 2, 100, 20
@@ -114,7 +114,7 @@ END
 
 IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "MenuOS 安装程序"
+CAPTION "ReactOS 安装程序"
 FONT 9, "宋体"
 BEGIN
     LTEXT "您是否希望此计算机成为域的成员？\n\
@@ -179,6 +179,6 @@ BEGIN
     IDS_NETWORKCOMPONENTSUBTITLE "确定计算机上使用的网络组件。若要添加新组件，请单击“安装”。"
     IDS_NETWORKDOMAINTITLE "工作组或计算机域"
     IDS_NETWORKDOMAINSUBTITLE "域是由网络管理员定义的一组计算机。工作组是共享相同工作组名称的计算机组。"
-    IDS_REACTOS_SETUP "MenuOS 安装程序"
+    IDS_REACTOS_SETUP "ReactOS 安装程序"
     IDS_WZD_DOMAIN_NAME "在输入域或工作组的名称之前，安装程序无法继续。"
 END

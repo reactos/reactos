@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS system libraries
+ * PROJECT:     ReactOS system libraries
  * FILE:        dll/win32/kernel32/client/arm/fiber.S
  * PURPOSE:     Fiber context switch code for the amd64 architecture
  * PROGRAMMER:

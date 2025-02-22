@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS RPC Subsystem Service
+ * PROJECT:     ReactOS RPC Subsystem Service
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     UUID initialization.
  * COPYRIGHT:   Copyright 2019 Pierre Schweitzer

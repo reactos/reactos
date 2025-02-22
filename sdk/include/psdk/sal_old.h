@@ -3,7 +3,7 @@
  *
  * Old style Standard Annotation Language (SAL) definitions
  *
- * This file is part of the MenuOS PSDK package.
+ * This file is part of the ReactOS PSDK package.
  *
  * Contributors:
  *   Timo Kreuzer (timo.kreuzer@reactos.org)

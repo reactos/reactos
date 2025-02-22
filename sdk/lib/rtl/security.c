@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS system libraries
+ * PROJECT:           ReactOS system libraries
  * FILE:              lib/rtl/security.c
  * PURPOSE:           Security related functions and Security Objects
  * PROGRAMMER:        Eric Kohl

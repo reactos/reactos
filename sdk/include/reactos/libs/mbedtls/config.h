@@ -1259,7 +1259,7 @@
  * This option is only useful if both MBEDTLS_SHA256_C and
  * MBEDTLS_SHA512_C are defined. Otherwise the available hash module is used.
  */
-#define MBEDTLS_ENTROPY_FORCE_SHA256 /* swyter: MenuOS is primarily 32-bit only, this speeds it up notably */
+#define MBEDTLS_ENTROPY_FORCE_SHA256 /* swyter: ReactOS is primarily 32-bit only, this speeds it up notably */
 
 /**
  * \def MBEDTLS_ENTROPY_NV_SEED

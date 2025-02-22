@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          MenuOS Win32k subsystem
+ * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Driver entry and initialization of win32k
  * FILE:             win32ss/user/ntuser/main.c
  * PROGRAMER:

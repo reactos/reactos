@@ -3,7 +3,7 @@
  *
  * Mount Manager mounted devices interface
  *
- * This file is part of the MenuOS DDK package.
+ * This file is part of the ReactOS DDK package.
  *
  * Contributors:
  *   Magnus Olsen <greatlord@reactos.org>

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS GUI/console setup
+ * PROJECT:         ReactOS GUI/console setup
  * FILE:            base/setup/setup/setup.c
  * PURPOSE:         Second stage setup
  * PROGRAMMER:      Eric Kohl

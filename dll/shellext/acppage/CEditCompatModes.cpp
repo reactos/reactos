@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Compatibility Layer Shell Extension
+ * PROJECT:     ReactOS Compatibility Layer Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CEditCompatModes implementation
  * COPYRIGHT:   Copyright 2015-2019 Mark Jansen (mark.jansen@reactos.org)

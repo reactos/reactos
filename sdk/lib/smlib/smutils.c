@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS SM Helper Library
+ * PROJECT:     ReactOS SM Helper Library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Utility functions built around the client SM API
  * COPYRIGHT:   Copyright 2005 Emanuele Aliberti <ea@reactos.com>
@@ -362,7 +362,7 @@ SmLookupSubsystem(
  * status code.
  *
  * @remark
- * This API is MenuOS-specific and not in NT.
+ * This API is ReactOS-specific and not in NT.
  */
 NTSTATUS
 NTAPI

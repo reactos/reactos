@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS System Control Panel Applet
+ * PROJECT:     ReactOS System Control Panel Applet
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/cpl/sysdm/startrec.c
  * PURPOSE:     Computer settings for startup and recovery
@@ -153,7 +153,7 @@ ReadFreeldrSection(HINF hInf, WCHAR *szSectionName)
 
         if (!_wcsnicmp(szName, L"BootType", 8))
         {
-            if (!_wcsnicmp(szValue, L"MenuOS", 7))
+            if (!_wcsnicmp(szValue, L"ReactOS", 7))
             {
                 // FIXME: Store as enum
                 pRecord->BootType = 1;

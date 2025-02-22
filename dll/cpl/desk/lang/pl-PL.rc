@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Display Control Panel
+ * PROJECT:     ReactOS Display Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Polish resource file
  * TRANSLATORS: Copyright 2005 Sebastian Gasiorek <sebastian.gasiorek@reactos.org>
@@ -87,7 +87,7 @@ CAPTION "Wygląd zaawansowany"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "Jeśli wybierzesz motyw inny niż Klasyczny MenuOS, poniższe ustawienia zostaną zastąpione, ale nie we wszystkich starszych programach.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 132, 238, 25, BS_MULTILINE
+    LTEXT "Jeśli wybierzesz motyw inny niż Klasyczny ReactOS, poniższe ustawienia zostaną zastąpione, ale nie we wszystkich starszych programach.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 132, 238, 25, BS_MULTILINE
     LTEXT "&Element", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP

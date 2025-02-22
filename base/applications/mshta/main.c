@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS HTML Application Host
+ * PROJECT:     ReactOS HTML Application Host
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Forwards HTA application information to mshtml
  * COPYRIGHT:   Copyright 2017-2018 Jared Smudde(computerwhiz02@hotmail.com)

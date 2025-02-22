@@ -19,7 +19,7 @@ BEGIN
     DEFPUSHBUTTON "Batal", IDCANCEL, 142, 98, 43, 17
     PUSHBUTTON "&Akhiri Sekarang", IDC_END_NOW, 78, 98, 43, 17
     LTEXT "Program ini tidak merespon.", IDC_STATIC, 7, 7, 178, 8
-    LTEXT "Untuk kembali ke MenuOS dan memeriksa status program, klik Batal.", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "Untuk kembali ke ReactOS dan memeriksa status program, klik Batal.", IDC_STATIC, 7, 26, 178, 16
     LTEXT "Jika anda memilih untuk segera mengakhiri program, anda akan kehilangan data yang belum disimpan. Untuk mengakhiri program sekarang, klik Akhiri Sekarang.", IDC_STATIC, 7, 53, 178, 26
 END
 

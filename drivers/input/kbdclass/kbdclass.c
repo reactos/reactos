@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Keyboard class driver
+ * PROJECT:         ReactOS Keyboard class driver
  * FILE:            drivers/kbdclass/kbdclass.c
  * PURPOSE:         Keyboard class driver
  *

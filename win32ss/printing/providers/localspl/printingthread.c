@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Local Spooler
+ * PROJECT:     ReactOS Local Spooler
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Implementation of the Thread that actually performs the printing process
  * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)

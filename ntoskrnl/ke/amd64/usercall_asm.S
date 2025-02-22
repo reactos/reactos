@@ -1,7 +1,7 @@
 /*
- * PROJECT:     MenuOS Kernel
+ * PROJECT:     ReactOS Kernel
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     MenuOS AMD64 user mode callback helper
+ * PURPOSE:     ReactOS AMD64 user mode callback helper
  * COPYRIGHT:   Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 

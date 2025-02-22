@@ -137,7 +137,7 @@ BEGIN
     LTEXT "无法继续添加硬件向导", IDC_FINISHTITLE, 114, 8, 203, 28
     LTEXT "要继续，请将这个硬件跟计算机连接。", -1, 114, 40, 193, 16
     AUTOCHECKBOX "单击“完成”时关闭计算机；这样，我可以打开计算机并连接硬件(&T)。", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "在大多数情况下，MenuOS 会在您连接硬件后自动安装该硬件。如果 MenuOS 找不到，您可以重新打开此向导以安装支持软件。", -1, 114, 98, 193, 32
+    LTEXT "在大多数情况下，ReactOS 会在您连接硬件后自动安装该硬件。如果 ReactOS 找不到，您可以重新打开此向导以安装支持软件。", -1, 114, 98, 193, 32
     LTEXT "要关闭这个向导，请单击“完成”。", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 

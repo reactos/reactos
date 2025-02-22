@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS net command
+ * PROJECT:         ReactOS net command
  * FILE:            base/applications/network/net/cmdStatistics.c
  * PROGRAMMERS:     Eric Kohl <eric.kohl@reactos.org>
  */

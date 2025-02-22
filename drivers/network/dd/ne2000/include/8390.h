@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS Novell Eagle 2000 driver
+ * PROJECT:     ReactOS Novell Eagle 2000 driver
  * FILE:        include/8390.h
  * PURPOSE:     National Semiconductor 8390 NIC definitions
  */

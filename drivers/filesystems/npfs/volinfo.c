@@ -1,9 +1,9 @@
 /*
- * PROJECT:     MenuOS Named Pipe FileSystem
+ * PROJECT:     ReactOS Named Pipe FileSystem
  * LICENSE:     BSD - See COPYING.ARM in the top level directory
  * FILE:        drivers/filesystems/npfs/volinfo.c
  * PURPOSE:     Named Pipe FileSystem Volume Information
- * PROGRAMMERS: MenuOS Portable Systems Group
+ * PROGRAMMERS: ReactOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         MenuOS Virtual DOS Machine
+ * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            dskbios32.h
  * PURPOSE:         VDM 32-bit Disk BIOS
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

@@ -1,5 +1,5 @@
 /*
-* PROJECT:     MenuOS Win32k subsystem
+* PROJECT:     ReactOS Win32k subsystem
 * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
 * FILE:        win32ss/gdi/eng/multidisp.c
 * PURPOSE:     Multi-Display driver

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS NT User-Mode Library
+ * PROJECT:         ReactOS NT User-Mode Library
  * FILE:            dll/ntdll/ldr/ldrutils.c
  * PURPOSE:         Internal Loader Utility Functions
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)

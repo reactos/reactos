@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS VGA Font Editor
+ * PROJECT:     ReactOS VGA Font Editor
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     French resource file
  * COPYRIGHT:   Copyright 2008 Colin Finck (colin@reactos.org)
@@ -14,7 +14,7 @@ CAPTION "À propos de"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON           IDI_MAIN,                     IDC_STATIC, 10, 10, 20, 20
-    LTEXT          "Éditeur de police VGA MenuOS",    IDC_STATIC, 37, 10, 93, 10
+    LTEXT          "Éditeur de police VGA ReactOS",    IDC_STATIC, 37, 10, 93, 10
     LTEXT          "Copyright 2008 Colin Finck", IDC_STATIC, 37, 20, 93, 10
     DEFPUSHBUTTON  "OK",                         IDCANCEL,   40, 44, 55, 15
 END
@@ -81,7 +81,7 @@ BEGIN
     IDS_UNSUPPORTEDPSF, "Format de police PSF non supporté ! L'éditeur supporte seulement les polices 8x8 sans aucun mode spécial."
     IDS_DOCNAME, "Police %1!u!"
     IDS_SAVEPROMPT, "Le fichier ""%1"" a été modifié mais pas enregistré.\n\nVoulez-vous l'enregistrer ?"
-    IDS_APPTITLE, "Éditeur de police VGA MenuOS"
+    IDS_APPTITLE, "Éditeur de police VGA ReactOS"
     IDS_CLOSEEDIT, "Veuillez d'abord fermer toutes les fenêtres d'édition !"
 
     IDS_TOOLTIP_NEW, "Nouveau"

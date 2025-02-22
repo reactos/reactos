@@ -8,7 +8,7 @@
  *              Copyright 2006-2019 Aleksey Bragin <aleksey@reactos.org>
  *
  * NOTES:       The source code in this file is based on the work of respective
- *              authors of PE loading code in MenuOS and Brian Palmer and
+ *              authors of PE loading code in ReactOS and Brian Palmer and
  *              Alex Ionescu's arch/i386/loader.c, and my research project
  *              (creating a native EFI loader for Windows).
  *

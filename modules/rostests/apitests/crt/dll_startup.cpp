@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS API tests
+ * PROJECT:         ReactOS API tests
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
  * PURPOSE:         Test for static C++ object construction/destruction in a DLL
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>

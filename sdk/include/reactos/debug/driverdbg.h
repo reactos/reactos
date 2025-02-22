@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS SDK
+ * PROJECT:     ReactOS SDK
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Helper functions for driver debugging
  * COPYRIGHT:   2020 Victor Perevertkin (victor.perevertkin@reactos.org)

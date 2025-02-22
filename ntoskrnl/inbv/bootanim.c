@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Kernel
+ * PROJECT:     ReactOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Boot Theme & Animation
  * COPYRIGHT:   Copyright 2007 Alex Ionescu (alex.ionescu@reactos.org)
@@ -21,9 +21,9 @@
 /* GLOBALS *******************************************************************/
 
 /*
- * MenuOS uses the same boot screen for all the products.
+ * ReactOS uses the same boot screen for all the products.
  *
- * Enable this define when MenuOS will have different SKUs
+ * Enable this define when ReactOS will have different SKUs
  * (Workstation, Server, Storage Server, Cluster Server, etc...).
  */
 // #define REACTOS_SKUS
@@ -67,7 +67,7 @@ extern BOOLEAN ShowProgressBar;
 
 /*
  * Values for PltRotBarStatus:
- * - PltRotBarStatus == 1, do palette fading-in (done elsewhere in MenuOS);
+ * - PltRotBarStatus == 1, do palette fading-in (done elsewhere in ReactOS);
  * - PltRotBarStatus == 2, do rotation bar animation;
  * - PltRotBarStatus == 3, stop the animation thread.
  * - Any other value is ignored and the animation thread continues to run.
@@ -730,7 +730,7 @@ DisplayBootBitmap(
 
         /*
          * Add a rotating bottom horizontal bar when using a progress bar,
-         * to show that MenuOS can be still alive when the bar does not
+         * to show that ReactOS can be still alive when the bar does not
          * appear to progress.
          */
         if (TempRotBarSelection == RB_PROGRESS_BAR)
@@ -870,7 +870,7 @@ GetFamousQuote(VOID)
         "I have come here to chew bubble gum and kick ass,\r\n"
             "and I'm all out of bubble gum!",
         "That's the way the cookie crumbles ;-)",
-        "MenuOS is ready to be booted again ;-)",
+        "ReactOS is ready to be booted again ;-)",
         "NOOOO!! DON'T HIT THE BUTTON! I wouldn't do it to you!",
         "Don't abandon your computer, he wouldn't do it to you.",
         "Oh, come on. I got a headache. Leave me alone, will ya?",
@@ -906,7 +906,7 @@ GetFamousQuote(VOID)
             "reaper! - Death in Bill and Ted's Bogus Journey",
         "Final Surrender",
         "If you see this screen...",
-        "From MenuOS with Love",
+        "From ReactOS with Love",
         // "<Place your Ad here>"
     };
 

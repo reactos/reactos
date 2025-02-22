@@ -199,7 +199,7 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
 			       bbits = new char[bmp.bmHeight*bmp.bmWidthBytes*(bmp.bmBitsPixel / 8)];
 				   //GetDIBits(HMemDC, HBmp, 0, bmp.bmHeight, bbits, &bmInfo, DIB_RGB_COLORS);
 
-				   // Here goes a temp hack, since GetDIBits doesn't exist in MenuOS yet
+				   // Here goes a temp hack, since GetDIBits doesn't exist in ReactOS yet
 				   FILE *f = fopen(filename, "rb");
 				   BITMAPFILEHEADER bmpHeader;
 

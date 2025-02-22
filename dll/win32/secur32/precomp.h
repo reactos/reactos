@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS System Libraries
+ * PROJECT:         ReactOS System Libraries
  * FILE:            lib/secur32/precomp.h
  * PURPOSE:         Security Library Header
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)

@@ -1,7 +1,7 @@
 /*
  *
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              MenuOS kernel
+ * PROJECT:              ReactOS kernel
  * FILE:                 services/dd/mpu401/mpu401.h
  * PURPOSE:              MPU-401 MIDI device driver header
  * PROGRAMMER:           Andrew Greenwood

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Automatic Testing Utility
+ * PROJECT:     ReactOS Automatic Testing Utility
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Class implementing a journaled test list for the Crash Recovery feature
  * COPYRIGHT:   Copyright 2009 Colin Finck (colin@reactos.org)

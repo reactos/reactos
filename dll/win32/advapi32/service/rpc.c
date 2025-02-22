@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            lib/advapi32/service/rpc.c
  * PURPOSE:         RPC support routines
  * PROGRAMMER:      Eric Kohl

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
- * PROJECT:         MenuOS UEFI Boot Library
+ * PROJECT:         ReactOS UEFI Boot Library
  * FILE:            boot/environ/lib/misc/bcd.c
  * PURPOSE:         Boot Library BCD Routines
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)

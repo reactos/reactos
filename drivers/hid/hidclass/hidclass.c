@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Universal Serial Bus Human Interface Device Driver
+ * PROJECT:     ReactOS Universal Serial Bus Human Interface Device Driver
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        drivers/hid/hidclass/hidclass.c
  * PURPOSE:     HID Class Driver

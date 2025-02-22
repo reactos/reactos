@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS Winsock 2 IRDA Helper DLL
+ * PROJECT:     ReactOS Winsock 2 IRDA Helper DLL
  * FILE:        include/ws2help.h
  * PURPOSE:     WinSock 2 IRDA Helper DLL
  */

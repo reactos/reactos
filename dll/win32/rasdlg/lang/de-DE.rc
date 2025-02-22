@@ -67,7 +67,7 @@ BEGIN
     AUTOCHECKBOX "Ältere MS-CHAP-Versionen von &Win 95 Servern erlauben", 200, 46, 162, 198, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "M&icrosoft CHAP Version 2 (MS-CHAP v2)", 1492, 28, 176, 200, 10, BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 28, 189, 208, 1
-    AUTOCHECKBOX "&Für MS-CHAP basierte Protokolle, automatisch den MenuOS Anmeldename und Passwort verwenden (und Domäne wenn vorhanden)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Für MS-CHAP basierte Protokolle, automatisch den ReactOS Anmeldename und Passwort verwenden (und Domäne wenn vorhanden)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "OK", 1, 127, 232, 60, 14
     PUSHBUTTON "Abbrechen", 2, 192, 232, 60, 14
 END
@@ -161,7 +161,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Automatisches Wählen und Auflegen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "MenuOS kann Geräte automatisch wählen und auflegen lassen, abhängig davon, wie viele Informationen gesendet und empfangen wurden.", 1085, 9, 7, 253, 30
+    LTEXT "ReactOS kann Geräte automatisch wählen und auflegen lassen, abhängig davon, wie viele Informationen gesendet und empfangen wurden.", 1085, 9, 7, 253, 30
     GROUPBOX "Automatisches wählen", -1, 6, 38, 249, 71
     LTEXT "Andere Leitung wählen, wenn beide der folgenden Bedingungen für diese Verbindung zutreffen:", 1083, 16, 51, 237, 16, NOT WS_GROUP
     LTEXT "Mindest&aktivität:", -1, 16, 73, 100, 8
@@ -624,7 +624,7 @@ BEGIN
     AUTORADIOBUTTON "E&rweitert (Benutzerdefiniert)", 1541, 14, 102, 198, 8, BS_NOTIFY
     LTEXT "&Identität folgendermaßen bestätigen:", 1537, 26, 29, 187, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "&Automatisch eigenen MenuOS-Anmeldenamen und Passwort (und Domäne, falls vorhanden) verwenden", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Automatisch eigenen ReactOS-Anmeldenamen und Passwort (und Domäne, falls vorhanden) verwenden", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Daten&verschlüsselung ist zwingend erforderlich", 1169, 26, 82, 183, 10, BS_TOP | BS_MULTILINE
     LTEXT "Diese Einstellungen erfordern Kenntnisse über Sicherheitsprotokolle.", 1539, 15, 114, 134, 20
     PUSHBUTTON "&Einstellungen...", 1180, 151, 115, 60, 14
@@ -681,7 +681,7 @@ BEGIN
     GROUPBOX "Wähloptionen", 1289, 7, 2, 213, 64
     AUTOCHECKBOX "&Fortschritt während des Wählens anzeigen", 1284, 16, 14, 201, 10
     AUTOCHECKBOX "Na&me, Passwort, Zertifikat usw. abfragen", 1554, 16, 27, 201, 10
-    AUTOCHECKBOX "&MenuOS-Anmeldedomäne einbeziehen", 1555, 16, 40, 201, 10
+    AUTOCHECKBOX "&ReactOS-Anmeldedomäne einbeziehen", 1555, 16, 40, 201, 10
     AUTOCHECKBOX "&Telefonnummer abfragen", 1285, 16, 53, 200, 10, BS_TOP | BS_MULTILINE
     GROUPBOX "Wahlwiederholungsoptionen", 1290, 6, 72, 213, 79
     LTEXT "&Anzahl der Wahlwiederholungen:", 1300, 16, 87, 123, 8
@@ -879,7 +879,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Verbinden mit %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "MenuOS konnte keine Verbindung unter dem angegebenen Benutzernamen und Passwort herstellen. Geben Sie den Benutzernamen und das Passwort erneut ein.", 1396, 7, 6, 206, 36
+    LTEXT "ReactOS konnte keine Verbindung unter dem angegebenen Benutzernamen und Passwort herstellen. Geben Sie den Benutzernamen und das Passwort erneut ein.", 1396, 7, 6, 206, 36
     LTEXT "&Benutzername:", 1399, 8, 51, 49, 8
     EDITTEXT 1394, 66, 46, 143, 14, ES_AUTOHSCROLL
     LTEXT "&Passwort:", 1397, 8, 70, 49, 8, NOT WS_GROUP
@@ -895,7 +895,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Verbinden mit %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "MenuOS konnte keine Verbindung unter dem angegebenen Benutzernamen und Passwort herstellen. Geben Sie den Benutzernamen und das Passwort erneut ein.", 1396, 7, 6, 209, 26
+    LTEXT "ReactOS konnte keine Verbindung unter dem angegebenen Benutzernamen und Passwort herstellen. Geben Sie den Benutzernamen und das Passwort erneut ein.", 1396, 7, 6, 209, 26
     LTEXT "&Benutzername:", 1399, 7, 72, 49, 8
     EDITTEXT 1394, 97, 69, 115, 14, ES_AUTOHSCROLL
     LTEXT "&Passwort:", 1397, 7, 90, 45, 8, NOT WS_GROUP
@@ -1272,7 +1272,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Assistent für neue Verbindungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Geben Sie einen Dienstnamen ein, wenn Sie diesen von Ihrem Internetdienstanbieter erhalten haben. Andernfalls wird der Breitbanddienst beim Herstellen einer Verbindung automatisch von MenuOS gesucht und konfiguriert.", -1, 10, 7, 301, 25
+    LTEXT "Geben Sie einen Dienstnamen ein, wenn Sie diesen von Ihrem Internetdienstanbieter erhalten haben. Andernfalls wird der Breitbanddienst beim Herstellen einer Verbindung automatisch von ReactOS gesucht und konfiguriert.", -1, 10, 7, 301, 25
     LTEXT "&Dienstname (Optional):", -1, 22, 32, 229, 8
     EDITTEXT 1593, 22, 44, 275, 14, ES_AUTOHSCROLL
 END
@@ -1297,7 +1297,7 @@ BEGIN
     AUTORADIOBUTTON "Er&weitert (Benutzerdefinierte Einstellungen)", 1541, 14, 100, 197, 8, BS_NOTIFY
     LTEXT "&Identität folgendermaßen bestätigen:", 1537, 26, 29, 183, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "&Automatisch eigenen MenuOS-Anmeldenamen und Passwort (und Domäne, falls vorhanden) verwenden", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Automatisch eigenen ReactOS-Anmeldenamen und Passwort (und Domäne, falls vorhanden) verwenden", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Daten&verschlüsselung ist zwingend erforderlich", 1169, 26, 83, 182, 10, BS_TOP | BS_MULTILINE
     LTEXT "Diese Einstellungen erfordern Kenntnisse über Sicherheitsprotokolle.", 1539, 26, 111, 136, 20
     PUSHBUTTON "&Einstellungen...", 1180, 151, 134, 60, 14
@@ -1456,7 +1456,7 @@ BEGIN
     LTEXT "&Hostname oder IP-Adresse des Ziels (wie z.B. reactos.org oder 145.52.0.1):", 1430, 7, 5, 217, 18
     EDITTEXT 1427, 7, 25, 215, 14, ES_AUTOHSCROLL
     GROUPBOX "Erste Verbindung", 1431, 9, 48, 213, 78
-    LTEXT "MenuOS kann zuerst Verbindungen zu öffentlichen Netzwerken wie dem Internet herstellen, bevor versucht wird, virtuelle Verbindungen aufzubauen.", 1432, 17, 63, 199, 24
+    LTEXT "ReactOS kann zuerst Verbindungen zu öffentlichen Netzwerken wie dem Internet herstellen, bevor versucht wird, virtuelle Verbindungen aufzubauen.", 1432, 17, 63, 199, 24
     AUTOCHECKBOX "&Andere Verbindung zuerst wählen:", 1428, 19, 89, 183, 10
     COMBOBOX 1429, 29, 103, 182, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "&Symbol bei Verbindung im Infobereich der Taskleiste anzeigen", 1120, 10, 192, 213, 13
@@ -1470,7 +1470,7 @@ BEGIN
     GROUPBOX "Wähloptionen", 1289, 8, 7, 214, 56
     AUTOCHECKBOX "&Fortschritt während des Wählens anzeigen", 1284, 16, 17, 199, 10
     AUTOCHECKBOX "Na&me, Passwort, Zertifikat usw. abfragen", 1554, 16, 32, 199, 10
-    AUTOCHECKBOX "&MenuOS-Anmeldedomäne einbeziehen", 1555, 16, 47, 178, 10
+    AUTOCHECKBOX "&ReactOS-Anmeldedomäne einbeziehen", 1555, 16, 47, 178, 10
     GROUPBOX "Wahlwiederholungsoptionen", 1290, 8, 68, 214, 89
     LTEXT "&Anzahl der Wahlwiederholungen:", 1300, 16, 81, 121, 8
     EDITTEXT 1287, 140, 77, 70, 14, ES_AUTOHSCROLL | ES_NUMBER
@@ -1495,7 +1495,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Assistent für neue Verbindungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "MenuOS kann eine Anfangsverbindung mit dem Internet oder einem anderen öffentlichen Netzwerk automatisch wählen, bevor die virtuelle Verbindung hergestellt wird.", -1, 10, 6, 275, 24
+    LTEXT "ReactOS kann eine Anfangsverbindung mit dem Internet oder einem anderen öffentlichen Netzwerk automatisch wählen, bevor die virtuelle Verbindung hergestellt wird.", -1, 10, 6, 275, 24
     AUTORADIOBUTTON "&Keine Anfangsverbindung automatisch wählen", 1509, 32, 31, 271, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     AUTORADIOBUTTON "&Automatisch diese Anfangsverbindung wählen:", 1510, 32, 45, 269, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     COMBOBOX 1435, 43, 62, 253, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
@@ -1886,7 +1886,7 @@ BEGIN
     244 "Einige Einstellungen werden erst beim nächsten Einwählen wirksam, da die Verbindung momentan aktiv ist."
     245 "Es sind keine Verbindungen, die für alle Benutzer verfügbar sind, vorhanden. Sie müssen sich vor dem Wählen anmelden."
     246 "Das Telefonbuch ist leer.\n\nKlicken Sie auf OK, um einen Eintrag hinzuzufügen."
-    247 "Aufgrund von Import/Exportbeschränkungen ist die Datenverschlüsselung in dieser MenuOS-Version nicht verfügbar."
+    247 "Aufgrund von Import/Exportbeschränkungen ist die Datenverschlüsselung in dieser ReactOS-Version nicht verfügbar."
     248 "Geben Sie im nächsten Fenster eine X.25-Adresse ein."
     249 "Fehler %1: %2"
     250 "%1\n\nFehler %2: %3"
@@ -2022,7 +2022,7 @@ BEGIN
     414 "&Neue Telefonnummer oder Adresse:"
     415 "&Telefonnummern oder Adressen"
     416 "Nummern und Adressen"
-    417 "PPP: Windows 95/98/NT4/2000, MenuOS, Internet"
+    417 "PPP: Windows 95/98/NT4/2000, ReactOS, Internet"
     418 "Keine"
     419 "SLIP: Unix-Verbindung"
     420 "Verbindung mit allen Geräten hergestellt."
@@ -2109,7 +2109,7 @@ BEGIN
     501 "Wie lautet der Name bzw. die Adresse des VPN-Servers?"
     502 "Wählen bei Bedarf kann nicht deaktiviert werden."
     503 "Öffentliches Netzwerk"
-    504 "MenuOS kann gewährleisten, dass die Verbindung mit dem öffentlichen Netzwerk zuerst hergestellt wird."
+    504 "ReactOS kann gewährleisten, dass die Verbindung mit dem öffentlichen Netzwerk zuerst hergestellt wird."
     505 "VPN1"
     506 "Internetverbindungsfreigabe"
     507 "Sie können dem lokalen Netzwerk den Zugriff auf Ressourcen über diese DFÜ-Verbindung gestatten."
@@ -2235,8 +2235,8 @@ BEGIN
     1611 "Breitbandverbindung"
     1612 "Sie haben sich entschieden einen vordefinierten Schlüssel zu verwenden, aber keine eingegeben.\nGeben Sie einen vordefinierten Schlüssel ein."
     1613 "Anmeldeinformationen können nicht übertragen werden"
-    1634 "Die Anzeigeeigenschaften dieser Verbindung bzw. des Heimnetzwerks konnten nicht angezeigt werden, da die (MenuOS-)Win-Verwaltungsinstrumenation (WMI) deaktiviert wurde.\n\nSie müssen den WMI-Dienst aktivieren, um Verbindungseigenschaften dieser Verbindung oder des Heimnetzwerks konfigurieren zu können. Doppelklicken Sie dazu in der Systemsteuerungsoption Verwaltung auf Dienste, klicken Sie anschließend mit der rechten Maustaste auf MenuOS-Verwaltungsinstrumenation und auf Starten."
-    1635 "Die Eigenschaften dieser Verbindung können nicht angezeigt werden. Die Informationen der (MenuOS-)Win-Verwaltungsinstrumentation (WMI) sind eventuell beschädigt. Verwenden Sie die Systemwiederherstellung zur Behebung dieses Problems, um das MenuOS-System zu einem früherem Zeitpunkt wiederherzustellen. Die Systemwiederherstellung befindet sich im Ordner Systemprogramme unter Zubehör."
+    1634 "Die Anzeigeeigenschaften dieser Verbindung bzw. des Heimnetzwerks konnten nicht angezeigt werden, da die (ReactOS-)Win-Verwaltungsinstrumenation (WMI) deaktiviert wurde.\n\nSie müssen den WMI-Dienst aktivieren, um Verbindungseigenschaften dieser Verbindung oder des Heimnetzwerks konfigurieren zu können. Doppelklicken Sie dazu in der Systemsteuerungsoption Verwaltung auf Dienste, klicken Sie anschließend mit der rechten Maustaste auf ReactOS-Verwaltungsinstrumenation und auf Starten."
+    1635 "Die Eigenschaften dieser Verbindung können nicht angezeigt werden. Die Informationen der (ReactOS-)Win-Verwaltungsinstrumentation (WMI) sind eventuell beschädigt. Verwenden Sie die Systemwiederherstellung zur Behebung dieses Problems, um das ReactOS-System zu einem früherem Zeitpunkt wiederherzustellen. Die Systemwiederherstellung befindet sich im Ordner Systemprogramme unter Zubehör."
     1646 "Eingehende Echoanforderung zulassen"
     1647 "Eingehende Zeitstempelanforderung zulassen"
     1648 "Eingehende Maskenanforderung zulassen"
@@ -2349,7 +2349,7 @@ BEGIN
     7385 "Kommunikationsanschluss (%s)"
     7386 "Mit Netzwerkverbindungen können keine speziellen Optionen für eingehende Verbindungen angezeigt werden, die entweder mit der Konsole Benutzer-Manager (lokal) oder RAS-Richtlinien festgelegt wurden. Sie müssen diese Konsolen verwenden, um vollständige und korrekte Informationen über eingehende Verbindungen zu erhalten."
     7387 "Der ausgewählte Benutzerrückrufmodus erfordert, dass Sie eine gültige Rücktelefonnummer eingeben."
-    7388 "MenuOS muss neu gestartet werden, um den Vorgang abzuschließen. Soll der Neustart jetzt durchgeführt werden?"
+    7388 "ReactOS muss neu gestartet werden, um den Vorgang abzuschließen. Soll der Neustart jetzt durchgeführt werden?"
     7389 "Das momentan ausgewählte Gerät besitzt keine Konfigurationsoptionen."
     7390 "Ungültiger Bereich"
     7391 "Sie haben angefordert, dass %1 für eingehende Verbindungen deaktiviert wird. Dafür muss der Serverdienst angehalten werden. Nach dem Beenden des Dienstes sind keine freigegebenen Verzeichnisses oder Drucker auf diesem Computer für andere Computer verfügbar. Soll die Systemkonsole gestartet werden, mit der Sie den Serverdienst beenden können?\n\nKlicken Sie in der Computerverwaltung auf Systemprogramme und anschließend auf Dienste. Klicken Sie im rechten Fenster mit der rechten Maustaste auf Server und anschließend auf Beenden."

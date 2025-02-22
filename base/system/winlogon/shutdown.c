@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Winlogon
+ * PROJECT:         ReactOS Winlogon
  * FILE:            base/system/winlogon/shutdown.c
  * PURPOSE:         System shutdown dialog
  * PROGRAMMERS:     Edward Bronsten <tanki.alpha5056@gmail.com>

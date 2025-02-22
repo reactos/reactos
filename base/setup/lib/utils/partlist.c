@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Setup Library
+ * PROJECT:     ReactOS Setup Library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Partition list functions
  * COPYRIGHT:   Copyright 2003-2019 Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -3507,7 +3507,7 @@ UseAlternativePartition:
      * We are here because we did not find any (active) candidate system
      * partition that we know how to support. What we are going to do is
      * to change the existing system partition and use the alternative partition
-     * (e.g. on which we install MenuOS) as the new system partition.
+     * (e.g. on which we install ReactOS) as the new system partition.
      * Then we will need to add in FreeLdr's boot menu an entry for booting
      * from the original system partition.
      */

@@ -1,5 +1,5 @@
 /*
- *  MenuOS Floppy Driver
+ *  ReactOS Floppy Driver
  *  Copyright (C) 2004, Vizzini (vizzini@plasmic.com)
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -16,7 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * PROJECT:         MenuOS Floppy Driver
+ * PROJECT:         ReactOS Floppy Driver
  * FILE:            csqrtns.c
  * PURPOSE:         Cancel-safe queue routines
  * PROGRAMMER:      Vizzini (vizzini@plasmic.com)
@@ -32,7 +32,7 @@
  *     - Note that the semaphore can get ahead of the number of IRPs in the
  *       queue if any are canceled; the queue management thread that de-queues
  *       IRPs is coded with that in mind.
- *     - For more information, see the csqtest driver in the MenuOS tree,
+ *     - For more information, see the csqtest driver in the ReactOS tree,
  *       or the cancel sample in recent (3790+) Microsoft DDKs.
  *     - Many of these routines are called at DISPATCH_LEVEL, due to the fact
  *       that my lock choice is a spin lock.

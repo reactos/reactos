@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Console Driver
+ * PROJECT:         ReactOS Console Driver
  * FILE:            drivers/base/condrv/control.c
  * PURPOSE:         Console Driver - Controller Device
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS CRT
+ * PROJECT:     ReactOS CRT
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Implementation of _control87
  * COPYRIGHT:   Copyright 2022 Timo Kreuzer <timo.kreuzer@reactos.org>

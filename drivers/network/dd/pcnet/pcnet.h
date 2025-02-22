@@ -1,5 +1,5 @@
 /*
- * MenuOS AMD PCNet Driver
+ * ReactOS AMD PCNet Driver
  *
  * Copyright (C) 2003 Vizzini <vizzini@plasmic.com>
  * Copyright (C) 2004 Filip Navara <navaraf@reactos.com>

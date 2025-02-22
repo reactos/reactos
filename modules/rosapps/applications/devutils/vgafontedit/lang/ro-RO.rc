@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS VGA Font Editor
+ * PROJECT:     ReactOS VGA Font Editor
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2014-2018 Ștefan Fulea <stefan.fulea@mail.com>
@@ -14,7 +14,7 @@ CAPTION "Despre"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON           IDI_MAIN,                          IDC_STATIC, 10, 10, 20, 20
-    LTEXT          "Editor de font VGA MenuOS",      IDC_STATIC, 37, 10, 93, 10
+    LTEXT          "Editor de font VGA ReactOS",      IDC_STATIC, 37, 10, 93, 10
     LTEXT          "Drept de autor 2008 Colin Finck", IDC_STATIC, 37, 20, 93, 10
     DEFPUSHBUTTON  "Î&nchidere",                      IDCANCEL,   40, 44, 55, 15
 END
@@ -81,7 +81,7 @@ BEGIN
     IDS_UNSUPPORTEDPSF, "Format incompatibil de font PSF! Posibilitățile editorului se limitează la fonturile 8x8 fără moduri speciale."
     IDS_DOCNAME, "Font %1!u!"
     IDS_SAVEPROMPT, "Fișierul ""%1"" a fost modificat, dar nu salvat.\n\nDoriți salvarea lor?"
-    IDS_APPTITLE, "Editorul de font VGA MenuOS"
+    IDS_APPTITLE, "Editorul de font VGA ReactOS"
     IDS_CLOSEEDIT, "Închideți mai întâi toate ferestrele de Editare deschise!"
 
     IDS_TOOLTIP_NEW, "Nou"

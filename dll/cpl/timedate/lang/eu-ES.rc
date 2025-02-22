@@ -53,7 +53,7 @@ BEGIN
     IDS_INETTIMESUCSYNC "Ordua ongi sinkronizatu da honekin: %s  %s-an  %s-etan"
     IDS_INETTIMENEXTSYNC "Hurrengo sinkronizatzea: %s-n %s-etan"
     IDS_INETTIMESYNCING "Mesedez itxoin ReactOSek %s-rekin ordua sinkronizatu arte"
-    IDS_INETTIMEERROR "Errore bat gertatu da MenuOS %s-kin sinkronizatzen zen bitartean"
+    IDS_INETTIMEERROR "Errore bat gertatu da ReactOS %s-kin sinkronizatzen zen bitartean"
     IDS_INETTIMESUCFILL "Please type an NTP server name in order to synchronize the time"
     IDS_INETTIMEWELCOME "Select an NTP server from the list or type an NTP server name to synchronize the computer's time"
 END

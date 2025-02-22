@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Kernel
+ * PROJECT:     ReactOS Kernel
  * LICENSE:     GPL - 2.0 + (https ://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     AMD64 User-mode Callout Mechanisms (APC and Win32K Callbacks)
  * COPYRIGHT:   Timo Kreuzer(timo.kreuzer@reactos.org)

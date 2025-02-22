@@ -1,5 +1,5 @@
 /*
- * PROJECT:         MenuOS c++ runtime library
+ * PROJECT:         ReactOS c++ runtime library
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Exception-handling vector ctor/dtor iterator implementation
  * PROGRAMMER:      Thomas Faber (thomas.faber@reactos.org)

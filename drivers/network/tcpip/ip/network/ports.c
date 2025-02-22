@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS TCP/IP protocol driver
+ * PROJECT:     ReactOS TCP/IP protocol driver
  * FILE:        tcpip/ports.c
  * PURPOSE:     Port allocation
  * PROGRAMMERS: arty (ayerkes@speakeasy.net)

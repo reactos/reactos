@@ -1,5 +1,5 @@
 /*
- *  MenuOS Application
+ *  ReactOS Application
  *
  *  panelwnd.c
  *

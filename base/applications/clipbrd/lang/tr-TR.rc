@@ -42,7 +42,7 @@ BEGIN
     STRING_CLIPFILE  "Pano Ögesi"
     STRING_DELETE_MSG "Pano içeriği silinsin mi?"
     STRING_DELETE_TITLE "Panoyu Temizle"
-    STRING_FORMAT_NT "MenuOS İçin Pano Dosyaları (*.clp)"
+    STRING_FORMAT_NT "ReactOS İçin Pano Dosyaları (*.clp)"
     STRING_FORMAT_GEN "Pano Dosyaları (*.clp)"
 END
 

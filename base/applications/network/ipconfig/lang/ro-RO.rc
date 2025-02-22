@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS ipconfig utility
+ * PROJECT:     ReactOS ipconfig utility
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
@@ -10,7 +10,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_HEADER "\nConfigurația IP a MenuOS\n\n"
+    IDS_HEADER "\nConfigurația IP a ReactOS\n\n"
     IDS_HOSTNAME            "\tNumele gazdei . . . . . . . . . . : %hs\n"
     IDS_PRIMARYDNSSUFFIX    "\tSufixul primar DNS. . . . . . . . : %hs\n"
     IDS_NODETYPEBCAST       "\tTipul nodului . . . . . . . . . . : Difuzare\n"

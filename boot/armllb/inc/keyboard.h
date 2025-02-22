@@ -1,9 +1,9 @@
 /*
- * PROJECT:         MenuOS Boot Loader
+ * PROJECT:         ReactOS Boot Loader
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            boot/armllb/inc/keyboard.h
  * PURPOSE:         LLB Keyboard Functions
- * PROGRAMMERS:     MenuOS Portable Systems Group
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 CHAR

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS text-mode setup
+ * PROJECT:     ReactOS text-mode setup
  * FILE:        base/setup/usetup/cabinet.c
  * PURPOSE:     Cabinet routines
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

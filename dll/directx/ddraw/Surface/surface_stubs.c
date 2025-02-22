@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              MenuOS DirectX
+ * PROJECT:              ReactOS DirectX
  * FILE:                 dll/directx/ddraw/Surface/surface_stubs.c
  * PURPOSE:              IDirectDrawSurface7 Implementation
  * PROGRAMMER:           Magnus Olsen, Maarten Bosma

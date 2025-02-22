@@ -1,5 +1,5 @@
 /*
- *  MenuOS RosPerf - MenuOS GUI performance test program (gradient.c)
+ *  ReactOS RosPerf - ReactOS GUI performance test program (gradient.c)
  *
  *  Copyright 2006 Timo Kreuzer <timo.kreuzer@web.de>
  *

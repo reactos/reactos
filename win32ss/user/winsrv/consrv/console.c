@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS Console Server DLL
+ * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/console.c
  * PURPOSE:         Console Management Functions
  * PROGRAMMERS:     Gé van Geldorp
@@ -710,7 +710,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
         }
         else
         {
-            ConsoleCreateUnicodeString(&Console->Title, L"MenuOS Console");
+            ConsoleCreateUnicodeString(&Console->Title, L"ReactOS Console");
         }
     }
     else
@@ -2050,11 +2050,11 @@ CON_API(SrvGetConsoleLangId,
      * to the active console output code page. */
     switch (Console->OutputCodePage)
     {
-/** MenuOS-specific: do nothing if the code page is UTF-8. This will allow
+/** ReactOS-specific: do nothing if the code page is UTF-8. This will allow
  ** programs to naturally output in whatever current language they are. **/
     case CP_UTF8:
         return STATUS_NOT_SUPPORTED;
-/** End MenuOS-specific **/
+/** End ReactOS-specific **/
     case CP_JAPANESE:
         LangIdRequest->LangId = MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT);
         break;

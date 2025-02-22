@@ -1,7 +1,7 @@
 /*
  * usb.h
  *
- * This file is part of the MenuOS PSDK package.
+ * This file is part of the ReactOS PSDK package.
  *
  * Contributors:
  *   Created by Casper S. Hornstrup <chorns@users.sourceforge.net>

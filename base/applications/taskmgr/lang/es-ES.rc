@@ -417,7 +417,7 @@ BEGIN
     IDS_MENU_CPUHISTORY "Historial de &CPU"
     IDS_MENU_SHOWKERNELTIMES "Mostrar cronología del &kernel"
     IDS_CREATENEWTASK "Crear nueva tarea"
-    IDS_CREATENEWTASK_DESC "Escriba el nombre del programa, carpeta, documento o recurso de Internet que desea abrir con MenuOS."
+    IDS_CREATENEWTASK_DESC "Escriba el nombre del programa, carpeta, documento o recurso de Internet que desea abrir con ReactOS."
     IDS_MSG_ACCESSPROCESSAFF "No se pudo acceder o configurar la afinidad del proceso"
     IDS_MSG_PROCESSONEPRO "El proceso debe tener afinidad al menos con un procesador."
     IDS_MSG_INVALIDOPTION "Opción no válida"

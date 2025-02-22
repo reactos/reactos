@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS API tests
+ * PROJECT:     ReactOS API tests
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     Test for ScrollBar cbWndExtra
  * COPYRIGHT:   Copyright 2019 Mark Jansen <mark.jansen@reactos.org>

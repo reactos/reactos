@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           MenuOS system libraries
+ * PROJECT:           ReactOS system libraries
  * PURPOSE:           Implementation of tan
  * FILE:              lib/sdk/crt/math/amd64/sqrtf.S
  * PROGRAMMER:        Timo Kreuzer (timo.kreuzer@reactos.org)

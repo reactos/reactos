@@ -1,5 +1,5 @@
 /*
- * PROJECT:     PAINT for MenuOS
+ * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Indonesian resource file
  * TRANSLATOR:  Copyright 2019 Mas Ahmad Muhammad <m.charly81@gmail.com>
@@ -234,7 +234,7 @@ STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Paint"
     IDS_WINDOWTITLE "%s - Paint"
-    IDS_INFOTITLE "Paint untuk MenuOS"
+    IDS_INFOTITLE "Paint untuk ReactOS"
     IDS_INFOTEXT "Tersedia di bawah GNU Lesser General Public License (LGPL, see www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Ingin menyimpan perubahan untuk %s?"
     IDS_DEFAULTFILENAME "Tanpa Nama"

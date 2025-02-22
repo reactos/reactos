@@ -1,6 +1,6 @@
 /*
- *  MenuOS applications
- *  Copyright (C) 2001, 2002 MenuOS Team
+ *  ReactOS applications
+ *  Copyright (C) 2001, 2002 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,10 +18,10 @@
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     MenuOS Userinit Logon Application
+ * PROJECT:     ReactOS Userinit Logon Application
  * FILE:        base/system/userinit/userinit.c
  * PROGRAMMERS: Thomas Weidenmueller (w3seek@users.sourceforge.net)
- *              HervÃ© Poussineau (hpoussin@reactos.org)
+ *              Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #include "userinit.h"
@@ -597,7 +597,7 @@ StartInstaller(IN LPCTSTR lpInstallerName)
 
     /*
      * We failed. Try to find the installer from either the current
-     * MenuOS installation directory, or from our current directory.
+     * ReactOS installation directory, or from our current directory.
      */
     *Installer = UNICODE_NULL;
     /* Alternatively one can use SharedUserData->NtSystemRoot */

@@ -2,7 +2,7 @@
 Signature="$WINDOWS NT$"
 Class=HIDClass
 ClassGuid={745a17a0-74d3-11d0-b6fe-00a0c90f57da}
-Provider=%MenuOS%
+Provider=%ReactOS%
 LayoutFile=layout.inf
 DriverVer=01/20/2012,1.00
 
@@ -73,7 +73,7 @@ LoadOrderGroup = Extended Base
 
 [Strings]
 ; Non-localizable
-MenuOS="MenuOS Project"
+ReactOS="ReactOS Project"
 
 MSMice="Microsoft"
 

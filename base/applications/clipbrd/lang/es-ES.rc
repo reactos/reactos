@@ -38,7 +38,7 @@ BEGIN
     STRING_CLIPFILE  "Elemento del Portapapeles"
     STRING_DELETE_MSG "¿Borrar contenidos del Portapapeles?"
     STRING_DELETE_TITLE "Vaciar Portapapeles"
-    STRING_FORMAT_NT "Archivos de Portapapeles de MenuOS (*.clp)"
+    STRING_FORMAT_NT "Archivos de Portapapeles de ReactOS (*.clp)"
     STRING_FORMAT_GEN "Archivos de Portapapeles (*.clp)"
 END
 

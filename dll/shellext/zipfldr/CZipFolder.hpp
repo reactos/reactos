@@ -1,5 +1,5 @@
 /*
- * PROJECT:     MenuOS Zip Shell Extension
+ * PROJECT:     ReactOS Zip Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Main class
  * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
@@ -155,7 +155,7 @@ public:
         bool isDir = zipEntry->ZipType == ZIP_PIDL_DIRECTORY;
         switch (iColumn)
         {
-        case 0: /* Name, MenuOS specific? */
+        case 0: /* Name, ReactOS specific? */
             return GetDisplayNameOf(pidl, 0, &psd->str);
         case 1: /* Type */
         {

@@ -1,7 +1,7 @@
 /*
- * PROJECT:                 MenuOS Software Control Panel
+ * PROJECT:                 ReactOS Software Control Panel
  * FILE:                    dll/cpl/appwiz/removestartmenuitems.c
- * PURPOSE:                 MenuOS Software Control Panel
+ * PURPOSE:                 ReactOS Software Control Panel
  * PROGRAMMERS:             Jared Smudde (computerwhiz02@hotmail.com)
  */
 

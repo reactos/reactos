@@ -129,7 +129,7 @@ BEGIN
     LTEXT "Hardwareassistent kann nicht fortgesetzt werden", IDC_FINISHTITLE, 114, 8, 203, 28
     LTEXT "Um fortsetzen zu können, verbinden Sie folgende Hardware mit dem Computer.", -1, 114, 40, 193, 16
     AUTOCHECKBOX "&Nach Beenden den Computer neu starten, um die Hardware anschließen zu können.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "In den meisten Fällen wird MenuOS die Hardware automatisch installieren, wenn Sie diese mit dem Computer verbinden. Andernfalls können Sie den Assistenten erneut starten, um die zu unterstützende Hardware zu installieren.", -1, 114, 98, 193, 32
+    LTEXT "In den meisten Fällen wird ReactOS die Hardware automatisch installieren, wenn Sie diese mit dem Computer verbinden. Andernfalls können Sie den Assistenten erneut starten, um die zu unterstützende Hardware zu installieren.", -1, 114, 98, 193, 32
     LTEXT "Klicken Sie auf ""Beenden"", um den Assistenten zu schließen.", IDC_STATUSTEXT, 114, 166, 200, 8
 END
 

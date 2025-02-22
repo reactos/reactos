@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS C runtime library
+ * PROJECT:         ReactOS C runtime library
  * FILE:            lib/sdk/crt/stdio/popen.c
  * PURPOSE:         Pipe Functions
  * PROGRAMMERS:     Eric Kohl

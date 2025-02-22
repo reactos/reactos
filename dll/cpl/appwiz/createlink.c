@@ -1,7 +1,7 @@
 /*
- * PROJECT:         MenuOS Software Control Panel
+ * PROJECT:         ReactOS Software Control Panel
  * FILE:            dll/cpl/appwiz/createlink.c
- * PURPOSE:         MenuOS Software Control Panel
+ * PURPOSE:         ReactOS Software Control Panel
  * PROGRAMMER:      Gero Kuehn (reactos.filter@gkware.com)
  *                  Dmitry Chapyshev (lentind@yandex.ru)
  *                  Johannes Anderwald

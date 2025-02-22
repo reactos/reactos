@@ -311,7 +311,7 @@ CAPTION "Importassistent für die Zertifikatsverwaltung"
 STYLE DS_SHELLFONT | WS_VISIBLE | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "MenuOS kann automatisch einen Zertifikatsspeicher wählen, oder Sie wählen einen aus.",
+  LTEXT "ReactOS kann automatisch einen Zertifikatsspeicher wählen, oder Sie wählen einen aus.",
     -1, 21,1,220,25
   AUTORADIOBUTTON "A&utomatisch einen Zertifikatsspeicher wählen",
     IDC_IMPORT_AUTO_STORE, 31,28,220,12, BS_AUTORADIOBUTTON|WS_TABSTOP

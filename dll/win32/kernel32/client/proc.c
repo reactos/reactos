@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/client/proc.c
  * PURPOSE:         Process functions
  * PROGRAMMERS:     Ariadne (ariadne@xs4all.nl)
@@ -127,11 +127,11 @@ BasepIsImageVersionOk(IN ULONG ImageMajorVersion,
     if (ImageMajorVersion > 3 ||
         (ImageMajorVersion == 3 && ImageMinorVersion >= 10))
     {
-        /* MenuOS-specific: Accept images even if they are newer than our internal NT version. */
+        /* ReactOS-specific: Accept images even if they are newer than our internal NT version. */
         if (ImageMajorVersion > SharedUserData->NtMajorVersion ||
             (ImageMajorVersion == SharedUserData->NtMajorVersion && ImageMinorVersion > SharedUserData->NtMinorVersion))
         {
-            DPRINT1("Accepting image version %lu.%lu, although MenuOS is an NT %hu.%hu OS!\n",
+            DPRINT1("Accepting image version %lu.%lu, although ReactOS is an NT %hu.%hu OS!\n",
                 ImageMajorVersion,
                 ImageMinorVersion,
                 SharedUserData->NtMajorVersion,
@@ -158,15 +158,15 @@ BasepCheckWebBladeHashes(IN HANDLE FileHandle)
     /* Depending on which suite this is, run a bsearch and block the appropriate ones */
     if (SharedUserData->SuiteMask & VER_SUITE_COMPUTE_SERVER)
     {
-        DPRINT1("Egad! This is a MenuOS Compute Server and we should prevent you from using certain APIs...but we won't.");
+        DPRINT1("Egad! This is a ReactOS Compute Server and we should prevent you from using certain APIs...but we won't.");
     }
     else if (SharedUserData->SuiteMask & VER_SUITE_STORAGE_SERVER)
     {
-        DPRINT1("Gasp! This is a MenuOS Storage Server and we should prevent you from using certain APIs...but we won't.");
+        DPRINT1("Gasp! This is a ReactOS Storage Server and we should prevent you from using certain APIs...but we won't.");
     }
     else if (SharedUserData->SuiteMask & VER_SUITE_BLADE)
     {
-        DPRINT1("Golly! This is a MenuOS Web Blade Server and we should prevent you from using certain APIs...but we won't.");
+        DPRINT1("Golly! This is a ReactOS Web Blade Server and we should prevent you from using certain APIs...but we won't.");
     }
 
     /* Actually, fuck it, don't block anything, we're open source */
@@ -3482,7 +3482,7 @@ StartScan:
 
         case STATUS_INVALID_IMAGE_WIN_64:
         {
-            /* 64-bit binaries are not allowed to run on 32-bit MenuOS */
+            /* 64-bit binaries are not allowed to run on 32-bit ReactOS */
             DPRINT1("64-bit binary, failing\n");
             SetLastError(ERROR_EXE_MACHINE_TYPE_MISMATCH);
             Result = FALSE;
@@ -4316,7 +4316,7 @@ StartScan:
     /* Check if there's side-by-side assembly data associated with the process */
     if (CreateProcessMsg->Sxs.Flags)
     {
-        /* This should not happen in MenuOS yet */
+        /* This should not happen in ReactOS yet */
         DPRINT1("This is an SxS Message -- should not happen yet\n");
         BaseSetLastNTError(STATUS_NOT_IMPLEMENTED);
         NtTerminateProcess(ProcessHandle, STATUS_NOT_IMPLEMENTED);

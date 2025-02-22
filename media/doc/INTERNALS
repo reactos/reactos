@@ -4,7 +4,7 @@ A collection of articles on kernel internals, please add to this
 IRQ level
 ------------------------------------------------------------------------------
 
-IRQ level (IRQL) is a per-processor state in MenuOS used to coordinate
+IRQ level (IRQL) is a per-processor state in ReactOS used to coordinate
 execution between ISRs and between threads. There are several levels
 
        PASSIVE_LEVEL, APC_LEVEL: The normal level for user mode and most

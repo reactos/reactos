@@ -1,5 +1,5 @@
 /*
- * MenuOS undocumented shell interface
+ * ReactOS undocumented shell interface
  *
  * Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
  * Copyright 2013 Dominik Hornung

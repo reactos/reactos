@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS system libraries
+ * PROJECT:         ReactOS system libraries
  * PURPOSE:         Compression and decompression functions
  * FILE:            lib/rtl/compress.c
  * PROGRAMER:       Eric Kohl

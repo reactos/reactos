@@ -1,5 +1,5 @@
 /*
- * PROJECT:     PAINT for MenuOS
+ * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Bulgarian resource file
  * TRANSLATORS: Copyright 2009-2012 S. Stanev (CCTAHEB) <sstpr@narod.ru>
@@ -235,7 +235,7 @@ STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Paint"
     IDS_WINDOWTITLE "%s - Paint"
-    IDS_INFOTITLE "Paint за MenuOS"
+    IDS_INFOTITLE "Paint за ReactOS"
     IDS_INFOTEXT "Достъпен под GNU Lesser General Public License (LGPL, see www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Искате ли да запишете промените в %s?"
     IDS_DEFAULTFILENAME "Без име"

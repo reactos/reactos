@@ -1,6 +1,6 @@
 /*
- * MenuOS German (Switzerland) ASCII Keyboard layout
- * Copyright (C) 2005 MenuOS
+ * ReactOS German (Switzerland) ASCII Keyboard layout
+ * Copyright (C) 2005 ReactOS
  * License: LGPL, see: LGPL.txt
  *
  * Thanks to: http://www.barcodeman.com/altek/mule/scandoc.php
@@ -168,7 +168,7 @@ ROSDATA MODIFIERS modifier_bits = {
 /* ############################################ */
 
 ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
-  { VK_OEM_5, 0, {0xa7, 0xb0} }, /* Â§ Â° */
+  { VK_OEM_5, 0, {0xa7, 0xb0} }, /* § ° */
 
   /* Normal vs Shifted */
   /* The numbers */
@@ -221,11 +221,11 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
   /* Normal, Shifted, Alt Gr */
   /* Legacy (telnet-style) ascii escapes */
-  { VK_OEM_4, 0, {'\''     , '?'     , WCH_DEAD} },          /* ' ? Â´ */
+  { VK_OEM_4, 0, {'\''     , '?'     , WCH_DEAD} },          /* ' ? ´ */
       { 0xff, 0,  {WCH_NONE, WCH_NONE, 0xb4} },
   { 'Q', CAPLOK, {'q', 'Q', '@'} },
   { 'C', CAPLOK, {'c', 'C', 0xa9} },    /* c C Copyright-Sign */
-  { 'E', CAPLOK, {'e', 'E', 0x20ac} }, /* e E â‚¬ */
+  { 'E', CAPLOK, {'e', 'E', 0x20ac} }, /* e E € */
   { 'M', CAPLOK, {'m', 'M', 0xb5} },   /* m M mu-Sign */
   { VK_OEM_102, 0, {'<', '>', '\\'} },
   { 0,0 }
@@ -250,13 +250,13 @@ ROSDATA VK_TO_WCHARS5 key_to_chars_5mod[] = {
   { '6', 0, {'6', '&',  0xac, WCH_NONE, 0x00} },
   { '7', 0, {'7', '/',  0xa6, WCH_NONE, 0x00} },
   { '8', 0, {'8', '(',  0xa2, WCH_NONE, 0x00} },
-  { VK_OEM_1, KBDCTRL, {0xfc, 0xe8, 0x5b, 0Xdc, 0xc8} },                    /*    Ã¼ Ã¨ [ Ãœ Ãˆ   */
-  { VK_OEM_2, 0, {0x24, 0xa3, 0x7d, WCH_NONE, 0x00} },                    /*    $ Â£ }    */
-  { VK_OEM_3, KBDCTRL, {0xf6, 0xe9, WCH_NONE, 0xd6, 0xc9} },                     /* Ã¶ Ã© Ã– Ã‰*/
+  { VK_OEM_1, KBDCTRL, {0xfc, 0xe8, 0x5b, 0Xdc, 0xc8} },                    /*    ü è [ Ü È   */
+  { VK_OEM_2, 0, {0x24, 0xa3, 0x7d, WCH_NONE, 0x00} },                    /*    $ £ }    */
+  { VK_OEM_3, KBDCTRL, {0xf6, 0xe9, WCH_NONE, 0xd6, 0xc9} },                     /* ö é Ö É*/
   { VK_OEM_6, 0, {WCH_DEAD, WCH_DEAD, WCH_DEAD,  WCH_NONE, 0x00} },       /*    ^ ` ~    */
       { 0xff, 0, {0x5e    , 0x27    , 0x7e     , WCH_NONE, 0x00} },
-  { VK_OEM_7, KBDCTRL, {0xe4, 0xe0, 0x7b, 0xc4, 0xc0} },   /* Ã¤ Ã  { Ã„ Ã€ */
-  { VK_OEM_PLUS, 0, {WCH_DEAD, 0x21    , 0x5D    , WCH_NONE, 0x00} },    /*    Â¨ ! ]    */
+  { VK_OEM_7, KBDCTRL, {0xe4, 0xe0, 0x7b, 0xc4, 0xc0} },   /* ä à { Ä À */
+  { VK_OEM_PLUS, 0, {WCH_DEAD, 0x21    , 0x5D    , WCH_NONE, 0x00} },    /*    ¨ ! ]    */
          { 0xff, 0, {0xa8    , WCH_NONE, WCH_NONE, WCH_NONE, 0x00} },
   { 0, 0 }
 };
@@ -363,10 +363,10 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x51, L"Bild-Nach-Unten" },
   { 0x52, L"Einfg" },
   { 0x53, L"Entf" },
-  { 0x54, L"<MenuOS>" },
+  { 0x54, L"<ReactOS>" },
   { 0x55, L"Hilfe" },
-  { 0x56, L"Linke <MenuOS>" },
-  { 0x5b, L"Rechte <MenuOS>" },
+  { 0x56, L"Linke <ReactOS>" },
+  { 0x5b, L"Rechte <ReactOS>" },
   { 0, NULL },
 };
 
@@ -391,7 +391,7 @@ ROSDATA DEADKEY dead_key[] = {
   { DEADTRANS(L'O', L'^', 0xd4, 0x00) },
   { DEADTRANS(L'U', L'^', 0xdb, 0x00) },
   { DEADTRANS(L' ', L'^', L'^', 0x00) },
-  { DEADTRANS(L'a', 0xb4, 0xe1, 0x00) }, /* Â´ */
+  { DEADTRANS(L'a', 0xb4, 0xe1, 0x00) }, /* ´ */
   { DEADTRANS(L'e', 0xb4, 0xe9, 0x00) },
   { DEADTRANS(L'i', 0xb4, 0xed, 0x00) },
   { DEADTRANS(L'o', 0xb4, 0xf3, 0x00) },
@@ -415,7 +415,7 @@ ROSDATA DEADKEY dead_key[] = {
   { DEADTRANS(L'O', L'`', 0xd2, 0x00) },
   { DEADTRANS(L'U', L'`', 0xd9, 0x00) },
   { DEADTRANS(L' ', L'`', L'`', 0x00) },
-  { DEADTRANS(L' ', 0xa8, 0xa8, 0x00) }, /* Â¨ */
+  { DEADTRANS(L' ', 0xa8, 0xa8, 0x00) }, /* ¨ */
   { DEADTRANS(L'a', 0xa8, 0xe4, 0x00) },
   { DEADTRANS(L'e', 0xa8, 0xeb, 0x00) },
   { DEADTRANS(L'i', 0xa8, 0xef, 0x00) },

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         MenuOS System Libraries
+ * PROJECT:         ReactOS System Libraries
  * FILE:            dll/win32/kernel32/include/base_x.h
  * PURPOSE:         Base API Client Macros
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
