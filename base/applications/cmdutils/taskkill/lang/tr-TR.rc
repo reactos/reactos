@@ -21,6 +21,6 @@ STRINGTABLE
     STRING_CLOSE_CHILD, "Close message sent to top-level windows of process with PID %1!u!, child of PID %2!u!.\n"
     STRING_TERM_CHILD, "Process with PID %1!u! was forcibly terminated, child of PID %2!u!.\n"
     STRING_TERM_CHILD_FAILED, "Error: Unable to terminate process with PID %1!u!, child of PID %2!u!.\n"
-    STRING_PARAM_TOO_MUCH, "Hata: Geçersiz sözdizimi. '%1' seçeneğine '%2!d!'den fazla kez izin verilmiyor..\n"
+    STRING_PARAM_TOO_MUCH, "Hata: Geçersiz sözdizimi. '%1' seçeneğine '%2!d!'den fazla kez izin verilmiyor.\n"
     STRING_INVALID_SYNTAX, "Hata: Geçersiz sözdizimi.\n"
 }

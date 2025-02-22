@@ -30,13 +30,13 @@ COPY     Bir ya da daha çok dosyayı başka bir konuma kopyalar.\n\
 DATE     Tarihi görüntüler ya da ayarlar.\n\
 DELETE   Bir ya da daha çok dosya siler.\n\
 DIR      Bir dizindeki dosyaların ve alt dizinlerin bir listesini görüntüler.\n\
-ECHO     İletileri görüntüler ya da komut yankılanmasını açar ya da kapatır.\n\
+ECHO     İletileri görüntüler ya da komut yankılamasını açar ya da kapatır.\n\
 ERASE    Bir ya da daha çok dosyayı siler.\n\
 EXIT     CMD.EXE programından (komut yorumcusundan) çıkarır.\n\
 FOR      Bir takım dosyalar içinde tüm dosyalar için belirtilen bir komut\n\
          çalıştırır.\n\
 FREE     (boş) disk alanını görüntüler.\n\
-GOTO     Bir toplu iş dosyasında ReactOS komut istemini etiketlenmiş bir\n\
+GOTO     Bir toplu iş dosyasında ReactOS komut istemini etiketli bir\n\
          satıra yönlendirir.\n\
 HELP     ReactOS komutları için yardım bilgisini sağlar.\n\
 HISTORY  Kullanılan tüm komutları listeler.\n\
@@ -45,7 +45,7 @@ LABEL    Bir diskin birim etiketini oluşturur, değiştirir ya da siler.\n\
 MD       Bir dizin oluşturur.\n\
 MKDIR    Bir dizin oluşturur.\n\
 MKLINK   Bir dosya dizisi bağlantı nesnesi oluşturur.\n"
-	IDS_HELP2 "MOVE     Bir dizinden bir ya da daha çok dosyayı başka bir dizine taşır.\n\
+    IDS_HELP2 "MOVE     Bir dizinden bir ya da daha çok dosyayı başka bir dizine taşır.\n\
 PATH     Çalıştırılabilir dosyalar için varsayılan arama yolunu görüntüler ya da\n\
          yeni bir arama yolu oluşturur.\n\
 PAUSE    Bir toplu iş dosyasında işlemeyi askıya alır ve bir ileti görüntüler.\n\

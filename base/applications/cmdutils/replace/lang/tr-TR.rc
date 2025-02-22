@@ -11,10 +11,10 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     STRING_REPLACE_HELP1 "Dosyaları değiştirir.\n\n\
-REPLACE [sürücü1:][yol1]filename [sürücü2:][yol2] [/A] [/P] [/R] [/W]\n\
-REPLACE [sürücü1:][yol1]filename [sürücü2:][yol2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [drive1:][yol1]dosya adı  Kaynak dosyayı veya dosyaları belirtir.\n\
-  [drive2:][yol2]           Dosyaların aktarılacağı dizini belirtir.\n\
+REPLACE [sürücü1:][yol1]dosya adı [sürücü2:][yol2] [/A] [/P] [/R] [/W]\n\
+REPLACE [sürücü1:][yol1]dosya adı [sürücü2:][yol2] [/P] [/R] [/S] [/W] [/U]\n\n\
+  [sürücü1:][yol1]dosya adı  Kaynak dosyayı veya dosyaları belirtir.\n\
+  [sürücü2:][yol2]           Dosyaların aktarılacağı dizini belirtir.\n\
   /A                        Hedef dizine yeni dosyalar ekler. /S veya /U\n\
                             anahtarlarıyla kullanılamaz.\n\
   /P                        Bir dosyayı değiştirmeden veya bir kaynak dosya eklemeden\n\

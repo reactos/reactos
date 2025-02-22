@@ -6,8 +6,8 @@ BEGIN
 görüntüler.\n\
 \n\
 FC [/A] [/C] [/L] [/LBn] [/N] [/OFF[LINE]] [/T] [/U] [/W] [/nnnn]\n\
-   [surucu1:][yol1]dosyaadi1 [surucu2:][yol2]dosyaadi2\n\
-FC /B [surucu1:][yol1]dosyaadi1 [surucu2:][yol2]dosyaadi2\n\
+   [sürücü1:][yol1]dosyaadi1 [sürücü2:][yol2]dosyaadi2\n\
+FC /B [sürücü1:][yol1]dosyaadi1 [sürücü2:][yol2]dosyaadi2\n\
 \n\
   /A         Her fark kümesi için yalnızca ilk ve son satırları görüntüler.\n\
   /B         İkili karşılaştırma gerçekleştirir.\n\
@@ -22,9 +22,9 @@ FC /B [surucu1:][yol1]dosyaadi1 [surucu2:][yol2]dosyaadi2\n\
   /W         Karşılaştırma için boşlukları (sekmeler ve boşluklar) sıkıştırır.\n\
   /nnnn      Uyuşmazlıktan sonra eşleşmesi gereken ardışık satır sayısını\n\
              belirtir (varsayılan: 2).\n\
-  [surucu1:][yol1]dosyaadi1\n\
+  [sürücü1:][yol1]dosyaadi1\n\
              Karşılaştırılacak ilk dosyayı veya dosya grubunu belirtir.\n\
-  [surucu2:][yol2]dosyaadi2\n\
+  [sürücü2:][yol2]dosyaadi2\n\
              Karşılaştırılacak ikinci dosyayı veya dosya grubunu belirtir.\n"
     IDS_NO_DIFFERENCE "FC: farkla karşılaşılmadı\n"
     IDS_LONGER_THAN "FC: %ls, %ls'den daha uzun\n"
