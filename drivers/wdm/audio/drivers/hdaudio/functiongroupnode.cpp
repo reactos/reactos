@@ -670,8 +670,16 @@ CFunctionGroupNode::GetSupportedPCMSizeRates(IN ULONG NodeId, OUT PNODE_PCM_RATE
     }
     if (Response == 0)
     {
-        // DPRINT1("HDAUDIO: GetSupportedPCMSizeRates 0 Response\n");
-        return STATUS_UNSUCCESSFUL;
+        // retry with AFG node
+        Verb = (m_CodecAddress << 28) | (m_StartNodeId << 20) | (AC_VERB_PARAMETERS << 8) | AC_PAR_STREAM;
+        Status = m_Adapter->TransferVerb(Verb, &Response);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("HDAUDIO: GetSupportedPCMSizeRates failed with %x\n", Status);
+            return Status;
+        }
+        if (Response == 0)
+            return STATUS_UNSUCCESSFUL;
     }
     OutRates->AC3FormatSupported = (Response & 0x4) ? 1 : 0;
     OutRates->Float32FormatSupported = (Response & 0x2) ? 1 : 0;
