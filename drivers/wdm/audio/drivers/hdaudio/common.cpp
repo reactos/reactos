@@ -280,7 +280,7 @@ CAdapterCommon::TransferInitVerbs(IN PDEVICE_OBJECT DeviceObject)
     PREGISTRYKEY Key;
     UNICODE_STRING KeyName;
 
-    // setup unsolicated responses
+    // FIXME examine setup unsolicated responses
     for (ULONG Index = 0; Index < 5; Index++)
     {
         Status = Interface.RegisterEventCallback(
@@ -293,8 +293,8 @@ CAdapterCommon::TransferInitVerbs(IN PDEVICE_OBJECT DeviceObject)
     Status = ReadRegistryKey(DeviceObject, L"NumVerbs", sizeof(ULONG), &Key, &Type, &NumVerbs);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("HDAUDIO: Failed to read NumVerbs key with %x\n", Status);
-        return Status;
+        DPRINT1("HDAUDIO: Warning failed to read NumVerbs key with %x\n", Status);
+        return STATUS_SUCCESS;
     }
     for (Index = 0; Index < NumVerbs; Index++)
     {
