@@ -1844,7 +1844,7 @@ BEGIN
     199 "Seçili bağlantı çoklu protokolü yönlendirici tarafından kurulmuştur.\nLütfen bağlantıyı kapatmak için ""Yönlendirme ve RAS Yöneticisi"" aracını kullanınız.\0"
     200 "Yorum\0"
     201 "Genel kimlik doğrulaması paketi yapılandırması başarısız oldu.\0"
-    202 "Yönlendirme ve Uzaktan Erişim için TCP/IP kurulu değil ya da devre dışı bırakılmış. Denetim Masası'nda Ağ'ı başlatınız, Hizmetler sayfasına gidiniz, ""Yönlendirme ve Uzaktan Erişim Hizmeti"" Özellikleri'ini seçiniz ve Ağ butonuna tıklayınız.\0"
+    202 "Yönlendirme ve Uzaktan Erişim için TCP/IP kurulu değil ya da devre dışı bırakılmış. Denetim Masası'nda Ağ'ı başlatınız, Hizmetler sayfasına gidiniz, ""Yönlendirme ve Uzaktan Erişim Hizmeti"" Özellikleri'ni seçiniz ve Ağ butonuna tıklayınız.\0"
     203 "Yönlendirme ve Uzaktan Erişim için IPX kurulu değil ya da devre dışı bırakılmış. IPX'i ""Bağlantılar"" dizininde bir bağlantının özelliklerini görüntüleyerek kurabilir ve etkinleştirebilirsiniz.\0"
     204 "Sistemden seçili aygıt ya da aygıtlar kaldırılsın mı?\0"
     205 "%1 telefon defterinden silinsin mi?\0"
