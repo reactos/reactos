@@ -230,8 +230,7 @@ class CNotifySettingsPage : public CPropertyPageImpl<CNotifySettingsPage>
 private:
     HBITMAP m_hbmpTray;
     HWND m_hwndTaskbar;
-	
-	static const UINT uImageIdLookupTable[2][2][2][2];
+    static const UINT uImageIdLookupTable[2][2][2][2];
 
     void _UpdateDialog()
     {
@@ -315,7 +314,8 @@ public:
     }
 };
 
-const UINT CNotifySettingsPage::uImageIdLookupTable[2][2][2][2] = {
+const UINT CNotifySettingsPage::uImageIdLookupTable[2][2][2][2] =
+{
     {
         {
             {IDB_SYSTRAYPROP_SHOW_NOCLOCK_NODESK, IDB_SYSTRAYPROP_SHOW_NOCLOCK_DESK},
