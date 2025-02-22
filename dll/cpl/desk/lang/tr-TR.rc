@@ -23,7 +23,7 @@ BEGIN
     CONTROL "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
     CONTROL "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 8, 104, 174, 86
-    LTEXT "Duvar kağıdınız olarak kullanmak için bir resim seçiniz:", IDC_STATIC, 8, 93, 230, 9//FIXME: add accel. I used "Duvar &kağıdınız olarak kullanmak için bir resim seçiniz:" for the backport
+    LTEXT "Duvar &kağıdınız olarak kullanmak için bir resim seçiniz:", IDC_STATIC, 8, 93, 230, 9
     PUSHBUTTON "&Göz At...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
     PUSHBUTTON "&Renk...", IDC_COLOR_BUTTON, 188, 167, 55, 15
     LTEXT "&Yerleşim:", IDC_STATIC, 188, 128, 55, 9
@@ -151,10 +151,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Masaüstü simgeleri", IDC_STATIC, 6, 4, 212, 40
-    AUTOCHECKBOX "&Belgelerim", IDC_ICONS_MYDOCS, 14, 14, 100, 12//FIXME: accelerator collision &B
-    AUTOCHECKBOX "&Ağ Konumlarım", IDC_ICONS_MYNET, 116, 14, 100, 12
-    AUTOCHECKBOX "&Bu bilgisayar", IDC_ICONS_MYCOMP, 14, 28, 100, 12//FIXME: accelerator collision &B
+    GROUPBOX "Masaüstü Simgeleri", IDC_STATIC, 6, 4, 212, 40
+    AUTOCHECKBOX "&Belgelerim", IDC_ICONS_MYDOCS, 14, 14, 100, 12
+    AUTOCHECKBOX "&Ağ Bağlantılarım", IDC_ICONS_MYNET, 116, 14, 100, 12
+    AUTOCHECKBOX "&Bilgisayarım", IDC_ICONS_MYCOMP, 14, 28, 100, 12
     AUTOCHECKBOX "&İnternet Tarayıcısı", IDC_ICONS_INTERNET, 116, 28, 100, 12
     CONTROL "", IDC_ICONS_LISTVIEW, "SysListView32",
             LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP | WS_HSCROLL,
@@ -296,7 +296,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DISPLAY_SETTINGS "Görüntü ayarları"
+    IDS_DISPLAY_SETTINGS "Görüntü Ayarları"
     IDS_APPLY_FAILED "Yeni ayarların uygulanması başarısız oldu."
     IDS_APPLY_NEEDS_RESTART "Değişiklikleri uygulamak için bilgisayarınızı yeniden başlatmanız gerekir."
     IDS_TIMEOUTTEXT "%d saniyede önceki ayarlara geri dönülecek."
