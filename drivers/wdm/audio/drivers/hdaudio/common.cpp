@@ -1115,6 +1115,16 @@ CAdapterCommon::ProcessOutputNodes(
                     }
                 }
             }
+            if (PinCaps.EAPDCapable)
+            {
+                // enable EAPD
+                DPRINT1("Enable EAPD...\n");
+                Status = OutNode->SetEAPD(PinNodes[NodeIndex], TRUE);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("Warning: SetEAPD failed with %x\n", Status);
+                }
+            }
         }
         else
         {
