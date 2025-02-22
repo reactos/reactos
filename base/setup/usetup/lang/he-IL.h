@@ -9,14 +9,14 @@ static MUI_ENTRY heILSetupInitPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         0,
         20,
-        "Please wait while the ReactOS Setup initializes itself",
+        "Please wait while the MenuOS Setup initializes itself",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -47,7 +47,7 @@ static MUI_ENTRY heILLanguagePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -99,21 +99,21 @@ static MUI_ENTRY heILWelcomePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "ReactOS \232\220\227\232\204\214 \215\211\200\201\204 \215\211\213\205\230\201",
+        "MenuOS \232\220\227\232\204\214 \215\211\200\201\204 \215\211\213\205\230\201",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
     {
         6,
         11,
-        "ReactOS \204\214\222\224\204\204 \232\213\230\222\216 \232\200 \227\211\232\222\211 \204\220\227\232\204\204 \214\231 \204\206\204 \201\214\231\204",
+        "MenuOS \204\214\222\224\204\204 \232\213\230\222\216 \232\200 \227\211\232\222\211 \204\220\227\232\204\204 \214\231 \204\206\204 \201\214\231\204",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -127,36 +127,36 @@ static MUI_ENTRY heILWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  .ReactOS \232\200 \202\230\203\231\214 \205\200 \217\211\227\232\204\214 \211\203\213 ENTER \225\207\214",
+        "\x07  .MenuOS \232\200 \202\230\203\231\214 \205\200 \217\211\227\232\204\214 \211\203\213 ENTER \225\207\214",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-     // "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
-        "\x07  .ReactOS \232\220\227\232\204 \217\227\232\214 \211\203\213 R \225\207\214",
+     // "\x07  Press R to repair a MenuOS installation using the Recovery Console.",
+        "\x07  .MenuOS \232\220\227\232\204 \217\227\232\214 \211\203\213 R \225\207\214",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  .ReactOS \214\231 \211\205\231\211\230\204 \211\200\220\232 \232\205\200\230\214 \211\203\213 L \225\207\214",
+        "\x07  .MenuOS \214\231 \211\205\231\211\230\204 \211\200\220\232 \232\205\200\230\214 \211\203\213 L \225\207\214",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         21,
-        "\x07  .ReactOS \232\200 \217\211\227\232\204\214 \211\214\201\216 \232\200\226\214 \211\203\213 F3 \225\207\214",
+        "\x07  .MenuOS \232\200 \217\211\227\232\204\214 \211\214\201\216 \232\200\226\214 \211\203\213 F3 \225\207\214",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         23,
-        ":\230\232\200\201 \230\227\201\214 \217\232\211\220 ,ReactOS \211\201\202\214 \222\203\211\216 \230\232\205\211\214",
+        ":\230\232\200\201 \230\227\201\214 \217\232\211\220 ,MenuOS \211\201\202\214 \222\203\211\216 \230\232\205\211\214",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -187,21 +187,21 @@ static MUI_ENTRY heILIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "ReactOS \232\221\230\202 \201\226\216",
+        "MenuOS \232\221\230\202 \201\226\216",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
     {
         6,
         11,
-        "\232\205\207\213\205\220 \232\205\220\205\213\232\204 \214\213 \200\214\231 \232\205\222\216\231\216 ,\200\224\214\200 \201\214\231\201 \232\200\226\216\220 ReactOS",
+        "\232\205\207\213\205\220 \232\205\220\205\213\232\204 \214\213 \200\214\231 \232\205\222\216\231\216 ,\200\224\214\200 \201\214\231\201 \232\200\226\216\220 MenuOS",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -229,21 +229,21 @@ static MUI_ENTRY heILIntroPageEntries[] =
     {
         6,
         16,
-        ".\232\211\206\211\224 \204\230\216\205\207 \214\222 ReactOS \232\200 \225\211\230\204\214 \232\220\216 \214\222",
+        ".\232\211\206\211\224 \204\230\216\205\207 \214\222 MenuOS \232\200 \225\211\230\204\214 \232\220\216 \214\222",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  .ReactOS \232\220\227\232\204 \232\200 \212\211\231\216\204\214 \211\203\213 ENTER \231\227\204",
+        "\x07  .MenuOS \232\220\227\232\204 \232\200 \212\211\231\216\204\214 \211\203\213 ENTER \231\227\204",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         21,
-        "\x07  .ReactOS \232\200 \217\211\227\232\204\214 \211\214\201\216 \232\200\226\214 \211\203\213 F3 \225\207\214",
+        "\x07  .MenuOS \232\200 \217\211\227\232\204\214 \211\214\201\216 \232\200\226\214 \211\203\213 F3 \225\207\214",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -267,7 +267,7 @@ static MUI_ENTRY heILLicensePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -281,7 +281,7 @@ static MUI_ENTRY heILLicensePageEntries[] =
     {
         8,
         8,
-        "The ReactOS System is licensed under the terms of the",
+        "The MenuOS System is licensed under the terms of the",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -302,7 +302,7 @@ static MUI_ENTRY heILLicensePageEntries[] =
     {
         8,
         11,
-        "All software that is part of the ReactOS system is",
+        "All software that is part of the MenuOS system is",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -337,7 +337,7 @@ static MUI_ENTRY heILLicensePageEntries[] =
     {
         8,
         17,
-        "ReactOS only covers distribution to third parties.",
+        "MenuOS only covers distribution to third parties.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -351,7 +351,7 @@ static MUI_ENTRY heILLicensePageEntries[] =
     {
         8,
         19,
-        "GNU General Public License with ReactOS please visit",
+        "GNU General Public License with MenuOS please visit",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -410,7 +410,7 @@ static MUI_ENTRY heILDevicePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -517,14 +517,14 @@ static MUI_ENTRY heILRepairPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        ".\215\203\227\205\216 \207\205\232\211\224 \201\226\216\201 \232\200\226\216\220 ReactOS \232\220\227\232\204",
+        ".\215\203\227\205\216 \207\205\232\211\224 \201\226\216\201 \232\200\226\216\220 MenuOS \232\220\227\232\204",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -590,14 +590,14 @@ static MUI_ENTRY heILUpgradePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "ReactOS \232\205\220\227\232\204\216 \232\207\200 \232\200 \202\230\203\231\214 \204\214\205\213\211 ReactOS \232\220\227\232\204",
+        "MenuOS \232\205\220\227\232\204\216 \232\207\200 \232\200 \202\230\203\231\214 \204\214\205\213\211 MenuOS \232\220\227\232\204",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -646,7 +646,7 @@ static MUI_ENTRY heILUpgradePageEntries[] =
     {
         8,
         21,
-        "\x07  .ReactOS \232\200 \217\211\227\232\204\214 \211\214\201\216 \232\200\226\214 \211\203\213 F3 \225\207\214",
+        "\x07  .MenuOS \232\200 \217\211\227\232\204\214 \211\214\201\216 \232\200\226\214 \211\203\213 F3 \225\207\214",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -670,7 +670,7 @@ static MUI_ENTRY heILComputerPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -729,7 +729,7 @@ static MUI_ENTRY heILFlushPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -774,14 +774,14 @@ static MUI_ENTRY heILQuitPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         10,
         6,
-        "\200\214\216 \217\224\205\200\201 \232\220\227\232\205\216 \200\214 ReactOS",
+        "\200\214\216 \217\224\205\200\201 \232\220\227\232\205\216 \200\214 MenuOS",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -826,7 +826,7 @@ static MUI_ENTRY heILDisplayPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -885,14 +885,14 @@ static MUI_ENTRY heILSuccessPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         10,
         6,
-        ".\204\207\214\226\204\201 \205\220\227\232\205\204 ReactOS \214\231 \215\211\211\221\211\221\201\204 \215\211\201\211\213\230\204",
+        ".\204\207\214\226\204\201 \205\220\227\232\205\204 MenuOS \214\231 \215\211\211\221\211\221\201\204 \215\211\201\211\213\230\204",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -937,7 +937,7 @@ static MUI_ENTRY heILSelectPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -965,7 +965,7 @@ static MUI_ENTRY heILSelectPartitionEntries[] =
     {
         8,
         13,
-        "\x07  .\232\230\207\201\220\204 \204\226\211\207\216\204 \214\222 ReactOS \232\200 \217\211\227\232\204\214 \211\203\213 ENTER \225\207\214",
+        "\x07  .\232\230\207\201\220\204 \204\226\211\207\216\204 \214\222 MenuOS \232\200 \217\211\227\232\204\214 \211\203\213 ENTER \225\207\214",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1010,7 +1010,7 @@ static MUI_ENTRY heILChangeSystemPartition[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1031,14 +1031,14 @@ static MUI_ENTRY heILChangeSystemPartition[] =
     {
         6,
         16,
-        "uses a format not supported by ReactOS.",
+        "uses a format not supported by MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         18,
-        "In order to successfully install ReactOS, the Setup program must change",
+        "In order to successfully install MenuOS, the Setup program must change",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1108,7 +1108,7 @@ static MUI_ENTRY heILChangeSystemPartition[] =
     {
         6,
         35,
-        "to the original one after finishing the installation of ReactOS.",
+        "to the original one after finishing the installation of MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1132,7 +1132,7 @@ static MUI_ENTRY heILConfirmDeleteSystemPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1153,7 +1153,7 @@ static MUI_ENTRY heILConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         11,
-        ")ReactOS \205\216\213( \204\214\222\224\204 \232\205\213\230\222\216 \232\214\222\224\204\214 \232\205\211\220\213\232",
+        ")MenuOS \205\216\213( \204\214\222\224\204 \232\205\213\230\222\216 \232\214\222\224\204\214 \232\205\211\220\213\232",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1188,7 +1188,7 @@ static MUI_ENTRY heILConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         17,
-        ".ReactOS \232\220\227\232\204 \215\205\211\221\214 \203\222",
+        ".MenuOS \232\220\227\232\204 \215\205\211\221\214 \203\222",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1240,7 +1240,7 @@ static MUI_ENTRY heILFormatPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1278,7 +1278,7 @@ static MUI_ENTRY heILCheckFSEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1309,21 +1309,21 @@ static MUI_ENTRY heILInstallDirectoryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        ".\232\230\207\201\220\204 \204\226\211\207\216\204 \214\222 ReactOS \232\200 \217\211\227\232\232 \204\220\227\232\204\204",
+        ".\232\230\207\201\220\204 \204\226\211\207\216\204 \214\222 MenuOS \232\200 \217\211\227\232\232 \204\220\227\232\204\204",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         9,
-        ":ReactOS \232\200 \217\211\227\232\204\214 \212\220\205\226\230\201 \204\201 \204\211\211\227\211\232 \230\207\201",
+        ":MenuOS \232\200 \217\211\227\232\204\214 \212\220\205\226\230\201 \204\201 \204\211\211\227\211\232 \230\207\201",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1337,7 +1337,7 @@ static MUI_ENTRY heILInstallDirectoryEntries[] =
     {
         6,
         15,
-        ".ReactOS \232\200 \217\211\227\232\204\214 \212\220\205\226\230\201 \204\201 \204\211\211\227\211\232\204 \232\200 \215\205\231\230\232 \206\200\205 \215\211\205\205\232",
+        ".MenuOS \232\200 \217\211\227\232\204\214 \212\220\205\226\230\201 \204\201 \204\211\211\227\211\232\204 \232\200 \215\205\231\230\232 \206\200\205 \215\211\205\205\232",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1368,14 +1368,14 @@ static MUI_ENTRY heILFileCopyEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         0,
         12,
-        "\215\211\226\201\227 \204\227\211\232\222\216 ReactOS \232\220\227\232\204\231 \217\216\206\201 \217\211\232\216\204\214 \200\220",
+        "\215\211\226\201\227 \204\227\211\232\222\216 MenuOS \232\220\227\232\204\231 \217\216\206\201 \217\211\232\216\204\214 \200\220",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -1413,7 +1413,7 @@ static MUI_ENTRY heILBootLoaderSelectPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1472,7 +1472,7 @@ static MUI_ENTRY heILBootLoaderInstallPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1503,7 +1503,7 @@ static MUI_ENTRY heILBootLoaderRemovableDiskPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1542,7 +1542,7 @@ static MUI_ENTRY heILKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1601,7 +1601,7 @@ static MUI_ENTRY heILLayoutSettingsEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1661,14 +1661,14 @@ static MUI_ENTRY heILPrepareCopyEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        ".ReactOS \211\226\201\227 \232\227\232\222\204\214 \212\201\231\207\216 \232\200 \204\220\211\213\216 \204\220\227\232\204\204 \232\211\220\213\232 ",
+        ".MenuOS \211\226\201\227 \232\227\232\222\204\214 \212\201\231\207\216 \232\200 \204\220\211\213\216 \204\220\227\232\204\204 \232\211\220\213\232 ",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1693,7 +1693,7 @@ static MUI_ENTRY heILSelectFSEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1741,7 +1741,7 @@ static MUI_ENTRY heILDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1793,7 +1793,7 @@ static MUI_ENTRY heILRegistryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        " MenuOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1828,9 +1828,9 @@ MUI_ERROR heILErrorEntries[] =
     },
     {
         // ERROR_NOT_INSTALLED
-        ".\212\201\231\207\216 \214\222 \200\214\216 \217\224\205\200\201 \232\220\227\232\205\216 \200\214 ReactOS\n"
+        ".\212\201\231\207\216 \214\222 \200\214\216 \217\224\205\200\201 \232\220\227\232\205\216 \200\214 MenuOS\n"
         "\201\205\231 \204\220\227\232\204\204 \232\200 \214\211\222\224\204\214 \212\230\210\226\232 ,\232\222\213 \204\220\227\232\204\204\216 \200\226\232 \215\200\n"
-        ".ReactOS \232\200 \217\211\227\232\204\214 \211\203\213\n"
+        ".MenuOS \232\200 \217\211\227\232\204\214 \211\203\213\n"
         "\n"
         "  \x07  .\204\220\227\232\204\204\201 \212\211\231\216\204\214 \211\203\213 ENTER \225\207\214\n"
         "  \x07  .\204\220\227\232\204\204\216 \232\200\226\214 \211\203\213 F3 \225\207\214",
@@ -1838,7 +1838,7 @@ MUI_ERROR heILErrorEntries[] =
     },
     {
         // ERROR_NO_BUILD_PATH
-        "Failed to build the installation paths for the ReactOS installation directory!\n"
+        "Failed to build the installation paths for the MenuOS installation directory!\n"
         "ENTER = Reboot computer"
     },
     {
@@ -1848,7 +1848,7 @@ MUI_ERROR heILErrorEntries[] =
     },
     {
         // ERROR_SOURCE_DIR
-        "You cannot install ReactOS within the installation source directory!\n"
+        "You cannot install MenuOS within the installation source directory!\n"
         "ENTER = Reboot computer"
     },
     {
@@ -2038,7 +2038,7 @@ MUI_ERROR heILErrorEntries[] =
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,
-        ".ReactOS \232\200 \217\211\227\232\204\214 \211\203\213 \227\211\224\221\216 \204\214\205\203\202 \200\214 \204\230\207\201\220\231 \204\226\211\207\216\204\n"
+        ".MenuOS \232\200 \217\211\227\232\204\214 \211\203\213 \227\211\224\221\216 \204\214\205\203\202 \200\214 \204\230\207\201\220\231 \204\226\211\207\216\204\n"
         ".\201\"\216 %lu \214\231 \214\203\205\202\201 \232\205\211\204\214 \232\205\207\224\214 \232\201\211\211\207 \204\220\227\232\204\204 \225\226\211\207\216\n"
         "\n"
         ".\212\211\231\216\204\214 \211\203\213 \231\227\216 \214\222 \225\207\214 *  ",
@@ -2223,13 +2223,13 @@ MUI_STRING heILStrings[] =
     {STRING_PARTFORMAT,
     ".\212\231\216\204\201 \214\207\232\205\200\232 \232\200\206\204 \204\226\211\207\216\204"},
     {STRING_NONFORMATTEDPART,
-    ".\232\214\207\232\205\200\216 \200\214/\204\231\203\207 \204\226\211\207\216 \214\222 ReactOS \232\200 \217\211\227\232\204\214 \232\230\207\201"},
+    ".\232\214\207\232\205\200\216 \200\214/\204\231\203\207 \204\226\211\207\216 \214\222 MenuOS \232\200 \217\211\227\232\204\214 \232\230\207\201"},
     {STRING_NONFORMATTEDSYSTEMPART,
     ".\232\214\207\232\205\200\216 \200\214 \217\211\211\203\222 \232\213\230\222\216\204 \232\226\211\207\216"},
     {STRING_NONFORMATTEDOTHERPART,
     ".\232\214\207\232\205\200\216 \200\214 \217\211\211\203\222 \204\231\203\207\204 \204\226\211\207\216\204"},
     {STRING_INSTALLONPART,
-    "\204\226\211\207\216 \214\222 ReactOS \232\200 \204\220\211\227\232\216 \204\220\227\232\204\204 \232\211\220\213\232"},
+    "\204\226\211\207\216 \214\222 MenuOS \232\200 \204\220\211\227\232\216 \204\220\227\232\204\204 \232\211\220\213\232"},
     {STRING_CONTINUE,
     "\212\231\216\204 = ENTER"},
     {STRING_QUITCONTINUE,

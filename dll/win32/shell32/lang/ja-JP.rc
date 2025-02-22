@@ -145,9 +145,9 @@ BEGIN
     LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10, SS_NOPREFIX
     LTEXT "Copyright 1996-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
-    LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
+    LTEXT " MenuOS Team\0", IDC_STATIC, 105, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20, SS_NOPREFIX
-    LTEXT "この ReactOS のバージョンは次の方に登録されています:", IDC_ABOUT_REG_TO, 35, 105, 180, 10
+    LTEXT "この MenuOS のバージョンは次の方に登録されています:", IDC_ABOUT_REG_TO, 35, 105, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 115, 180, 10, SS_NOPREFIX
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 125, 180, 10, SS_NOPREFIX
     LTEXT "", IDC_STATIC, 35, 125, 235, 1, SS_ETCHEDHORZ
@@ -161,7 +161,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "ReactOS は次の方々によって提供されています:", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "MenuOS は次の方々によって提供されています:", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 145, 40
 END
 
@@ -421,7 +421,7 @@ BEGIN
     GROUPBOX "タスク", -1, 7, 10, 249, 40
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
     AUTORADIOBUTTON "フォルダに共通のタスクを表示する(&F)", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "ReactOS クラシック フォルダを使用する(&I)", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
+    AUTORADIOBUTTON "MenuOS クラシック フォルダを使用する(&I)", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
     GROUPBOX "フォルダの参照", -1, 7, 60, 249, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "同じウィンドウでフォルダを開く(&M)", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
@@ -491,7 +491,7 @@ END
 
 IDD_LOG_OFF DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "ReactOS のログオフ"
+CAPTION "MenuOS のログオフ"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
@@ -509,14 +509,14 @@ BEGIN
     PUSHBUTTON "ユーザー切り替え(&S)", IDC_SWITCH_USER_BUTTON, 57, 46, 19, 19, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
     PUSHBUTTON "ログオフ(&L)", IDC_LOG_OFF_BUTTON, 134, 46, 19, 19, BS_OWNERDRAW
     PUSHBUTTON "キャンセル", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
-    LTEXT "ReactOS のログオフ", IDC_LOG_OFF_TEXT_STATIC, 4, 9, 130, 20
+    LTEXT "MenuOS のログオフ", IDC_LOG_OFF_TEXT_STATIC, 4, 9, 130, 20
     CTEXT "ユーザー切り替え", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
     CTEXT "ログオフ", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
 END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "ReactOS の切断"
+CAPTION "MenuOS の切断"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
@@ -530,7 +530,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLIN
 CAPTION "自動再生"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "コンテンツの種類を選んで、その種類がこのデバイスで使用されるときに ReactOS が自動的に実行する動作を選択してください(&S):", 1000, 7, 7, 215, 20
+    LTEXT "コンテンツの種類を選んで、その種類がこのデバイスで使用されるときに MenuOS が自動的に実行する動作を選択してください(&S):", 1000, 7, 7, 215, 20
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
     GROUPBOX "動作", -1, 7, 45, 212, 146
     AUTORADIOBUTTON "実行する動作を選択(&P):", 1005, 14, 54, 202, 10, WS_GROUP
@@ -546,7 +546,7 @@ FONT 9, "MS UI Gothic"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
     LTEXT "このディスクもしくはデバイスには複数の種類のコンテンツが含まれています。", 1001, 32, 7, 191, 20
-    LTEXT "ReactOS が実行する動作を選択してください", 1002, 32, 31, 188, 8
+    LTEXT "MenuOS が実行する動作を選択してください", 1002, 32, 31, 188, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
     DEFPUSHBUTTON "OK", IDOK, 96, 186, 60, 14
     PUSHBUTTON "キャンセル", IDCANCEL, 160, 186, 60, 14
@@ -558,10 +558,10 @@ CAPTION "混在したコンテンツ"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "ReactOS はディスクが挿入される、もしくはこのファイルの種類のデバイスが接続されたとき毎回同じ動作が可能です:", 1001, 30, 7, 193, 20
+    LTEXT "MenuOS はディスクが挿入される、もしくはこのファイルの種類のデバイスが接続されたとき毎回同じ動作が可能です:", 1001, 30, 7, 193, 20
     ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
     EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "ReactOS が実行する動作を選択してください", 1002, 32, 41, 190, 8
+    LTEXT "MenuOS が実行する動作を選択してください", 1002, 32, 41, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
     AUTOCHECKBOX "常に選択した動作を行う。", 1004, 32, 171, 190, 10
     DEFPUSHBUTTON "OK", IDOK, 96, 185, 60, 14
@@ -574,8 +574,8 @@ CAPTION "自動再生"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "ReactOS はこのデバイスが接続されたとき毎回同じ動作が可能です。", 1001, 32, 7, 190, 22
-    LTEXT "ReactOS が実行する動作を選択してください(&W)", 1002, 32, 31, 190, 8
+    LTEXT "MenuOS はこのデバイスが接続されたとき毎回同じ動作が可能です。", 1001, 32, 7, 190, 22
+    LTEXT "MenuOS が実行する動作を選択してください(&W)", 1002, 32, 31, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
     AUTOCHECKBOX "常に選択した動作を行う(&A)", 1004, 32, 143, 190, 8
     DEFPUSHBUTTON "OK", IDOK, 94, 160, 60, 14
@@ -584,7 +584,7 @@ END
 
 IDD_SHUTDOWN DIALOGEX 0, 0, 211, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "ReactOS のシャットダウン"
+CAPTION "MenuOS のシャットダウン"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
@@ -851,7 +851,7 @@ BEGIN
 
     /* Warning format system drive dialog strings */
     IDS_NO_FORMAT_TITLE "ボリュームをフォーマットできません"
-    IDS_NO_FORMAT "このボリュームをフォーマットできません! ReactOS を実行するための重要なシステム ファイルが含まれています。"
+    IDS_NO_FORMAT "このボリュームをフォーマットできません! MenuOS を実行するための重要なシステム ファイルが含まれています。"
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "「ファイルの実行」ダイアログを表示できませんでした (内部エラー)"
@@ -937,8 +937,8 @@ BEGIN
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "フォルダ"
-    IDS_BAT_FILE "ReactOS バッチ ファイル"
-    IDS_CMD_FILE "ReactOS コマンド スクリプト"
+    IDS_BAT_FILE "MenuOS バッチ ファイル"
+    IDS_CMD_FILE "MenuOS コマンド スクリプト"
     IDS_COM_FILE "DOS アプリケーション"
     IDS_CPL_FILE "コントロール パネルの項目"
     IDS_CUR_FILE "カーソル"
@@ -980,7 +980,7 @@ BEGIN
     IDS_DEFAULT_CLUSTER_SIZE "デフォルト アロケーション サイズ"
     IDS_COPY_OF "コピー ～"
 
-    IDS_SHLEXEC_NOASSOC "この種類のファイルを開くように設定された ReactOS プログラムがありません。"
+    IDS_SHLEXEC_NOASSOC "この種類のファイルを開くように設定された MenuOS プログラムがありません。"
 
     IDS_FILE_DETAILS "拡張子 '%s' の詳細"
     IDS_FILE_DETAILSADV "拡張子 '%s' のファイルの種類は'%s'です。 '%s' のファイルすべてに対する設定を変更するには 詳細設定をクリックしてください。"
@@ -1059,7 +1059,7 @@ BEGIN
     IDS_SYSTEMFOLDER "システムフォルダ"
 
     /* For IDD_LOG_OFF_FANCY */
-    IDS_LOG_OFF_DESC "プログラムを終了し、ReactOS セッションを終了します。"
+    IDS_LOG_OFF_DESC "プログラムを終了し、MenuOS セッションを終了します。"
     IDS_SWITCH_USER_DESC "プログラムとファイルを開いたまま、別のユーザーがログオンできるようにします。\r\n\r\n(Win+L を押して、ユーザーを切り替えることもできます)"
     IDS_LOG_OFF_TITLE "ログオフ"
     IDS_SWITCH_USER_TITLE "ユーザー切り替え"

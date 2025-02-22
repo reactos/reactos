@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Multimedia Control Panel
+ * PROJECT:     MenuOS Multimedia Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
@@ -36,7 +36,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Scheme de evenimente"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Schema de sunete este un set de sunete atribuite evenimentelor din ReactOS şi din programe. Se poate selecta o schemă existentă sau se salvează o schemă modificată.", -1, 8, 7, 230, 40
+    LTEXT "Schema de sunete este un set de sunete atribuite evenimentelor din MenuOS şi din programe. Se poate selecta o schemă existentă sau se salvează o schemă modificată.", -1, 8, 7, 230, 40
     LTEXT "Schemă s&unete:", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Sal&vare ca…", IDC_SAVEAS_BTN, 134, 70, 50, 15
@@ -132,7 +132,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Performanţă"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Aceste setări controlează modul în care ReactOS redă sunetele. Acestea vă pot ajuta la depanarea problemelor legate de sunet.", 8492, 34, 7, 220, 23
+    LTEXT "Aceste setări controlează modul în care MenuOS redă sunetele. Acestea vă pot ajuta la depanarea problemelor legate de sunet.", 8492, 34, 7, 220, 23
     GROUPBOX "Redare audio", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
     LTEXT "Accelerare &hardware:", 8495, 13, 56, 102, 14
@@ -153,7 +153,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Performanţă"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Aceste setări controlează modul în care ReactOS face înregistrări audio. Acestea vă pot ajuta la depanarea problemelor audio.", 8492, 34, 7, 217, 26
+    LTEXT "Aceste setări controlează modul în care MenuOS face înregistrări audio. Acestea vă pot ajuta la depanarea problemelor audio.", 8492, 34, 7, 217, 26
     GROUPBOX "Înregistrare audio", 8494, 7, 34, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
     LTEXT "&Accelerare hardware:", 8495, 13, 51, 108, 17
@@ -174,13 +174,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Instalare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "ReactOS Audio", 10243, 7, 5, 213, 192
+    GROUPBOX "MenuOS Audio", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "Acest computer nu poate reda ReactOS Audio nu este activat.", 10245, 60, 25, 150, 40
-    AUTOCHECKBOX "&Activare ReactOS Audio", 10253, 60, 68, 150, 9
+    LTEXT "Acest computer nu poate reda MenuOS Audio nu este activat.", 10245, 60, 25, 150, 40
+    AUTOCHECKBOX "&Activare MenuOS Audio", 10253, 60, 68, 150, 9
     LTEXT "Notă", 10246, 58, 87, 150, 11
     LTEXT "1. Trebuie să fiți administrator pentru a activa acest serviciu. Dacă nu sunteți conectat ca administrator, vi se va solicita un nume și o parolă de administrator.", 10247, 60, 100, 150, 40
-    LTEXT "2. După ce activați ReactOS Audio, va trebui să reporniți computerul.", 10248, 60, 140, 150, 40
+    LTEXT "2. După ce activați MenuOS Audio, va trebui să reporniți computerul.", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOGEX 0, 0, 227, 218
@@ -230,11 +230,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Instalare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Sunet ReactOS", 10259, 7, 5, 213, 192
+    GROUPBOX "Sunet MenuOS", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "Serviciul ReactOS Audio este acum activat. Totuși, este posibil ca sunetul să nu funcționeze corect până când reporniți ReactOS. Dacă doriți să reporniți acum, mai întâi salvați-vă munca și închideți toate programele.", 10261, 60, 25, 150, 50
-    LTEXT "Pentru a reporni ReactOS, apăsați OK.", 10262, 60, 75, 150, 20
-    LTEXT "Dacă apăsați pe Revocare, va trebui să reporniți mai târziu pentru ca ReactOS Audio să funcționeze corect.", 10263, 60, 100, 150, 40
+    LTEXT "Serviciul MenuOS Audio este acum activat. Totuși, este posibil ca sunetul să nu funcționeze corect până când reporniți MenuOS. Dacă doriți să reporniți acum, mai întâi salvați-vă munca și închideți toate programele.", 10261, 60, 25, 150, 50
+    LTEXT "Pentru a reporni MenuOS, apăsați OK.", 10262, 60, 75, 150, 20
+    LTEXT "Dacă apăsați pe Revocare, va trebui să reporniți mai târziu pentru ca MenuOS Audio să funcționeze corect.", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
@@ -271,15 +271,15 @@ BEGIN
     5843 "Asterisc"
     5844 "Sunet implicit"
     5845 "Exclamație"
-    5846 "Închidere ReactOS"
+    5846 "Închidere MenuOS"
     5847 "Oprire critică"
     5848 "Notificare de sistem"
     5849 "Întrebare"
-    5850 "Pornire ReactOS"
+    5850 "Pornire MenuOS"
     5851 "Meniul Start"
-    IDS_REACTOS_LOGOFF "Deconectare ReactOS"
-    IDS_REACTOS_LOGON "Conectare ReactOS"
-    5854 "ReactOS Explorer"
+    IDS_REACTOS_LOGOFF "Deconectare MenuOS"
+    IDS_REACTOS_LOGON "Conectare MenuOS"
+    5854 "MenuOS Explorer"
     IDS_BROWSE_FOR_SOUND "Căutare sunete noi"
     IDS_WAVE_FILES_FILTER "Fișiere Wave (*.wav)|*.wav|"
 END

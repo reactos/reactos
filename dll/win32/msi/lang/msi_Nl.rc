@@ -32,8 +32,8 @@ STRINGTABLE
     14 "Feature van:"
     15 "Kies de map die %s bevat"
 #ifdef __REACTOS__
-    34 "ReactOS Installer Package"
-    35 "ReactOS Installer Patch"
+    34 "MenuOS Installer Package"
+    35 "MenuOS Installer Patch"
     36 "&Install"
     37 "Re&pair"
     38 "&Uninstall"

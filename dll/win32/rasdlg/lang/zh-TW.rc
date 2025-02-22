@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Remote Access Common Dialog
+ * PROJECT:     MenuOS Remote Access Common Dialog
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
@@ -76,7 +76,7 @@ BEGIN
     AUTOCHECKBOX "允許在 Win 95 伺服器使用舊的 MS-CHAP 版本(&W)", 200, 46, 162, 198, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "微軟 CHAP 版本 2 (MS-CHAP v2)(&I)", 1492, 28, 176, 200, 10, BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 28, 189, 208, 1
-    AUTOCHECKBOX "對於 MS CHAP 的基礎協定，自動使用我的 ReactOS 使用者名稱和密碼（及網域，如果有的話）(&F)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "對於 MS CHAP 的基礎協定，自動使用我的 MenuOS 使用者名稱和密碼（及網域，如果有的話）(&F)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "確定", 1, 127, 232, 60, 14
     PUSHBUTTON "取消", 2, 192, 232, 60, 14
 END
@@ -170,7 +170,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "自動撥號和掛斷"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "ReactOS 可以根據設備發送和接收的訊息自動撥號和掛斷。", 1085, 9, 7, 253, 30
+    LTEXT "MenuOS 可以根據設備發送和接收的訊息自動撥號和掛斷。", 1085, 9, 7, 253, 30
     GROUPBOX "自動撥號", -1, 6, 38, 249, 71
     LTEXT "當這個連線滿足以下兩個條件時撥接另一個電話：", 1083, 16, 51, 237, 16, NOT WS_GROUP
     LTEXT "活動至少(&L)：", -1, 16, 73, 100, 8
@@ -633,7 +633,7 @@ BEGIN
     AUTORADIOBUTTON "進階（自訂設定）(&D)", 1541, 14, 102, 198, 8, BS_NOTIFY
     LTEXT "驗證我的身份，如下所示(&V)：", 1537, 26, 29, 187, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "自動使用我的 ReactOS 登入名稱和密碼（及網域，如果有的話）(&U)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "自動使用我的 MenuOS 登入名稱和密碼（及網域，如果有的話）(&U)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "要求數據加密（沒有則斷開）(&I)", 1169, 26, 82, 183, 10, BS_TOP | BS_MULTILINE
     LTEXT "使用這些設定，需要對安全協定有所了解。", 1539, 15, 114, 134, 20
     PUSHBUTTON "設定(&S)...", 1180, 151, 115, 60, 14
@@ -690,7 +690,7 @@ BEGIN
     GROUPBOX "撥號選項", 1289, 7, 2, 213, 64
     AUTOCHECKBOX "連線時顯示連線進度(&D)", 1284, 16, 14, 201, 10
     AUTOCHECKBOX "提示名稱、 密碼、 證書等。(&P)", 1554, 16, 27, 201, 10
-    AUTOCHECKBOX "包括 &ReactOS 登入網域", 1555, 16, 39, 201, 10
+    AUTOCHECKBOX "包括 &MenuOS 登入網域", 1555, 16, 39, 201, 10
     AUTOCHECKBOX "提示輸入電話號碼(&N)", 1285, 16, 52, 200, 10, BS_TOP | BS_MULTILINE
     GROUPBOX "重撥選項", 1290, 6, 72, 213, 79
     LTEXT "重撥次數(&R)：", 1300, 16, 87, 123, 8
@@ -888,7 +888,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "連線 %1"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "ReactOS 無法從您提供的使用者名稱和密碼連線到網路。請重新輸入使用者名稱和密碼。", 1396, 7, 6, 206, 36
+    LTEXT "MenuOS 無法從您提供的使用者名稱和密碼連線到網路。請重新輸入使用者名稱和密碼。", 1396, 7, 6, 206, 36
     LTEXT "使用者名稱(&U)：", 1399, 8, 51, 49, 8
     EDITTEXT 1394, 66, 46, 143, 14, ES_AUTOHSCROLL
     LTEXT "密碼(&P)：", 1397, 8, 70, 49, 8, NOT WS_GROUP
@@ -904,7 +904,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "連線 %1"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "ReactOS 是無法從您提供的使用者名稱和密碼連線到網路。請重新輸入使用者名稱和密碼。", 1396, 7, 6, 209, 26
+    LTEXT "MenuOS 是無法從您提供的使用者名稱和密碼連線到網路。請重新輸入使用者名稱和密碼。", 1396, 7, 6, 209, 26
     LTEXT "使用者名稱(&U)：", 1399, 7, 72, 44, 8
     EDITTEXT 1394, 97, 69, 115, 14, ES_AUTOHSCROLL
     LTEXT "密碼(&P)：", 1397, 7, 90, 45, 8, NOT WS_GROUP
@@ -1281,7 +1281,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "新增連線精靈"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "在下面的文字欄位輸入您的服務的名稱。如果您將文字框留空，當您連線時，ReactOS會自動檢測並配置您的服務。", -1, 10, 7, 301, 25
+    LTEXT "在下面的文字欄位輸入您的服務的名稱。如果您將文字框留空，當您連線時，MenuOS會自動檢測並配置您的服務。", -1, 10, 7, 301, 25
     LTEXT "服務名稱（可選）(&S)：", -1, 22, 32, 229, 8
     EDITTEXT 1593, 22, 44, 275, 14, ES_AUTOHSCROLL
 END
@@ -1306,7 +1306,7 @@ BEGIN
     AUTORADIOBUTTON "進階（自訂設定）(&D)", 1541, 14, 100, 197, 8, BS_NOTIFY
     LTEXT "驗證我的身份，如下所示(&V)：", 1537, 26, 29, 183, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "自動使用我 ReactOS 登入名稱和密碼（及網域，如果有的話）(&U)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "自動使用我 MenuOS 登入名稱和密碼（及網域，如果有的話）(&U)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "要求數據加密（沒有則斷開）(&I)", 1169, 26, 83, 182, 10, BS_TOP | BS_MULTILINE
     LTEXT "使用這些設定，需要對安全協定有所了解。", 1539, 26, 111, 136, 20
     PUSHBUTTON "設定(&S)...", 1180, 151, 134, 60, 14
@@ -1465,7 +1465,7 @@ BEGIN
     LTEXT "主機名或 IP 位址的目標（如 reactos.org 或 145.52.0.1）(&H)：", 1430, 7, 5, 217, 18
     EDITTEXT 1427, 7, 25, 215, 14, ES_AUTOHSCROLL
     GROUPBOX "第一次連線", 1431, 9, 48, 213, 78
-    LTEXT "ReactOS 可以在嘗試建立這個虛擬連線前首先連線公共網路，例如網際網路。", 1432, 17, 63, 199, 24
+    LTEXT "MenuOS 可以在嘗試建立這個虛擬連線前首先連線公共網路，例如網際網路。", 1432, 17, 63, 199, 24
     AUTOCHECKBOX "先撥號另一個連線(&D)：", 1428, 19, 89, 183, 10
     COMBOBOX 1429, 29, 103, 182, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "連線後在通知區域顯示圖標(&W)", 1120, 10, 192, 213, 13
@@ -1479,7 +1479,7 @@ BEGIN
     GROUPBOX "撥號選項", 1289, 8, 7, 214, 56
     AUTOCHECKBOX "連線時顯示連線進度(&D)", 1284, 16, 17, 199, 10
     AUTOCHECKBOX "提示名稱、 密碼、 證書等。(&P)", 1554, 16, 32, 199, 10
-    AUTOCHECKBOX "包括 &ReactOS 登入網域", 1555, 16, 47, 178, 10
+    AUTOCHECKBOX "包括 &MenuOS 登入網域", 1555, 16, 47, 178, 10
     GROUPBOX "重撥選項", 1290, 8, 68, 214, 89
     LTEXT "重撥次數(&R)：", 1300, 16, 81, 121, 8
     EDITTEXT 1287, 140, 77, 70, 14, ES_AUTOHSCROLL | ES_NUMBER
@@ -1504,7 +1504,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "新增連線精靈"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "ReactOS 可以在建立虛擬連線之前自動撥號初始連線到網際網路或其他公共網路。", -1, 10, 6, 275, 24
+    LTEXT "MenuOS 可以在建立虛擬連線之前自動撥號初始連線到網際網路或其他公共網路。", -1, 10, 6, 275, 24
     AUTORADIOBUTTON "不撥號初始連線。(&D)", 1509, 32, 31, 271, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     AUTORADIOBUTTON "自動撥號這個初始連線(&A)：", 1510, 32, 45, 269, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     COMBOBOX 1435, 43, 62, 253, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
@@ -1806,7 +1806,7 @@ BEGIN
     AUTORADIOBUTTON "允許虛擬專用連線(&A)", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "不允許虛擬專用連線(&D)", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     LTEXT "您想要允許虛擬專用連線到這台電腦嗎？", -1, 17, 49, 275, 8
-    LTEXT " 如果您允許 VPN 連線，ReactOS 將會修改網際網路連線防火牆，以允許您的電腦發送和接收 VPN 數據包", -1, 10, 25, 293, 25
+    LTEXT " 如果您允許 VPN 連線，MenuOS 將會修改網際網路連線防火牆，以允許您的電腦發送和接收 VPN 數據包", -1, 10, 25, 293, 25
 END
 
 7055 DIALOGEX 0, 0, 317, 143
@@ -1895,7 +1895,7 @@ BEGIN
     244 "因為這個連線是目前處於活動狀態，某些設定在直到下一次您再撥號前不會生效。\0"
     245 "沒有連線可供所有使用者使用。您必須在撥號前登入。\0"
     246 "通訊簿是空的。\n\n按［確定］以新增一個條目。\0"
-    247 "由於匯入/ 匯出限制，數據加密不可用於這個 ReactOS 版本中。\0"
+    247 "由於匯入/ 匯出限制，數據加密不可用於這個 MenuOS 版本中。\0"
     248 "請在下一個畫面上輸入一個 X.25 地址。\0"
     249 "錯誤 %1：%2\0"
     250 "%1\n\n錯誤 %2：%3\0"
@@ -2118,7 +2118,7 @@ BEGIN
     501 "名稱或 VPN 伺服器的地址是什麼？\0"
     502 "無法停用請求撥號。\0"
     503 "公用網路\0"
-    504 "ReactOS 可以確保公用網路第一次連線。\0"
+    504 "MenuOS 可以確保公用網路第一次連線。\0"
     505 "VPN1\0"
     506 "網際網路連線共享\0"
     507 "您可以讓通過這個撥號連線的本地網路存取資源。\0"
@@ -2244,8 +2244,8 @@ BEGIN
     1611 "寬頻連線\0"
     1612 "您已經選擇使用預共享密鑰，但您尚未輸入。\n請輸入一個預共享密鑰。\0"
     1613 "無法提交憑據\0"
-    1634 "由於 Windows 管理規範（WMI）服務已被停用，ReactOS 不能顯示這個連線或家庭網路的內容。\n\n若要設定這個連線或家庭網路的內容，必須首先啟用 WMI 服務。如要啟用服務，在管理工具控制面板中，點擊「服務」，然後右鍵點擊 Windows 管理規範，然後點擊「開始」。\0"
-    1635 "ReactOS 無法顯示這個連線的內容。Windows 管理規範（WMI）訊息可能已損毀。若要更正這個問題，請使用系統還原將 ReactOS 還原到較早的時間（稱為還原點）。系統還原位於系統工具資料夾內。\0"
+    1634 "由於 Windows 管理規範（WMI）服務已被停用，MenuOS 不能顯示這個連線或家庭網路的內容。\n\n若要設定這個連線或家庭網路的內容，必須首先啟用 WMI 服務。如要啟用服務，在管理工具控制面板中，點擊「服務」，然後右鍵點擊 Windows 管理規範，然後點擊「開始」。\0"
+    1635 "MenuOS 無法顯示這個連線的內容。Windows 管理規範（WMI）訊息可能已損毀。若要更正這個問題，請使用系統還原將 MenuOS 還原到較早的時間（稱為還原點）。系統還原位於系統工具資料夾內。\0"
     1646 "允許傳入的回顯請求\0"
     1647 "允許傳入時間戳請求\0"
     1648 "允許傳入遮罩請求\0"
@@ -2358,7 +2358,7 @@ BEGIN
     7385 "通訊通訊埠（%s）\0"
     7386 "網路連線不會顯示一些專門的選項來使用遠端存取策略或本地使用者管理器的控制台已設定的入站連線。有關傳入連線的完整和正確的訊息，您將需要使用這些控制台。\0"
     7387 "您所選擇的使用者回撥模式需要您輸入有效的回撥號碼。\0"
-    7388 "ReactOS 必須重新啟動才能完成操作。您要立即重新啟動嗎？\0"
+    7388 "MenuOS 必須重新啟動才能完成操作。您要立即重新啟動嗎？\0"
     7389 "目前所選的設備沒有可用的設定選項。\0"
     7390 "無效的範圍\0"
     7391 "您請求了停止將連線傳入到「%1」。要停用它，您必須停止「伺服器」服務。一旦停止，任何共享的目錄或這臺電腦上的印表機將不再提供給任何其他電腦。您啟動系統控制台，使您停止伺服器服務嗎？\r\n\n在電腦管理工具內點擊「系統工具」，然後點擊「服務」。在右側窗格中，右鍵點擊伺服器並點擊［停止］。\0"

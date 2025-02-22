@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Application Wizard
+ * PROJECT:     MenuOS Application Wizard
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Spanish language file ...
  * COPYRIGHT:   Javier Remacha 2007-12-22
@@ -68,7 +68,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Instalador de Wine Gecko"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "ReactOS no pudo encontrar el paquete de Wine Gecko, necesario para que las aplicaciones con HTML embebido funcionen correctamente.\n\nReactOS puede ayudar a descargarlo de forma automática y fácil.",
+    CONTROL "MenuOS no pudo encontrar el paquete de Wine Gecko, necesario para que las aplicaciones con HTML embebido funcionen correctamente.\n\nReactOS puede ayudar a descargarlo de forma automática y fácil.",
           ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
     CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
     DEFPUSHBUTTON "&Instalar", ID_DWL_INSTALL, 144, 76, 50, 14
@@ -89,7 +89,7 @@ BEGIN
     IDS_INSTALLING "Instalando..."
     IDS_INVALID_SHA "La suma de verificación del archivo descargado no coincide. Se ha cancelado la instalación del archivo corrupto."
     IDS_NEW_INTERNET_SHORTCUT "Nuevo acceso directo a Internet"
-    IDS_DWL_FAILED "ReactOS no pudo descargar el paquete de Wine Gecko. Asegúrese de que tiene conexión a Internet. La instalación continuará sin instalar Wine Gecko."
+    IDS_DWL_FAILED "MenuOS no pudo descargar el paquete de Wine Gecko. Asegúrese de que tiene conexión a Internet. La instalación continuará sin instalar Wine Gecko."
     IDS_CANTMAKEINETSHORTCUT "No se pudo crear un acceso directo a Internet."
     IDS_CANTMAKESHORTCUT "No se pudo crear un acceso directo."
     IDS_NO_MEMORY "No se pudo asignar memoria"

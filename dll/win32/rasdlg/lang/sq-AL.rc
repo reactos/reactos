@@ -71,7 +71,7 @@ BEGIN
     AUTOCHECKBOX "Lejo versione të vjetra MS-CHAP për &Win 95 servers", 200, 46, 162, 198, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "M&icrosoft CHAP Versioni 2 (MS-CHAP v2)", 1492, 28, 176, 200, 10, BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 28, 189, 208, 1
-    AUTOCHECKBOX "&Për protokollet bazë MS-CHAP , përdor emrin e përdoruesit dhe fjalëkalimin e ReactOS (dhe domain nëse ka)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Për protokollet bazë MS-CHAP , përdor emrin e përdoruesit dhe fjalëkalimin e MenuOS (dhe domain nëse ka)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "OK", 1, 127, 232, 60, 14
     PUSHBUTTON "Anulo", 2, 192, 232, 60, 14
 END
@@ -165,7 +165,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Thirrje dhe Mbyllje Automatike"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS automatikisht mund të thërras dhe të ul pajisjen e receptorit të telefonit në varësi të qfarë informacion është duke u dërguar dhe marrë.", 1085, 9, 7, 253, 30
+    LTEXT "MenuOS automatikisht mund të thërras dhe të ul pajisjen e receptorit të telefonit në varësi të qfarë informacion është duke u dërguar dhe marrë.", 1085, 9, 7, 253, 30
     GROUPBOX "Thirrje Automatike", -1, 6, 38, 249, 71
     LTEXT "Thirr një tjetër linjë kur kjo lidhje plotëson dy kushtet e mëposhtme:", 1083, 16, 51, 237, 16, NOT WS_GROUP
     LTEXT "Aktivizo të &paktën:", -1, 16, 73, 100, 8
@@ -628,7 +628,7 @@ BEGIN
     AUTORADIOBUTTON "A&vancuar (cilësimet parazgjedhura)", 1541, 14, 102, 198, 8, BS_NOTIFY
     LTEXT "&Vlereso identitetin tim si vijon:", 1537, 26, 29, 187, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "Automatikisht përdor emrin tim hzres ReactOS dhe fjalëkalimin (dhe domain nëse ka)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Automatikisht përdor emrin tim hzres MenuOS dhe fjalëkalimin (dhe domain nëse ka)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Kërkojnë të dhënat kryptuara (shkëputu nëse ska)", 1169, 26, 82, 183, 10, BS_TOP | BS_MULTILINE
     LTEXT "Duke përdorur këto cilësime kërkoni një njohuri të protokolleve të sigurisë.", 1539, 15, 114, 134, 20
     PUSHBUTTON "&Cilësime...", 1180, 151, 115, 60, 14
@@ -685,7 +685,7 @@ BEGIN
     GROUPBOX "Alternativa thirrje", 1289, 7, 2, 213, 64
     AUTOCHECKBOX "&Shfaq përparim ndërsa lidhesh", 1284, 16, 14, 201, 10
     AUTOCHECKBOX "&Shfaq për emrin dhe fjalëkalimin, certifikata, etj.", 1554, 16, 27, 201, 10
-    AUTOCHECKBOX "Përfshijë hzrjen në domain &ReactOS", 1555, 16, 39, 201, 10
+    AUTOCHECKBOX "Përfshijë hzrjen në domain &MenuOS", 1555, 16, 39, 201, 10
     AUTOCHECKBOX "Shfaq &number telefonit", 1285, 16, 52, 200, 10, BS_TOP | BS_MULTILINE
     GROUPBOX "Alternativa thirrje", 1290, 6, 72, 213, 79
     LTEXT "&Përpjekje thirrje:", 1300, 16, 87, 123, 8
@@ -883,7 +883,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Lidhu %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS nuk ishte në gjendje për tu lidhur në rrjet duke përdorur emrin e përdoruesit dhe fjalëkalimin që ju keni dhënë. Ju lutem ri-shkruani emrin e përdoruesit dhe fjalëkalimin.", 1396, 7, 6, 206, 36
+    LTEXT "MenuOS nuk ishte në gjendje për tu lidhur në rrjet duke përdorur emrin e përdoruesit dhe fjalëkalimin që ju keni dhënë. Ju lutem ri-shkruani emrin e përdoruesit dhe fjalëkalimin.", 1396, 7, 6, 206, 36
     LTEXT "&Përdorues:", 1399, 8, 51, 49, 8
     EDITTEXT 1394, 66, 46, 143, 14, ES_AUTOHSCROLL
     LTEXT "&Fjalëkalim:", 1397, 8, 70, 49, 8, NOT WS_GROUP
@@ -899,7 +899,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Lidhu %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS nuk ishte në gjendje për tu lidhur në rrjet duke përdorur emrin e përdoruesit dhe fjalëkalimin që ju keni dhënë. Ju lutem ri-shkruani emrin e përdoruesit dhe fjalëkalimin.", 1396, 7, 6, 209, 26
+    LTEXT "MenuOS nuk ishte në gjendje për tu lidhur në rrjet duke përdorur emrin e përdoruesit dhe fjalëkalimin që ju keni dhënë. Ju lutem ri-shkruani emrin e përdoruesit dhe fjalëkalimin.", 1396, 7, 6, 209, 26
     LTEXT "&Përdorues:", 1399, 7, 72, 44, 8
     EDITTEXT 1394, 97, 69, 115, 14, ES_AUTOHSCROLL
     LTEXT "&Fjalëkalim:", 1397, 7, 90, 45, 8, NOT WS_GROUP
@@ -1276,7 +1276,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Magjistari Lidhjes Re"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Shkruaj emrin e shërbimit tuaj në kutinë e tekstit në vijim. Në qoftë se leni kutinë tekstit bosh, ReactOS automatikisht do të zbulojë dhe të konfigurojë shërbimin tuaj, kur ju lidheni.", -1, 10, 7, 301, 25
+    LTEXT "Shkruaj emrin e shërbimit tuaj në kutinë e tekstit në vijim. Në qoftë se leni kutinë tekstit bosh, MenuOS automatikisht do të zbulojë dhe të konfigurojë shërbimin tuaj, kur ju lidheni.", -1, 10, 7, 301, 25
     LTEXT "Emri &Sherbimit (opsional):", -1, 22, 32, 229, 8
     EDITTEXT 1593, 22, 44, 275, 14, ES_AUTOHSCROLL
 END
@@ -1301,7 +1301,7 @@ BEGIN
     AUTORADIOBUTTON "A&vancuar (Cilësime parazgjedhura)", 1541, 14, 100, 197, 8, BS_NOTIFY
     LTEXT "&Vlereso identitetin tim si vijon:", 1537, 26, 29, 183, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "Automatikisht përdor emrin dhe fjalëkalimin tim hyres ReactOS (dhe domain nëse ka)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Automatikisht përdor emrin dhe fjalëkalimin tim hyres MenuOS (dhe domain nëse ka)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Kërkojnë të dhënat e kriptume (shkëput nëse ska)", 1169, 26, 83, 182, 10, BS_TOP | BS_MULTILINE
     LTEXT "Duke përdorur këto cilësime kërko një njohuri të protokolleve të sigurisë.", 1539, 26, 111, 136, 20
     PUSHBUTTON "&Cilësime...", 1180, 151, 134, 60, 14
@@ -1460,7 +1460,7 @@ BEGIN
     LTEXT "Emri &Host-it ose adresa IP'së ose destinacioni (si psh reactos.org ose 145.52.0.1):", 1430, 7, 5, 217, 18
     EDITTEXT 1427, 7, 25, 215, 14, ES_AUTOHSCROLL
     GROUPBOX "Lidhja parë", 1431, 9, 48, 213, 78
-    LTEXT "ReactOS parë mund të lidhë rrjetin publik, të tilla si internet, para se të përpiqet për të krijuar këtë lidhje virtuale.", 1432, 17, 63, 199, 24
+    LTEXT "MenuOS parë mund të lidhë rrjetin publik, të tilla si internet, para se të përpiqet për të krijuar këtë lidhje virtuale.", 1432, 17, 63, 199, 24
     AUTOCHECKBOX "&Thirr një lidhje tjetër të parë:", 1428, 19, 89, 183, 10
     COMBOBOX 1429, 29, 103, 182, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "Shfaq ikonën në zonën e njoftimit kur i lidhur", 1120, 10, 192, 213, 13
@@ -1474,7 +1474,7 @@ BEGIN
     GROUPBOX "Alternativa thirrje", 1289, 8, 7, 214, 56
     AUTOCHECKBOX "&Shfaq përparim ndërsa lidhesh", 1284, 16, 17, 199, 10
     AUTOCHECKBOX "Shfaq për emrin dhe fjalëkalimin, certifikatë, etj.", 1554, 16, 32, 199, 10
-    AUTOCHECKBOX "Përfshijë &ReactOS hyrje në domain", 1555, 16, 47, 178, 10
+    AUTOCHECKBOX "Përfshijë &MenuOS hyrje në domain", 1555, 16, 47, 178, 10
     GROUPBOX "Alternativa ri-thirrje", 1290, 8, 68, 214, 89
     LTEXT "Përpjekje &Rithirrje:", 1300, 16, 81, 121, 8
     EDITTEXT 1287, 140, 77, 70, 14, ES_AUTOHSCROLL | ES_NUMBER
@@ -1499,7 +1499,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Magjistari Lidhjes Re"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS automatikisht mund të thirr lidhjen fillestare në internet ose rrjet tjetër publik, para krijimit të lidhjes virtuale.", -1, 10, 6, 275, 24
+    LTEXT "MenuOS automatikisht mund të thirr lidhjen fillestare në internet ose rrjet tjetër publik, para krijimit të lidhjes virtuale.", -1, 10, 6, 275, 24
     AUTORADIOBUTTON "&Mos thirrni lidhje fillestar.", 1509, 32, 31, 271, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     AUTORADIOBUTTON "&Automatikisht thirr këtë lidhje fillestar:", 1510, 32, 45, 269, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     COMBOBOX 1435, 43, 62, 253, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
@@ -1801,7 +1801,7 @@ BEGIN
     AUTORADIOBUTTON "&Lejo lidhjet virtuale private", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Mos lejoni lidhjet virtuale private", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     LTEXT "A doni të lejoni lidhjet virtuale private në këtë kompjuter?", -1, 17, 49, 275, 8
-    LTEXT "Nëse ju lejojnë lidhjet VPN, ReactOS do të ndryshojë MurinMbrojtës Lidhjes Internetit për të lejuar kompjuterin tuaj të dërgojë dhe të merrë pako VPN.", -1, 10, 25, 293, 25
+    LTEXT "Nëse ju lejojnë lidhjet VPN, MenuOS do të ndryshojë MurinMbrojtës Lidhjes Internetit për të lejuar kompjuterin tuaj të dërgojë dhe të merrë pako VPN.", -1, 10, 25, 293, 25
 END
 
 7055 DIALOGEX 0, 0, 317, 143
@@ -1890,7 +1890,7 @@ BEGIN
     244 "Me që kjo lidhje është aktualisht aktive, disa konfigurime nuk do të hyjë në fuqi deri në herën tjetër që ju thirrni atë.\0"
     245 "Nuk ka lidhje në dispozicion për të gjithë përdoruesit. Ju duhet të futeni para se të thirrni.\0"
     246 "Libri Telefonit është bosh.\n\nShtypni OK për të shtuar një shënim.\0"
-    247 "Për shkak të kufizimeve të import/eksportit, të dhënat e kryptimit nuk janë në dispozicion në këtë version të ReactOS.\0"
+    247 "Për shkak të kufizimeve të import/eksportit, të dhënat e kryptimit nuk janë në dispozicion në këtë version të MenuOS.\0"
     248 "Ju lutem fusni një X.25 adresë në ekranin tjetër.\0"
     249 "Gabim %1: %2\0"
     250 "%1\n\nGabim %2: %3\0"
@@ -2113,7 +2113,7 @@ BEGIN
     501 "Cili është emri ose adresa e serverit VPN?\0"
     502 "Nuk mund të gjymtojë mbi-kërkesën formimi i numrit.\0"
     503 "Rrjeti Publik\0"
-    504 "ReactOS mund të sigurohet që rrjet publik është e lidhur së pari.\0"
+    504 "MenuOS mund të sigurohet që rrjet publik është e lidhur së pari.\0"
     505 "VPN1\0"
     506 "Shpërndarja Lidhjes Internetit\0"
     507 "Ju mund të leni një burim vendëro të aksesit të rrjetit përmes kësaj lidhje formuese.\0"
@@ -2239,8 +2239,8 @@ BEGIN
     1611 "Lidhja Broadband\0"
     1612 "Ju keni zgjedhur për të përdorur një çelës para-shpërndarës, por ju nuk e keni futur një të tillë.\nJu lutemi fusni një çelës para-shpërndarës.\0"
     1613 "Nuk mund të Dorëzojë letrat kredenciale\0"
-    1634 "Për shkak se shërbimi i Menaximit të Instrumentëve Windows-i (WMI) ka qenë me aftësi të kufizuara, ReactOS nuk mund të shfaqin vetitë e kësaj lidhje ose rrjetit në shtëpi.\n\nPër të konfiguruar vetitë e kësaj lidhje ose rrjetit tuaj në shtëpi, ju duhet së pari të mundësoni shërbimin WMI. Për ta bërë këtë, ne Veglat Administrative të panelit të kontrollit, klikoni dy herë Shërbimet, klikoni me të djathtën në Menaxhimin e Orkestrimit Windows, dhe pastaj klikoni Fillo.\0"
-    1635 "ReactOS nuk mund të shfaqin vetitë e kësaj lidhje. Menaxhimi Instrumental Windows (WMI) Informues mund të jetë i korruptuar. Për të korrigjuar këtë, përdorimi Restauro Sistemin për të rivendosur ReactOS një kohë më parë (e quajtur një pikë të rivendosur). Restaurimi Sistemit është e vendosur në Dosjen e Veglave të Sistemit në Aksesore.\0"
+    1634 "Për shkak se shërbimi i Menaximit të Instrumentëve Windows-i (WMI) ka qenë me aftësi të kufizuara, MenuOS nuk mund të shfaqin vetitë e kësaj lidhje ose rrjetit në shtëpi.\n\nPër të konfiguruar vetitë e kësaj lidhje ose rrjetit tuaj në shtëpi, ju duhet së pari të mundësoni shërbimin WMI. Për ta bërë këtë, ne Veglat Administrative të panelit të kontrollit, klikoni dy herë Shërbimet, klikoni me të djathtën në Menaxhimin e Orkestrimit Windows, dhe pastaj klikoni Fillo.\0"
+    1635 "MenuOS nuk mund të shfaqin vetitë e kësaj lidhje. Menaxhimi Instrumental Windows (WMI) Informues mund të jetë i korruptuar. Për të korrigjuar këtë, përdorimi Restauro Sistemin për të rivendosur MenuOS një kohë më parë (e quajtur një pikë të rivendosur). Restaurimi Sistemit është e vendosur në Dosjen e Veglave të Sistemit në Aksesore.\0"
     1646 "Lejo hyrjen kërkesë e përsëritur hyrëse\0"
     1647 "Lejo hyrjen kërkesë kohëstampe\0"
     1648 "Lejo hyrjen kërkesë maske\0"
@@ -2353,7 +2353,7 @@ BEGIN
     7385 "Porti Komunikues(%s)\0"
     7386 "Lidhjet Rrjetit nuk shfaqin disa opsione të specializuara për lidhjet përbrenda që janë të përcaktuara duke përdorur Përdoruesin Vendorë Futboll apo Politika Aksesi në Distancë konsole. Për informacion të plotë dhe të saktë për lidhjet hyrëse, ju do të duhet të përdorin këtë konsole.\0"
     7387 "Mënyra thirrmbrapa e përdoruesit që keni zgjedhur kërkon që ju të shkruani në një numër të vlefshme për thirrmbrapa.\0"
-    7388 "ReactOS duhet të riniset për të përfunduar operacionin. A është mire të riniset tani?\0"
+    7388 "MenuOS duhet të riniset për të përfunduar operacionin. A është mire të riniset tani?\0"
     7389 "Pajisja zgjedhur aktualisht nuk ka opsionet e konfigurimit në dispozicion.\0"
     7390 "Gama e pavlefshme\0"
     7391 "Ju keni kërkuar që '%1' të jetë me aftësi të kufizuara për lidhjet hyrëse. Për të çaktivizuar këtë, ju duhet të ndaloni shërbimit 'Serverit'. Pasi u ndal, çdo skedarë i përbashkët ose printera në këtë kompjuter nuk do të jenë në dispozicion të çdo kompjuter tjetër. A doni të sjellë tastierën një sistem që do t'ju lejojë të ndaloni shërbimin 'Server'?\r\n\nPoshtë Menaxhimit Komputerit, klikoni Veglat Sistemit dhe pastaj kliko Shërbimet. Në panelin djathtas, klikoni me të djathtën Server dhe klikoni ndalo.\0"

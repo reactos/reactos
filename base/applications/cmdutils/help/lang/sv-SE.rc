@@ -7,7 +7,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
+    IDS_USAGE "Provides Help information for MenuOS commands.\n\n\
 HELP [command]\n\n\
   command - Display help information for this command.\n"
     IDS_HELP1 "Lista av alla tillgängeliga kommandon (+ beskrivning)\n\n\
@@ -22,7 +22,7 @@ CD       Visa namnet på eller ändrar aktuell mapp.\n\
 CHCP     Visar eller anger nummer på aktiv teckentabell.\n\
 CHOICE   Väntar tills användaren väljer en av antal specifierade val.\n\
 CLS      Tömmer skämen.\n\
-CMD      Startar en ny instans av ReactOS kommandotolk.\n\
+CMD      Startar en ny instans av MenuOS kommandotolk.\n\
 COLOR    Anger standard forgrunn- och bakgrunnsfargr for konsollen.\n\
 COPY     Kopierer en eller flere filer til en annen plassering.\n\
 DATE     Viser eller anger datoen.\n\
@@ -33,9 +33,9 @@ ERASE    Sletter en eller flere filer.\n\
 EXIT     Avslutter programmet CMD.EXE program (kommandotolken).\n\
 FOR      Kjør en bestemt kommando for hver fil i et sett av filer.\n\
 FREE     Viser ledig diskplass.\n\
-GOTO     Leder ReactOS kommandotolk til en merket linje i\n\
+GOTO     Leder MenuOS kommandotolk til en merket linje i\n\
          et satsvis program.\n\
-HELP     Viser hjelpeinformasjon for ReactOS-kommandoer.\n\
+HELP     Viser hjelpeinformasjon for MenuOS-kommandoer.\n\
 HISTORY  Lister alle kommandoer som har blitt brukt\n\
 IF       Utføre betinget behandling i satsvise programmer.\n\
 LABEL    Oppretter, endrer, eller sletter volumnamnet på en disk.\n\
@@ -55,7 +55,7 @@ REN      Gir nytt namn til en eller flere filer.\n\
 RENAME   Gir nytt namn til en eller flere filer.\n\
 RMDIR    Tar bort en mapp.\n\
 SCREEN   Flyttar markör.\n\
-SET      Visa, sätt, eller ta bort ReactOS miljövariabel.\n\
+SET      Visa, sätt, eller ta bort MenuOS miljövariabel.\n\
 SHIFT    Shift plass for erstattelige parameter i satsvise filer.\n"
     IDS_HELP2 "START    Start et separat vindu til att kjøre et spesifisert program eller kommando.\n\
          Utfører kommando.\n\
@@ -63,8 +63,8 @@ TIME     Visa eller sätt systemtid.\n\
 TIMER    Håndtere stoppeklokker (maks 10 stk).\n\
 TITLE    Sett vindustittel for CMD.EXE sesjon.\n\
 TYPE     Visa innhållet i en textfil.\n\
-VER      Visar ReactOS version.\n\
-VERIFY   Forteller ReactOS om att bekrefte om dine filer är skrevet\n\
+VER      Visar MenuOS version.\n\
+VERIFY   Forteller MenuOS om att bekrefte om dine filer är skrevet\n\
          riktig til disk.\n\
 VOL      Vis et volums namn och serienummer.\n"
 END

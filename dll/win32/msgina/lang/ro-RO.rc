@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS msgina.dll
+ * PROJECT:     MenuOS msgina.dll
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
@@ -21,7 +21,7 @@ END
 
 IDD_WELCOME DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Bun venit în ReactOS"
+CAPTION "Bun venit în MenuOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -117,7 +117,7 @@ END
 
 IDD_LOGOFF DIALOGEX 0, 0, 188, 60
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP
-CAPTION "Log off din ReactOS"
+CAPTION "Log off din MenuOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOGOFF, IDC_STATIC, 7, 7, 20, 20
@@ -128,7 +128,7 @@ END
 
 IDD_SHUTDOWN DIALOGEX 0, 0, 275, 146
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Închidere ReactOS"
+CAPTION "Închidere MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -148,7 +148,7 @@ END
 IDD_SHUTDOWN_REASON DIALOGEX 0, 0, 275, 297
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 // STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Închidere ReactOS"
+CAPTION "Închidere MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -192,7 +192,7 @@ BEGIN
     PUSHBUTTON "Î&nchidere", IDC_BUTTON_SHUTDOWN, 93, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "&Repornire", IDC_BUTTON_REBOOT, 150, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Revocare", IDCANCEL, 162, 103, 40, 12, BS_FLAT | WS_GROUP
-    LTEXT "Închidere ReactOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
+    LTEXT "Închidere MenuOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
     CTEXT "Stare de veghe", IDC_SLEEP_STATIC, 22, 70, 51, 11
     CTEXT "Închidere", IDC_SHUTDOWN_STATIC, 79, 70, 51, 11
     CTEXT "Repornire", IDC_RESTART_STATIC, 136, 70, 51, 11
@@ -209,7 +209,7 @@ BEGIN
     PUSHBUTTON "Î&nchidere", IDC_BUTTON_SHUTDOWN, 150, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "&Repornire", IDC_BUTTON_REBOOT, 207, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Revocare", IDCANCEL, 218, 103, 40, 12, BS_FLAT | WS_GROUP
-    LTEXT "Închidere ReactOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
+    LTEXT "Închidere MenuOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
     CTEXT "Hibernare", IDC_HIBERNATE_STATIC, 22, 70, 51, 11
     CTEXT "Stare de veghe", IDC_SLEEP_STATIC, 79, 70, 51, 11
     CTEXT "Închidere", IDC_SHUTDOWN_STATIC, 136, 70, 51, 11
@@ -243,7 +243,7 @@ BEGIN
     IDS_INVALIDLOGONHOURS "Contul are restricţii de timp care vă împiedică să faceţi Log on acum. Încercaţi din nou mai târziu."
     IDS_INVALIDWORKSTATION "Contul este configurat să vă împiedice să utilizaţi acest computer. Încercaţi un alt computer."
     IDS_ACCOUNTRESTRICTION "Nu v-ați putut conecta din cauza unei restricții a contului."
-    IDS_EMERGENCYLOGOFFTITLE "Log off din ReactOS"
+    IDS_EMERGENCYLOGOFFTITLE "Log off din MenuOS"
     IDS_EMERGENCYLOGOFF "Apăsați OK pentru a vă deautentifica imediat. Toate datele nesalvate vor fi pierdute. Folosiți acest lucru doar ca ultimă soluție."
     IDS_EMERGENCYRESTARTTITLE "Repornire de urgență"
     IDS_EMERGENCYRESTART "Apăsați OK pentru a vă reporni calculatorul imediat. Toate datele nesalvate vor fi pierdute. Folosiți acest lucru doar ca ultimă soluție."
@@ -260,7 +260,7 @@ BEGIN
     /* Shut down descriptions */
     IDS_SHUTDOWN_LOGOFF_DESC "Închide sesiunea curentă permițând altor utilizatori Log on în sistem."
     IDS_SHUTDOWN_SHUTDOWN_DESC "Se încheie sesiunea şi se închide Windows astfel încât oprirea alimentării cu curent să se facă în siguranţă."
-    IDS_SHUTDOWN_RESTART_DESC "Se închide sesiunea, se închide Windows, apoi se porneşte din nou ReactOS."
+    IDS_SHUTDOWN_RESTART_DESC "Se închide sesiunea, se închide Windows, apoi se porneşte din nou MenuOS."
     IDS_SHUTDOWN_SLEEP_DESC "Se induce sistemul în starea de veghe."
     IDS_SHUTDOWN_HIBERNATE_DESC "Se Salvează sesiunea curentă și se oprește calculatorul."
 END

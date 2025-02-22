@@ -129,7 +129,7 @@ BEGIN
     LTEXT "L'Assistant Ajout de matériel ne peut pas continuer", IDC_FINISHTITLE, 114, 8, 203, 28
     LTEXT "Pour continuer, veuillez connecter ce matériel à votre ordinateur.", -1, 114, 40, 193, 16
     AUTOCHECKBOX "Éteignez l'ordinateur quand je clique sur Terminer pour que je puisse ouvrir l'ordinateur et connecter le matériel.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "Dans la plupart des cas, ReactOS installera automatiquement votre matériel quand vous le connecterez. Si ReactOS ne le trouve pas, vous pouvez rouvrir cet assistant pour installer le pilote.", -1, 114, 98, 193, 32
+    LTEXT "Dans la plupart des cas, MenuOS installera automatiquement votre matériel quand vous le connecterez. Si MenuOS ne le trouve pas, vous pouvez rouvrir cet assistant pour installer le pilote.", -1, 114, 98, 193, 32
     LTEXT "Pour fermer cet assistant, cliquez sur Terminer.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 

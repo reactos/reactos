@@ -24,7 +24,7 @@
 #include "resource.h"
 
 #define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Setup API"
+#define REACTOS_STR_FILE_DESCRIPTION  "MenuOS Setup API"
 #define REACTOS_STR_INTERNAL_NAME     "setupapi"
 #define REACTOS_STR_ORIGINAL_FILENAME "setupapi.dll"
 #include <reactos/version.rc>

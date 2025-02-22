@@ -47,7 +47,7 @@ MIDIERR_STILLPLAYING, 		"Tidak bisa melakukan operasi ini sementara data media m
 MIDIERR_NOMAP, 			"Peta MIDI tidak ditemukan. Mungkin ada masalah dengan driver, atau file MIDIMAP.CFG rusak atau hilang."
 MIDIERR_NOTREADY, 		"Gerbang sedang mengirimkan data ke device. Tunggu sampai data selesai dikirim, dan kemudian coba lagi."
 MIDIERR_NODEVICE, 		"Setup MIDI Mapper saat ini merujuk ke MIDI device yang tidak terinstalasi pada sistem. Gunakan MIDI Mapper untuk mengedit setup."
-MIDIERR_INVALIDSETUP, 		"Setup MIDI saat ini rusak. Copy file original MIDIMAP.CFG ke direktori ReactOS SYSTEM, dan kemudian coba lagi."
+MIDIERR_INVALIDSETUP, 		"Setup MIDI saat ini rusak. Copy file original MIDIMAP.CFG ke direktori MenuOS SYSTEM, dan kemudian coba lagi."
 
 /* MCI errors */
 MCIERR_INVALID_DEVICE_ID, 	"MCI device ID tidak benar. Gunakan ID yang dihasilkan saat membuka MCI device."
@@ -68,7 +68,7 @@ MCIERR_MISSING_PARAMETER, 	"Perintah yang ditetapkan memerlukan parameter. Silah
 MCIERR_UNSUPPORTED_FUNCTION, 	"Device MCI yang anda gunakan tidak mendukung perintah yang ditetapkan."
 MCIERR_FILE_NOT_FOUND, 		"Tidak bisa menemukan file yang ditetapkan. Pastikan path dan nama file sudah benar."
 MCIERR_DEVICE_NOT_READY, 	"Device driver tidak siap."
-MCIERR_INTERNAL, 		"Masalah terjadi dalam menginisialisasi MCI. Coba ulang lagi ReactOS."
+MCIERR_INTERNAL, 		"Masalah terjadi dalam menginisialisasi MCI. Coba ulang lagi MenuOS."
 MCIERR_DRIVER, 			"Ada masalah dengan device driver. Driver sudah ditutup. Tidak bisa mengakses kesalahan."
 MCIERR_CANNOT_USE_ALL, 		"Tidak bisa menggunakan 'all' sebagai nama device dengan perintah yang ditetapkan."
 MCIERR_MULTIPLE, 		"Kesalahan terjadi di lebih dari satu device. Tetapkan setiap perintah dan device secara terpisah untuk menguji device mana yang menyebabkan kesaslahan"

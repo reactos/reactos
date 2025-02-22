@@ -51,7 +51,7 @@ BEGIN
     IDS_PREPARETOSTANDBY "Préparation de la Mise en Veille..."
     IDS_PREPARETOHIBERNATE "Préparation de l'hibernation..."
     IDS_SAVEYOURSETTINGS "Enregistrement de vos paramètres..."
-    IDS_REACTOSISSTARTINGUP "Démarrage de ReactOS..."
+    IDS_REACTOSISSTARTINGUP "Démarrage de MenuOS..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d jours"
 END

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Configuration of network devices
+ * PROJECT:     MenuOS Configuration of network devices
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Hong Kong) resource file
  * TRANSLATORS: Copytight 2020-2022 Chan Chilung <eason066@gmail.com>
@@ -233,7 +233,7 @@ BEGIN
     IDS_DHCPACTIVE "啟用 DHCP"
     IDS_AUTOMATIC "自動"
     IDS_NOITEMSEL "您沒有選擇一個項目。請先選擇一個。"
-    IDS_TCPIP "ReactOS-TCP/IP"
+    IDS_TCPIP "MenuOS-TCP/IP"
     IDS_ADD "新增"
     IDS_MOD "確定"
     IDS_TCP_PORTS "TCP 埠"

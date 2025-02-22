@@ -78,20 +78,20 @@ END
 
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS セットアップ"
+CAPTION "MenuOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "一般的な設定かカスタム設定のどちらを使うかをお選び下さい:", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "一般的な設定", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "カスタム設定", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
-    LTEXT "ReactOS ネットワークのクライアント、ReactOS ネットワークのファイルとプリンタ共有、自動アドレッシングによるTCP/IP通信プロトコルを使ってネットワーク接続を作成します。", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "MenuOS ネットワークのクライアント、MenuOS ネットワークのファイルとプリンタ共有、自動アドレッシングによるTCP/IP通信プロトコルを使ってネットワーク接続を作成します。", IDC_STATIC, 65, 45, 240, 30
     LTEXT "手動によるネットワーク コンポーネントの設定を可能にします。", IDC_STATIC, 65, 90, 243, 20
 END
 
 IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS セットアップ"
+CAPTION "MenuOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
     LTEXT "対象デバイス:", IDC_STATIC, 33, 2, 100, 20
@@ -106,7 +106,7 @@ END
 
 IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS セットアップ"
+CAPTION "MenuOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
     LTEXT "このコンピュータをドメインのメンバーにしたいですか? (あなたはこの情報をネットワーク管理者から取得できます)", IDC_STATIC, 33, 2, 263, 50
@@ -170,6 +170,6 @@ BEGIN
     IDS_NETWORKCOMPONENTSUBTITLE "あなたのコンピュータで使われるネットワーク コンポーネントを決定して下さい。新しいコンポーネントを追加するには、インストールをクリックして下さい。"
     IDS_NETWORKDOMAINTITLE "ワークグループかコンピュータ ドメイン"
     IDS_NETWORKDOMAINSUBTITLE "ドメインは、ネットワーク管理者によって定義された、コンピュータのグループです。ワークグループは、同じワークグループの名前を共有するコンピュータのグループです。"
-    IDS_REACTOS_SETUP "ReactOS セットアップ"
+    IDS_REACTOS_SETUP "MenuOS セットアップ"
     IDS_WZD_DOMAIN_NAME "セットアップは、あなたがあなたのドメインかワークグループの名前を入力するまで続行できません。"
 END

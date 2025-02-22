@@ -1,8 +1,8 @@
 /*
- * PROJECT:    ReactOS MPlay32
+ * PROJECT:    MenuOS MPlay32
  * LICENSE:    GPL - See COPYING in the top level directory
  * FILE:       base/applications/mplay32/lang/uk-UA.rc
- * PURPOSE:    Ukraianian Language File for ReactOS MPlay32
+ * PURPOSE:    Ukraianian Language File for MenuOS MPlay32
  * TRANSLATOR: Sakara Yevhen
  */
 
@@ -69,7 +69,7 @@ BEGIN
     IDS_TOOLTIP_SEEKFORW "Перемотування вперед"
     IDS_TOOLTIP_FORWARD "Вперед"
     IDS_TOOLTIP_PAUSE "Pause"
-    IDS_APPTITLE "Програвач ReactOS"
+    IDS_APPTITLE "Програвач MenuOS"
     IDS_PLAY "Відтворити"
     IDS_DEFAULTMCIERRMSG "No description is available for this error."
 END

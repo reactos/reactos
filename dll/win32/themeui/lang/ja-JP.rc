@@ -16,8 +16,8 @@ BEGIN
     IDS_PUMPKIN "カボチャ"
     IDS_RAIN "雨の日"
     IDS_RWB "赤・白・青"
-    IDS_CLASSIC "ReactOS クラシック"
-    IDS_STANDARD "ReactOS 標準"
+    IDS_CLASSIC "MenuOS クラシック"
+    IDS_STANDARD "MenuOS 標準"
     IDS_ROSE "バラ"
     IDS_SAND "砂漠" //Desert
     IDS_SLATE "石盤"

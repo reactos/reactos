@@ -268,10 +268,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRESS_INFO_START "ReactOS is attempting to start the following service"
-    IDS_PROGRESS_INFO_STOP "ReactOS is attempting to stop the following service"
-    IDS_PROGRESS_INFO_PAUSE "ReactOS is attempting to pause the following service"
-    IDS_PROGRESS_INFO_RESUME "ReactOS is attempting to resume the following service"
+    IDS_PROGRESS_INFO_START "MenuOS is attempting to start the following service"
+    IDS_PROGRESS_INFO_STOP "MenuOS is attempting to stop the following service"
+    IDS_PROGRESS_INFO_PAUSE "MenuOS is attempting to pause the following service"
+    IDS_PROGRESS_INFO_RESUME "MenuOS is attempting to resume the following service"
     IDS_CREATE_SUCCESS "השירות נוצר בהצלחה"
     IDS_DELETE_SUCCESS "השירות נמחק בהצלחה"
     IDS_CREATE_REQ "Fields marked with an\nasterix are mandatory"
@@ -306,7 +306,7 @@ BEGIN
     IDS_HINT_DETAILS " Display information about each item in a window."
     IDS_HINT_CUST " Customizes the view."
     IDS_HINT_HELP " מציג חלון עזרה."
-    IDS_HINT_ABOUT " אודות מנהל השירותים של ReactOS"
+    IDS_HINT_ABOUT " אודות מנהל השירותים של MenuOS"
     IDS_HINT_SYS_RESTORE " Restores this window to normal size."
     IDS_HINT_SYS_MOVE " Moves this window."
     IDS_HINT_SYS_SIZE " Resizes this window."
@@ -318,7 +318,7 @@ END
 /* Application title */
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "מנהל השירותים של ReactOS"
+    IDS_APPNAME "מנהל השירותים של MenuOS"
     IDS_APPAUTHORS "Copyright (C) 2005-2007 by Ged Murphy (gedmurphy@reactos.org)"
 END
 

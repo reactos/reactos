@@ -58,7 +58,7 @@ ERRORLEVEL встановлюється рiвним номеру вибрано�
     STRING_CMD_HELP5 "  [заваршення iмен файлiв Bash]"
     STRING_CMD_HELP6 "  [стек директорiй]"
     STRING_CMD_HELP7 "  [перенаправлення та piping]"
-    STRING_CMD_HELP8 "Запуск нової копiї iнтерпретатора команд ReactOS.\n\n\
+    STRING_CMD_HELP8 "Запуск нової копiї iнтерпретатора команд MenuOS.\n\n\
 CMD [/[C|K] команда][/P][/Q][/T:кл]\n\n\
   /C команда  Виконання вказаної команди з подальшим завершенням.\n\
   /K команда  Виконання вказаної команди без подальшого завершення.\n\
@@ -510,10 +510,10 @@ title         новий заголовок\n"
     STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
     STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
-    STRING_CMD_INFOLINE "  Командний рядок ReactOS                              Введіть HELP = Допомога  "
-    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
-    STRING_REACTOS_VERSION "ReactOS [Версiя %s %s]\n"
-    STRING_CMD_SHELLINFO "\nIнтерпретатор командного рядка ReactOS\nVersion %s %s"
+    STRING_CMD_INFOLINE "  Командний рядок MenuOS                              Введіть HELP = Допомога  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s MenuOS Team.\n"
+    STRING_REACTOS_VERSION "MenuOS [Версiя %s %s]\n"
+    STRING_CMD_SHELLINFO "\nIнтерпретатор командного рядка MenuOS\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Запущений на: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
     STRING_COPY_FILE "        %d файл(iв) скопiйовано\n"

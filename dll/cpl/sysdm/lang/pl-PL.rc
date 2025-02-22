@@ -28,7 +28,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "Odwiedź <A HREF=""https://reactos.org/"">Stronę domową ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    CONTROL "Odwiedź <A HREF=""https://reactos.org/"">Stronę domową MenuOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "Wyświetl &licencję...", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -77,7 +77,7 @@ CAPTION "Ustawienia systemowe"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Informowanie o wersji", IDC_STATIC, 6, 3, 210, 73
-    LTEXT "ReactOS jest zbudowany w oparciu o wersję serwerową. Zaznacz pole, aby ReactOS zgłaszał się aplikacjom jako stacja robocza.", IDC_STATIC, 15, 15, 183, 41
+    LTEXT "MenuOS jest zbudowany w oparciu o wersję serwerową. Zaznacz pole, aby MenuOS zgłaszał się aplikacjom jako stacja robocza.", IDC_STATIC, 15, 15, 183, 41
     CONTROL "Zgłaszaj jako stację roboczą", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
 END
@@ -98,7 +98,7 @@ BEGIN
     PUSHBUTTON "Z&mień nazwę", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
     PUSHBUTTON "&Usuń", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
     GROUPBOX "Wybór profili sprzętu", IDC_STATIC, 7, 130, 240, 80
-    LTEXT "Podczas uruchamiania ReactOS:", IDC_STATIC, 14, 142, 210, 8
+    LTEXT "Podczas uruchamiania MenuOS:", IDC_STATIC, 14, 142, 210, 8
     AUTORADIOBUTTON "&Czekaj na wybór profilu sprzętu przez użytkownika", IDC_HRDPROFWAIT, 14, 158, 175, 8, WS_GROUP
     AUTORADIOBUTTON "&Wybierz &pierwszy profil na liście, jeżeli użytkownik nie wybierze\nprofilu w ciągu", IDC_HRDPROFSELECT, 14, 173, 215, 17, BS_MULTILINE
     LTEXT "s", IDC_STATIC, 65, 195, 35, 8

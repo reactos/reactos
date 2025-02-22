@@ -16,7 +16,7 @@ Sposób użycia: %s [dysk:] [-F] [-V] [-R] [-C]\n\n\
     IDS_ABOUT "\n\
 Chkdskx v1.0.1 by Mark Russinovich\n\
 Systems Internals - http://www.sysinternals.com\n\
-ReactOS adaptation 1999 by Emanuele Aliberti\n\n"
+MenuOS adaptation 1999 by Emanuele Aliberti\n\n"
 END
 
 STRINGTABLE

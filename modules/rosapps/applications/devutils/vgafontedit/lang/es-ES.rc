@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS VGA Font Editor
+ * PROJECT:     MenuOS VGA Font Editor
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Spanish resource file
  * COPYRIGHT:   Copyright 2008 Colin Finck (colin@reactos.org)
@@ -15,7 +15,7 @@ CAPTION "Acerca de"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON           IDI_MAIN,                     IDC_STATIC, 10, 10, 20, 20
-    LTEXT          "Editor de Fuentes VGA de ReactOS",    IDC_STATIC, 37, 10, 93, 10
+    LTEXT          "Editor de Fuentes VGA de MenuOS",    IDC_STATIC, 37, 10, 93, 10
     LTEXT          "Copyright 2008 Colin Finck", IDC_STATIC, 37, 20, 93, 10
     DEFPUSHBUTTON  "Aceptar",                         IDCANCEL,   40, 44, 55, 15
 END
@@ -82,7 +82,7 @@ BEGIN
     IDS_UNSUPPORTEDPSF, "¡Formato de fuente PSF no soportado! El editor sólo soporta fuentes 8x8 fonts sin modos especiales."
     IDS_DOCNAME, "Fuente %1!u!"
     IDS_SAVEPROMPT, "El archivo ""%1"" ha sido modificado, pero no guardado.\n\n¿Quiere guardarlo ahora?"
-    IDS_APPTITLE, "ReactOS VGA Font Editor"
+    IDS_APPTITLE, "MenuOS VGA Font Editor"
     IDS_CLOSEEDIT, "¡Por favor, cierre todas las ventanas de Edición abiertas primero!"
 
     IDS_TOOLTIP_NEW, "Nuevo"

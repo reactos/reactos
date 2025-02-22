@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Win32 BrowseUI
+ * PROJECT:     MenuOS Win32 BrowseUI
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
@@ -343,6 +343,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARSE_ADDR_ERR_TITLE "Navigatorul ReactOS"
-    IDS_PARSE_ADDR_ERR_TEXT "Navigatorul ReactOS nu poate găsi '%1'. Verificați ortografia și încercați din nou."
+    IDS_PARSE_ADDR_ERR_TITLE "Navigatorul MenuOS"
+    IDS_PARSE_ADDR_ERR_TEXT "Navigatorul MenuOS nu poate găsi '%1'. Verificați ortografia și încercați din nou."
 END

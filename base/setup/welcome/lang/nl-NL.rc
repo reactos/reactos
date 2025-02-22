@@ -5,9 +5,9 @@ LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 /* Default settings */
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS - Welkom"
-    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
-    IDS_DEFAULT_TOPIC_DESC "Welkom bij het ReactOS besturingssysteem.\n\nKlik links op een onderwerp."
+    IDS_APPTITLE "MenuOS - Welkom"
+    IDS_DEFAULT_TOPIC_TITLE "MenuOS"
+    IDS_DEFAULT_TOPIC_DESC "Welkom bij het MenuOS besturingssysteem.\n\nKlik links op een onderwerp."
     IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Ga terug naar dit scherm"
     IDS_CLOSETEXT "&Afsluiten"
@@ -16,7 +16,7 @@ END
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_BUTTON0 "&Installeer ReactOS"
+    IDS_TOPIC_BUTTON0 "&Installeer MenuOS"
     IDS_TOPIC_BUTTON1 "&Deze CD Verkennen"
     IDS_TOPIC_BUTTON2 "&Afsluiten"
 END
@@ -24,7 +24,7 @@ END
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_TITLE0 "Installeer ReactOS"
+    IDS_TOPIC_TITLE0 "Installeer MenuOS"
     IDS_TOPIC_TITLE1 "Deze CD Verkennen"
     IDS_TOPIC_TITLE2 "Afsluiten"
 END
@@ -32,7 +32,7 @@ END
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_DESC0 "Maak een nieuwe ReactOS installatie of upgrade een bestaande installatie."
+    IDS_TOPIC_DESC0 "Maak een nieuwe MenuOS installatie of upgrade een bestaande installatie."
     IDS_TOPIC_DESC1 "Deze CD Verkennen."
     IDS_TOPIC_DESC2 "Klik om dit programma af te sluiten."
 END

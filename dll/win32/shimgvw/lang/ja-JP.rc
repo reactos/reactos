@@ -2,7 +2,7 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS 画像とFAXビュアー"
+    IDS_APPTITLE "MenuOS 画像とFAXビュアー"
     IDS_SETASDESKBG "デスクトップの背景に設定する"
     IDS_NOPREVIEW "プレビューは利用できません。"
     IDS_PREVIEW "プレビュー"

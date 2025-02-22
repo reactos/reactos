@@ -279,7 +279,7 @@ CAPTION "Konum Bilgisi"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 10, 10, 88, 155
-    LTEXT "Bir telefon ya da modem bağlantısı yapabilmenizden önce ReactOS'un şimdiki konumunuz hakkıdna aşağıdaki bilgilere gereksinimi vardır.", 2000, 107, 15, 188, 25
+    LTEXT "Bir telefon ya da modem bağlantısı yapabilmenizden önce MenuOS'un şimdiki konumunuz hakkıdna aşağıdaki bilgilere gereksinimi vardır.", 2000, 107, 15, 188, 25
     LTEXT "&Şimdi içinde bulunduğunuz ülke ya da bölge nedir?", -1, 107, 43, 189, 10
     COMBOBOX 1006, 107, 55, 180, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "Ş&imdi içinde bulunduğunuz alan kodu ya da kent kodu nedir?", -1, 107, 74, 189, 10
@@ -300,7 +300,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 0, 0, 88, 155
-    LTEXT "Bir telefon ya da modem bağlantısı yapabilmenizden önce ReactOS'un şimdiki konumunuz üzerine aşağıdaki bilgilere gereksinimi vardır.", 2000, 95, 2, 188, 25
+    LTEXT "Bir telefon ya da modem bağlantısı yapabilmenizden önce MenuOS'un şimdiki konumunuz üzerine aşağıdaki bilgilere gereksinimi vardır.", 2000, 95, 2, 188, 25
     LTEXT "&Şimdi içinde bulunduğunuz ülke ya da bölge nedir?", -1, 95, 30, 188, 10
     COMBOBOX 1006, 95, 41, 177, 68, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "Ş&imdi içinde bulunduğunuz alan kodu ya da kent kodu nedir?", -1, 95, 61, 188, 10
@@ -314,7 +314,7 @@ END
 
 500 DIALOGEX 0, 0, 235, 88
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "ReactOS Gezgini"
+CAPTION "MenuOS Gezgini"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 504, 501, 13, 14, 21, 20
@@ -408,7 +408,7 @@ BEGIN
     80 "Bu alan kodu protokolünü silmek istediğinizden emin misiniz?"
     81 "Çevirmek için basamakları girmelisiniz."
     82 "Girdiğiniz arama kartı adı zaten kullanımda. Lütfen eşsiz bir ad giriniz."
-    83 "ReactOS, içinden çevireceğiniz konum hakkında telefon bilgisine gereksinim duyar. Bu bilgiyi sağlamadan iptal ederseniz, bu program çevirirken doğru çalışmayabilir. Ek olarak, bazı uygulamalar onu gecikmeden yeniden göndererek bu iletişim kutusunu iptal ettiğinize yanıt verir.\nİptal etmek istedğinizden emin misiniz?"
+    83 "MenuOS, içinden çevireceğiniz konum hakkında telefon bilgisine gereksinim duyar. Bu bilgiyi sağlamadan iptal ederseniz, bu program çevirirken doğru çalışmayabilir. Ek olarak, bazı uygulamalar onu gecikmeden yeniden göndererek bu iletişim kutusunu iptal ettiğinize yanıt verir.\nİptal etmek istedğinizden emin misiniz?"
     84 "Doğrulamayı İptal Et"
     85 "Konumum"
     86 "<Kurulum için hizmet sağlayıcısı yok.>"

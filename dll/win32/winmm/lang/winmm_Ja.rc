@@ -47,7 +47,7 @@ MIDIERR_STILLPLAYING, 		"メディア再生中にはこの操作を実行でき�
 MIDIERR_NOMAP, 			"MIDIマップが見つかりません。ドライバの問題か、MIDIMAP.CFGファイルが破損しているか存在しない可能性があります。"
 MIDIERR_NOTREADY, 		"ポートはデバイスにデータを送信中です。データの送信が終わるまで待ってからやり直して下さい。"
 MIDIERR_NODEVICE, 		"MIDIマッパの設定がシステムに装着されていないデバイスを参照しています。設定を変更するにはコントロールパネルの「MIDIマッパ」アプレットを使用して下さい。"
-MIDIERR_INVALIDSETUP, 		"MIDIの設定が破損しています。オリジナルのMIDIMAP.CFGファイルをReactOSのSYSTEMディレクトリからコピーしてやり直して下さい。"
+MIDIERR_INVALIDSETUP, 		"MIDIの設定が破損しています。オリジナルのMIDIMAP.CFGファイルをMenuOSのSYSTEMディレクトリからコピーしてやり直して下さい。"
 
 /* MCI errors */
 MCIERR_INVALID_DEVICE_ID, 	"無効なMCIデバイスIDです。MCIデバイスをオープンしたときに返されたIDを使用して下さい。"
@@ -68,7 +68,7 @@ MCIERR_MISSING_PARAMETER, 	"指定されたコマンドにはパラメータが�
 MCIERR_UNSUPPORTED_FUNCTION, 	"使用しているMCIデバイスは指定されたコマンドをサポートしていません。"
 MCIERR_FILE_NOT_FOUND, 		"指定されたファイルは見つかりません。ファイル名とパスを確認して下さい。"
 MCIERR_DEVICE_NOT_READY, 	"デバイスドライバの準備ができていません。"
-MCIERR_INTERNAL, 		"MCIの初期化中に問題が発生しました。ReactOSを再起動して下さい。"
+MCIERR_INTERNAL, 		"MCIの初期化中に問題が発生しました。MenuOSを再起動して下さい。"
 MCIERR_DRIVER, 			"デバイスドライバに問題が発生しました。ドライバはクローズされています。エラーにアクセスできません。"
 MCIERR_CANNOT_USE_ALL, 		"指定されたコマンドは「all」をデバイス名として使用することができません。"
 MCIERR_MULTIPLE, 		"複数のデバイスでエラーが発生しました。どのデバイスでエラーが発生したか確認するには、コマンドとデバイスを別個に指定して下さい。"

@@ -33,7 +33,7 @@ Beispiele:\n\
     WHERE myfile*.exe\n\
     WHERE /F /T mspaint\n\
     WHERE $WINDIR:notepad myfile???\n\
-    WHERE C:\\ReactOS;C:\\ReactOS\\system32:exp*.exe\n\
+    WHERE C:\\MenuOS;C:\\MenuOS\\system32:exp*.exe\n\
     WHERE /R ""C:\\Program Files"" *.dll\n"
 
     IDS_BAD_ARG "FEHLER: Ungültige Option - '%ls'.\n"

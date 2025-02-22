@@ -28,10 +28,10 @@ STRINGTABLE
 {
 5000, "Mizu"
 5001, "Estilo visual"
-5002, "Fundación ReactOS"
+5002, "Fundación MenuOS"
 5003, "Foxlet, basado en Lautus"
 5004, "Bajo licencia GNU/GPL 2.0, 2019"
 5005, "https://reactos.org/"
 5006, "1.0"
-5007, "Estilo visual para ReactOS"
+5007, "Estilo visual para MenuOS"
 }

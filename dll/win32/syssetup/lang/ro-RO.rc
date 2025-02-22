@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS System Setup Library
+ * PROJECT:     MenuOS System Setup Library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
@@ -11,28 +11,28 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expert de instalare ReactOS"
+CAPTION "Expert de instalare MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bun venit la etapa secundă de instalare ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Acest expert va finaliza instalarea ReactOS. În cele ce urmează expertul va culege niște informații despre calculator pentru a instala ReactOS corect.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Bun venit la etapa secundă de instalare MenuOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Acest expert va finaliza instalarea MenuOS. În cele ce urmează expertul va culege niște informații despre calculator pentru a instala MenuOS corect.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Apăsați Înainte pentru a continua.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expert de instalare ReactOS"
+CAPTION "Expert de instalare MenuOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Echipa ReactOS aduce mulțumiri următoarelor proiecte FOSS ce au fost utilizate la crearea ReactOS:", IDC_STATIC, 15, 7, 286, 19
+    LTEXT "Echipa MenuOS aduce mulțumiri următoarelor proiecte FOSS ce au fost utilizate la crearea MenuOS:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "ReactOS este oferit sub licența GPL, astfel reutilizarea sau redistribuția sa (sau a părților sale componente), cere respectarea licenței GPL.", IDC_STATIC, 15, 110, 234, 19
+    LTEXT "MenuOS este oferit sub licența GPL, astfel reutilizarea sau redistribuția sa (sau a părților sale componente), cere respectarea licenței GPL.", IDC_STATIC, 15, 110, 234, 19
     PUSHBUTTON "Afișează &GPL", IDC_VIEWGPL, 251, 110, 50, 19
     LTEXT "Apăsați Înainte pentru a continua.", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
-CAPTION "Configurare ReactOS"
+CAPTION "Configurare MenuOS"
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -47,7 +47,7 @@ END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expert de instalare ReactOS"
+CAPTION "Expert de instalare MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
@@ -60,7 +60,7 @@ END
 
 IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expert de instalare ReactOS"
+CAPTION "Expert de instalare MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
@@ -78,7 +78,7 @@ END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expert de instalare ReactOS"
+CAPTION "Expert de instalare MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
@@ -95,7 +95,7 @@ END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expert de instalare ReactOS"
+CAPTION "Expert de instalare MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
@@ -109,7 +109,7 @@ END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expert de instalare ReactOS"
+CAPTION "Expert de instalare MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_THEMEPICKER, "SysListView32", LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_TABSTOP, 18, 8, 288, 130
@@ -117,7 +117,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expert de instalare ReactOS"
+CAPTION "Expert de instalare MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Componente în curs de înregistrare", IDC_TASKTEXT1, 65, 27, 232, 8
@@ -130,11 +130,11 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expert de instalare ReactOS"
+CAPTION "Expert de instalare MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Sfârșit de instalare ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Instalarea ReactOS a fost finalizată cu succes.\nDupă apasarea butonului Sfârșit, calculatorul va reporni.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Sfârșit de instalare MenuOS", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "Instalarea MenuOS a fost finalizată cu succes.\nDupă apasarea butonului Sfârșit, calculatorul va reporni.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "Dacă aveți vreun CD introdus în calculator, scoateți-l. Pentru a reporni calculatorul, apăsați Sfârșit.", IDC_STATIC, 115, 169, 195, 17
 END
@@ -180,9 +180,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Mulțumiri"
-    IDS_ACKSUBTITLE "Contribuții aduse ReactOS și informații despre licență"
+    IDS_ACKSUBTITLE "Contribuții aduse MenuOS și informații despre licență"
     IDS_OWNERTITLE "Personalizare sistem"
-    IDS_OWNERSUBTITLE "Instalatorul folosește aceste in formații despre dvs. pentru a personaliza ReactOS"
+    IDS_OWNERSUBTITLE "Instalatorul folosește aceste in formații despre dvs. pentru a personaliza MenuOS"
     IDS_COMPUTERTITLE "Nume calculator și parolă pentru contul Administrator"
     IDS_COMPUTERSUBTITLE "Furnizare nume pentru calculator și parolă pentru contul Administrator"
     IDS_LOCALETITLE "Particularizări regionale"
@@ -199,7 +199,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP "Expert de instalare ReactOS"
+    IDS_REACTOS_SETUP "Expert de instalare MenuOS"
     IDS_UNKNOWN_ERROR "Eroare necunoscută"
     IDS_LOADLIBRARY_FAILED "LoadLibrary a eșuat: "
     IDS_GETPROCADDR_FAILED "GetProcAddr a eșuat: "
@@ -259,8 +259,8 @@ STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Opțiuni de produs"
     IDS_PRODUCTSUBTITLE "Puteți alege o opțiune de produs care afectează comportamentul sistemului."
-    IDS_PRODUCTSERVERNAME "Server ReactOS"
-    IDS_PRODUCTWORKSTATIONNAME "Stație de lucru ReactOS"
+    IDS_PRODUCTSERVERNAME "Server MenuOS"
+    IDS_PRODUCTWORKSTATIONNAME "Stație de lucru MenuOS"
     IDS_PRODUCTSERVERINFO "Sistemul va fi recunoscut ca un server. Folderele private ""Imaginile mele"", ""Videoclipurile mele"" și ""Muzica mea"" vor fi independente de ""Documentele mele""."
     IDS_PRODUCTWORKSTATIONINFO "Sistemul va fi recunoscut ca o stație de lucru. Folderele private ""Imaginile mele"", ""Videoclipurile mele"" și ""Muzica mea"" sunt în ""Documentele mele""."
     IDS_DEFAULT "(Implicit)"

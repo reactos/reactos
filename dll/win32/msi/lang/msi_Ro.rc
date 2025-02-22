@@ -47,8 +47,8 @@ STRINGTABLE
     14 "caracteristică de la:"
     15 "selectați fișierul care conține %s"
 #ifdef __REACTOS__
-    34 "Pachet de instalare ReactOS"
-    35 "ReactOS Installer Patch"
+    34 "Pachet de instalare MenuOS"
+    35 "MenuOS Installer Patch"
     36 "Instalează" //FIXME: add accel
     37 "Repară" //FIXME: add accel
     38 "Dezinstalează" //FIXME: add accel

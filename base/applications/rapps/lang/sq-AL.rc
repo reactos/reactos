@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Applications Manager
+ * PROJECT:     MenuOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Albanian resource file
  * TRANSLATOR:  Copyright 2013 Ardit Dani (Ard1t) <ardit.dani@gmail.com>
@@ -170,9 +170,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS Applications Manager"
+    IDS_APPTITLE "MenuOS Applications Manager"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_WELCOME_TITLE "Mire Se Erdhe ne ReactOS Applications Manager!"
+    IDS_WELCOME_TITLE "Mire Se Erdhe ne MenuOS Applications Manager!"
     IDS_WELCOME_TEXT "Zgjidh nje kategori ne te majte, pastaj zgjidh nje aplicacion per ta instaluar ose uninstall.\nReactOS Web Site: "
     IDS_WELCOME_URL "https://reactos.org"
 

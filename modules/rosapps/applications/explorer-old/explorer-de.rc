@@ -38,7 +38,7 @@ BEGIN
     POPUP "&Hilfe"
     BEGIN
         MENUITEM "Explorer-&FAQ...", ID_EXPLORER_FAQ
-        MENUITEM "&Über ReactOS Explorer...", ID_ABOUT_EXPLORER
+        MENUITEM "&Über MenuOS Explorer...", ID_ABOUT_EXPLORER
         MENUITEM "Über React&OS...", ID_ABOUT_WINDOWS
     END
 END
@@ -217,10 +217,10 @@ END
 
 IDD_ABOUT_EXPLORER DIALOGEX 0, 0, 199, 106
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Über ReactOS Explorer"
+CAPTION "Über MenuOS Explorer"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS Explorer", IDC_ROS_EXPLORER, 91, 13, 104, 11
+    LTEXT "MenuOS Explorer", IDC_ROS_EXPLORER, 91, 13, 104, 11
     LTEXT "V 0.9", IDC_VERSION_TXT, 91, 27, 104, 8
     LTEXT "(c) 2003-2005 Martin Fuchs", IDC_STATIC, 91, 42, 104, 8
     LTEXT "", IDC_WIN_VERSION, 91, 58, 98, 22
@@ -232,7 +232,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TITLE "ReactOS Explorer"
+    IDS_TITLE "MenuOS Explorer"
     IDS_START "Start"
     IDS_LOGOFF "Abmelden..."
     IDS_SHUTDOWN "Herunterfahren..."

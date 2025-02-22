@@ -32,7 +32,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Zvuky"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Zvukové schéma je soubor zvuků, které jsou přehrávány při událostech v systému ReactOS a programech. Lze zvolit existující schéma nebo uložit jiné, upravené.", -1, 8, 7, 230, 40
+    LTEXT "Zvukové schéma je soubor zvuků, které jsou přehrávány při událostech v systému MenuOS a programech. Lze zvolit existující schéma nebo uložit jiné, upravené.", -1, 8, 7, 230, 40
     LTEXT "Zvukové s&chéma:", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Uložit jako...", IDC_SAVEAS_BTN, 134, 70, 50, 15
@@ -128,7 +128,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Výkon"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Tato nastavení ovlivňují, jak systém ReactOS přehrává zvuk. Mohou pomoci při řešení problémů se zvukem.", 8492, 34, 7, 218, 23
+    LTEXT "Tato nastavení ovlivňují, jak systém MenuOS přehrává zvuk. Mohou pomoci při řešení problémů se zvukem.", 8492, 34, 7, 218, 23
     GROUPBOX "Přehrávání zvuku", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
     LTEXT "&Hardwarová akcelerace:", 8495, 13, 56, 111, 14
@@ -149,7 +149,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Výkon"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Tato nastavení ovlivňují, jak systém ReactOS zaznamenává zvuk. Mohou pomoci při řešení problémů se zvukem.", 8492, 34, 7, 217, 20
+    LTEXT "Tato nastavení ovlivňují, jak systém MenuOS zaznamenává zvuk. Mohou pomoci při řešení problémů se zvukem.", 8492, 34, 7, 217, 20
     GROUPBOX "Záznam zvuku", 8494, 7, 29, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
     LTEXT "&Hardwarová akcelerace:", 8495, 13, 46, 103, 17
@@ -170,13 +170,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Nastavení"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "ReactOS zvuk", 10243, 7, 5, 213, 192
+    GROUPBOX "MenuOS zvuk", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "Tento počítač nemůže přehrávat zvuk, protože služba zvuku systému ReactOS není spuštěna.", 10245, 60, 25, 150, 40
-    AUTOCHECKBOX "&Spustit ReactOS zvuk", 10253, 60, 68, 150, 9
+    LTEXT "Tento počítač nemůže přehrávat zvuk, protože služba zvuku systému MenuOS není spuštěna.", 10245, 60, 25, 150, 40
+    AUTOCHECKBOX "&Spustit MenuOS zvuk", 10253, 60, 68, 150, 9
     LTEXT "Poznámky", 10246, 58, 87, 150, 11
     LTEXT "1. Pro spuštění této služby je třeba být správcem počítače. Pokud nejste přihlášeni jako správce, bude vyžádáno jméno a heslo správce.", 10247, 60, 100, 150, 40
-    LTEXT "2. Po spuštění ReactOS zvuku bude třeba restartovat počítač.", 10248, 60, 140, 150, 40
+    LTEXT "2. Po spuštění MenuOS zvuku bude třeba restartovat počítač.", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOGEX 0, 0, 227, 218
@@ -226,11 +226,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Nastavení"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "ReactOS zvuk", 10259, 7, 5, 213, 192
+    GROUPBOX "MenuOS zvuk", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "Služba zvuku systému ReactOS je nyní spuštěna. Zvuk nicméně nemusí fungovat správně, dokud nebude systém ReactOS restartován. Pokud chcete restartovat nyní, nejdříve uložte svou práci a ukončete všechny spuštěné programy.", 10261, 60, 25, 150, 50
-    LTEXT "Klepnutím na tlačítko OK restartujete systém ReactOS.", 10262, 60, 75, 150, 20
-    LTEXT "Pokud klepnete na tlačítko Storno, bude třeba počítač restartovat později, aby ReactOS zvuk fungoval správně.", 10263, 60, 100, 150, 40
+    LTEXT "Služba zvuku systému MenuOS je nyní spuštěna. Zvuk nicméně nemusí fungovat správně, dokud nebude systém MenuOS restartován. Pokud chcete restartovat nyní, nejdříve uložte svou práci a ukončete všechny spuštěné programy.", 10261, 60, 25, 150, 50
+    LTEXT "Klepnutím na tlačítko OK restartujete systém MenuOS.", 10262, 60, 75, 150, 20
+    LTEXT "Pokud klepnete na tlačítko Storno, bude třeba počítač restartovat později, aby MenuOS zvuk fungoval správně.", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
@@ -267,15 +267,15 @@ BEGIN
     5843 "Hvězdička"
     5844 "Výchozí nastavení zvuku"
     5845 "Výstraha"
-    5846 "Ukončení systému ReactOS"
+    5846 "Ukončení systému MenuOS"
     5847 "Kritické zastavení"
     5848 "Systémová oznámení"
     5849 "Otázka"
-    5850 "Spuštění systému ReactOS"
+    5850 "Spuštění systému MenuOS"
     5851 "Otevření nabídky Start"
-    IDS_REACTOS_LOGOFF "Odhlášení od systému ReactOS"
-    IDS_REACTOS_LOGON "Přihlášení k systému ReactOS"
-    5854 "ReactOS Explorer"
+    IDS_REACTOS_LOGOFF "Odhlášení od systému MenuOS"
+    IDS_REACTOS_LOGON "Přihlášení k systému MenuOS"
+    5854 "MenuOS Explorer"
     IDS_BROWSE_FOR_SOUND "Search for new sounds"
     IDS_WAVE_FILES_FILTER "Wave Files (*.wav)|*.wav|"
 END

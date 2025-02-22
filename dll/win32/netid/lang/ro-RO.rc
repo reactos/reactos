@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Network ID Page
+ * PROJECT:     MenuOS Network ID Page
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
@@ -14,7 +14,7 @@ CAPTION "Nume computer"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT "Pentru identificarea computerului în reţea, ReactOS utilizează următoarele informaţii.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT "Pentru identificarea computerului în reţea, MenuOS utilizează următoarele informaţii.", IDC_STATIC, 40, 5, 204, 20
     LTEXT "&Descriere computer:", IDC_STATIC, 7, 40, 90, 9
     EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "Numele complet al computerului:", IDC_STATIC, 7, 68, 85, 9
@@ -74,7 +74,7 @@ BEGIN
     4 "Modificări ale numelui computerului"
     5 "Grup de lucru:"
     6 "Domeniu:"
-    7 "Numele domeniului ""%1"" nu este conform specificaţiilor serviciului Internet Domain Name, deşi este un nume ReactOS legal. Pentru nume nestandard utilizaţi serverul DNS ReactOS."
+    7 "Numele domeniului ""%1"" nu este conform specificaţiilor serviciului Internet Domain Name, deşi este un nume MenuOS legal. Pentru nume nestandard utilizaţi serverul DNS MenuOS."
     8 "Numele de domeniu ""%1"" nu este formatat corespunzător. Punctele (.) sunt utilizate pentru a separa domeniile. Exemplu: domeniul-1.reactos.org."
     10 "Noul nume al computerului ""%1"" este prea lung. Numele nu poate fi mai lung de 63 de caractere."
     11 "Numele nou introdus pentru computer nu este formatat corespunzător. Numele standard pot conţine litere (a-z, A-Z), cifre (0-9) şi cratime (-), nu şi spaţii sau puncte (.). Numele nu poate fi compus în întregime numai din cifre."

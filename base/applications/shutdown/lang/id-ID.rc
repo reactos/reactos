@@ -30,7 +30,7 @@ END
 /* Information and error messages */
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Utilitas Penonaktifan ReactOS\n\
+    IDS_USAGE "Utilitas Penonaktifan MenuOS\n\
 \n\
 Penggunaan: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
        [/m \\\\computer][/t xxx][/d [p|u:]xx:yy [/c ""komentar""]]\n\

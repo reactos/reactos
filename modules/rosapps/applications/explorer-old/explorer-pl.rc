@@ -38,8 +38,8 @@ BEGIN
     POPUP "Pomo&c"
     BEGIN
         MENUITEM "Explorer &FAQ", ID_EXPLORER_FAQ
-        MENUITEM "ReactOS Explorer - &informacje", ID_ABOUT_EXPLORER
-        MENUITEM "ReactOS - i&nformacje", ID_ABOUT_WINDOWS
+        MENUITEM "MenuOS Explorer - &informacje", ID_ABOUT_EXPLORER
+        MENUITEM "MenuOS - i&nformacje", ID_ABOUT_WINDOWS
     END
 END
 
@@ -50,7 +50,7 @@ BEGIN
         MENUITEM "&Właściwości", ID_DESKTOPBAR_SETTINGS
         MENUITEM "Menedżer &zadań", ID_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "ReactOS Explorer - &informacje", ID_ABOUT_EXPLORER
+        MENUITEM "MenuOS Explorer - &informacje", ID_ABOUT_EXPLORER
     END
 END
 
@@ -72,7 +72,7 @@ BEGIN
         MENUITEM "&Konfiguruj powiadomienia", ID_CONFIG_NOTIFYAREA
         MENUITEM "Ustaw &datę/godzinę", ID_CONFIG_TIME
         MENUITEM SEPARATOR
-        MENUITEM "ReactOS Explorer - &informacje", ID_ABOUT_EXPLORER
+        MENUITEM "MenuOS Explorer - &informacje", ID_ABOUT_EXPLORER
     END
 END
 
@@ -101,8 +101,8 @@ BEGIN
     POPUP "Pomo&c"
     BEGIN
         MENUITEM "Explorer &FAQ", ID_EXPLORER_FAQ
-        MENUITEM "ReactOS Explorer - &informacje", ID_ABOUT_EXPLORER
-        MENUITEM "ReactOS - i&nformacje", ID_ABOUT_WINDOWS
+        MENUITEM "MenuOS Explorer - &informacje", ID_ABOUT_EXPLORER
+        MENUITEM "MenuOS - i&nformacje", ID_ABOUT_WINDOWS
     END
 END
 
@@ -217,10 +217,10 @@ END
 
 IDD_ABOUT_EXPLORER DIALOGEX 0, 0, 199, 106
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Explorer - &informacje"
+CAPTION "MenuOS Explorer - &informacje"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS Explorer", IDC_ROS_EXPLORER, 91, 13, 104, 11
+    LTEXT "MenuOS Explorer", IDC_ROS_EXPLORER, 91, 13, 104, 11
     LTEXT "V 0.9", IDC_VERSION_TXT, 91, 27, 104, 8
     LTEXT "(c) 2003-2005 Martin Fuchs", IDC_STATIC, 91, 42, 104, 8
     LTEXT "", IDC_WIN_VERSION, 91, 58, 98, 22
@@ -232,7 +232,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TITLE "ReactOS Explorer"
+    IDS_TITLE "MenuOS Explorer"
     IDS_START "Start"
     IDS_LOGOFF "Wyloguj..."
     IDS_SHUTDOWN "Zamknij system..."
@@ -265,7 +265,7 @@ BEGIN
     IDS_NOTIFY_AUTOHIDE "autoukrywanie"
     IDS_SHOW_HIDDEN_ICONS "Pokaż ukryte ikony"
     IDS_HIDE_ICONS "Ukryj ikony"
-    IDS_TERMINATE "Zakończ działanie ReactOS Explorer"
+    IDS_TERMINATE "Zakończ działanie MenuOS Explorer"
 END
 
 STRINGTABLE
@@ -281,7 +281,7 @@ BEGIN
     IDS_SEARCH_PRG "Znajdź program..."
     IDS_ALL_USERS "Wszyscy\\"
     IDS_SEARCH "Szukaj"
-    IDS_ABOUT_EXPLORER "ReactOS Explorer - &informacje"
+    IDS_ABOUT_EXPLORER "MenuOS Explorer - &informacje"
     IDS_LAUNCH_MANY_PROGRAMS "Zaznaczyłeś więcej niż jeden program.\nCzy chcesz uruchomić je jednocześnie?"
     IDS_DESKTOPBAR_SETTINGS "Właściwości pulpitu"
     IDS_DESKTOP "Pulpit"

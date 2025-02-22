@@ -96,7 +96,7 @@ BEGIN
     END
     POPUP "說明(&H)", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "關於 ReactOS(&A)", IDM_HELP_ABOUT
+        MENUITEM "關於 MenuOS(&A)", IDM_HELP_ABOUT
     END
 END
 
@@ -359,6 +359,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARSE_ADDR_ERR_TITLE "ReactOS 檔案總管"
-    IDS_PARSE_ADDR_ERR_TEXT "ReactOS 檔案總管找不到「%1」。請檢查拼寫並再試一次。"
+    IDS_PARSE_ADDR_ERR_TITLE "MenuOS 檔案總管"
+    IDS_PARSE_ADDR_ERR_TEXT "MenuOS 檔案總管找不到「%1」。請檢查拼寫並再試一次。"
 END

@@ -7,7 +7,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "Przeglądarka obrazów i faksów ReactOS"
+    IDS_APPTITLE "Przeglądarka obrazów i faksów MenuOS"
     IDS_SETASDESKBG "Ustaw jako tło pulpitu"
     IDS_NOPREVIEW "Podgląd niedostępny."
     IDS_PREVIEW "Podgląd"

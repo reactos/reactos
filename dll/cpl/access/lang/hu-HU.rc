@@ -13,7 +13,7 @@ BEGIN
     AUTOCHECKBOX "&Beragadó billentyűk használata", IDC_STICKY_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Beállítások", IDC_STICKY_BUTTON, 144, 49, 90, 14
     GROUPBOX "FilterKeys", -1, 6, 79, 234, 62
-    LTEXT "Use FilterKeys if you want ReactOS to ignore brief or repeated keystrokes, or slow the repeat rate.",
+    LTEXT "Use FilterKeys if you want MenuOS to ignore brief or repeated keystrokes, or slow the repeat rate.",
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "Use &FilterKeys", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "B&eállítások", IDC_FILTER_BUTTON, 144, 121, 90, 14
@@ -32,7 +32,7 @@ CAPTION "Hang"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "HangFigyelő", -1, 6, 11, 234, 98
-    LTEXT "Ezt a funkciót akkor használja, ha szeretné, hogy a ReactOS látható figyelmeztetéseket küldjön olyankor, amikor a rendszer hangjelzést ad.",
+    LTEXT "Ezt a funkciót akkor használja, ha szeretné, hogy a MenuOS látható figyelmeztetéseket küldjön olyankor, amikor a rendszer hangjelzést ad.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&HangFigyelő használata", IDC_SENTRY_BOX, 12, 49, 90, 14
     LTEXT "User the following warning:", IDC_SENTRY_TEXT, 12, 72, 222, 11
@@ -50,7 +50,7 @@ CAPTION "Képernyő"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Nagy kontraszt", -1, 6, 11, 234, 62
-    LTEXT "Ha azt szeretné, hogy a ReactOS olyan színeket használjon, amelyek a könnyű olvasást teszik lehetővé, akkor válassza ki ezt a lehetőséget.",
+    LTEXT "Ha azt szeretné, hogy a MenuOS olyan színeket használjon, amelyek a könnyű olvasást teszik lehetővé, akkor válassza ki ezt a lehetőséget.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Nagy kontraszt használata", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Bellítások", IDC_CONTRAST_BUTTON, 144, 49, 90, 14

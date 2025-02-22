@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS help utility
+ * PROJECT:     MenuOS help utility
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2011 Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
@@ -15,7 +15,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "提供 ReactOS 命令的帮助信息。\n\n\
+    IDS_USAGE "提供 MenuOS 命令的帮助信息。\n\n\
 HELP [command]\n\n\
   command - 显示此命令的帮助信息。\n"
     IDS_HELP1 "列出所有可用命令（+ 它们的描述）\n\n\
@@ -30,7 +30,7 @@ CD       显示当前目录的名称或更改当前目录。\n\
 CHCP     显示或设置活动代码页。\n\
 CHOICE   等待用户在一组选项中做出选择。\n\
 CLS      清空屏幕。\n\
-CMD      创建一个 ReactOS 命令行解释器的新实例。\n\
+CMD      创建一个 MenuOS 命令行解释器的新实例。\n\
 COLOR    设置控制台默认的前景和背景颜色。\n\
 COPY     将一个或多个文件复制到另一个位置。\n\
 DATE     显示或设置日期。\n\
@@ -41,8 +41,8 @@ ERASE    删除一个或多个文件。\n\
 EXIT     退出 CMD.EXE 程序（命令解释器）。\n\
 FOR      为一组文件中的每一个文件执行指定命令。\n\
 FREE     显示（空闲的）磁盘空间。\n\
-GOTO     在批处理程序中指示 ReactOS 命令解释器跳转到被标记的行继续执行。\n\
-HELP     为 ReactOS 命令提供帮助信息。\n\
+GOTO     在批处理程序中指示 MenuOS 命令解释器跳转到被标记的行继续执行。\n\
+HELP     为 MenuOS 命令提供帮助信息。\n\
 HISTORY  列出所有曾被使用的命令。\n\
 IF       在批处理程序中执行条件控制。\n\
 LABEL    创建、更改或删除磁盘卷标。\n\
@@ -62,7 +62,7 @@ RENAME   重命名一个或多个文件。\n\
 REPLACE  替换文件。\n\
 RMDIR    删除一个目录。\n\
 SCREEN   移动光标并可选地输出文本。\n\
-SET      显示、设置或删除 ReactOS 环境变量。\n\
+SET      显示、设置或删除 MenuOS 环境变量。\n\
 SHIFT    在批处理文件中移动可替换参数的位置。\n"
     IDS_HELP2 "START    启动另一个窗口来运行指定的程序或命令。\n\
          执行命令。\n\
@@ -70,7 +70,7 @@ TIME     显示或设置系统时间。\n\
 TIMER    允许使用至多十个停表。\n\
 TITLE    设置一个 CMD.EXE 会话的窗口标题。\n\
 TYPE     显示一个文本文件的内容。\n\
-VER      显示 ReactOS 版本。\n\
-VERIFY   要求 ReactOS 检验您的文件是否已被正确地写入磁盘。\n\
+VER      显示 MenuOS 版本。\n\
+VERIFY   要求 MenuOS 检验您的文件是否已被正确地写入磁盘。\n\
 VOL      显示磁盘卷标和序列号。\n"
 END

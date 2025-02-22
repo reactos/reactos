@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Command shell
+ * PROJECT:     MenuOS Command shell
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2011 Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
@@ -58,7 +58,7 @@ ERRORLEVEL 将被设置为用户输入在选项中的偏移。\n"
     STRING_CMD_HELP5 "  [Bash 文件名自动补全]"
     STRING_CMD_HELP6 "  [目录栈]"
     STRING_CMD_HELP7 "  [重定向和管道]"
-    STRING_CMD_HELP8 "启动一个新的 ReactOS 命令行解释器的新实例。\n\n\
+    STRING_CMD_HELP8 "启动一个新的 MenuOS 命令行解释器的新实例。\n\n\
 CMD [/[C|K] 命令][/P][/Q][/T:bf]\n\n\
   /C 命令      运行指定的命令后退出。\n\
   /K 命令      运行指定的命令后不退出。\n\
@@ -479,9 +479,9 @@ RESTORE       恢复窗口\n\
     STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
     STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "环境变量“%s”未定义\n"
-    STRING_CMD_INFOLINE "  ReactOS 命令行解释器                                       输入 HELP = 帮助  "
-    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
-    STRING_REACTOS_VERSION "ReactOS [版本 %s %s]\n"
+    STRING_CMD_INFOLINE "  MenuOS 命令行解释器                                       输入 HELP = 帮助  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s MenuOS Team.\n"
+    STRING_REACTOS_VERSION "MenuOS [版本 %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS 命令行解释器\n版本 %s %s"
     STRING_VERSION_RUNNING_ON "在 上运行"
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"

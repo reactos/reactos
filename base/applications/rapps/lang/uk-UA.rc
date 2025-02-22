@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Applications Manager
+ * PROJECT:     MenuOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Ukrainian resource file
  * TRANSLATORS: Copyright 2010 Sakara Yevhen <eresid@gmail.com>
@@ -173,10 +173,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "Менеджер додатків ReactOS"
+    IDS_APPTITLE "Менеджер додатків MenuOS"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_WELCOME_TITLE "Ласкаво просимо в Менеджер додатків ReactOS!"
-    IDS_WELCOME_TEXT "Виберіть категорію зліва, а потім виберіть програми для встановлення чи видалення.\nСторінка ReactOS: "
+    IDS_WELCOME_TITLE "Ласкаво просимо в Менеджер додатків MenuOS!"
+    IDS_WELCOME_TEXT "Виберіть категорію зліва, а потім виберіть програми для встановлення чи видалення.\nСторінка MenuOS: "
     IDS_WELCOME_URL "https://reactos.org"
 
     IDS_APPWIZ_TITLE "Add/Remove Programs"

@@ -22,7 +22,7 @@ BEGIN
     IDS_SCROLLUP "Posunout nahoru"
     IDS_SCROLLDOWN "Posunout dolů"
 */
-    IDS_TERMINAL_TITLE "Příkazový řádek ReactOS"
+    IDS_TERMINAL_TITLE "Příkazový řádek MenuOS"
 END
 
 STRINGTABLE

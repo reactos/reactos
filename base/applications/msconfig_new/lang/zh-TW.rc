@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS System Configuration Tool
+ * PROJECT:     MenuOS System Configuration Tool
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2011 Elton Chung aka MfldElton <elton328@gmail.com>
@@ -15,8 +15,8 @@ FONT 9, "新細明體"
 BEGIN
     ICON            IDI_APPICON, IDC_STATIC, 14, 14, 20, 20
     LTEXT           "系統組態程式\n版本 1.0", IDC_STATIC, 42, 14, 182, 17, SS_NOPREFIX
-//  "Copyright (C) ReactOS Team 2005-"COPYRIGHT_YEAR"\n"
-    LTEXT           "著作權 (C) ReactOS Team 2005-2015\n\
+//  "Copyright (C) MenuOS Team 2005-"COPYRIGHT_YEAR"\n"
+    LTEXT           "著作權 (C) MenuOS Team 2005-2015\n\
 Christoph von Wittich (Christoph@ApiViewer.de)\n\
 Gregor Schneider (Gregor.Schneider@reactos.org)\n\
 Hermès BÉLUSCA - MAÏTO (hermes.belusca@sfr.fr)",

@@ -66,7 +66,7 @@ BEGIN
     IDS_TOOLTIP_SEEKFORW "Posunout vpřed"
     IDS_TOOLTIP_FORWARD "Přeskočit vpřed"
     IDS_TOOLTIP_PAUSE "Pozastavit"
-    IDS_APPTITLE "ReactOS Přehrávač multimédií"
+    IDS_APPTITLE "MenuOS Přehrávač multimédií"
     IDS_PLAY "Přehrát"
     IDS_DEFAULTMCIERRMSG "Pro tuto chybu není dostupný žádný popis."
 END

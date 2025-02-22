@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Win32 BrowseUI
+ * PROJECT:     MenuOS Win32 BrowseUI
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     German resource file
  * TRANSLATORS: Copyright 2023 Joachim Henze <Joachim.Henze@reactos.org>
@@ -343,6 +343,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARSE_ADDR_ERR_TITLE "ReactOS Explorer"
+    IDS_PARSE_ADDR_ERR_TITLE "MenuOS Explorer"
     IDS_PARSE_ADDR_ERR_TEXT "'%1' kann nicht gefunden werden."
 END

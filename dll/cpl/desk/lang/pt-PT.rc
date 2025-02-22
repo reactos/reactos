@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Display Control Panel
+ * PROJECT:     MenuOS Display Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Portuguese (Portugal) resource file
  * TRANSLATOR:  Copyright 2019-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
@@ -83,7 +83,7 @@ CAPTION "Aspecto avançado"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "Se seleccionar um tema que não seja o ReactOS classic, serão substituidas as seguintes definições, excepto em alguns programas mais antigos.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
+    LTEXT "Se seleccionar um tema que não seja o MenuOS classic, serão substituidas as seguintes definições, excepto em alguns programas mais antigos.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
     LTEXT "&Item:", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP

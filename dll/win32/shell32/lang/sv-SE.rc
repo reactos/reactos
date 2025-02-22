@@ -145,9 +145,9 @@ BEGIN
     LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10, SS_NOPREFIX
     LTEXT "Copyright 1996-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
-    LTEXT " ReactOS-gruppen\0", IDC_STATIC, 105, 75, 60, 10
+    LTEXT " MenuOS-gruppen\0", IDC_STATIC, 105, 75, 60, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20, SS_NOPREFIX
-    LTEXT "Den här versionen av ReactOS är registrerad till:", IDC_ABOUT_REG_TO, 35, 115, 180, 10
+    LTEXT "Den här versionen av MenuOS är registrerad till:", IDC_ABOUT_REG_TO, 35, 115, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10, SS_NOPREFIX
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10, SS_NOPREFIX
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
@@ -161,7 +161,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS hade inte varit möjligt utan dessa personer:", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "MenuOS hade inte varit möjligt utan dessa personer:", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -421,7 +421,7 @@ BEGIN
     GROUPBOX "Aktiviteter", -1, 7, 10, 249, 40
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
     AUTORADIOBUTTON "Visa vanliga aktiviteter i &mappar", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP //FIXME: accelerator collision &M
-    AUTORADIOBUTTON "Använd ReactOS klass&iska mappar", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
+    AUTORADIOBUTTON "Använd MenuOS klass&iska mappar", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
     GROUPBOX "Bläddra mappar", -1, 7, 60, 249, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "Öppna varje mapp i sa&mma fönster", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP //FIXME: accelerator collision &M
@@ -491,7 +491,7 @@ END
 
 IDD_LOG_OFF DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Logga ut från ReactOS"
+CAPTION "Logga ut från MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
@@ -509,14 +509,14 @@ BEGIN
     PUSHBUTTON "&Switch User", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
     PUSHBUTTON "&Logga ut", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Avbryt", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
-    LTEXT "Logga ut från ReactOS", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 155, 19
+    LTEXT "Logga ut från MenuOS", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 155, 19
     CTEXT "Switch User", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
     CTEXT "Logga ut", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
 END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Koppla ifrån ReactOS"
+CAPTION "Koppla ifrån MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
@@ -530,7 +530,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLIN
 CAPTION "Automatisk uppspelning"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Välj en innehållstyp, och sedan en åtgärd som ReactOS ska utföra automatiskt när den typen används i den här enheten:", 1000, 7, 7, 215, 20
+    LTEXT "&Välj en innehållstyp, och sedan en åtgärd som MenuOS ska utföra automatiskt när den typen används i den här enheten:", 1000, 7, 7, 215, 20
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
     GROUPBOX "Åtgärder", -1, 7, 45, 212, 146
     AUTORADIOBUTTON "Välj en åtgärd att &utföra:", 1005, 14, 54, 202, 10, WS_GROUP
@@ -584,7 +584,7 @@ END
 
 IDD_SHUTDOWN DIALOGEX 0, 0, 211, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Stäng av ReactOS"
+CAPTION "Stäng av MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
@@ -854,7 +854,7 @@ BEGIN
 
     /* Warning format system drive dialog strings */
     IDS_NO_FORMAT_TITLE "Cannot format this volume"
-    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
+    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for MenuOS to run."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Kunde inte visa dialogen Kör fil (internt fel)"
@@ -940,8 +940,8 @@ BEGIN
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Mapp"
-    IDS_BAT_FILE "ReactOS Batch-fil"
-    IDS_CMD_FILE "ReactOS Kommandoradsskript"
+    IDS_BAT_FILE "MenuOS Batch-fil"
+    IDS_CMD_FILE "MenuOS Kommandoradsskript"
     IDS_COM_FILE "DOS-program"
     IDS_CPL_FILE "Kontrollpanelsprogram"
     IDS_CUR_FILE "Pekare"
@@ -983,7 +983,7 @@ BEGIN
     IDS_DEFAULT_CLUSTER_SIZE "Standard allokeringsstorlek"
     IDS_COPY_OF "Kopia av"
 
-    IDS_SHLEXEC_NOASSOC "Det finns inget ReactOS-program konfigurerat för att öppna filer av den här typen."
+    IDS_SHLEXEC_NOASSOC "Det finns inget MenuOS-program konfigurerat för att öppna filer av den här typen."
 
     IDS_FILE_DETAILS "Detaljer för filändelsen '%s'"
     IDS_FILE_DETAILSADV "Filer med filändelsen '%s' är av typen '%s'. Klicka på Avancerat om du vill ändra inställningar som påverkar alla '%s'-filer."
@@ -1062,7 +1062,7 @@ BEGIN
     IDS_SYSTEMFOLDER "System Folder"
 
     /* For IDD_LOG_OFF_FANCY */
-    IDS_LOG_OFF_DESC "Closes your programs and ends your ReactOS session."
+    IDS_LOG_OFF_DESC "Closes your programs and ends your MenuOS session."
     IDS_SWITCH_USER_DESC "Lets another user log on while your programs and files remain open.\r\n\r\n(You can also switch users by pressing the Windows logo key + L.)"
     IDS_LOG_OFF_TITLE "Logga ut"
     IDS_SWITCH_USER_TITLE "Switch User"

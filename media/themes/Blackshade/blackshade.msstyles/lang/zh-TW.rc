@@ -30,10 +30,10 @@ STRINGTABLE
 {
 5000, "Black Shade"
 5001, "視覺樣式"
-5002, "ReactOS Project"
+5002, "MenuOS Project"
 5003, "圖像由 David Quintana <gigaherz@gmail.com> 提供"
 5004, "圖像以 CC-BY-SA 4.0 條款發行"
 5005, "https://reactos.org/"
 5006, "1.0"
-5007, "ReactOS 的視覺樣式"
+5007, "MenuOS 的視覺樣式"
 }

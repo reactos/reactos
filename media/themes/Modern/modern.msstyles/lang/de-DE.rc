@@ -30,10 +30,10 @@ STRINGTABLE
 {
 5000, "Modern"
 5001, "Visueller Stil"
-5002, "ReactOS Project"
+5002, "MenuOS Project"
 5003, "Polar, basierend auf win10"
 5004, "Veröffentlicht unter GNU/GPL 3.0, 2018"
 5005, "https://reactos.org/"
 5006, "1.0"
-5007, "Visueller Stil für ReactOS"
+5007, "Visueller Stil für MenuOS"
 }

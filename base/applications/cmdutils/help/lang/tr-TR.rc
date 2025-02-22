@@ -9,7 +9,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "ReactOS komutları için yardım bilgisini sağlar.\n\n\
+    IDS_USAGE "MenuOS komutları için yardım bilgisini sağlar.\n\n\
 HELP [komut]\n\n\
   komut - Bu komut için yardım bilgisini görüntüler.\n"
     IDS_HELP1 "Tüm kullanılabilir komutların (ve tanımların) listesi:\n\n\
@@ -24,7 +24,7 @@ CD       Şimdiki dizinin adını görüntüler ya da şimdiki dizini değiştir
 CHCP     Etkin kod sayfası numarasını görüntüler ya da ayarlar.\n\
 CHOICE   Bir dizi seçimden birini seçmek için kullanıcıyı bekler.\n\
 CLS      Ekranı siler.\n\
-CMD      ReactOS komut satırının yeni bir örneğini başlatır.\n\
+CMD      MenuOS komut satırının yeni bir örneğini başlatır.\n\
 COLOR    Varsayılan konsol ön plan ve arka plan renklerini ayarlar.\n\
 COPY     Bir ya da daha çok dosyayı başka bir konuma kopyalar.\n\
 DATE     Tarihi görüntüler ya da ayarlar.\n\
@@ -36,9 +36,9 @@ EXIT     CMD.EXE programından (komut yorumcusundan) çıkarır.\n\
 FOR      Bir takım dosyalar içinde tüm dosyalar için belirtilen bir komut\n\
          çalıştırır.\n\
 FREE     (boş) disk alanını görüntüler.\n\
-GOTO     Bir toplu iş dosyasında ReactOS komut istemini etiketlenmiş bir\n\
+GOTO     Bir toplu iş dosyasında MenuOS komut istemini etiketlenmiş bir\n\
          satıra yönlendirir.\n\
-HELP     ReactOS komutları için yardım bilgisini sağlar.\n\
+HELP     MenuOS komutları için yardım bilgisini sağlar.\n\
 HISTORY  Kullanılan tüm komutları listeler.\n\
 IF       Toplu iş dosyalarında şartlı eşleşmeyi gerçekleştirir.\n\
 LABEL    Bir diskin birim etiketini oluşturur, değiştirir ya da siler.\n\
@@ -60,7 +60,7 @@ RENAME   Bir dosya ya da dizinin adını değiştirir.\n\
 REPLACE  Dosyaların yerlerini değiştirir.\n\
 RMDIR    Bir dizin siler.\n\
 SCREEN   İmleci taşır ve isteğe bağlı olarak olarak metin yazdır.\n\
-SET      ReactOS çevresel değişkenlerini görüntüler, ayarlar ya da kaldırır.\n\
+SET      MenuOS çevresel değişkenlerini görüntüler, ayarlar ya da kaldırır.\n\
 SHIFT    Toplu iş dosyalarındaki yerine konulabilir değişkenlerin konumunu\n\
          değiştirir.\n\
 START    Belirtilen bir programı ya da komutu çalıştırmak için ayrı bir\n\
@@ -70,8 +70,8 @@ TIME     Sistem saatini görüntüler ya da ayarlar.\n\
 TIMER    On farklı kronometre kullanmaya izin verir.\n\
 TITLE    Bir CMD.EXE oturumu için pencere başlığını ayarlar.\n\
 TYPE     Bir metin dosyasının içeriğini görüntüler.\n\
-VER      ReactOS sürümünü görüntüler.\n\
-VERIFY   ReactOS'a dosyalarınızın bir diske doğru yazıldığını doğrulayıp\n\
+VER      MenuOS sürümünü görüntüler.\n\
+VERIFY   MenuOS'a dosyalarınızın bir diske doğru yazıldığını doğrulayıp\n\
          doğrulamayacağını söyler.\n\
 VOL      Bir disk bölümünün birim etiketi ve seri numarasını görüntüler.\n"
 END

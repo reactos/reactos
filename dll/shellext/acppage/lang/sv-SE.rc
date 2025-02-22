@@ -7,7 +7,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Kompatibilitet"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Ifall du har problem med att köra det här programmet i ReactOS, välj det operativsystem som ReactOS ska rapportera till programmet.\nPlease note that this is a work in progress.", IDC_EXPLANATION, 7, 7, 210, 31
+    LTEXT "Ifall du har problem med att köra det här programmet i MenuOS, välj det operativsystem som MenuOS ska rapportera till programmet.\nPlease note that this is a work in progress.", IDC_EXPLANATION, 7, 7, 210, 31
     GROUPBOX "Kompatibilitetsläge", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "Kör det här programmet i kompatibilitetsläge för:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
@@ -40,5 +40,5 @@ STRINGTABLE
 BEGIN
     IDS_COMPAT_TITLE "Kompatibilitet"
     IDS_FAILED_NETWORK "Compatibility modes cannot be set on this program because it is on a network drive."
-    IDS_FAILED_PROTECTED "Compatibility modes cannot be set on this program because it is a part of ReactOS."
+    IDS_FAILED_PROTECTED "Compatibility modes cannot be set on this program because it is a part of MenuOS."
 END

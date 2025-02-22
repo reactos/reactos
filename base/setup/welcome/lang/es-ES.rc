@@ -5,9 +5,9 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 /* Default settings */
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS - Bienvenido"
-    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
-    IDS_DEFAULT_TOPIC_DESC "Bienvenido al Sistema Operativo ReactOS.\n\nHaz Click en una de las opciones de la izquierda."
+    IDS_APPTITLE "MenuOS - Bienvenido"
+    IDS_DEFAULT_TOPIC_TITLE "MenuOS"
+    IDS_DEFAULT_TOPIC_DESC "Bienvenido al Sistema Operativo MenuOS.\n\nHaz Click en una de las opciones de la izquierda."
     IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Mostrar esta ventana otra vez"
     IDS_CLOSETEXT "&Salir"
@@ -16,7 +16,7 @@ END
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_BUTTON0 "&Instalar ReactOS"
+    IDS_TOPIC_BUTTON0 "&Instalar MenuOS"
     IDS_TOPIC_BUTTON1 "&Explorar este CD"
     IDS_TOPIC_BUTTON2 "&Salir"
 END
@@ -24,7 +24,7 @@ END
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_TITLE0 "Instalar ReactOS"
+    IDS_TOPIC_TITLE0 "Instalar MenuOS"
     IDS_TOPIC_TITLE1 "Explorar este CD"
     IDS_TOPIC_TITLE2 "Salir"
 END
@@ -32,7 +32,7 @@ END
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_DESC0 "Cree una nueva instalación de ReactOS en su PC o actualice una instalación existente."
+    IDS_TOPIC_DESC0 "Cree una nueva instalación de MenuOS en su PC o actualice una instalación existente."
     IDS_TOPIC_DESC1 "Explore el CD desde el navegador."
     IDS_TOPIC_DESC2 "Haga clic para salir de esta aplicación."
 END

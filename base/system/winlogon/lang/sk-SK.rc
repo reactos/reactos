@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Winlogon
+ * PROJECT:     MenuOS Winlogon
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Slovak resource file
  * TRANSLATORS: Copyright 2008 Mário Kačmár (Kario) <kario@szm.sk>
@@ -57,7 +57,7 @@ BEGIN
     IDS_PREPARETOSTANDBY "Systém sa pripravuje na prechod do úsporného režimu..."
     IDS_PREPARETOHIBERNATE "Systém sa pripravuje na prechod do režimu dlhodobého spánku..."
     IDS_SAVEYOURSETTINGS "Systém ukladá Vaše nastavenia..."
-    IDS_REACTOSISSTARTINGUP "Systém ReactOS sa spúšťa..."
+    IDS_REACTOSISSTARTINGUP "Systém MenuOS sa spúšťa..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d dní"
 END

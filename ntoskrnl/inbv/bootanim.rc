@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Kernel
+ * PROJECT:     MenuOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Boot Theme & Animation - Resource File
  * COPYRIGHT:   Copyright 2007-2010 Alex Ionescu (alex.ionescu@reactos.org)
@@ -22,7 +22,7 @@ IDB_SERVER_LOGO     BITMAP "inbv/resources/logo.bmp"
 IDB_SERVER_HEADER   BITMAP "inbv/resources/hserver.bmp"
 IDB_SERVER_FOOTER   BITMAP "inbv/resources/fserver.bmp"
 
-/* ReactOS additions */
+/* MenuOS additions */
 //IDB_LOGO_XMAS       BITMAP "inbv/resources/logo_xmas.bmp"
 IDB_ROTATING_LINE   BITMAP "inbv/resources/line.bmp"
 IDB_PROGRESS_BAR    BITMAP "inbv/resources/progress.bmp"

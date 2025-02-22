@@ -63,7 +63,7 @@ BEGIN
     IDS_TOOLTIP_SEEKFORW "İleri Sar"
     IDS_TOOLTIP_FORWARD "Bir Sonrakine Geç"
     IDS_TOOLTIP_PAUSE "Duraklat"
-    IDS_APPTITLE "ReactOS Çoklu Ortam Oynatıcısı"
+    IDS_APPTITLE "MenuOS Çoklu Ortam Oynatıcısı"
     IDS_PLAY "Çal"
     IDS_DEFAULTMCIERRMSG "Bu hata için bir tanım yoktur."
 END

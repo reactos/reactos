@@ -61,7 +61,7 @@ BEGIN
     IDS_TOOLTIP_SEEKFORW "Avanzamento rapido"
     IDS_TOOLTIP_FORWARD "Successivo"
     IDS_TOOLTIP_PAUSE "Pausa"
-    IDS_APPTITLE "Riproduttore multimediale ReactOS"
+    IDS_APPTITLE "Riproduttore multimediale MenuOS"
     IDS_PLAY "Riproduci"
     IDS_DEFAULTMCIERRMSG "Nessuna descrizione è disponibile per questo tipo di errore."
 END

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Explorer
+ * PROJECT:     MenuOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Slovak resource file
  * TRANSLATOR:  Copyright 2007-2010 Mário Kačmár <kario@szm.sk>
@@ -49,7 +49,7 @@ BEGIN
         BEGIN
             MENUITEM "&Ovládaci panel", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "&Zabezpečenie systému ReactOS...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Zabezpečenie systému MenuOS...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
             MENUITEM "Sieťové pripoje&nia", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
             MENUITEM "&Tlačiarne a faxy", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "P&anel úloh a ponuka Štart", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
@@ -118,7 +118,7 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Customize Notifications"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT            "ReactOS displays icons for active and urgent notifications, and hides inactive ones. You can change this behavior for items in the list below.", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "MenuOS displays icons for active and urgent notifications, and hides inactive ones. You can change this behavior for items in the list below.", IDC_STATIC, 6, 6, 220, 30
     LTEXT            "Select an item, then choose its notification behavior:", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS

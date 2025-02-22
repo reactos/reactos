@@ -48,7 +48,7 @@ CHOICE [/C[:]opções][/N][/S][/T[:]c,nn][texto]\n\n\
     STRING_CMD_HELP5 "[conclusão do nome do ficheiro Bash]"
     STRING_CMD_HELP6 "[pilha de directórios]"
     STRING_CMD_HELP7 "[redirecionamentos e tubulação]"
-    STRING_CMD_HELP8 "Inicia uma nova instância do interpretador da linha de comando ReactOS.\n\n\
+    STRING_CMD_HELP8 "Inicia uma nova instância do interpretador da linha de comando MenuOS.\n\n\
 CMD [/[C|K] comando] [/P][/Q][/T:bf]\n\n\
   /C comando   Executa o comando especificado e termina.\n\
   Comando /K   Executa o comando especificado e permanece.\n\
@@ -520,9 +520,9 @@ título      Novo título\n"
     STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
     STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Variável de ambiente '%s' não está definida\n"
-    STRING_CMD_INFOLINE "Tipo de prompt de comando do ReactOS HELP = Ajuda"
-    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
-    STRING_REACTOS_VERSION "ReactOS [Versão %s %s]\n"
+    STRING_CMD_INFOLINE "Tipo de prompt de comando do MenuOS HELP = Ajuda"
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s MenuOS Team.\n"
+    STRING_REACTOS_VERSION "MenuOS [Versão %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Intérprete de linha de comando\nVersão %s %s"
     STRING_VERSION_RUNNING_ON "Em execução em:"
     STRING_VERSION_RUNVER "%s [Versão %d.%d.%d] %s"

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS VGA Font Editor
+ * PROJECT:     MenuOS VGA Font Editor
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Polish resource file
  * COPYRIGHT:   Copyright 2008 Colin Finck (colin@reactos.org)
@@ -14,7 +14,7 @@ CAPTION "O programie"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON           IDI_MAIN,                     IDC_STATIC, 10, 10, 20, 20
-    LTEXT          "Edytor czcionek VGA dla ReactOS",    IDC_STATIC, 37, 10, 93, 10
+    LTEXT          "Edytor czcionek VGA dla MenuOS",    IDC_STATIC, 37, 10, 93, 10
     LTEXT          "Copyright 2008 Colin Finck", IDC_STATIC, 37, 20, 93, 10
     DEFPUSHBUTTON  "OK",                         IDCANCEL,   40, 44, 55, 15
 END
@@ -81,7 +81,7 @@ BEGIN
     IDS_UNSUPPORTEDPSF, "Nieobsługiwana wersja PSF! Edytor obsługuje wyłącznie czcionki rozmiaru 8x8, bez dodatków."
     IDS_DOCNAME, "Czcionka %1!u!"
     IDS_SAVEPROMPT, "Plik ""%1"" został zmieniony, ale nie zapisany.\n\nCzy chcesz zapisać zmiany?"
-    IDS_APPTITLE, "Edytor czcionek VGA dla ReactOS"
+    IDS_APPTITLE, "Edytor czcionek VGA dla MenuOS"
     IDS_CLOSEEDIT, "Proszę najpierw zamknąć wszystkie okna Edycji!"
 
     IDS_TOOLTIP_NEW, "Nowy"

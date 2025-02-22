@@ -1,4 +1,4 @@
-﻿/* Translated by Baruch Rutman, Additional Translations By Shy Zedaka */
+/* Translated by Baruch Rutman, Additional Translations By Shy Zedaka */
 
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
@@ -6,41 +6,41 @@ LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "התקנת ReactOS"
+CAPTION "התקנת MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ברוכים לאשף ההתקנה של ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "This wizard will install or upgrade ReactOS on your computer, \
+    LTEXT "ברוכים לאשף ההתקנה של MenuOS", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "This wizard will install or upgrade MenuOS on your computer, \
 and prepare the second part of the setup.", IDC_STATIC, 115, 40, 195, 27
 ////
     GROUPBOX " IMPORTANT INFORMATION ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
-    LTEXT "ReactOS is in Alpha stage: it is not feature- complete and is \
+    LTEXT "MenuOS is in Alpha stage: it is not feature- complete and is \
 under heavy development. It is recommended to use it only for \
 evaluation and testing and not as your daily-usage OS.\n\
 It may corrupt your data or damage your hardware.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
     LTEXT "Backup your data or test on a secondary computer \
-if you attempt to run ReactOS on real hardware.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+if you attempt to run MenuOS on real hardware.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
 ////
     LTEXT "לחץ על הבא כדי להמשיך עם ההתקנה", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "התקנת ReactOS"
+CAPTION "התקנת MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "(&I)התקנת ReactOS", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
-    AUTORADIOBUTTON "(&U)תיקון או עדכון ReactOS", IDC_UPDATE, 7, 80, 277, 10
-    LTEXT "Update or repair an installed copy of ReactOS. This option keeps your files, settings and programs. This option is only available if ReactOS is already installed on this computer.", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "(&I)התקנת MenuOS", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
+    LTEXT "Install a new copy of MenuOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "(&U)תיקון או עדכון MenuOS", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "Update or repair an installed copy of MenuOS. This option keeps your files, settings and programs. This option is only available if MenuOS is already installed on this computer.", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "התקנת ReactOS"
+CAPTION "התקנת MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT       "The ReactOS Setup can upgrade one of the available ReactOS installations listed below, or, if a ReactOS installation is damaged, the Setup program can attempt to repair it.", IDC_STATIC, 6, 6, 300, 18
+    LTEXT       "The MenuOS Setup can upgrade one of the available MenuOS installations listed below, or, if a MenuOS installation is damaged, the Setup program can attempt to repair it.", IDC_STATIC, 6, 6, 300, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "אל תשדרג", IDC_SKIPUPGRADE, 230, 128, 80, 14
     LTEXT       "Click Next to upgrade the selected OS installation, or on 'Do not upgrade' to continue a new installation without upgrading.", IDC_STATIC, 7, 124, 222, 16
@@ -48,7 +48,7 @@ END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "התקנת ReactOS"
+CAPTION "התקנת MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "מחשב:", IDC_STATIC, 20, 15, 80, 10
@@ -62,7 +62,7 @@ END
 
 IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "התקנת ReactOS"
+CAPTION "התקנת MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
@@ -110,7 +110,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Advanced Installation Options"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Choose the &directory where you want to install ReactOS:", IDC_STATIC, 7, 9, 291, 10
+    LTEXT "Choose the &directory where you want to install MenuOS:", IDC_STATIC, 7, 9, 291, 10
     EDITTEXT IDC_PATH, 7, 23, 291, 13
     GROUPBOX "Bootloader", IDC_STATIC, 7, 45, 291, 60
     LTEXT "Select the location where the FreeLoader\nbootloader should be installed.\n\nBy default, it is installed on the system partition of the boot disk (and either in the Master or the Volume Boot Record for BIOS-based computers).", IDC_STATIC, 13, 57, 279, 44
@@ -121,7 +121,7 @@ END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "התקנת ReactOS"
+CAPTION "התקנת MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "סוג התקנה:", IDC_STATIC, 18, 5, 74, 11
@@ -147,7 +147,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "התקנת ReactOS"
+CAPTION "התקנת MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "התקן קבצים...", IDC_ACTIVITY, 20, 50, 277, 10
@@ -157,11 +157,11 @@ END
 
 IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "התקנת ReactOS"
+CAPTION "התקנת MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Completing the ReactOS Setup Wizard", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "You have successfully completed the first stage of ReactOS Setup.", IDC_STATIC, 115, 50, 195, 17
+    LTEXT "Completing the MenuOS Setup Wizard", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "You have successfully completed the first stage of MenuOS Setup.", IDC_STATIC, 115, 50, 195, 17
     LTEXT "כאשר תלחץ על 'סיים' המחשב שלך יפעיל את עצמו מחדש", IDC_STATIC, 115, 80, 195, 17
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
     LTEXT "'אם יש דיסק בכונן, הסר אותו ואז, בשביל מחדש את המחשב לחץ על 'סיום", IDC_STATIC, 115, 169, 195, 17
@@ -171,11 +171,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CAPTION "התקנת ReactOS"
+    IDS_CAPTION "התקנת MenuOS"
     IDS_TYPETITLE "Installation Type"
-    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
-    IDS_UPDATETITLE "Update or Repair ReactOS"
-    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
+    IDS_TYPESUBTITLE "You can setup a new MenuOS installation, or update/repair an existing installation."
+    IDS_UPDATETITLE "Update or Repair MenuOS"
+    IDS_UPDATESUBTITLE "Choose which existing MenuOS installation you want to update or repair."
     IDS_DEVICETITLE "Setup the basic devices"
     IDS_DEVICESUBTITLE "Set the settings of display and keyboard."
     IDS_DRIVETITLE "Setup the installation partition and system folder"
@@ -186,7 +186,7 @@ BEGIN
     IDS_PROCESSSUBTITLE "Create and format partition, copy files, install and setup bootloader."
     IDS_RESTARTTITLE "First stage of setup finished"
     IDS_RESTARTSUBTITLE "The first stage of setup has been completed, restart to continue with second stage."
-    IDS_ABORTSETUP "ReactOS is not completely installed on your computer. If you quit Setup now, you will need to run Setup again to install ReactOS. Really quit?"
+    IDS_ABORTSETUP "MenuOS is not completely installed on your computer. If you quit Setup now, you will need to run Setup again to install MenuOS. Really quit?"
     IDS_ABORTSETUP2 "לבטל את ההתקנה?"
     IDS_NO_TXTSETUP_SIF "Unable to find 'txtsetup.sif'.\nSetup is unable to continue."
     IDS_INSTALLBTN "&Install"
@@ -268,7 +268,7 @@ alphanumericals (a-z, A-Z, 0-9), and\n . \\ - _\n\
 Spaces are not allowed."
 
     IDS_ERROR_DIRECTORY_NAME_TITLE "Invalid installation path"
-    IDS_ERROR_DIRECTORY_NAME "The ReactOS installation path must follow the DOS 8.3 naming scheme, \
+    IDS_ERROR_DIRECTORY_NAME "The MenuOS installation path must follow the DOS 8.3 naming scheme, \
 and only contain letters, digits, dashes and periods. Spaces are not allowed."
 
     IDS_ERROR_CREATE_PARTITION_TITLE "Create partition"
@@ -280,9 +280,9 @@ and only contain letters, digits, dashes and periods. Spaces are not allowed."
 
     IDS_ERROR_WRITE_PTABLE "Setup failed to write partition tables."
 
-    IDS_ERROR_SYSTEM_PARTITION "The ReactOS Setup could not find a supported system partition\n\
+    IDS_ERROR_SYSTEM_PARTITION "The MenuOS Setup could not find a supported system partition\n\
 on your system or could not create a new one. Without such a partition\n\
-the Setup program cannot install ReactOS.\
+the Setup program cannot install MenuOS.\
 \nClick on OK to return to the partition selection list."
 
     IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Unrecognized volume while attempting to format the partition."

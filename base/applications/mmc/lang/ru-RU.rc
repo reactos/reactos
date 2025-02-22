@@ -40,6 +40,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "Консоль управления ReactOS"
+    IDS_APPTITLE "Консоль управления MenuOS"
     IDS_CONSOLETITLE "Консоль%1!u!"
 END

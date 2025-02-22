@@ -11,7 +11,7 @@ BEGIN
     END
     POPUP "Aide"
     BEGIN
-        MENUITEM "À propos de l&a Console de Gestion ReactOS", IDM_HELP_ABOUT
+        MENUITEM "À propos de l&a Console de Gestion MenuOS", IDM_HELP_ABOUT
     END
 END
 
@@ -32,12 +32,12 @@ BEGIN
     END
     POPUP "Aide"
     BEGIN
-        MENUITEM "À propos de l&a Console de Gestion ReactOS", IDM_HELP_ABOUT
+        MENUITEM "À propos de l&a Console de Gestion MenuOS", IDM_HELP_ABOUT
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "Console de Gestion ReactOS"
+    IDS_APPTITLE "Console de Gestion MenuOS"
     IDS_CONSOLETITLE "Console%1!u!"
 END

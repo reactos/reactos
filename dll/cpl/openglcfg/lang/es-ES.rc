@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS OpenGL Configuration Control Panel
+ * PROJECT:     MenuOS OpenGL Configuration Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Spanish (Spain) resource file
  * TRANSLATOR:  Copyright 2024 Julen Urizar Compains <julenuri@hotmail.com>
@@ -26,7 +26,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_RENDERER_DEFAULT "Predeterminado del sistema"
-    IDS_RENDERER_RSWR "Implementación por software de ReactOS"
+    IDS_RENDERER_RSWR "Implementación por software de MenuOS"
     IDS_CPLNAME "Configuración de OpenGL"
     IDS_CPLDESCRIPTION "Configura el renderizado OpenGL."
     IDS_DEBUG_SET "Escoger"

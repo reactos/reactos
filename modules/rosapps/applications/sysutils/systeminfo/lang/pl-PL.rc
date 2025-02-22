@@ -1,6 +1,6 @@
 /*
  *      translated by Caemyr - Olaf Siejka (Feb, 2008)
- *      Use ReactOS forum PM or IRC to contact me
+ *      Use MenuOS forum PM or IRC to contact me
  *      https://reactos.org
  *      IRC: irc.freenode.net #reactos-pl;
  */
@@ -54,7 +54,7 @@ IDS_PROCESSORS,              "Procesory"
 IDS_PROCESSORS_FORMAT,       "Zainstalowane procesory: %u."
 IDS_BIOS_DATE,               "Data BIOSu"
 IDS_BIOS_VERSION,            "Wersja BIOSu"
-IDS_ROS_DIR,                 "Katalog ReactOS"
+IDS_ROS_DIR,                 "Katalog MenuOS"
 IDS_SYS_DIR,                 "Katalog Systemowy"
 IDS_BOOT_DEV,                "Urządzenie źródłowe"
 IDS_SYS_LOCALE,              "Wersja lokalizacji"

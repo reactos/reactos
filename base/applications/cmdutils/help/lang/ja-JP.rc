@@ -9,7 +9,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
+    IDS_USAGE "Provides Help information for MenuOS commands.\n\n\
 HELP [command]\n\n\
   command - Display help information for this command.\n"
     IDS_HELP1 "利用可能なすべてのコマンドの一覧と、その説明。\n\n\
@@ -24,7 +24,7 @@ CD       現在のディレクトリを変更したり、ディレクトリ名�
 CHCP     現在のコード ページ番号を表示または設定します。\n\
 CHOICE   ユーザーが選択肢から一つを選択するのを待ちます。\n\
 CLS      画面を消去します。\n\
-CMD      ReactOS コマンド インタープリタの新しいインスタンスを開始します。\n\
+CMD      MenuOS コマンド インタープリタの新しいインスタンスを開始します。\n\
 COLOR    コンソールのデフォルトの前景色および背景色を設定します。\n\
 COPY     1 つまたは複数のファイルを別の場所にコピーします。\n\
 DATE     日付を表示または設定します。\n\
@@ -37,7 +37,7 @@ EXIT     CMD.exe (コマンド ライン インタープリタ) を終了しま�
 FOR      指定されたコマンドをファイル セットの各ファイルに対して実行します。\n\
 FREE     ディスクの空き容量\n\
 GOTO     バッチ プログラム内の、ラベルで指定されている行へ制御を移動します。\n\
-HELP     ReactOS コマンドのヘルプ情報を提供します。\n\
+HELP     MenuOS コマンドのヘルプ情報を提供します。\n\
 HISTORY  使用されたすべてのコマンドを一覧表示します。\n\
 IF       バッチ プログラム中で条件処理を実行します。\n\
 LABEL    ディスクのボリューム ラベルを表示または変更します。\n\
@@ -64,7 +64,7 @@ TIME     システム時刻を表示または設定します。\n\
 TIMER    10 個までのストップウォッチを使うことができます。\n\
 TITLE    コマンド プロンプト ウィンドウのウィンドウ タイトルを設定します。\n\
 TYPE     テキスト ファイルまたはファイルの内容を表示します。\n\
-VER      ReactOS のバージョンを表示します。\n\
+VER      MenuOS のバージョンを表示します。\n\
 VERIFY   ファイルがディスクに正しく書き込まれたことを照合するかどうかを\n\
          指示します。\n\
 VOL      ディスクのボリューム ラベルとシリアル番号を表示します。\n"

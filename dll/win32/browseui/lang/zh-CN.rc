@@ -94,7 +94,7 @@ BEGIN
     END
     POPUP "帮助(&H)", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "关于 ReactOS(&A)", IDM_HELP_ABOUT
+        MENUITEM "关于 MenuOS(&A)", IDM_HELP_ABOUT
     END
 END
 
@@ -357,6 +357,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARSE_ADDR_ERR_TITLE "ReactOS 资源管理器"
-    IDS_PARSE_ADDR_ERR_TEXT "ReactOS 资源管理器找不到“%1”。请检查拼写，然后重试。"
+    IDS_PARSE_ADDR_ERR_TITLE "MenuOS 资源管理器"
+    IDS_PARSE_ADDR_ERR_TEXT "MenuOS 资源管理器找不到“%1”。请检查拼写，然后重试。"
 END

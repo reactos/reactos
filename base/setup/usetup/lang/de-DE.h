@@ -8,14 +8,14 @@ static MUI_ENTRY deDESetupInitPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         0,
         20,
-        "Bitte warten Sie w\204hrend das ReactOS Setup startet",
+        "Bitte warten Sie w\204hrend das MenuOS Setup startet",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -46,7 +46,7 @@ static MUI_ENTRY deDELanguagePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -98,21 +98,21 @@ static MUI_ENTRY deDEWelcomePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "Willkommen zum ReactOS-Setup",
+        "Willkommen zum MenuOS-Setup",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
     {
         6,
         11,
-        "Dieser Teil des Setups kopiert das ReactOS-Betriebssystem auf Ihren",
+        "Dieser Teil des Setups kopiert das MenuOS-Betriebssystem auf Ihren",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -126,21 +126,21 @@ static MUI_ENTRY deDEWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Dr\201cken Sie ENTER, um ReactOS zu installieren / aktualisieren.",
+        "\x07  Dr\201cken Sie ENTER, um MenuOS zu installieren / aktualisieren.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-        "\x07  Dr\201cken Sie R, um ReactOS zu reparieren. (Wiederherstellungskonsole)",
+        "\x07  Dr\201cken Sie R, um MenuOS zu reparieren. (Wiederherstellungskonsole)",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  Dr\201cken Sie L, um das Lizenzabkommen von ReactOS zu lesen.",
+        "\x07  Dr\201cken Sie L, um das Lizenzabkommen von MenuOS zu lesen.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -185,21 +185,21 @@ static MUI_ENTRY deDEIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "ReactOS Version Status",
+        "MenuOS Version Status",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
     {
         6,
         11,
-        "ReactOS befindet sich noch im Alpha Stadium. Noch sind nicht alle",
+        "MenuOS befindet sich noch im Alpha Stadium. Noch sind nicht alle",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -234,14 +234,14 @@ static MUI_ENTRY deDEIntroPageEntries[] =
     {
         8,
         19,
-        "\x07  Dr\201cken Sie ENTER, um das ReactOS Setup fortzusetzen.",
+        "\x07  Dr\201cken Sie ENTER, um das MenuOS Setup fortzusetzen.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         21,
-        "\x07  Dr\201cken Sie F3, um abzubrechen ohne ReactOS zu installieren.",
+        "\x07  Dr\201cken Sie F3, um abzubrechen ohne MenuOS zu installieren.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -265,7 +265,7 @@ static MUI_ENTRY deDELicensePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -279,14 +279,14 @@ static MUI_ENTRY deDELicensePageEntries[] =
     {
         8,
         8,
-        "ReactOS ist unter den Bedingungen der GNU General Public License",
+        "MenuOS ist unter den Bedingungen der GNU General Public License",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         9,
-        "lizenziert. Einige Teile von ReactOS stehen unter dazu kompatiblen",
+        "lizenziert. Einige Teile von MenuOS stehen unter dazu kompatiblen",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -300,7 +300,7 @@ static MUI_ENTRY deDELicensePageEntries[] =
     {
         8,
         11,
-        "Alle Softwarebestandteile in ReactOS sind daher unter der",
+        "Alle Softwarebestandteile in MenuOS sind daher unter der",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -321,7 +321,7 @@ static MUI_ENTRY deDELicensePageEntries[] =
     {
         8,
         15,
-        "ReactOS ist freie Software. Die Ver\224ffentlichung dieses Programms",
+        "MenuOS ist freie Software. Die Ver\224ffentlichung dieses Programms",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -370,7 +370,7 @@ static MUI_ENTRY deDELicensePageEntries[] =
     {
         8,
         23,
-        "zusammen mit ReactOS erhalten haben.",
+        "zusammen mit MenuOS erhalten haben.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -408,7 +408,7 @@ static MUI_ENTRY deDEDevicePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -515,7 +515,7 @@ static MUI_ENTRY deDERepairPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -550,7 +550,7 @@ static MUI_ENTRY deDERepairPageEntries[] =
     {
         8,
         16,
-        "\x07  Dr\201cken Sie U, um ReactOS zu aktualisieren.",
+        "\x07  Dr\201cken Sie U, um MenuOS zu aktualisieren.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -595,14 +595,14 @@ static MUI_ENTRY deDEUpgradePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "Das ReactOS Setup kann eine der unten aufgef\201hrten Installationen",
+        "Das MenuOS Setup kann eine der unten aufgef\201hrten Installationen",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -616,7 +616,7 @@ static MUI_ENTRY deDEUpgradePageEntries[] =
     {
         6,
         10,
-        "eine bestehende ReactOS Installation zu reparieren.",
+        "eine bestehende MenuOS Installation zu reparieren.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -651,7 +651,7 @@ static MUI_ENTRY deDEUpgradePageEntries[] =
     {
         8,
         21,
-        "\x07  Dr\201cken Sie F3, um abzubrechen ohne ReactOS zu installieren.",
+        "\x07  Dr\201cken Sie F3, um abzubrechen ohne MenuOS zu installieren.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -675,7 +675,7 @@ static MUI_ENTRY deDEComputerPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -734,7 +734,7 @@ static MUI_ENTRY deDEFlushPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -779,14 +779,14 @@ static MUI_ENTRY deDEQuitPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         10,
         6,
-        "ReactOS wurde nicht vollst\204ndig installiert.",
+        "MenuOS wurde nicht vollst\204ndig installiert.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -824,7 +824,7 @@ static MUI_ENTRY deDEDisplayPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -883,14 +883,14 @@ static MUI_ENTRY deDESuccessPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         10,
         6,
-        "Die Grundkomponenten von ReactOS wurden erfolgreich installiert.",
+        "Die Grundkomponenten von MenuOS wurden erfolgreich installiert.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -928,7 +928,7 @@ static MUI_ENTRY deDESelectPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1001,7 +1001,7 @@ static MUI_ENTRY deDEChangeSystemPartition[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1022,14 +1022,14 @@ static MUI_ENTRY deDEChangeSystemPartition[] =
     {
         6,
         16,
-        "verwendet eine von ReactOS nicht unterst\201tzte Formatierung.",
+        "verwendet eine von MenuOS nicht unterst\201tzte Formatierung.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         18,
-        "Um ReactOS installieren zu k\224nnen, muss das Setup Programm",
+        "Um MenuOS installieren zu k\224nnen, muss das Setup Programm",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1099,7 +1099,7 @@ static MUI_ENTRY deDEChangeSystemPartition[] =
     {
         6,
         35,
-        "nachdem das ReactOS Setup abgeschlossen wurde.",
+        "nachdem das MenuOS Setup abgeschlossen wurde.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1123,7 +1123,7 @@ static MUI_ENTRY deDEConfirmDeleteSystemPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1231,7 +1231,7 @@ static MUI_ENTRY deDEFormatPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1276,7 +1276,7 @@ static MUI_ENTRY deDECheckFSEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1307,7 +1307,7 @@ static MUI_ENTRY deDEInstallDirectoryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1321,7 +1321,7 @@ static MUI_ENTRY deDEInstallDirectoryEntries[] =
     {
         6,
         9,
-        "W\204hlen Sie ein Installationsverzeichnis f\201r ReactOS:",
+        "W\204hlen Sie ein Installationsverzeichnis f\201r MenuOS:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1366,7 +1366,7 @@ static MUI_ENTRY deDEFileCopyEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1411,7 +1411,7 @@ static MUI_ENTRY deDEBootLoaderSelectPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1470,7 +1470,7 @@ static MUI_ENTRY deDEBootLoaderInstallPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1501,7 +1501,7 @@ static MUI_ENTRY deDEBootLoaderRemovableDiskPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1547,7 +1547,7 @@ static MUI_ENTRY deDEKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1606,7 +1606,7 @@ static MUI_ENTRY deDELayoutSettingsEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1666,7 +1666,7 @@ static MUI_ENTRY deDEPrepareCopyEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1698,7 +1698,7 @@ static MUI_ENTRY deDESelectFSEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1746,7 +1746,7 @@ static MUI_ENTRY deDEDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1798,7 +1798,7 @@ static MUI_ENTRY deDERegistryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1833,9 +1833,9 @@ MUI_ERROR deDEErrorEntries[] =
     },
     {
         // ERROR_NOT_INSTALLED
-        "ReactOS wurde nicht vollst\204ndig auf Ihrem System installiert.\n"
+        "MenuOS wurde nicht vollst\204ndig auf Ihrem System installiert.\n"
         "Wenn Sie die Installation jetzt beenden, m\201ssen Sie diese\n"
-        "erneut starten, um ReactOS zu installieren.\n"
+        "erneut starten, um MenuOS zu installieren.\n"
         "\n"
         "  \x07  Dr\201cken Sie ENTER, um die Installation fortzusetzen.\n"
         "  \x07  Dr\201cken Sie F3, um die Installation zu beenden.",
@@ -1843,7 +1843,7 @@ MUI_ERROR deDEErrorEntries[] =
     },
     {
         // ERROR_NO_BUILD_PATH
-        "Die Installationspfade f\201r das ReactOS Installationsverzeichnis konnten nicht erstellt werden!\n"
+        "Die Installationspfade f\201r das MenuOS Installationsverzeichnis konnten nicht erstellt werden!\n"
         "ENTER = Computer neu starten"
     },
     {
@@ -1853,7 +1853,7 @@ MUI_ERROR deDEErrorEntries[] =
     },
     {
         // ERROR_SOURCE_DIR
-        "ReactOS kann nicht in dasselbe Verzeichnis installiert werden, in dem die Installationsquellen liegen!\n"
+        "MenuOS kann nicht in dasselbe Verzeichnis installiert werden, in dem die Installationsquellen liegen!\n"
         "ENTER = Computer neu starten"
     },
     {
@@ -2048,7 +2048,7 @@ MUI_ERROR deDEErrorEntries[] =
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "Die gew\204hlte Partition ist nicht gro\341 genug, um ReactOS zu installieren.\n"
+        "Die gew\204hlte Partition ist nicht gro\341 genug, um MenuOS zu installieren.\n"
         "Die Installationspartition muss mindestens %lu MB gro\341 sein.\n"
         "\n"
         "  * Eine beliebige Taste zum Fortsetzen dr\201cken.",
@@ -2233,13 +2233,13 @@ MUI_STRING deDEStrings[] =
     {STRING_PARTFORMAT,
     "Diese Partition wird als n\204chstes formatiert."},
     {STRING_NONFORMATTEDPART,
-    "Sie wollen ReactOS auf einer neuen/unformatierten Partition installieren."},
+    "Sie wollen MenuOS auf einer neuen/unformatierten Partition installieren."},
     {STRING_NONFORMATTEDSYSTEMPART,
     "Die Systempartition ist noch nicht formartiert."},
     {STRING_NONFORMATTEDOTHERPART,
     "Die neue Partition ist noch nicht formatiert."},
     {STRING_INSTALLONPART,
-    "ReactOS wird auf dieser Partition installiert."},
+    "MenuOS wird auf dieser Partition installiert."},
     {STRING_CONTINUE,
     "ENTER = Fortsetzen"},
     {STRING_QUITCONTINUE,

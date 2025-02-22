@@ -27,7 +27,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "Navštívte <A HREF=""https://reactos.org/"">domovskú stránku systému ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    CONTROL "Navštívte <A HREF=""https://reactos.org/"">domovskú stránku systému MenuOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "Zobraziť &licenciu...", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -76,7 +76,7 @@ CAPTION "System Settings"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Version Info", IDC_STATIC, 6, 3, 210, 73
-    LTEXT "ReactOS is built as a server OS and reports as such. Check this box to change this for applications only.", IDC_STATIC, 15, 15, 183, 41
+    LTEXT "MenuOS is built as a server OS and reports as such. Check this box to change this for applications only.", IDC_STATIC, 15, 15, 183, 41
     CONTROL "Report as Workstation", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
 END
@@ -97,7 +97,7 @@ BEGIN
     PUSHBUTTON "Pr&emenovať", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
     PUSHBUTTON "&Odstrániť", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
     GROUPBOX "Výber hardvérového profilu", IDC_STATIC, 7, 130, 240, 75
-    LTEXT "Pri štarte systému ReactOS:", IDC_STATIC, 14, 142, 210, 8
+    LTEXT "Pri štarte systému MenuOS:", IDC_STATIC, 14, 142, 210, 8
     AUTORADIOBUTTON "&Počkať na výber hardvérového profilu", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
     AUTORADIOBUTTON "&Vybrať prvý profil v zozname, ak sa profil nevyberie do", IDC_HRDPROFSELECT, 14, 173, 190, 8
     LTEXT "sekúnd", IDC_STATIC, 65, 187, 35, 8
@@ -125,7 +125,7 @@ BEGIN
     AUTORADIOBUTTON "The computer is &docked", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
     AUTORADIOBUTTON "The computer is &undocked", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
     GROUPBOX "Hardware profiles selection", IDC_STATIC, 10, 138, 192, 42
-    AUTOCHECKBOX "Always &include this profile as an option when ReactOS starts", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
+    AUTOCHECKBOX "Always &include this profile as an option when MenuOS starts", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
 END
 
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52

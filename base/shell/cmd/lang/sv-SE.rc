@@ -50,7 +50,7 @@ ERRORLEVEL sätts till nummer för knappen användaren väljer.\n"
     STRING_CMD_HELP5 "  [Bash filnamnändelse]"
     STRING_CMD_HELP6 "  [mapplista]"
     STRING_CMD_HELP7 "  [omadressering och datakanaler]"
-    STRING_CMD_HELP8 "Starta en ny instans av ReactOS kommandotolk.\n\n\
+    STRING_CMD_HELP8 "Starta en ny instans av MenuOS kommandotolk.\n\n\
 CMD [/[C|K] kommando][/P][/Q][/T:bf]\n\n\
   /C kommando  Kör angivet kommando och avslutar.\n\
   /K kommando  Kör angivet kommando men avslutar inte.\n\
@@ -310,7 +310,7 @@ Ledetexten kan bli satt sammen av normale tegn och følgende spesielle koder:\n\
   $Q   = (likhetstegn)\n\
   $S   (space)\n\
   $T   aktuell klokkeslett\n\
-  $V   Versionsnummer för ReactOS\n\
+  $V   Versionsnummer för MenuOS\n\
   $_   Retur och linjeskift\n\
   $$   $ (dollar tegn)\n"
     STRING_PROMPT_HELP2 "  $+   Visa aktuell dybde av mappstakken"
@@ -393,7 +393,7 @@ VERIFY [ON | OFF]\n\n\
 Skriv VERIFY uten parametre för att visa aktuell VERIFY inställninar.\n"
     STRING_VERIFY_HELP2 "VERIFY är %s.\n"
     STRING_VERIFY_HELP3 "Måste ange ON eller OFF."
-    STRING_VERSION_HELP1 "Visa ReactOS versionen\n\n\
+    STRING_VERSION_HELP1 "Visa MenuOS versionen\n\n\
 VER [/C][/R][/W]\n\n\
   /C  Visa anerkjennelse.\n\
   /R  Visa videreformidlingsinformasjon.\n\
@@ -497,9 +497,9 @@ tittel        ny tittel\n"
     STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
     STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
-    STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
-    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
-    STRING_REACTOS_VERSION "ReactOS [Version %s %s]\n"
+    STRING_CMD_INFOLINE "  MenuOS Command Prompt                                      Type HELP = Help  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s MenuOS Team.\n"
+    STRING_REACTOS_VERSION "MenuOS [Version %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Kommandotolk\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Körs på: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"

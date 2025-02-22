@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Applications Manager
+ * PROJECT:     MenuOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Slovak resource file
  * TRANSLATORS: Copyright 2009-2010 Mário Kačmár <kario@szm.sk>
@@ -171,10 +171,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "Manažér aplikácií systému ReactOS"
+    IDS_APPTITLE "Manažér aplikácií systému MenuOS"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_WELCOME_TITLE "Víta Vás Manažér aplikácií systému ReactOS!"
-    IDS_WELCOME_TEXT "Vyberte si kategóriu na ľavej strane, potom vyberte aplikáciu, ktorú chcete nainštalovať alebo odinštalovať.\nWebstránka projektu ReactOS: "
+    IDS_WELCOME_TITLE "Víta Vás Manažér aplikácií systému MenuOS!"
+    IDS_WELCOME_TEXT "Vyberte si kategóriu na ľavej strane, potom vyberte aplikáciu, ktorú chcete nainštalovať alebo odinštalovať.\nWebstránka projektu MenuOS: "
     IDS_WELCOME_URL "https://reactos.org"
 
     IDS_APPWIZ_TITLE "Pridať/Odobrať programy"

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS System Setup Library
+ * PROJECT:     MenuOS System Setup Library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Spanish (Basque) resource file
  * TRANSLATOR:  Copyright 2021 Julen Urizar Compains <julenuri@hotmail.com>
@@ -9,28 +9,28 @@ LANGUAGE LANG_BASQUE, SUBLANG_NEUTRAL
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-aren Instalazioa"
+CAPTION "MenuOS-aren Instalazioa"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ongi etorri ReactOS-aren instalazio bigarren zati.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Morroi hau ReactOS instalatuko zure ordenagailuan.\n\nInstalazioa behar du zure eta zure ordenagailuaren informazio gutxia osatzeko zuzen konfiguratzeko.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Ongi etorri MenuOS-aren instalazio bigarren zati.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Morroi hau MenuOS instalatuko zure ordenagailuan.\n\nInstalazioa behar du zure eta zure ordenagailuaren informazio gutxia osatzeko zuzen konfiguratzeko.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Sakatu Aurrera instalazioa jarraitzeko.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-aren Instalazioa"
+CAPTION "MenuOS-aren Instalazioa"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "ReactOS garatzaileek kode-irekiko-proiektu hauei eskerrak eman nahi dizkiete, ReactOS sortzeko oinarrizko zati izan direnak:", IDC_STATIC, 15, 7, 286, 19
+    LTEXT "MenuOS garatzaileek kode-irekiko-proiektu hauei eskerrak eman nahi dizkiete, MenuOS sortzeko oinarrizko zati izan direnak:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "ReactOS GPL lizentziapean banatzen da, beraz, osorik edo zati batean berrerabili edo birbanatu nahi baduzu, bere baldintzak errespetatu behar dituzu.", IDC_STATIC, 15, 110, 227, 19
+    LTEXT "MenuOS GPL lizentziapean banatzen da, beraz, osorik edo zati batean berrerabili edo birbanatu nahi baduzu, bere baldintzak errespetatu behar dituzu.", IDC_STATIC, 15, 110, 227, 19
     PUSHBUTTON "&Ikusi GPL-a...", IDC_VIEWGPL, 251, 110, 50, 19
     LTEXT "Sakatu Aurrera instalazioa jarraitzeko.", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
-CAPTION "ReactOS-aren Instalazioa"
+CAPTION "MenuOS-aren Instalazioa"
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -45,7 +45,7 @@ END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-aren Instalazioa"
+CAPTION "MenuOS-aren Instalazioa"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
@@ -58,7 +58,7 @@ END
 
 IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-aren Instalazioa"
+CAPTION "MenuOS-aren Instalazioa"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
@@ -76,7 +76,7 @@ END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-aren Instalazioa"
+CAPTION "MenuOS-aren Instalazioa"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
@@ -92,7 +92,7 @@ END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-aren Instalazioa"
+CAPTION "MenuOS-aren Instalazioa"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
@@ -106,7 +106,7 @@ END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-aren Instalazioa"
+CAPTION "MenuOS-aren Instalazioa"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_THEMEPICKER, "SysListView32", LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_TABSTOP, 18, 8, 288, 130
@@ -114,7 +114,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-aren Instalazioa"
+CAPTION "MenuOS-aren Instalazioa"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Osagaiak erregistratzea", IDC_TASKTEXT1, 65, 27, 232, 8
@@ -127,11 +127,11 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS-aren Instalazio bukaera"
+CAPTION "MenuOS-aren Instalazio bukaera"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS-aren Instalazioa bukatu da.", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "ReactOS-aren Instalazioa se ha completado correctamente.\nSe reiniciará el equipo al hacer clic sobre el botón Terminar.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "MenuOS-aren Instalazioa bukatu da.", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "MenuOS-aren Instalazioa se ha completado correctamente.\nSe reiniciará el equipo al hacer clic sobre el botón Terminar.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "Disko-unitatean CDren bat badago, kendu.\nBukatu ondoren, berrabiarazi ordenagailua sakatu Amaitu.", IDC_STATIC, 115, 169, 195, 17
 END
@@ -177,13 +177,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Eskerrak"
-    IDS_ACKSUBTITLE "Zertan oinarritzen den ReactOS eta lizentziaren informazioa."
+    IDS_ACKSUBTITLE "Zertan oinarritzen den MenuOS eta lizentziaren informazioa."
     IDS_OWNERTITLE "Pertsonalizatu zure softwarea"
-    IDS_OWNERSUBTITLE "Instalatzaileak informazio pertsonal hau erabiltzen du ReactOS pertsonalizatzeko."
+    IDS_OWNERSUBTITLE "Instalatzaileak informazio pertsonal hau erabiltzen du MenuOS pertsonalizatzeko."
     IDS_COMPUTERTITLE "Ordenagailuaren izena eta Administratzailearen pasahitza"
     IDS_COMPUTERSUBTITLE "Administratzaile izena eta pasahitza eman diezazkiokezu ordenagailuari."
     IDS_LOCALETITLE "Eskualdeko aukerak"
-    IDS_LOCALESUBTITLE "ReactOS pertsonaliza dezakezu eskualde eta hizkuntza desberdinetarako."
+    IDS_LOCALESUBTITLE "MenuOS pertsonaliza dezakezu eskualde eta hizkuntza desberdinetarako."
     IDS_DATETIMETITLE "Data eta ordua"
     IDS_DATETIMESUBTITLE "Ezarri zure ordenagailurako data eta ordu egokiak."
     IDS_PROCESSTITLE "Finishing the Installation"
@@ -194,7 +194,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP "ReactOS-aren Instalazioa"
+    IDS_REACTOS_SETUP "MenuOS-aren Instalazioa"
     IDS_UNKNOWN_ERROR "Errore ezezaguna"
     IDS_LOADLIBRARY_FAILED "Ezin izan da liburutegia kargatu: "
     IDS_GETPROCADDR_FAILED "Ezin izan da prozesuaren kokapena lortu: "
@@ -254,8 +254,8 @@ STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Produktuen aukerak"
     IDS_PRODUCTSUBTITLE "Produktu-aukera bat hauta dezakezu sistemaren portaeran eragingo du."
-    IDS_PRODUCTSERVERNAME "ReactOS Servidore gisa"
-    IDS_PRODUCTWORKSTATIONNAME "ReactOS Mahaigain gisa"
+    IDS_PRODUCTSERVERNAME "MenuOS Servidore gisa"
+    IDS_PRODUCTWORKSTATIONNAME "MenuOS Mahaigain gisa"
     IDS_PRODUCTSERVERINFO "Sistema zerbitzari gisa agertuko da. ""Nire irudiak"", ""Nire bideoak"" y ""Nire musika"" karpetak ""Nire Dokumentoak"" independienteki izango dira."
     IDS_PRODUCTWORKSTATIONINFO "Sistema mahaigain gisa agertuko da. ""Nire irudiak"", ""Nire bideoak"" y ""Nire musika"" karpetak ""Nire Dokumentoak"" barruan egongo dira."
     IDS_DEFAULT "(Lehenetsia)"

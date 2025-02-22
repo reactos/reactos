@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Applications Manager
+ * PROJECT:     MenuOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
@@ -172,10 +172,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "Managerul de aplicații ReactOS"
+    IDS_APPTITLE "Managerul de aplicații MenuOS"
     IDS_APP_AUTHORS "Marcă înregistrată 2009 Dmitry Chapyshev"
-    IDS_WELCOME_TITLE "Bun venit la Managerul de aplicații ReactOS!"
-    IDS_WELCOME_TEXT "Alegeți o categorie din stânga, apoi alegeți o aplicație pentru a o instala sau dezinstala.\nArdesa web ReactOS: "
+    IDS_WELCOME_TITLE "Bun venit la Managerul de aplicații MenuOS!"
+    IDS_WELCOME_TEXT "Alegeți o categorie din stânga, apoi alegeți o aplicație pentru a o instala sau dezinstala.\nArdesa web MenuOS: "
     IDS_WELCOME_URL "https://reactos.org"
 
     IDS_APPWIZ_TITLE "Adăugare/Eliminare de programe"

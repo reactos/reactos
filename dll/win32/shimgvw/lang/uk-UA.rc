@@ -1,5 +1,5 @@
 /*
- * PROJECT:    ReactOS Logon GINA DLL
+ * PROJECT:    MenuOS Logon GINA DLL
  * LICENSE:    GPL - See COPYING in the top level directory
  * FILE:       dll/win32/shimgvw/lang/uk-UA.rc
  * PURPOSE:    Ukraianian Language File for msgina
@@ -10,7 +10,7 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "Програма перегляду зображень і факсів ReactOS"
+    IDS_APPTITLE "Програма перегляду зображень і факсів MenuOS"
     IDS_SETASDESKBG "Встановити як фон робочого столу"
     IDS_NOPREVIEW "No preview available."
     IDS_PREVIEW "Перегляд"

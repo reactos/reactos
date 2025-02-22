@@ -16,8 +16,8 @@ BEGIN
     IDS_PUMPKIN "Гарбуз"
     IDS_RAIN "Дощовий День"
     IDS_RWB "Red, White, and Blue"
-    IDS_CLASSIC "ReactOS Класична"
-    IDS_STANDARD "ReactOS Стандартна"
+    IDS_CLASSIC "MenuOS Класична"
+    IDS_STANDARD "MenuOS Стандартна"
     IDS_ROSE "Троянда"
     IDS_SAND "Пісок" //Desert
     IDS_SLATE "Шифер"

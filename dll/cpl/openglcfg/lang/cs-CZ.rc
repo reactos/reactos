@@ -19,7 +19,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_RENDERER_DEFAULT "Výchozí nastavení"
-    IDS_RENDERER_RSWR "ReactOS Software Implementation"
+    IDS_RENDERER_RSWR "MenuOS Software Implementation"
     IDS_CPLNAME "Nastavení OpenGL"
     IDS_CPLDESCRIPTION "Konfigurace vykreslování OpenGL."
     IDS_DEBUG_SET "Nastavit"

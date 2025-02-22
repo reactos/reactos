@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Modem Properties
+ * PROJECT:     MenuOS Modem Properties
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Hong Kong) resource file
  * TRANSLATORS: Copyright 2021-2022 Chan Chilung <eason066@gmail.com>
@@ -372,7 +372,7 @@ BEGIN
     3053 "無法顯示數據機的內容，因為目前無法使用數據機。\n\n請重新啟動系統，然後再試一次。"
     3054 "數據機的內容"
     3060 "您確定要從系統中刪除選定的數據機？"
-    3061 "ReactOS 無法從 %2 中刪除數據機「%1」。"
+    3061 "MenuOS 無法從 %2 中刪除數據機「%1」。"
     3062 "數據機"
     3069 "記憶體不足，無法開啟數據機的控制台。\n\n請關閉一些程式，然後再試一次。"
     3073 "您必須是系統管理員才能安裝數據機。"

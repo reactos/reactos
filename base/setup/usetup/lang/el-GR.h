@@ -8,14 +8,14 @@ static MUI_ENTRY elGRSetupInitPageEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         0,
         20,
-        "Please wait while the ReactOS Setup initializes itself",
+        "Please wait while the MenuOS Setup initializes itself",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -46,7 +46,7 @@ static MUI_ENTRY elGRLanguagePageEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -98,21 +98,21 @@ static MUI_ENTRY elGRWelcomePageEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         5,
         8,
-        "\211\230\242\351\252 \216\250\345\251\230\253\234 \251\253\236\244 \234\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS",
+        "\211\230\242\351\252 \216\250\345\251\230\253\234 \251\253\236\244 \234\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
     {
         5,
         11,
-        "\200\254\253\346 \253\246 \243\342\250\246\252 \253\236\252 \234\232\241\230\253\341\251\253\230\251\236\252 \230\244\253\240\232\250\341\255\234\240 \253\246 \242\234\240\253\246\254\250\232\240\241\346 \251\347\251\253\236\243\230 ReactOS",
+        "\200\254\253\346 \253\246 \243\342\250\246\252 \253\236\252 \234\232\241\230\253\341\251\253\230\251\236\252 \230\244\253\240\232\250\341\255\234\240 \253\246 \242\234\240\253\246\254\250\232\240\241\346 \251\347\251\253\236\243\230 MenuOS",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -126,35 +126,35 @@ static MUI_ENTRY elGRWelcomePageEntries[] =
     {
         7,
         15,
-        "\x07  Press ENTER to install or upgrade ReactOS.",
+        "\x07  Press ENTER to install or upgrade MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         7,
         17,
-        "\x07  \217\230\253\343\251\253\234 R \232\240\230 \244\230 \234\247\240\233\240\246\250\237\351\251\234\253\234 \253\246 ReactOS.",
+        "\x07  \217\230\253\343\251\253\234 R \232\240\230 \244\230 \234\247\240\233\240\246\250\237\351\251\234\253\234 \253\246 MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         7,
         19,
-        "\x07  \217\230\253\343\251\253\234 L \232\240\230 \244\230 \233\234\345\253\234 \253\246\254\252 \346\250\246\254\252 \230\233\234\240\246\233\346\253\236\251\236\252 \253\246\254 ReactOS.",
+        "\x07  \217\230\253\343\251\253\234 L \232\240\230 \244\230 \233\234\345\253\234 \253\246\254\252 \346\250\246\254\252 \230\233\234\240\246\233\346\253\236\251\236\252 \253\246\254 MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         7,
         21,
-        "\x07  \217\230\253\343\251\253\234 F3 \232\240\230 \244\230 \230\247\246\256\340\250\343\251\234\253\234 \256\340\250\345\252 \244\230 \234\232\241\230\253\230\251\253\343\251\234\253\234 \253\246 ReactOS.",
+        "\x07  \217\230\253\343\251\253\234 F3 \232\240\230 \244\230 \230\247\246\256\340\250\343\251\234\253\234 \256\340\250\345\252 \244\230 \234\232\241\230\253\230\251\253\343\251\234\253\234 \253\246 MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         5,
         23,
-        "\202\240\230 \247\234\250\240\251\251\346\253\234\250\234\252 \247\242\236\250\246\255\246\250\345\234\252 \232\240\230 \253\246 ReactOS, \247\230\250\230\241\230\242\246\347\243\234 \234\247\240\251\241\234\255\237\234\345\253\234 \253\246:",
+        "\202\240\230 \247\234\250\240\251\251\346\253\234\250\234\252 \247\242\236\250\246\255\246\250\345\234\252 \232\240\230 \253\246 MenuOS, \247\230\250\230\241\230\242\246\347\243\234 \234\247\240\251\241\234\255\237\234\345\253\234 \253\246:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -185,21 +185,21 @@ static MUI_ENTRY elGRIntroPageEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "ReactOS Version Status",
+        "MenuOS Version Status",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
     {
         6,
         11,
-        "ReactOS is in Alpha stage, meaning it is not feature-complete",
+        "MenuOS is in Alpha stage, meaning it is not feature-complete",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -227,21 +227,21 @@ static MUI_ENTRY elGRIntroPageEntries[] =
     {
         6,
         16,
-        "to run ReactOS on real hardware.",
+        "to run MenuOS on real hardware.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  Press ENTER to continue ReactOS Setup.",
+        "\x07  Press ENTER to continue MenuOS Setup.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  Press F3 to quit without installing MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -265,7 +265,7 @@ static MUI_ENTRY elGRLicensePageEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -279,7 +279,7 @@ static MUI_ENTRY elGRLicensePageEntries[] =
     {
         8,
         8,
-        "The ReactOS System is licensed under the terms of the",
+        "The MenuOS System is licensed under the terms of the",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -300,7 +300,7 @@ static MUI_ENTRY elGRLicensePageEntries[] =
     {
         8,
         11,
-        "All software that is part of the ReactOS system is",
+        "All software that is part of the MenuOS system is",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -335,7 +335,7 @@ static MUI_ENTRY elGRLicensePageEntries[] =
     {
         8,
         17,
-        "ReactOS only covers distribution to third parties.",
+        "MenuOS only covers distribution to third parties.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -349,7 +349,7 @@ static MUI_ENTRY elGRLicensePageEntries[] =
     {
         8,
         19,
-        "GNU General Public License with ReactOS please visit",
+        "GNU General Public License with MenuOS please visit",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -408,7 +408,7 @@ static MUI_ENTRY elGRDevicePageEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -515,14 +515,14 @@ static MUI_ENTRY elGRRepairPageEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "\206 \234\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS \231\250\345\251\241\234\253\230\240 \251\234 \247\250\351\240\243\246 \251\253\341\233\240\246 \230\244\341\247\253\254\245\236\252 \241\230\240",
+        "\206 \234\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS \231\250\345\251\241\234\253\230\240 \251\234 \247\250\351\240\243\246 \251\253\341\233\240\246 \230\244\341\247\253\254\245\236\252 \241\230\240",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -588,21 +588,21 @@ static MUI_ENTRY elGRUpgradePageEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        "The MenuOS Setup can upgrade one of the available MenuOS installations",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         9,
-        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        "listed below, or, if a MenuOS installation is damaged, the Setup program",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -644,7 +644,7 @@ static MUI_ENTRY elGRUpgradePageEntries[] =
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  Press F3 to quit without installing MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -668,7 +668,7 @@ static MUI_ENTRY elGRComputerPageEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -734,7 +734,7 @@ static MUI_ENTRY elGRFlushPageEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -779,14 +779,14 @@ static MUI_ENTRY elGRQuitPageEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         10,
         6,
-        "\222\246 ReactOS \233\234\244 \234\232\241\230\253\230\251\253\341\237\236\241\234 \247\242\343\250\340\252.",
+        "\222\246 MenuOS \233\234\244 \234\232\241\230\253\230\251\253\341\237\236\241\234 \247\242\343\250\340\252.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -831,7 +831,7 @@ static MUI_ENTRY elGRDisplayPageEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -897,14 +897,14 @@ static MUI_ENTRY elGRSuccessPageEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         10,
         6,
-        "\222\230 \231\230\251\240\241\341 \251\253\246\240\256\234\345\230 \253\246\254 ReactOS \234\232\241\230\253\230\251\253\341\237\236\241\230\244 \234\247\240\253\254\256\351\252.",
+        "\222\230 \231\230\251\240\241\341 \251\253\246\240\256\234\345\230 \253\246\254 MenuOS \234\232\241\230\253\230\251\253\341\237\236\241\230\244 \234\247\240\253\254\256\351\252.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -949,7 +949,7 @@ static MUI_ENTRY elGRSelectPartitionEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -977,7 +977,7 @@ static MUI_ENTRY elGRSelectPartitionEntries[] =
     {
         8,
         13,
-        "\x07  \217\230\253\343\251\253\234 ENTER \232\240\230 \244\230 \234\232\241\230\253\230\251\253\343\251\234\253\234 \253\246 ReactOS \251\253\246 \234\247\240\242\234\232\243\342\244\246 \233\240\230\243\342\250\240\251\243\230.",
+        "\x07  \217\230\253\343\251\253\234 ENTER \232\240\230 \244\230 \234\232\241\230\253\230\251\253\343\251\234\253\234 \253\246 MenuOS \251\253\246 \234\247\240\242\234\232\243\342\244\246 \233\240\230\243\342\250\240\251\243\230.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1022,7 +1022,7 @@ static MUI_ENTRY elGRChangeSystemPartition[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1043,14 +1043,14 @@ static MUI_ENTRY elGRChangeSystemPartition[] =
     {
         6,
         16,
-        "uses a format not supported by ReactOS.",
+        "uses a format not supported by MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         18,
-        "In order to successfully install ReactOS, the Setup program must change",
+        "In order to successfully install MenuOS, the Setup program must change",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1120,7 +1120,7 @@ static MUI_ENTRY elGRChangeSystemPartition[] =
     {
         6,
         35,
-        "to the original one after finishing the installation of ReactOS.",
+        "to the original one after finishing the installation of MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1144,7 +1144,7 @@ static MUI_ENTRY elGRConfirmDeleteSystemPartitionEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1165,7 +1165,7 @@ static MUI_ENTRY elGRConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         11,
-        "programs, programs to start an operating system (like ReactOS) or other",
+        "programs, programs to start an operating system (like MenuOS) or other",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1200,7 +1200,7 @@ static MUI_ENTRY elGRConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         17,
-        "computer from the harddisk until you finished the ReactOS Setup.",
+        "computer from the harddisk until you finished the MenuOS Setup.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1252,7 +1252,7 @@ static MUI_ENTRY elGRFormatPartitionEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1290,7 +1290,7 @@ static MUI_ENTRY elGRCheckFSEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1321,21 +1321,21 @@ static MUI_ENTRY elGRInstallDirectoryEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "\206 \234\232\241\230\253\341\251\253\230\251\236 \230\244\253\240\232\250\341\255\234\240 \253\230 \230\250\256\234\345\230 \253\246\254 ReactOS \251\253\246 \234\247\240\242\234\232\243\342\244\246 \233\240\230\243\342\250\240\251\243\230.",
+        "\206 \234\232\241\230\253\341\251\253\230\251\236 \230\244\253\240\232\250\341\255\234\240 \253\230 \230\250\256\234\345\230 \253\246\254 MenuOS \251\253\246 \234\247\240\242\234\232\243\342\244\246 \233\240\230\243\342\250\240\251\243\230.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         9,
-        "\204\247\240\242\342\245\253\234 \253\246\244 \251\253\246\244 \255\341\241\234\242\246 \247\246\254 \237\342\242\234\253\234 \244\230 \234\232\241\230\253\230\251\253\230\237\234\345 \253\246 ReactOS:",
+        "\204\247\240\242\342\245\253\234 \253\246\244 \251\253\246\244 \255\341\241\234\242\246 \247\246\254 \237\342\242\234\253\234 \244\230 \234\232\241\230\253\230\251\253\230\237\234\345 \253\246 MenuOS:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1356,7 +1356,7 @@ static MUI_ENTRY elGRInstallDirectoryEntries[] =
     {
         6,
         16,
-        "\237\342\242\234\253\234 \244\230 \234\232\241\230\251\253\230\237\234\345 \253\246 ReactOS.",
+        "\237\342\242\234\253\234 \244\230 \234\232\241\230\251\253\230\237\234\345 \253\246 MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1380,14 +1380,14 @@ static MUI_ENTRY elGRFileCopyEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         0,
         12,
-        "\217\230\250\230\241\230\242\351 \247\234\250\240\243\342\244\234\253\234 \346\251\246 \236 \234\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS \230\244\253\240\232\250\341\255\234\240",
+        "\217\230\250\230\241\230\242\351 \247\234\250\240\243\342\244\234\253\234 \346\251\246 \236 \234\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS \230\244\253\240\232\250\341\255\234\240",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -1425,7 +1425,7 @@ static MUI_ENTRY elGRBootLoaderSelectPageEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1484,7 +1484,7 @@ static MUI_ENTRY elGRBootLoaderInstallPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1515,7 +1515,7 @@ static MUI_ENTRY elGRBootLoaderRemovableDiskPageEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1561,7 +1561,7 @@ static MUI_ENTRY elGRKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1627,7 +1627,7 @@ static MUI_ENTRY elGRLayoutSettingsEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1687,14 +1687,14 @@ static MUI_ENTRY elGRPrepareCopyEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "\206 \234\232\241\230\253\341\251\253\230\251\236 \247\250\246\234\253\246\240\243\341\235\234\240 \253\246\244 \254\247\246\242\246\232\240\251\253\343 \251\230\252 \232\240\230 \253\236\244 \230\244\253\240\232\250\230\255\343 \253\340\244 \230\250\256\234\345\340\244 \253\246\254 ReactOS.",
+        "\206 \234\232\241\230\253\341\251\253\230\251\236 \247\250\246\234\253\246\240\243\341\235\234\240 \253\246\244 \254\247\246\242\246\232\240\251\253\343 \251\230\252 \232\240\230 \253\236\244 \230\244\253\240\232\250\230\255\343 \253\340\244 \230\250\256\234\345\340\244 \253\246\254 MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1719,7 +1719,7 @@ static MUI_ENTRY elGRSelectFSEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1767,7 +1767,7 @@ static MUI_ENTRY elGRDeletePartitionEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1819,7 +1819,7 @@ static MUI_ENTRY elGRRegistryEntries[] =
     {
         4,
         3,
-        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 ReactOS " KERNEL_VERSION_STR,
+        " \204\232\241\230\253\341\251\253\230\251\236 \253\246\254 MenuOS " KERNEL_VERSION_STR,
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1854,9 +1854,9 @@ MUI_ERROR elGRErrorEntries[] =
     },
     {
         // ERROR_NOT_INSTALLED
-        "\222\246 ReactOS \233\234\244 \234\232\241\230\253\230\251\253\341\237\236\241\234 \247\242\343\250\340\252 \251\253\246\244\n"
+        "\222\246 MenuOS \233\234\244 \234\232\241\230\253\230\251\253\341\237\236\241\234 \247\242\343\250\340\252 \251\253\246\244\n"
         "\254\247\246\242\246\232\240\251\253\343 \251\230\252. \200\244 \230\247\246\256\340\250\343\251\234\253\234 \230\247\346 \253\236\244 \204\232\241\230\253\341\251\253\230\251\236 \253\351\250\230, \237\230 \247\250\342\247\234\240 \244\230\n"
-        "\245\230\244\230\253\250\342\245\234\253\234 \253\236\244 \204\232\241\230\253\341\251\253\230\251\236 \232\240\230 \244\230 \234\232\241\230\253\230\251\253\343\251\234\253 \253\246 ReactOS.\n"
+        "\245\230\244\230\253\250\342\245\234\253\234 \253\236\244 \204\232\241\230\253\341\251\253\230\251\236 \232\240\230 \244\230 \234\232\241\230\253\230\251\253\343\251\234\253 \253\246 MenuOS.\n"
         "\n"
         "  \x07  \217\230\253\343\251\253\234 ENTER \232\240\230 \230\244 \251\254\244\234\256\345\251\234\253\234 \253\236\244 \204\232\241\230\253\341\251\253\230\251\236.\n"
         "  \x07  \217\230\253\343\251\253\234 F3 \232\240\230 \244\230 \230\247\246\256\340\250\343\251\234\253\234 \230\247\346 \253\236\244 \204\232\241\230\253\341\251\253\230\251\236.",
@@ -1864,7 +1864,7 @@ MUI_ERROR elGRErrorEntries[] =
     },
     {
         // ERROR_NO_BUILD_PATH
-        "Failed to build the installation paths for the ReactOS installation directory!\n"
+        "Failed to build the installation paths for the MenuOS installation directory!\n"
         "ENTER = Reboot computer"
     },
     {
@@ -1874,7 +1874,7 @@ MUI_ERROR elGRErrorEntries[] =
     },
     {
         // ERROR_SOURCE_DIR
-        "You cannot install ReactOS within the installation source directory!\n"
+        "You cannot install MenuOS within the installation source directory!\n"
         "ENTER = Reboot computer"
     },
     {
@@ -2230,7 +2230,7 @@ MUI_STRING elGRStrings[] =
      "\213\342\232\234\237\246\252 \253\246\254 \244\342\246\254 partition:"},
     {STRING_CHOOSE_NEW_PARTITION,
      "You have chosen to create a primary partition on"},
-//     "„§ ¢â¥˜«œ ¤˜ ›ž£ ¦¬¨šã©œ«œ â¤˜ ¤â¦ partition on"},
+//     "â€žÂ§Â Â¢Ã¢Â¥ËœÂ«Å“ Â¤Ëœ â€ºÅ¾Â£Â Â¦Â¬Â¨Å¡Ã£Â©Å“Â«Å“ Ã¢Â¤Ëœ Â¤Ã¢Â¦ partition on"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
@@ -2244,13 +2244,13 @@ MUI_STRING elGRStrings[] =
     {STRING_PARTFORMAT,
     "\200\254\253\346 \253\246 Partition \237\230 \233\240\230\243\246\250\255\340\237\234\345 \243\234\253\341."},
     {STRING_NONFORMATTEDPART,
-    "\204\247\240\242\342\245\230\253\234 \244\230 \234\232\241\230\253\230\251\253\343\251\234\253\234 \253\246 ReactOS \251\234 \342\244\230 \244\342\246 \343 \243\236 \233\240\230\243\246\250\255\340\243\342\244\246 Partition."},
+    "\204\247\240\242\342\245\230\253\234 \244\230 \234\232\241\230\253\230\251\253\343\251\234\253\234 \253\246 MenuOS \251\234 \342\244\230 \244\342\246 \343 \243\236 \233\240\230\243\246\250\255\340\243\342\244\246 Partition."},
     {STRING_NONFORMATTEDSYSTEMPART,
     "The system partition is not formatted yet."},
     {STRING_NONFORMATTEDOTHERPART,
     "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
-    "Setup install ReactOS onto Partition"},
+    "Setup install MenuOS onto Partition"},
     {STRING_CONTINUE,
     "ENTER = \221\254\244\342\256\234\240\230"},
     {STRING_QUITCONTINUE,

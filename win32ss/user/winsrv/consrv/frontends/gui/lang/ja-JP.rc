@@ -20,7 +20,7 @@ BEGIN
     IDS_SCROLLUP "上にスクロール"
     IDS_SCROLLDOWN "下にスクロール"
 */
-    IDS_TERMINAL_TITLE "ReactOS コンソール"
+    IDS_TERMINAL_TITLE "MenuOS コンソール"
 END
 
 STRINGTABLE

@@ -9,6 +9,6 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "ReactOS Çökme Raporlayıcısı"
+    IDS_APP_TITLE "MenuOS Çökme Raporlayıcısı"
     IDS_USER_ALERT_MESSAGE "%ls uygulaması çöktü. Bu kilitlenmeyle ilgili bilgiler şuraya kaydedildi:\n\n%ls"
 END

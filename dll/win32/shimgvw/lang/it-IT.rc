@@ -2,7 +2,7 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "Visualizzatore immagini e fax di ReactOS"
+    IDS_APPTITLE "Visualizzatore immagini e fax di MenuOS"
     IDS_SETASDESKBG "Imposta come sfondo del desktop"
     IDS_NOPREVIEW "Anteprima non disponibile."
     IDS_PREVIEW "Anteprima"

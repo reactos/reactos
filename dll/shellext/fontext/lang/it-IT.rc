@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS FontExt Shell Extension
+ * PROJECT:     MenuOS FontExt Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Italian translation resource
  * COPYRIGHT:   Copyright 2018 George Bișoc (george.bisoc@reactos.org)
@@ -9,7 +9,7 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_FONTS_FOLDER "Cartella dei font di ReactOS"
+    IDS_REACTOS_FONTS_FOLDER "Cartella dei font di MenuOS"
 END
 
 STRINGTABLE

@@ -2,7 +2,7 @@ LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "מציג התמונות והפקסים של ReactOS"
+    IDS_APPTITLE "מציג התמונות והפקסים של MenuOS"
     IDS_SETASDESKBG "קבע כרקע שולחן עבודה"
     IDS_NOPREVIEW "No preview available."
     IDS_PREVIEW "תצוגה מקדימה"

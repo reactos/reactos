@@ -9,12 +9,12 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
 
 STRINGTABLE
 {
-1000, "ReactOS"
+1000, "MenuOS"
 }
 
 STRINGTABLE
 {
-2000, "Lunar ReactOS"
+2000, "Lunar MenuOS"
 }
 
 STRINGTABLE
@@ -35,10 +35,10 @@ STRINGTABLE
 {
 5000, "Lunar"
 5001, "視覺樣式"
-5002, "ReactOS Project"
+5002, "MenuOS Project"
 5003, "Cernodile & Illen, built on top of Lautus"
 5004, "於 2019 年以 GNU/GPL 2.0 條款發行"
 5005, "https://reactos.org/"
 5006, "1.1"
-5007, "ReactOS 的視覺樣式"
+5007, "MenuOS 的視覺樣式"
 }

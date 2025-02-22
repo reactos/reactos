@@ -78,7 +78,7 @@ CAPTION "Gelişmiş Görünüm"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "ReactOS Klasik'ten başka bir tema seçerseniz seçtiğiniz tema bazı eski programlardakiler dışında aşağıdaki ayarları geçersiz kılacaktır.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
+    LTEXT "MenuOS Klasik'ten başka bir tema seçerseniz seçtiğiniz tema bazı eski programlardakiler dışında aşağıdaki ayarları geçersiz kılacaktır.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
     LTEXT "&Öge", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP

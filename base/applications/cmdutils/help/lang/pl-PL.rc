@@ -1,7 +1,7 @@
 /*
  *    Translated by Caemyr - Olaf Siejka (Jan, 2008)
  *    Updated by niski - Maciej Bialas (Mar, 2010)
- *    Use ReactOS forum PM or IRC to contact me
+ *    Use MenuOS forum PM or IRC to contact me
  *    https://reactos.org
  *    IRC: irc.freenode.net #reactos-pl;
  *    UTF-8 conversion by Caemyr (May, 2011)
@@ -17,7 +17,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Podaje informacje o poleceniach ReactOS.\n\n\
+    IDS_USAGE "Podaje informacje o poleceniach MenuOS.\n\n\
 HELP [polecenie]\n\n\
   polecenie - wyświetla informacje o tym poleceniu.\n"
     IDS_HELP1 "Lista wszystkich dostępnych komend (+opisy)\n\n\
@@ -32,7 +32,7 @@ CD       Wyświetla ścieżkę lub przechodzi do innego katalogu.\n\
 CHCP     Wyświetla lub ustawia bieżącą stronę kodową.\n\
 CHOICE   Przedstawia użytkownikowi kilka możliwości i czeka na wybór.\n\
 CLS      Czyści ekran.\n\
-CMD      Uruchamia kolejne okno konsoli ReactOS.\n\
+CMD      Uruchamia kolejne okno konsoli MenuOS.\n\
 COLOR    Ustawia kolory tła i tekstu w oknie konsoli.\n\
 COPY     Kopiuje jeden lub więcej plików w inne miejsce.\n\
 DATE     Wyświetla lub ustawia datę.\n\
@@ -45,7 +45,7 @@ FOR      Wykonuje określoną komendę dla każdego pliku z określonej listy.\n
 FREE     Wolne miejsce na dysku.\n\
 GOTO     Kieruje interpreter poleceń do określonej linii,\n\
          oznaczonej, w danym programie wsadowym.\n\
-HELP     Lista komend konsoli ReactOS wraz z opisem.\n\
+HELP     Lista komend konsoli MenuOS wraz z opisem.\n\
 HISTORY  Lista użytych komend.\n\
 IF       Przetwarzanie warunkowe w programach wsadowych.\n\
 LABEL    Tworzy, zmienia lub kasuje etykietę woluminu w danym napędzie.\n\
@@ -73,8 +73,8 @@ TIME     Wyświetla lub zmienia czas systemowy.\n\
 TIMER    Pozwala na użycie do 10 stoperów.\n\
 TITLE    Ustanawia tytuł dla danej sesji CMD.EXE.\n\
 TYPE     Wyświetla zawartość pliku tekstowego.\n\
-VER      Wyświetla wersję systemu ReactOS.\n\
-VERIFY   Decyduje czy ReactOS ma sprawdzać poprawność zapisu plików\n\
+VER      Wyświetla wersję systemu MenuOS.\n\
+VERIFY   Decyduje czy MenuOS ma sprawdzać poprawność zapisu plików\n\
          na dysku.\n\
 VOL      Wyświetla etykietę woluminu na danym napędzie i numer seryjny.\n"
 END

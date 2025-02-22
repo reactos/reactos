@@ -78,20 +78,20 @@ END
 
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalátor ReactOS"
+CAPTION "Instalátor MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Zvolte, zda chcete použít typická nastavení nebo si je přizpůsobit:", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "Typická nastavení", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Přizpůsobit", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
-    LTEXT "Vytvoří připojení k síti pomocí Síťového klienta ReactOS, sdílení souborů a tiskáren a nastaví automatickou adresu protokolu TCP/IP.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "Vytvoří připojení k síti pomocí Síťového klienta MenuOS, sdílení souborů a tiskáren a nastaví automatickou adresu protokolu TCP/IP.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Umožní ruční nastavení sítě.", IDC_STATIC, 65, 90, 243, 20
 END
 
 IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalátor ReactOS"
+CAPTION "Instalátor MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Pro zařízení:", IDC_STATIC, 33, 2, 100, 20
@@ -106,7 +106,7 @@ END
 
 IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalátor ReactOS"
+CAPTION "Instalátor MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Má být tento počítač součástí domény?\n\
@@ -171,6 +171,6 @@ BEGIN
     IDS_NETWORKCOMPONENTSUBTITLE "Určete, které síťové součásti jsou používány. Přidání nové součásti provedete kliknutím na Instalovat."
     IDS_NETWORKDOMAINTITLE "Doména nebo pracovní skupina"
     IDS_NETWORKDOMAINSUBTITLE "Doména je skupina počítaču definovaná správcem sítě. Pracovní skupina je skupina počítačů sdilející název pracovní skupiny."
-    IDS_REACTOS_SETUP "Instalátor ReactOS"
+    IDS_REACTOS_SETUP "Instalátor MenuOS"
     IDS_WZD_DOMAIN_NAME "Instalátor nemůže pokračovat dokud\nnezadáte jméno domény\nnebo pracovní skupiny."
 END

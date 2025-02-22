@@ -25,5 +25,5 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "許可證管理"
     IDS_CPLDESCRIPTION_1 "許可證管理"
-    IDS_REACTOS "ReactOS - 自由軟體"
+    IDS_REACTOS "MenuOS - 自由軟體"
 END

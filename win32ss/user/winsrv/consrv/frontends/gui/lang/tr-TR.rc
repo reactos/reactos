@@ -22,7 +22,7 @@ BEGIN
     IDS_SCROLLUP "Yukarı Kaydır"
     IDS_SCROLLDOWN "Aşağı Kaydır"
 */
-    IDS_TERMINAL_TITLE "ReactOS Konsol"
+    IDS_TERMINAL_TITLE "MenuOS Konsol"
 END
 
 STRINGTABLE

@@ -277,7 +277,7 @@ CAPTION "Plassering informasjon"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 10, 10, 88, 155
-    LTEXT "Før du kan lage telefon eller modem tilkobling. Trenger ReactOS følgene informasjon om gjeldende plassering.", 2000, 107, 15, 188, 25
+    LTEXT "Før du kan lage telefon eller modem tilkobling. Trenger MenuOS følgene informasjon om gjeldende plassering.", 2000, 107, 15, 188, 25
     LTEXT "&Hvilket land/området er du i nå?", -1, 107, 43, 189, 10
     COMBOBOX 1006, 107, 55, 180, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "Hva er retnings&nummeret (eller etter kode) som du er i nå?", -1, 107, 74, 189, 10
@@ -298,7 +298,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 0, 0, 88, 155
-    LTEXT "Før du kan lage telefon eller modem tilkobling, trenger ReactOS følgene informasjon om gjeldende plassering.", 2000, 95, 2, 188, 25
+    LTEXT "Før du kan lage telefon eller modem tilkobling, trenger MenuOS følgene informasjon om gjeldende plassering.", 2000, 95, 2, 188, 25
     LTEXT "&Hvilket land/området er du i nå?", -1, 95, 30, 188, 10
     COMBOBOX 1006, 95, 41, 177, 68, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "Hva er retnings&nummeret (eller by kode) som du er i nå?", -1, 95, 61, 188, 10
@@ -312,7 +312,7 @@ END
 
 500 DIALOGEX 0, 0, 235, 88
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "ReactOS Explorer"
+CAPTION "MenuOS Explorer"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 504, 501, 13, 14, 21, 20
@@ -406,7 +406,7 @@ BEGIN
     80 "Er du sikker på at du ønsker å slette denne område regelen?"
     81 "You must enter the digits to dial."
     82 "The calling card name you have entered is already in use.  Please enter a unique name."
-    83 "ReactOS trenger telefon informasjon om plasseringen fra hvem du vil ringe. Hvis du avbryter uten å skaffe denne informasjonen, dette programmet vil kanskje ikke fungere riktig når ringing. I tillegg, noen programmer svarer til din avbryting denne dialogboks av øyeblikkelig gjen-postere av seg selv.\nEr du sikker på at du vil avbryte?"
+    83 "MenuOS trenger telefon informasjon om plasseringen fra hvem du vil ringe. Hvis du avbryter uten å skaffe denne informasjonen, dette programmet vil kanskje ikke fungere riktig når ringing. I tillegg, noen programmer svarer til din avbryting denne dialogboks av øyeblikkelig gjen-postere av seg selv.\nEr du sikker på at du vil avbryte?"
     84 "Bekreft avbryt"
     85 "Min plassering"
     86 "<ingen tjeneste produsenter er tilgjengelig for installasjon>"

@@ -36,7 +36,7 @@ BEGIN
     STRING_CLIPFILE  "Elemen Papan Klip"
     STRING_DELETE_MSG "Bersihkan isi papan klip?"
     STRING_DELETE_TITLE "Bersihkan papan klip"
-    STRING_FORMAT_NT "Berkas papan klip untuk ReactOS (*.clp)"
+    STRING_FORMAT_NT "Berkas papan klip untuk MenuOS (*.clp)"
     STRING_FORMAT_GEN "Berkas papan klip (*.clp)"
 END
 

@@ -5,9 +5,9 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 /* Default settings */
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS - Welcome"
-    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
-    IDS_DEFAULT_TOPIC_DESC "ReactOS へようこそ。\n\n左側のトピックをクリックしてください。"
+    IDS_APPTITLE "MenuOS - Welcome"
+    IDS_DEFAULT_TOPIC_TITLE "MenuOS"
+    IDS_DEFAULT_TOPIC_DESC "MenuOS へようこそ。\n\n左側のトピックをクリックしてください。"
     IDS_FONTNAME "MS UI Gothic"
     IDS_CHECKTEXT "&Show this dialog again"
     IDS_CLOSETEXT "終了(&Q)"
@@ -16,7 +16,7 @@ END
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_BUTTON0 "ReactOS をインストールする"
+    IDS_TOPIC_BUTTON0 "MenuOS をインストールする"
     IDS_TOPIC_BUTTON1 "この CD を開く"
     IDS_TOPIC_BUTTON2 "終了(&Q)"
 END
@@ -24,7 +24,7 @@ END
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_TITLE0 "ReactOS をインストールする"
+    IDS_TOPIC_TITLE0 "MenuOS をインストールする"
     IDS_TOPIC_TITLE1 "この CD を開く"
     IDS_TOPIC_TITLE2 "終了"
 END
@@ -32,7 +32,7 @@ END
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_DESC0 "コンピュータに新しく ReactOS をインストールしたり、既存の ReactOS をアップグレードします。"
+    IDS_TOPIC_DESC0 "コンピュータに新しく MenuOS をインストールしたり、既存の MenuOS をアップグレードします。"
     IDS_TOPIC_DESC1 "CD の内容を参照します。"
     IDS_TOPIC_DESC2 "クリックするとこのアプリケーションを終了します。"
 END

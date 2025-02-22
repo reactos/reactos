@@ -15,7 +15,7 @@ BEGIN
     AUTOCHECKBOX "&Użyj Klawiszy Trwałych", IDC_STICKY_BOX, 12, 49, 126, 14
     PUSHBUTTON "U&stawienia", IDC_STICKY_BUTTON, 154, 49, 90, 14
     GROUPBOX "Klawisze Filtra", -1, 6, 79, 248, 62
-    LTEXT "Użyj funkcji Klawisze Filtra, jeśli chcesz, żeby ReactOS ignorował krótkie albo powtarzające się naciskanie klawiszy albo zmniejszał częstość powtarzania.",
+    LTEXT "Użyj funkcji Klawisze Filtra, jeśli chcesz, żeby MenuOS ignorował krótkie albo powtarzające się naciskanie klawiszy albo zmniejszał częstość powtarzania.",
           -1, 12, 89, 238, 29
     AUTOCHECKBOX "Klawisze &Filtra", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "Us&tawienia", IDC_FILTER_BUTTON, 154, 121, 90, 14
@@ -34,7 +34,7 @@ CAPTION "Dźwięk"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Wartownik Dźwięku", -1, 6, 11, 248, 98
-    LTEXT "Użyj funkcji Wartownik Dźwięku jeśli chcesz, żeby ReactOS pokazywał wizualne ostrzeżenia w chwili generacji dźwięku.",
+    LTEXT "Użyj funkcji Wartownik Dźwięku jeśli chcesz, żeby MenuOS pokazywał wizualne ostrzeżenia w chwili generacji dźwięku.",
           -1, 12, 20, 238, 29
     AUTOCHECKBOX "Użyj funkcji &Wartownik Dźwięku", IDC_SENTRY_BOX, 12, 49, 120, 14
     LTEXT "Użyj następującego ostrzeżenia:", IDC_SENTRY_TEXT, 12, 72, 222, 11
@@ -52,7 +52,7 @@ CAPTION "Ekran"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Wysoki Kontrast", -1, 6, 11, 248, 62
-    LTEXT "Użyj tej funkcji, jeśli chcesz, żeby ReactOS używał kolorów i czcionek zaprojektowanych do łatwego czytania.",
+    LTEXT "Użyj tej funkcji, jeśli chcesz, żeby MenuOS używał kolorów i czcionek zaprojektowanych do łatwego czytania.",
           -1, 12, 20, 238, 29
     AUTOCHECKBOX "&Użyj funkcji Wysoki Kontrast", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "U&stawienia", IDC_CONTRAST_BUTTON, 154, 49, 90, 14

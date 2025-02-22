@@ -27,7 +27,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Sonidos"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Una combinación de sonidos es un conjunto de sonidos asociados a sucesos en ReactOS y en los programas. Puede seleccionar una combinación existente o guardar una que haya modificado.", -1, 8, 7, 230, 40
+    LTEXT "Una combinación de sonidos es un conjunto de sonidos asociados a sucesos en MenuOS y en los programas. Puede seleccionar una combinación existente o guardar una que haya modificado.", -1, 8, 7, 230, 40
     LTEXT "&Combinación de sonidos:", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "G&uardar como...", IDC_SAVEAS_BTN, 125, 70, 59, 15
@@ -123,7 +123,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Rendimiento"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Estos valores controlan la forma en que ReactOS reproduce audio y le pueden ayudar a resolver problemas relacionados.", 8492, 34, 7, 218, 23
+    LTEXT "Estos valores controlan la forma en que MenuOS reproduce audio y le pueden ayudar a resolver problemas relacionados.", 8492, 34, 7, 218, 23
     GROUPBOX "Reproducción de audio ", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
     LTEXT "&Aceleración de hardware:", 8495, 13, 56, 111, 14
@@ -144,7 +144,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Rendimiento"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Estos valores controlan la forma en que ReactOS reproduce audio y le pueden ayudar a resolver problemas relacionados.", 8492, 34, 7, 217, 20
+    LTEXT "Estos valores controlan la forma en que MenuOS reproduce audio y le pueden ayudar a resolver problemas relacionados.", 8492, 34, 7, 217, 20
     GROUPBOX "Grabación de audio ", 8494, 7, 29, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
     LTEXT "&Aceleración de hardware:", 8495, 13, 46, 103, 17
@@ -165,13 +165,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Instalación"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "ReactOS Audio", 10243, 7, 5, 213, 192
+    GROUPBOX "MenuOS Audio", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "Este equipo no puede reproducir sonidos porque el servicio ReactOS Audio service no esta habilitado.", 10245, 60, 25, 150, 40
-    AUTOCHECKBOX "&Habilitar ReactOS Audio", 10253, 60, 68, 150, 9
+    LTEXT "Este equipo no puede reproducir sonidos porque el servicio MenuOS Audio service no esta habilitado.", 10245, 60, 25, 150, 40
+    AUTOCHECKBOX "&Habilitar MenuOS Audio", 10253, 60, 68, 150, 9
     LTEXT "Notas", 10246, 58, 87, 150, 11
     LTEXT "1. Debe tener privilegios administrativos para habilitar este servicio. Si no está registrado como administrador, se le pedirá un nombre de usuario y contraseña de administrador.", 10247, 60, 100, 150, 40
-    LTEXT "2. Despues de habilitar ReactOS Audio necesitará reiniciar su equipo.", 10248, 60, 140, 150, 40
+    LTEXT "2. Despues de habilitar MenuOS Audio necesitará reiniciar su equipo.", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOGEX 0, 0, 227, 218
@@ -221,11 +221,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Instalación"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "ReactOS Audio", 10259, 7, 5, 213, 192
+    GROUPBOX "MenuOS Audio", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "El servicio ReactOS Audio está ahora disponible. Sin embargo, el sonido no funcionará correctamente hasta que reinicie. Si quiere reiniciar ahora, primero guarde su trabajo y cierre todos los programas.", 10261, 60, 25, 150, 50
-    LTEXT "Para reiniciar ReactOS, presione Aceptar.", 10262, 60, 75, 150, 20
-    LTEXT "Si presiona Cancelar, necesitará reiniciar su equipo más tarde para que ReactOS Audio funcione correctamente.", 10263, 60, 100, 150, 40
+    LTEXT "El servicio MenuOS Audio está ahora disponible. Sin embargo, el sonido no funcionará correctamente hasta que reinicie. Si quiere reiniciar ahora, primero guarde su trabajo y cierre todos los programas.", 10261, 60, 25, 150, 50
+    LTEXT "Para reiniciar MenuOS, presione Aceptar.", 10262, 60, 75, 150, 20
+    LTEXT "Si presiona Cancelar, necesitará reiniciar su equipo más tarde para que MenuOS Audio funcione correctamente.", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
@@ -262,15 +262,15 @@ BEGIN
     5843 "Asterisco"
     5844 "Sonido predeterminado"
     5845 "Exclamación"
-    5846 "Salir de ReactOS"
+    5846 "Salir de MenuOS"
     5847 "Parada crítica"
     5848 "Notificación del sistema"
     5849 "Pregunta"
-    5850 "Iniciar ReactOS"
+    5850 "Iniciar MenuOS"
     5851 "Menú Inicio"
-    IDS_REACTOS_LOGOFF "Cierre de sesión de ReactOS"
-    IDS_REACTOS_LOGON "Inicio de sesión en ReactOS"
-    5854 "Explorador de ReactOS"
+    IDS_REACTOS_LOGOFF "Cierre de sesión de MenuOS"
+    IDS_REACTOS_LOGON "Inicio de sesión en MenuOS"
+    5854 "Explorador de MenuOS"
     IDS_BROWSE_FOR_SOUND "Search for new sounds"
     IDS_WAVE_FILES_FILTER "Wave Files (*.wav)|*.wav|"
 END

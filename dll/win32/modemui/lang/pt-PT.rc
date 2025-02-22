@@ -364,7 +364,7 @@ BEGIN
     3053 "As propriedades do modem não podem ser exibidas porque o modem não está disponível.\n\nReinicie o sistema e tente novamente."
     3054 "Propriedades para modems"
     3060 "Tem certeza que deseja remover o(s) modem(s) selecionado(s) do seu sistema?"
-    3061 "O ReactOS não conseguiu remover o modem '%1' de %2."
+    3061 "O MenuOS não conseguiu remover o modem '%1' de %2."
     3062 "Modem"
     3069 "Não há memória suficiente para abrir o painel de controle do modem.\n\nFeche alguns programas e tente novamente."
     3073 "Deve ser um administrador do sistema para instalar um modem."

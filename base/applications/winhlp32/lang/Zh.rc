@@ -77,7 +77,7 @@ END
 
 STRINGTABLE
 {
-STID_WINE_HELP, 	"ReactOS 帮助"
+STID_WINE_HELP, 	"MenuOS 帮助"
 STID_WHERROR, 		"错误"
 STID_WARNING,  		"警告"
 STID_INFO,  		"信息"
@@ -163,7 +163,7 @@ END
 
 STRINGTABLE
 {
-STID_WINE_HELP, 	"ReactOS 說明"
+STID_WINE_HELP, 	"MenuOS 說明"
 STID_WHERROR, 		"錯誤"
 STID_WARNING,  		"警告"
 STID_INFO,  		"資訊"

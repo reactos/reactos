@@ -225,10 +225,10 @@ END
 
 IDD_ABOUT_EXPLORER DIALOGEX 0, 0, 199, 106
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Čo je Prieskumník systému ReactOS"
+CAPTION "Čo je Prieskumník systému MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Prieskumník systému ReactOS", IDC_ROS_EXPLORER, 91, 13, 104, 11
+    LTEXT "Prieskumník systému MenuOS", IDC_ROS_EXPLORER, 91, 13, 104, 11
     LTEXT "Verzia 0.9", IDC_VERSION_TXT, 91, 27, 104, 8
     LTEXT "(c) 2003-2005 Martin Fuchs", IDC_STATIC, 91, 42, 104, 8
     LTEXT "", IDC_WIN_VERSION, 91, 58, 98, 22
@@ -240,7 +240,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TITLE "Prieskumník systému ReactOS"
+    IDS_TITLE "Prieskumník systému MenuOS"
     IDS_START "Štart"
     IDS_LOGOFF "Odhlásiť..."
     IDS_SHUTDOWN "Vypnúť..."
@@ -273,7 +273,7 @@ BEGIN
     IDS_NOTIFY_AUTOHIDE "skryť automaticky"
     IDS_SHOW_HIDDEN_ICONS "Zobraziť skryté ikony"
     IDS_HIDE_ICONS "Skryť ikony"
-    IDS_TERMINATE "Ukončiť Prieskumníka systému ReactOS"
+    IDS_TERMINATE "Ukončiť Prieskumníka systému MenuOS"
 END
 
 STRINGTABLE

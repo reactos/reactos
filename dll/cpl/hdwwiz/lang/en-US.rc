@@ -129,7 +129,7 @@ BEGIN
     LTEXT "Cannot Continue the Add Hardware Wizard", IDC_FINISHTITLE, 114, 8, 203, 28
     LTEXT "To continue, connect this hardware to your computer.", -1, 114, 40, 193, 16
     AUTOCHECKBOX "&Turn off the computer when I click Finish so that I can open the computer and connect the hardware.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "In most cases ReactOS will automatically install your hardware after you connect it. If ReactOS does not find it, you can reopen this wizard to install the supporting software.", -1, 114, 98, 193, 32
+    LTEXT "In most cases MenuOS will automatically install your hardware after you connect it. If MenuOS does not find it, you can reopen this wizard to install the supporting software.", -1, 114, 98, 193, 32
     LTEXT "To close this wizard, click Finish.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 

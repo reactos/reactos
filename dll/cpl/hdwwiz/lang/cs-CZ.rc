@@ -134,7 +134,7 @@ BEGIN
     LTEXT "Nelze pokračovat v Průvodci přidáním hardwaru", IDC_FINISHTITLE, 114, 8, 203, 28
     LTEXT "Pokračovat lze po připojení hardwaru k počítači.", -1, 114, 40, 193, 16
     AUTOCHECKBOX "Vypnou&t počítač po klepnutí na tlačítko Dokončit, aby mohl být hardware připojen.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "Ve většině případů ReactOS automaticky nainstaluje hardware po jeho připojení. Pokud jej ReactOS nenajde, lze tohoto průvodce znovu spustit a nainstalovat podpůrný software.", -1, 114, 98, 193, 32
+    LTEXT "Ve většině případů MenuOS automaticky nainstaluje hardware po jeho připojení. Pokud jej MenuOS nenajde, lze tohoto průvodce znovu spustit a nainstalovat podpůrný software.", -1, 114, 98, 193, 32
     LTEXT "Klepnutím na tlačítko Dokončit ukončíte průvodce.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 

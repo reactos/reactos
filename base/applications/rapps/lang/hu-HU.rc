@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Applications Manager
+ * PROJECT:     MenuOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Hungarian resource file
  * TRANSLATOR:  Copyright 2021 Tibor Lajos Füzi <tibor.fuzi@gmail.com>
@@ -170,9 +170,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS Alkalmazáskezelő"
+    IDS_APPTITLE "MenuOS Alkalmazáskezelő"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_WELCOME_TITLE "Üdvözöljük a ReactOS Alkalmazáskezelőben!"
+    IDS_WELCOME_TITLE "Üdvözöljük a MenuOS Alkalmazáskezelőben!"
     IDS_WELCOME_TEXT "Bal oldalon válasszon kategóriát, majd válasszon egy telepíteni vagy eltávolítani kívánt alkalmazást.\nReactOS weboldal: "
     IDS_WELCOME_URL "https://reactos.org"
 

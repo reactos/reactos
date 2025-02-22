@@ -11,8 +11,8 @@ STRINGTABLE
     14 "機能の場所:"
     15 "%s のあるフォルダを選択してください"
 #ifdef __REACTOS__
-    34 "ReactOS インストーラ パッケージ"
-    35 "ReactOS Installer Patch"
+    34 "MenuOS インストーラ パッケージ"
+    35 "MenuOS Installer Patch"
     36 "インストール" //FIXME: add accel
     37 "修復" //FIXME: add accel
     38 "アンインストール" //FIXME: add accel

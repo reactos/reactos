@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Network Shell Extension
+ * PROJECT:     MenuOS Network Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Spanish locale file
  * COPYRIGHT:   Ismael Ferreras Morezuelas
@@ -233,7 +233,7 @@ BEGIN
     IDS_DHCPACTIVE "DHCP habilitado"
     IDS_AUTOMATIC "Automático"
     IDS_NOITEMSEL "No ha seleccionado ningún elemento. Seleccione uno primero."
-    IDS_TCPIP "ReactOS-TCP/IP"
+    IDS_TCPIP "MenuOS-TCP/IP"
     IDS_ADD "Agregar"
     IDS_MOD "Aceptar"
     IDS_TCP_PORTS "Puertos TCP"

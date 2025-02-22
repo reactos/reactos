@@ -19,7 +19,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "Visiter la <A HREF=""https://reactos.org/"">page d'accueil ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    CONTROL "Visiter la <A HREF=""https://reactos.org/"">page d'accueil MenuOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "Voir la &licence...", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -68,7 +68,7 @@ CAPTION "Paramètres système"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Information de version", IDC_STATIC, 6, 3, 210, 73
-    LTEXT "ReactOS est construit comme un OS serveur et se présente comme tel. Cochez cette case pour changer ce comportement pour les applications.", IDC_STATIC, 15, 15, 183, 41
+    LTEXT "MenuOS est construit comme un OS serveur et se présente comme tel. Cochez cette case pour changer ce comportement pour les applications.", IDC_STATIC, 15, 15, 183, 41
     CONTROL "Se présenter comme une station de travail", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
 END
@@ -89,7 +89,7 @@ BEGIN
     PUSHBUTTON "&Renommer", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
     PUSHBUTTON "S&upprimer", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
     GROUPBOX "Sélection de profils matériels ", IDC_STATIC, 7, 130, 240, 75
-    LTEXT "Au démarrage de ReactOS :", IDC_STATIC, 14, 142, 210, 8
+    LTEXT "Au démarrage de MenuOS :", IDC_STATIC, 14, 142, 210, 8
     AUTORADIOBUTTON "A&ttendre que l'utilisateur sélectionne un profil matériel", IDC_HRDPROFWAIT, 14, 158, 220, 8, WS_GROUP
     AUTORADIOBUTTON "&Sélectionner le premier profil listé en l'absence de sélection après", IDC_HRDPROFSELECT, 14, 173, 220, 8
     LTEXT "secondes", IDC_STATIC, 65, 187, 35, 8
@@ -117,7 +117,7 @@ BEGIN
     AUTORADIOBUTTON "L'ordinateur est &connecté à sa station d'accueil", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
     AUTORADIOBUTTON "L'ordinateur est &retiré de sa station d'accueil", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
     GROUPBOX "Sélection de profils matériels", IDC_STATIC, 10, 138, 192, 42
-    AUTOCHECKBOX "Toujours &inclure ce profil en tant qu'option lors du démarrage de ReactOS", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
+    AUTOCHECKBOX "Toujours &inclure ce profil en tant qu'option lors du démarrage de MenuOS", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
 END
 
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52

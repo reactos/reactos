@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Disk Checking Utility
+ * PROJECT:     MenuOS Disk Checking Utility
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2018 Luke Luo <njlyf2011@hotmail.com>
@@ -24,7 +24,7 @@ Usage: %s [磁碟機:] [-F] [-V] [-R] [-C]\n\n\
     IDS_ABOUT "\n\
 Chkdskx v1.0.1 by Mark Russinovich\n\
 Systems Internals - http://www.sysinternals.com\n\
-ReactOS 於 1999 年由 Emanuele Aliberti 編寫"
+MenuOS 於 1999 年由 Emanuele Aliberti 編寫"
 END
 
 STRINGTABLE

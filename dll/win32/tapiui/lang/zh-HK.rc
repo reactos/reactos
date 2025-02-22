@@ -1,5 +1,5 @@
  /*
- * PROJECT:     ReactOS Telephone API UI DLL
+ * PROJECT:     MenuOS Telephone API UI DLL
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Hong Kong) resource file
  * TRANSLATORS: Copyright 2020-2022 Chan Chilung <eason066@gmail.com>
@@ -320,7 +320,7 @@ END
 
 500 DIALOGEX 0, 0, 235, 88
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "ReactOS 瀏覽器"
+CAPTION "MenuOS 瀏覽器"
 FONT 9, "新細明體"
 BEGIN
     ICON 504, 501, 13, 14, 21, 20
@@ -414,7 +414,7 @@ BEGIN
     80 "您要刪除這個區碼規則嗎？"
     81 "您必須輸入要撥打的號碼。"
     82 "您輸入的電話卡名稱已被使用。請輸入一個唯一的名稱。"
-    83 "ReactOS 需要您撥號所在位置的電話資訊。如果您選擇［取消］而不提供這個資訊，會造成程式無法正常運作。另外，一些程式會在您取消這個對話方塊後立即重新通知。\n您確定要取消嗎？"
+    83 "MenuOS 需要您撥號所在位置的電話資訊。如果您選擇［取消］而不提供這個資訊，會造成程式無法正常運作。另外，一些程式會在您取消這個對話方塊後立即重新通知。\n您確定要取消嗎？"
     84 "確認取消"
     85 "我的位置"
     86 "< 沒有可供安裝的服務提供商 >"

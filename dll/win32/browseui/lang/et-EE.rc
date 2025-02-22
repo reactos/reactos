@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS browseui.dll
+ * PROJECT:     MenuOS browseui.dll
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Estonian Language resource file
  * TRANSLATOR:  Joann Mõndresku (joannmondresku at gmail dot com)
@@ -79,7 +79,7 @@ BEGIN
     END
     POPUP "&Spikker", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "&Teave ReactOS'i kohta", IDM_HELP_ABOUT
+        MENUITEM "&Teave MenuOS'i kohta", IDM_HELP_ABOUT
     END
 END
 
@@ -342,6 +342,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARSE_ADDR_ERR_TITLE "ReactOS Explorer"
-    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Explorer cannot find '%1'. Check the spelling and try again."
+    IDS_PARSE_ADDR_ERR_TITLE "MenuOS Explorer"
+    IDS_PARSE_ADDR_ERR_TEXT "MenuOS Explorer cannot find '%1'. Check the spelling and try again."
 END

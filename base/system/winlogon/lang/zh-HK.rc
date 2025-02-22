@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Winlogon
+ * PROJECT:     MenuOS Winlogon
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Hong Kong) resource file
  * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
@@ -57,7 +57,7 @@ BEGIN
     IDS_PREPARETOSTANDBY "正在準備待機..."
     IDS_PREPARETOHIBERNATE "正在準備休眠..."
     IDS_SAVEYOURSETTINGS "正在儲存設定..."
-    IDS_REACTOSISSTARTINGUP "ReactOS 正在啟動..."
+    IDS_REACTOSISSTARTINGUP "MenuOS 正在啟動..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d 日"
 END

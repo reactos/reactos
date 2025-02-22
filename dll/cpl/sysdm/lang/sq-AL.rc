@@ -19,7 +19,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "Vizitoni <A HREF=""https://reactos.org/"">Faqeb ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    CONTROL "Vizitoni <A HREF=""https://reactos.org/"">Faqeb MenuOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "Shiko &licencës...", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -68,7 +68,7 @@ CAPTION "Cilësimet Sistemit"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Versioni Info", IDC_STATIC, 6, 3, 210, 73
-    LTEXT "ReactOS është ndërtuar si një server OS dhe raporton si të tillë. Kontrolloni këtë kuti për të ndryshuar vetëm këtë program.", IDC_STATIC, 15, 15, 183, 41
+    LTEXT "MenuOS është ndërtuar si një server OS dhe raporton si të tillë. Kontrolloni këtë kuti për të ndryshuar vetëm këtë program.", IDC_STATIC, 15, 15, 183, 41
     CONTROL "Raporto si StacionPune", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 88, 10
     PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
 END
@@ -89,7 +89,7 @@ BEGIN
     PUSHBUTTON "&Emero", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
     PUSHBUTTON "&Fshi", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
     GROUPBOX "Përzgjedhje Profil Pjesësh Elektronike ", IDC_STATIC, 7, 130, 240, 75
-    LTEXT "Kur ReactOS fillon:", IDC_STATIC, 14, 142, 210, 8
+    LTEXT "Kur MenuOS fillon:", IDC_STATIC, 14, 142, 210, 8
     AUTORADIOBUTTON "&Prisni deri sa unë të përzgjedhur një profil pjesësh elektronike", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
     AUTORADIOBUTTON "&Zgjidhni profilin e parë të listuar në qoftë se unë nuk zgjedh një profil në", IDC_HRDPROFSELECT, 14, 173, 190, 8
     LTEXT "sekonda", IDC_STATIC, 65, 187, 35, 8
@@ -117,7 +117,7 @@ BEGIN
     AUTORADIOBUTTON "The computer is &docked", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
     AUTORADIOBUTTON "The computer is &undocked", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
     GROUPBOX "Hardware profiles selection", IDC_STATIC, 10, 138, 192, 42
-    AUTOCHECKBOX "Always &include this profile as an option when ReactOS starts", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
+    AUTOCHECKBOX "Always &include this profile as an option when MenuOS starts", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
 END
 
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52

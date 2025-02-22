@@ -13,7 +13,7 @@ BEGIN
     AUTOCHECKBOX "Einrastfunktion a&ktivieren", IDC_STICKY_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Einstellungen", IDC_STICKY_BUTTON, 144, 49, 90, 14
     GROUPBOX "Verzögerung", -1, 6, 79, 234, 62
-    LTEXT "Benutzen Sie die Anschlagsverzögerung, wenn ReactOS kurze oder wiederholte Anschläge ignorieren oder die Wiederholungsrate verringern soll.",
+    LTEXT "Benutzen Sie die Anschlagsverzögerung, wenn MenuOS kurze oder wiederholte Anschläge ignorieren oder die Wiederholungsrate verringern soll.",
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "&Verzögerung aktivieren", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "E&instellungen", IDC_FILTER_BUTTON, 144, 121, 90, 14
@@ -32,7 +32,7 @@ CAPTION "Sound"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Darstellungsoptionen", -1, 6, 11, 234, 98
-    LTEXT "Benutzen Sie die Sounddarstellung, wenn ReactOS Sounds visuell darstellen soll.",
+    LTEXT "Benutzen Sie die Sounddarstellung, wenn MenuOS Sounds visuell darstellen soll.",
           -1, 12, 22, 222, 29
     AUTOCHECKBOX "&Darstellungsoption aktivieren", IDC_SENTRY_BOX, 12, 49, 105, 14
     LTEXT "Zu verwendende Warnsignale:", IDC_SENTRY_TEXT, 12, 72, 222, 11
@@ -50,7 +50,7 @@ CAPTION "Anzeige"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Hoher Kontrast", -1, 6, 11, 234, 62
-    LTEXT "Aktivieren Sie diese Option, damit ReactOS Farben und Schrift besonders leserlich darstellt.",
+    LTEXT "Aktivieren Sie diese Option, damit MenuOS Farben und Schrift besonders leserlich darstellt.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Hohen Kontrast aktivieren", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Einstellungen", IDC_CONTRAST_BUTTON, 144, 49, 90, 14

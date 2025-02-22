@@ -9,6 +9,6 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "ReactOS 崩溃报告"
+    IDS_APP_TITLE "MenuOS 崩溃报告"
     IDS_USER_ALERT_MESSAGE "应用程序 %ls 遇到错误异常退出了。有关这次异常退出的信息保存在：\n\n%ls"
 END

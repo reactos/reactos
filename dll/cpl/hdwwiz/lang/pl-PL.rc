@@ -138,7 +138,7 @@ BEGIN
     LTEXT "Nie można kontynuować pracy Kreatora dodawania sprzętu", IDC_FINISHTITLE, 114, 8, 203, 28
     LTEXT "Aby kontynuować, podłącz sprzęt do komputera.", -1, 114, 40, 193, 16
     AUTOCHECKBOX "&Wyłącz komputer po kliknięciu przycisku Zakończ, aby można było otworzyć komputer i podłączyć sprzęt.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "W większości przypadków system ReactOS automatycznie instaluje sprzęt po jego podłączeniu. Jeśli system ReactOS nie odnajdzie sprzętu, uruchom ponownie kreatora w celu zainstalowania oprogramowania do obsługi sprzętu.", -1, 114, 98, 193, 32
+    LTEXT "W większości przypadków system MenuOS automatycznie instaluje sprzęt po jego podłączeniu. Jeśli system MenuOS nie odnajdzie sprzętu, uruchom ponownie kreatora w celu zainstalowania oprogramowania do obsługi sprzętu.", -1, 114, 98, 193, 32
     LTEXT "Aby zamknąć kreatora, kliknij Zakończ.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 

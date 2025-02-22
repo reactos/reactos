@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Shell32
+ * PROJECT:     MenuOS Shell32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Chinese (Hong Kong) resource file
  * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
@@ -153,7 +153,7 @@ BEGIN
     LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10, SS_NOPREFIX
     LTEXT "Copyright 1996-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
-    LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
+    LTEXT " MenuOS Team\0", IDC_STATIC, 105, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20, SS_NOPREFIX
     LTEXT "這個版本授權予：", IDC_ABOUT_REG_TO, 35, 115, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10, SS_NOPREFIX
@@ -169,7 +169,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "給您帶來 ReactOS 的是：", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "給您帶來 MenuOS 的是：", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -179,7 +179,7 @@ CAPTION "執行"
 FONT 9, "新細明體"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "請輸入程式、資料夾、文件或互聯網的資源名稱，ReactOS 會幫您開啟。", 12289, 36, 11, 185, 18
+    LTEXT "請輸入程式、資料夾、文件或互聯網的資源名稱，MenuOS 會幫您開啟。", 12289, 36, 11, 185, 18
     LTEXT "開啟(&O)：", 12305, 7, 39, 26, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 184, 100
     DEFPUSHBUTTON "確定", IDOK, 36, 70, 59, 14
@@ -429,7 +429,7 @@ BEGIN
     GROUPBOX "任務", -1, 7, 10, 249, 40
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
     AUTORADIOBUTTON "顯示資料夾的常見工作(&F)", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "使用 ReactOS 傳統資料夾(&I)", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
+    AUTORADIOBUTTON "使用 MenuOS 傳統資料夾(&I)", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
     GROUPBOX "瀏覽資料夾", -1, 7, 60, 249, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "在相同視窗中開啟每一個資料夾(&M)", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
@@ -499,11 +499,11 @@ END
 
 IDD_LOG_OFF DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "登出 ReactOS"
+CAPTION "登出 MenuOS"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "您確定要登出 ReactOS 嗎？", -1, 49, 15, 132, 8
+    LTEXT "您確定要登出 MenuOS 嗎？", -1, 49, 15, 132, 8
     DEFPUSHBUTTON "登出(&L)", IDOK, 49, 38, 43, 14
     PUSHBUTTON "取消", IDCANCEL, 99, 38, 43, 14
 END
@@ -517,18 +517,18 @@ BEGIN
     PUSHBUTTON "切換使用者(&S)", IDC_SWITCH_USER_BUTTON, 57, 46, 19, 19, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
     PUSHBUTTON "登出(&L)", IDC_LOG_OFF_BUTTON, 134, 46, 19, 19, BS_OWNERDRAW
     PUSHBUTTON "取消", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
-    LTEXT "登出 ReactOS", IDC_LOG_OFF_TEXT_STATIC, 4, 9, 130, 20
+    LTEXT "登出 MenuOS", IDC_LOG_OFF_TEXT_STATIC, 4, 9, 130, 20
     CTEXT "切換使用者", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
     CTEXT "登出", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
 END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "中斷 ReactOS"
+CAPTION "中斷 MenuOS"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
-    LTEXT "您確定要中斷 ReactOS 嗎？", -1, 49, 15, 131, 8
+    LTEXT "您確定要中斷 MenuOS 嗎？", -1, 49, 15, 131, 8
     DEFPUSHBUTTON "中斷(&D)", IDOK, 47, 38, 47, 14
     PUSHBUTTON "取消", IDCANCEL, 99, 38, 47, 14
 END
@@ -538,7 +538,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLIN
 CAPTION "自動播放"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "選擇內容類型，然後選擇 ReactOS 在這個裝置中使用該類型時自動執行的動作(&S)：", 1000, 7, 7, 215, 20
+    LTEXT "選擇內容類型，然後選擇 MenuOS 在這個裝置中使用該類型時自動執行的動作(&S)：", 1000, 7, 7, 215, 20
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
     GROUPBOX "動作", -1, 7, 45, 212, 146
     AUTORADIOBUTTON "選擇要執行的動作(&P)：", 1005, 14, 54, 202, 10, WS_GROUP
@@ -554,7 +554,7 @@ FONT 9, "新細明體"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
     LTEXT "這個磁碟或裝置包含多種類型的內容。", 1001, 32, 7, 191, 20
-    LTEXT "您希望 ReactOS 做甚麼？", 1002, 32, 31, 188, 8
+    LTEXT "您希望 MenuOS 做甚麼？", 1002, 32, 31, 188, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
     DEFPUSHBUTTON "確定", IDOK, 96, 186, 60, 14
     PUSHBUTTON "取消", IDCANCEL, 160, 186, 60, 14
@@ -566,10 +566,10 @@ CAPTION "混合內容"
 FONT 9, "新細明體"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "每次插入磁碟或連接有同類檔案的裝置時，ReactOS 都可以執行相同的動作：", 1001, 30, 7, 193, 20
+    LTEXT "每次插入磁碟或連接有同類檔案的裝置時，MenuOS 都可以執行相同的動作：", 1001, 30, 7, 193, 20
     ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
     EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "您希望 ReactOS 做甚麼？", 1002, 32, 41, 190, 8
+    LTEXT "您希望 MenuOS 做甚麼？", 1002, 32, 41, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
     AUTOCHECKBOX "總是執行指定的動作。", 1004, 32, 171, 190, 10
     DEFPUSHBUTTON "確定", IDOK, 96, 185, 60, 14
@@ -582,8 +582,8 @@ CAPTION "自動播放"
 FONT 9, "新細明體"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "ReactOS 可以執行您選擇的相同動作。", 1001, 32, 7, 190, 22
-    LTEXT "您希望 ReactOS 做甚麼(&W)？", 1002, 32, 31, 190, 8
+    LTEXT "MenuOS 可以執行您選擇的相同動作。", 1001, 32, 7, 190, 22
+    LTEXT "您希望 MenuOS 做甚麼(&W)？", 1002, 32, 31, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
     AUTOCHECKBOX "總是執行相同的動作(&A)", 1004, 32, 143, 190, 8
     DEFPUSHBUTTON "確定", IDOK, 94, 160, 60, 14
@@ -592,7 +592,7 @@ END
 
 IDD_SHUTDOWN DIALOGEX 0, 0, 211, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "關閉 ReactOS"
+CAPTION "關閉 MenuOS"
 FONT 9, "新細明體"
 BEGIN
     ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
@@ -860,7 +860,7 @@ BEGIN
 
     /* Warning format system drive dialog strings */
     IDS_NO_FORMAT_TITLE "無法格式化這個磁碟區"
-    IDS_NO_FORMAT "這個磁碟區無法格式化！磁碟區內有重要的系統檔案，使 ReactOS 正常運作。"
+    IDS_NO_FORMAT "這個磁碟區無法格式化！磁碟區內有重要的系統檔案，使 MenuOS 正常運作。"
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "無法顯示執行文件對話方塊（內部錯誤）"
@@ -948,8 +948,8 @@ BEGIN
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "資料夾"
-    IDS_BAT_FILE "ReactOS 批次文件"
-    IDS_CMD_FILE "ReactOS 命令指令碼"
+    IDS_BAT_FILE "MenuOS 批次文件"
+    IDS_CMD_FILE "MenuOS 命令指令碼"
     IDS_COM_FILE "DOS 應用程式"
     IDS_CPL_FILE "控制台項目"
     IDS_CUR_FILE "指標"
@@ -991,7 +991,7 @@ BEGIN
     IDS_DEFAULT_CLUSTER_SIZE "預設配置大小"
     IDS_COPY_OF "複製"
 
-    IDS_SHLEXEC_NOASSOC "沒有為 ReactOS 設定關聯的程式以開啟這種類型的檔案。"
+    IDS_SHLEXEC_NOASSOC "沒有為 MenuOS 設定關聯的程式以開啟這種類型的檔案。"
 
     IDS_FILE_DETAILS "副檔名「%s」的詳細資料"
     IDS_FILE_DETAILSADV "副檔名為「%s」的檔案屬於類型「%s」。如果要變更影響所有「%s」檔案的設定值，請按［進階］。"

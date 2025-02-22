@@ -27,5 +27,5 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "Manažér licencií"
     IDS_CPLDESCRIPTION_1 "Manažér licencií"
-    IDS_REACTOS "ReactOS - FreeSoftware"
+    IDS_REACTOS "MenuOS - FreeSoftware"
 END

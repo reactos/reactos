@@ -11,7 +11,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Hep informacion ndihmë për ReactOS Komande.\n\n\
+    IDS_USAGE "Hep informacion ndihmë për MenuOS Komande.\n\n\
 HELP [command]\n\n\
   command - Display help information for this command.\n"
     IDS_HELP1 "Listo te gjitha komandat e mundshme (+ pershkrime)\n\n\
@@ -26,7 +26,7 @@ CD       Shfaq emrin e ose ndryshon skedarin aktual.\n\
 CHCP     Shfaq ose cakton codin dhe numrin e faqes aktive.\n\
 CHOICE   Pret për përdoruesit për të zgjedhur një nga një sërë zgjedhjesh.\n\
 CLS      Pastron ekranin.\n\
-CMD      Fillon një shembull të ri të përkthyesit se komandës ReactOS.\n\
+CMD      Fillon një shembull të ri të përkthyesit se komandës MenuOS.\n\
 COLOR    Vë dukshëm panelin e komandimit te parazgjedhur dhe ngjyrat e sfondit.\n\
 COPY     Kopjon një ose më shumë dokumenta në një vend tjetër.\n\
 DATE     Shfaq ose cakton datën.\n\
@@ -37,9 +37,9 @@ ERASE    Fshin një ose më shumë dokumenta.\n\
 EXIT     Del nga programi CMD.EXE (interpretuesi i komandave).\n\
 FOR      Ekzekuton një komandë të specifikuar për secilin dokument në një grup dokumentësh.\n\
 FREE     (liron) hapsira e diskut.\n\
-GOTO     Drejton përkthyesin e komandave te ReactOS në një linjë të emërtuar të\n\
+GOTO     Drejton përkthyesin e komandave te MenuOS në një linjë të emërtuar të\n\
          programit batch.\n\
-HELP     Ofron informacione Ndihmë për komandat e ReactOS.\n\
+HELP     Ofron informacione Ndihmë për komandat e MenuOS.\n\
 HISTORY  Listoni të gjitha komandat e cila ka qenë përdorur\n\
 IF       Kryen përpunimin e kushtëzuar në programet batch.\n\
 LABEL    Krijon, ndryshon, apo fshin etiketën e vëllimit te një hardisdisku.\n\
@@ -61,7 +61,7 @@ RENAME   Riemëron nje dokument ose dokumenta.\n\
 REPLACE  Zëvendëson nje dokument.\n\
 RMDIR    Fshin nje skedare.\n\
 SCREEN   Zhvendos kursorin dhe tekstin opsional te printuar.\n\
-SET      Paraqet, vendos, ose heq variabëlet e mjedisit te ReactOS.\n\
+SET      Paraqet, vendos, ose heq variabëlet e mjedisit te MenuOS.\n\
 SHIFT    Ndërron pozitën e parametrave të dokumentave ne batch.\n"
     IDS_HELP2 "START    Fillon një dritare të veçantë për të drejtuar një program të caktuar ose të komandës.\n\
          Executes command.\n\
@@ -69,8 +69,8 @@ TIME     Shfaq dhe përcakton kohën e sistemit.\n\
 TIMER    Lejo përdorimin e dhjetë kronometër.\n\
 TITLE    Vendos titullin e dritares për një seancë CMD.EXE.\n\
 TYPE     Shfaq përmbajtjen e një tekst skedari.\n\
-VER      Shfaq versionin e ReactOS.\n\
-VERIFY   Thuai ReactOS-it për të verifikuar që dosjet tuaja janë të shkruara\n\
+VER      Shfaq versionin e MenuOS.\n\
+VERIFY   Thuai MenuOS-it për të verifikuar që dosjet tuaja janë të shkruara\n\
          saktesisht ne harddisk.\n\
 VOL      Paraqet një emërtim te vëllimit ne hardddisk dhe numrin serial.\n"
 END

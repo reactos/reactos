@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Logon GINA DLL
+ * PROJECT:     MenuOS Logon GINA DLL
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/win32/msgina/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for msgina
@@ -20,7 +20,7 @@ END
 
 IDD_WELCOME DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Ласкаво просимо до ReactOS"
+CAPTION "Ласкаво просимо до MenuOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -116,7 +116,7 @@ END
 
 IDD_LOGOFF DIALOGEX 0, 0, 188, 60
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP
-CAPTION "Вийти з ReactOS"
+CAPTION "Вийти з MenuOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOGOFF, IDC_STATIC, 7, 7, 20, 20
@@ -127,7 +127,7 @@ END
 
 IDD_SHUTDOWN DIALOGEX 0, 0, 275, 146
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Завершення роботи ReactOS"
+CAPTION "Завершення роботи MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -147,7 +147,7 @@ END
 IDD_SHUTDOWN_REASON DIALOGEX 0, 0, 275, 297
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 // STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Завершення роботи ReactOS"
+CAPTION "Завершення роботи MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -191,7 +191,7 @@ BEGIN
     PUSHBUTTON "&Вимкнути", IDC_BUTTON_SHUTDOWN, 93, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "&Перезавантажити", IDC_BUTTON_REBOOT, 150, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Скасувати", IDCANCEL, 162, 103, 40, 12, BS_FLAT | WS_GROUP
-    LTEXT "Завершення роботи ReactOS", IDC_TURN_OFF_STATIC, 4, 7, 155, 19
+    LTEXT "Завершення роботи MenuOS", IDC_TURN_OFF_STATIC, 4, 7, 155, 19
     CTEXT "Сон", IDC_SLEEP_STATIC, 22, 70, 51, 11
     CTEXT "Вимкнути", IDC_SHUTDOWN_STATIC, 79, 70, 51, 11
     CTEXT "Перезавантажити", IDC_RESTART_STATIC, 131, 70, 61, 11
@@ -208,7 +208,7 @@ BEGIN
     PUSHBUTTON "&Вимкнути", IDC_BUTTON_SHUTDOWN, 150, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "&Перезавантажити", IDC_BUTTON_REBOOT, 207, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Скасувати", IDCANCEL, 218, 103, 40, 12, BS_FLAT | WS_GROUP
-    LTEXT "Завершення роботи ReactOS", IDC_TURN_OFF_STATIC, 4, 7, 155, 19
+    LTEXT "Завершення роботи MenuOS", IDC_TURN_OFF_STATIC, 4, 7, 155, 19
     CTEXT "Гібернація", IDC_HIBERNATE_STATIC, 22, 70, 51, 11
     CTEXT "Сон", IDC_SLEEP_STATIC, 79, 70, 51, 11
     CTEXT "Вимкнути", IDC_SHUTDOWN_STATIC, 136, 70, 51, 11
@@ -242,7 +242,7 @@ BEGIN
     IDS_INVALIDLOGONHOURS "Ваш профіль має обмеження часу, через що ви не можете зайти зараз. Будь-ласка, спробуйте пізніше."
     IDS_INVALIDWORKSTATION "Ваш профіль налаштовано так, що ви не можете користуватись цим комп'ютером. Спробуйте інший комп'ютер."
     IDS_ACCOUNTRESTRICTION "Не вдалось ввійти через обмеження профілю."
-    IDS_EMERGENCYLOGOFFTITLE "Log Off ReactOS"
+    IDS_EMERGENCYLOGOFFTITLE "Log Off MenuOS"
     IDS_EMERGENCYLOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
     IDS_EMERGENCYRESTARTTITLE "Emergency restart"
     IDS_EMERGENCYRESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
@@ -258,7 +258,7 @@ BEGIN
     IDS_SHUTDOWN_HIBERNATE "Гібернація"
     /* Shut down descriptions */
     IDS_SHUTDOWN_LOGOFF_DESC "Завершує поточний сеанс і дозволяє іншим користувачам увійти в систему."
-    IDS_SHUTDOWN_SHUTDOWN_DESC "Закриває всі програми, завершує роботу ReactOS і вимикає комп'ютер."
+    IDS_SHUTDOWN_SHUTDOWN_DESC "Закриває всі програми, завершує роботу MenuOS і вимикає комп'ютер."
     IDS_SHUTDOWN_RESTART_DESC "Завершує поточний сеанс і перезавантажує систему."
     IDS_SHUTDOWN_SLEEP_DESC "Перекладає систему в режим сну."
     IDS_SHUTDOWN_HIBERNATE_DESC "Зберігає поточний сеанс і вимикає комп'ютер."

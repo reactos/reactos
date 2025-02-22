@@ -14,7 +14,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Segítséget nyújt a ReactOS parancsok használatához.\n\n\
+    IDS_USAGE "Segítséget nyújt a MenuOS parancsok használatához.\n\n\
 HELP [command]\n\n\
   parancs - Segítséget ad ehhez a parancshoz.\n"
     IDS_HELP1 "Támogatott parancsok megjelenítése (+ leírás)\n\n\
@@ -29,7 +29,7 @@ CD       Megjeleníti az aktuális mappa nevét, vagy átvált egy másikba.\n\
 CHCP     Megjeleníti vagy megváltoztatja az aktív kódlapot.\n\
 CHOICE   Vár a felhasználóra, hogy válasszon a felkínált lehetőségek közül.\n\
 CLS      Törli a képernyőt.\n\
-CMD      Egy új példányt indít a ReactOS parancsértelmezőjéből.\n\
+CMD      Egy új példányt indít a MenuOS parancsértelmezőjéből.\n\
 COLOR    A konzol elő- és háttérszínét állítja be.\n\
 COPY     Egy vagy több állományt másol a megadott helyre.\n\
 DATE     Megjeleníti vagy beállítja a rendszerdátumot.\n\
@@ -44,7 +44,7 @@ EXIT     Kilép a parancssor értelmezőből.\n\
 FOR      Végrehajt egy parancsot a megadott fájlhalmaz összes fájlján.\n\
 FREE     Megjeleníti a szabad hely méretét.\n\
 GOTO     Átirányít egy másik címkére a batch állományban.\n\
-HELP     Segítséget ad a ReactOS parancsairól.\n\
+HELP     Segítséget ad a MenuOS parancsairól.\n\
 HISTORY  Megjeleníti az ebben az ablakban kiadott parancsok listáját.\n\
 IF       Feltételes végrehajtás batch állományokban.\n\
 LABEL    Létrehozza, módosítja vagy törli egy kötet címkéjét.\n\
@@ -71,7 +71,7 @@ TIME     Megjeleníti vagy beállítja a rendszeridőt.\n\
 TIMER    Időzítők kezelését teszi lehetővé.\n\
 TITLE    Beállítja az ablak címsorának szövegét.\n\
 TYPE     Megjeleníti egy szöveges állomány tartalmát.\n\
-VER      Megjeleníti a ReactOS verzió információját.\n\
+VER      Megjeleníti a MenuOS verzió információját.\n\
 VERIFY   Írási műveletek ellenőrzését vezérli\n\
 VOL      Megjeleníti egy kötet címkéjét és sorozatszámát.\n"
 END

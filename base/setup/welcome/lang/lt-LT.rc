@@ -7,9 +7,9 @@ LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 /* Default settings */
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS - Sveiki"
-    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
-    IDS_DEFAULT_TOPIC_DESC "Sveiki, čia ReactOS Operacinė Sistema.\n\nPasirinkite punktą kairėje."
+    IDS_APPTITLE "MenuOS - Sveiki"
+    IDS_DEFAULT_TOPIC_TITLE "MenuOS"
+    IDS_DEFAULT_TOPIC_DESC "Sveiki, čia MenuOS Operacinė Sistema.\n\nPasirinkite punktą kairėje."
     IDS_FONTNAME "Tahoma"
     IDS_CHECKTEXT "&Rodyti šį langą vėl"
     IDS_CLOSETEXT "&Išeiti"
@@ -18,7 +18,7 @@ END
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_BUTTON0 "Įdiegti &ReactOS"
+    IDS_TOPIC_BUTTON0 "Įdiegti &MenuOS"
     IDS_TOPIC_BUTTON1 "&Peržiūrėti šį CD"
     IDS_TOPIC_BUTTON2 "&Išeiti"
 END
@@ -26,7 +26,7 @@ END
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_TITLE0 "Įdiegti ReactOS"
+    IDS_TOPIC_TITLE0 "Įdiegti MenuOS"
     IDS_TOPIC_TITLE1 "Peržiūrėti šį CD"
     IDS_TOPIC_TITLE2 "Išeiti"
 END
@@ -34,7 +34,7 @@ END
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_DESC0 "Įdiekite arba atnaujinkite ReactOS."
+    IDS_TOPIC_DESC0 "Įdiekite arba atnaujinkite MenuOS."
     IDS_TOPIC_DESC1 "Peržiūrėti šį CD."
     IDS_TOPIC_DESC2 "Paspauskite, kad išeitumėte iš programos."
 END

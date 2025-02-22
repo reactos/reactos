@@ -368,7 +368,7 @@ BEGIN
     3053 "Karakteristikat e modemit nuk mund të shfaqen, sepse modemi nuk është në dispozicion.\n\nRifilloni sistemin dhe provoni përsëri."
     3054 "Karakteristikat për Modemin"
     3060 "Jeni te sigurte qe doni te hiqni modem e zgjedhu(r) nga sistemi juaj?"
-    3061 "ReactOS nuk ishte në gjendje për të hequr modem '%1' nga %2."
+    3061 "MenuOS nuk ishte në gjendje për të hequr modem '%1' nga %2."
     3062 "Modemi"
     3069 "Nuk ka memorie të mjaftueshme për të hapur panelin e kontrollit të modemit.\n\nMbylle disa programe dhe provoni përsëri."
     3073 "Ju duhet të jeni një Administrator i Sistemit për të instaluar një modem."

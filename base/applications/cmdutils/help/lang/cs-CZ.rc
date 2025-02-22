@@ -8,7 +8,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Provides Help information for ReactOS commands.\n\n\
+    IDS_USAGE "Provides Help information for MenuOS commands.\n\n\
 HELP [command]\n\n\
   command - Display help information for this command.\n"
     IDS_HELP1 "List of all available commands (+ description)\n\n\
@@ -23,7 +23,7 @@ CD       Displays the name of or changes the current directory.\n\
 CHCP     Displays or sets the active code page number.\n\
 CHOICE   Waits for the user to choose one of a set of choices.\n\
 CLS      Clears the screen.\n\
-CMD      Starts a new instance of the ReactOS command interpreter.\n\
+CMD      Starts a new instance of the MenuOS command interpreter.\n\
 COLOR    Sets the default console foreground and background colors.\n\
 COPY     Copies one or more files to another location.\n\
 DATE     Displays or sets the date.\n\
@@ -34,9 +34,9 @@ ERASE    Deletes one or more files.\n\
 EXIT     Quits the CMD.EXE program (command interpreter).\n\
 FOR      Runs a specified command for each file in a set of files.\n\
 FREE     (free) disc space.\n\
-GOTO     Directs the ReactOS command interpreter to a labeled line in\n\
+GOTO     Directs the MenuOS command interpreter to a labeled line in\n\
          a batch program.\n\
-HELP     Provides Help information for ReactOS commands.\n\
+HELP     Provides Help information for MenuOS commands.\n\
 HISTORY  List all commands which has been used\n\
 IF       Performs conditional processing in batch programs.\n\
 LABEL    Creates, changes, or deletes the volume label of a disk.\n\
@@ -58,7 +58,7 @@ RENAME   Renames a file or files.\n\
 REPLACE  Replaces files.\n\
 RMDIR    Removes a directory.\n\
 SCREEN   Move cursor and optionally print text.\n\
-SET      Displays, sets, or removes ReactOS environment variables.\n\
+SET      Displays, sets, or removes MenuOS environment variables.\n\
 SHIFT    Shifts the position of replaceable parameters in batch files.\n"
     IDS_HELP2 "START    Starts a separate window to run a specified program or command.\n\
          Executes command.\n\
@@ -66,8 +66,8 @@ TIME     Displays or sets the system time.\n\
 TIMER    Allow the use of ten stopwatches.\n\
 TITLE    Sets the window title for a CMD.EXE session.\n\
 TYPE     Displays the contents of a text file.\n\
-VER      Displays the ReactOS version.\n\
-VERIFY   Tells ReactOS whether to verify that your files are written\n\
+VER      Displays the MenuOS version.\n\
+VERIFY   Tells MenuOS whether to verify that your files are written\n\
          correctly to a disk.\n\
 VOL      Displays a disk volume label and serial number.\n"
 END

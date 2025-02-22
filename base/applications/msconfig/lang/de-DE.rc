@@ -148,7 +148,7 @@ BEGIN
     IDS_TOOLS_CMD_DESCR ""
     IDS_TOOLS_CMD_CMD "cmd.exe"
     IDS_TOOLS_INFO_NAME "Version"
-    IDS_TOOLS_INFO_DESCR "Zeigt die installierte ReactOS-Version an."
+    IDS_TOOLS_INFO_DESCR "Zeigt die installierte MenuOS-Version an."
     IDS_TOOLS_INFO_CMD "winver.exe"
     IDS_TOOLS_REGEDIT_NAME "Registrierungs-Editor"
     IDS_TOOLS_REGEDIT_DESCR "Öffnet den Registrierungs-Editor."

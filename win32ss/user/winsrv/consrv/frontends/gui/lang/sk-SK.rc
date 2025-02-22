@@ -25,7 +25,7 @@ BEGIN
     IDS_SCROLLUP "Rolovať nahor"
     IDS_SCROLLDOWN "Rolovať nadol"
 */
-    IDS_TERMINAL_TITLE "ReactOS Console"
+    IDS_TERMINAL_TITLE "MenuOS Console"
 END
 
 STRINGTABLE
