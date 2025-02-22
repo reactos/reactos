@@ -120,6 +120,15 @@ HDA_TransferCodecVerbs(
         return STATUS_NO_SUCH_DEVICE;
 	}
 
+    for (ULONG Index = 0; Index < Count; Index++)
+    {
+        if (CodecTransfer[Index].Output.Verb8.CodecAddress != devData->CodecIds.CodecAddress)
+        {
+            DPRINT1("Attempt access other codec\n");
+            return STATUS_INVALID_ADDRESS;
+        }
+    }
+
 	PFDO_CONTEXT fdoCtx = devData->FdoContext;
 
     if (Callback)

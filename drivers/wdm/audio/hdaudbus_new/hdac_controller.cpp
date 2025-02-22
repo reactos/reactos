@@ -402,11 +402,11 @@ static void HDAFlushRIRB(PFDO_CONTEXT fdoCtx) {
 			KeSetEvent(&fdoCtx->rirb.xferEvent[addr], IO_NO_INCREMENT, FALSE);
 		}
 		else {
-            DPRINT1("Unexpectes solicited response addr %x\n", addr);
 			SklHdAudBusPrint(DEBUG_LEVEL_ERROR, DBG_IOCTL,
 				"Unexpected unsolicited response from address %d %x\n", addr,
 				rirb.response);
-		}
+
+        }
 	}
 }
 
