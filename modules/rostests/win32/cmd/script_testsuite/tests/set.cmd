@@ -1,5 +1,5 @@
 ::
-:: PROJECT:     ReactOS CMD Testing Suite
+:: PROJECT:     MenuOS CMD Testing Suite
 :: LICENSE:     GPL v2 or any later version
 :: FILE:        tests/set.cmd
 :: PURPOSE:     Tests for the "set" command

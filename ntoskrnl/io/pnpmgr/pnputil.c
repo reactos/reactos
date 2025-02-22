@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         MenuOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/io/pnpmgr/pnputil.c
  * PURPOSE:         PnP Utility Code
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROGRAMMERS:     MenuOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/

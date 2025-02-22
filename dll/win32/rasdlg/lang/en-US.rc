@@ -67,7 +67,7 @@ BEGIN
     AUTOCHECKBOX "Allow older MS-CHAP version for &Win 95 servers", 200, 46, 162, 198, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "M&icrosoft CHAP Version 2 (MS-CHAP v2)", 1492, 28, 176, 200, 10, BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 28, 189, 208, 1
-    AUTOCHECKBOX "&For MS-CHAP based protocols, automatically use my ReactOS logon name and password (and domain if any)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&For MS-CHAP based protocols, automatically use my MenuOS logon name and password (and domain if any)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "OK", 1, 127, 232, 60, 14
     PUSHBUTTON "Cancel", 2, 192, 232, 60, 14
 END
@@ -161,7 +161,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Automatic Dialing And Hanging Up"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS can automatically dial and hang up devices depending on how much information is being sent and received.", 1085, 9, 7, 253, 30
+    LTEXT "MenuOS can automatically dial and hang up devices depending on how much information is being sent and received.", 1085, 9, 7, 253, 30
     GROUPBOX "Automatic dialing", -1, 6, 38, 249, 71
     LTEXT "Dial another line when this connection meets both of the following conditions:", 1083, 16, 51, 237, 16, NOT WS_GROUP
     LTEXT "Activity at &least:", -1, 16, 73, 100, 8
@@ -624,7 +624,7 @@ BEGIN
     AUTORADIOBUTTON "A&dvanced (custom settings)", 1541, 14, 102, 198, 8, BS_NOTIFY
     LTEXT "&Validate my identity as follows:", 1537, 26, 29, 187, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "A&utomatically use my ReactOS logon name and password (and domain if any)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "A&utomatically use my MenuOS logon name and password (and domain if any)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Requ&ire data encryption (disconnect if none)", 1169, 26, 82, 183, 10, BS_TOP | BS_MULTILINE
     LTEXT "Using these settings requires a knowledge of security protocols.", 1539, 15, 114, 134, 20
     PUSHBUTTON "&Settings...", 1180, 151, 115, 60, 14
@@ -681,7 +681,7 @@ BEGIN
     GROUPBOX "Dialing options", 1289, 7, 2, 213, 64
     AUTOCHECKBOX "&Display progress while connecting", 1284, 16, 14, 201, 10
     AUTOCHECKBOX "&Prompt for name and password, certificate, etc.", 1554, 16, 27, 201, 10
-    AUTOCHECKBOX "Include &ReactOS logon domain", 1555, 16, 39, 201, 10
+    AUTOCHECKBOX "Include &MenuOS logon domain", 1555, 16, 39, 201, 10
     AUTOCHECKBOX "Prompt for phone &number", 1285, 16, 52, 200, 10, BS_TOP | BS_MULTILINE
     GROUPBOX "Redialing options", 1290, 6, 72, 213, 79
     LTEXT "&Redial attempts:", 1300, 16, 87, 123, 8
@@ -879,7 +879,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Connect %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS was unable to connect to the network using the user name and password you provided. Please re-enter the user name and password.", 1396, 7, 6, 206, 36
+    LTEXT "MenuOS was unable to connect to the network using the user name and password you provided. Please re-enter the user name and password.", 1396, 7, 6, 206, 36
     LTEXT "&User name:", 1399, 8, 51, 49, 8
     EDITTEXT 1394, 66, 46, 143, 14, ES_AUTOHSCROLL
     LTEXT "&Password:", 1397, 8, 70, 49, 8, NOT WS_GROUP
@@ -895,7 +895,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Connect %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS was unable to connect to the network using the user name and password you provided. Please re-enter the user name and password.", 1396, 7, 6, 209, 26
+    LTEXT "MenuOS was unable to connect to the network using the user name and password you provided. Please re-enter the user name and password.", 1396, 7, 6, 209, 26
     LTEXT "&User name:", 1399, 7, 72, 44, 8
     EDITTEXT 1394, 97, 69, 115, 14, ES_AUTOHSCROLL
     LTEXT "&Password:", 1397, 7, 90, 45, 8, NOT WS_GROUP
@@ -1272,7 +1272,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "New Connection Wizard"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Type the name of your service in the following text box. If you leave the text box blank, ReactOS will automatically detect and configure your service when you connect.", -1, 10, 7, 301, 25
+    LTEXT "Type the name of your service in the following text box. If you leave the text box blank, MenuOS will automatically detect and configure your service when you connect.", -1, 10, 7, 301, 25
     LTEXT "&Service name (optional):", -1, 22, 32, 229, 8
     EDITTEXT 1593, 22, 44, 275, 14, ES_AUTOHSCROLL
 END
@@ -1297,7 +1297,7 @@ BEGIN
     AUTORADIOBUTTON "A&dvanced (custom settings)", 1541, 14, 100, 197, 8, BS_NOTIFY
     LTEXT "&Validate my identity as follows:", 1537, 26, 29, 183, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "A&utomatically use my ReactOS logon name and password (and domain if any)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "A&utomatically use my MenuOS logon name and password (and domain if any)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Requ&ire data encryption (disconnect if none)", 1169, 26, 83, 182, 10, BS_TOP | BS_MULTILINE
     LTEXT "Using these settings requires a knowledge of security protocols.", 1539, 26, 111, 136, 20
     PUSHBUTTON "&Settings...", 1180, 151, 134, 60, 14
@@ -1456,7 +1456,7 @@ BEGIN
     LTEXT "&Host name or IP address of destination (such as reactos.org or 145.52.0.1):", 1430, 7, 5, 217, 18
     EDITTEXT 1427, 7, 25, 215, 14, ES_AUTOHSCROLL
     GROUPBOX "First connect", 1431, 9, 48, 213, 78
-    LTEXT "ReactOS can first connect the public network, such as the Internet, before trying to establish this virtual connection.", 1432, 17, 63, 199, 24
+    LTEXT "MenuOS can first connect the public network, such as the Internet, before trying to establish this virtual connection.", 1432, 17, 63, 199, 24
     AUTOCHECKBOX "&Dial another connection first:", 1428, 19, 89, 183, 10
     COMBOBOX 1429, 29, 103, 182, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "Sho&w icon in notification area when connected", 1120, 10, 192, 213, 13
@@ -1470,7 +1470,7 @@ BEGIN
     GROUPBOX "Dialing options", 1289, 8, 7, 214, 56
     AUTOCHECKBOX "&Display progress while connecting", 1284, 16, 17, 199, 10
     AUTOCHECKBOX "&Prompt for name and password, certificate, etc.", 1554, 16, 32, 199, 10
-    AUTOCHECKBOX "Include &ReactOS logon domain", 1555, 16, 47, 178, 10
+    AUTOCHECKBOX "Include &MenuOS logon domain", 1555, 16, 47, 178, 10
     GROUPBOX "Redialing options", 1290, 8, 68, 214, 89
     LTEXT "&Redial attempts:", 1300, 16, 81, 121, 8
     EDITTEXT 1287, 140, 77, 70, 14, ES_AUTOHSCROLL | ES_NUMBER
@@ -1495,7 +1495,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "New Connection Wizard"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS can automatically dial the initial connection to the Internet or other public network, before establishing the virtual connection.", -1, 10, 6, 275, 24
+    LTEXT "MenuOS can automatically dial the initial connection to the Internet or other public network, before establishing the virtual connection.", -1, 10, 6, 275, 24
     AUTORADIOBUTTON "&Do not dial the initial connection.", 1509, 32, 31, 271, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     AUTORADIOBUTTON "&Automatically dial this initial connection:", 1510, 32, 45, 269, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     COMBOBOX 1435, 43, 62, 253, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
@@ -1797,7 +1797,7 @@ BEGIN
     AUTORADIOBUTTON "&Allow virtual private connections", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Do not allow virtual private connections", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     LTEXT "Do you want to allow virtual private connections to this computer?", -1, 17, 49, 275, 8
-    LTEXT " If you allow VPN connections, ReactOS will modify the Internet Connection Firewall to allow your computer to send and receive VPN packets.", -1, 10, 25, 293, 25
+    LTEXT " If you allow VPN connections, MenuOS will modify the Internet Connection Firewall to allow your computer to send and receive VPN packets.", -1, 10, 25, 293, 25
 END
 
 7055 DIALOGEX 0, 0, 317, 143
@@ -1886,7 +1886,7 @@ BEGIN
     244 "Since this connection is currently active, some settings will not take effect until the next time you dial it.\0"
     245 "There are no connections available to all users. You must logon before dialing.\0"
     246 "The phonebook is empty.\n\nPress OK to add an entry.\0"
-    247 "Due to import/export restrictions, data encryption is not available in this version of ReactOS.\0"
+    247 "Due to import/export restrictions, data encryption is not available in this version of MenuOS.\0"
     248 "Please enter an X.25 address on the next screen.\0"
     249 "Error %1: %2\0"
     250 "%1\n\nError %2: %3\0"
@@ -2109,7 +2109,7 @@ BEGIN
     501 "What is the name or address of the VPN server?\0"
     502 "Cannot disable on-demand dialing.\0"
     503 "Public Network\0"
-    504 "ReactOS can make sure the public network is connected first.\0"
+    504 "MenuOS can make sure the public network is connected first.\0"
     505 "VPN1\0"
     506 "Internet Connection Sharing\0"
     507 "You can let a local network access resources through this dial-up connection.\0"
@@ -2235,8 +2235,8 @@ BEGIN
     1611 "Broadband Connection\0"
     1612 "You have selected to use a preshared key but you have not entered one.\nPlease enter a preshared key.\0"
     1613 "Cannot Commit Credentials\0"
-    1634 "Because the Windows Management Instrumentation (WMI) service has been disabled, ReactOS cannot display the properties of this connection or the home network.\n\nTo configure the properties of this connection or your home network, you must first enable the WMI service. To do this, in the Administrative Tools control panel, double-click Services, right-click Windows Management Instrumentation, and then click Start.\0"
-    1635 "ReactOS cannot display the properties of this connection. The Windows Management Instrumentation (WMI) information might be corrupted. To correct this, use System Restore to restore ReactOS to an earlier time (called a restore point). System Restore is located in the System Tools folder in Accessories.\0"
+    1634 "Because the Windows Management Instrumentation (WMI) service has been disabled, MenuOS cannot display the properties of this connection or the home network.\n\nTo configure the properties of this connection or your home network, you must first enable the WMI service. To do this, in the Administrative Tools control panel, double-click Services, right-click Windows Management Instrumentation, and then click Start.\0"
+    1635 "MenuOS cannot display the properties of this connection. The Windows Management Instrumentation (WMI) information might be corrupted. To correct this, use System Restore to restore MenuOS to an earlier time (called a restore point). System Restore is located in the System Tools folder in Accessories.\0"
     1646 "Allow incoming echo request\0"
     1647 "Allow incoming timestamp request\0"
     1648 "Allow incoming mask request\0"
@@ -2349,7 +2349,7 @@ BEGIN
     7385 "Communications Port (%s)\0"
     7386 "Network Connections does not display some specialized options for inbound connections that have been set using the Local User Manager or Remote Access Policy consoles. For complete and correct information on incoming connections, you will need to use these consoles.\0"
     7387 "The user callback mode you have selected requires you to enter a valid callback number.\0"
-    7388 "ReactOS must reboot to complete the operation. Is it ok to reboot now?\0"
+    7388 "MenuOS must reboot to complete the operation. Is it ok to reboot now?\0"
     7389 "The currently selected device has no configuration options available.\0"
     7390 "Invalid Range\0"
     7391 "You have requested that '%1' be disabled for Incoming Connections. In order to disable this, you must stop the 'Server' service. Once stopped, any shared directories or printers on this computer will no longer be available to any other computer. Do you want to bring up a system console that will allow you to stop the 'Server' service?\r\n\nUnder Computer Management, click System Tools and then click Services. In the right pane, right-click Server and click stop.\0"

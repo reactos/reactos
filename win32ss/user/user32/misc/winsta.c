@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS user32.dll
+ * PROJECT:     MenuOS user32.dll
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Window stations
  * COPYRIGHT:   Copyright 2001-2018 Casper S. Hornstrup (chorns@users.sourceforge.net)

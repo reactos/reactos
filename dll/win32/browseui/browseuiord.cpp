@@ -1,5 +1,5 @@
 /*
- * ReactOS browseui
+ * MenuOS browseui
  *
  * Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
  *

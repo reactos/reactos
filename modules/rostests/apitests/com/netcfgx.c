@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS api tests
+ * PROJECT:         MenuOS api tests
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
  * PURPOSE:         COM interface test for netcfgx classes
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>

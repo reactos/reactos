@@ -38,7 +38,7 @@ BEGIN
     STRING_CLIPFILE  "剪贴板元素"
     STRING_DELETE_MSG "清空剪贴板的内容吗？"
     STRING_DELETE_TITLE "清空剪贴板"
-    STRING_FORMAT_NT "ReactOS 的剪贴板文件 (*.clp)"
+    STRING_FORMAT_NT "MenuOS 的剪贴板文件 (*.clp)"
     STRING_FORMAT_GEN "剪贴板文件 (*.clp)"
 END
 

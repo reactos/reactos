@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         ReactOS Virtual DOS Machine
+ * PROJECT:         MenuOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/emulator.c
  * PURPOSE:         Minimal x86 machine emulator for the VDM
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
@@ -193,7 +193,7 @@ ConsoleEventThread(LPVOID Parameter)
     DWORD  WaitResult;
 
     /*
-     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * For optimization purposes, Windows (and hence MenuOS, too, for
      * compatibility reasons) uses a static buffer if no more than five
      * input records are read. Otherwise a new buffer is used.
      * The client-side expects that we know this behaviour.

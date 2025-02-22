@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS ReactX
+ * PROJECT:         MenuOS ReactX
  * FILE:            dll/directx/d3d9/d3d9_basetexture.h
  * PURPOSE:         Work-around for gcc warning, DO NOT USE FOR ANYTHING ELSE!!!
  * PROGRAMERS:      Gregor Gullwi <gbrunmar (dot) ros (at) gmail (dot) com>

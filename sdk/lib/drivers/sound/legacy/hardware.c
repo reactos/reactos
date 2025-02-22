@@ -1,5 +1,5 @@
 /*
-    ReactOS Sound System
+    MenuOS Sound System
     Hardware interaction helper
 
     Author:

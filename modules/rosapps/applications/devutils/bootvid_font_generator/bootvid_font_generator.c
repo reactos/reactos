@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS BootVid Font Generator Utility
+ * PROJECT:     MenuOS BootVid Font Generator Utility
  * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
  * PURPOSE:     Generates the FontData array for the bootdata.c file of bootvid.dll
  * COPYRIGHT:   Copyright 2016 Colin Finck <colin@reactos.org>

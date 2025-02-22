@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         MenuOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/ke/arm/usercall.c
  * PURPOSE:         Implements system calls and user-mode callbacks for ARM
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROGRAMMERS:     MenuOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Local Spooler
+ * PROJECT:     MenuOS Local Spooler
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions related to Printer Configuration Data
  * COPYRIGHT:   Copyright 2017 Colin Finck (colin@reactos.org)
@@ -12,7 +12,7 @@ LocalGetPrinterData(HANDLE hPrinter, PWSTR pValueName, PDWORD pType, PBYTE pData
 {
     TRACE("LocalGetPrinterData(%p, %S, %p, %p, %lu, %p)\n", hPrinter, pValueName, pType, pData, nSize, pcbNeeded);
 
-    // The ReactOS Printing Stack forwards all GetPrinterData calls to GetPrinterDataEx as soon as possible.
+    // The MenuOS Printing Stack forwards all GetPrinterData calls to GetPrinterDataEx as soon as possible.
     // This function may only be called if localspl.dll is used together with Windows Printing Stack components.
     WARN("This function should never be called!\n");
     return LocalGetPrinterDataEx(hPrinter, L"PrinterDriverData", pValueName, pType, pData, nSize, pcbNeeded);
@@ -362,7 +362,7 @@ LocalSetPrinterData(HANDLE hPrinter, PWSTR pValueName, DWORD Type, PBYTE pData, 
 {
     TRACE("LocalSetPrinterData(%p, %S, %lu, %p, %lu)\n", hPrinter, pValueName, Type, pData, cbData);
 
-    // The ReactOS Printing Stack forwards all SetPrinterData calls to SetPrinterDataEx as soon as possible.
+    // The MenuOS Printing Stack forwards all SetPrinterData calls to SetPrinterDataEx as soon as possible.
     // This function may only be called if localspl.dll is used together with Windows Printing Stack components.
     WARN("This function should never be called!\n");
     return LocalSetPrinterDataEx(hPrinter, L"PrinterDriverData", pValueName, Type, pData, cbData);

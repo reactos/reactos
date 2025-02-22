@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS LPK
+ * PROJECT:     MenuOS LPK
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Language Pack DLL.
  * PROGRAMMERS: Magnus Olsen  (greatlrd)

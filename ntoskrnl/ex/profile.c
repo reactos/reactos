@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         MenuOS Kernel
  * FILE:            ntoskrnl/ex/profile.c
  * PURPOSE:         Support for Executive Profile Objects
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)

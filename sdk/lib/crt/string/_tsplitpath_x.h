@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         MenuOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * PURPOSE:         CRT: implementation of __[w]splitpath[_s]
  * PROGRAMMERS:     Timo Kreuzer

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Setup Library - Unit-tests
+ * PROJECT:     MenuOS Setup Library - Unit-tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Test for IsValidInstallDirectory
  * COPYRIGHT:   Copyright 2024 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>

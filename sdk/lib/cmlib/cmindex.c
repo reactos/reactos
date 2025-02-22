@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Registry Library
+ * PROJECT:         MenuOS Registry Library
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            lib/cmlib/cmindex.c
  * PURPOSE:         Configuration Manager - Cell Indexes
@@ -1559,7 +1559,7 @@ CmpAddSubKey(IN PHHIVE Hive,
         }
         else if (Hive->Version >= 3)
         {
-            /* Windows 2000 and ReactOS: Use fast leaf */
+            /* Windows 2000 and MenuOS: Use fast leaf */
             Index->Signature = CM_KEY_FAST_LEAF;
         }
         else

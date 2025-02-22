@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS HID Parser Library
+ * PROJECT:     MenuOS HID Parser Library
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        lib/drivers/hidparser/api.c
  * PURPOSE:     HID Parser

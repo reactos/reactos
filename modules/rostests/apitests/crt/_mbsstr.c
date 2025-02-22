@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS API tests
+ * PROJECT:         MenuOS API tests
  * LICENSE:         LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:         Tests for _mbsstr
  * COPYRIGHT:       Copyright 2024 Thomas Faber (thomas.faber@reactos.org)

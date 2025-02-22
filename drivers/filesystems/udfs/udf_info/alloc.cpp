@@ -1149,7 +1149,7 @@ UDFGetTotalSpace(
             s+=Vcb->Partitions[i].PartitionLen;
         }
     } else {
-        if(s & ((int64)1 << 63)) s=0;  /* FIXME ReactOS this shift value was 64, which is undefiened behavior. */
+        if(s & ((int64)1 << 63)) s=0;  /* FIXME MenuOS this shift value was 64, which is undefiened behavior. */
         s= Vcb->LastPossibleLBA - Vcb->Partitions[0].PartitionRoot;
     }
     return s >> Vcb->LB2B_Bits;
@@ -1230,7 +1230,7 @@ UDFGetBit__(
         ret
     }
 #else
-/* FIXME ReactOS */
+/* FIXME MenuOS */
     return ((BOOLEAN)(((((uint32*)(arr))[(bit)>>5]) >> ((bit)&31)) &1));
 #endif
 } // end UDFGetBit__()
@@ -1268,7 +1268,7 @@ UDFSetBit__(
         ret
     }
 #else
-/* FIXME ReactOS */
+/* FIXME MenuOS */
     (((uint32*)(arr))[(bit)>>5]) |= (((uint32)1) << ((bit)&31));
 #endif
 } // end UDFSetBit__()
@@ -1335,7 +1335,7 @@ EO_sb_loop:
         pop  eax
     }
 #else
-/* FIXME ReactOS */
+/* FIXME MenuOS */
     uint32 j;
     for(j=0;j<bc;j++) {
         UDFSetBit(arr, bit+j);
@@ -1376,7 +1376,7 @@ UDFClrBit__(
         ret
     }
 #else
-/* FIXME ReactOS */
+/* FIXME MenuOS */
     (((uint32*)(arr))[(bit)>>5]) &= (~(((uint32)1) << ((bit)&31)));
 #endif
 } // end UDFClrBit__()
@@ -1443,7 +1443,7 @@ EO_cp_loop:
         pop  eax
     }
 #else
-/* FIXME ReactOS */
+/* FIXME MenuOS */
     uint32 j;
     for(j=0;j<bc;j++) {
         UDFClrBit(arr, bit+j);

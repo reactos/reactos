@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Kernel - Vista+ APIs
+ * PROJECT:         MenuOS Kernel - Vista+ APIs
  * LICENSE:         GPL v2 - See COPYING in the top level directory
  * FILE:            lib/drivers/ntoskrnl_vista/rtl.c
  * PURPOSE:         Implementation of RtlIsNtDdiVersionAvailable and RtlIsServicePackVersionInstalled

@@ -30,7 +30,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
 #ifdef __REACTOS__
-/* ReactOS FIXME: Insect */
+/* MenuOS FIXME: Insect */
 #define fmin min
 #define fmax max
 #endif

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Spooler Router API Tests
+ * PROJECT:     MenuOS Spooler Router API Tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Tests for MarshallDownStructuresArray
  * COPYRIGHT:   Copyright 2018 Colin Finck (colin@reactos.org)

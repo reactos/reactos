@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS TCP/IP protocol driver
+ * PROJECT:     MenuOS TCP/IP protocol driver
  * FILE:        include/icmp.h
  * PURPOSE:     Internet Control Message Protocol definitions
  */

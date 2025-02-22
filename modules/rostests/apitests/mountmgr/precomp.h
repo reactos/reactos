@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS API Tests
+ * PROJECT:     MenuOS API Tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Precompiled header
  * COPYRIGHT:   Copyright 2019 Pierre Schweitzer <pierre@reactos.org>

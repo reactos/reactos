@@ -3,7 +3,7 @@
  *
  * SAL 2 annotations for kernel mode drivers
  *
- * This file is part of the ReactOS DDK package.
+ * This file is part of the MenuOS DDK package.
  *
  * Contributor:
  *   Timo Kreuzer (timo.kreuzer@reactos.org)

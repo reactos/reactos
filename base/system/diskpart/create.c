@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS DiskPart
+ * PROJECT:         MenuOS DiskPart
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/system/diskpart/create.c
  * PURPOSE:         Manages all the partitions of the OS in an interactive way.

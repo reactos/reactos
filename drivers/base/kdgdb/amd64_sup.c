@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS KD dll - GDB stub
+ * PROJECT:     MenuOS KD dll - GDB stub
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Base functions for the kernel debugger
  * COPYRIGHT:   Copyright 2021 Jérôme Gardou

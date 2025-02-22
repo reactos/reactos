@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS File System Recognizer
+ * PROJECT:          MenuOS File System Recognizer
  * FILE:             drivers/filesystems/fs_rec/fs_rec.h
  * PURPOSE:          Main Header File
  * PROGRAMMER:       Alex Ionescu (alex.ionescu@reactos.org)

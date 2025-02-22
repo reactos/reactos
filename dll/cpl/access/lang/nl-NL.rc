@@ -11,7 +11,7 @@ BEGIN
     AUTOCHECKBOX "&Plaktoetsen Gebruiken", IDC_STICKY_BOX, 12, 49, 254, 14
     PUSHBUTTON "&Instellingen...", IDC_STICKY_BUTTON, 164, 49, 90, 14
     GROUPBOX "Filtertoetsen", -1, 6, 79, 254, 62
-    LTEXT "U kunt Filtertoetsen gebruiken als u wilt dat ReactOS korte of herhaalde toetsaanslagen negeert, of als u de herhaalsnelheid wilt verlagen.",
+    LTEXT "U kunt Filtertoetsen gebruiken als u wilt dat MenuOS korte of herhaalde toetsaanslagen negeert, of als u de herhaalsnelheid wilt verlagen.",
           -1, 12, 89, 242, 29
     AUTOCHECKBOX "&Filtertoetsen gebruiken", IDC_FILTER_BOX, 12, 121, 254, 14
     PUSHBUTTON "Inst&ellingen...", IDC_FILTER_BUTTON, 164, 121, 90, 14
@@ -30,7 +30,7 @@ CAPTION "Geluid"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Geluidswaarschuwingen", -1, 6, 11, 254, 98
-    LTEXT "Schakel Geluidswaarschuwingen gebruiken in als u wilt dat ReactOS een visuele waarschuwing weergeeft wanneer het systeem een geluid laat horen.",
+    LTEXT "Schakel Geluidswaarschuwingen gebruiken in als u wilt dat MenuOS een visuele waarschuwing weergeeft wanneer het systeem een geluid laat horen.",
           -1, 12, 20, 242, 29
     AUTOCHECKBOX "&Geluidswaarschuwingen gebruiken", IDC_SENTRY_BOX, 12, 49, 90, 14
     LTEXT "Use the following warning:", IDC_SENTRY_TEXT, 12, 72, 222, 11
@@ -48,7 +48,7 @@ CAPTION "Weergave"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Hoog Contrast", -1, 6, 11, 254, 62
-    LTEXT "U kunt deze optie gebruiken als u wilt dat ReactOS kleuren en lettertypen zodanig instelt dat deze gemakkelijk te lezen zijn.",
+    LTEXT "U kunt deze optie gebruiken als u wilt dat MenuOS kleuren en lettertypen zodanig instelt dat deze gemakkelijk te lezen zijn.",
           -1, 12, 20, 242, 29
     AUTOCHECKBOX "&Hoog contrast gebruiken", IDC_CONTRAST_BOX, 12, 49, 254, 14
     PUSHBUTTON "I&nstellingen...", IDC_CONTRAST_BUTTON, 164, 49, 90, 14

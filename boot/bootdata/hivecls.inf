@@ -85,9 +85,9 @@ HKCR,"anifile","",0x00000000,"Animated Cursor"
 HKCR,"anifile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\main.cpl,-1039"
 HKCR,"anifile\DefaultIcon","",0x00000000,"%1"
 
-; ReactOS Batch Files
+; MenuOS Batch Files
 HKCR,".bat","",0x00000000,"batfile"
-HKCR,"batfile","",0x00000000,"ReactOS Batch File"
+HKCR,"batfile","",0x00000000,"MenuOS Batch File"
 HKCR,"batfile","EditFlags",0x00010001,0x00000010
 HKCR,"batfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-201"
 HKCR,"batfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
@@ -101,9 +101,9 @@ HKCR,"cerfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\cryptext.dl
 HKCR,"cerfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\cryptext.dll,-1"
 HKCR,"cerfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\rundll32.exe cryptext.dll,CryptExtOpenCER %1"
 
-; ReactOS Command Script Files
+; MenuOS Command Script Files
 HKCR,".cmd","",0x00000000,"cmdfile"
-HKCR,"cmdfile","",0x00000000,"ReactOS Command Script"
+HKCR,"cmdfile","",0x00000000,"MenuOS Command Script"
 HKCR,"cmdfile","EditFlags",0x00010001,0x00000010
 HKCR,"cmdfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-202"
 HKCR,"cmdfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
@@ -432,7 +432,7 @@ HKCR,"xslfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.e
 
 ; MSI files
 HKCR,".msi","",0x00000000,"Msi.Package"
-HKCR,"Msi.Package","",0x00000000,"ReactOS Installer Package"
+HKCR,"Msi.Package","",0x00000000,"MenuOS Installer Package"
 HKCR,"Msi.Package","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msi.dll,-34"
 HKCR,"Msi.Package\DefaultIcon","",0x00000000,"msiexec.exe"
 HKCR,"Msi.Package\shell\Open","",0x00000000,"&Install"
@@ -447,7 +447,7 @@ HKCR,"Msi.Package\shell\Uninstall\command","",0x00020000,"%SystemRoot%\system32\
 
 ; MSP files
 HKCR,".msp","",0x00000000,"Msi.Patch"
-HKCR,"Msi.Patch","",0x00000000,"ReactOS Installer Patch"
+HKCR,"Msi.Patch","",0x00000000,"MenuOS Installer Patch"
 HKCR,"Msi.Patch","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msi.dll,-35"
 HKCR,"Msi.Patch\DefaultIcon","",0x00000000,"msiexec.exe"
 HKCR,"Msi.Patch\shell\Open","",0x00000000,"&Apply Patch"
@@ -809,7 +809,7 @@ AVIFILE="Video Clip"
 
 ;; Misc file types without friendly (localized in .dll resources) name
 CSSFILE="Cascading Style Sheet"
-SCFFILE="ReactOS Explorer Command"
+SCFFILE="MenuOS Explorer Command"
 WMZFILE="Compressed Enhanced Metafile"
 WSFFILE="Windows Script File"
 
@@ -846,7 +846,7 @@ CPLFILE_OPENWITH="Mit der Systemsteuerung öffnen"
 
 ;; Misc file types without friendly (localized in .dll resources) name
 ;CSSFILE="Cascading Style Sheet"
-;SCFFILE="ReactOS Explorer Command"
+;SCFFILE="MenuOS Explorer Command"
 ;WMZFILE="Compressed Enhanced Metafile"
 
 ;; For .reg files, right-click menu
@@ -882,7 +882,7 @@ AVIFILE="Secuencia de vídeo"
 
 ;; Misc file types without friendly (localized in .dll resources) name
 CSSFILE="Hoja de estilos en cascada"
-SCFFILE="Órden del explorador de ReactOS"
+SCFFILE="Órden del explorador de MenuOS"
 WMZFILE="Metarchivo mejorado comprimido"
 
 ;; For .reg files, right-click menu
@@ -918,7 +918,7 @@ AVIFILE="Clip Vidéo"
 
 ;; Misc file types without friendly (localized in .dll resources) name
 CSSFILE="Fichier CSS"
-SCFFILE="Commande de l'explorateur ReactOS"
+SCFFILE="Commande de l'explorateur MenuOS"
 ;WMZFILE="Compressed Enhanced Metafile"
 
 ;; For .reg files, right-click menu
@@ -954,7 +954,7 @@ AVIFILE="Filmato video"
 
 ;; Misc file types without friendly (localized in .dll resources) name
 ;CSSFILE="Cascading Style Sheet"
-;SCFFILE="ReactOS Explorer Command"
+;SCFFILE="MenuOS Explorer Command"
 ;WMZFILE="Compressed Enhanced Metafile"
 
 ;; For .reg files, right-click menu
@@ -990,7 +990,7 @@ AVIFILE="Arkusz stylu kaskadowego"
 
 ;; Misc file types without friendly (localized in .dll resources) name
 ;CSSFILE="Cascading Style Sheet"
-SCFFILE="Polecenie Eksploratora ReactOS"
+SCFFILE="Polecenie Eksploratora MenuOS"
 WMZFILE="Skompresowany metaplik"
 
 ;; For .reg files, right-click menu
@@ -1027,7 +1027,7 @@ AVIFILE="Sequência de vídeo"
 
 ;; Misc file types without friendly (localized in .dll resources) name
 CSSFILE="Folha de estilos em cascada"
-SCFFILE="Comando do Explorador ReactOS"
+SCFFILE="Comando do Explorador MenuOS"
 WMZFILE="Metarquivo aprimorado compactado"
 
 ;; For .reg files, right-click menu
@@ -1064,7 +1064,7 @@ AVIFILE="Fișier video"
 
 ;; Misc file types without friendly (localized in .dll resources) name
 CSSFILE="Foaie de stiluri în cascadă"
-SCFFILE="Comandă de Explorator ReactOS"
+SCFFILE="Comandă de Explorator MenuOS"
 WMZFILE="Metafișier îmbunătățit comprimat"
 
 ;; For .reg files, right-click menu
@@ -1100,7 +1100,7 @@ AVIFILE="Видеозапись"
 
 ;; Misc file types without friendly (localized in .dll resources) name
 CSSFILE="Каскадная таблица стилей"
-SCFFILE="Команда проводника ReactOS"
+SCFFILE="Команда проводника MenuOS"
 WMZFILE="Сжатый расширенный метафайл"
 
 ;; For .reg files, right-click menu
@@ -1136,7 +1136,7 @@ AVIFILE="視訊短片"
 
 ;; Misc file types without friendly (localized in .dll resources) name
 CSSFILE="階層式樣式表"
-SCFFILE="ReactOS Explorer 命令"
+SCFFILE="MenuOS Explorer 命令"
 ;WMZFILE="Compressed Enhanced Metafile"
 
 ;; For .reg files, right-click menu
@@ -1172,7 +1172,7 @@ CPLFILE_OPENWITH="Denetim Masası'yla Aç"
 
 ;; Misc file types without friendly (localized in .dll resources) name
 ;CSSFILE="Basamaklı Stil Şablonu"
-;SCFFILE="ReactOS Gezgini Komutu"
+;SCFFILE="MenuOS Gezgini Komutu"
 ;WMZFILE="Sıkıştırılmış Geliştirilmiş Meta Dosyası"
 
 ;; For .reg files, right-click menu
@@ -1208,7 +1208,7 @@ AVIFILE="視訊短片"
 
 ;; Misc file types without friendly (localized in .dll resources) name
 CSSFILE="階層式樣式表"
-SCFFILE="ReactOS Explorer 命令"
+SCFFILE="MenuOS Explorer 命令"
 ;WMZFILE="Compressed Enhanced Metafile"
 
 ;; For .reg files, right-click menu
@@ -1245,7 +1245,7 @@ AVIFILE="ビデオ クリップ"
 
 ;; Misc file types without friendly (localized in .dll resources) name
 CSSFILE="カスケード スタイル シート"
-SCFFILE="ReactOS エクスプローラ コマンド"
+SCFFILE="MenuOS エクスプローラ コマンド"
 WMZFILE="圧縮済み拡張メタファイル"
 
 ;; For .reg files, right-click menu
@@ -1281,7 +1281,7 @@ AVIFILE="视频剪辑"
 
 ;; Misc file types without friendly (localized in .dll resources) name
 CSSFILE="层叠样式表文档"
-SCFFILE="ReactOS Explorer Command"
+SCFFILE="MenuOS Explorer Command"
 ;WMZFILE="Compressed Enhanced Metafile"
 
 ;; For .reg files, right-click menu

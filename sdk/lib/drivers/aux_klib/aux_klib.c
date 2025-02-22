@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS SDK: Auxiliary Kernel-Mode Library
+ * PROJECT:     MenuOS SDK: Auxiliary Kernel-Mode Library
  * LICENSE:     BSD-2-Clause-Views (https://spdx.org/licenses/BSD-2-Clause-Views)
  * PURPOSE:     Main source file
  * COPYRIGHT:   Copyright 2019-2020 Max Korostil <mrmks04@yandex.ru>

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Applications
+ * PROJECT:     MenuOS Applications
  * LICENSE:     LGPL - See COPYING in the top level directory
  * FILE:        base/applications/msconfig_new/toolspage.cpp
  * PURPOSE:     Tools page message handler
@@ -380,7 +380,7 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             while ((lvitem.iItem = ListView_GetNextItem(hToolsListCtrl, lvitem.iItem, LVNI_ALL)) != -1)
             {
                 // ListView_Update();   // Updates a list-view item.
-                // ListView_FindItem(); // peut être intéressant pour faire de la recherche itérative à partir du nom (ou partie du...) de l'item.
+                // ListView_FindItem(); // peut Ãªtre intÃ©ressant pour faire de la recherche itÃ©rative Ã  partir du nom (ou partie du...) de l'item.
 
                 ListView_GetItem(hToolsListCtrl, &lvitem);
 

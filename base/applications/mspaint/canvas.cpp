@@ -1,5 +1,5 @@
 /*
- * PROJECT:    PAINT for ReactOS
+ * PROJECT:    PAINT for MenuOS
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:    Providing the canvas window class
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>

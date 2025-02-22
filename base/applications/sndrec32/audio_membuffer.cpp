@@ -1,4 +1,4 @@
-/* PROJECT:         ReactOS sndrec32
+/* PROJECT:         MenuOS sndrec32
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/applications/sndrec32/audio_membuffer.cpp
  * PURPOSE:         Sound recording

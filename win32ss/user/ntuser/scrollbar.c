@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS kernel
+ * PROJECT:     MenuOS kernel
  * LICENSE:     See COPYING in the top level directory
  * PURPOSE:     Scrollbars
  * COPYRIGHT:   Thomas Weidenmueller (w3seek@users.sourceforge.net)

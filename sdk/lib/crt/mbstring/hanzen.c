@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS system libraries
+ * PROJECT:     MenuOS system libraries
  * FILE:        lib/sdk/crt/mbstring/hanzen.c
  * PURPOSE:     Multibyte conversion routines formerly called hantozen and zentohan
  * PROGRAMER:   Ariadne, Taiji Yamada

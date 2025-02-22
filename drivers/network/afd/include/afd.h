@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          MenuOS kernel
  * FILE:             drivers/net/afd/include/afd.h
  * PURPOSE:          Ancillary functions driver -- constants and structures
  * PROGRAMMER:       Art Yerkes (ayerkes@speakeasy.net)

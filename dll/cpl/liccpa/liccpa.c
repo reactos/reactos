@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS License Manager
+ * PROJECT:         MenuOS License Manager
  * FILE:            dll/cpl/liccpa/liccpa.c
  * PURPOSE:         License Manager GUI
  *

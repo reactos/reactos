@@ -16,13 +16,13 @@ Severity=Informational
 Facility=Application
 SymbolicName=MSG_TESTS_STARTED
 Language=English
-ReactOS Automatic Testing Utility is started.
+MenuOS Automatic Testing Utility is started.
 .
 Language=Polish
-Uruchomiono narzędzie automatycznych testów systemu ReactOS.
+Uruchomiono narzędzie automatycznych testów systemu MenuOS.
 .
 Language=Romanian
-Utilitarul de testare automată ReactOS a fost pornit.
+Utilitarul de testare automată MenuOS a fost pornit.
 .
 
 MessageId=2
@@ -30,12 +30,12 @@ Severity=Success
 Facility=Application
 SymbolicName=MSG_TESTS_SUCCESSFUL
 Language=English
-ReactOS Automatic Testing Utility is successful.
+MenuOS Automatic Testing Utility is successful.
 .
 Language=Polish
-Narzędzie automatycznych testów systemu ReactOS pomyślnie zakończyło działanie.
+Narzędzie automatycznych testów systemu MenuOS pomyślnie zakończyło działanie.
 .
 Language=Romanian
-Utilitarul de testare automată ReactOS a avut succes.
+Utilitarul de testare automată MenuOS a avut succes.
 .
 

@@ -1290,14 +1290,14 @@ static INT_PTR CALLBACK ColorDlgProc( HWND hDlg, UINT message,
 			  return TRUE;
 			break;
 #ifdef __REACTOS__
-	  /* ReactOS: The following comment doesn't apply */
+	  /* MenuOS: The following comment doesn't apply */
 #endif
 	  case WM_LBUTTONUP:  /* FIXME: ClipCursor off (if in color graph)*/
                         if (CC_WMLButtonUp(lpp))
                            return TRUE;
 			break;
 #ifdef __REACTOS__
-	  /* ReactOS: The following comment doesn't apply */
+	  /* MenuOS: The following comment doesn't apply */
 #endif
 	  case WM_LBUTTONDOWN:/* FIXME: ClipCursor on  (if in color graph)*/
 	                if (CC_WMLButtonDown(lpp, lParam))

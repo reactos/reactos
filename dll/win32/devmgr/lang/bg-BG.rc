@@ -74,7 +74,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Водачите за това устройство не са сложени."
     IDS_DEV_HARDWARE_DISABLED "Устройството е изключено, понеже БИОСът му не му е дал никакви ресурси."
     IDS_DEV_CANT_SHARE_IRQ "Това устройство ползва заявка за прекъсване (IRQ), която се ползва от друго устройство и не може да бъде споделена.\nТрябва да смените спорната настройка или да махнете водача за реално време, причиняващ неразбирателството."
-    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
+    IDS_DEV_FAILED_ADD "This device is not working properly because MenuOS cannot load the drivers required for this device."
     IDS_DEV_DISABLED_SERVICE "РеактОС не може да сложи водачите за устройството, понеже няма достъп до устройството или мрежовото местоположение, което съдържа нужните файлове."
     IDS_DEV_TRANSLATION_FAILED "Устройството не отговаря на своя водач (драйвер)."
     IDS_DEV_NO_SOFTCONFIG "РеактОС не може да определи настройките на устройството. Вижте документацията на устройството и използвайте подпрозореца ""Ресурси"" за да го настроите."
@@ -288,7 +288,7 @@ END
 
 STRINGTABLE
 BEGIN
-  IDS_APPNAME               "ReactOS Device Manager"
+  IDS_APPNAME               "MenuOS Device Manager"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
   IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\nDo you really want to disable it?"
   IDS_CONFIRM_UNINSTALL     "Warning: You are about to uninstall this device from your system.\nDo you want to continue?"
@@ -326,7 +326,7 @@ BEGIN
   IDS_HINT_UPDATE       " Launches the Update Driver Software wizard for the selected device."
   IDS_HINT_UNINSTALL    " Uninstalls the driver for the selected device."
   IDS_HINT_ADD          " Adds a legacy (non-Plug and Play) device to the computer."
-  IDS_HINT_ABOUT        " About ReactOS Device Manager."
+  IDS_HINT_ABOUT        " About MenuOS Device Manager."
   IDS_HINT_EXIT         " Exits the program."
 
   IDS_HINT_DEV_BY_TYPE  " Displays devices by hardware type."

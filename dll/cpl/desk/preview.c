@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Desktop Control Panel
+ * PROJECT:     MenuOS Desktop Control Panel
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/cpl/desk/preview.c
  * PURPOSE:     Draws the preview control

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          MenuOS kernel
  * PURPOSE:          Video initialization and display settings
  * FILE:             win32ss/user/ntuser/display.c
  * PROGRAMER:        Timo Kreuzer (timo.kreuzer@reactos.org)

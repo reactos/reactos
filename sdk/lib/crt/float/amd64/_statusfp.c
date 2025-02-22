@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS CRT
+ * PROJECT:     MenuOS CRT
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     x64 implementation of _statusfp
  * COPYRIGHT:   Copyright 2022 Timo Kreuzer <timo.kreuzer@reactos.org>

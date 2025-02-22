@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
+ * PROJECT:           MenuOS kernel
  * PURPOSE:           Run-Time Library
  * FILE:              lib/sdk/crt/math/i386/ceil_asm.s
  * PROGRAMER:         Alex Ionescu (alex@relsoft.net)

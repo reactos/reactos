@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         MenuOS system libraries
  * FILE:            lib/advapi32/service/winreg.c
  * PURPOSE:         Remote registry functions
  * PROGRAMMER:      Eric Kohl

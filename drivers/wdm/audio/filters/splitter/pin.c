@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
+ * PROJECT:         MenuOS Kernel Streaming
  * FILE:            drivers/wdm/audio/filters/splitter/pin.c
  * PURPOSE:         Pin Context Handling
  * PROGRAMMER:      Johannes Anderwald

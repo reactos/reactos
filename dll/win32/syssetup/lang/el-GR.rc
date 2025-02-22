@@ -2,28 +2,28 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Εγκατάσταση του ReactOS"
+CAPTION "Εγκατάσταση του MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Καλώς ήλθατε στον οδηγό εγκατάστασης του ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Αυτός ο οδηγός εγκαθιστά το ReactOS στον υπολογιστή σας. Ο οδηγός χρειάζεται πρώτα κάποιες πληροφορίες για εσάς και τον υπολογιστή σας  για να ρυθμίσει σωστά το ReactOS.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Καλώς ήλθατε στον οδηγό εγκατάστασης του MenuOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Αυτός ο οδηγός εγκαθιστά το MenuOS στον υπολογιστή σας. Ο οδηγός χρειάζεται πρώτα κάποιες πληροφορίες για εσάς και τον υπολογιστή σας  για να ρυθμίσει σωστά το MenuOS.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Πατήστε το κουμπί 'Επόμενο' για να συνεχίσει η εγκατάσταση.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Εγκατάσταση του ReactOS"
+CAPTION "Εγκατάσταση του MenuOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Οι υπεύθυνοι για την ανάπτυξη του ReactOS θα ήθελαν να αναγνωρίσουν τις παρακάτω εργασίες ελεύθερου λογισμικού, (μέρη των οποίων) χρησιμοποιήθηκαν για την ανάπτυξη του ReactOS:", IDC_STATIC,15,4,286,25
+    LTEXT "Οι υπεύθυνοι για την ανάπτυξη του MenuOS θα ήθελαν να αναγνωρίσουν τις παρακάτω εργασίες ελεύθερου λογισμικού, (μέρη των οποίων) χρησιμοποιήθηκαν για την ανάπτυξη του MenuOS:", IDC_STATIC,15,4,286,25
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "Το ReactOS σας έχει δοθεί σύμφωνα με την άδεια GPL, έτσι αν θέλετε να ξαναχρησιμοποιήσετε ή να επαναδιανείμετε μέρη του ή ολόκληρο το ReactOS, πρέπει να τηρείτε την GPL.", IDC_STATIC, 15, 110, 227, 24
+    LTEXT "Το MenuOS σας έχει δοθεί σύμφωνα με την άδεια GPL, έτσι αν θέλετε να ξαναχρησιμοποιήσετε ή να επαναδιανείμετε μέρη του ή ολόκληρο το MenuOS, πρέπει να τηρείτε την GPL.", IDC_STATIC, 15, 110, 227, 24
     PUSHBUTTON "&Άδεια...", IDC_VIEWGPL, 251, 110, 50, 19
     LTEXT "Πατήστε το κουμπί 'Επόμενο' για να συνεχίσετε.", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
-CAPTION "ReactOS Setup"
+CAPTION "MenuOS Setup"
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -38,7 +38,7 @@ END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Εγκατάσταση του ReactOS"
+CAPTION "Εγκατάσταση του MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
@@ -51,7 +51,7 @@ END
 
 IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Εγκατάσταση του ReactOS"
+CAPTION "Εγκατάσταση του MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
@@ -69,7 +69,7 @@ END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Εγκατάσταση του ReactOS"
+CAPTION "Εγκατάσταση του MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
@@ -86,7 +86,7 @@ END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Εγκατάσταση του ReactOS"
+CAPTION "Εγκατάσταση του MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
@@ -100,7 +100,7 @@ END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "MenuOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_THEMEPICKER, "SysListView32", LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_TABSTOP, 18, 8, 288, 130
@@ -108,7 +108,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Εγκατάσταση του ReactOS"
+CAPTION "Εγκατάσταση του MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Καταχώρηση στοιχείων στο μητρώο", IDC_TASKTEXT1, 65, 27, 232, 8
@@ -121,11 +121,11 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Ολοκλήρωση της εγκατάστασης του ReactOS"
+CAPTION "Ολοκλήρωση της εγκατάστασης του MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ολοκλήρωση του οδηγού εγκατάστασης του ReactOS", IDC_FINISHTITLE, 115, 8, 195, 27
-    LTEXT "Εχετε ολοκληρώσει επιτυχώς την εγκατάσταση του ReactOS.\n\nΠατήστε το κουμπί 'Ολοκλήρωση' για να επανεκκινήσετε τον υπολογιστή σας.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Ολοκλήρωση του οδηγού εγκατάστασης του MenuOS", IDC_FINISHTITLE, 115, 8, 195, 27
+    LTEXT "Εχετε ολοκληρώσει επιτυχώς την εγκατάσταση του MenuOS.\n\nΠατήστε το κουμπί 'Ολοκλήρωση' για να επανεκκινήσετε τον υπολογιστή σας.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "Αν υπάρχει κάποιο CD/DVD σε κάποια μονάδα, βγάλτε το. Μετά, πατήστε το κουμπί 'Ολοκλήρωση' και ο υπολογιστής θα επανεκκινηθεί.", IDC_STATIC, 115, 160, 195, 25
 END
@@ -171,13 +171,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Αναγνωρίσεις"
-    IDS_ACKSUBTITLE "Τα στηρίγματα του ReactOS και πληροφορίες για την άδειά του"
+    IDS_ACKSUBTITLE "Τα στηρίγματα του MenuOS και πληροφορίες για την άδειά του"
     IDS_OWNERTITLE "Εξατομίκευση του λογισμικού σας"
-    IDS_OWNERSUBTITLE "Η εγκατάσταση χρησιμοποιεί τις παρακάτω πληροφορίες για να εξατομικεύσει το ReactOS."
+    IDS_OWNERSUBTITLE "Η εγκατάσταση χρησιμοποιεί τις παρακάτω πληροφορίες για να εξατομικεύσει το MenuOS."
     IDS_COMPUTERTITLE "Όνομα υπολογιστή και κωδικός πρόσβασης διαχειριστή"
     IDS_COMPUTERSUBTITLE "Πρέπει να δώσετε ένα όνομα και έναν κωδικό πρόσβασης για τον υπολογιστή σας."
     IDS_LOCALETITLE "Τοπικές ρυθμίσεις"
-    IDS_LOCALESUBTITLE "Μπορείτε να προσαρμόσετε το ReactOS για διαφορετικές περιοχές και γλώσσες."
+    IDS_LOCALESUBTITLE "Μπορείτε να προσαρμόσετε το MenuOS για διαφορετικές περιοχές και γλώσσες."
     IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
     IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Ημερομηνία και ώρα"
@@ -190,7 +190,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP "Εγκατάσταση του ReactOS"
+    IDS_REACTOS_SETUP "Εγκατάσταση του MenuOS"
     IDS_UNKNOWN_ERROR "Άγνωστο σφάλμα"
     IDS_LOADLIBRARY_FAILED "Το LoadLibrary απέτυχε: "
     IDS_GETPROCADDR_FAILED "Το GetProcAddr απέτυχε: "
@@ -250,8 +250,8 @@ STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Product Options"
     IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behavior of the system."
-    IDS_PRODUCTSERVERNAME "ReactOS Server"
-    IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
+    IDS_PRODUCTSERVERNAME "MenuOS Server"
+    IDS_PRODUCTWORKSTATIONNAME "MenuOS Workstation"
     IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."
     IDS_PRODUCTWORKSTATIONINFO "The system will be recognized as a workstation. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents""."
     IDS_DEFAULT "(Default)"

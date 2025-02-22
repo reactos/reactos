@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Display Control Panel
+ * PROJECT:         MenuOS Display Control Panel
  * FILE:            dll/cpl/desk/screensaver.c
  * PURPOSE:         Screen saver property page
  *
@@ -570,12 +570,12 @@ EnumScreenSavers(
         SearchScreenSavers(hwndScreenSavers, pData, szLocalPath);
     }
 
-    /* Add all the screensavers in the C:\ReactOS\System32 directory */
+    /* Add all the screensavers in the C:\MenuOS\System32 directory */
     GetSystemDirectory(szSearchPath, _countof(szSearchPath));
     if (pBackSlash != NULL && _tcsicmp(szSearchPath, szLocalPath) != 0)
         SearchScreenSavers(hwndScreenSavers, pData, szSearchPath);
 
-    /* Add all the screensavers in the C:\ReactOS directory */
+    /* Add all the screensavers in the C:\MenuOS directory */
     GetWindowsDirectory(szSearchPath, _countof(szSearchPath));
     if (pBackSlash != NULL && _tcsicmp(szSearchPath, szLocalPath) != 0)
         SearchScreenSavers(hwndScreenSavers, pData, szSearchPath);

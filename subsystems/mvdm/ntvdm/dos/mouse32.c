@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         ReactOS Virtual DOS Machine
+ * PROJECT:         MenuOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/dos/mouse32.c
  * PURPOSE:         VDM 32-bit compatible PS/2 MOUSE.COM driver
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
@@ -40,9 +40,9 @@
 /* PRIVATE VARIABLES **********************************************************/
 
 static const CHAR MouseCopyright[] =
-    "ReactOS PS/2 16/32-bit Mouse Driver Compatible MS-MOUSE 6.26\r\n"
+    "MenuOS PS/2 16/32-bit Mouse Driver Compatible MS-MOUSE 6.26\r\n"
     "Version "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\r\n"
-    "Copyright (C) ReactOS Team 1996-"COPYRIGHT_YEAR"\0";
+    "Copyright (C) MenuOS Team 1996-"COPYRIGHT_YEAR"\0";
 
 #pragma pack(push, 1)
 

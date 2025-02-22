@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS api tests
+ * PROJECT:         MenuOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Test for AddFontMemResourceEx
  * PROGRAMMERS:     Mark Jansen
@@ -277,7 +277,7 @@ static void test_font_caps(HDC hdc, int test_index)
 }
 
 
-/* Not working as of 2017-04-08 on ReactOS */
+/* Not working as of 2017-04-08 on MenuOS */
 static BOOL is_font_available(HDC hdc, const char* fontName)
 {
     char name[64];

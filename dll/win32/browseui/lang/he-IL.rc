@@ -74,7 +74,7 @@ BEGIN
     END
     POPUP "עזרה", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "אודות ReactOS", IDM_HELP_ABOUT
+        MENUITEM "אודות MenuOS", IDM_HELP_ABOUT
     END
 END
 
@@ -337,6 +337,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARSE_ADDR_ERR_TITLE "ReactOS Explorer"
-    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Explorer cannot find '%1'. Check the spelling and try again."
+    IDS_PARSE_ADDR_ERR_TITLE "MenuOS Explorer"
+    IDS_PARSE_ADDR_ERR_TEXT "MenuOS Explorer cannot find '%1'. Check the spelling and try again."
 END

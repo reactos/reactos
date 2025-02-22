@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
+ * PROJECT:         MenuOS Kernel Streaming
  * FILE:            drivers/wdm/audio/legacy/wdmaud/deviface.c
  * PURPOSE:         System Audio graph builder
  * PROGRAMMER:      Andrew Greenwood

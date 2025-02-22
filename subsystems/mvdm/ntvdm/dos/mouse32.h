@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         ReactOS Virtual DOS Machine
+ * PROJECT:         MenuOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/dos/mouse32.h
  * PURPOSE:         VDM 32-bit compatible PS/2 MOUSE.COM driver
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
@@ -12,7 +12,7 @@
 /* DEFINES ********************************************************************/
 
 //
-// We are ReactOS PS/2 Mouse Driver Version 6.26, compatible MS-MOUSE 6.26
+// We are MenuOS PS/2 Mouse Driver Version 6.26, compatible MS-MOUSE 6.26
 //
 #define MOUSE_VERSION   MAKEWORD(0x26, 0x06)
 

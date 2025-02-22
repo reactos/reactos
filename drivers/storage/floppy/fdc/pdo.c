@@ -1,5 +1,5 @@
 /*
- * PROJECT:        ReactOS Floppy Disk Controller Driver
+ * PROJECT:        MenuOS Floppy Disk Controller Driver
  * LICENSE:        GNU GPLv2 only as published by the Free Software Foundation
  * FILE:           drivers/storage/fdc/fdc/pdo.c
  * PURPOSE:        Physical Device Object routines

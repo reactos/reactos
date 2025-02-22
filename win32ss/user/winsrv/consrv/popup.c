@@ -1,6 +1,6 @@
 /*
  * LICENSE:         GPL - See COPYING in the top level directory
- * PROJECT:         ReactOS Console Server DLL
+ * PROJECT:         MenuOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/popup.c
  * PURPOSE:         Console popup windows
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
@@ -8,7 +8,7 @@
  * NOTE:            Strongly inspired by the DrawBox function
  *                  from base/setup/usetup/interface/usetup.c, written by:
  *                  Eric Kohl (revision 3753)
- *                  Hervé Poussineau (revision 24718)
+ *                  HervÃ© Poussineau (revision 24718)
  *                  and *UiDisplayMenu from FreeLdr.
  */
 

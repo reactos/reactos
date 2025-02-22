@@ -1,5 +1,5 @@
 /*
-* PROJECT:          ReactOS Update Service
+* PROJECT:          MenuOS Update Service
 * LICENSE:          GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
 * PURPOSE:          Windows Update Stand-Alone installer.
 *                   Stub is required for some application at the installation phase.

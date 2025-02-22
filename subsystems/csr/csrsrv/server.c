@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Client/Server Runtime SubSystem
+ * PROJECT:         MenuOS Client/Server Runtime SubSystem
  * FILE:            subsystems/win32/csrsrv/server.c
  * PURPOSE:         CSR Server DLL Server Functions
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT: See COPYING in the top level directory
- * PROJECT  : ReactOS system libraries
+ * PROJECT  : MenuOS system libraries
  * MODULE   : kernel32.dll
  * FILE     : reactos/dll/win32/kernel32/misc/ldr.c
  * AUTHOR   : Aleksey Bragin <aleksey@reactos.org>

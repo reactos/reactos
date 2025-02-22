@@ -1,7 +1,7 @@
 /*
- * PROJECT:         ReactOS Multimedia Control Panel
+ * PROJECT:         MenuOS Multimedia Control Panel
  * FILE:            dll/cpl/mmsys/sounds.c
- * PURPOSE:         ReactOS Multimedia Control Panel
+ * PURPOSE:         MenuOS Multimedia Control Panel
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *                  Johannes Anderwald <janderwald@reactos.com>
  *                  Dmitry Chapyshev <dmitry@reactos.org>

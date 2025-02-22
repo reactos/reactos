@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS WinSock 2.2 Library
+ * PROJECT:     MenuOS WinSock 2.2 Library
  * FILE:        dll/win32/ws2_32/inc/ws2_32p.h
  * PURPOSE:     WinSock 2.2 Main Header
  */

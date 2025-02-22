@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS CRT library
+ * PROJECT:     MenuOS CRT library
  * LICENSE:     BSD - See COPYING.ARM in the top level directory
  * PURPOSE:     Implementation of _chkstk and _alloca_probe
  * COPYRIGHT:   Copyright 2014 Timo Kreuzer (timo.kreuzer@reactos.org)

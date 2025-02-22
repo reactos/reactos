@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         GPL, see COPYING in the top level directory
- * PROJECT:           ReactOS win32 kernel mode sunsystem
+ * PROJECT:           MenuOS win32 kernel mode sunsystem
  * PURPOSE:           GDI DRIVEROBJ Functions
  * FILE:              win32ss/gdi/eng/driverobj.c
  * PROGRAMER:         Timo Kreuzer

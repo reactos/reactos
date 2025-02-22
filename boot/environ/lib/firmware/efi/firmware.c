@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
- * PROJECT:         ReactOS UEFI Boot Library
+ * PROJECT:         MenuOS UEFI Boot Library
  * FILE:            boot/environ/lib/firmware/efi/firmware.c
  * PURPOSE:         Boot Library Firmware Initialization for EFI
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)
@@ -2569,7 +2569,7 @@ EfiGetNtStatusCode (
             return STATUS_IO_DEVICE_ERROR;
         case EFI_WRITE_PROTECTED:
             return STATUS_MEDIA_WRITE_PROTECTED;
-        /* @FIXME: ReactOS Headers don't yet have this */
+        /* @FIXME: MenuOS Headers don't yet have this */
         //case EFI_OUT_OF_RESOURCES:
             //return STATUS_INSUFFICIENT_NVRAM_RESOURCES;
         case EFI_VOLUME_CORRUPTED:

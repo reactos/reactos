@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS System Libraries
+ * PROJECT:         MenuOS System Libraries
  * FILE:            win32ss/gdi/gdi32/include/gdi32p.h
  * PURPOSE:         User-Mode Win32 GDI Library Private Header
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)

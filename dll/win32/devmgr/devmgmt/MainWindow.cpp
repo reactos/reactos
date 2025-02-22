@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Device Manager
+ * PROJECT:     MenuOS Device Manager
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/win32/devmgr/devmgmt/MainWindow.cpp
  * PURPOSE:     Implements the main container window for the device view
@@ -655,7 +655,7 @@ CDeviceManager::OnCommand(_In_ WPARAM wParam,
             CAtlStringW szAppAuthors;
 
             if (!szAppName.LoadStringW(g_hThisInstance, IDS_APPNAME))
-                szAppName = L"ReactOS Device Manager";
+                szAppName = L"MenuOS Device Manager";
             if (!szAppAuthors.LoadStringW(g_hThisInstance, IDS_APP_AUTHORS))
                 szAppAuthors = L"";
             ShellAboutW(m_hMainWnd, szAppName, szAppAuthors,

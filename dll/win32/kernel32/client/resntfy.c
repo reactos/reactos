@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS Win32 Base API
+ * PROJECT:              MenuOS Win32 Base API
  * FILE:                 dll/win32/kernel32/client/resntfy.c
  * PURPOSE:              Memory Resource Notifications
  * PROGRAMMER:           Thomas Weidenmueller <w3seek@reactos.com>

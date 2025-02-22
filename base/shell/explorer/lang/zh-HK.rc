@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Explorer
+ * PROJECT:     MenuOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Chinese (Hong Kong) resource file
  * TRANSLATORS: Copyright 2020-2021 Chan Chilung <eason066@gmail.com>
@@ -119,7 +119,7 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "自訂通知"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT            "ReactOS 會顯示活躍和緊急通知的圖示，並隱藏不活躍的通知。您可以在下面清單中的專案更改行為。", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "MenuOS 會顯示活躍和緊急通知的圖示，並隱藏不活躍的通知。您可以在下面清單中的專案更改行為。", IDC_STATIC, 6, 6, 220, 30
     LTEXT            "選擇一個專案，然後選擇它的通知行為：", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS

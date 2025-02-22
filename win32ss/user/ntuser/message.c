@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS Win32k subsystem
+ * PROJECT:          MenuOS Win32k subsystem
  * PURPOSE:          Messages
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
@@ -661,7 +661,7 @@ IntMsgCreateStructW(
     WindowName = (PLARGE_STRING)   Cs->lpszName;
     ClassName  = (PUNICODE_STRING) Cs->lpszClass;
 
-    // Based on the assumption this is from "unicode source" user32, ReactOS, answer is yes.
+    // Based on the assumption this is from "unicode source" user32, MenuOS, answer is yes.
     if (!IS_ATOM(ClassName->Buffer))
     {
         if (ClassName->Length)

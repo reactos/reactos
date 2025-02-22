@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS WinSock DLL
+ * PROJECT:         MenuOS WinSock DLL
  * FILE:            stubs.c
  * PURPOSE:         WSAIoctl wrappers for Microsoft extensions to Winsock
  * PROGRAMMERS:     KJK::Hyperion <hackbunny@reactos.com>

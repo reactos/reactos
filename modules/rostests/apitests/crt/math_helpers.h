@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS api tests
+ * PROJECT:     MenuOS api tests
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Helpers for testing math functions
  * COPYRIGHT:   Copyright 2021 Timo Kreuzer <timo.kreuzer@reactos.org>

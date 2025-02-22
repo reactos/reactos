@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Browser Service
+ * PROJECT:     MenuOS Browser Service
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Browser service RPC server
  * COPYRIGHT:   Eric Kohl 2020 <eric.kohl@reactos.org>

@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS HAL
+ * PROJECT:         MenuOS HAL
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * PURPOSE:         Generic HAL PIC Management Code shared between APIC and PIC HAL
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROGRAMMERS:     MenuOS Portable Systems Group
  */
 
  /* INCLUDES *******************************************************************/

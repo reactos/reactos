@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS system libraries
+ * PROJECT:           MenuOS system libraries
  * FILE:              lib/rtl/propvar.c
  * PURPOSE:           Native properties and variants API
  * PROGRAMMER:        Pierre Schweitzer (pierre@reactos.org)

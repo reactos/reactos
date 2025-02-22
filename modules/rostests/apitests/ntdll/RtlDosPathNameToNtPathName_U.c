@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS api tests
+ * PROJECT:         MenuOS api tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Test for RtlDosPathNameToNtPathName_U
  * PROGRAMMER:      Mike "tamlin" Nordell
@@ -29,7 +29,7 @@
  * Code is assumed to be compiled as 32-bit "ANSI" (i.e. with _UNICODE) undefined.
  */
 
-// Enable this define to compile the test as a ReactOS auto-test.
+// Enable this define to compile the test as a MenuOS auto-test.
 // Disable it to compile on plain Win32, to test-run and get info.
 #define COMPILE_AS_ROSTEST
 
@@ -38,7 +38,7 @@
 # include <windows.h>
 # include <stdio.h>
 # include <stddef.h>
-#else /* Compile for ReactOS or wine */
+#else /* Compile for MenuOS or wine */
 # include "precomp.h"
 #endif
 

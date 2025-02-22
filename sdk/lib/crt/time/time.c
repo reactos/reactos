@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   LGPL, See LGPL.txt in the top level directory
- * PROJECT:     ReactOS system libraries
+ * PROJECT:     MenuOS system libraries
  * FILE:        lib/sdk/crt/time/time.c
  * PURPOSE:     Implementation of _time (_time32, _time64)
  * PROGRAMER:   Timo Kreuzer

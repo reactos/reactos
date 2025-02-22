@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS API Tests
+ * PROJECT:     MenuOS API Tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Test for SHEnumClassesOfCategories
  * COPYRIGHT:   Copyright 2019 Serge Gautherie <reactos-git_serge_171003@gautherie.fr>
@@ -49,7 +49,7 @@ START_TEST(SHEnumClassesOfCategories)
     // Test (mostly) invalid arguments.
 
     // Implemented, '(ULONG)-1, NULL'.
-    // Keep this odd case, as ReactOS used to "implement" it.
+    // Keep this odd case, as MenuOS used to "implement" it.
 
     // hr = pSHEnumClassesOfCategories((ULONG)-1, NULL, 0, NULL, NULL);
     // ok_long(hr, E_INVALIDARG);

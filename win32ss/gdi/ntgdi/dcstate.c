@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS Win32k subsystem
+ * PROJECT:           MenuOS Win32k subsystem
  * PURPOSE:           Functions for saving and restoring dc states
  * FILE:              win32ss/gdi/ntgdi/dcstate.c
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@rectos.org)

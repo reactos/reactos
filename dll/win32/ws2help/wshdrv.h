@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS WinSock 2 DLL
+ * PROJECT:     MenuOS WinSock 2 DLL
  * FILE:        dll/win32/ws2help/wshdrv.h
  * PURPOSE:     WinSock 2 Helper Driver header
  */

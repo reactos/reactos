@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS VGA Font Editor
+ * PROJECT:     MenuOS VGA Font Editor
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     CPI (Code Page Information) MS-DOS-compatible Fonts
  *              We support only screen fonts, not printer fonts.

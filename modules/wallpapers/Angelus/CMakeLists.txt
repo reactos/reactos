@@ -1,1 +1,1 @@
-add_subdirectory(ReactOS)
+add_subdirectory(MenuOS)

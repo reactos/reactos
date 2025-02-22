@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         MenuOS system libraries
  * FILE:            lib/advapi32/misc/dllmain.c
  * PURPOSE:         Library main function
  * PROGRAMMER:      ???

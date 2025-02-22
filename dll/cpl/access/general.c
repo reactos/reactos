@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Accessibility Control Panel
+ * PROJECT:         MenuOS Accessibility Control Panel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/cpl/access/general.c
  * PURPOSE:         General accessibility settings

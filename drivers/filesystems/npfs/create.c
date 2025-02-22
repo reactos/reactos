@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS Named Pipe FileSystem
+ * PROJECT:     MenuOS Named Pipe FileSystem
  * LICENSE:     BSD - See COPYING.ARM in the top level directory
  * FILE:        drivers/filesystems/npfs/create.c
  * PURPOSE:     Pipes Creation
- * PROGRAMMERS: ReactOS Portable Systems Group
+ * PROGRAMMERS: MenuOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/

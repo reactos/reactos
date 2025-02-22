@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS WinSock 2 NSP
+ * PROJECT:     MenuOS WinSock 2 NSP
  * FILE:        include/reactos/winsock/wsmobile.h
  * PURPOSE:     WinSock 2 NSP Header
  */

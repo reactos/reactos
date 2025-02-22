@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Kernel
+ * PROJECT:     MenuOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Boot Theme & Animation - Standard Bitmap Resources
  * COPYRIGHT:   Copyright 2010 Alex Ionescu (alex.ionescu@reactos.org)
@@ -46,7 +46,7 @@
 #define IDB_CLUSTER_SERVER  17  // Compute Cluster Edition
 #define IDB_STORAGE_SERVER2 18
 
-/* ReactOS additions */
+/* MenuOS additions */
 #define IDB_LOGO_XMAS       19
 #define IDB_ROTATING_LINE   20
 #define IDB_PROGRESS_BAR    21

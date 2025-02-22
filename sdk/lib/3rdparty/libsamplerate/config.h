@@ -196,7 +196,7 @@
 
 #define inline __inline
 
-/* ReactOS hacks */
+/* MenuOS hacks */
 void __cdecl __debugbreak(void);
 unsigned long __cdecl DbgPrint(const char *Format, ...);
 #define exit(n) __debugbreak()

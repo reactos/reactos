@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Tests
+ * PROJECT:         MenuOS Tests
  * FILE:            rostests/win32/user32/biditext/biditext.c
  * PURPOSE:         Demonstrates how ExtTextOut and GetCharacterPlacement
  *                  handle bidirectional text strings via certain selection

@@ -1,5 +1,5 @@
 #
-# PROJECT:     ReactOS Networking
+# PROJECT:     MenuOS Networking
 # LICENSE:     GPL - See COPYING in the top level directory
 # FILE:        lib/dhcpcsvc/dhcpcsvc.spec
 # PURPOSE:     dhcpcsvc exports

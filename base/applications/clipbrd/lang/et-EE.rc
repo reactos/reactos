@@ -36,7 +36,7 @@ BEGIN
     STRING_CLIPFILE  "Lõikelaua element"
     STRING_DELETE_MSG "Puhastada lõikelaua sisu?"
     STRING_DELETE_TITLE "Puhasta lõikelauda"
-    STRING_FORMAT_NT "Lõikelaua failid ReactOS'i jaoks (*.clp)"
+    STRING_FORMAT_NT "Lõikelaua failid MenuOS'i jaoks (*.clp)"
     STRING_FORMAT_GEN "Lõikelaua failid (*.clp)"
 END
 

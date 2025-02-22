@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Kernel - Vista+ APIs
+ * PROJECT:     MenuOS Kernel - Vista+ APIs
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     DPI functions for user32 and user32_vista.
  * COPYRIGHT:   Copyright 2024 Carl Bialorucki <cbialo2@outlook.com>

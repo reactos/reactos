@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Task Manager
+ * PROJECT:     MenuOS Task Manager
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Run Task.
  * COPYRIGHT:   Copyright 1999-2001 Brian Palmer <brianp@reactos.org>
@@ -11,7 +11,7 @@
  * use the type below to declare a function pointer
  *
  * Information taken from http://www.geocities.com/SiliconValley/4942/
- * Copyright © 1998-1999 James Holderness. All Rights Reserved.
+ * Copyright Â© 1998-1999 James Holderness. All Rights Reserved.
  * jholderness@geocities.com
  */
 

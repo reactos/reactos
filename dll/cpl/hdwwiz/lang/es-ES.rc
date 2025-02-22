@@ -129,7 +129,7 @@ BEGIN
     LTEXT "El Asistente de instalación de dispositivos no puede continuar", IDC_FINISHTITLE, 114, 8, 203, 28
     LTEXT "Para continuar, conecte este hardware al equipo.", -1, 114, 40, 193, 16
     AUTOCHECKBOX "Apagar el equipo cuando &haga clic en Finalizar para poder abrirlo y conectar el hardware.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "En muchos casos ReactOS instalará automáticamente el hardware después de conectarlo. Si ReactOS no lo encuentra, puede volver a abrir el asistente para instalar software compatible.", -1, 114, 98, 193, 32
+    LTEXT "En muchos casos MenuOS instalará automáticamente el hardware después de conectarlo. Si MenuOS no lo encuentra, puede volver a abrir el asistente para instalar software compatible.", -1, 114, 98, 193, 32
     LTEXT "Para salir de este asistente, haga clic en Finalizar.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 

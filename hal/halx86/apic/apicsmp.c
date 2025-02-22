@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS HAL
+ * PROJECT:     MenuOS HAL
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     SMP specific APIC code
  * COPYRIGHT:   Copyright 2021 Timo Kreuzer <timo.kreuzer@reactos.org>

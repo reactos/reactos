@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         ReactOS Virtual DOS Machine
+ * PROJECT:         MenuOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/bios/bios32/vidbios32.h
  * PURPOSE:         VDM 32-bit Video BIOS
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS framebuffer driver for NEC PC-98 series
+ * PROJECT:     MenuOS framebuffer driver for NEC PC-98 series
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Hardware support code
  * COPYRIGHT:   Copyright 2020 Dmitry Borisov (di.sean@protonmail.com)

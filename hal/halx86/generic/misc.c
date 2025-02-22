@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS Hardware Abstraction Layer (HAL)
+ * PROJECT:         MenuOS Hardware Abstraction Layer (HAL)
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * PURPOSE:         I/O Mapping and x86 Subs
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROGRAMMERS:     MenuOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS API Tests
+ * PROJECT:     MenuOS API Tests
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Precompiled header for isapnp_unittest
  * COPYRIGHT:   Copyright 2024 Dmitry Borisov <di.sean@protonmail.com>

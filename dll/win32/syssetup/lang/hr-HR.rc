@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS System Setup Library
+ * PROJECT:     MenuOS System Setup Library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Croatian resource file
  * TRANSLATORS: Copyright 2022 Andrej Bartulin <andrej.bartulinvr@gmail.com>
@@ -9,28 +9,28 @@ LANGUAGE LANG_CROATIAN, SUBLANG_CROATIAN_CROATIA
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Instalacija"
+CAPTION "MenuOS Instalacija"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Dobrodošli u ReactOS Instalacijski čarobnjak.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Ovaj čarobnjak instalira ReactOS na Vaš uređaj. Čarobnjak treba nabaviti nekoliko informacija kako bi pravilno postavio ReactOS.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Dobrodošli u MenuOS Instalacijski čarobnjak.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Ovaj čarobnjak instalira MenuOS na Vaš uređaj. Čarobnjak treba nabaviti nekoliko informacija kako bi pravilno postavio MenuOS.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Klikinite Napred da biste nastavili.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Instalacija"
+CAPTION "MenuOS Instalacija"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Razvijatelji ReactOS-a žele zahvaliti na sljedećim projektima otvorenog koda (dijelovima) koji su korišteni za stvaranje ReactOS-a:", IDC_STATIC, 15, 7, 286, 19
+    LTEXT "Razvijatelji MenuOS-a žele zahvaliti na sljedećim projektima otvorenog koda (dijelovima) koji su korišteni za stvaranje MenuOS-a:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "ReactOS je licenciran pod GPL-om, pa ako ga želite ponovno koristiti ili redistribuirati (dijelove) morate poštivati GPL.", IDC_STATIC, 15, 110, 227, 19
+    LTEXT "MenuOS je licenciran pod GPL-om, pa ako ga želite ponovno koristiti ili redistribuirati (dijelove) morate poštivati GPL.", IDC_STATIC, 15, 110, 227, 19
     PUSHBUTTON "&Vidi GPL...", IDC_VIEWGPL, 251, 110, 50, 19
     LTEXT "Klikinite Napred da biste nastavili.", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
-CAPTION "ReactOS Instalacija"
+CAPTION "MenuOS Instalacija"
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -45,7 +45,7 @@ END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Instalacija"
+CAPTION "MenuOS Instalacija"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
@@ -58,7 +58,7 @@ END
 
 IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Instalacija"
+CAPTION "MenuOS Instalacija"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
@@ -76,7 +76,7 @@ END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Instalacija"
+CAPTION "MenuOS Instalacija"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
@@ -93,7 +93,7 @@ END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Instalacija"
+CAPTION "MenuOS Instalacija"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
@@ -107,7 +107,7 @@ END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Instalacija"
+CAPTION "MenuOS Instalacija"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_THEMEPICKER, "SysListView32", LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_TABSTOP, 18, 8, 288, 130
@@ -115,7 +115,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Instalacija"
+CAPTION "MenuOS Instalacija"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Registriranje komponenti", IDC_TASKTEXT1, 65, 27, 232, 8
@@ -128,11 +128,11 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Dovršavanje ReactOS instalacije"
+CAPTION "Dovršavanje MenuOS instalacije"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Dovršavanje ReactOS instalacije", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Uspješno ste dovršili postavljanje ReactOS-a.\n\nKada kliknete Završi, vaše će se računalo ponovno pokrenuti.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Dovršavanje MenuOS instalacije", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "Uspješno ste dovršili postavljanje MenuOS-a.\n\nKada kliknete Završi, vaše će se računalo ponovno pokrenuti.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "Ako se u priključku nalazi CD ili USB, uklonite ga. Zatim, za ponovno pokretanje računala, kliknite Završi.", IDC_STATIC, 115, 169, 195, 17
 END
@@ -178,13 +178,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Priznanja"
-    IDS_ACKSUBTITLE "Rame na kojima ReactOS stoji i informacije o licenci"
+    IDS_ACKSUBTITLE "Rame na kojima MenuOS stoji i informacije o licenci"
     IDS_OWNERTITLE "Personalizirajte svoj softver"
-    IDS_OWNERSUBTITLE "Postavljanje koristi ove podatke o vama za personalizaciju ReactOS-a."
+    IDS_OWNERSUBTITLE "Postavljanje koristi ove podatke o vama za personalizaciju MenuOS-a."
     IDS_COMPUTERTITLE "Ime računala i administratorska lozinka"
     IDS_COMPUTERSUBTITLE "Trebate unijeti ime i administratorsku lozinku za svoje računalo."
     IDS_LOCALETITLE "Regionalne postavke"
-    IDS_LOCALESUBTITLE "Možete prilagoditi ReactOS za različite regije i jezike."
+    IDS_LOCALESUBTITLE "Možete prilagoditi MenuOS za različite regije i jezike."
     IDS_LOCALETEXT "Standardi i formati su postavljeni na %s, a lokacija na %s."
     IDS_LAYOUTTEXT "Vaš zadani jezik i način unosa teksta je: %s raspored tipkovnice"
     IDS_DATETIMETITLE "Datum i vrijeme"
@@ -197,7 +197,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP "ReactOS Instalacija"
+    IDS_REACTOS_SETUP "MenuOS Instalacija"
     IDS_UNKNOWN_ERROR "Nepoznata pogreška"
     IDS_LOADLIBRARY_FAILED "Učitavanje LoadLibrary-a je neuspješno: "
     IDS_GETPROCADDR_FAILED "Učitavanje GetProcAddr-a je neuspješno: "
@@ -257,8 +257,8 @@ STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Opcije proizvoda"
     IDS_PRODUCTSUBTITLE "Možete odabrati opciju proizvoda koja utječe na ponašanje sustava."
-    IDS_PRODUCTSERVERNAME "ReactOS Server"
-    IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
+    IDS_PRODUCTSERVERNAME "MenuOS Server"
+    IDS_PRODUCTWORKSTATIONNAME "MenuOS Workstation"
     IDS_PRODUCTSERVERINFO "Sustav će biti prepoznat kao server. Privatne mape su: ""My Pictures"", ""My Videos"" i ""My Music"" koji su neovisni od mape ""My Documents""."
     IDS_PRODUCTWORKSTATIONINFO "Sustav će biti prepoznat kao radna stanica - workstation. Privatne mape su: ""My Pictures"", ""My Videos"" i ""My Music"" koji su u mapi ""My Documents""."
     IDS_DEFAULT "Zadano (Default)"

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS HTTP Daemon
+ * PROJECT:     MenuOS HTTP Daemon
  * FILE:        include/debug.h
  */
 #ifndef __DEBUG_H

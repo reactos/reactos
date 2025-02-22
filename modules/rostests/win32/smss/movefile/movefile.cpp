@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Test applications
+ * PROJECT:         MenuOS Test applications
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/applications/testsets/smss/movefile.cpp
  * PURPOSE:         Provides testing for the "move file after reboot"

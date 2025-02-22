@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS NDIS User I/O driver
+ * PROJECT:     MenuOS NDIS User I/O driver
  * FILE:        readwrite.c
  * PURPOSE:     Handles IRP_MJ_READ and IRP_MJ_WRITE
  * PROGRAMMERS: Cameron Gutman (cameron.gutman@reactos.org)

@@ -620,7 +620,7 @@ VOID TransferPacketQueueRetryDpc(PTRANSFER_PACKET Pkt)
 
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 TransferPacketRetryTimerDpc(   IN PKDPC Dpc,
                                     IN PVOID DeferredContext,
                                     IN PVOID SystemArgument1,

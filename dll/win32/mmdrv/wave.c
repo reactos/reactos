@@ -1,12 +1,12 @@
 /*
  *
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS Multimedia
+ * PROJECT:              MenuOS Multimedia
  * FILE:                 dll/win32/mmdrv/wave.c
  * PURPOSE:              Multimedia User Mode Driver (Wave Audio)
  * PROGRAMMER:           Andrew Greenwood
  * UPDATE HISTORY:
- *                       Jan 30, 2004: Imported into ReactOS tree
+ *                       Jan 30, 2004: Imported into MenuOS tree
  *                       Jan 14, 2007: Rewritten and tidied up
  */
 

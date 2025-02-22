@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        GNU GPL, See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          MenuOS kernel
  * PURPOSE:          Coordinate systems
  * FILE:             win32ss/gdi/ntgdi/coord.c
  * PROGRAMERS:       Timo Kreuzer (timo.kreuzer@rectos.org)

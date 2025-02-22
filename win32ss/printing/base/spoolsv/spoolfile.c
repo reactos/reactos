@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS Print Spooler Service
+ * PROJECT:     MenuOS Print Spooler Service
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Spool File RPC calls
- * COPYRIGHT:   Copyright 2020 ReactOS
+ * COPYRIGHT:   Copyright 2020 MenuOS
  */
 
 #include "precomp.h"

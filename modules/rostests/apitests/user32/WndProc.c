@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS api tests
+ * PROJECT:         MenuOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Test for mismatch with function prototype in window procedure callback.
  * PROGRAMMERS:
@@ -19,7 +19,7 @@ static int redrawComplete, WMPAINT_count;
  * Adding (6 and) more will force exception faults and terminate the test program.
  * The test is with five and this is safe for windows.
  *
- * But,,,, ReactOS compiled with GCC can handle this,,,,,,
+ * But,,,, MenuOS compiled with GCC can handle this,,,,,,
  */
 static LRESULT WINAPI redraw_window_procA(
     HWND hwnd,

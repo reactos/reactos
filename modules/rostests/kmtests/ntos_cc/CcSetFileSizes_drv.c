@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS kernel-mode tests
+ * PROJECT:         MenuOS kernel-mode tests
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
  * PURPOSE:         Test driver for CcSetFileSizes function
  * PROGRAMMER:      Pierre Schweitzer <pierre@reactos.org>

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Font Shell Extension
+ * PROJECT:     MenuOS Font Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CFontExt definition
  * COPYRIGHT:   Copyright 2019,2020 Mark Jansen <mark.jansen@reactos.org>

@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS ACPI-Compliant Control Method Battery
+ * PROJECT:         MenuOS ACPI-Compliant Control Method Battery
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            boot/drivers/bus/acpi/cmbatt/cmbatt.h
  * PURPOSE:         Main Header File
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROGRAMMERS:     MenuOS Portable Systems Group
  */
 
 #ifndef _CMBATT_PCH_

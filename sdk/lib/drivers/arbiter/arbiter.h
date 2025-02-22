@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Kernel&Driver SDK
+ * PROJECT:     MenuOS Kernel&Driver SDK
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Hardware Resources Arbiter Library
  * COPYRIGHT:   Copyright 2020 Vadim Galyant <vgal@rambler.ru>

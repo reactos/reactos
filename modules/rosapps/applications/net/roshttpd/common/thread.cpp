@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS HTTP Daemon
+ * PROJECT:     MenuOS HTTP Daemon
  * FILE:        thread.cpp
  * PURPOSE:     Generic thread class
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

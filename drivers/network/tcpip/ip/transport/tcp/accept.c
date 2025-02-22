@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS TCP/IP protocol driver
+ * PROJECT:     MenuOS TCP/IP protocol driver
  * FILE:        transport/tcp/accept.c
  * PURPOSE:     Transmission Control Protocol Listen/Accept code
  * PROGRAMMERS: Art Yerkes (arty@users.sf.net)

@@ -6,14 +6,14 @@ static MUI_ENTRY euESSetupInitPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         0,
         20,
-        "Itxaron mesedez ReactOS Instalazioa hasten ari dela",
+        "Itxaron mesedez MenuOS Instalazioa hasten ari dela",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -44,7 +44,7 @@ static MUI_ENTRY euESLanguagePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -96,21 +96,21 @@ static MUI_ENTRY euESWelcomePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "Ongi etorri ReactOS Insalazioa",
+        "Ongi etorri MenuOS Insalazioa",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
     {
         6,
         11,
-        "Parte honetan Instalazioak kapiatu du ReactOS Sistema Eragilea zure",
+        "Parte honetan Instalazioak kapiatu du MenuOS Sistema Eragilea zure",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -124,36 +124,36 @@ static MUI_ENTRY euESWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Sakatu SARTU ReactOS instalatzeko edo hobetzeko.",
+        "\x07  Sakatu SARTU MenuOS instalatzeko edo hobetzeko.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-     // "\x07  Sakatu R ReactOS instalazioa kompontzeko berreskuragailu erabiltzen.",
-        "\x07  Sakatu R ReactOS instalazioa kompontzeko.",
+     // "\x07  Sakatu R MenuOS instalazioa kompontzeko berreskuragailu erabiltzen.",
+        "\x07  Sakatu R MenuOS instalazioa kompontzeko.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  Sakatu L ReactOS Lizentziako terminoak eta baldintzak irakurtzea.",
+        "\x07  Sakatu L MenuOS Lizentziako terminoak eta baldintzak irakurtzea.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         21,
-        "\x07  Sakatu F3 irteteko ReactOS-rik instalatu gabe.",
+        "\x07  Sakatu F3 irteteko MenuOS-rik instalatu gabe.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         23,
-        "ReactOS agirbide gehiago nahi baduzun, webgune hau ikusi:",
+        "MenuOS agirbide gehiago nahi baduzun, webgune hau ikusi:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -184,21 +184,21 @@ static MUI_ENTRY euESIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "ReactOS bertsio egoera",
+        "MenuOS bertsio egoera",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
     {
         6,
         11,
-        "ReactOS Alpha mailan dago, honek esan nahi du ReactOS ez da",
+        "MenuOS Alpha mailan dago, honek esan nahi du MenuOS ez da",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -233,14 +233,14 @@ static MUI_ENTRY euESIntroPageEntries[] =
     {
         8,
         19,
-        "\x07  Sakatu SARTU ReactOS instalazio jarraitzeko.",
+        "\x07  Sakatu SARTU MenuOS instalazio jarraitzeko.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         21,
-        "\x07  Sakatu F3 irteteko ReactOS-rik instalatu gabe.",
+        "\x07  Sakatu F3 irteteko MenuOS-rik instalatu gabe.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -264,7 +264,7 @@ static MUI_ENTRY euESLicensePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -278,7 +278,7 @@ static MUI_ENTRY euESLicensePageEntries[] =
     {
         8,
         8,
-        "ReactOS Sistema lizentziatuta dago GNU GLP-aren lizentzia",
+        "MenuOS Sistema lizentziatuta dago GNU GLP-aren lizentzia",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -299,7 +299,7 @@ static MUI_ENTRY euESLicensePageEntries[] =
     {
         8,
         11,
-        "Software denak dagoen ReactOS sisteman partez atera dira",
+        "Software denak dagoen MenuOS sisteman partez atera dira",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -327,7 +327,7 @@ static MUI_ENTRY euESLicensePageEntries[] =
     {
         8,
         16,
-        "lokala edo internazional legeak izan ezik. ReactOS lizentzia",
+        "lokala edo internazional legeak izan ezik. MenuOS lizentzia",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -348,7 +348,7 @@ static MUI_ENTRY euESLicensePageEntries[] =
     {
         8,
         19,
-        "zure ReactOS-ekin mesedez bisitatu",
+        "zure MenuOS-ekin mesedez bisitatu",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -407,7 +407,7 @@ static MUI_ENTRY euESDevicePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -514,14 +514,14 @@ static MUI_ENTRY euESRepairPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "ReactOS Instalazioa hasierako garapen zatian dago. Oraindik ez du",
+        "MenuOS Instalazioa hasierako garapen zatian dago. Oraindik ez du",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -587,21 +587,21 @@ static MUI_ENTRY euESUpgradePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "ReactOS Instalazioak hurrengo zerrendaren ReactOS sistema bakoitz",
+        "MenuOS Instalazioak hurrengo zerrendaren MenuOS sistema bakoitz",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         9,
-        "hobetu ahal du edo, ReactOS sistema apurtuta badago, Instalazioak",
+        "hobetu ahal du edo, MenuOS sistema apurtuta badago, Instalazioak",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -643,7 +643,7 @@ static MUI_ENTRY euESUpgradePageEntries[] =
     {
         8,
         21,
-        "\x07  Sakatu F3 irteteko ReactOS-rik instalatu gabe.",
+        "\x07  Sakatu F3 irteteko MenuOS-rik instalatu gabe.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -667,7 +667,7 @@ static MUI_ENTRY euESComputerPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -726,7 +726,7 @@ static MUI_ENTRY euESFlushPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -771,14 +771,14 @@ static MUI_ENTRY euESQuitPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         10,
         6,
-        "ReactOS ez dago zeharo instalatuta.",
+        "MenuOS ez dago zeharo instalatuta.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -823,7 +823,7 @@ static MUI_ENTRY euESDisplayPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -882,14 +882,14 @@ static MUI_ENTRY euESSuccessPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         10,
         6,
-        "ReactOS oinarrizko zatiak arrakaztaz instalatuta da.",
+        "MenuOS oinarrizko zatiak arrakaztaz instalatuta da.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -934,7 +934,7 @@ static MUI_ENTRY euESSelectPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -962,7 +962,7 @@ static MUI_ENTRY euESSelectPartitionEntries[] =
     {
         8,
         13,
-        "\x07  Sakatu SARTU ReactOS instalatzeko partizio aukeratuta barruan.",
+        "\x07  Sakatu SARTU MenuOS instalatzeko partizio aukeratuta barruan.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1007,7 +1007,7 @@ static MUI_ENTRY euESChangeSystemPartition[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1028,14 +1028,14 @@ static MUI_ENTRY euESChangeSystemPartition[] =
     {
         6,
         16,
-        "formatok ReactOS-k ez da euskarri erabiltzen.",
+        "formatok MenuOS-k ez da euskarri erabiltzen.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         18,
-        "ReactOS arrakastaz instalatzeko, Instalazio programa aldatu behar du",
+        "MenuOS arrakastaz instalatzeko, Instalazio programa aldatu behar du",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1105,7 +1105,7 @@ static MUI_ENTRY euESChangeSystemPartition[] =
     {
         6,
         35,
-        "ReactOS instalazioa bukatuz gero.",
+        "MenuOS instalazioa bukatuz gero.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1129,7 +1129,7 @@ static MUI_ENTRY euESConfirmDeleteSystemPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1150,7 +1150,7 @@ static MUI_ENTRY euESConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         11,
-        "programak sistema operatibo hasten direna (ReactOS bezala) edo beste",
+        "programak sistema operatibo hasten direna (MenuOS bezala) edo beste",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1185,7 +1185,7 @@ static MUI_ENTRY euESConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         17,
-        "diskogogorretik ReactOS Instalazioa amaitu arte.",
+        "diskogogorretik MenuOS Instalazioa amaitu arte.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1237,7 +1237,7 @@ static MUI_ENTRY euESFormatPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1275,7 +1275,7 @@ static MUI_ENTRY euESCheckFSEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1306,7 +1306,7 @@ static MUI_ENTRY euESInstallDirectoryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1334,7 +1334,7 @@ static MUI_ENTRY euESInstallDirectoryEntries[] =
     {
         6,
         15,
-        "ezabatzeko eta idatzi direktorioa zu ReactOS nahi duzun",
+        "ezabatzeko eta idatzi direktorioa zu MenuOS nahi duzun",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1365,21 +1365,21 @@ static MUI_ENTRY euESFileCopyEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         0,
         12,
-        "Itxaron mesedez ReactOS Instalazioa fitxategiak kopiatuen",
+        "Itxaron mesedez MenuOS Instalazioa fitxategiak kopiatuen",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
     {
         0,
         13,
-        "bitartean ReactOS-n karpeta.",
+        "bitartean MenuOS-n karpeta.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -1410,7 +1410,7 @@ static MUI_ENTRY euESBootLoaderSelectPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1469,7 +1469,7 @@ static MUI_ENTRY euESBootLoaderInstallPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1500,7 +1500,7 @@ static MUI_ENTRY euESBootLoaderRemovableDiskPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1546,7 +1546,7 @@ static MUI_ENTRY euESKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1605,7 +1605,7 @@ static MUI_ENTRY euESLayoutSettingsEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1665,14 +1665,14 @@ static MUI_ENTRY euESPrepareCopyEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "Instalazioak zure ordenagailua antolatu du ReactOS fitxategiak kopiatzeko.",
+        "Instalazioak zure ordenagailua antolatu du MenuOS fitxategiak kopiatzeko.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1697,7 +1697,7 @@ static MUI_ENTRY euESSelectFSEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1745,7 +1745,7 @@ static MUI_ENTRY euESDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1797,7 +1797,7 @@ static MUI_ENTRY euESRegistryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        " MenuOS " KERNEL_VERSION_STR " Instalazioa ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1832,9 +1832,9 @@ MUI_ERROR euESErrorEntries[] =
     },
     {
         // ERROR_NOT_INSTALLED
-        "ReactOS ez dago instalatuta guztiz zure\n"
+        "MenuOS ez dago instalatuta guztiz zure\n"
         "ordenagailuan. Orain instalazioa utzi baduzu, zuk nahiago\n"
-        "duzu Instalazioa berriro hasi ReactOS instalatzeko.\n"
+        "duzu Instalazioa berriro hasi MenuOS instalatzeko.\n"
         "\n"
         "  \x07  Sakatu SARTU Instalazioa jarraitzeko.\n"
         "  \x07  Sakatu F3 Instalazioa utzi.",
@@ -1842,7 +1842,7 @@ MUI_ERROR euESErrorEntries[] =
     },
     {
         // ERROR_NO_BUILD_PATH
-        "ReactOS instalazio direktorio bide eraikitzea huts egin da!\n"
+        "MenuOS instalazio direktorio bide eraikitzea huts egin da!\n"
         "SARTU = Berrabiarazi"
     },
     {
@@ -1852,7 +1852,7 @@ MUI_ERROR euESErrorEntries[] =
     },
     {
         // ERROR_SOURCE_DIR
-        "Ez ahal duzu ReactOS instalatzeko instalazio direktorion barruan!\n"
+        "Ez ahal duzu MenuOS instalatzeko instalazio direktorion barruan!\n"
         "SARTU = Berrabiarazi"
     },
     {
@@ -2044,7 +2044,7 @@ MUI_ERROR euESErrorEntries[] =
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "Partizio aukeratuta ez da nahiko haundia ReactOS instalatzeko.\n"
+        "Partizio aukeratuta ez da nahiko haundia MenuOS instalatzeko.\n"
         "Instalatzeko partizioa %lu MB handi gutzienez behar dauka.\n"
         "\n"
         "  * Sakatu tekla batzuk jarraitzeko.",
@@ -2229,13 +2229,13 @@ MUI_STRING euESStrings[] =
     {STRING_PARTFORMAT,
     "Partizio hau izango da formatuta gero."},
     {STRING_NONFORMATTEDPART,
-    "Zu aukeratu duzu ReactOS instalatzeko partizio berri edo garbi barruan."},
+    "Zu aukeratu duzu MenuOS instalatzeko partizio berri edo garbi barruan."},
     {STRING_NONFORMATTEDSYSTEMPART,
     "Oraindik sistema partizioa ez dago formatuta."},
     {STRING_NONFORMATTEDOTHERPART,
     "Oraindik partizio berria ez dago formatuta."},
     {STRING_INSTALLONPART,
-    "Instalazioa ReactOS instalatu du partizio barruan"},
+    "Instalazioa MenuOS instalatu du partizio barruan"},
     {STRING_CONTINUE,
     "SARTU = Jarraitu"},
     {STRING_QUITCONTINUE,

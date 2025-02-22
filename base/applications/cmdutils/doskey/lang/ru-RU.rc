@@ -4,7 +4,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_HELP "Редактирование и повторный вызов команд ReactOS; создание макросов DOSKey.\n\
+    IDS_HELP "Редактирование и повторный вызов команд MenuOS; создание макросов DOSKey.\n\
 \n\
 DOSKEY [/REINSTALL] [/LISTSIZE=размер] [/MACROS[:ALL | :модуль]]\n\
   [/HISTORY] [/INSERT | /OVERSTRIKE] [/EXENAME=модуль] [/MACROFILE=файл]\n\

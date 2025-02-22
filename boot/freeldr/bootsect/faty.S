@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Bootsector
+ * PROJECT:         MenuOS Bootsector
  * FILE:            boot/freeldr/bootsect/faty.S
  * PURPOSE:         Combined FAT12, FAT16 and FAT32 boot sector
  * PROGRAMMERS:     Brian Palmer

@@ -12,5 +12,5 @@ STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "Заставка ""Cylinders fractal"""
     IDS_TITLE       "Про"
-    IDS_TEXT        "Cylinders fractal від unC0Rr.\nСпеціально для ReactOS."
+    IDS_TEXT        "Cylinders fractal від unC0Rr.\nСпеціально для MenuOS."
 END

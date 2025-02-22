@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS KDBG Kernel Debugger
+ * PROJECT:     MenuOS KDBG Kernel Debugger
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     IO interface for KDBG. Provides local KDBG versions
  *              of KdpPrintString, KdpPromptString and KdpDprintf.

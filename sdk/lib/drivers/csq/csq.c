@@ -1,9 +1,9 @@
 /*
- * ReactOS Cancel-Safe Queue library
+ * MenuOS Cancel-Safe Queue library
  * Copyright (c) 2004, Vizzini (vizzini@plasmic.com)
- * Licensed under the GNU GPL for the ReactOS project
+ * Licensed under the GNU GPL for the MenuOS project
  *
- * This file implements the ReactOS CSQ library.  For background and overview
+ * This file implements the MenuOS CSQ library.  For background and overview
  * information on these routines, read csq.h.   For the authoritative reference
  * to using these routines, see the current DDK (IoCsqXXX and CsqXxx callbacks).
  *

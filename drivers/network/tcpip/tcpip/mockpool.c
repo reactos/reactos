@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS TCP/IP protocol driver
+ * PROJECT:     MenuOS TCP/IP protocol driver
  * FILE:        tcpip/pool.c
  * PURPOSE:     Routines for controling pools
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

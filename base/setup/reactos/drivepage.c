@@ -1,6 +1,6 @@
 /*
- *  ReactOS applications
- *  Copyright (C) 2004-2008 ReactOS Team
+ *  MenuOS applications
+ *  Copyright (C) 2004-2008 MenuOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS GUI first stage setup application
+ * PROJECT:     MenuOS GUI first stage setup application
  * FILE:        base/setup/reactos/drivepage.c
  * PROGRAMMERS: Matthias Kupfer
  *              Dmitry Chapyshev (dmitry@reactos.org)
@@ -161,7 +161,7 @@ ShowErrorTip(
 /**
  * @brief
  * Subclass edit window procedure to filter allowed characters
- * for the ReactOS installation directory.
+ * for the MenuOS installation directory.
  **/
 static LRESULT
 CALLBACK
@@ -2060,7 +2060,7 @@ DisableWizNext:
                     ASSERT(PartEntry);
 
                     /*
-                     * Check whether the user wants to install ReactOS on a disk that
+                     * Check whether the user wants to install MenuOS on a disk that
                      * is not recognized by the computer's firmware and if so, display
                      * a warning since such disks may not be bootable.
                      */
@@ -2072,7 +2072,7 @@ DisableWizNext:
                         nRet = DisplayMessage(hwndDlg,
                                               MB_OKCANCEL | MB_ICONWARNING,
                                               L"Warning",
-                                              L"The disk you have selected for installing ReactOS\n"
+                                              L"The disk you have selected for installing MenuOS\n"
                                               L"is not visible by the firmware of your computer,\n"
                                               L"and so may not be bootable.\n"
                                               L"\nClick on OK to continue anyway."

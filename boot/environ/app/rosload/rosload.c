@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
- * PROJECT:         ReactOS UEFI OS Loader
+ * PROJECT:         MenuOS UEFI OS Loader
  * FILE:            boot/environ/app/rosload/rosload.c
  * PURPOSE:         OS Loader Entrypoint
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Host Headers
+ * PROJECT:     MenuOS Host Headers
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Type definitions and useful macros for host tools
  * COPYRIGHT:   Copyright 2007 Hervé Poussineau (hpoussin@reactos.org)

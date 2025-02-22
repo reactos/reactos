@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS System Setup Library
+ * PROJECT:     MenuOS System Setup Library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Turkish resource file
  * TRANSLATORS: Copyright 2012 Arda Tanrıkulu <ardatanrikulu@gmail.com>
@@ -11,28 +11,28 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
+CAPTION "MenuOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS Kurulum Sihirbazı'na hoşgeldiniz.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Bu sihirbaz ReactOS'u bilgisayarınıza kurar. ReactOS Kurulum Sihirbazı, ReactOS'u düzgünce kurmak için siz ve bilgisayarınız hakkında bazı bilgiler toplamaya gerek duymaktadır.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "MenuOS Kurulum Sihirbazı'na hoşgeldiniz.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Bu sihirbaz MenuOS'u bilgisayarınıza kurar. MenuOS Kurulum Sihirbazı, MenuOS'u düzgünce kurmak için siz ve bilgisayarınız hakkında bazı bilgiler toplamaya gerek duymaktadır.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Kuruluma devam etmek için İleri'ye tıklayınız.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
+CAPTION "MenuOS Kur"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "ReactOS geliştiricileri, ReactOS'u (ve bileşenlerini) oluşturmak için kullanılan, aşağıdaki açık kaynaklı projelere teşekkür etmek istiyorlar:", IDC_STATIC, 15, 7, 286, 19
+    LTEXT "MenuOS geliştiricileri, MenuOS'u (ve bileşenlerini) oluşturmak için kullanılan, aşağıdaki açık kaynaklı projelere teşekkür etmek istiyorlar:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "ReactOS, GPL altında lisanslanmıştır, bu yüzden onu (ve bileşenlerini) yeniden kullanmak veya dağıtmak isterseniz GPL'ye uymalısınız.", IDC_STATIC, 15, 110, 220, 25
+    LTEXT "MenuOS, GPL altında lisanslanmıştır, bu yüzden onu (ve bileşenlerini) yeniden kullanmak veya dağıtmak isterseniz GPL'ye uymalısınız.", IDC_STATIC, 15, 110, 220, 25
     PUSHBUTTON "&GPL'yi Görüntüle...", IDC_VIEWGPL, 236, 110, 65, 19
     LTEXT "Kuruluma devam etmek için İleri'ye tıklayınız.", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
-CAPTION "ReactOS Kur"
+CAPTION "MenuOS Kur"
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -47,7 +47,7 @@ END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
+CAPTION "MenuOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
@@ -60,7 +60,7 @@ END
 
 IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
+CAPTION "MenuOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
@@ -78,7 +78,7 @@ END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
+CAPTION "MenuOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
@@ -95,7 +95,7 @@ END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
+CAPTION "MenuOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
@@ -109,7 +109,7 @@ END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
+CAPTION "MenuOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_THEMEPICKER, "SysListView32", LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_TABSTOP, 18, 8, 288, 130
@@ -117,7 +117,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
+CAPTION "MenuOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bileşenler kaydediliyor", IDC_TASKTEXT1, 65, 27, 232, 8
@@ -130,11 +130,11 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kurulumunun Tamamlanması"
+CAPTION "MenuOS Kurulumunun Tamamlanması"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS Kurulum Sihirbazı, Kurulumu Tamamladı", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "ReactOS Kurulumu başarı ile tamamlandı.\n\nBitir'e tıkladığınızda bilgisayarınız yeniden başlatılacaktır.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "MenuOS Kurulum Sihirbazı, Kurulumu Tamamladı", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "MenuOS Kurulumu başarı ile tamamlandı.\n\nBitir'e tıkladığınızda bilgisayarınız yeniden başlatılacaktır.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "Eğer bir sürücüde herhangi bir CD veya USB bellek varsa, onu çıkarınız. Sonra bilgisayarınızı yeniden başlatmak için Bitir'e tıklayınız.", IDC_STATIC, 115, 169, 195, 30
 END
@@ -180,13 +180,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Teşekkürler"
-    IDS_ACKSUBTITLE "ReactOS'u ayakta tutanlar ve lisans bilgisi:"
+    IDS_ACKSUBTITLE "MenuOS'u ayakta tutanlar ve lisans bilgisi:"
     IDS_OWNERTITLE "Yazılımınızı Kişiselleştirin"
-    IDS_OWNERSUBTITLE "Kurulum Sihirbazı, ReactOS'u kişiselleştirmek için kendiniz hakkında bu bilgiyi kullanır."
+    IDS_OWNERSUBTITLE "Kurulum Sihirbazı, MenuOS'u kişiselleştirmek için kendiniz hakkında bu bilgiyi kullanır."
     IDS_COMPUTERTITLE "Bilgisayar Adı ve Yönetici Şifresi"
     IDS_COMPUTERSUBTITLE "Bilgisayarınız için bir ad ve bir Yönetici Şifresi sağlamalısınız."
     IDS_LOCALETITLE "Yerel Ayarlar"
-    IDS_LOCALESUBTITLE "Farklı bölgeler ve diller için ReactOS'u özelleştirebilirsiniz."
+    IDS_LOCALESUBTITLE "Farklı bölgeler ve diller için MenuOS'u özelleştirebilirsiniz."
     IDS_LOCALETEXT "Standartlar ve biçimler %s olarak ayarlandı ve konum %s olarak ayarlandı."
     IDS_LAYOUTTEXT "Varsayılan metin giriş diliniz ve yönteminiz: %s klavye düzeni"
     IDS_DATETIMETITLE "Tarih ve Saat"
@@ -199,7 +199,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP "ReactOS Kur"
+    IDS_REACTOS_SETUP "MenuOS Kur"
     IDS_UNKNOWN_ERROR "Bilinmeyen hata"
     IDS_LOADLIBRARY_FAILED "LoadLibrary başarısız oldu: "
     IDS_GETPROCADDR_FAILED "GetProcAddr başarısız oldu: "
@@ -259,8 +259,8 @@ STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Ürün Seçenekleri"
     IDS_PRODUCTSUBTITLE "Sisteminizin davranışını etkileyen bir ürün seçeneği seçebilirsiniz."
-    IDS_PRODUCTSERVERNAME "ReactOS Sunucu"
-    IDS_PRODUCTWORKSTATIONNAME "ReactOS İş İstasyonu"
+    IDS_PRODUCTSERVERNAME "MenuOS Sunucu"
+    IDS_PRODUCTWORKSTATIONNAME "MenuOS İş İstasyonu"
     IDS_PRODUCTSERVERINFO "Sistem bir sunucu olarak tanınacaktır. ""Resimlerim"", ""Videolarım"" ve ""Müziklerim"" özel dizinleri, ""Belgelerim""den bağımsızdır."
     IDS_PRODUCTWORKSTATIONINFO "Sistem bir iş istasyonu olarak tanınacaktır. ""Resimlerim"", ""Videolarım"" ve ""Müziklerim"" özel dizinleri ""Belgelerim""in içindedir."
     IDS_DEFAULT "(Varsayılan)"

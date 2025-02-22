@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         MenuOS system libraries
  * FILE:            dll/win32/kernel32/client/job.c
  * PURPOSE:         Job functions
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>

@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         MenuOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/po/povolume.c
  * PURPOSE:         Power Manager DOPE and Volume Management
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROGRAMMERS:     MenuOS Portable Systems Group
  */
 
 /* INCLUDES ******************************************************************/
@@ -298,7 +298,7 @@ PopFlushVolumes(IN BOOLEAN ShuttingDown)
     /* Check if we should skip non-removable devices */
     if (!(FlushPolicy & 2))
     {
-        /* ReactOS only implements this routine for shutdown, which requires it */
+        /* MenuOS only implements this routine for shutdown, which requires it */
         UNIMPLEMENTED;
     }
 

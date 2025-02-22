@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS User-mode DMI/SMBIOS Helper Functions
+ * PROJECT:     MenuOS User-mode DMI/SMBIOS Helper Functions
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     SMBIOS table parsing functions
  * COPYRIGHT:   Copyright 2018 Stanislav Motylkov

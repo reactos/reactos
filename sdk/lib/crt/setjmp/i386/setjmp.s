@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS system libraries
+ * PROJECT:           MenuOS system libraries
  * PURPOSE:           Implementation of _setjmp/longjmp
  * FILE:              lib/sdk/crt/setjmp/i386/setjmp.s
  * PROGRAMMER:        Ge van Geldorp (ge@gse.nl)

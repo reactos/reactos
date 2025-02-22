@@ -1,5 +1,5 @@
 ::
-:: PROJECT:     ReactOS CMD Testing Suite
+:: PROJECT:     MenuOS CMD Testing Suite
 :: LICENSE:     GPL v2 or any later version
 :: FILE:        tests/at.cmd
 :: PURPOSE:     Tests for the correct parsing of the "@" character

@@ -217,7 +217,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 ClassSystemControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -816,7 +816,7 @@ Return Value:
 --*/
 {
     NTSTATUS status;
-#ifndef __REACTOS__ // WMI in not a thing on ReactOS yet
+#ifndef __REACTOS__ // WMI in not a thing on MenuOS yet
     ULONG sizeNeeded = 0, i;
     PFUNCTIONAL_DEVICE_EXTENSION fdoExt = DeviceObject->DeviceExtension;
     if (GuidIndex == MSStorageDriver_ClassErrorLogGuid_Index) {
@@ -1005,7 +1005,7 @@ Return Value:
 --*/
 SCSIPORT_API
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 ClassWmiCompleteRequest(
     _In_ PDEVICE_OBJECT DeviceObject,
     _Inout_ PIRP Irp,
@@ -1167,7 +1167,7 @@ Return Value:
 --*/
 _IRQL_requires_max_(DISPATCH_LEVEL)
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 ClassWmiFireEvent(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ LPGUID Guid,

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Cicero
+ * PROJECT:     MenuOS Cicero
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Cicero base
  * COPYRIGHT:   Copyright 2023-2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>

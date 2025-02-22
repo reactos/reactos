@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Screen Saver Library
+ * PROJECT:         MenuOS Screen Saver Library
  * LICENSE:         GPL v2 or any later version
  * FILE:            include/psdk/scrnsave.h
  * PURPOSE:         Header file for the library

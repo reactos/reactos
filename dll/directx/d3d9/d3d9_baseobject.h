@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS ReactX
+ * PROJECT:         MenuOS ReactX
  * FILE:            dll/directx/d3d9/d3d9_baseobject.h
  * PURPOSE:         Direct3D9's base object
  * PROGRAMERS:      Gregor Gullwi <gbrunmar (dot) ros (at) gmail (dot) com>

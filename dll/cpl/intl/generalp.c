@@ -1,6 +1,6 @@
 /*
- *  ReactOS
- *  Copyright (C) 2004, 2005 ReactOS Team
+ *  MenuOS
+ *  Copyright (C) 2004, 2005 MenuOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
- * PROJECT:         ReactOS International Control Panel
+ * PROJECT:         MenuOS International Control Panel
  * FILE:            dll/cpl/intl/generalp.c
  * PURPOSE:         General property page
  * PROGRAMMER:      Eric Kohl

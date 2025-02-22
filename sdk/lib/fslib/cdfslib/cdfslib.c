@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS CDFS library
+ * PROJECT:     MenuOS CDFS library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Checking and Formatting CDFS volumes
  * COPYRIGHT:   Copyright 2017 Colin Finck <colin@reactos.org>

@@ -1,5 +1,5 @@
 /*
-    ReactOS Sound System
+    MenuOS Sound System
     NT4 Multimedia Audio Support (ntddsnd.h)
 
     This file is in the public domain.

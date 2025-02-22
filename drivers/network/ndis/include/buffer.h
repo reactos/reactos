@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS NDIS library
+ * PROJECT:     MenuOS NDIS library
  * FILE:        include/buffer.h
  * PURPOSE:     Buffer management routine definitions
  */

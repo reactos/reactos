@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS cabinet manager
+ * PROJECT:     MenuOS cabinet manager
  * FILE:        tools/cabman/cabman.h
  * PURPOSE:     Cabinet manager header
  */

@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS API tests
+ * PROJECT:         MenuOS API tests
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         Tests for __i64tod/u64tod/i64tos/u64tos on ARM
  * COPYRIGHT:       Copyright 2021 Stanislav Motylkov <x86corez@gmail.com>

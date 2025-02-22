@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS API Tests
+ * PROJECT:     MenuOS API Tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Tests for CachedGetUserFromSid
  * COPYRIGHT:   Copyright 2020 Serge Gautherie <reactos-git_serge_171003@gautherie.fr>
@@ -63,7 +63,7 @@ START_TEST(CachedGetUserFromSid)
     const char szFunction[] = "CachedGetUserFromSid";
     void* pFunction;
 
-    // TODO: Dynamically checking, until ReactOS implements this dll.
+    // TODO: Dynamically checking, until MenuOS implements this dll.
     HMODULE hModule;
     DWORD dwLE;
 

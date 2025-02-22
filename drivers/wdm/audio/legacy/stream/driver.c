@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
+ * PROJECT:         MenuOS Kernel Streaming
  * FILE:            drivers/wdm/audio/legacy/stream/driver.c
  * PURPOSE:         WDM Codec Class Driver
  * PROGRAMMER:      Johannes Anderwald

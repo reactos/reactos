@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        GNU GPL, See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          MenuOS kernel
  * PURPOSE:          Bit blit functions
  * FILE:             win32ss/gdi/ntgdi/bitblt.c
  * PROGRAMER:        Unknown

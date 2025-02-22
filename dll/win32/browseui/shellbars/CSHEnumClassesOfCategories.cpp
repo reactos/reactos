@@ -1,5 +1,5 @@
 /*
- * ReactOS Explorer
+ * MenuOS Explorer
  *
  * Copyright 2016 Sylvain Deverre <deverre dot sylv at gmail dot com>
  *

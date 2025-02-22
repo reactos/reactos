@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS DDK
+ * PROJECT:         MenuOS DDK
  * COPYRIGHT:       This file is in the Public Domain.
  * FILE:            include/psdk/driverspecs.h
  * ABSTRACT:        This header stubs out Driver Verifier annotations to

@@ -8,7 +8,7 @@ Signature  = "$Windows NT$"
 LayoutFile = layout.inf
 Class      = Monitor
 ClassGUID  = {4D36E96E-E325-11CE-BFC1-08002BE10318}
-Provider   = %ReactOS%
+Provider   = %MenuOS%
 DriverVer  = 03/11/2012,1.00
 
 [DestinationDirs]
@@ -51,7 +51,7 @@ ServiceBinary = %12%\monitor.sys
 
 [Strings]
 ; Non-localizable
-ReactOS = "ReactOS Project"
+MenuOS = "MenuOS Project"
 
 ; Localizable
 MonitorClassName = "Monitors"

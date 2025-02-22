@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Win32 Graphical Subsystem (WIN32K)
+ * PROJECT:         MenuOS Win32 Graphical Subsystem (WIN32K)
  * FILE:            win32ss/include/ntgdihdl.h
  * PURPOSE:         Win32 Shared GDI Handle/Object Types
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)

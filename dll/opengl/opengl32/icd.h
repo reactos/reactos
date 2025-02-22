@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS kernel
+ * PROJECT:              MenuOS kernel
  * FILE:                 lib/opengl32/icd.h
  * PURPOSE:              OpenGL32 lib, ICD specific definitions
  */

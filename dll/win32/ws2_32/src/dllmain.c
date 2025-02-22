@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS WinSock 2 API
+ * PROJECT:     MenuOS WinSock 2 API
  * FILE:        dll/win32/ws2_32/src/dllmain.c
  * PURPOSE:     DLL Entrypoint
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)

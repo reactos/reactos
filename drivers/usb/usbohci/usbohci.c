@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS USB OHCI Miniport Driver
+ * PROJECT:     MenuOS USB OHCI Miniport Driver
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     USBOHCI main driver functions
  * COPYRIGHT:   Copyright 2017-2018 Vadim Galyant <vgal@rambler.ru>

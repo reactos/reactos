@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Win32k subsystem
+ * PROJECT:     MenuOS Win32k subsystem
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Pan-Display driver
  * COPYRIGHT:   Copyright 2022 Hervé Poussineau <hpoussin@reactos.org>

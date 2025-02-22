@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS ISA PnP Bus driver
+ * PROJECT:         MenuOS ISA PnP Bus driver
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         FDO-specific code
  * COPYRIGHT:       Copyright 2010 Cameron Gutman <cameron.gutman@reactos.org>

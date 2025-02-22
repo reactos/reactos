@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         MenuOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/mm/ARM3/pfnlist.c
  * PURPOSE:         ARM Memory Manager PFN List Manipulation
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROGRAMMERS:     MenuOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/
@@ -240,7 +240,7 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     ASSERT(ColorTable->Count >= 1);
     ColorTable->Count--;
 
-    /* ReactOS Hack */
+    /* MenuOS Hack */
     Entry->OriginalPte.u.Long = 0;
 
     /* We are not on a list anymore */
@@ -347,7 +347,7 @@ MiUnlinkPageFromList(IN PMMPFN Pfn)
         ListHead->Flink = OldFlink;
     }
 
-    /* ReactOS Hack */
+    /* MenuOS Hack */
     Pfn->OriginalPte.u.Long = 0;
 
     /* We are not on a list anymore */
@@ -453,7 +453,7 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     /* One less page */
     ColorTable->Count--;
 
-    /* ReactOS Hack */
+    /* MenuOS Hack */
     Pfn1->OriginalPte.u.Long = 0;
 
     /* Decrement number of available pages */

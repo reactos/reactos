@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS Run-Time Library
+ * PROJECT:           MenuOS Run-Time Library
  * PURPOSE:           User-mode exception support for IA-32
  * FILE:              lib/rtl/i386/except.c
  * PROGRAMERS:        Alex Ionescu (alex@relsoft.net)

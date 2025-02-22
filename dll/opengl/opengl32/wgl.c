@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS
+ * PROJECT:              MenuOS
  * FILE:                 dll/opengl/opengl32/wgl.c
  * PURPOSE:              OpenGL32 DLL, WGL functions
  */

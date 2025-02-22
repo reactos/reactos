@@ -1,4 +1,4 @@
-﻿
+
 drive_disk.ico
 --------------
 From the GNOME-Colors project,
@@ -24,7 +24,7 @@ would like to spread the word.
 
 roslogo.ico
 -----------
-(C) 2018 ReactOS Team & Contributors
+(C) 2018 MenuOS Team & Contributors
 Distributed under CC-BY-SA 4.0 International License Terms.
 
 

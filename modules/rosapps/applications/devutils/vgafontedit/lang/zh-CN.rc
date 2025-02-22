@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS VGA Font Editor
+ * PROJECT:     MenuOS VGA Font Editor
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Simplified Chinese resource file
  * COPYRIGHT:   Copyright 2008 Colin Finck (colin@reactos.org)
@@ -14,7 +14,7 @@ CAPTION "关于"
 FONT 9, "宋体"
 BEGIN
     ICON           IDI_MAIN,                     IDC_STATIC, 10, 10, 20, 20
-    LTEXT          "ReactOS VGA 字体 编辑器",    IDC_STATIC, 37, 10, 93, 10
+    LTEXT          "MenuOS VGA 字体 编辑器",    IDC_STATIC, 37, 10, 93, 10
     LTEXT          "Copyright 2008 Colin Finck", IDC_STATIC, 37, 20, 93, 10
     DEFPUSHBUTTON  "确定",                         IDCANCEL,   40, 44, 55, 15
 END
@@ -81,7 +81,7 @@ BEGIN
     IDS_UNSUPPORTEDPSF, "不支持的 PSF 字体格式！编辑器仅支持非特殊模式 8x8 字体。"
     IDS_DOCNAME, "字体 %1!u!"
     IDS_SAVEPROMPT, "文件“%1”已更改，但未保存。\n\n是否保存文件？"
-    IDS_APPTITLE, "ReactOS VGA 字体 编辑器"
+    IDS_APPTITLE, "MenuOS VGA 字体 编辑器"
     IDS_CLOSEEDIT, "请先关闭全部打开的编辑窗口。"
 
     IDS_TOOLTIP_NEW, "新建"

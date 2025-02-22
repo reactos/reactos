@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS sdbinst
+ * PROJECT:     MenuOS sdbinst
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Application compatibility database installer
  * COPYRIGHT:   Copyright 2020 Max Korostil (mrmks04@yandex.ru)

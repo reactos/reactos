@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS CRT
+ * PROJECT:         MenuOS CRT
  * FILE:            lib/sdk/crt/except/amd64/seh.s
  * PURPOSE:         SEH Support for the CRT
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)

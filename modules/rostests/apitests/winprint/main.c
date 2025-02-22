@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Standard Print Processor API Tests
+ * PROJECT:     MenuOS Standard Print Processor API Tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Main functions
  * COPYRIGHT:   Copyright 2016 Colin Finck (colin@reactos.org)

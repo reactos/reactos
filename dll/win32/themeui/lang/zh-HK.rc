@@ -23,8 +23,8 @@ BEGIN
     IDS_PUMPKIN "南瓜"
     IDS_RAIN "雨天"
     IDS_RWB "紅白藍"
-    IDS_CLASSIC "ReactOS 經典"
-    IDS_STANDARD "ReactOS 標準"
+    IDS_CLASSIC "MenuOS 經典"
+    IDS_STANDARD "MenuOS 標準"
     IDS_ROSE "玫瑰"
     IDS_SAND "沙漠" //Desert
     IDS_SLATE "石板"

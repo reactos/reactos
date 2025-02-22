@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS system libraries
+ * PROJECT:     MenuOS system libraries
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/win32/syssetup/classinst.c
  * PURPOSE:     Class installers
- * PROGRAMMERS: Copyright 2006 Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS: Copyright 2006 HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "precomp.h"

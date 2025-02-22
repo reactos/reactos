@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS ipconfig utility
+ * PROJECT:     MenuOS ipconfig utility
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Polish resource file
  * TRANSLATORS: Copyright 2007 Konrad Chielecki aka TestamenT <testament@users.sourceforge.net>
@@ -12,7 +12,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_HEADER "\nKonfiguracja IP systemu ReactOS\n\n"
+    IDS_HEADER "\nKonfiguracja IP systemu MenuOS\n\n"
     IDS_HOSTNAME            "\tNazwa hosta . . . . . . . . . . . : %hs\n"
     IDS_PRIMARYDNSSUFFIX    "\tSufiks podstawowej domeny DNS . . : %hs\n"
     IDS_NODETYPEBCAST       "\tTyp węzła . . . . . . . . . . . . : Transmisja\n"

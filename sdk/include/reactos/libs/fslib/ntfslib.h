@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS NTFS filesystem library
+ * PROJECT:     MenuOS NTFS filesystem library
  * FILE:        include/reactos/libs/fslib/ntfslib.h
  * PURPOSE:     Public definitions for NTFS filesystem library
  */

@@ -680,7 +680,7 @@
     //Stray syscalls (must be placed here to be correct for both checked/free builds)
     SVC_(GdiMakeObjectXferable, 2)
     SVC_(DxEngGetRedirectionBitmap, 1)
-    // ReactOS-specific syscalls (must be at the end to not interfere!)
+    // MenuOS-specific syscalls (must be at the end to not interfere!)
     SVC_(GdiSetViewportOrgEx, 4)
     SVC_(GdiSetWindowOrgEx, 4)
     SVC_(GdiGetFontFamilyInfo, 4)

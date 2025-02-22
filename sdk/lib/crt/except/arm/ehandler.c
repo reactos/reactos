@@ -1,5 +1,5 @@
 /*
-* PROJECT:         ReactOS Kernel
+* PROJECT:         MenuOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
 * FILE:            lib/sdk/crt/except/arm/ehandler.c
 * PURPOSE:         Low level exception handler functions

@@ -2,28 +2,28 @@ LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Penyetelan ReactOS"
+CAPTION "Penyetelan MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Selamat datang di Penuntun Penyetelan ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Penuntun ini memasang ReactOS di komputer anda. Penuntun ini membutuhkan beberapa informasi terkait anda dan komputer anda untuk menyetel ReactOS dengan baik.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Selamat datang di Penuntun Penyetelan MenuOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Penuntun ini memasang MenuOS di komputer anda. Penuntun ini membutuhkan beberapa informasi terkait anda dan komputer anda untuk menyetel MenuOS dengan baik.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Klik Lanjut untuk melanjutkan Penyetelan.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Penyetelan ReactOS"
+CAPTION "Penyetelan MenuOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Pengembang ReactOS ingin berterima kasih kepada beberapa proyek Sumber Terbuka berikut, yang (bagiannya) digunakan untuk membuat ReactOS:", IDC_STATIC, 15, 7, 286, 19
+    LTEXT "Pengembang MenuOS ingin berterima kasih kepada beberapa proyek Sumber Terbuka berikut, yang (bagiannya) digunakan untuk membuat MenuOS:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "ReactOS terdaftar di bawah GPL, jadi jika anda ingin menggunakan atau menyalurkan (bagian) itu harus menghargai GPL tersebut.", IDC_STATIC, 15, 110, 222, 19
+    LTEXT "MenuOS terdaftar di bawah GPL, jadi jika anda ingin menggunakan atau menyalurkan (bagian) itu harus menghargai GPL tersebut.", IDC_STATIC, 15, 110, 222, 19
     PUSHBUTTON "&Tunjukkan GPL...", IDC_VIEWGPL, 239, 110, 63, 19
     LTEXT "Klik Lanjut untuk melanjutkan Penyetelan.", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
-CAPTION "Penyetelan ReactOS"
+CAPTION "Penyetelan MenuOS"
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -38,7 +38,7 @@ END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Penyetelan ReactOS"
+CAPTION "Penyetelan MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
@@ -51,7 +51,7 @@ END
 
 IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Penyetelan ReactOS"
+CAPTION "Penyetelan MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
@@ -69,7 +69,7 @@ END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Penyetelan ReactOS"
+CAPTION "Penyetelan MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
@@ -86,7 +86,7 @@ END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Penyetelan ReactOS"
+CAPTION "Penyetelan MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
@@ -100,7 +100,7 @@ END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Penyetelan ReactOS"
+CAPTION "Penyetelan MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_THEMEPICKER, "SysListView32", LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_TABSTOP, 18, 8, 288, 130
@@ -108,7 +108,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Penyetelan ReactOS"
+CAPTION "Penyetelan MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Meregister komponen", IDC_TASKTEXT1, 65, 27, 232, 8
@@ -121,11 +121,11 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Menyelesaikan Penyetelan ReactOS"
+CAPTION "Menyelesaikan Penyetelan MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Menyelesaikan Penuntun Penyetelan ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Anda telah menyelesaikan Penyetelan ReactOS.\n\nSaat anda mengklik Selesai, komputer anda akan dimulai ulang.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Menyelesaikan Penuntun Penyetelan MenuOS", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "Anda telah menyelesaikan Penyetelan MenuOS.\n\nSaat anda mengklik Selesai, komputer anda akan dimulai ulang.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "Jika ada CD di dalam drive, keluarkan. Lalu, untuk memulai ulang komputer anda, klik Selesai.", IDC_STATIC, 115, 169, 195, 17
 END
@@ -171,13 +171,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Berterima kasih"
-    IDS_ACKSUBTITLE "Tempat berdiri ReactOS dan informasi lisensi"
+    IDS_ACKSUBTITLE "Tempat berdiri MenuOS dan informasi lisensi"
     IDS_OWNERTITLE "Personalisasi Perangkat Lunak anda"
-    IDS_OWNERSUBTITLE "Penyetelan ini menggunakan informasi terkait diri anda untuk menyesuaikan ReactOS."
+    IDS_OWNERSUBTITLE "Penyetelan ini menggunakan informasi terkait diri anda untuk menyesuaikan MenuOS."
     IDS_COMPUTERTITLE "Nama Komputer dan Kata sandi Administrator"
     IDS_COMPUTERSUBTITLE "Anda harus menyediakan nama dan Kata sandi Administrator untuk komputer anda."
     IDS_LOCALETITLE "Setelan Daerah"
-    IDS_LOCALESUBTITLE "Anda bisa menyesuaikan ReactOS untuk daerah dan bahasa berbeda."
+    IDS_LOCALESUBTITLE "Anda bisa menyesuaikan MenuOS untuk daerah dan bahasa berbeda."
     IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
     IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Tanggal dan Jam"
@@ -190,7 +190,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP "Penyetelan ReactOS"
+    IDS_REACTOS_SETUP "Penyetelan MenuOS"
     IDS_UNKNOWN_ERROR "Kesalahan tidak dikenal"
     IDS_LOADLIBRARY_FAILED "LoadLibrary gagal: "
     IDS_GETPROCADDR_FAILED "GetProcAddr gagal: "
@@ -250,8 +250,8 @@ STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Pilihan Produk"
     IDS_PRODUCTSUBTITLE "Anda bisa memilih opsi produk yang bisa mempengaruhi tindakan sistem."
-    IDS_PRODUCTSERVERNAME "ReactOS Server"
-    IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
+    IDS_PRODUCTSERVERNAME "MenuOS Server"
+    IDS_PRODUCTWORKSTATIONNAME "MenuOS Workstation"
     IDS_PRODUCTSERVERINFO "Sistem akan dikenal sebagai server. Folder pribadi ""Gambar Saya"", ""Video Saya"" dan ""Musik Saya"" disendirikan dari ""Dokumen Saya""."
     IDS_PRODUCTWORKSTATIONINFO "Sistem akan dikenal sebagai workstation. Folder pribadi ""Gambar Saya"", ""Video Saya"" dan ""Musik Saya"" dimasukkan dalam ""Dokumen Saya""."
     IDS_DEFAULT "(Asli)"

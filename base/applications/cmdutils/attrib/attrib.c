@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Attrib Command
+ * PROJECT:     MenuOS Attrib Command
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Displays or changes file attributes recursively.
  * COPYRIGHT:   Copyright 1998-2019 Eric Kohl <eric.kohl@reactos.org>

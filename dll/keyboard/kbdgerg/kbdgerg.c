@@ -1,6 +1,6 @@
 /*
- * ReactOS German de_ergo/eMeier ASCII Keyboard layout
- * Copyright (C) 2008 ReactOS
+ * MenuOS German de_ergo/eMeier ASCII Keyboard layout
+ * Copyright (C) 2008 MenuOS
  * License: LGPL, see: LGPL.txt
  *
  * Thanks to: http://www.barcodeman.com/altek/mule/scandoc.php
@@ -354,10 +354,10 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x51, L"Bild-Nach-Unten" },
   { 0x52, L"Einfg" },
   { 0x53, L"Entf" },
-  { 0x54, L"<ReactOS>" },
+  { 0x54, L"<MenuOS>" },
   { 0x55, L"Hilfe" },
-  { 0x56, L"Linke <ReactOS>" },
-  { 0x5b, L"Rechte <ReactOS>" },
+  { 0x56, L"Linke <MenuOS>" },
+  { 0x5b, L"Rechte <MenuOS>" },
   { 0, NULL },
 };
 

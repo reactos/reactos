@@ -13,7 +13,7 @@ BEGIN
     END
     POPUP "&Pagalba"
     BEGIN
-        MENUITEM "&Apie ReactOS Valdymo Pultą", IDM_HELP_ABOUT
+        MENUITEM "&Apie MenuOS Valdymo Pultą", IDM_HELP_ABOUT
     END
 END
 
@@ -34,12 +34,12 @@ BEGIN
     END
     POPUP "&Pagalba"
     BEGIN
-        MENUITEM "&Apie ReactOS Valdymo Pultą", IDM_HELP_ABOUT
+        MENUITEM "&Apie MenuOS Valdymo Pultą", IDM_HELP_ABOUT
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS Valdymo Pultas"
+    IDS_APPTITLE "MenuOS Valdymo Pultas"
     IDS_CONSOLETITLE "Pultas%1!u!"
 END

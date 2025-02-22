@@ -1,4 +1,4 @@
-// PROJECT:        ReactOS ATL CPathT
+// PROJECT:        MenuOS ATL CPathT
 // LICENSE:        Public Domain
 // PURPOSE:        Provides compatibility to Microsoft ATL
 // PROGRAMMERS:    Benedikt Freisen

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Shim helper library
+ * PROJECT:     MenuOS Shim helper library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Shimlib helper file, used for setting up the macro's used when registering a shim.
  * COPYRIGHT:   Copyright 2016,2017 Mark Jansen (mark.jansen@reactos.org)

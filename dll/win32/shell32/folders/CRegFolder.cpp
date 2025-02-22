@@ -1,5 +1,5 @@
 /*
- * ReactOS Shell
+ * MenuOS Shell
  *
  * Copyright 2016 Giannis Adamopoulos
  *

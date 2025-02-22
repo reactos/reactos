@@ -7,7 +7,7 @@ enum _DCPATHFLAGS
     DCPATH_SAVE      = 0x0002,
     DCPATH_CLOCKWISE = 0x0004,
 
-    /* ReactOS only */
+    /* MenuOS only */
     DCPATH_SAVESTATE = 0x80000000
 };
 
@@ -48,7 +48,7 @@ typedef struct _PATH
 
   struct _EPATHOBJ *epo;
 
-  // Wine/ReactOS Things to convert from:
+  // Wine/MenuOS Things to convert from:
   FLONG        state;
   POINT        *pPoints;
   BYTE         *pFlags;

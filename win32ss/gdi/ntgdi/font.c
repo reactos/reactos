@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS win32 kernel mode subsystem
+ * PROJECT:         MenuOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            win32ss/gdi/ntgdi/font.c
  * PURPOSE:         Font
@@ -110,7 +110,7 @@ GreGetKerningPairs(
   value.
 
   MS must use a preset "compiled in" support for each language based releases.
-  ReactOS uses FreeType, this will need to be supported. ATM this is hard coded
+  MenuOS uses FreeType, this will need to be supported. ATM this is hard coded
   for GCPCLASS_LATIN!
 
  */

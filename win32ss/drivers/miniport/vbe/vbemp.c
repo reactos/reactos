@@ -1,5 +1,5 @@
 /*
- * ReactOS VBE miniport video driver
+ * MenuOS VBE miniport video driver
  * Copyright (C) 2004 Filip Navara
  *
  * Power Management and VBE 1.2 support

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Multimedia Control Panel
+ * PROJECT:     MenuOS Multimedia Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Hong Kong) resource file
  * TRANSLATORS: Copyright 2020-2022 Chan Chilung <eason066@gmail.com>
@@ -35,7 +35,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "聲音"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "聲音方案是應用於 ReactOS 和程式事件中的一組聲音。請選擇一個現有方案或儲存您已經更改的方案。", -1, 8, 7, 230, 40
+    LTEXT "聲音方案是應用於 MenuOS 和程式事件中的一組聲音。請選擇一個現有方案或儲存您已經更改的方案。", -1, 8, 7, 230, 40
     LTEXT "聲音方案(&C)︰", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "另存新檔(&E)...", IDC_SAVEAS_BTN, 134, 70, 50, 15
@@ -131,7 +131,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "效能"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "這些設定控制 ReactOS 如何播放音訊。它們能夠幫助您解決有關音訊方面的問題。", 8492, 34, 7, 218, 23
+    LTEXT "這些設定控制 MenuOS 如何播放音訊。它們能夠幫助您解決有關音訊方面的問題。", 8492, 34, 7, 218, 23
     GROUPBOX "音訊播放", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
     LTEXT "硬件加速(&H)︰", 8495, 13, 56, 111, 14
@@ -152,7 +152,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "效能"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "這些設定控制 ReactOS 如何錄音。可幫助您診斷與音訊有關的問題。", 8492, 34, 7, 217, 20
+    LTEXT "這些設定控制 MenuOS 如何錄音。可幫助您診斷與音訊有關的問題。", 8492, 34, 7, 217, 20
     GROUPBOX "音訊錄音", 8494, 7, 29, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
     LTEXT "硬件加速(&H)︰", 8495, 13, 46, 103, 17
@@ -173,13 +173,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "安裝"
 FONT 9, "新細明體"
 BEGIN
-    GROUPBOX "ReactOS 音訊", 10243, 7, 5, 213, 192
+    GROUPBOX "MenuOS 音訊", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "由於未啟用 ReactOS 音訊服務，這部電腦目前無法播放聲音", 10245, 60, 25, 150, 40
-    AUTOCHECKBOX "啟用 ReactOS 音訊(&E)", 10253, 60, 68, 150, 9
+    LTEXT "由於未啟用 MenuOS 音訊服務，這部電腦目前無法播放聲音", 10245, 60, 25, 150, 40
+    AUTOCHECKBOX "啟用 MenuOS 音訊(&E)", 10253, 60, 68, 150, 9
     LTEXT "注意", 10246, 58, 87, 150, 11
     LTEXT "1. 您必須是管理員才能啟用此服務。如果您沒有以管理員身份登入，您將提示輸入管理員名稱和密碼。", 10247, 60, 100, 150, 40
-    LTEXT "2. 您啟用ReactOS音訊後，必須重新啟動電腦。", 10248, 60, 140, 150, 40
+    LTEXT "2. 您啟用MenuOS音訊後，必須重新啟動電腦。", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOGEX 0, 0, 227, 218
@@ -229,11 +229,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "安裝"
 FONT 9, "新細明體"
 BEGIN
-    GROUPBOX "ReactOS 音訊", 10259, 7, 5, 213, 192
+    GROUPBOX "MenuOS 音訊", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "ReactOS 音訊服務已經啟用。您必須重新啟動 ReactOS，新的設定才會生效。請確定在重新啟動之前已經儲存工作並關閉所有程式。", 10261, 60, 25, 150, 50
-    LTEXT "按［確定］重新啟動 ReactOS", 10262, 60, 75, 150, 20
-    LTEXT "如果取消，則需要在稍後重新啟動 ReactOS 使新的設定生效。", 10263, 60, 100, 150, 40
+    LTEXT "MenuOS 音訊服務已經啟用。您必須重新啟動 MenuOS，新的設定才會生效。請確定在重新啟動之前已經儲存工作並關閉所有程式。", 10261, 60, 25, 150, 50
+    LTEXT "按［確定］重新啟動 MenuOS", 10262, 60, 75, 150, 20
+    LTEXT "如果取消，則需要在稍後重新啟動 MenuOS 使新的設定生效。", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
@@ -270,15 +270,15 @@ BEGIN
     5843 "星號"
     5844 "預設聲音"
     5845 "感歎號"
-    5846 "退出 ReactOS"
+    5846 "退出 MenuOS"
     5847 "關鍵性停止"
     5848 "系統通知"
     5849 "問題"
-    5850 "啟動 ReactOS"
+    5850 "啟動 MenuOS"
     5851 "「開始」選單"
-    IDS_REACTOS_LOGOFF "ReactOS 登出"
-    IDS_REACTOS_LOGON "ReactOS 登入"
-    5854 "ReactOS 檔案總管"
+    IDS_REACTOS_LOGOFF "MenuOS 登出"
+    IDS_REACTOS_LOGON "MenuOS 登入"
+    5854 "MenuOS 檔案總管"
     IDS_BROWSE_FOR_SOUND "搜尋新的聲音"
     IDS_WAVE_FILES_FILTER "Wave 檔案 (*.wav)|*.wav|"
 END

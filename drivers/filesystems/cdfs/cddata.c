@@ -1091,7 +1091,7 @@ _Function_class_(FAST_IO_CHECK_IF_POSSIBLE)
 _IRQL_requires_same_
 _Success_(return != FALSE)
 BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 CdFastIoCheckIfPossible (
     _In_ PFILE_OBJECT FileObject,
     _In_ PLARGE_INTEGER FileOffset,

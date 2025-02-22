@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         MenuOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ex/xipdisp.c
  * PURPOSE:         eXecute In Place (XIP) Support.
@@ -90,7 +90,7 @@ XIPInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (!((ULONG_PTR)XipRom ^ (ULONG_PTR)XipRam)) return;
 
     /* FIXME: TODO */
-    DPRINT1("ReactOS does not yet support eXecute In Place boot technology\n");
+    DPRINT1("MenuOS does not yet support eXecute In Place boot technology\n");
     DPRINT("%s MB requested (XIP = %s)\n", XipMegs, XipBoot);
 }
 

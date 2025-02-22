@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Hardware Abstraction Layer
+ * PROJECT:     MenuOS Hardware Abstraction Layer
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     PC/AT hardware header file
  * COPYRIGHT:   ...

@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Runtime Library
+ * PROJECT:         MenuOS Runtime Library
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            lib/rtl/heapdbg.c
  * PURPOSE:         Heap manager debug heap

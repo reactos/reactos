@@ -1,5 +1,5 @@
 /*
- * ReactOS VGA miniport video driver
+ * MenuOS VGA miniport video driver
  *
  * Copyright (C) 2004 Filip Navara, Herve Poussineau
  *

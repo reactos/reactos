@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Console Server DLL
+ * PROJECT:         MenuOS Console Server DLL
  * FILE:            win32ss/user/winsrv/concfg/settings.c
  * PURPOSE:         Console settings management
  * PROGRAMMERS:     Johannes Anderwald
@@ -110,7 +110,7 @@ ConCfgOpenUserSettings(
      * via the console application directly or via a shortcut.
      *
      * If the title of the console corresponds to a path (more precisely,
-     * if the title is of the form: C:\ReactOS\<some_path>\<some_app.exe>),
+     * if the title is of the form: C:\MenuOS\<some_path>\<some_app.exe>),
      * then use the corresponding unexpanded path and with the backslashes
      * replaced by underscores, to make the registry happy,
      *     i.e. %SystemRoot%_<some_path>_<some_app.exe>

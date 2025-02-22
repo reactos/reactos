@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         BSD - See COPYING.ARM in the top level directory
- * PROJECT:           ReactOS CRT library
+ * PROJECT:           MenuOS CRT library
  * PURPOSE:           MSVC wrappers for C++ functions
  * PROGRAMMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */

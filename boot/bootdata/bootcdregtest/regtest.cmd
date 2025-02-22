@@ -3,7 +3,7 @@ set WINETEST_DEBUG=0
 set WINETEST_PLATFORM=reactos
 
 :: On the first boot, we're started through RunOnce.
-:: Add us to the Run key, so we're also started on the next reboot in case ReactOS crashed *and* the registry has been saved.
+:: Add us to the Run key, so we're also started on the next reboot in case MenuOS crashed *and* the registry has been saved.
 :: Exit right after that, because Explorer processes the Run key right after RunOnce and therefore picks up regtest.cmd a second time during the first boot.
 reg query HKLM\Software\Microsoft\Windows\CurrentVersion\Run /v regtest
 if "%errorlevel%"=="1" (

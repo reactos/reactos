@@ -33,8 +33,8 @@ STRINGTABLE
     14 "fonctionnalité depuis :"
     15 "sélectionnez le dossier contenant %s"
 #ifdef __REACTOS__
-    34 "Package ReactOS Installer"
-    35 "ReactOS Installer Patch"
+    34 "Package MenuOS Installer"
+    35 "MenuOS Installer Patch"
     36 "Installer" //FIXME: add accel
     37 "Réparer" //FIXME: add accel
     38 "Désinstaller" //FIXME: add accel

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Automatic Testing Utility
+ * PROJECT:     MenuOS Automatic Testing Utility
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Class for managing all the configuration parameters
  * COPYRIGHT:   Copyright 2009-2011 Colin Finck (colin@reactos.org)
@@ -27,7 +27,7 @@ CConfiguration::CConfiguration()
     WCHAR WindowsDirectory[MAX_PATH];
     WCHAR Interactive[32];
 
-    /* Check if we are running under ReactOS from the SystemRoot directory */
+    /* Check if we are running under MenuOS from the SystemRoot directory */
     if(!GetWindowsDirectoryW(WindowsDirectory, MAX_PATH))
         FATAL("GetWindowsDirectoryW failed\n");
 

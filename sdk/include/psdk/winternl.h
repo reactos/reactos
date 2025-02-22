@@ -5,11 +5,11 @@
  *
  * Note: This header exists only for compatibility with the native SDK.
  * It's definitions are incomplete and potentially unsuitable.
- * ReactOS modules should not make use of it!
+ * MenuOS modules should not make use of it!
  *
  * USE NDK INSTEAD!
  *
- * This file is part of the ReactOS PSDK package.
+ * This file is part of the MenuOS PSDK package.
  *
  * Contributors:
  *   Timo Kreuzer (timo.kreuzer@reactos.org)

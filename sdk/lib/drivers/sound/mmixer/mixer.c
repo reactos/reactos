@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
+ * PROJECT:         MenuOS Kernel Streaming
  * FILE:            lib/drivers/sound/mmixer/mmixer.c
  * PURPOSE:         Mixer Handling Functions
  * PROGRAMMER:      Johannes Anderwald

@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS EventLog File Library
+ * PROJECT:         MenuOS EventLog File Library
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            sdk/lib/evtlib/evtlib.c
  * PURPOSE:         Provides functionality for reading and writing

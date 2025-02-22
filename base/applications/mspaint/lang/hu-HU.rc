@@ -1,5 +1,5 @@
 /*
- * PROJECT:     PAINT for ReactOS
+ * PROJECT:     PAINT for MenuOS
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Hungarian resource file
  * TRANSLATORS: Copyright 2009 Gábor Balogh (xxxx00) <xxxx_0000@freemail.hu>
@@ -235,7 +235,7 @@ STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Paint"
     IDS_WINDOWTITLE "%s - Paint"
-    IDS_INFOTITLE "ReactOS Paint"
+    IDS_INFOTITLE "MenuOS Paint"
     IDS_INFOTEXT "A GNU Lesser General Public License (LGPL) alatt érhető el (lásd www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Kívánja menteni %s változásait?"
     IDS_DEFAULTFILENAME "Névtelen"

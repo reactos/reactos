@@ -145,9 +145,9 @@ BEGIN
     LTEXT "", IDC_ABOUT_VERSION, 35, 65, 250, 10, SS_NOPREFIX
     LTEXT "Hak Cipta 1996-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
-    LTEXT " Tim ReactOS\0", IDC_STATIC, 105, 75, 53, 10
+    LTEXT " Tim MenuOS\0", IDC_STATIC, 105, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20, SS_NOPREFIX
-    LTEXT "Versi ReactOS ini terdaftar kepada:", IDC_ABOUT_REG_TO, 35, 115, 180, 10
+    LTEXT "Versi MenuOS ini terdaftar kepada:", IDC_ABOUT_REG_TO, 35, 115, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10, SS_NOPREFIX
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10, SS_NOPREFIX
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
@@ -161,7 +161,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS dipersembahkan untuk anda oleh:", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "MenuOS dipersembahkan untuk anda oleh:", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -171,7 +171,7 @@ CAPTION "Jalankan"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "Ketikkan nama program, folder, dokumen, atau sumber Internet dan ReactOS akan membukanya.", 12289, 36, 11, 185, 18
+    LTEXT "Ketikkan nama program, folder, dokumen, atau sumber Internet dan MenuOS akan membukanya.", 12289, 36, 11, 185, 18
     LTEXT "&Buka:", 12305, 7, 39, 24, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 184, 100
     DEFPUSHBUTTON "OK", IDOK, 36, 70, 59, 14
@@ -421,7 +421,7 @@ BEGIN
     GROUPBOX "Tugas", -1, 7, 10, 249, 40
     CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 20, 21, 20
     AUTORADIOBUTTON "Tampilkan tugas umum di &folder", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Gunakan folder kla&sik ReactOS", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
+    AUTORADIOBUTTON "Gunakan folder kla&sik MenuOS", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 210, 10
     GROUPBOX "Jelajah folder", -1, 7, 60, 249, 40, WS_TABSTOP
     CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
     AUTORADIOBUTTON "Buka setiap folder di jendela yang sa&ma", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
@@ -491,7 +491,7 @@ END
 
 IDD_LOG_OFF DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Keluar ReactOS"
+CAPTION "Keluar MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
@@ -509,14 +509,14 @@ BEGIN
     PUSHBUTTON "&Ganti Pengguna", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
     PUSHBUTTON "&Keluar", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Cancel", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
-    LTEXT "Keluar ReactOS", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 130, 19
+    LTEXT "Keluar MenuOS", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 130, 19
     CTEXT "Ganti Pengguna", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
     CTEXT "Keluar", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
 END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Pemutusan ReactOS"
+CAPTION "Pemutusan MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
@@ -530,7 +530,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLIN
 CAPTION "Putar Otomatis"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Pilih jenis konten, kemudian pilih tindakan untuk ReactOS agar menjalankan secara otomatis ketika jenis tersebut digunakan pada perangkat ini:", 1000, 7, 7, 215, 26
+    LTEXT "&Pilih jenis konten, kemudian pilih tindakan untuk MenuOS agar menjalankan secara otomatis ketika jenis tersebut digunakan pada perangkat ini:", 1000, 7, 7, 215, 26
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 33, 212, 200
     GROUPBOX "Tindakan", -1, 7, 48, 212, 146
     AUTORADIOBUTTON "Pilih &Tindakan untuk menjalankan:", 1005, 14, 57, 202, 10, WS_GROUP
@@ -546,7 +546,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
     LTEXT "Disk atau perangkat berisi lebih dari satu jenis konten.", 1001, 32, 7, 191, 20
-    LTEXT "Apa yang ingin ReactOS lakukan?", 1002, 32, 31, 188, 8
+    LTEXT "Apa yang ingin MenuOS lakukan?", 1002, 32, 31, 188, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
     DEFPUSHBUTTON "OK", IDOK, 96, 186, 60, 14
     PUSHBUTTON "Batal", IDCANCEL, 160, 186, 60, 14
@@ -558,10 +558,10 @@ CAPTION "Konten Campuran"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "ReactOS dapat melakukan tindakan yang sama setiap kali Anda memasukkan disk atau menghubungkan perangkat dengan jenis berkas ini:", 1001, 30, 7, 193, 20
+    LTEXT "MenuOS dapat melakukan tindakan yang sama setiap kali Anda memasukkan disk atau menghubungkan perangkat dengan jenis berkas ini:", 1001, 30, 7, 193, 20
     ICON "", 1005, 32, 30, 11, 10, SS_REALSIZECONTROL
     EDITTEXT 1006, 49, 31, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Apa yang ingin ReactOS lakukan?", 1002, 32, 43, 190, 8
+    LTEXT "Apa yang ingin MenuOS lakukan?", 1002, 32, 43, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
     AUTOCHECKBOX "Selalu lakukan tindakan terpilih.", 1004, 32, 171, 190, 10
     DEFPUSHBUTTON "OK", IDOK, 96, 185, 60, 14
@@ -574,8 +574,8 @@ CAPTION "Putar Otomatis"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "ReactOS dapat melakukan tindakan yang sama setiap kali Anda menghubungkan perangkat.", 1001, 32, 7, 190, 22
-    LTEXT "&Apa yang ingin ReactOS lakukan?", 1002, 32, 31, 190, 8
+    LTEXT "MenuOS dapat melakukan tindakan yang sama setiap kali Anda menghubungkan perangkat.", 1001, 32, 7, 190, 22
+    LTEXT "&Apa yang ingin MenuOS lakukan?", 1002, 32, 31, 190, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
     AUTOCHECKBOX "&Selalu lakukan tindakan terpilih", 1004, 32, 143, 190, 8
     DEFPUSHBUTTON "OK", IDOK, 94, 160, 60, 14
@@ -584,7 +584,7 @@ END
 
 IDD_SHUTDOWN DIALOGEX 0, 0, 211, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Nonaktifkan ReactOS"
+CAPTION "Nonaktifkan MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
@@ -851,7 +851,7 @@ BEGIN
 
     /* Warning format system drive dialog strings */
     IDS_NO_FORMAT_TITLE "Tidak bisa memformat volume ini"
-    IDS_NO_FORMAT "Volume ini tidak bisa diformat! Volume ini berisi berkas sistem yang penting agar ReactOS dapat berjalan."
+    IDS_NO_FORMAT "Volume ini tidak bisa diformat! Volume ini berisi berkas sistem yang penting agar MenuOS dapat berjalan."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Tidak bisa menampilkan kotak dialog Jalankan Berkas (kesalahan internal)"
@@ -937,8 +937,8 @@ BEGIN
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Folder"
-    IDS_BAT_FILE "Berkas Batch ReactOS"
-    IDS_CMD_FILE "Naskah Perintah ReactOS"
+    IDS_BAT_FILE "Berkas Batch MenuOS"
+    IDS_CMD_FILE "Naskah Perintah MenuOS"
     IDS_COM_FILE "Aplikasi DOS"
     IDS_CPL_FILE "Butir Panel Kontrol"
     IDS_CUR_FILE "Penunjuk"
@@ -980,7 +980,7 @@ BEGIN
     IDS_DEFAULT_CLUSTER_SIZE "Ukuran alokasi asli"
     IDS_COPY_OF "Salinan"
 
-    IDS_SHLEXEC_NOASSOC "Tidak ada proram ReactOS yang diatur untuk membuka berkas tipe ini."
+    IDS_SHLEXEC_NOASSOC "Tidak ada proram MenuOS yang diatur untuk membuka berkas tipe ini."
 
     IDS_FILE_DETAILS "Rincian untuk ekstensi '%s'"
     IDS_FILE_DETAILSADV "Berkas dengan ekstensi '%s' adalah untuk jenis '%s'. Mengubah setelan akan berpengaruh ke berkas '%s', klik Tingkat Lanjut."
@@ -1058,7 +1058,7 @@ BEGIN
     IDS_SYSTEMFOLDER "Folder Sistem"
 
     /* For IDD_LOG_OFF_FANCY */
-    IDS_LOG_OFF_DESC "Menutup semua program dan mengakhiri sesi ReactOS anda."
+    IDS_LOG_OFF_DESC "Menutup semua program dan mengakhiri sesi MenuOS anda."
     IDS_SWITCH_USER_DESC "Memungkinkan pengguna lain masuk saat program dan Berkas anda masih terbuka.\r\n\r\n(Anda bisa mengganti pengguna dengan menekan tombol logo Windows + L.)"
     IDS_LOG_OFF_TITLE "Keluar"
     IDS_SWITCH_USER_TITLE "Ganti Pengguna"

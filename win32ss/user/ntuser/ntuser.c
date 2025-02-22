@@ -1,6 +1,6 @@
 /*
  *  COPYRIGHT:        See COPYING in the top level directory
- *  PROJECT:          ReactOS kernel
+ *  PROJECT:          MenuOS kernel
  *  PURPOSE:          ntuser init. and main funcs.
  *  FILE:             win32ss/user/ntuser/ntuser.c
  */

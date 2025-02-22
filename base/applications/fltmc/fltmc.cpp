@@ -1,5 +1,5 @@
 /*
-* PROJECT:     ReactOS fltmc utility
+* PROJECT:     MenuOS fltmc utility
 * LICENSE:     GPL - See COPYING in the top level directory
 * FILE:        base/applications/fltmc/fltmc.c
 * PURPOSE:     Control utility for file system filter drivers

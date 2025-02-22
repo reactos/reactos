@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS NDIS library
+ * PROJECT:     MenuOS NDIS library
  * FILE:        ndis/protocol.h
  * PURPOSE:     Definitions for routines used by NDIS protocol drivers
  */

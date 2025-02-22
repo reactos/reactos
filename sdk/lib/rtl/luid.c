@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         MenuOS system libraries
  * PURPOSE:         Locally unique identifier (LUID) helper functions
  * FILE:            lib/rtl/luid.c
  * PROGRAMER:       Eric Kohl

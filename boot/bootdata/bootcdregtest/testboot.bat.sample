@@ -21,6 +21,6 @@ ECHO
 START dbgprint.exe SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE
 
 ECHO
-ECHO Shutting down ReactOS
+ECHO Shutting down MenuOS
 ECHO
 START shutdown.exe shutdown

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS system libraries
+ * PROJECT:     MenuOS system libraries
  * FILE:        dll/win32/advapi32/misc/unicode.c
  * PURPOSE:     Unicode helper. Needed because RtlIsTextUnicode returns a
  *              BOOLEAN (byte) while IsTextUnicode returns a BOOL (long).

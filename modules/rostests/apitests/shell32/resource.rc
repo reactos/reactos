@@ -18,7 +18,7 @@ FONT 9, "Tahoma"
 }
 
 ShellHook DIALOG 0, 0, 200, 84
-CAPTION "ReactOS ShellHook test dialog"
+CAPTION "MenuOS ShellHook test dialog"
 STYLE DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 FONT 9, "Tahoma"
 {

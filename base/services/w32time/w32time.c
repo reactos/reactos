@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS W32Time Service
+ * PROJECT:     MenuOS W32Time Service
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Create W32Time Service that reqularly syncs clock to Internet Time
  * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>

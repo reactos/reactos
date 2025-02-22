@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          MenuOS kernel
  * PURPOSE:          Native driver for dxg implementation
  * FILE:             win32ss/reactx/dxg/ddsurf.c
  * PROGRAMER:        Sebastian Gasiorek (sebastian.gasiorek@reactos.org)

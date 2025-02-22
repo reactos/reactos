@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
+ * PROJECT:         MenuOS Kernel Streaming
  * FILE:            drivers/wdm/audio/backpln/portcls/dispatcher.c
  * PURPOSE:         portcls generic dispatcher
  * PROGRAMMER:      Johannes Anderwald

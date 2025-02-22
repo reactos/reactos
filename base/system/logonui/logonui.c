@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS Logon User Interface Host
+ * PROJECT:     MenuOS Logon User Interface Host
  * FILE:        base/system/logonui/logonui.c
  * PROGRAMMERS: Ged Murphy (gedmurphy@reactos.org)
  */

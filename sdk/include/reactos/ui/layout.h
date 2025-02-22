@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS headers
+ * PROJECT:     MenuOS headers
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     The layout engine of resizable dialog boxes / windows
  * COPYRIGHT:   Copyright 2020-2021 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)

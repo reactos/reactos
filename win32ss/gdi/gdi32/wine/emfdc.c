@@ -2234,7 +2234,7 @@ BOOL EMFDC_DeleteDC( WINEDC *dc_attr )
 
 
 //
-// ReactOS Print Support
+// MenuOS Print Support
 //
 BOOL EMFDC_WriteEscape( WINEDC *dc_attr, INT nEscape, INT cbInput, LPSTR lpszInData, DWORD emrType)
 {

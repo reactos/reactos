@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS win32 subsystem
+ * PROJECT:          MenuOS win32 subsystem
  * PURPOSE:          PATHOBJ service routines
  * FILE:             win32ss/gdi/eng/pathobj.c
  * PROGRAMERS:       Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)

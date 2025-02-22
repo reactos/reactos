@@ -8,7 +8,7 @@ Signature  = "$Windows NT$"
 LayoutFile = layout.inf
 Class      = Keyboard
 ClassGUID  = {4D36E96B-E325-11CE-BFC1-08002BE10318}
-Provider   = %ReactOS%
+Provider   = %MenuOS%
 DriverVer  = 06/04/2007,1.04
 
 [DestinationDirs]
@@ -100,7 +100,7 @@ LoadOrderGroup = Keyboard Class
 
 [Strings]
 ; Non-localizable
-ReactOS = "ReactOS Project"
+MenuOS = "MenuOS Project"
 
 ; Localizable
 KeyboardClassName = "Keyboards"

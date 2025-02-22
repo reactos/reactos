@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS browseui
+ * PROJECT:     MenuOS browseui
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Custom MRU AutoComplete List
  * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)

@@ -27,7 +27,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Lyder"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Et lydoppsett er et sett med lyder som tilordnes hendelser i ReactOS og programmer. Du kan velge et eksisterende oppsett eller lagre et du har endret på.", -1, 8, 7, 230, 40
+    LTEXT "Et lydoppsett er et sett med lyder som tilordnes hendelser i MenuOS og programmer. Du kan velge et eksisterende oppsett eller lagre et du har endret på.", -1, 8, 7, 230, 40
     LTEXT "Lydo&ppsett :", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Lag&re som...", IDC_SAVEAS_BTN, 134, 70, 50, 15
@@ -123,7 +123,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ytelse"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Disse innstillingene kontrollere hvordan ReactOS spiller lyd. Denne kan hjelpe deg med å feilsøke lyd-relatert problemer.", 8492, 34, 7, 218, 23
+    LTEXT "Disse innstillingene kontrollere hvordan MenuOS spiller lyd. Denne kan hjelpe deg med å feilsøke lyd-relatert problemer.", 8492, 34, 7, 218, 23
     GROUPBOX "Lyd avspilling", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
     LTEXT "&Maskinvare akselerasjon:", 8495, 13, 56, 111, 14
@@ -144,7 +144,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ytelse"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Disse innstillingene kontollerer hvordan ReactOS tar opp lyd. De kan hjelpe deg å feilsøke lyd-relaterte problemer.", 8492, 34, 7, 217, 20
+    LTEXT "Disse innstillingene kontollerer hvordan MenuOS tar opp lyd. De kan hjelpe deg å feilsøke lyd-relaterte problemer.", 8492, 34, 7, 217, 20
     GROUPBOX "Lyd opptak", 8494, 7, 29, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
     LTEXT "&Maskinvare akselerasjon:", 8495, 13, 46, 103, 17
@@ -165,13 +165,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Oppsett"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "ReactOS lyd", 10243, 7, 5, 213, 192
+    GROUPBOX "MenuOS lyd", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "Denne datamaskinen kan ikke spille av lyd fordi ReactOS lydtjeneste er ikke aktivert.", 10245, 60, 25, 150, 40
-    AUTOCHECKBOX "&Aktiverer ReactOS lyd", 10253, 60, 68, 150, 9
+    LTEXT "Denne datamaskinen kan ikke spille av lyd fordi MenuOS lydtjeneste er ikke aktivert.", 10245, 60, 25, 150, 40
+    AUTOCHECKBOX "&Aktiverer MenuOS lyd", 10253, 60, 68, 150, 9
     LTEXT "Notater", 10246, 58, 87, 150, 11
     LTEXT "1. Du trenger å være en administrator for å aktivere denne tjenesten. Hvis du ikke er en administrator, vil du bli spurt etter et administrator navn og passord.", 10247, 60, 100, 150, 40
-    LTEXT "2. Etter at du aktiverer ReactOS lyd vil du trenge å starte maskinen på nytt.", 10248, 60, 140, 150, 40
+    LTEXT "2. Etter at du aktiverer MenuOS lyd vil du trenge å starte maskinen på nytt.", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOGEX 0, 0, 227, 218
@@ -221,11 +221,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Oppsett"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "ReactOS lyd", 10259, 7, 5, 213, 192
+    GROUPBOX "MenuOS lyd", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "ReactOS lydtjeneste er nå aktivert. Uansett, lyden vil kanskje ikke fungere optimalt før du starter ReactOS på nytt. Hvis du ønsker å starte på nytt nå, først lagre ditt arbeid og lukk alle dine programmer.", 10261, 60, 25, 150, 50
-    LTEXT "For å starte ReactOS på nytt, trykk på OK.", 10262, 60, 75, 150, 20
-    LTEXT "Hvis du trykker avbryt, vil du trenge å starte på nytt senere for at ReactOS lyd skal fungere riktig.", 10263, 60, 100, 150, 40
+    LTEXT "MenuOS lydtjeneste er nå aktivert. Uansett, lyden vil kanskje ikke fungere optimalt før du starter MenuOS på nytt. Hvis du ønsker å starte på nytt nå, først lagre ditt arbeid og lukk alle dine programmer.", 10261, 60, 25, 150, 50
+    LTEXT "For å starte MenuOS på nytt, trykk på OK.", 10262, 60, 75, 150, 20
+    LTEXT "Hvis du trykker avbryt, vil du trenge å starte på nytt senere for at MenuOS lyd skal fungere riktig.", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
@@ -262,15 +262,15 @@ BEGIN
     5843 "Asterisk"
     5844 "Standardlyd"
     5845 "Exclamation"
-    5846 "Avslutt ReactOS"
+    5846 "Avslutt MenuOS"
     5847 "Kritisk Stopp"
     5848 "System notifikasjon"
     5849 "Spørsmål"
-    5850 "Start ReactOS"
+    5850 "Start MenuOS"
     5851 "Start Meny"
-    IDS_REACTOS_LOGOFF "ReactOS Logg av"
-    IDS_REACTOS_LOGON "ReactOS Logg på"
-    5854 "ReactOS Explorer"
+    IDS_REACTOS_LOGOFF "MenuOS Logg av"
+    IDS_REACTOS_LOGON "MenuOS Logg på"
+    5854 "MenuOS Explorer"
     IDS_BROWSE_FOR_SOUND "Search for new sounds"
     IDS_WAVE_FILES_FILTER "Wave Files (*.wav)|*.wav|"
 END

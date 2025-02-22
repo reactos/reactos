@@ -1604,7 +1604,7 @@ _Dispatch_type_(IRP_MJ_POWER)
 DRIVER_DISPATCH ClassDispatchPower;
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 ClassMinimalPowerHandler(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -1691,7 +1691,7 @@ ClasspScanForSpecialInRegistry(
     );
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 ClasspScanForClassHacks(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN ULONG_PTR Data

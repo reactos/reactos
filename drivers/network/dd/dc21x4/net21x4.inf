@@ -8,7 +8,7 @@ Signature  = "$Windows NT$"
 LayoutFile = layout.inf
 Class      = Net
 ClassGUID  = {4D36E972-E325-11CE-BFC1-08002BE10318}
-Provider   = %ReactOS%
+Provider   = %MenuOS%
 DriverVer  = 08/24/2023,1.00
 
 [DestinationDirs]
@@ -134,7 +134,7 @@ HKR, , TypesSupported,   0x00010001, 7
 
 [Strings]
 ; Non-localizable
-ReactOS="ReactOS Team"
+MenuOS="MenuOS Team"
 IntelMfg="Intel"
 
 NA="Network Address"

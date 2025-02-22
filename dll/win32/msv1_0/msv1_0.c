@@ -1533,7 +1533,7 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
             return STATUS_BAD_VALIDATION_CLASS;
         }
 
-#if 0   // FIXME: These checks happen to be done on Windows. We however keep them general on ReactOS for now...
+#if 0   // FIXME: These checks happen to be done on Windows. We however keep them general on MenuOS for now...
         if (LogonInfo->UserName.Length > 512) // CRED_MAX_STRING_LENGTH * sizeof(WCHAR) or (CREDUI_MAX_USERNAME_LENGTH (== CRED_MAX_USERNAME_LENGTH) - 1) * sizeof(WCHAR)
         {
             ERR("UserName too long (%lu, maximum 512)\n", LogonInfo->UserName.Length);

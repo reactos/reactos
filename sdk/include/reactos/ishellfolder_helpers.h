@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS header
+ * PROJECT:     MenuOS header
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     SHLWAPI IShellFolder helpers
  * COPYRIGHT:   Copyright 2009 Andrew Hill <ash77 at domain reactos.org>

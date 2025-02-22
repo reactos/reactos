@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS PSDK
+ * PROJECT:     MenuOS PSDK
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Undefines SAL definitions
  * COPYRIGHT:   Copyright 2020 Timo Kreuzer <timo.kreuzer@reactos.org>

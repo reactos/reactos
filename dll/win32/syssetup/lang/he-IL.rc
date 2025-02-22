@@ -2,28 +2,28 @@ LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "התקנת ReactOS"
+CAPTION "התקנת MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ברוכים לאשף ההתקנה של ReactOS", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "האשף הזה יתקין את ReactOS על מחשבך. האשף צריך לאסוף מידע מסוים עליך על מחשבך כדי להגדיר את ReactOS כמו שצריך.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "ברוכים לאשף ההתקנה של MenuOS", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "האשף הזה יתקין את MenuOS על מחשבך. האשף צריך לאסוף מידע מסוים עליך על מחשבך כדי להגדיר את MenuOS כמו שצריך.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "לחץ על הבא כדי להמשיך עם ההתקנה", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "התקנת ReactOS"
+CAPTION "התקנת MenuOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "המפתחים של ReactOS רוצים להודות למיזמי הקוד פתוח הבאים, אשר (חלקם) שימשו ביצירת ReactOS:", IDC_STATIC, 15, 7, 286, 19
+    LTEXT "המפתחים של MenuOS רוצים להודות למיזמי הקוד פתוח הבאים, אשר (חלקם) שימשו ביצירת MenuOS:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "ReactOS מורשת תחת רשיון ה-GPL, אז אם ברצונך להתשמש בחזרה או להפיצה(בחלקה), אז הינך מחויב לכבד את רישיון ה-GPL.", IDC_STATIC, 15, 110, 227, 19
+    LTEXT "MenuOS מורשת תחת רשיון ה-GPL, אז אם ברצונך להתשמש בחזרה או להפיצה(בחלקה), אז הינך מחויב לכבד את רישיון ה-GPL.", IDC_STATIC, 15, 110, 227, 19
     PUSHBUTTON "&ראה GPL...", IDC_VIEWGPL, 251, 110, 50, 19
     LTEXT "לחץ על הבא כדי להמשיך עם ההתקנה", IDC_STATIC, 15, 136, 195, 17
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
-CAPTION "ReactOS Setup"
+CAPTION "MenuOS Setup"
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -38,7 +38,7 @@ END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "התקנת ReactOS"
+CAPTION "התקנת MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
@@ -51,7 +51,7 @@ END
 
 IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "התקנת ReactOS"
+CAPTION "התקנת MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
@@ -69,7 +69,7 @@ END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "התקנת ReactOS"
+CAPTION "התקנת MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
@@ -86,7 +86,7 @@ END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "התקנת ReactOS"
+CAPTION "התקנת MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
@@ -100,7 +100,7 @@ END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "MenuOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_THEMEPICKER, "SysListView32", LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_TABSTOP, 18, 8, 288, 130
@@ -108,7 +108,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "התקנת ReactOS"
+CAPTION "התקנת MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "רושם רכיבים", IDC_TASKTEXT1, 65, 27, 232, 8
@@ -121,11 +121,11 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "משלים את התקנת ReactOS"
+CAPTION "משלים את התקנת MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Completing the ReactOS Setup Wizard", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "You have successfully completed ReactOS Setup.\n\nWhen you click Finish, your computer will restart.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Completing the MenuOS Setup Wizard", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "You have successfully completed MenuOS Setup.\n\nWhen you click Finish, your computer will restart.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "If there is a CD in a drive, remove it. Then, to restart your computer, click Finish.", IDC_STATIC, 115, 169, 195, 17
 END
@@ -171,13 +171,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE "תודות"
-    IDS_ACKSUBTITLE "The shoulders ReactOS stands on and license information"
+    IDS_ACKSUBTITLE "The shoulders MenuOS stands on and license information"
     IDS_OWNERTITLE "Personalize your Software"
-    IDS_OWNERSUBTITLE "Setup uses this information about yourself to personalize ReactOS."
+    IDS_OWNERSUBTITLE "Setup uses this information about yourself to personalize MenuOS."
     IDS_COMPUTERTITLE "Computer Name and Administrator Password"
     IDS_COMPUTERSUBTITLE "You must provide a name and an Administrator Password for your computer."
     IDS_LOCALETITLE "הגדרות אזור"
-    IDS_LOCALESUBTITLE "You can customize ReactOS for different regions and languages."
+    IDS_LOCALESUBTITLE "You can customize MenuOS for different regions and languages."
     IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
     IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "תאריך ושעה"
@@ -190,7 +190,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP "ReactOS התקנת"
+    IDS_REACTOS_SETUP "MenuOS התקנת"
     IDS_UNKNOWN_ERROR "שגיאה לא ידועה"
     IDS_LOADLIBRARY_FAILED "LoadLibrary נכשל: "
     IDS_GETPROCADDR_FAILED "GetProcAddr נכשל: "
@@ -250,8 +250,8 @@ STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Product Options"
     IDS_PRODUCTSUBTITLE "You can choose a product option that affects the behavior of the system."
-    IDS_PRODUCTSERVERNAME "ReactOS Server"
-    IDS_PRODUCTWORKSTATIONNAME "ReactOS Workstation"
+    IDS_PRODUCTSERVERNAME "MenuOS Server"
+    IDS_PRODUCTWORKSTATIONNAME "MenuOS Workstation"
     IDS_PRODUCTSERVERINFO "The system will be recognized as a server. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are independent from ""My Documents""."
     IDS_PRODUCTWORKSTATIONINFO "The system will be recognized as a workstation. Private folders ""My Pictures"", ""My Videos"" and ""My Music"" are in ""My Documents""."
     IDS_DEFAULT "(Default)"

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Kernel
+ * PROJECT:     MenuOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Configuration Manager Library - Registry Self-Heal Routines
  * COPYRIGHT:   Copyright 2022 George Bișoc <george.bisoc@reactos.org>
@@ -355,7 +355,7 @@ CmpRemoveSubKeyInLeaf(
  * bootloader. Self healing is also triggered if such a
  * request was prompted by the user to fix a broken hive.
  * Such a request tipically comes from a registry repair
- * tool such as the ReactOS Check Registry Utility.
+ * tool such as the MenuOS Check Registry Utility.
  *
  * @param[in] FixHive
  * If set to TRUE, self heal is triggered and the target

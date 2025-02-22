@@ -16,7 +16,7 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WINDOWS);
 
-// This is needed because headers define wrong one for ReactOS
+// This is needed because headers define wrong one for MenuOS
 #undef KIP0PCRADDRESS
 #define KIP0PCRADDRESS                      0xffdff000
 

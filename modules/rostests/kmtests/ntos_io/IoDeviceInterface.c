@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS kernel-mode tests
+ * PROJECT:     MenuOS kernel-mode tests
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Test for Device Interface functions
  * COPYRIGHT:   Copyright 2011 Filip Navara <xnavara@volny.cz>

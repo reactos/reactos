@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS API Tests
+ * PROJECT:     MenuOS API Tests
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     x64 ASM helper functions for syscall tests
  * COPYRIGHT:   Copyright 2024 Timo Kreuzer <timo.kreuzer@reactos.org>
@@ -63,7 +63,7 @@ LoadContext:
     mov ax, [rcx + CxSegFs]
     mov fs, ax
     mov ax, [rcx + CxSegGs]
-    //mov gs, ax // FIXME: ReactOS does not like this
+    //mov gs, ax // FIXME: MenuOS does not like this
 
     ret
 
@@ -112,7 +112,7 @@ GLOBAL_LABEL SyscallReturn
     mov ax, HEX(2B)
     mov ds, ax
     mov es, ax
-    //mov gs, ax // FIXME: ReactOS does not like this
+    //mov gs, ax // FIXME: MenuOS does not like this
     mov ss, ax
     mov ax, HEX(53)
     mov fs, ax

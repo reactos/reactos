@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS RASDLG
+ * PROJECT:     MenuOS RASDLG
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
@@ -75,7 +75,7 @@ BEGIN
     AUTOCHECKBOX "Se permit versiuni anterioare MS-CHAP pentru servere &Windows 95", 200, 46, 162, 198, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Mi&crosoft CHAP Versiunea 2 (MS-CHAP v2)", 1492, 28, 176, 200, 10, BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 28, 189, 208, 1
-    AUTOCHECKBOX "Se u&tilizează nume şi parolă proprii de Log on în ReactOS (şi domeniu, dacă există) pentru protocoale bazate pe MS-CHAP", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Se u&tilizează nume şi parolă proprii de Log on în MenuOS (şi domeniu, dacă există) pentru protocoale bazate pe MS-CHAP", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "OK", 1, 127, 232, 60, 14
     PUSHBUTTON "Revocare", 2, 192, 232, 60, 14
 END
@@ -169,7 +169,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Apelare şi suspendare automată"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS are posibilitatea să apeleze şi să suspende automat dispozitivele în funcţie de câte informaţii sunt de trimis şi de primit.", 1085, 9, 7, 253, 30
+    LTEXT "MenuOS are posibilitatea să apeleze şi să suspende automat dispozitivele în funcţie de câte informaţii sunt de trimis şi de primit.", 1085, 9, 7, 253, 30
     GROUPBOX "Apelare automată", -1, 6, 38, 249, 71
     LTEXT "Se apelează altă linie, atunci când se îndeplinesc următoarele două condiţii:", 1083, 16, 51, 237, 16, NOT WS_GROUP
     LTEXT "Activitate de &cel puţin:", -1, 16, 73, 100, 8
@@ -632,7 +632,7 @@ BEGIN
     AUTORADIOBUTTON "&Complex (setări particularizate)", 1541, 14, 102, 198, 8, BS_NOTIFY
     LTEXT "&Validare identitate după cum urmează:", 1537, 26, 29, 187, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "&Utilizare automată a numelui şi parolei proprii de Log on în ReactOS (şi domeniu, dacă există)", 1174, 26, 58, 184, 18, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Utilizare automată a numelui şi parolei proprii de Log on în MenuOS (şi domeniu, dacă există)", 1174, 26, 58, 184, 18, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "Se s&olicită criptarea datelor (deconectare dacă nu există)", 1169, 26, 82, 183, 18, BS_TOP | BS_MULTILINE
     LTEXT "Utilizarea acestor setări solicită cunoştinţe despre protocoale de securitate.", 1539, 15, 114, 134, 20
     PUSHBUTTON "&Setări…", 1180, 151, 115, 60, 14
@@ -689,7 +689,7 @@ BEGIN
     GROUPBOX "Opţiuni apelare", 1289, 7, 2, 213, 64
     AUTOCHECKBOX "&Afişare progres la conectare", 1284, 16, 14, 201, 10
     AUTOCHECKBOX "&Solicitare nume şi parolă, certificat, etc.", 1554, 16, 27, 201, 10
-    AUTOCHECKBOX "Includere domeniu &ReactOS de Log on", 1555, 16, 39, 201, 10
+    AUTOCHECKBOX "Includere domeniu &MenuOS de Log on", 1555, 16, 39, 201, 10
     AUTOCHECKBOX "Solicitare &număr de telefon", 1285, 16, 52, 200, 10, BS_TOP | BS_MULTILINE
     GROUPBOX "Opţiuni reapelare", 1290, 6, 72, 213, 79
     LTEXT "Încercări &reapelare:", 1300, 16, 87, 123, 8
@@ -887,7 +887,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Conectare %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Imposibil ca ReactOS să se conecteze la reţea utilizând numele utilizatorului şi parola furnizate. Reintroduceţi numele utilizatorului şi parola.", 1396, 7, 6, 206, 36
+    LTEXT "Imposibil ca MenuOS să se conecteze la reţea utilizând numele utilizatorului şi parola furnizate. Reintroduceţi numele utilizatorului şi parola.", 1396, 7, 6, 206, 36
     LTEXT "Nume &utilizator:", 1399, 8, 51, 49, 8
     EDITTEXT 1394, 66, 46, 143, 14, ES_AUTOHSCROLL
     LTEXT "&Parolă:", 1397, 8, 70, 49, 8, NOT WS_GROUP
@@ -903,7 +903,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Conectare %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Imposibil ca ReactOS să se conecteze la reţea utilizând numele utilizatorului şi parola furnizate. Reintroduceţi numele utilizatorului şi parola.", 1396, 7, 6, 209, 26
+    LTEXT "Imposibil ca MenuOS să se conecteze la reţea utilizând numele utilizatorului şi parola furnizate. Reintroduceţi numele utilizatorului şi parola.", 1396, 7, 6, 209, 26
     LTEXT "Nume &utilizator:", 1399, 7, 72, 44, 8
     EDITTEXT 1394, 97, 69, 115, 14, ES_AUTOHSCROLL
     LTEXT "&Parolă:", 1397, 7, 90, 45, 8, NOT WS_GROUP
@@ -1280,7 +1280,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Expert conexiune nouă"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Tastaţi numele serviciului în caseta text următoare. Dacă lăsaţi necompletată caseta text, ReactOS detectează şi configurează automat serviciul atunci când vă conectaţi.", -1, 10, 7, 301, 25
+    LTEXT "Tastaţi numele serviciului în caseta text următoare. Dacă lăsaţi necompletată caseta text, MenuOS detectează şi configurează automat serviciul atunci când vă conectaţi.", -1, 10, 7, 301, 25
     LTEXT "Nume &serviciu (opţional):", -1, 22, 32, 229, 8
     EDITTEXT 1593, 22, 44, 275, 14, ES_AUTOHSCROLL
 END
@@ -1305,7 +1305,7 @@ BEGIN
     AUTORADIOBUTTON "Comple&x (setări particularizate)", 1541, 14, 100, 197, 8, BS_NOTIFY
     LTEXT "&Validare identitate după cum urmează:", 1537, 26, 29, 183, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "&Utilizare automată a numelui şi parolei proprii de Log on în ReactOS (şi domeniu, dacă există)", 1174, 26, 59, 182, 18, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Utilizare automată a numelui şi parolei proprii de Log on în MenuOS (şi domeniu, dacă există)", 1174, 26, 59, 182, 18, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "S&e solicită criptarea datelor (deconectare dacă nu există)", 1169, 26, 81, 182, 18, BS_TOP | BS_MULTILINE
     LTEXT "Utilizarea acestor setări solicită cunoştinţe despre protocoale de securitate.", 1539, 26, 111, 182, 18
     PUSHBUTTON "&Setări…", 1180, 151, 134, 60, 14
@@ -1464,7 +1464,7 @@ BEGIN
     LTEXT "&Nume gazdă sau adresă IP a destinaţiei (cum ar fi reactos.org sau 145.52.0.1):", 1430, 7, 5, 217, 18
     EDITTEXT 1427, 7, 25, 215, 14, ES_AUTOHSCROLL
     GROUPBOX "Conectare iniţială", 1431, 9, 48, 213, 78
-    LTEXT "ReactOS se poate conecta mai întâi la reţeaua publică, cum ar fi Internet, înainte de a încerca să stabilească această conexiune virtuală.", 1432, 17, 60, 199, 24
+    LTEXT "MenuOS se poate conecta mai întâi la reţeaua publică, cum ar fi Internet, înainte de a încerca să stabilească această conexiune virtuală.", 1432, 17, 60, 199, 24
     AUTOCHECKBOX "&Se formează mai întâi o altă conexiune:", 1428, 19, 89, 183, 10
     COMBOBOX 1429, 29, 103, 182, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "Se a&fişează pictogramă în zona de notificare, când e conectat", 1120, 10, 192, 213, 13
@@ -1478,7 +1478,7 @@ BEGIN
     GROUPBOX "Opţiuni apelare", 1289, 8, 7, 214, 56
     AUTOCHECKBOX "&Afişare progres la conectare", 1284, 16, 17, 199, 10
     AUTOCHECKBOX "&Solicitare nume şi parolă, certificat, etc.", 1554, 16, 32, 199, 10
-    AUTOCHECKBOX "Includere domeniu &ReactOS de Log on", 1555, 16, 47, 178, 10
+    AUTOCHECKBOX "Includere domeniu &MenuOS de Log on", 1555, 16, 47, 178, 10
     GROUPBOX "Opţiuni reapelare", 1290, 8, 68, 214, 89
     LTEXT "Încercări &reapelare:", 1300, 16, 81, 121, 8
     EDITTEXT 1287, 140, 77, 70, 14, ES_AUTOHSCROLL | ES_NUMBER
@@ -1503,7 +1503,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Expert conexiune nouă"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS are posibilitatea să formeze automat conexiunea iniţială la Internet sau la altă reţea publică, înaintea stabilirii conexiunii virtuale.", -1, 10, 6, 275, 24
+    LTEXT "MenuOS are posibilitatea să formeze automat conexiunea iniţială la Internet sau la altă reţea publică, înaintea stabilirii conexiunii virtuale.", -1, 10, 6, 275, 24
     AUTORADIOBUTTON "&Fără formare conexiune iniţială.", 1509, 32, 31, 271, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     AUTORADIOBUTTON "For&mare automată a acestei conexiuni iniţiale:", 1510, 32, 45, 269, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     COMBOBOX 1435, 43, 62, 253, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
@@ -1805,7 +1805,7 @@ BEGIN
     AUTORADIOBUTTON "&Se permit conexiuni virtuale private", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Nu se permit conexiuni virtuale private", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     LTEXT "Acceptaţi conexiuni virtuale private către acest computer?", -1, 17, 49, 275, 8
-    LTEXT " Dacă acceptaţi conexiuni VPN, ReactOS modifică Paravanul protector al conexiunilor la Internet, pentru a permite computerului să trimită şi să primească pachete VPN.", -1, 10, 25, 293, 25
+    LTEXT " Dacă acceptaţi conexiuni VPN, MenuOS modifică Paravanul protector al conexiunilor la Internet, pentru a permite computerului să trimită şi să primească pachete VPN.", -1, 10, 25, 293, 25
 END
 
 7055 DIALOGEX 0, 0, 317, 143
@@ -1894,7 +1894,7 @@ BEGIN
     244 "Întrucât conexiunea este activă, unele setări nu vor avea efect până data viitoare când o apelaţi.\0"
     245 "Nu există nici o conexiune disponibilă pentru toţi utilizatorii. Este necesar să faceţi Log on înaintea apelării.\0"
     246 "Agenda telefonică este goală.\n\nApăsaţi pe OK pentru a adăuga o intrare.\0"
-    247 "Din cauza restricţiilor de import/export, criptarea datelor nu este disponibilă în această versiune ReactOS.\0"
+    247 "Din cauza restricţiilor de import/export, criptarea datelor nu este disponibilă în această versiune MenuOS.\0"
     248 "Introduceţi o adresă X.25 pe ecranul următor.\0"
     249 "Eroare %1: %2\0"
     250 "%1\n\nEroare %2: %3\0"
@@ -2117,7 +2117,7 @@ BEGIN
     501 "Care este numele sau adresa serverului VPN?\0"
     502 "Imposibil de dezactivat apelarea la cerere.\0"
     503 "Reţea publică\0"
-    504 "ReactOS poate asigura că reţeaua publică se conectează prima.\0"
+    504 "MenuOS poate asigura că reţeaua publică se conectează prima.\0"
     505 "VPN1\0"
     506 "Partajare conexiune la Internet\0"
     507 "Aveţi posibilitatea să închiriaţi resurse de acces la o reţea locală prin această conexiune pe linie comutată.\0"
@@ -2243,8 +2243,8 @@ BEGIN
     1611 "Conexiune de bandă largă\0"
     1612 "Aţi selectat utilizarea unei chei pre-distribuite dar nu aţi introdus nici una.\nIntroduceţi cheia pre-distribuită.\0"
     1613 "Imposibil de angajat acreditările\0"
-    1634 "Deoarece serviciul Instrumentaţie de management ReactOS (WMI) s-a dezactivat, ReactOS nu afişează proprietăţile acestei conexiuni sau reţeaua de pornire.\n\nPentru a configura proprietăţile acestei conexiuni sau ale reţelei de la domiciliu, este necesar să activaţi mai întâi serviciul WMI. Pentru a realiza acest lucru, în Instrumente administrative din Panoul de control faceţi dublu clic pe Servicii, faceţi clic cu butonul din dreapta pe Instrumentaţia de management ReactOS, apoi faceţi clic pe Start.\0"
-    1635 "ReactOS nu afişează proprietăţile acestei conexiuni. Este posibil ca informaţiile din Instrumentaţia de management ReactOS (WMI) să fie deteriorate. Pentru a corecta aceasta, utilizaţi Restabilire sistem pentru a restabili ReactOS la un moment anterior (numit punct de restabilire). Restabilire sistem este amplasat în folderul Instrumente sistem din Accesorii.\0"
+    1634 "Deoarece serviciul Instrumentaţie de management MenuOS (WMI) s-a dezactivat, MenuOS nu afişează proprietăţile acestei conexiuni sau reţeaua de pornire.\n\nPentru a configura proprietăţile acestei conexiuni sau ale reţelei de la domiciliu, este necesar să activaţi mai întâi serviciul WMI. Pentru a realiza acest lucru, în Instrumente administrative din Panoul de control faceţi dublu clic pe Servicii, faceţi clic cu butonul din dreapta pe Instrumentaţia de management MenuOS, apoi faceţi clic pe Start.\0"
+    1635 "MenuOS nu afişează proprietăţile acestei conexiuni. Este posibil ca informaţiile din Instrumentaţia de management MenuOS (WMI) să fie deteriorate. Pentru a corecta aceasta, utilizaţi Restabilire sistem pentru a restabili MenuOS la un moment anterior (numit punct de restabilire). Restabilire sistem este amplasat în folderul Instrumente sistem din Accesorii.\0"
     1646 "Se permite solicitare ecou la sosire\0"
     1647 "Se permite solicitare marcă de timp de intrare\0"
     1648 "Se permite solicitare mască de intrare\0"
@@ -2357,7 +2357,7 @@ BEGIN
     7385 "Port comunicaţii (%s)\0"
     7386 "Conexiuni în reţea nu afişează unele opţiuni specializate pentru conexiunile ataşate care au fost stabilite utilizând consolele Manager pentru utilizator local sau Politică de acces la distanţă. Pentru informaţii complete şi corecte pentru conexiunile dinspre exterior, este necesar să utilizaţi aceste console.\0"
     7387 "Modul selectat de apelare inversă a utilizatorului vă solicită să introduceţi un număr corect pentru apelare inversă.\0"
-    7388 "Pentru a finaliza operaţia este necesar să reporniţi ReactOS. Reporniţi acum?\0"
+    7388 "Pentru a finaliza operaţia este necesar să reporniţi MenuOS. Reporniţi acum?\0"
     7389 "Dispozitivul selectat curent nu are opţiuni de configurare disponibile.\0"
     7390 "Interval incorect\0"
     7391 "Aţi cerut ca '%1' să fie dezactivat pentru Conexiuni dinspre exterior. Pentru dezactivare, trebuie să opriţi serviciul 'Server'. Odată oprit, orice directoare sau imprimante partajate pe acest computer nu vor mai fi disponibile pentru nici un alt computer. Afişaţi o consolă sistem care să vă permită să opriţi serviciul 'Server'?\r\n\nSub Gestionare computer faceţi clic pe Instrumente sistem, apoi clic pe Servicii. În panoul din dreapta, faceţi clic cu butonul din dreapta al mausului pe Server şi faceţi clic pe oprire.\0"

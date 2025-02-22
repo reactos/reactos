@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Picture and Fax Viewer
+ * PROJECT:     MenuOS Picture and Fax Viewer
  * LICENSE:     GPL-2.0 (https://spdx.org/licenses/GPL-2.0)
  * PURPOSE:     Image file browsing and manipulation
  * COPYRIGHT:   Copyright 2025 Whindmar Saksit <whindsaks@proton.me>

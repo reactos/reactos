@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS ACPI bus driver
+ * PROJECT:         MenuOS ACPI bus driver
  * FILE:            acpi/ospm/acpienum.c
  * PURPOSE:         ACPI namespace enumerator
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)

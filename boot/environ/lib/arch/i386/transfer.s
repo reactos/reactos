@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
- * PROJECT:         ReactOS UEFI Boot Library
+ * PROJECT:         MenuOS UEFI Boot Library
  * FILE:            boot/environ/lib/arch/transfer.asm
  * PURPOSE:         Boot Library i386 Transfer Functions
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)

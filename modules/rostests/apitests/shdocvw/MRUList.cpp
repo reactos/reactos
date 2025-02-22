@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS api tests
+ * PROJECT:     MenuOS api tests
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Tests for MRU List
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
@@ -21,7 +21,7 @@
 #define SUBKEY0 L"Software\\MRUListTest"
 #define SUBSUBKEY0 L"Software\\MRUListTest\\0"
 #define TEXT0 L"This is a test."
-#define TEXT1 L"ReactOS rocks!"
+#define TEXT1 L"MenuOS rocks!"
 
 static void MRUList_DataList_0(void)
 {

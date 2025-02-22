@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
+ * PROJECT:         MenuOS Kernel Streaming
  * FILE:            drivers/wdm/audio/backpln/portcls/miniport_fmsynth.cpp
  * PURPOSE:         Miniport FM Synth
  * PROGRAMMER:      Johannes Anderwald

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Bochs graphics card driver
+ * PROJECT:     MenuOS Bochs graphics card driver
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Bochs graphics card driver
  * COPYRIGHT:   Copyright 2022 Hervé Poussineau <hpoussin@reactos.org>

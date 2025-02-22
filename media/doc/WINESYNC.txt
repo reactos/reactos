@@ -1,13 +1,13 @@
-# ReactOS WINE porting/syncing reference file
+# MenuOS WINE porting/syncing reference file
 # Update this file when you port/sync a dll/program from WINE.
 
-The ReactOS Project shares quite a bit of code with the WINE project.
+The MenuOS Project shares quite a bit of code with the WINE project.
 This document should provide a complete reference for all of the
-locations in the ReactOS source tree where code is shared between the
+locations in the MenuOS source tree where code is shared between the
 two projects. If you find something is missing from this documentation
 please add it.
 
-If you find that a function in ReactOS that is not implemented properly
+If you find that a function in MenuOS that is not implemented properly
 and is based on WINE sources, check the latest Winehq CVS and see if
 it has been fixed there. If so, please submit a patch to
 ros-dev@reactos.org. Otherwise please send a patch to both
@@ -240,7 +240,7 @@ dll/cpl/inetcpl               # Synced to WineStaging-4.18
 
 win32ss/printing/monitors/localmon/ui/  # Synced to WineStaging-4.18 (known there as /dll/win32/localui)
 
-ReactOS shares the following programs with Winehq.
+MenuOS shares the following programs with Winehq.
 
 base/applications/cmdutils/cscript  # Synced to WineStaging-4.18
 base/applications/cmdutils/reg      # Synced to WineStaging-6.23

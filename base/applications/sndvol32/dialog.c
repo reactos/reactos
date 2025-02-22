@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS Sound Volume Control
+ * PROJECT:     MenuOS Sound Volume Control
  * FILE:        base/applications/sndvol32/dialog.c
  * PROGRAMMERS: Johannes Anderwald
  */

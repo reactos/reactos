@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Multimedia Player
+ * PROJECT:     MenuOS Multimedia Player
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Hong Kong) resource file
  * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
@@ -69,7 +69,7 @@ BEGIN
     IDS_TOOLTIP_SEEKFORW "前進"
     IDS_TOOLTIP_FORWARD "快轉"
     IDS_TOOLTIP_PAUSE "暫停"
-    IDS_APPTITLE "ReactOS 多媒體播放器"
+    IDS_APPTITLE "MenuOS 多媒體播放器"
     IDS_PLAY "播放"
     IDS_DEFAULTMCIERRMSG "該錯誤沒有可用的描述。"
 END

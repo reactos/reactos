@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS HTTP Daemon
+ * PROJECT:     MenuOS HTTP Daemon
  * FILE:        httpd.cpp
  * PURPOSE:     HTTP daemon
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

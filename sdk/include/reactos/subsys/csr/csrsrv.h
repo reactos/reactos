@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Client/Server Runtime SubSystem
+ * PROJECT:         MenuOS Client/Server Runtime SubSystem
  * FILE:            include/reactos/subsys/csr/csrsrv.h
  * PURPOSE:         Public definitions for CSR Servers
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)

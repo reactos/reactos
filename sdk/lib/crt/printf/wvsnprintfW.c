@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
- * PROJECT:         ReactOS crt library
+ * PROJECT:         MenuOS crt library
  * FILE:            lib/sdk/crt/printf/wvsnprintfW.c
  * PURPOSE:         Implementation of wvsnprintfW
  * PROGRAMMER:      Timo Kreuzer

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS CRT
+ * PROJECT:          MenuOS CRT
  * FILE:             lib/sdk/crt/math/amd64/asin.c
  * PURPOSE:          Generic C implementation of arc sine
  * PROGRAMMER:       Timo Kreuzer (timo.kreuzer@reactos.org)

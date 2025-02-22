@@ -80,7 +80,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(button);
 #define BUTTON_UNKNOWN2        0x20
 #define BUTTON_UNKNOWN3        0x10
 #ifdef __REACTOS__
-#define BUTTON_BMCLICK         0x100 // ReactOS Need to up to wine!
+#define BUTTON_BMCLICK         0x100 // MenuOS Need to up to wine!
 #endif
 
 #define BUTTON_NOTIFY_PARENT(hWnd, code) \
@@ -391,7 +391,7 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
     case WM_LBUTTONUP:
 #ifdef __REACTOS__
     {
-        BOOL TellParent = FALSE; //// ReactOS see note below.
+        BOOL TellParent = FALSE; //// MenuOS see note below.
 #endif
         state = get_button_state( hWnd );
         if (!(state & BUTTON_BTNPRESSED)) break;
@@ -463,7 +463,7 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
     {
         /* Clear an old text here as Windows does */
 //
-// ReactOS Note :
+// MenuOS Note :
 // wine Bug: http://bugs.winehq.org/show_bug.cgi?id=25790
 // Patch: http://source.winehq.org/patches/data/70889
 // By: Alexander LAW, Replicate Windows behavior of WM_SETTEXT handler regarding WM_CTLCOLOR*

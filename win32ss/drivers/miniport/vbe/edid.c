@@ -1,7 +1,7 @@
 /*
- * ReactOS VBE EDID management
+ * MenuOS VBE EDID management
  *
- * Copyright (C) 2006 Hervé Poussineau
+ * Copyright (C) 2006 HervÃ© Poussineau
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -116,7 +116,7 @@ VBEReadEdidUsingSCI(
    VideoPortDebugPrint(Trace, "VBEMP: VBEReadEdidUsingSCI() called\n");
 
    /*
-    * Check if graphic card support I²C interface
+    * Check if graphic card support IÂ²C interface
     */
    VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
    BiosRegisters.Eax = VBE_DDC;
@@ -132,7 +132,7 @@ VBEReadEdidUsingSCI(
       return FALSE;
 
    /*
-    * Enable I²C interface
+    * Enable IÂ²C interface
     */
    VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
    BiosRegisters.Eax = VBE_DDC;
@@ -161,7 +161,7 @@ VBEReadEdidUsingSCI(
       MAX_SIZE_OF_EDID);
 
    /*
-    * Disable I²C interface
+    * Disable IÂ²C interface
     */
    VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
    BiosRegisters.Eax = VBE_DDC;

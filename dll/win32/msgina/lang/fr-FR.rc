@@ -12,7 +12,7 @@ END
 
 IDD_WELCOME DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Bienvenue dans ReactOS"
+CAPTION "Bienvenue dans MenuOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -108,7 +108,7 @@ END
 
 IDD_LOGOFF DIALOGEX 0, 0, 188, 60
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP
-CAPTION "Déconnexion de ReactOS"
+CAPTION "Déconnexion de MenuOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOGOFF, IDC_STATIC, 7, 7, 20, 20
@@ -119,7 +119,7 @@ END
 
 IDD_SHUTDOWN DIALOGEX 0, 0, 275, 146
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Arrêt de ReactOS"
+CAPTION "Arrêt de MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -139,7 +139,7 @@ END
 IDD_SHUTDOWN_REASON DIALOGEX 0, 0, 275, 297
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 // STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Arrêt de ReactOS"
+CAPTION "Arrêt de MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -183,7 +183,7 @@ BEGIN
     PUSHBUTTON "Éteindr&e", IDC_BUTTON_SHUTDOWN, 93, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "&Redémarrer", IDC_BUTTON_REBOOT, 150, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Annuler", IDCANCEL, 162, 103, 40, 12, BS_FLAT | WS_GROUP
-    LTEXT "Arrêt de ReactOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
+    LTEXT "Arrêt de MenuOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
     CTEXT "Mettre en veille", IDC_SLEEP_STATIC, 22, 70, 51, 11
     CTEXT "Éteindre", IDC_SHUTDOWN_STATIC, 79, 70, 51, 11
     CTEXT "Redémarrer", IDC_RESTART_STATIC, 136, 70, 51, 11
@@ -200,7 +200,7 @@ BEGIN
     PUSHBUTTON "Éteindr&e", IDC_BUTTON_SHUTDOWN, 150, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "&Redémarrer", IDC_BUTTON_REBOOT, 207, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Annuler", IDCANCEL, 218, 103, 40, 12, BS_FLAT | WS_GROUP
-    LTEXT "Arrêt de ReactOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
+    LTEXT "Arrêt de MenuOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
     CTEXT "Veille prolongée", IDC_HIBERNATE_STATIC, 22, 70, 51, 11
     CTEXT "Mettre en veille", IDC_SLEEP_STATIC, 79, 70, 51, 11
     CTEXT "Éteindre", IDC_SHUTDOWN_STATIC, 136, 70, 51, 11
@@ -234,7 +234,7 @@ BEGIN
     IDS_INVALIDLOGONHOURS "Votre compte a des restrictions temporelles qui vous empêchent de vous connecter à cette heure-ci. Veuillez réessayer ultérieurement."
     IDS_INVALIDWORKSTATION "Votre compte a été configuré pour que vous n'utilisiez pas cet ordinateur. Veuillez réessayer depuis un autre ordinateur."
     IDS_ACCOUNTRESTRICTION "Impossible de vous connecter en raison d'une restriction sur votre compte."
-    IDS_EMERGENCYLOGOFFTITLE "Log Off ReactOS"
+    IDS_EMERGENCYLOGOFFTITLE "Log Off MenuOS"
     IDS_EMERGENCYLOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
     IDS_EMERGENCYRESTARTTITLE "Emergency restart"
     IDS_EMERGENCYRESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."

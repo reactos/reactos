@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS kernel
+ * PROJECT:     MenuOS kernel
  * FILE:        include/reactos/services/services.h
  * PURPOSE:     Private interface between SERVICES.EXE and ADVAPI32.DLL
  * PROGRAMMER:  Eric Kohl

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
- * PROJECT:         ReactOS UEFI Boot Library
+ * PROJECT:         MenuOS UEFI Boot Library
  * FILE:            boot/environ/lib/io/display/guicons.c
  * PURPOSE:         Boot Library GUI Console Routines
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)

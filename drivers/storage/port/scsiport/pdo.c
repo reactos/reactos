@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Storage Stack / SCSIPORT storage port library
+ * PROJECT:     MenuOS Storage Stack / SCSIPORT storage port library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Logical Unit (PDO) functions
  * COPYRIGHT:   Eric Kohl (eric.kohl@reactos.org)

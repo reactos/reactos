@@ -1,6 +1,6 @@
 <SDB>
     <DATABASE>
-        <NAME>ReactOS compatibility fix database</NAME>
+        <NAME>MenuOS compatibility fix database</NAME>
         <OS_PLATFORM >1</OS_PLATFORM>
         <DATABASE_ID>{11111111-1111-1111-1111-111111111111}</DATABASE_ID>
         <LIBRARY>
@@ -254,7 +254,7 @@
             </SHIM>
             <SHIM NAME="ShimTest">
                 <DLLFILE>acgenral.dll</DLLFILE>
-                <DESCRIPTION>Shim used to test ReactOS shim engine functionality</DESCRIPTION>
+                <DESCRIPTION>Shim used to test MenuOS shim engine functionality</DESCRIPTION>
             </SHIM>
             <SHIM NAME="VMHorizonSetup">
                 <DLLFILE>aclayers.dll</DLLFILE>
@@ -375,7 +375,7 @@
             <!-- TODO: Add more fixes! -->
         </LAYER>
         <LAYER NAME="WIN7SP1">
-            <!-- ReactOS specific. Windows does not have this version lie -->
+            <!-- MenuOS specific. Windows does not have this version lie -->
             <SHIM_REF NAME="Win7SP1VersionLie" />
             <DATA NAME="SHIMVERSIONNT" DATA_DWORD="601" />
             <!-- TODO: Add more fixes! -->
@@ -391,19 +391,19 @@
             <!-- TODO: Add more fixes! -->
         </LAYER>
         <LAYER NAME="WIN10RTM">
-            <!-- ReactOS specific. Windows does not have this version lie -->
+            <!-- MenuOS specific. Windows does not have this version lie -->
             <SHIM_REF NAME="Win10RTMVersionLie" />
             <DATA NAME="SHIMVERSIONNT" DATA_DWORD="1000" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
         <LAYER NAME="WINSRV16RTM">
-            <!-- ReactOS specific. Windows does not have this version lie -->
+            <!-- MenuOS specific. Windows does not have this version lie -->
             <SHIM_REF NAME="Win2k16RTMVersionLie" />
             <DATA NAME="SHIMVERSIONNT" DATA_DWORD="1000" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
         <LAYER NAME="WINSRV19RTM">
-            <!-- ReactOS specific. Windows does not have this version lie -->
+            <!-- MenuOS specific. Windows does not have this version lie -->
             <SHIM_REF NAME="Win2k19RTMVersionLie" />
             <DATA NAME="SHIMVERSIONNT" DATA_DWORD="1000" />
             <!-- TODO: Add more fixes! -->
@@ -458,13 +458,13 @@
             <SHIM_REF NAME="IgnoreFreeLibrary" COMMAND_LINE="libpng12.dll" />
         </EXE>
 
-        <!-- ReactOS shim used to test the shim engine -->
-        <EXE NAME="shimtest_ros.exe" APP_NAME="Shim test application" VENDOR="ReactOS">
+        <!-- MenuOS shim used to test the shim engine -->
+        <EXE NAME="shimtest_ros.exe" APP_NAME="Shim test application" VENDOR="MenuOS">
             <MATCHING_FILE NAME="*">
-                <FILE_DESCRIPTION>ReactOS Shim Engine test utility</FILE_DESCRIPTION>
+                <FILE_DESCRIPTION>MenuOS Shim Engine test utility</FILE_DESCRIPTION>
                 <ORIGINAL_FILENAME>shimtest_ros.exe</ORIGINAL_FILENAME>
                 <INTERNAL_NAME>shimtest_ros</INTERNAL_NAME>
-                <COMPANY_NAME>ReactOS - test</COMPANY_NAME>
+                <COMPANY_NAME>MenuOS - test</COMPANY_NAME>
             </MATCHING_FILE>
             <SHIM_REF NAME="ShimTest" />
         </EXE>

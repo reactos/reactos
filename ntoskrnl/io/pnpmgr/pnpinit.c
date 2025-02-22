@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         MenuOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/io/pnpmgr/pnpinit.c
  * PURPOSE:         PnP Initialization Code
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROGRAMMERS:     MenuOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/
@@ -40,7 +40,7 @@ INTERFACE_TYPE
 NTAPI
 IopDetermineDefaultInterfaceType(VOID)
 {
-    /* FIXME: ReactOS doesn't support MicroChannel yet */
+    /* FIXME: MenuOS doesn't support MicroChannel yet */
     return Isa;
 }
 

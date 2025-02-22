@@ -464,7 +464,7 @@ Return Value:
 
 --*/
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 ClasspIdleTimerDpc(
     IN PKDPC Dpc,
     IN PVOID Context,

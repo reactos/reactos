@@ -52,8 +52,8 @@ BEGIN
     IDS_TIMEZONEUNKNOWN "Ukjent"
     IDS_INETTIMESUCSYNC "Tiden har blitt velykket synkronisert med %s på %s med %s"
     IDS_INETTIMENEXTSYNC "Neste synkonisering: %s med %s"
-    IDS_INETTIMESYNCING "Vennligst vent mens ReactOS sykroniserer tiden med %s"
-    IDS_INETTIMEERROR "En feil har oppstatt mens ReactOS ble sykronisert med %s"
+    IDS_INETTIMESYNCING "Vennligst vent mens MenuOS sykroniserer tiden med %s"
+    IDS_INETTIMEERROR "En feil har oppstatt mens MenuOS ble sykronisert med %s"
     IDS_INETTIMESUCFILL "Please type an NTP server name in order to synchronize the time"
     IDS_INETTIMEWELCOME "Select an NTP server from the list or type an NTP server name to synchronize the computer's time"
 END

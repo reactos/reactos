@@ -332,7 +332,7 @@ BEGIN
     BEGIN
         MENUITEM "Ndihmë temë", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Rreth ReactOS Makine Llogaritje", IDM_HELP_ABOUT
+        MENUITEM "Rreth MenuOS Makine Llogaritje", IDM_HELP_ABOUT
     END
 END
 
@@ -365,7 +365,7 @@ BEGIN
     BEGIN
         MENUITEM "Ndihmë temë", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Rreth ReactOS Makine Llogaritje", IDM_HELP_ABOUT
+        MENUITEM "Rreth MenuOS Makine Llogaritje", IDM_HELP_ABOUT
     END
 END
 
@@ -388,7 +388,7 @@ BEGIN
     BEGIN
         MENUITEM "Ndihmë temë", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Rreth ReactOS Makine Llogaritje", IDM_HELP_ABOUT
+        MENUITEM "Rreth MenuOS Makine Llogaritje", IDM_HELP_ABOUT
     END
 END
 
@@ -403,7 +403,7 @@ END
 /* About */
 STRINGTABLE
 BEGIN
-    IDS_CALC_NAME "ReactOS Makine Llogaritje"
+    IDS_CALC_NAME "MenuOS Makine Llogaritje"
     IDS_AUTHOR "krijuar nga Carlo Bramini"
 END
 

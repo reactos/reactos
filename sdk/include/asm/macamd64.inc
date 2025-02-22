@@ -1,7 +1,7 @@
 /*
- * PROJECT:     ReactOS SDK
+ * PROJECT:     MenuOS SDK
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     ReactOS AMD64 architecture asm macros
+ * PURPOSE:     MenuOS AMD64 architecture asm macros
  * COPYRIGHT:   Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 

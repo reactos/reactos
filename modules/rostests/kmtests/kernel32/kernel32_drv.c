@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS kernel-mode tests
+ * PROJECT:     MenuOS kernel-mode tests
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     Test driver for kernel32 filesystem tests
  * COPYRIGHT:   Copyright 2013-2017 Thomas Faber <thomas.faber@reactos.org>

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS Win32k subsystem
+ * PROJECT:          MenuOS Win32k subsystem
  * PURPOSE:          Miscellaneous User functions
  * FILE:             win32ss/user/ntuser/misc.c
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)

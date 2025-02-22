@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Picture and Fax Viewer
+ * PROJECT:     MenuOS Picture and Fax Viewer
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Esperanto resource file
  * TRANSLATOR:  Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
@@ -9,7 +9,7 @@ LANGUAGE LANG_ESPERANTO, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "Montrilo de Bildoj kaj Faksoj de ReactOS"
+    IDS_APPTITLE "Montrilo de Bildoj kaj Faksoj de MenuOS"
     IDS_SETASDESKBG "Agordi kiel fono de labortablo"
     IDS_NOPREVIEW "Antaŭrigardo nedisponebla."
     IDS_PREVIEW "Antaŭrigardo"

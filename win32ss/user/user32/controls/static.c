@@ -45,7 +45,7 @@ static COLORREF color_3dshadow, color_3ddkshadow, color_3dhighlight;
 /* offsets for GetWindowLong for static private information */
 #define HFONT_GWL_OFFSET    0
 #define HICON_GWL_OFFSET    (sizeof(HFONT))
-#define UISTATE_GWL_OFFSET (HICON_GWL_OFFSET+sizeof(HICON)) // ReactOS: keep in sync with STATIC_UISTATE_GWL_OFFSET
+#define UISTATE_GWL_OFFSET (HICON_GWL_OFFSET+sizeof(HICON)) // MenuOS: keep in sync with STATIC_UISTATE_GWL_OFFSET
 #define STATIC_EXTRA_BYTES  (UISTATE_GWL_OFFSET + sizeof(LONG))
 
 typedef void (*pfPaint)( HWND hwnd, HDC hdc, DWORD style );
@@ -334,7 +334,7 @@ static BOOL hasTextStyle( DWORD style )
 /***********************************************************************
  *           StaticWndProc_common
  */
-LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL unicode ) // ReactOS
+LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL unicode ) // MenuOS
 {
     LRESULT lResult = 0;
     LONG full_style = GetWindowLongW( hwnd, GWL_STYLE );
@@ -370,7 +370,7 @@ LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
             ERR("Unknown style 0x%02lx\n", style );
             return -1;
         }
-        STATIC_update_uistate(hwnd, unicode); // ReactOS r30727
+        STATIC_update_uistate(hwnd, unicode); // MenuOS r30727
         STATIC_InitColours();
         break;
 
@@ -525,16 +525,16 @@ LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
     case STM_SETIMAGE:
         switch(wParam) {
 	case IMAGE_BITMAP:
-	    if (style != SS_BITMAP) return 0; // ReactOS r43158
+	    if (style != SS_BITMAP) return 0; // MenuOS r43158
 	    lResult = (LRESULT)STATIC_SetBitmap( hwnd, (HBITMAP)lParam, full_style );
 	    break;
 	case IMAGE_ENHMETAFILE:
-	    if (style != SS_ENHMETAFILE) return 0; // ReactOS r43158
+	    if (style != SS_ENHMETAFILE) return 0; // MenuOS r43158
 	    lResult = (LRESULT)STATIC_SetEnhMetaFile( hwnd, (HENHMETAFILE)lParam, full_style );
 	    break;
 	case IMAGE_ICON:
 	case IMAGE_CURSOR:
-	    if (style != SS_ICON) return 0; // ReactOS r43158
+	    if (style != SS_ICON) return 0; // MenuOS r43158
 	    lResult = (LRESULT)STATIC_SetIcon( hwnd, (HICON)lParam, full_style );
 	    break;
 	default:
@@ -662,7 +662,7 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
 
     if (style & SS_NOPREFIX)
         format |= DT_NOPREFIX;
-    else if (GetWindowLongW(hwnd, UISTATE_GWL_OFFSET) & UISF_HIDEACCEL) // ReactOS r30727
+    else if (GetWindowLongW(hwnd, UISTATE_GWL_OFFSET) & UISF_HIDEACCEL) // MenuOS r30727
         format |= DT_HIDEPREFIX;
 
     if ((style & SS_TYPEMASK) != SS_SIMPLE)

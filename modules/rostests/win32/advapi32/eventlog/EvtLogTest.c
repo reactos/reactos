@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Tests
+ * PROJECT:         MenuOS Tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            rostests/win32/advapi32/eventlog/EvtLogTest.c
  * PURPOSE:         Interactively test some EventLog service APIs and its behaviour.
@@ -309,7 +309,7 @@ VOID TestMyEventProvider(VOID)
     LONG lRet;
     HKEY hKey = NULL, hSourceKey = NULL;
     DWORD dwData;
-    // WCHAR DllPath[] = L"C:\\Users\\ReactOS\\Desktop\\EvtLogTest\\Debug\\" PROVIDER_NAME L".dll";
+    // WCHAR DllPath[] = L"C:\\Users\\MenuOS\\Desktop\\EvtLogTest\\Debug\\" PROVIDER_NAME L".dll";
     WCHAR DllPath[] = L"C:\\" PROVIDER_NAME L".dll";
 
     wprintf(L"Testing \"" PROVIDER_NAME L"\" in 'Application' log...");
@@ -424,7 +424,7 @@ int wmain(int argc, WCHAR* argv[])
     UINT Choice = 0;
 
     wprintf(L"\n"
-            L"EventLog API interactive tester for ReactOS\n"
+            L"EventLog API interactive tester for MenuOS\n"
             L"===========================================\n"
             L"\n");
 

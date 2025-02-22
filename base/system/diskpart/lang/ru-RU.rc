@@ -5,7 +5,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 /* Basic application information */
 STRINGTABLE
 BEGIN
-    IDS_APP_HEADER "ReactOS DiskPart"
+    IDS_APP_HEADER "MenuOS DiskPart"
     IDS_APP_USAGE "\nРазбиение диска на разделы.\n\n\
 Использование: DISKPART [/S <имя_файла>] [/T <тайм-аут>] [/?]\n\n\
 /S <имя_файла>\tЗапускает указанный скрипт.\n\

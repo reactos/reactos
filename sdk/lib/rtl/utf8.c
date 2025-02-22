@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Kernel - Vista+ APIs
+ * PROJECT:     MenuOS Kernel - Vista+ APIs
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Rtl functions of Vista+
  * COPYRIGHT:   2016 Thomas Faber <thomas.faber@reactos.org>

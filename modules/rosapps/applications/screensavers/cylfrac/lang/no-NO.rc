@@ -4,5 +4,5 @@ STRINGTABLE
 BEGIN
    IDS_DESCRIPTION "Sylindere fraktal"
    IDS_TITLE       "Om"
-   IDS_TEXT        "Sylindere fraktal av unC0Rr.\nSpesielt for ReactOS."
+   IDS_TEXT        "Sylindere fraktal av unC0Rr.\nSpesielt for MenuOS."
 END

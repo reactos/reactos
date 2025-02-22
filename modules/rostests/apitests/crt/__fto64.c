@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS API tests
+ * PROJECT:         MenuOS API tests
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         Tests for __dtoi64/dtou64/stoi64/stou64 on ARM
  * COPYRIGHT:       Copyright 2021 Roman Masanin <36927roma@gmail.com>

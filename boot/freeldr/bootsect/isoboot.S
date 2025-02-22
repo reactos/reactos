@@ -1,7 +1,7 @@
 /*
- * PROJECT:     ReactOS Boot Sector for ISO file system (based on ISOLINUX)
+ * PROJECT:     MenuOS Boot Sector for ISO file system (based on ISOLINUX)
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Booting ReactOS off a CD-ROM using the El Torito boot standard in "no emulation mode"
+ * PURPOSE:     Booting MenuOS off a CD-ROM using the El Torito boot standard in "no emulation mode"
  * COPYRIGHT:   Copyright 1994-2009 H. Peter Anvin
  *              Copyright 2002 Michael K. Ter Louw
  *              Copyright 2002 Eric Kohl
@@ -124,7 +124,7 @@ relocated:
 .read_mbr:
     // Read the first sector (MBR) from the first hard disk (drive 80h) to 7C00h.
     // If we then decide to boot from HDD, we already have it at the right place.
-    // In case of an error (indicated by the Carry Flag), just boot FREELDR from our ReactOS medium.
+    // In case of an error (indicated by the Carry Flag), just boot FREELDR from our MenuOS medium.
     mov ax, HEX(0201)
     mov dx, HEX(0080)
     mov cx, HEX(0001)
@@ -133,13 +133,13 @@ relocated:
     jc .boot_freeldr
 
     // Verify the signature of the read MBR.
-    // If it's invalid, there is probably no OS installed and we just boot FREELDR from our ReactOS medium.
+    // If it's invalid, there is probably no OS installed and we just boot FREELDR from our MenuOS medium.
     mov ax, word ptr ds:[HEX(7C00)+510]
     cmp ax, HEX(AA55)
     jne .boot_freeldr
 
 #ifdef WAIT_FOR_KEY
-    // We could either boot from the ReactOS medium or from hard disk. Let the user decide!
+    // We could either boot from the MenuOS medium or from hard disk. Let the user decide!
     // Display the 'Press key' message.
     call crlf_early
     mov si, offset presskey_msg
@@ -155,7 +155,7 @@ relocated:
     add eax, 19
 
 .poll_again:
-    // Check for a keypress, boot FREELDR from our ReactOS medium if a key was pressed.
+    // Check for a keypress, boot FREELDR from our MenuOS medium if a key was pressed.
     call pollchar_and_empty
     jnz .boot_freeldr
 
@@ -1059,7 +1059,7 @@ pollchar_and_empty:
 
 /* INITIALIZED VARIABLES *****************************************************/
 presskey_msg:
-    .ascii "Press any key to boot from the ReactOS medium", NUL
+    .ascii "Press any key to boot from the MenuOS medium", NUL
 dot_msg:
     .ascii ".", NUL
 isoboot_str:

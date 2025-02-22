@@ -1,7 +1,7 @@
 /*
- * PROJECT:         ReactOS Network Control Panel
+ * PROJECT:         MenuOS Network Control Panel
  * FILE:            dll/cpl/ncpa/ncpa.c
- * PURPOSE:         ReactOS Network Control Panel
+ * PURPOSE:         MenuOS Network Control Panel
  * PROGRAMMER:      Gero Kuehn (reactos.filter@gkware.com)
  * UPDATE HISTORY:
  *      07-18-2004  Created
@@ -20,7 +20,7 @@ DisplayApplet(VOID)
 {
 	WCHAR szParameters[] = L"/n,::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}";
 
-	/* NOTE: If Explorer shell is not available, use ReactOS's alternative file browser instead */
+	/* NOTE: If Explorer shell is not available, use MenuOS's alternative file browser instead */
 	return (INT_PTR) ShellExecuteW(NULL, L"open",
 	                               GetShellWindow() ? L"explorer.exe" : L"filebrowser.exe",
 								   szParameters, NULL, SW_SHOWDEFAULT) > 32;

@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Boot Loader (FreeLDR)
+ * PROJECT:         MenuOS Boot Loader (FreeLDR)
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            boot/freeldr/freeldr/disk/scsiport.c
  * PURPOSE:         Interface for SCSI Emulation

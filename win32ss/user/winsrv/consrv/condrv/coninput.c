@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Console Driver DLL
+ * PROJECT:         MenuOS Console Driver DLL
  * FILE:            win32ss/user/winsrv/consrv/condrv/coninput.c
  * PURPOSE:         Console Input functions
  * PROGRAMMERS:     Jeffrey Morlan

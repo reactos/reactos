@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS ComPort Library
+ * PROJECT:         MenuOS ComPort Library
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            include/reactos/libs/cportlib/cportlib.h
  * PURPOSE:         Header for the ComPort Library
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROGRAMMERS:     MenuOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/

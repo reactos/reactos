@@ -1,5 +1,5 @@
 ;
-; ReactOS Operating System
+; MenuOS Operating System
 ;
 ; This file contains all win32k native api functions from win 2003 sp2
 ;

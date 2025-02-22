@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS Kernel
+ * PROJECT:     MenuOS Kernel
  * FILE:        drivers/bus/pcmcia/pdo.c
  * PURPOSE:     PCMCIA Bus Driver
  * PROGRAMMERS: Cameron Gutman (cameron.gutman@reactos.org)

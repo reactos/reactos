@@ -3,10 +3,10 @@
 <assemblyIdentity
     version="1.0.0.0"
     processorArchitecture="*"
-    name="ReactOS.Explorer"
+    name="MenuOS.Explorer"
     type="win32"
 />
-<description>This is ReactOS Explorer</description>
+<description>This is MenuOS Explorer</description>
 <dependency>
     <dependentAssembly>
         <assemblyIdentity

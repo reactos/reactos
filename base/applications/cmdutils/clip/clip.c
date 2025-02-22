@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Clip Command
+ * PROJECT:         MenuOS Clip Command
  * FILE:            base/applications/cmdutils/clip/clip.c
  * PURPOSE:         Provides clipboard management for command-line programs.
  * PROGRAMMERS:     Ricardo Hanke

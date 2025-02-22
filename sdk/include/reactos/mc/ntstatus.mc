@@ -856,7 +856,7 @@ Facility=System
 SymbolicName=STATUS_GUID_SUBSTITUTION_MADE
 Language=English
 {GUID Substitution}
-During the translation of a global identifier (GUID) to a ReactOS security ID (SID), no administratively-defined GUID prefix was found.
+During the translation of a global identifier (GUID) to a MenuOS security ID (SID), no administratively-defined GUID prefix was found.
 A substitute prefix was used, which will not compromise system security.
 However, this may provide a more restrictive access than intended.
 .
@@ -1329,7 +1329,7 @@ SymbolicName=STATUS_NONCONTINUABLE_EXCEPTION
 Language=English
 {EXCEPTION}
 Cannot Continue
-ReactOS cannot continue from this exception.
+MenuOS cannot continue from this exception.
 .
 
 MessageId=0x26
@@ -1897,7 +1897,7 @@ Facility=System
 SymbolicName=STATUS_INVALID_IMAGE_FORMAT
 Language=English
 {Bad Image}
-%hs is either not designed for ReactOS or it contains an error.
+%hs is either not designed for MenuOS or it contains an error.
 Try reinstalling the application using the original installation media or contact the software vendor for support.
 .
 
@@ -2626,7 +2626,7 @@ Severity=Error
 Facility=System
 SymbolicName=STATUS_SYNCHRONIZATION_REQUIRED
 Language=English
-The SAM database on a ReactOS Server is significantly out of synchronization with the copy on the Domain Controller. A complete synchronization is required.
+The SAM database on a MenuOS Server is significantly out of synchronization with the copy on the Domain Controller. A complete synchronization is required.
 .
 
 MessageId=0x135
@@ -2643,7 +2643,7 @@ Severity=Error
 Facility=System
 SymbolicName=STATUS_OPEN_FAILED
 Language=English
-The NtCreateFile API failed. This error should never be returned to an application, it is a place holder for the ReactOS Lan Manager Redirector to use in its internal error mapping routines.
+The NtCreateFile API failed. This error should never be returned to an application, it is a place holder for the MenuOS Lan Manager Redirector to use in its internal error mapping routines.
 .
 
 MessageId=0x137
@@ -3398,7 +3398,7 @@ Facility=System
 SymbolicName=STATUS_LOST_WRITEBEHIND_DATA
 Language=English
 {Delayed Write Failed}
-ReactOS was unable to save all the data for the file %hs. The data has been lost.
+MenuOS was unable to save all the data for the file %hs. The data has been lost.
 This error may be caused by a failure of your computer hardware or network connection. Please try to save this file elsewhere.
 .
 
@@ -3804,8 +3804,8 @@ Severity=Error
 Facility=System
 SymbolicName=STATUS_EVALUATION_EXPIRATION
 Language=English
-{ReactOS Evaluation Notification}
-Your ReactOS will NEVER expire!.
+{MenuOS Evaluation Notification}
+Your MenuOS will NEVER expire!.
 .
 
 MessageId=0x269
@@ -3815,7 +3815,7 @@ SymbolicName=STATUS_ILLEGAL_DLL_RELOCATION
 Language=English
 {Illegal System DLL Relocation}
 The system DLL %hs was relocated in memory. The application will not run properly.
-The relocation occurred because the DLL %hs occupied an address range reserved for ReactOS system DLLs. The vendor supplying the DLL should be contacted for a new DLL.
+The relocation occurred because the DLL %hs occupied an address range reserved for MenuOS system DLLs. The vendor supplying the DLL should be contacted for a new DLL.
 .
 
 MessageId=0x26c
@@ -3873,7 +3873,7 @@ Severity=Error
 Facility=System
 SymbolicName=STATUS_IO_REPARSE_TAG_INVALID
 Language=English
-The ReactOS I/O reparse tag passed for the NTFS reparse point is invalid.
+The MenuOS I/O reparse tag passed for the NTFS reparse point is invalid.
 .
 
 MessageId=0x277
@@ -3881,7 +3881,7 @@ Severity=Error
 Facility=System
 SymbolicName=STATUS_IO_REPARSE_TAG_MISMATCH
 Language=English
-The ReactOS I/O reparse tag does not match the one present in the NTFS reparse point.
+The MenuOS I/O reparse tag does not match the one present in the NTFS reparse point.
 .
 
 MessageId=0x278
@@ -4117,7 +4117,7 @@ Facility=System
 SymbolicName=STATUS_COMMITMENT_MINIMUM
 Language=English
 {Virtual Memory Minimum Too Low}
-Your system is low on virtual memory. ReactOS is increasing the size of your virtual memory paging file.
+Your system is low on virtual memory. MenuOS is increasing the size of your virtual memory paging file.
 During this process, memory requests for some applications may be denied.
 .
 
@@ -4144,7 +4144,7 @@ Severity=Error
 Facility=System
 SymbolicName=STATUS_NOT_SUPPORTED_ON_SBS
 Language=English
-ReactOS doesn't have any Small Business Support editions, so this error never appears.
+MenuOS doesn't have any Small Business Support editions, so this error never appears.
 .
 
 MessageId=0x301
@@ -4289,7 +4289,7 @@ Severity=Error
 Facility=System
 SymbolicName=STATUS_DS_VERSION_CHECK_FAILURE
 Language=English
-This version of ReactOS is not compatible with the behavior version of directory forest, domain or domain controller.
+This version of MenuOS is not compatible with the behavior version of directory forest, domain or domain controller.
 .
 
 MessageId=0x356
@@ -5144,7 +5144,7 @@ Severity=Error
 Facility=RpcRuntime
 SymbolicName=RPC_NT_NOT_RPC_ERROR
 Language=English
-The error specified is not a valid ReactOS RPC error code.
+The error specified is not a valid MenuOS RPC error code.
 .
 
 MessageId=0x57
@@ -5649,7 +5649,7 @@ Severity=Error
 Facility=SXS
 SymbolicName=STATUS_SXS_CANT_GEN_ACTCTX
 Language=English
-ReactOS was not able to process the application binding information.
+MenuOS was not able to process the application binding information.
 Please refer to your System Event Log for further information.
 .
 

@@ -1,5 +1,5 @@
 LIBRARY			CSQ
-DESCRIPTION		"ReactOS Cancel-Safe Queue Library"
+DESCRIPTION		"MenuOS Cancel-Safe Queue Library"
 EXPORTS
   IoCsqInitialize
   IoCsqInitializeEx

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Console Server DLL
+ * PROJECT:         MenuOS Console Server DLL
  * FILE:            win32ss/user/winsrv/concfg/precomp.h
  * PURPOSE:         Console settings management - Precompiled header
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

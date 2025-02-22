@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS NDIS library
+ * PROJECT:     MenuOS NDIS library
  * FILE:        ndis/hardware.c
  * PURPOSE:     Hardware related routines
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

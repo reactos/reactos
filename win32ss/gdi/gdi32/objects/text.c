@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS GDI32
+ * PROJECT:     MenuOS GDI32
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Text drawing API.
  * COPYRIGHT:   Copyright 2014 Timo Kreuzer

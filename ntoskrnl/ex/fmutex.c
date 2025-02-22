@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         MenuOS Kernel
  * FILE:            ntoskrnl/ex/fmutex.c
  * PURPOSE:         Implements fast mutexes
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)

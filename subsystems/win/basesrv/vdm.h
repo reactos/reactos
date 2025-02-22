@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Base API Server DLL
+ * PROJECT:         MenuOS Base API Server DLL
  * FILE:            subsystems/win/basesrv/vdm.h
  * PURPOSE:         VDM Definitions
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>

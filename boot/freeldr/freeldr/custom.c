@@ -84,7 +84,7 @@ static const PCSTR ARCPathPrompt =
     "multi(0)disk(0)fdisk(0)";
 
 static const PCSTR ReactOSSystemPathPrompt =
-    "Enter the path to your ReactOS system directory.\n"
+    "Enter the path to your MenuOS system directory.\n"
     "\n"
     "Examples:\n"
     "\\REACTOS\n"
@@ -98,7 +98,7 @@ static const PCSTR ReactOSOptionsPrompt =
     "/BASEVIDEO /MAXMEM=64\n"
     "/KERNEL=NTKRNLMP.EXE /HAL=HALMPS.DLL";
 static const PCSTR ReactOSSetupOptionsPrompt =
-    "Enter additional load options you want passed to the ReactOS Setup.\n"
+    "Enter additional load options you want passed to the MenuOS Setup.\n"
     "These options will supplement those obtained from the TXTSETUP.SIF\n"
     "file, unless you also specify the /SIFOPTIONSOVERRIDE option switch.\n"
     "\n"
@@ -119,8 +119,8 @@ VOID OptionMenuCustomBoot(VOID)
         "Boot Sector (Disk/Partition/File)",
         "Linux",
 #endif
-        "ReactOS",
-        "ReactOS Setup"
+        "MenuOS",
+        "MenuOS Setup"
         };
     ULONG SelectedMenuItem;
     OperatingSystemItem OperatingSystem;
@@ -148,17 +148,17 @@ VOID OptionMenuCustomBoot(VOID)
         case 1: // Linux
             EditCustomBootLinux(&OperatingSystem);
             break;
-        case 2: // ReactOS
+        case 2: // MenuOS
             EditCustomBootReactOS(&OperatingSystem, FALSE);
             break;
-        case 3: // ReactOS Setup
+        case 3: // MenuOS Setup
             EditCustomBootReactOS(&OperatingSystem, TRUE);
             break;
 #else
-        case 0: // ReactOS
+        case 0: // MenuOS
             EditCustomBootReactOS(&OperatingSystem, FALSE);
             break;
-        case 1: // ReactOS Setup
+        case 1: // MenuOS Setup
             EditCustomBootReactOS(&OperatingSystem, TRUE);
             break;
 #endif /* _M_IX86 || _M_AMD64 */
@@ -552,7 +552,7 @@ EditCustomBootReactOS(
     if (!IniAddSettingValueToSection(SectionId, "BootType", IsSetup ? "ReactOSSetup" : "Windows2003"))
         return;
 
-    /* Construct the ReactOS ARC system path */
+    /* Construct the MenuOS ARC system path */
     ConstructArcPath(ReactOSARCPath, ReactOSSystemPath,
                      DriveMapGetBiosDriveNumber(BootDriveString),
                      atoi(BootPartitionString));

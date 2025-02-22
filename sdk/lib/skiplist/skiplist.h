@@ -1,5 +1,5 @@
 /*
- * PROJECT:     Skiplist implementation for the ReactOS Project
+ * PROJECT:     Skiplist implementation for the MenuOS Project
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Interfaces for the Skiplist
  * COPYRIGHT:   Copyright 2015 Colin Finck (colin@reactos.org)

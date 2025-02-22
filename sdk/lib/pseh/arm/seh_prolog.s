@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
- * PROJECT:         ReactOS CRT
+ * PROJECT:         MenuOS CRT
  * FILE:            lib/pseh/arm/seh_prolog.S
  * PURPOSE:         SEH Support for MSVC / ARM
  * PROGRAMMERS:     Timo Kreuzer

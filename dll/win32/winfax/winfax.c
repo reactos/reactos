@@ -1,6 +1,6 @@
 /*
- * ReactOS FAX API Support
- * Copyright (C) 2004 ReactOS Team
+ * MenuOS FAX API Support
+ * Copyright (C) 2004 MenuOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,9 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 /*
- * PROJECT:         ReactOS FAX API Support
+ * PROJECT:         MenuOS FAX API Support
  * FILE:            lib/winfax/winfax.c
- * PURPOSE:         ReactOS FAX API Support
+ * PURPOSE:         MenuOS FAX API Support
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *
  * UPDATE HISTORY:

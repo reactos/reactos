@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS advapi32
+ * PROJECT:     MenuOS advapi32
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/win32/advapi32/service/sctrl.c
  * PURPOSE:     Service control manager functions

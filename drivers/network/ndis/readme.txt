@@ -28,6 +28,6 @@ DDK environment variables must be set! (run setenv.bat)
     - Run "build" to build the library
 
 
-Building with Mingw32 and ReactOS include files:
+Building with Mingw32 and MenuOS include files:
 
-    - Run "make ndis" FROM THE ReactOS ROOT DIRECTORY to build the library
+    - Run "make ndis" FROM THE MenuOS ROOT DIRECTORY to build the library

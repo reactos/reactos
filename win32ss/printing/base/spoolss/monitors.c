@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Spooler Router
+ * PROJECT:     MenuOS Spooler Router
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions related to Print Monitors
  * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)

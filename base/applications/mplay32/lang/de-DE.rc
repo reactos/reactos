@@ -61,7 +61,7 @@ BEGIN
     IDS_TOOLTIP_SEEKFORW "Schneller Vorlauf"
     IDS_TOOLTIP_FORWARD "Weiter"
     IDS_TOOLTIP_PAUSE "Pause"
-    IDS_APPTITLE "ReactOS Multimedia Player"
+    IDS_APPTITLE "MenuOS Multimedia Player"
     IDS_PLAY "Abspielen"
     IDS_DEFAULTMCIERRMSG "Für diesen Fehler steht keine Beschreibung zur Verfügung."
 END

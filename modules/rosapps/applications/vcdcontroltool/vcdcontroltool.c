@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Virtual CD Control Tool
+ * PROJECT:     MenuOS Virtual CD Control Tool
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        modules/rosapps/applications/vcdcontroltool/vcdcontroltool.c
  * PURPOSE:     main dialog implementation

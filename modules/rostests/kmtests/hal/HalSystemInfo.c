@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Kernel-Mode Tests
+ * PROJECT:     MenuOS Kernel-Mode Tests
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Test for HalQuerySystemInformation
  * COPYRIGHT:   Copyright 2020 Thomas Faber (thomas.faber@reactos.org)

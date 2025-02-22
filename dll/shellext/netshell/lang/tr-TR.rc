@@ -80,20 +80,20 @@ END
 
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
+CAPTION "MenuOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Normal ya da özelleştirilmiş ayarlar kullanıp kullanmayacağınızı seçiniz:", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "Normal Ayarlar", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Özelleştirilmiş Ayarlar", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
-    LTEXT "ReactOS Ağları için İstemci'yi, Dosya ve Yazdırma Paylaşımı'nı ve otomatik adreslemeli TCP/IP protokolünü kullanarak ağ bağlantıları oluşturur.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "MenuOS Ağları için İstemci'yi, Dosya ve Yazdırma Paylaşımı'nı ve otomatik adreslemeli TCP/IP protokolünü kullanarak ağ bağlantıları oluşturur.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Ağ bileşenlerini elle yapılandırmanıza olanak sağlar.", IDC_STATIC, 65, 90, 243, 20
 END
 
 IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
+CAPTION "MenuOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Aygıt için:", IDC_STATIC, 33, 2, 100, 20
@@ -108,7 +108,7 @@ END
 
 IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kur"
+CAPTION "MenuOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bu bilgisayarın bir etki alanının bir üyesi olmasını ister misiniz?\n\
@@ -173,6 +173,6 @@ BEGIN
     IDS_NETWORKCOMPONENTSUBTITLE "Bilgisayarınızda hangi ağ bileşenlerinin kullanacağını belirtir. Yeni bileşenler eklemek için Kur'a tıklayınız."
     IDS_NETWORKDOMAINTITLE "Çalışma Grubu ya da Bilgisayar Etki Alanı"
     IDS_NETWORKDOMAINSUBTITLE "Bir etki alanı, bir ağ yöneticisi tarafından tanımlanmış bir grup bilgisayardır. Bir çalışma grubu, aynı çalışma grubu adını paylaşan bir grup bilgisayardır."
-    IDS_REACTOS_SETUP "ReactOS Kur"
+    IDS_REACTOS_SETUP "MenuOS Kur"
     IDS_WZD_DOMAIN_NAME "Kurulum Yöneticisi, etki alanınızın ya da\nçalışma takımınızın adını\ngirene kadar devam edemez."
 END

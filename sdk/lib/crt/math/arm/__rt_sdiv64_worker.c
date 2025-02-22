@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       BSD - See COPYING.ARM in the top level directory
- * PROJECT:         ReactOS CRT library
+ * PROJECT:         MenuOS CRT library
  * FILE:            lib/sdk/crt/math/arm/__rt_sdiv64_worker.c
  * PURPOSE:         Implementation of __rt_sdiv_worker
  * PROGRAMMER:      Timo Kreuzer

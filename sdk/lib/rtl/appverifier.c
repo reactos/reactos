@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Runtime Library
+ * PROJECT:         MenuOS Runtime Library
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            lib/rtl/appverifier.c
  * PURPOSE:         RTL Application Verifier Routines

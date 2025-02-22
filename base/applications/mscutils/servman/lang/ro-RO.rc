@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Service Manager
+ * PROJECT:     MenuOS Service Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011 Petru Dimitriu <petrimetri@gmail.com>
@@ -277,10 +277,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRESS_INFO_START "ReactOS încearcă să pornească următorul serviciu"
-    IDS_PROGRESS_INFO_STOP "ReactOS încearcă să oprească următorul serviciu"
-    IDS_PROGRESS_INFO_PAUSE "ReactOS încearcă să întrerupă următorul serviciu"
-    IDS_PROGRESS_INFO_RESUME "ReactOS încearcă să reia următorului serviciu"
+    IDS_PROGRESS_INFO_START "MenuOS încearcă să pornească următorul serviciu"
+    IDS_PROGRESS_INFO_STOP "MenuOS încearcă să oprească următorul serviciu"
+    IDS_PROGRESS_INFO_PAUSE "MenuOS încearcă să întrerupă următorul serviciu"
+    IDS_PROGRESS_INFO_RESUME "MenuOS încearcă să reia următorului serviciu"
     IDS_CREATE_SUCCESS "Serviciul a fost creat cu succes"
     IDS_DELETE_SUCCESS "Serviciul a fost eliminat cu succes"
     IDS_CREATE_REQ "Câmpurile marcate cu un\nasterisc sunt obligatorii"
@@ -315,7 +315,7 @@ BEGIN
     IDS_HINT_DETAILS " Afișează informații despre fiecare element într-o fereastră."
     IDS_HINT_CUST " Particularizează afișajul."
     IDS_HINT_HELP " Afișează fereastra de ajutor."
-    IDS_HINT_ABOUT " Despre Managerul de servicii ReactOS."
+    IDS_HINT_ABOUT " Despre Managerul de servicii MenuOS."
     IDS_HINT_SYS_RESTORE " Restabilește această fereastră la dimensiunea normală."
     IDS_HINT_SYS_MOVE " Mută fereastra."
     IDS_HINT_SYS_SIZE " Redimensionează fereastra."
@@ -327,7 +327,7 @@ END
 /* Application title */
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "Managerul de servicii ReactOS"
+    IDS_APPNAME "Managerul de servicii MenuOS"
     IDS_APPAUTHORS "Drepturi de autor (C) 2005-2007 de Ged Murphy (gedmurphy@reactos.org)"
 END
 

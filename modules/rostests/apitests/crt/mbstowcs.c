@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS api tests
+ * PROJECT:         MenuOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Test for mbstowcs
  */
@@ -11,8 +11,8 @@
 #include <stdlib.h>
 #include <specstrings.h>
 
-#define StrROS "ReactOS"
-#define LStrROS L"ReactOS"
+#define StrROS "MenuOS"
+#define LStrROS L"MenuOS"
 
 START_TEST(mbstowcs)
 {

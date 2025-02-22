@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
- * PROJECT:         ReactOS UEFI Boot Library
+ * PROJECT:         MenuOS UEFI Boot Library
  * FILE:            boot/environ/lib/rtl/libsupp.c
  * PURPOSE:         RTL Support Routines
  * PROGRAMMER:      Mark Jansen (mark.jansen@reactos.org)

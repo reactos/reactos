@@ -1,6 +1,6 @@
 <SDB>
     <DATABASE>
-        <NAME>ReactOS test database</NAME>
+        <NAME>MenuOS test database</NAME>
         <OS_PLATFORM >1</OS_PLATFORM>
         <DATABASE_ID>{551F8E78-A9DA-44AC-A24C-5A8145317BC7}</DATABASE_ID>
         <LIBRARY>

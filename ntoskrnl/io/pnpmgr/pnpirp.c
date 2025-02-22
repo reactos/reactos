@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Kernel
+ * PROJECT:     MenuOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Shortcuts for sending different IRP_MJ_PNP requests
  * COPYRIGHT:   Copyright 2010 Sir Richard <sir_richard@svn.reactos.org>

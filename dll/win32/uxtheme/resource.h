@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS uxtheme.dll
+ * PROJECT:     MenuOS uxtheme.dll
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Main resource header file
  * COPYRIGHT:   Copyright 2014 Giannis Adamopoulos <gadamopoulos@reactos.org>

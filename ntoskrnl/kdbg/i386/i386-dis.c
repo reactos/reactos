@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         MenuOS kernel
  * FILE:            ntoskrnl/kdbg/i386/i386-dis.c
  * PURPOSE:         No purpose listed.
  *
@@ -10,7 +10,7 @@
 #include <ntoskrnl.h>
 #include "../kdb.h"
 
-/* ReactOS compatibility stuff. */
+/* MenuOS compatibility stuff. */
 #define PARAMS(X) X
 #define PTR void*
 typedef enum bfd_flavour

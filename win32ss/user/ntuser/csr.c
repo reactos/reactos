@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS Win32k subsystem
+ * PROJECT:          MenuOS Win32k subsystem
  * PURPOSE:          Interface between Win32k and USERSRV
  * FILE:             win32ss/user/ntuser/csr.c
  * PROGRAMMER:       Hermes Belusca-Maito (hermes.belusca@sfr.fr), based on

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Event Log Viewer
+ * PROJECT:     MenuOS Event Log Viewer
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Resources header.
  * COPYRIGHT:   Copyright 2007 Marc Piulachs <marc.piulachs@codexchange.net>

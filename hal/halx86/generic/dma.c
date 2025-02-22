@@ -1,7 +1,7 @@
 /*
  *
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         MenuOS kernel
  * FILE:            hal/halx86/generic/dma.c
  * PURPOSE:         DMA functions
  * PROGRAMMERS:     David Welch (welch@mcmail.com)

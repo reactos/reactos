@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Font Shell Extension
+ * PROJECT:     MenuOS Font Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     CFontExt implementation
  * COPYRIGHT:   Copyright 2019-2021 Mark Jansen <mark.jansen@reactos.org>
@@ -146,7 +146,7 @@ STDMETHODIMP CFontExt::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDET
         return E_FAIL;
     }
 
-    // Name, ReactOS specific?
+    // Name, MenuOS specific?
     if (iColumn == FONTEXT_COL_NAME)
         return GetDisplayNameOf(pidl, 0, &psd->str);
 

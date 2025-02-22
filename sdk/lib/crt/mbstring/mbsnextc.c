@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS system libraries
+ * PROJECT:     MenuOS system libraries
  * FILE:        lib/sdk/crt/mbstring/mbsnextc.c
  * PURPOSE:      Finds the next character in a string
  * PROGRAMERS:

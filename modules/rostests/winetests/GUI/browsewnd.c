@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS API Test GUI
+ * PROJECT:     MenuOS API Test GUI
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        
  * PURPOSE:     browse dialog implementation

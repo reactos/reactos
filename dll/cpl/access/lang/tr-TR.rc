@@ -13,7 +13,7 @@ BEGIN
     AUTOCHECKBOX "&Yapışkan Tuşlar'ı Kullan", IDC_STICKY_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Ayarlar", IDC_STICKY_BUTTON, 144, 49, 90, 14
     GROUPBOX "Filtre Anahtarlar", -1, 6, 79, 234, 62
-    LTEXT "ReactOS'un kısa veya yinelenen tuş vuruşlarını yok saymasını veya yinelenme hızını yavaşlatmasını istiyorsanız Filtre Anahtarları'nı kullanınız.",
+    LTEXT "MenuOS'un kısa veya yinelenen tuş vuruşlarını yok saymasını veya yinelenme hızını yavaşlatmasını istiyorsanız Filtre Anahtarları'nı kullanınız.",
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "&Filtre Anahtarları'nı Kullan", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "Aya&rlar", IDC_FILTER_BUTTON, 144, 121, 90, 14
@@ -32,7 +32,7 @@ CAPTION "Ses"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Ses Nöbetçisi", -1, 6, 11, 234, 98
-    LTEXT "Eğer sisteminiz bir ses çıkardığında ReactOS'un görsel uyarılar oluşturmasını istiyorsanız Ses Nöbetçisi'ni kullanınız.",
+    LTEXT "Eğer sisteminiz bir ses çıkardığında MenuOS'un görsel uyarılar oluşturmasını istiyorsanız Ses Nöbetçisi'ni kullanınız.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Ses Nöbetçisi'ni Kullan", IDC_SENTRY_BOX, 12, 49, 90, 14
     LTEXT "&Aşağıdaki Uyarıyı Kullan:", IDC_SENTRY_TEXT, 12, 72, 222, 11
@@ -50,7 +50,7 @@ CAPTION "Görüntü"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Yüksek Karşıtlık", -1, 6, 11, 234, 62
-    LTEXT "ReactOS'un kolay okuma için tasarlanmış renklerle yazı tiplerini kullanmasını istiyorsanız bu seçeneği kullanınız.",
+    LTEXT "MenuOS'un kolay okuma için tasarlanmış renklerle yazı tiplerini kullanmasını istiyorsanız bu seçeneği kullanınız.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Yüksek Karşıtlık Kullan", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Ayarlar", IDC_CONTRAST_BUTTON, 144, 49, 90, 14

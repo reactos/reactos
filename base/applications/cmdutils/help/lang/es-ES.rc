@@ -13,7 +13,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Otorga información de Ayuda sobre los comandos de ReactOS.\n\n\
+    IDS_USAGE "Otorga información de Ayuda sobre los comandos de MenuOS.\n\n\
 HELP [comando]\n\n\
   comando - Imprime la información de ayuda para ese comando.\n"
     IDS_HELP1 "Lista de todos los comandos disponibles (con descripción)\n\n\
@@ -41,7 +41,7 @@ FOR      Ejecuta un comando específico en un grupo de archivos.\n\
 FREE     Espacio libre en disco.\n\
 GOTO     Direcciona la ventana del intérprete de comandos a una linea etiquetada\n\
          en un archivo por lotes.\n\
-HELP     Proporciona ayuda sobre los comandos para ReactOS.\n\
+HELP     Proporciona ayuda sobre los comandos para MenuOS.\n\
 HISTORY  Muestra todos los comandos que han sido usados.\n\
 IF       Realiza un proceso condicional en un archivo por lotes.\n\
 LABEL    Crea, cambia, o borra la etiqueta de volumen de un disco.\n\
@@ -68,8 +68,8 @@ TIME     Muestra o cambia la hora del sistema.\n\
 TIMER    Permite al usuario diez paradas para ver.\n\
 TITLE    Configura el título de la ventama de la sesión de CMD.EXE.\n\
 TYPE     Muestra el contenido de un archivo de texto.\n\
-VER      Muestra la versión de ReactOS.\n\
-VERIFY   Le dice a ReactOS que verifique que cada archivo se escriba.\n\
+VER      Muestra la versión de MenuOS.\n\
+VERIFY   Le dice a MenuOS que verifique que cada archivo se escriba.\n\
          corectamente en el disco.\n\
 VOL      Muestra la etiqueta de volumen y el número de serie del disco.\n"
 END

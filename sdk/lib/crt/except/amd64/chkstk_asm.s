@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS system libraries
+ * PROJECT:           MenuOS system libraries
  * PURPOSE:           Implementation of _chkstk and _alloca_probe
  * FILE:              lib/sdk/crt/except/amd64/chkstk_asm.s
  * PROGRAMMER:        Timo Kreuzer (timo.kreuzer@reactos.org)

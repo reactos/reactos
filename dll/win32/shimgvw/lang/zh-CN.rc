@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Picture and Fax Viewer
+ * PROJECT:     MenuOS Picture and Fax Viewer
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2015 Henry Tang Ih <henrytang2@hotmail.com>
@@ -11,7 +11,7 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS 图片和传真查看器"
+    IDS_APPTITLE "MenuOS 图片和传真查看器"
     IDS_SETASDESKBG "设置为桌面背景"
     IDS_NOPREVIEW "没有预览。"
     IDS_PREVIEW "预览"

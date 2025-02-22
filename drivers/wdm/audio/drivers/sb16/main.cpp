@@ -1,5 +1,5 @@
 /*
-    ReactOS Operating System
+    MenuOS Operating System
     Sound Blaster KS Driver
 
     AUTHORS:

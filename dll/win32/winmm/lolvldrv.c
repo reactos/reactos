@@ -4,7 +4,7 @@
  * MMSYSTEM low level drivers handling functions
  *
  * Copyright 1999 Eric Pouech
- * Modified for use with ReactOS by Andrew Greenwood, 2007
+ * Modified for use with MenuOS by Andrew Greenwood, 2007
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

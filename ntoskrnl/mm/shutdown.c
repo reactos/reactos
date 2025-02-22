@@ -1,5 +1,5 @@
-﻿/*
- * PROJECT:         ReactOS Kernel
+/*
+ * PROJECT:         MenuOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/mm/shutdown.c
  * PURPOSE:         Memory Manager Shutdown

@@ -1,5 +1,5 @@
 /*
- *  genguid utility for WINE and ReactOS
+ *  genguid utility for WINE and MenuOS
  *
  *  Copyright 2003 Jonathan Wilson
  * This library is free software; you can redistribute it and/or

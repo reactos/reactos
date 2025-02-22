@@ -2121,7 +2121,7 @@ static void test__strtod(void)
 #ifdef __REACTOS__
         if ((i == 19) && IsReactOS())
         {
-            skip("Skipping i == 19, because it crashes on ReactOS\n");
+            skip("Skipping i == 19, because it crashes on MenuOS\n");
             continue;
         }
 #endif

@@ -53,7 +53,7 @@ Az ERRORLEVEL a válasz sorszámára lesz beállítva.\n"
     STRING_CMD_HELP5 "  [Bash típusú állománynév kiegészítés]"
     STRING_CMD_HELP6 "  [mappa tár]"
     STRING_CMD_HELP7 "  [átirányítások és csővezetékek]"
-    STRING_CMD_HELP8 "Elindít egy új ReactOS parancssor értelmezőt.\n\n\
+    STRING_CMD_HELP8 "Elindít egy új MenuOS parancssor értelmezőt.\n\n\
 CMD [/[C|K] parancs][/P][/Q][/T:eh]\n\n\
   /C parancs  Végrehajtja a parancsot, majd kilép.\n\
   /K parancs  Végrehajtja a parancsot és tovább fut az értelmező.\n\
@@ -409,7 +409,7 @@ Gépelje be a `ver /c'-t a készítők listájáért."
     STRING_VERSION_HELP5 "\nHibákról e-maileket ide küldhet: <ros-dev@reactos.org>.\n\
 Frissítések és egyéb információk: https://reactos.org"
     STRING_VERSION_HELP6 "\nA FreeDOS verzió készítői:\n"
-    STRING_VERSION_HELP7 "\nA ReactOS verzió készítői:\n"
+    STRING_VERSION_HELP7 "\nA MenuOS verzió készítői:\n"
     STRING_VOL_HELP1 " A %c meghajtóban lévő kötet: %s\n"
     STRING_VOL_HELP2 " A %c meghajtóban lévő kötetnek nincs címkéje.\n"
     STRING_VOL_HELP3 " A kötet sorozatszáma: %04X-%04X\n"
@@ -493,9 +493,9 @@ title         új cím\n"
     STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
     STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "A(z) '%s' környezeti változó nincs definiálva\n"
-    STRING_CMD_INFOLINE "  ReactOS Parancssor                                       HELP parancs = Súgó  "
-    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
-    STRING_REACTOS_VERSION "ReactOS [Version %s %s]\n"
+    STRING_CMD_INFOLINE "  MenuOS Parancssor                                       HELP parancs = Súgó  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s MenuOS Team.\n"
+    STRING_REACTOS_VERSION "MenuOS [Version %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Parancssor értelmező\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Ezen fut: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"

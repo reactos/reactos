@@ -70,7 +70,7 @@ diff -pudN e:\wine\dlls\winhttp/net.c e:\reactos\dll\win32\winhttp/net.c
          if (res == WSAEWOULDBLOCK || res == WSAEINPROGRESS)
          {
 +#ifdef __REACTOS__
-+            /* ReactOS: use select instead of poll */
++            /* MenuOS: use select instead of poll */
 +            fd_set outfd;
 +            struct timeval tv;
 +

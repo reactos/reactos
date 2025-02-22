@@ -23,6 +23,6 @@
 // If you add features then you increment the minor version
 // If you add major functionality then you increment the major version and zero the minor version
 #define VERSION         "FreeLoader v3.2"
-#define COPYRIGHT       "Copyright (C) 1996-" COPYRIGHT_YEAR " ReactOS Project"
+#define COPYRIGHT       "Copyright (C) 1996-" COPYRIGHT_YEAR " MenuOS Project"
 #define AUTHOR_EMAIL    "<www.reactos.org>"
-#define BY_AUTHOR       "by ReactOS Project"
+#define BY_AUTHOR       "by MenuOS Project"

@@ -1,5 +1,5 @@
 '''
-PROJECT:     ReactOS baseaddress updater
+PROJECT:     MenuOS baseaddress updater
 LICENSE:     MIT (https://spdx.org/licenses/MIT)
 PURPOSE:     Update baseaddresses of all modules
 COPYRIGHT:   Copyright 2017,2018 Mark Jansen (mark.jansen@reactos.org)

@@ -1,6 +1,6 @@
 /*
- * ReactOS Esperanto Keyboard layout
- * Copyright (C) 2003-2016 ReactOS
+ * MenuOS Esperanto Keyboard layout
+ * Copyright (C) 2003-2016 MenuOS
  * License: LGPL, see: LGPL.txt
  *
  * Thanks to: http://www.barcodeman.com/altek/mule/scandoc.php

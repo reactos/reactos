@@ -68,7 +68,7 @@ BEGIN
     IDS_QUERYDELETE,    "本当にこの項目を削除したいですか？"
     IDS_CANTOPENKEY,    "レジストリキーが開けませんでした。"
     IDS_REBOOTNOW,      "レジストリが更新されました。Windowsを再起動しますか？"
-    IDS_ABOUT,          "FontSub (Font Substitute Editor) Version 0.5\r\nby Katayama Hirofumi MZ and The ReactOS Team\r\n\r\nThis software was released under CC0 1.0 license."
+    IDS_ABOUT,          "FontSub (Font Substitute Editor) Version 0.5\r\nby Katayama Hirofumi MZ and The MenuOS Team\r\n\r\nThis software was released under CC0 1.0 license."
 END
 
 IDD_ADD DIALOGEX 0, 0, 315, 65

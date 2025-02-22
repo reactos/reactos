@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS user32.dll
+ * PROJECT:          MenuOS user32.dll
  * PURPOSE:          Dynamic Data Exchange
  * FILE:             win32ss/user/user32/misc/dde.c
  * PROGRAMER:                                                          

@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:   LGPL, See LGPL.txt in the top level directory
- * PROJECT:     ReactOS CRT library
+ * PROJECT:     MenuOS CRT library
  * FILE:        lib/sdk/crt/time/localtime.c
  * PURPOSE:     Implementation of localtime, localtime_s
  * PROGRAMERS:  Timo Kreuzer
- *              Samuel Serapión
+ *              Samuel SerapiÃ³n
  */
 #include <precomp.h>
 #include <time.h>

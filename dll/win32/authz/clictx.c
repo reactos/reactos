@@ -1,6 +1,6 @@
 /*
- * ReactOS Authorization Framework
- * Copyright (C) 2005 - 2006 ReactOS Team
+ * MenuOS Authorization Framework
+ * Copyright (C) 2005 - 2006 MenuOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 /*
- * PROJECT:         ReactOS Authorization Framework
+ * PROJECT:         MenuOS Authorization Framework
  * FILE:            lib/authz/clictx.c
  * PURPOSE:         Authorization Framework
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>

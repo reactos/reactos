@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS ReactX
+ * PROJECT:         MenuOS ReactX
  * FILE:            dll/directx/d3d9/d3d9_swapchain.h
  * PURPOSE:         Direct3D9's swap chain object
  * PROGRAMERS:      Gregor Gullwi <gbrunmar (dot) ros (at) gmail (dot) com>

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         MenuOS system libraries
  * FILE:            lib/rtl/amd64/slist.S
  * PURPOSE:         Rtl Interlocked Functions for amd64
  * PROGRAMMERS:     Timo Kreuzer

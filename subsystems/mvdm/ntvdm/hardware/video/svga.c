@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         ReactOS Virtual DOS Machine
+ * PROJECT:         MenuOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/hardware/video/svga.c
  * PURPOSE:         SuperVGA hardware emulation (Cirrus Logic CL-GD5434 compatible)
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
@@ -36,7 +36,7 @@ static CONST DWORD MemorySize[] = { 0x20000, 0x10000, 0x08000, 0x08000 };
 
 #if defined(USE_REACTOS_COLORS)
 
-// ReactOS colors
+// MenuOS colors
 static CONST COLORREF VgaDefaultPalette[VGA_MAX_COLORS] =
 {
     RGB(0x00, 0x00, 0x00), RGB(0x00, 0x00, 0xAA), RGB(0x00, 0xAA, 0x00), RGB(0x00, 0xAA, 0xAA),

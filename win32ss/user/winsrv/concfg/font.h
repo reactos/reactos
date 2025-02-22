@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Console Server DLL
+ * PROJECT:     MenuOS Console Server DLL
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Console GDI Fonts Management.
  * COPYRIGHT:   Copyright 2017-2022 Hermès Bélusca-Maïto

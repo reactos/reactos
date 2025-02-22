@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Timedate Control Panel
+ * PROJECT:     MenuOS Timedate Control Panel
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Estonian Language resource file
  * TRANSLATOR:  Joann Mõndresku (joannmondresku at gmail dot com)
@@ -59,7 +59,7 @@ BEGIN
     IDS_TIMEZONEUNKNOWN "Tundmatu"
     IDS_INETTIMESUCSYNC "Kellaaeg on edukalt sünkroonitud serveriga %s kuupäeval %s kell %s"
     IDS_INETTIMENEXTSYNC "Next synchronization: %s at %s"
-    IDS_INETTIMESYNCING "Palun oodake, kuni ReactOS sünkroonib serveriga %s"
+    IDS_INETTIMESYNCING "Palun oodake, kuni MenuOS sünkroonib serveriga %s"
     IDS_INETTIMEERROR "ReactOSi sünkroonimisel serveriga %s ilmnes tõrge."
     IDS_INETTIMESUCFILL "Please type an NTP server name in order to synchronize the time"
     IDS_INETTIMEWELCOME "Select an NTP server from the list or type an NTP server name to synchronize the computer's time"

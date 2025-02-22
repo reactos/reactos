@@ -1,12 +1,12 @@
 /*
- * PROJECT:     ReactOS Mode Utility
+ * PROJECT:     MenuOS Mode Utility
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Provides fast mode setup for DOS devices.
  * COPYRIGHT:   Copyright 2002 Robert Dickenson
  *              Copyright 2016-2021 Hermes Belusca-Maito
  */
 /*
- *  ReactOS mode console command
+ *  MenuOS mode console command
  *
  *  mode.c
  *

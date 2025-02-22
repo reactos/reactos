@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          MenuOS kernel
  * PURPOSE:          NtUserCallXxx call stubs
  * FILE:             win32ss/user/ntuser/simplecall.c
  * PROGRAMERS:       Ge van Geldorp (ge@gse.nl)
@@ -118,7 +118,7 @@ NtUserCallNoParam(DWORD Routine)
             Result = !!gfIMEShowStatus;
             break;
 
-        /* this is a ReactOS only case and is needed for gui-on-demand */
+        /* this is a MenuOS only case and is needed for gui-on-demand */
         case NOPARAM_ROUTINE_ISCONSOLEMODE:
             Result = (ScreenDeviceContext == NULL);
             break;

@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS On-Screen Keyboard
+ * PROJECT:         MenuOS On-Screen Keyboard
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         On-Screen Keyboard resource identifiers
  * COPYRIGHT:       Denis ROBERT

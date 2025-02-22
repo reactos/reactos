@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
+ * PROJECT:         MenuOS Kernel Streaming
  * FILE:            drivers/ksfilter/ks/worker.c
  * PURPOSE:         KS Allocator functions
  * PROGRAMMER:      Johannes Anderwald

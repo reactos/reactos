@@ -1,4 +1,4 @@
-/* ReactOS-Specific lwIP binding header - by Cameron Gutman */
+/* MenuOS-Specific lwIP binding header - by Cameron Gutman */
 
 #include <wdm.h>
 

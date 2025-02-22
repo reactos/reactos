@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS api tests
+ * PROJECT:         MenuOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Tests for IEEE floatting-point functions
  * PROGRAMMER:      Pierre Schweitzer (pierre@reactos.org)

@@ -1,12 +1,12 @@
 /*
  *
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS Multimedia
+ * PROJECT:              MenuOS Multimedia
  * FILE:                 lib/mmdrv/midi.c
  * PURPOSE:              Multimedia User Mode Driver
  * PROGRAMMER:           Andrew Greenwood
  * UPDATE HISTORY:
- *                       Jan 30, 2004: Imported into ReactOS tree
+ *                       Jan 30, 2004: Imported into MenuOS tree
  */
 
 #include "mmdrv.h"

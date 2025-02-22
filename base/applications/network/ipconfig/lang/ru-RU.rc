@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS ipconfig utility
+ * PROJECT:     MenuOS ipconfig utility
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Russian resource file
  * TRANSLATORS: Copyright 2007 Dmitry Chapyshev <dmitry@reactos.org>
@@ -10,7 +10,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_HEADER "\nНастройка протокола IP для ReactOS\n\n"
+    IDS_HEADER "\nНастройка протокола IP для MenuOS\n\n"
     IDS_HOSTNAME            "\tИмя компьютера  . . . . . . . . . : %hs\n"
     IDS_PRIMARYDNSSUFFIX    "\tОсновной DNS-суффикс  . . . . . . : %hs\n"
     IDS_NODETYPEBCAST       "\tТип узла. . . . . . . . . . . . . : Широковещательный\n"

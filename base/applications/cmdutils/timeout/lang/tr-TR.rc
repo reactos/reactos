@@ -1,5 +1,5 @@
 /* 
- * PROJECT:     ReactOS Timeout Utility
+ * PROJECT:     MenuOS Timeout Utility
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Turkish resource file
  * TRANSLATOR:  Copyright 2022 Süleyman Poyraz <zaryob.dev@gmail.com>
@@ -9,7 +9,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "ReactOS Zaman Aşımı Yardımcı Programı\n\
+    IDS_USAGE "MenuOS Zaman Aşımı Yardımcı Programı\n\
 \n\
 TIMEOUT [/?] [/T] gecikme [/NOBREAK]\n\
 \n\

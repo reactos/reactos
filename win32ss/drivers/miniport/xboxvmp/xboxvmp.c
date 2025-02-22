@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Xbox miniport video driver
+ * PROJECT:     MenuOS Xbox miniport video driver
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Simple framebuffer driver for NVIDIA NV2A XGPU
  * COPYRIGHT:   Copyright 2004 Gé van Geldorp

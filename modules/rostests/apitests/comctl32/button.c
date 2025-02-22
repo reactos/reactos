@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS api tests
+ * PROJECT:         MenuOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Test for Button window class v6
  * PROGRAMMERS:     Giannis Adamopoulos

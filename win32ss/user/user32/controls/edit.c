@@ -252,7 +252,7 @@ static HBRUSH EDIT_NotifyCtlColor(EDITSTATE *es, HDC hdc)
 
 	/* why do we notify to es->hwndParent, and we send this one to GetParent()? */
 #ifdef __REACTOS__
-        /* ReactOS r54259 */
+        /* MenuOS r54259 */
         hbrush = GetControlBrush(es->hwndSelf, hdc, msg);
 #else
         hbrush = (HBRUSH)SendMessageW(GetParent(es->hwndSelf), msg, (WPARAM)hdc, (LPARAM)es->hwndSelf);
@@ -364,7 +364,7 @@ static INT EDIT_CallWordBreakProc(EDITSTATE *es, INT start, INT index, INT count
 		countA = WideCharToMultiByte(CP_ACP, 0, es->text + start, count, NULL, 0, NULL, NULL);
 		textA = HeapAlloc(GetProcessHeap(), 0, countA);
 #ifdef __REACTOS__
-		/* ReactOS r33503 */
+		/* MenuOS r33503 */
 		if (textA == NULL) return 0;
 #endif
 		WideCharToMultiByte(CP_ACP, 0, es->text + start, count, textA, countA, NULL, NULL);
@@ -429,7 +429,7 @@ static SCRIPT_STRING_ANALYSIS EDIT_UpdateUniscribeData_linedef(EDITSTATE *es, HD
 
 		hr = ScriptStringAnalyse(udc, &es->text[index], line_def->net_length,
 #ifdef __REACTOS__
-                                         /* ReactOS r57679 */
+                                         /* MenuOS r57679 */
                                          (3*line_def->net_length/2+16), -1,
 #else
                                          (1.5*line_def->net_length+16), -1,
@@ -470,14 +470,14 @@ static SCRIPT_STRING_ANALYSIS EDIT_UpdateUniscribeData(EDITSTATE *es, HDC dc, IN
 
 			if (es->style & ES_PASSWORD)
 #ifdef __REACTOS__
-				/* ReactOS r57677 */
+				/* MenuOS r57677 */
 				ScriptStringAnalyse(udc, &es->password_char, length, (3*length/2+16), -1, SSA_LINK|SSA_FALLBACK|SSA_GLYPHS|SSA_PASSWORD, -1, NULL, NULL, NULL, NULL, NULL, &es->ssa);
 #else
 				ScriptStringAnalyse(udc, &es->password_char, length, (1.5*length+16), -1, SSA_LINK|SSA_FALLBACK|SSA_GLYPHS|SSA_PASSWORD, -1, NULL, NULL, NULL, NULL, NULL, &es->ssa);
 #endif
 			else
 #ifdef __REACTOS__
-				/* ReactOS r57677 */
+				/* MenuOS r57677 */
 				ScriptStringAnalyse(udc, es->text, length, (3*length/2+16), -1, SSA_LINK|SSA_FALLBACK|SSA_GLYPHS, -1, NULL, NULL, NULL, NULL, NULL, &es->ssa);
 #else
 				ScriptStringAnalyse(udc, es->text, length, (1.5*length+16), -1, SSA_LINK|SSA_FALLBACK|SSA_GLYPHS, -1, NULL, NULL, NULL, NULL, NULL, &es->ssa);
@@ -580,7 +580,7 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 				   insert it into the link list */
 				LINEDEF *new_line = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LINEDEF));
 #ifdef __REACTOS__
-				/* ReactOS r33509 */
+				/* MenuOS r33509 */
 				if (new_line == NULL)
 					break;
 #endif
@@ -1307,7 +1307,7 @@ static void EDIT_LockBuffer(EDITSTATE *es)
 
 #ifdef __REACTOS__
 /* FIXME: What is this ? */
-	    CHAR *textA = NULL; // ReactOS Hacked! r45670
+	    CHAR *textA = NULL; // MenuOS Hacked! r45670
 	    //UINT countA = 0;
 
 	    if(es->hloc32W)
@@ -1324,7 +1324,7 @@ static void EDIT_LockBuffer(EDITSTATE *es)
 		return;
 	    }
 
-	    if (textA) //// ReactOS
+	    if (textA) //// MenuOS
 	    {
 #else
 	    if(!es->hloc32W) return;
@@ -3108,7 +3108,7 @@ static BOOL EDIT_EM_SetTabStops(EDITSTATE *es, INT count, const INT *tabs)
 	else {
 		es->tabs = HeapAlloc(GetProcessHeap(), 0, count * sizeof(INT));
 #ifdef __REACTOS__
-        /* ReactOS r33503 */
+        /* MenuOS r33503 */
         if (es->tabs == NULL)
         {
             es->tabs_count = 0;
@@ -3160,7 +3160,7 @@ static BOOL EDIT_EM_Undo(EDITSTATE *es)
 
 	utext = HeapAlloc(GetProcessHeap(), 0, (ulength + 1) * sizeof(WCHAR));
 #ifdef __REACTOS__
-	/* ReactOS r33503 */
+	/* MenuOS r33503 */
 	if (utext == NULL) 
 		return FALSE;
 #endif
@@ -3450,7 +3450,7 @@ static void EDIT_WM_ContextMenu(EDITSTATE *es, INT x, INT y)
             RECT rc;
             /* Windows places the menu at the edit's center in this case */
 #ifdef __REACTOS__
-            /* ReactOS r55202 */
+            /* MenuOS r55202 */
             GetClientRect(es->hwndSelf, &rc);
             MapWindowPoints(es->hwndSelf, 0, (POINT *)&rc, 2);
 #else
@@ -3683,7 +3683,7 @@ static LRESULT EDIT_WM_KeyDown(EDITSTATE *es, INT key)
                 SendMessageW(es->hwndParent, WM_NEXTDLGCTL, shift, 0);
             break;
 #ifdef __REACTOS__
-        /* ReactOS CORE-1419 */
+        /* MenuOS CORE-1419 */
         case VK_BACK:
             if (control)
             {
@@ -4857,7 +4857,7 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 	EDITSTATE *es = (EDITSTATE *)GetWindowLongPtrW( hwnd, 0 );
 	LRESULT result = 0;
 #ifdef __REACTOS__
-    /* ReactOS r50219 */
+    /* MenuOS r50219 */
     PWND pWnd;
 
     pWnd = ValidateHwnd(hwnd);
@@ -5478,7 +5478,7 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 	}
 
 #ifdef __REACTOS__
-        /* ReactOS: check GetWindowLong in case es has been destroyed during processing */
+        /* MenuOS: check GetWindowLong in case es has been destroyed during processing */
         if (IsWindow(hwnd) && es && msg != EM_GETHANDLE && GetWindowLongPtrW(hwnd, 0))
 #else
         if (IsWindow(hwnd) && es && msg != EM_GETHANDLE)

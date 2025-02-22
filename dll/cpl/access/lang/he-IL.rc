@@ -13,7 +13,7 @@ BEGIN
     AUTOCHECKBOX "השתמש במקשים דביקים", IDC_STICKY_BOX, 12, 49, 126, 14
     PUSHBUTTON "הגדרות", IDC_STICKY_BUTTON, 144, 49, 90, 14
     GROUPBOX "FilterKeys", -1, 6, 79, 234, 62
-    LTEXT "Use FilterKeys if you want ReactOS to ignore brief or repeated keystrokes, or slow the repeat rate.",
+    LTEXT "Use FilterKeys if you want MenuOS to ignore brief or repeated keystrokes, or slow the repeat rate.",
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "Use &FilterKeys", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "הגדרות", IDC_FILTER_BUTTON, 144, 121, 90, 14
@@ -32,7 +32,7 @@ CAPTION "צליל"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "שומר קולי", -1, 6, 11, 234, 98
-    LTEXT "Use SoundSentry if you want ReactOS to generate visual warnings when your system makes a sound.",
+    LTEXT "Use SoundSentry if you want MenuOS to generate visual warnings when your system makes a sound.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "השתמש בשומר הקולי", IDC_SENTRY_BOX, 12, 49, 90, 14
     LTEXT "השתמש באזהרות הבאות:", IDC_SENTRY_TEXT, 12, 72, 222, 11
@@ -50,7 +50,7 @@ CAPTION "תצןגה"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "ניגודיות גבוהה", -1, 6, 11, 234, 62
-    LTEXT "Use this option if you want ReactOS to use colors and fonts designed for easy reading.",
+    LTEXT "Use this option if you want MenuOS to use colors and fonts designed for easy reading.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "השתמש בניגודיות גבוהה", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "הגדרות", IDC_CONTRAST_BUTTON, 144, 49, 90, 14

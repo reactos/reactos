@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Magnify
+ * PROJECT:     MenuOS Magnify
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Magnification of parts of the screen.
  * COPYRIGHT:   Copyright 2007-2019 Marc Piulachs <marc.piulachs@codexchange.net>

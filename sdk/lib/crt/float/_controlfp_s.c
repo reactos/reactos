@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS CRT library
+ * PROJECT:     MenuOS CRT library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Implementation of _controlfp_s (adapted from wine msvcrt/math.c)
  * COPYRIGHT:   Copyright 2000 Jon Griffiths

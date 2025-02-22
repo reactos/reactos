@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS EXT2 filesystem library
+ * PROJECT:     MenuOS EXT2 filesystem library
  * FILE:        include/reactos/libs/fslib/ext2lib.h
  * PURPOSE:     Public definitions for ext2 filesystem library
  */

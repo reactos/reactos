@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Storage Stack
+ * PROJECT:     MenuOS Storage Stack
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     SCSI Port driver SCSI requests handling
  * COPYRIGHT:   Eric Kohl (eric.kohl@reactos.org)

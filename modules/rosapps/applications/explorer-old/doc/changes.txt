@@ -2,14 +2,14 @@ You will find only major changes in this file.
 Small bug fixes and developments steps are not listet here.
 If you search for more information, look into the Subversion repository.
 
-14.10.2002	m. fuchs	Korrektur der Anpassungen durch Übernahme in wine: Anzeige der Verzeichnisnamen in Tree Pane
-			m. fuchs	Wieder-Anpassung an natives Übersetzen unter WIN32 mit VC++
+14.10.2002	m. fuchs	Korrektur der Anpassungen durch Ãœbernahme in wine: Anzeige der Verzeichnisnamen in Tree Pane
+			m. fuchs	Wieder-Anpassung an natives Ãœbersetzen unter WIN32 mit VC++
 
 15.10.2002	m. fuchs	Entfernung der Warnungsmeldung durch SetWindowText(0, ...)
 			m. fuchs	korrekte Anzeige der Header Control-Texte (nicht Unicode -> dlls/comctl32/header.c)
 
-15.10.2002	m. fuchs	sofortige Anzeige der Dateiliste beim Starten und Öffnen neuer Fenster
-15.10.2002	m. fuchs	Programmaufruf über Doppelklick in der Dateiliste
+15.10.2002	m. fuchs	sofortige Anzeige der Dateiliste beim Starten und Ã–ffnen neuer Fenster
+15.10.2002	m. fuchs	Programmaufruf Ã¼ber Doppelklick in der Dateiliste
 
 07.06.2003	m. fuchs	integration with ROS desktop window
 21.07.2003	m. fuchs	extension of winefile for shell namespace
@@ -105,7 +105,7 @@ If you search for more information, look into the Subversion repository.
 20.02.2005	m. fuchs	updates for Expat and XMLStorage files
 21.02.2005	m. fuchs	move public expat headers into common include folder
 27.02.2005	frik85	Add support for explorer to load the desk.cpl when right clicking on background. 
-04.03.2005	fireball	New StartMenu and ReactOS icons by Mindflyer
+04.03.2005	fireball	New StartMenu and MenuOS icons by Mindflyer
 05.03.2005	m. fuchs	case insensitive startmenu merging
 			m. fuchs	update ROS icon in about dialog and start menu side bar
 14.03.2005	gvg	tinus: Use RegisterShellHookWindow()
@@ -144,7 +144,7 @@ If you search for more information, look into the Subversion repository.
 19.09.2005	navaraf	Fix the taskbar button resizing to account for button spacing.
 21.09.2005	m. fuchs	XMLStorage update, Bugfix for UTF-8 strings
 			m. fuchs	use size_t for buffer/string lengths instead of int, define COUNTOF if not defined already
-25.09.2005	navaraf	Patricio Martínez Ros: Update spanish translation
+25.09.2005	navaraf	Patricio MartÃ­nez Ros: Update spanish translation
 25.09.2005	m. fuchs	new tool bar icons for the drive bar
 			m. fuchs	refactor all IUnknown implementations using IComSrvBase
 30.09.2005	m. fuchs	Fix of Bugzilla Bug 676: dynamic explorer start menu sidebar size

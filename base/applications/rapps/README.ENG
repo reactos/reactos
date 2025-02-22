@@ -8,7 +8,7 @@ Each program entry consists of a text file formatted with an INI-like syntax.
 They must be encoded in UTF-16 LE (Little Endian) or characters out of the ANSI range
 will display broken mojibake, some editors like Notepad++ call this format UCS-2 Little Endian.
 
-If you plan on including your program entry in the ReactOS source code versioning keep in mind
+If you plan on including your program entry in the MenuOS source code versioning keep in mind
 that entries are stored in UTF-8 without BOM (Byte Order Mask) for VCS friendliness.
 
 They get automatically converted to UTF-16 when creating the compressed rappmgr.cab package,
@@ -80,7 +80,7 @@ List of valid categories:
 15 - Themes
 16 - Other
 
-The official list of downloadable programs is kept on a public ReactOS server
+The official list of downloadable programs is kept on a public MenuOS server
 and synced every time RAPPS is launched for the first time.
 
 NOTE: You can find the most current URL in rapps.h, defined as APPLICATION_DATABASE_URL.

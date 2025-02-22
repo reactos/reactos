@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         MenuOS Kernel
  * COPYRIGHT:       GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * FILE:            ntoskrnl/io/debug.c
  * PURPOSE:         Useful functions for debugging IO and PNP managers

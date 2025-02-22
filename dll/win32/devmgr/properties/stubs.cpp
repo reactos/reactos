@@ -1,7 +1,7 @@
 /*
  *
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS devmgr.dll
+ * PROJECT:         MenuOS devmgr.dll
  * FILE:            lib/devmgr/stubs.c
  * PURPOSE:         devmgr.dll stubs
  * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)

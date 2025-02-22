@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS system libraries
+ * PROJECT:     MenuOS system libraries
  * FILE:        lib/sdk/crt/conio/kbhit.c
  * PURPOSE:     Checks for keyboard hits
  * PROGRAMERS:  Ariadne, Russell

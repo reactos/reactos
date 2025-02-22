@@ -46,7 +46,7 @@
  */
 
 /* NFSv4.1 client for Windows
- * Copyright © 2012 The Regents of the University of Michigan
+ * Copyright Â© 2012 The Regents of the University of Michigan
  *
  * Olga Kornievskaia <aglo@umich.edu>
  * Casey Bodley <cbodley@umich.edu>
@@ -977,7 +977,7 @@ read_vc(ctp, buf, len)
 #ifndef __REACTOS__
 		switch (poll(&fd, 1, milliseconds)) {
 #else
-		/* ReactOS: use select instead of poll */
+		/* MenuOS: use select instead of poll */
 		fd_set infd;
 		struct timeval timeout;
 

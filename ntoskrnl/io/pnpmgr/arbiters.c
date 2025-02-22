@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Kernel
+ * PROJECT:     MenuOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Root arbiters of the PnP manager
  * COPYRIGHT:   Copyright 2020 Vadim Galyant <vgal@rambler.ru>

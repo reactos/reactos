@@ -1,7 +1,7 @@
 /*
  * VideoPort driver
  *
- * Copyright (C) 2002-2004, 2007 ReactOS Team
+ * Copyright (C) 2002-2004, 2007 MenuOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -695,7 +695,7 @@ IntLoadRegistryParameters(VOID)
 
     ExFreePoolWithTag(KeyInfo, TAG_VIDEO_PORT);
 
-    /* FIXME: Old ReactOS-compatibility... */
+    /* FIXME: Old MenuOS-compatibility... */
     if (VpBaseVideo) VpNoVesa = TRUE;
 
     if (VpNoVesa)

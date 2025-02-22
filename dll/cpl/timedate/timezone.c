@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Timedate Control Panel
+ * PROJECT:     MenuOS Timedate Control Panel
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/cpl/timedate/timezone.c
  * PURPOSE:     Time Zone property page

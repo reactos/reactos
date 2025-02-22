@@ -2,28 +2,28 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS telepítő"
+CAPTION "MenuOS telepítő"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Üdvözöljük a ReactOS telepítőben.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "A ReactOS telepítő segítségével feltelepítjük a ReactOS rendszert a számítógépre. A telepítő előbb összegyűjt pár információt, majd véglegesítjük a telepítést.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Üdvözöljük a MenuOS telepítőben.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "A MenuOS telepítő segítségével feltelepítjük a MenuOS rendszert a számítógépre. A telepítő előbb összegyűjt pár információt, majd véglegesítjük a telepítést.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Kattintson a Tovább gombra a folytatáshoz.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS telepítő"
+CAPTION "MenuOS telepítő"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "A ReactOS fejlesztők szeretnének köszönetet mondani az alábbi Open Source projekteknek amelyeket (részben) felhasználtak a ReactOS fejlesztéséhez:", IDC_STATIC, 15, 7, 286, 19
+    LTEXT "A MenuOS fejlesztők szeretnének köszönetet mondani az alábbi Open Source projekteknek amelyeket (részben) felhasználtak a MenuOS fejlesztéséhez:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "A ReactOS a GPL licencével rendelkezik, így a felhasználásához és terjesztéséhez ezt a licencet kell figyelembe vennie.", IDC_STATIC, 15, 110, 227, 19
+    LTEXT "A MenuOS a GPL licencével rendelkezik, így a felhasználásához és terjesztéséhez ezt a licencet kell figyelembe vennie.", IDC_STATIC, 15, 110, 227, 19
     PUSHBUTTON "&Licenc megtekintése...", IDC_VIEWGPL, 200, 120, 90, 19
     LTEXT "Kattintson a Tovább gombra a folytatáshoz.", IDC_STATIC, 15, 136, 170, 17
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
-CAPTION "ReactOS telepítő"
+CAPTION "MenuOS telepítő"
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -38,7 +38,7 @@ END
 
 IDD_OWNERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS telepítő"
+CAPTION "MenuOS telepítő"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
@@ -51,7 +51,7 @@ END
 
 IDD_COMPUTERPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS telepítő"
+CAPTION "MenuOS telepítő"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
@@ -69,7 +69,7 @@ END
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS telepítő"
+CAPTION "MenuOS telepítő"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
@@ -86,7 +86,7 @@ END
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS telepítő"
+CAPTION "MenuOS telepítő"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
@@ -100,7 +100,7 @@ END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS telepítő"
+CAPTION "MenuOS telepítő"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_THEMEPICKER, "SysListView32", LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_TABSTOP, 18, 8, 288, 130
@@ -108,7 +108,7 @@ END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS telepítő"
+CAPTION "MenuOS telepítő"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Komponensek regisztrálása", IDC_TASKTEXT1, 65, 27, 232, 8
@@ -121,11 +121,11 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "A ReactOS telepítésének befejezése"
+CAPTION "A MenuOS telepítésének befejezése"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "A telepítés befejezése", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Sikeresen feltelepítette a ReactOS rendszert.\n\nHa a befejezésre kattint, a számítógép újraindul.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Sikeresen feltelepítette a MenuOS rendszert.\n\nHa a befejezésre kattint, a számítógép újraindul.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "Ha van CD vagy DVD lemez a meghajtóban, vegye ki, és utána kattintson a befejezés gombra.", IDC_STATIC, 115, 169, 195, 17
 END
@@ -171,13 +171,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE "Köszönetnyilvánítás"
-    IDS_ACKSUBTITLE "Akik nélkül nem jöhetett volna létre a ReactOS és licenc információk."
-    IDS_OWNERTITLE "A ReactOS testreszabása"
-    IDS_OWNERSUBTITLE "Ezt az információt fel fogja használni a ReactOS, hogy személyessé tegye a rendszert."
+    IDS_ACKSUBTITLE "Akik nélkül nem jöhetett volna létre a MenuOS és licenc információk."
+    IDS_OWNERTITLE "A MenuOS testreszabása"
+    IDS_OWNERSUBTITLE "Ezt az információt fel fogja használni a MenuOS, hogy személyessé tegye a rendszert."
     IDS_COMPUTERTITLE "Számítógépnév és a rendszergazda jelszava"
     IDS_COMPUTERSUBTITLE "Meg kell adnia egy számítógép nevet és a rendszergazda jelszavát."
     IDS_LOCALETITLE "Területi beállítások"
-    IDS_LOCALESUBTITLE "Beállíthatja, hogy a ReactOS milyen területi és nyelvi beállításokkal működjön."
+    IDS_LOCALESUBTITLE "Beállíthatja, hogy a MenuOS milyen területi és nyelvi beállításokkal működjön."
     IDS_LOCALETEXT "The Standards and formats are set to %s, and the location is set to %s."
     IDS_LAYOUTTEXT "Your default text input language and method is: %s keyboard layout"
     IDS_DATETIMETITLE "Dátum és idő"
@@ -190,7 +190,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP "ReactOS telepítő"
+    IDS_REACTOS_SETUP "MenuOS telepítő"
     IDS_UNKNOWN_ERROR "Hiba lépett fel, de nem tudni annak okát."
     IDS_LOADLIBRARY_FAILED "LoadLibrary hiba: "
     IDS_GETPROCADDR_FAILED "GetProcAddr hiba: "
@@ -250,8 +250,8 @@ STRINGTABLE
 BEGIN
     IDS_PRODUCTTITLE "Kiadások"
     IDS_PRODUCTSUBTITLE "Választhat egy kiadást, amely befolyásolja a rendszer viselkedését."
-    IDS_PRODUCTSERVERNAME "ReactOS Szerver"
-    IDS_PRODUCTWORKSTATIONNAME "ReactOS Munkaállomás"
+    IDS_PRODUCTSERVERNAME "MenuOS Szerver"
+    IDS_PRODUCTWORKSTATIONNAME "MenuOS Munkaállomás"
     IDS_PRODUCTSERVERINFO "A rendszer szerverként lesz felismerhető. A ""Képek"", ""Videók"" és ""Zenék"" személyes mappák függetlenek lesznek a ""Dokumentumok"" mappától."
     IDS_PRODUCTWORKSTATIONINFO "A rendszer munkaállomásként lesz felismerhető. A ""Képek"", ""Videók"" és ""Zenék"" személyes mappák a ""Dokumentumok"" mappában lesznek."
     IDS_DEFAULT "(alapértelmezett)"

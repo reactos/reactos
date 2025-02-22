@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS More Command
+ * PROJECT:     MenuOS More Command
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Displays text stream from STDIN or from an arbitrary number
  *              of files to STDOUT, with screen capabilities (more than CAT,

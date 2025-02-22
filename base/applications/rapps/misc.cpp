@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Applications Manager
+ * PROJECT:     MenuOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Misc functions
  * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev (dmitry@reactos.org)
@@ -218,7 +218,7 @@ InitLogs()
 
     if (key.Create(
             HKEY_LOCAL_MACHINE,
-            L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\ReactOS Application Manager", REG_NONE,
+            L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\MenuOS Application Manager", REG_NONE,
             REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &dwDisp) != ERROR_SUCCESS)
     {
         return;
@@ -237,7 +237,7 @@ InitLogs()
         (key.SetDWORDValue(L"CategoryCount", dwCategoryNum) == ERROR_SUCCESS))
 
     {
-        hLog = RegisterEventSourceW(NULL, L"ReactOS Application Manager");
+        hLog = RegisterEventSourceW(NULL, L"MenuOS Application Manager");
     }
 }
 

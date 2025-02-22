@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS api tests
+ * PROJECT:         MenuOS api tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Testing ShellExecuteW
  * PROGRAMMERS:     Doug Lyons <douglyons@douglyons.com>

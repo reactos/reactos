@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Local Spooler API Tests Injected DLL
+ * PROJECT:     MenuOS Local Spooler API Tests Injected DLL
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Tests for fpSetJob
  * COPYRIGHT:   Copyright 2017 Colin Finck (colin@reactos.org)

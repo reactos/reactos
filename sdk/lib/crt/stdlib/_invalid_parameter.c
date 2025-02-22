@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS CRT library
+ * PROJECT:     MenuOS CRT library
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     _invalid_parameter implementation
  * COPYRIGHT:   Timo Kreuzer <timo.kreuzer@reactos.org>

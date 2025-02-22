@@ -1,5 +1,5 @@
 /*
- * ReactOS Explorer
+ * MenuOS Explorer
  *
  * Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
  *
@@ -3828,7 +3828,7 @@ LRESULT CShellBrowser::OnDisconnectNetworkDrive(WORD wNotifyCode, WORD wID, HWND
 
 LRESULT CShellBrowser::OnAboutReactOS(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    ShellAbout(m_hWnd, _T("ReactOS"), NULL, NULL);
+    ShellAbout(m_hWnd, _T("MenuOS"), NULL, NULL);
     return 0;
 }
 

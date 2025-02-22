@@ -1,7 +1,7 @@
 /*
  * reactos/apps/lpc/dumpinfo.c
  *
- * ReactOS Operating System
+ * MenuOS Operating System
  *
  * Dump a kernel object's attributes by its handle.
  *

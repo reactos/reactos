@@ -189,7 +189,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    Mainly same as @FT_Bitmap_Convert, but the bitmap will be          */
-  /*    ReactOS compatible when hack parameter is true.                    */
+  /*    MenuOS compatible when hack parameter is true.                    */
   /*                                                                       */
   /* <Input>                                                               */
   /*    library   :: A handle to a library object.                         */
@@ -199,7 +199,7 @@ FT_BEGIN_HEADER
   /*    alignment :: The pitch of the bitmap is a multiple of this         */
   /*                 parameter.  Common values are 1, 2, or 4.             */
   /*                                                                       */
-  /*    hack      :: If TRUE, the bitmap will be ReactOS compatible.       */
+  /*    hack      :: If TRUE, the bitmap will be MenuOS compatible.       */
   /*                 If FALSE, the bitmap will be same as                  */
   /*                 FT_Bitmap_Convert returns.                            */
   /*                                                                       */

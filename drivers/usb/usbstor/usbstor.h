@@ -170,7 +170,7 @@ typedef struct _ERRORHANDLER_WORKITEM_DATA
     PIRP Irp;
 } ERRORHANDLER_WORKITEM_DATA, *PERRORHANDLER_WORKITEM_DATA;
 
-// we need this to be compatible with ReactOS' classpnp (which is compiled with NTDDI_WIN8)
+// we need this to be compatible with MenuOS' classpnp (which is compiled with NTDDI_WIN8)
 typedef struct _STORAGE_ADAPTER_DESCRIPTOR_WIN8 {
     ULONG Version;
     ULONG Size;

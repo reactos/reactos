@@ -531,7 +531,7 @@ protected:
 	FILE_FILEBUF* init_buf(LPCTSTR path, std::ios_base::openmode mode)
 	{
 		PCTSTR modestr = mode == std::ios::in ? TEXT("rb") : TEXT("wb");
-//@@ _MS_VER: temporarily needed for the ReactOS build environment
+//@@ _MS_VER: temporarily needed for the MenuOS build environment
 #if defined(__STDC_WANT_SECURE_LIB__) && defined(_MS_VER)	// secure CRT functions using VS 2005
 		if (_tfopen_s(&_pfile, path, modestr) != 0)
 			_pfile = NULL;

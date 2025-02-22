@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS API Tests
+ * PROJECT:     MenuOS API Tests
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Test for NtSetValueKey
  * COPYRIGHT:   Copyright 2016-2019 Thomas Faber (thomas.faber@reactos.org)

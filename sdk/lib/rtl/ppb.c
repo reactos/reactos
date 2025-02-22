@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS system libraries
+ * PROJECT:           MenuOS system libraries
  * FILE:              lib/rtl/ppb.c
  * PURPOSE:           Process parameters functions
  * PROGRAMMER:        Ariadne ( ariadne@xs4all.nl)

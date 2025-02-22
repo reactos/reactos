@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         MenuOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/io/iomgr/ramdisk.c
  * PURPOSE:         Allows booting from RAM disk
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROGRAMMERS:     MenuOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/
@@ -248,7 +248,7 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     //
-    // ReactOS hack (drive letter should not be hardcoded, and maybe set by mountmgr.sys)
+    // MenuOS hack (drive letter should not be hardcoded, and maybe set by mountmgr.sys)
     //
     {
         ANSI_STRING AnsiPath;

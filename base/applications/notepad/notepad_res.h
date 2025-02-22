@@ -1,7 +1,7 @@
 /*
- * PROJECT:    ReactOS Notepad
+ * PROJECT:    MenuOS Notepad
  * LICENSE:    LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:    Providing a Windows-compatible simple text editor for ReactOS
+ * PURPOSE:    Providing a Windows-compatible simple text editor for MenuOS
  * COPYRIGHT:  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  *             Copyright 2002 Andriy Palamarchuk
  */

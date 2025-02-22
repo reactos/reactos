@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS VT100 emulator
+ * PROJECT:     MenuOS VT100 emulator
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        drivers/base/green/createclose.c
  * PURPOSE:     IRP_MJ_CREATE, IRP_MJ_CLOSE and IRP_MJ_CLEANUP operations
- * PROGRAMMERS: Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS: Copyright 2005-2006 HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "green.h"

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS KDBG Kernel Debugger
+ * PROJECT:     MenuOS KDBG Kernel Debugger
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Useful debugging macros
  * COPYRIGHT:   Copyright 2023 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>

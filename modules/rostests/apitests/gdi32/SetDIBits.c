@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS api tests
+ * PROJECT:         MenuOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Test for SetDIBits
- * PROGRAMMERS:     Jérôme Gardou
+ * PROGRAMMERS:     JÃ©rÃ´me Gardou
  */
 
 #include "precomp.h"

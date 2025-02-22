@@ -1,6 +1,6 @@
 /*
- * ReactOS Finnish keyboard layout (Based on Swedish keyboard layout)
- * Copyright (C) 2007 ReactOS
+ * MenuOS Finnish keyboard layout (Based on Swedish keyboard layout)
+ * Copyright (C) 2007 MenuOS
  * License: LGPL, see: LGPL.txt
  *
  */
@@ -349,10 +349,10 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x51, L"PAGE DOWN" },
   { 0x52, L"INS" },
   { 0x53, L"DEL" },
-  { 0x54, L"<ReactOS>" },
+  { 0x54, L"<MenuOS>" },
   { 0x56, L"HELP" },
-  { 0x5b, L"VASEN <ReactOS>" },
-  { 0x5c, L"OIKEA <ReactOS>" },
+  { 0x5b, L"VASEN <MenuOS>" },
+  { 0x5c, L"OIKEA <MenuOS>" },
   { 0x5d, L"Program" },
   { 0, NULL }
 };

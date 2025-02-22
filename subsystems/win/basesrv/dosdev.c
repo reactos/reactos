@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Base API Server DLL
+ * PROJECT:         MenuOS Base API Server DLL
  * FILE:            subsystems/win/basesrv/dosdev.c
  * PURPOSE:         DOS Devices Management
  * PROGRAMMERS:     Pierre Schweitzer (pierre.schweitzer@reactos.org)

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Task Manager
+ * PROJECT:     MenuOS Task Manager
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
@@ -424,7 +424,7 @@ BEGIN
     IDS_MENU_CPUHISTORY "Ist&oric CPU"
     IDS_MENU_SHOWKERNELTIMES "Afișea&ză timpi kernel"
     IDS_CREATENEWTASK "Creare activitate nouă"
-    IDS_CREATENEWTASK_DESC "Tastați numele unui program, folder, document, sau a unei resurse de Internet, în vederea deschiderii în ReactOS."
+    IDS_CREATENEWTASK_DESC "Tastați numele unui program, folder, document, sau a unei resurse de Internet, în vederea deschiderii în MenuOS."
     IDS_MSG_ACCESSPROCESSAFF "Afinitatea nu a putut fi accesată/stabilită."
     IDS_MSG_PROCESSONEPRO "Procesul trebuie să aibă o afinitate de cel puțin un procesor."
     IDS_MSG_INVALIDOPTION "Opțiune nevalidă"

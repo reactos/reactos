@@ -3725,7 +3725,7 @@ SymbolicName=MSG_COMMAND_FORMAT
 Severity=Informational
 Facility=System
 Language=English
-    Formats the specified volume for use with ReactOS.
+    Formats the specified volume for use with MenuOS.
 
 Syntax:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
                 [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
@@ -3790,7 +3790,7 @@ Examples:
     FORMAT RECOMMENDED OVERRIDE
 .
 Language=German
-    Formatiert das angegebene Volume für die Verwendung mit ReactOS.
+    Formatiert das angegebene Volume für die Verwendung mit MenuOS.
 
 Syntax:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
                 [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
@@ -3864,7 +3864,7 @@ Beispiele:
     FORMAT RECOMMENDED OVERRIDE
 .
 Language=Polish
-    Formats the specified volume for use with ReactOS.
+    Formats the specified volume for use with MenuOS.
 
 Syntax:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
                 [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
@@ -3929,7 +3929,7 @@ Examples:
     FORMAT RECOMMENDED OVERRIDE
 .
 Language=Portugese
-    Formats the specified volume for use with ReactOS.
+    Formats the specified volume for use with MenuOS.
 
 Syntax:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
                 [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
@@ -3994,7 +3994,7 @@ Examples:
     FORMAT RECOMMENDED OVERRIDE
 .
 Language=Romanian
-    Formatează volumul specificat pentru folosire cu ReactOS.
+    Formatează volumul specificat pentru folosire cu MenuOS.
 
 Sintaxă:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
                 [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
@@ -4061,7 +4061,7 @@ De exemplu:
     FORMAT RECOMMENDED OVERRIDE
 .
 Language=Russian
-    Formats the specified volume for use with ReactOS.
+    Formats the specified volume for use with MenuOS.
 
 Syntax:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
                 [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
@@ -4126,7 +4126,7 @@ Examples:
     FORMAT RECOMMENDED OVERRIDE
 .
 Language=Albanian
-    Formats the specified volume for use with ReactOS.
+    Formats the specified volume for use with MenuOS.
 
 Syntax:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
                 [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
@@ -4191,7 +4191,7 @@ Examples:
     FORMAT RECOMMENDED OVERRIDE
 .
 Language=Turkish
-    Formats the specified volume for use with ReactOS.
+    Formats the specified volume for use with MenuOS.
 
 Syntax:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
                 [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
@@ -4256,7 +4256,7 @@ Examples:
     FORMAT RECOMMENDED OVERRIDE
 .
 Language=Chinese
-    Formats the specified volume for use with ReactOS.
+    Formats the specified volume for use with MenuOS.
 
 Syntax:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
                 [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
@@ -4321,7 +4321,7 @@ Examples:
     FORMAT RECOMMENDED OVERRIDE
 .
 Language=Taiwanese
-    格式化指定的磁碟區以供 ReactOS 使用。
+    格式化指定的磁碟區以供 MenuOS 使用。
 
 語法:  FORMAT [[FS=<FS>] [REVISION=<X.XX>] | RECOMMENDED] [LABEL=<"label">]
                 [UNIT=<N>] [QUICK] [COMPRESS] [OVERRIDE] [DUPLICATE] [NOWAIT]
@@ -4630,7 +4630,7 @@ Syntax:  INACTIVE
 
         Your computer might not start without an active partition. Do not mark
         a system or boot partition as inactive unless you are an experienced
-        user with a thorough understanding of ReactOS storage management.
+        user with a thorough understanding of MenuOS storage management.
 
 Example:
 
@@ -4655,7 +4655,7 @@ Syntax:  INACTIVE
         Möglicherweise kann der Computer nicht gestartet werden, wenn es
         keine aktive Partition gibt. Markieren Sie eine System- oder
         Startpartition nur dann als inaktiv, wenn Sie ein erfahrener
-        Benutzer und mit der ReactOS-Speicherverwaltung umfassend vertraut
+        Benutzer und mit der MenuOS-Speicherverwaltung umfassend vertraut
         sind.
 
 Beispiel:
@@ -4703,7 +4703,7 @@ Syntax:  INACTIVE
 
         Your computer might not start without an active partition. Do not mark
         a system or boot partition as inactive unless you are an experienced
-        user with a thorough understanding of ReactOS storage management.
+        user with a thorough understanding of MenuOS storage management.
 
 Example:
 
@@ -4728,7 +4728,7 @@ Sintaxă:  INACTIVE
         Calculatorul dumneavoastră ar putea să nu pornească fără o partiție
         activă. Nu marcați o partiție de sistem sau de inițializare ca inactivă
         dacă nu sunteți un utilizator experimentat cu o înțelegere aprofundată
-        a gestionării stocării ReactOS.
+        a gestionării stocării MenuOS.
 
 De exemplu:
 
@@ -4751,7 +4751,7 @@ Syntax:  INACTIVE
 
         Your computer might not start without an active partition. Do not mark
         a system or boot partition as inactive unless you are an experienced
-        user with a thorough understanding of ReactOS storage management.
+        user with a thorough understanding of MenuOS storage management.
 
 Example:
 
@@ -4774,7 +4774,7 @@ Syntax:  INACTIVE
 
         Your computer might not start without an active partition. Do not mark
         a system or boot partition as inactive unless you are an experienced
-        user with a thorough understanding of ReactOS storage management.
+        user with a thorough understanding of MenuOS storage management.
 
 Example:
 
@@ -4797,7 +4797,7 @@ Syntax:  INACTIVE
 
         Your computer might not start without an active partition. Do not mark
         a system or boot partition as inactive unless you are an experienced
-        user with a thorough understanding of ReactOS storage management.
+        user with a thorough understanding of MenuOS storage management.
 
 Example:
 
@@ -4820,7 +4820,7 @@ Syntax:  INACTIVE
 
         Your computer might not start without an active partition. Do not mark
         a system or boot partition as inactive unless you are an experienced
-        user with a thorough understanding of ReactOS storage management.
+        user with a thorough understanding of MenuOS storage management.
 
 Example:
 
@@ -4841,7 +4841,7 @@ Language=Taiwanese
     注意:
 
         如果沒有使用中的磁碟分割，您的電腦將無法啟動。
-        除非您是非常熟悉 ReactOS 存放管理的進階使用者，
+        除非您是非常熟悉 MenuOS 存放管理的進階使用者，
         否則請勿將系統或開機磁碟分割標示為非使用中。
 
 範例:

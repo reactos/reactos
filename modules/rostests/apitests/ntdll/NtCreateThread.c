@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS api tests
+ * PROJECT:     MenuOS api tests
  * LICENSE:     See COPYING in the top level directory
  * PURPOSE:     Test for NtCreateThread
  * PROGRAMMER:  Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>

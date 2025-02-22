@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS msgina.dll
+ * PROJECT:         MenuOS msgina.dll
  * FILE:            dll/win32/msgina/tui.c
- * PURPOSE:         ReactOS Logon GINA DLL
- * PROGRAMMER:      Hervé Poussineau (hpoussin@reactos.org)
+ * PURPOSE:         MenuOS Logon GINA DLL
+ * PROGRAMMER:      HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "msgina.h"

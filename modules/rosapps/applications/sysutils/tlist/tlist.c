@@ -1,5 +1,5 @@
 /*
- * ReactOS Project
+ * MenuOS Project
  * TList
  *
  * Copyright (c) 2000,2001 Emanuele Aliberti
@@ -65,7 +65,7 @@ void PsaiFree(void *ptr)
 
 int WINAPI PrintBanner (VOID)
 {
-  printf ("ReactOS "KERNEL_VERSION_STR" T(ask)List\n");
+  printf ("MenuOS "KERNEL_VERSION_STR" T(ask)List\n");
   printf ("Copyright (c) 2000,2001 Emanuele Aliberti\n\n");
   return EXIT_SUCCESS;
 }

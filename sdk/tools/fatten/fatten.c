@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS FAT Image Creator
+ * PROJECT:         MenuOS FAT Image Creator
  * FILE:            tools/fatten/fatten.c
  * PURPOSE:         FAT Image Creator (for EFI Boot)
  * PROGRAMMERS:     David Quintana

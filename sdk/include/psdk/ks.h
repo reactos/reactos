@@ -1,5 +1,5 @@
 /*
-    ReactOS
+    MenuOS
     Kernel Streaming API
 
     by Andrew Greenwood

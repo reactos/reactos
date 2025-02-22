@@ -7,7 +7,7 @@
 // #include <msvcrt/locale.h>
 
 // replace fjgpp fcvtbuf from project  http://www.jbox.dk/sanos/source/lib/fcvt.c.html
-// with small modification's to match ReactOS arch
+// with small modification's to match MenuOS arch
 
 // Floating point to string conversion routines
 //

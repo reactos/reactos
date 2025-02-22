@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         MenuOS Kernel
  * FILE:            ntoskrnl/io/iomgr/iomgr.c
  * PURPOSE:         I/O Manager Initialization and Misc Utility Functions
  *

@@ -1,4 +1,4 @@
-; TDI test driver - ReactOS Operating System
+; TDI test driver - MenuOS Operating System
 
 LIBRARY TDITEST.SYS
 

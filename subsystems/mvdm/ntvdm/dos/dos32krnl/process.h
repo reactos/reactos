@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPLv2 - See COPYING in the top level directory
- * PROJECT:         ReactOS Virtual DOS Machine
+ * PROJECT:         MenuOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/dos/dos32krnl/process.h
  * PURPOSE:         DOS32 Processes
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>

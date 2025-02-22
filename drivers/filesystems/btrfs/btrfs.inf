@@ -95,13 +95,13 @@ LoadOrderGroup   = "File System"
 [Btrfs.DllFiles]
 shellbtrfs.dll
 ubtrfs.dll
-; mkbtrfs.exe ; Not imported into ReactOS.
+; mkbtrfs.exe ; Not imported into MenuOS.
 
 [SourceDisksFiles]
 btrfs.sys = 1,,
 shellbtrfs.dll = 1,,
 ubtrfs.dll = 1,,
-; mkbtrfs.exe = 1,, ; Not imported into ReactOS.
+; mkbtrfs.exe = 1,, ; Not imported into MenuOS.
 
 [SourceDisksNames.x86]
 1 = %DiskId1%,,,\x86

@@ -1,7 +1,7 @@
 /*
  * mmintrin.h
  *
- * This file is part of the ReactOS CRT package.
+ * This file is part of the MenuOS CRT package.
  *
  * Contributors:
  *   Timo Kreuzer (timo.kreuzer@reactos.org)

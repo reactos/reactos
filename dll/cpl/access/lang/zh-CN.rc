@@ -17,7 +17,7 @@ BEGIN
     AUTOCHECKBOX "使用粘滞键(&U)", IDC_STICKY_BOX, 12, 49, 126, 14
     PUSHBUTTON "设置(&S)", IDC_STICKY_BUTTON, 144, 49, 90, 14
     GROUPBOX "筛选键", -1, 6, 79, 234, 62
-    LTEXT "如果希望 ReactOS 忽略短暂或重复的按键、或者减缓重复速度，请用“筛选键”。",
+    LTEXT "如果希望 MenuOS 忽略短暂或重复的按键、或者减缓重复速度，请用“筛选键”。",
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "使用筛选键(&F)", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "设置(&E)", IDC_FILTER_BUTTON, 144, 121, 90, 14
@@ -36,7 +36,7 @@ CAPTION "声音"
 FONT 9, "宋体", 0, 0, 0x0
 BEGIN
     GROUPBOX "声音卫士", -1, 6, 11, 234, 98
-    LTEXT "希望 ReactOS 能够在系统发出声音时发出可视警告，请用“声音卫士”。",
+    LTEXT "希望 MenuOS 能够在系统发出声音时发出可视警告，请用“声音卫士”。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用“声音卫士”(&S)", IDC_SENTRY_BOX, 12, 49, 90, 14
     LTEXT "选择视觉警告：", IDC_SENTRY_TEXT, 12, 72, 222, 11
@@ -54,7 +54,7 @@ CAPTION "显示"
 FONT 9, "宋体", 0, 0, 0x0
 BEGIN
     GROUPBOX "高对比度", -1, 6, 11, 234, 62
-    LTEXT "希望 ReactOS 使用可读性好的颜色与字体，请用该选项。",
+    LTEXT "希望 MenuOS 使用可读性好的颜色与字体，请用该选项。",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "使用高对比度(&U)", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "设置(&S)", IDC_CONTRAST_BUTTON, 144, 49, 90, 14

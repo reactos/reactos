@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         MenuOS kernel
  * FILE:            ntoskrnl/tests/tests/VirtualMemory.c
  * PURPOSE:         No purpose listed.
  *

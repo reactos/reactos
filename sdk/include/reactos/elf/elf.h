@@ -5,7 +5,7 @@
 #include <elf/common.h>
 
 /*
- * Word-size-dependent definitions. All ReactOS builds support all of them,
+ * Word-size-dependent definitions. All MenuOS builds support all of them,
  * even if (obviously) code for the wrong architecture cannot be executed - the
  * files can still be used in machine-independent ways, e.g. as resource DLLs
  */

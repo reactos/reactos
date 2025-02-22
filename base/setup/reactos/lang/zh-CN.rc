@@ -4,41 +4,41 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 安装程序"
+CAPTION "MenuOS 安装程序"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "欢迎使用 ReactOS 安装程序", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "This wizard will install or upgrade ReactOS on your computer, \
+    LTEXT "欢迎使用 MenuOS 安装程序", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "This wizard will install or upgrade MenuOS on your computer, \
 and prepare the second part of the setup.", IDC_STATIC, 115, 40, 195, 27
 ////
     GROUPBOX " IMPORTANT INFORMATION ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
-    LTEXT "ReactOS is in Alpha stage: it is not feature- complete and is \
+    LTEXT "MenuOS is in Alpha stage: it is not feature- complete and is \
 under heavy development. It is recommended to use it only for \
 evaluation and testing and not as your daily-usage OS.\n\
 It may corrupt your data or damage your hardware.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
     LTEXT "Backup your data or test on a secondary computer \
-if you attempt to run ReactOS on real hardware.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+if you attempt to run MenuOS on real hardware.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
 ////
     LTEXT "若要继续，请单击“下一步”。", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 安装程序"
+CAPTION "MenuOS 安装程序"
 FONT 9, "宋体"
 BEGIN
-    AUTORADIOBUTTON "安装 ReactOS(&I)", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "安装 ReactOS 的新副本。此选项将不会保存你的文件、设置和程序。你可以对磁盘和分区进行更改。", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
-    AUTORADIOBUTTON "修复或更新 ReactOS(&U)", IDC_UPDATE, 7, 80, 277, 10
-    LTEXT "更新或修复 ReactOS 安装的副本。此选项会保存您的文件、设置和程序。如果 ReactOS 已经安装，此选项方可使用。", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "安装 MenuOS(&I)", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
+    LTEXT "安装 MenuOS 的新副本。此选项将不会保存你的文件、设置和程序。你可以对磁盘和分区进行更改。", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "修复或更新 MenuOS(&U)", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "更新或修复 MenuOS 安装的副本。此选项会保存您的文件、设置和程序。如果 MenuOS 已经安装，此选项方可使用。", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 安装程序"
+CAPTION "MenuOS 安装程序"
 FONT 9, "宋体"
 BEGIN
-    LTEXT       "ReactOS 安装程序可以升级下面列出的一个可用的 ReactOS 安装，如果 ReactOS 安装损坏，安装程序可以尝试修复它。", IDC_STATIC, 6, 6, 300, 18
+    LTEXT       "MenuOS 安装程序可以升级下面列出的一个可用的 MenuOS 安装，如果 MenuOS 安装损坏，安装程序可以尝试修复它。", IDC_STATIC, 6, 6, 300, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "不执行升级(&D)", IDC_SKIPUPGRADE, 230, 128, 80, 14
     LTEXT       "单击“下一步”以升级所选的操作系统安装，或单击“不升级”以在不升级的情况下继续新安装。", IDC_STATIC, 7, 124, 222, 16
@@ -46,7 +46,7 @@ END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 安装程序"
+CAPTION "MenuOS 安装程序"
 FONT 9, "宋体"
 BEGIN
     LTEXT "计算机：", IDC_STATIC, 20, 15, 80, 10
@@ -60,7 +60,7 @@ END
 
 IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 安装程序"
+CAPTION "MenuOS 安装程序"
 FONT 9, "宋体"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
@@ -108,7 +108,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Advanced Installation Options"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "Choose the &directory where you want to install ReactOS:", IDC_STATIC, 7, 9, 291, 10
+    LTEXT "Choose the &directory where you want to install MenuOS:", IDC_STATIC, 7, 9, 291, 10
     EDITTEXT IDC_PATH, 7, 23, 291, 13
     GROUPBOX "Bootloader", IDC_STATIC, 7, 45, 291, 60
     LTEXT "Select the location where the FreeLoader\nbootloader should be installed.\n\nBy default, it is installed on the system partition of the boot disk (and either in the Master or the Volume Boot Record for BIOS-based computers).", IDC_STATIC, 13, 57, 279, 44
@@ -119,7 +119,7 @@ END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 安装程序"
+CAPTION "MenuOS 安装程序"
 FONT 9, "宋体"
 BEGIN
     LTEXT "安装类型：", IDC_STATIC, 18, 5, 74, 11
@@ -138,14 +138,14 @@ BEGIN
     EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "目标目录：", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    AUTOCHECKBOX "我确认我的操作是无误的。我同样了解 ReactOS\n 是一款 alpha 级软件，可能会损害我的计算机或破坏我的数据。",
+    AUTOCHECKBOX "我确认我的操作是无误的。我同样了解 MenuOS\n 是一款 alpha 级软件，可能会损害我的计算机或破坏我的数据。",
         IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
     LTEXT "请确认所有安装设置正确，\n然后点击安装开始安装。", IDC_STATIC, 7, 124, 303, 18
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 安装程序"
+CAPTION "MenuOS 安装程序"
 FONT 9, "宋体"
 BEGIN
     LTEXT "安装文件...", IDC_ACTIVITY, 20, 50, 277, 10
@@ -155,11 +155,11 @@ END
 
 IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS 安装程序已经完成"
+CAPTION "MenuOS 安装程序已经完成"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "正在完成 ReactOS 安装程序向导", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "您成功完成 ReactOS 第一阶段安装过程。", IDC_STATIC, 115, 50, 195, 17
+    LTEXT "正在完成 MenuOS 安装程序向导", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "您成功完成 MenuOS 第一阶段安装过程。", IDC_STATIC, 115, 50, 195, 17
     LTEXT "点击完成后，您的电脑将会重新启动。", IDC_STATIC, 115, 80, 195, 17
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
     LTEXT "请从光盘驱动器取出所有光盘。然后点击完成来重启您的电脑。", IDC_STATIC, 115, 169, 195, 17
@@ -169,11 +169,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CAPTION "ReactOS 安装程序"
+    IDS_CAPTION "MenuOS 安装程序"
     IDS_TYPETITLE "Installation Type"
-    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
-    IDS_UPDATETITLE "Update or Repair ReactOS"
-    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
+    IDS_TYPESUBTITLE "You can setup a new MenuOS installation, or update/repair an existing installation."
+    IDS_UPDATETITLE "Update or Repair MenuOS"
+    IDS_UPDATESUBTITLE "Choose which existing MenuOS installation you want to update or repair."
     IDS_DEVICETITLE "设置基本设备"
     IDS_DEVICESUBTITLE "指定显示和键盘设置。"
     IDS_DRIVETITLE "设置安装分区和系统文件夹"
@@ -184,7 +184,7 @@ BEGIN
     IDS_PROCESSSUBTITLE "建立并格式化分区，复制文件，安装并设置引导程序。"
     IDS_RESTARTTITLE "第一阶段安装完成"
     IDS_RESTARTSUBTITLE "第一阶段安装已经完成，重新启动进行第二阶段安装。"
-    IDS_ABORTSETUP "ReactOS 未在您的电脑上安装完成。如果您现在退出安装程序，您需要再次运行安装程序来安装 ReactOS。 确定退出？"
+    IDS_ABORTSETUP "MenuOS 未在您的电脑上安装完成。如果您现在退出安装程序，您需要再次运行安装程序来安装 MenuOS。 确定退出？"
     IDS_ABORTSETUP2 "终止安装？"
     IDS_NO_TXTSETUP_SIF "无法找到 'txtsetup.sif'。\n安装程序无法继续。"
     IDS_INSTALLBTN "&Install"
@@ -266,7 +266,7 @@ alphanumericals (a-z, A-Z, 0-9), and\n . \\ - _\n\
 Spaces are not allowed."
 
     IDS_ERROR_DIRECTORY_NAME_TITLE "Invalid installation path"
-    IDS_ERROR_DIRECTORY_NAME "The ReactOS installation path must follow the DOS 8.3 naming scheme, \
+    IDS_ERROR_DIRECTORY_NAME "The MenuOS installation path must follow the DOS 8.3 naming scheme, \
 and only contain letters, digits, dashes and periods. Spaces are not allowed."
 
     IDS_ERROR_CREATE_PARTITION_TITLE "Create partition"
@@ -278,9 +278,9 @@ and only contain letters, digits, dashes and periods. Spaces are not allowed."
 
     IDS_ERROR_WRITE_PTABLE "Setup failed to write partition tables."
 
-    IDS_ERROR_SYSTEM_PARTITION "The ReactOS Setup could not find a supported system partition\n\
+    IDS_ERROR_SYSTEM_PARTITION "The MenuOS Setup could not find a supported system partition\n\
 on your system or could not create a new one. Without such a partition\n\
-the Setup program cannot install ReactOS.\
+the Setup program cannot install MenuOS.\
 \nClick on OK to return to the partition selection list."
 
     IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Unrecognized volume while attempting to format the partition."

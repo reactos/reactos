@@ -1,7 +1,7 @@
 /*
  * New device installer (newdev.dll)
  *
- * Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
+ * Copyright 2005-2006 HervÃ© Poussineau (hpoussin@reactos.org)
  *           2005 Christoph von Wittich (Christoph@ActiveVB.de)
  *           2009 Colin Finck (colin@reactos.org)
  *
@@ -969,7 +969,7 @@ ClientSideInstallW(
         goto cleanup;
     }
 
-    /* Read the data. Some is just included for compatibility with Windows right now and not yet used by ReactOS.
+    /* Read the data. Some is just included for compatibility with Windows right now and not yet used by MenuOS.
        See umpnpmgr for more details. */
     if(!ReadFile(hPipe, &Value, sizeof(Value), &BytesRead, NULL))
     {

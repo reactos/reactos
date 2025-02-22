@@ -1,10 +1,10 @@
 /*
- * PROJECT:     ReactOS Console Utilities Library
+ * PROJECT:     MenuOS Console Utilities Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Provides basic abstraction wrappers around CRT streams or
  *              Win32 console API I/O functions, to deal with i18n + Unicode
  *              related problems.
- * COPYRIGHT:   Copyright 2017-2018 ReactOS Team
+ * COPYRIGHT:   Copyright 2017-2018 MenuOS Team
  *              Copyright 2017-2018 Hermes Belusca-Maito
  */
 

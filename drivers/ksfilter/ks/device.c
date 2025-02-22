@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
+ * PROJECT:         MenuOS Kernel Streaming
  * FILE:            drivers/ksfilter/ks/device.c
  * PURPOSE:         KS IKsDevice interface functions
  * PROGRAMMER:      Johannes Anderwald
@@ -584,11 +584,11 @@ IKsDevice_Create(
 
     if (IoStack->FileObject->FileName.Buffer == NULL)
     {
-        // ReactOS PnPMgr still sucks
+        // MenuOS PnPMgr still sucks
         ASSERT(IoStack->FileObject->FileName.Length == 0);
         Irp->IoStatus.Status = STATUS_SUCCESS;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        DPRINT1("ReactOS PnP hack\n");
+        DPRINT1("MenuOS PnP hack\n");
         return STATUS_SUCCESS;
     }
 

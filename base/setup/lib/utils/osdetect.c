@@ -1,7 +1,7 @@
 /*
- * PROJECT:     ReactOS Setup Library
+ * PROJECT:     MenuOS Setup Library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     NT 5.x family (MS Windows <= 2003, and ReactOS)
+ * PURPOSE:     NT 5.x family (MS Windows <= 2003, and MenuOS)
  *              operating systems detection code.
  * COPYRIGHT:   Copyright 2017-2024 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
@@ -94,7 +94,7 @@ EnumerateInstallations(
                          RTL_FIELD_SIZE(NTOS_OPTIONS, Signature)) !=
                          RTL_FIELD_SIZE(NTOS_OPTIONS, Signature))
     {
-        /* This is not a ReactOS entry */
+        /* This is not a MenuOS entry */
         // DPRINT("    An installation '%S' of unsupported type '%S'\n",
                // BootEntry->FriendlyName, BootEntry->Version ? BootEntry->Version : L"n/a");
         DPRINT("    An installation '%S' of unsupported type %lu\n",
@@ -106,7 +106,7 @@ EnumerateInstallations(
     /* BootType is Windows2003, now check OsLoadPath */
     if (!Options->OsLoadPath || !*Options->OsLoadPath)
     {
-        /* Certainly not a ReactOS installation */
+        /* Certainly not a MenuOS installation */
         DPRINT1("    A Win2k3 install '%S' without an ARC path?!\n", BootEntry->FriendlyName);
         /* Continue the enumeration */
         return STATUS_SUCCESS;

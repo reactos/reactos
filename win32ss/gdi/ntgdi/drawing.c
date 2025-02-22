@@ -46,7 +46,7 @@ SUCH DAMAGE.
    http://www.it.usyd.edu.au/~graphapp/
 */
 /*
-    Modified for ReactOS
+    Modified for MenuOS
  */
 
 #include <win32k.h>
@@ -1227,7 +1227,7 @@ int app_draw_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrushPen
     return result;
 }
 
-/* ReactOS Interface *********************************************************/
+/* MenuOS Interface *********************************************************/
 
 int
 FASTCALL

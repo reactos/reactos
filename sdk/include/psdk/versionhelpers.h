@@ -3,7 +3,7 @@
  *
  * Inline helper functions for Windows version detection
  *
- * This file is part of the ReactOS PSDK package.
+ * This file is part of the MenuOS PSDK package.
  *
  * Contributors:
  *   Created by Timo Kreuzer <timo.kreuzer@reactos.org>
@@ -151,6 +151,6 @@ IsReactOS()
     // FIXME: Find a better method!
     WCHAR szWinDir[MAX_PATH];
     GetWindowsDirectoryW(szWinDir, _countof(szWinDir));
-    return (wcsstr(szWinDir, L"ReactOS") != NULL);
+    return (wcsstr(szWinDir, L"MenuOS") != NULL);
 }
 #endif // __REACTOS__

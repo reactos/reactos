@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS ComPort Library
+ * PROJECT:         MenuOS ComPort Library
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            lib/reactos/cportlib/cport.c
  * PURPOSE:         Provides a serial port library for KDCOM, INIT, and FREELDR
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROGRAMMERS:     MenuOS Portable Systems Group
  */
 
 /* NOTE: This library follows the precise serial port intialization steps documented
@@ -172,7 +172,7 @@ ComPortTest1(IN PUCHAR Address)
         /* Set all modem output bits */
         WRITE_PORT_UCHAR(Address + MODEM_CONTROL_REGISTER,
                          SERIAL_MCR_OUT1 | SERIAL_MCR_LOOP); // Windows
-/* ReactOS
+/* MenuOS
         WRITE_PORT_UCHAR(Address + MODEM_CONTROL_REGISTER,
                          SERIAL_MCR_DTR | SERIAL_MCR_RTS | SERIAL_MCR_OUT1 | SERIAL_MCR_OUT2 | SERIAL_MCR_LOOP);
 */
@@ -185,7 +185,7 @@ ComPortTest1(IN PUCHAR Address)
          * equal to the lower nibble of the MCR (modem input bits).
          */
         if (Msr & SERIAL_MSR_RI) // Windows
-        // if (Msr & (SERIAL_MSR_CTS | SERIAL_MSR_DSR | SERIAL_MSR_RI | SERIAL_MSR_DCD) == 0xF0) // ReactOS
+        // if (Msr & (SERIAL_MSR_CTS | SERIAL_MSR_DSR | SERIAL_MSR_RI | SERIAL_MSR_DCD) == 0xF0) // MenuOS
         {
             RetVal = TRUE;
         }

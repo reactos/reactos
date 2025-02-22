@@ -13,6 +13,6 @@ DDK environment variables must be set! (run setenv.bat)
     - Run "build" to build the driver
 
 
-Building with Mingw32 and ReactOS include files:
+Building with Mingw32 and MenuOS include files:
 
-    - Run "make tditest" FROM THE ReactOS ROOT DIRECTORY to build the driver
+    - Run "make tditest" FROM THE MenuOS ROOT DIRECTORY to build the driver

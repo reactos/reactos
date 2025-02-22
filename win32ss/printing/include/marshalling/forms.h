@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS Printing Stack Marshalling Functions
+ * PROJECT:     MenuOS Printing Stack Marshalling Functions
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Marshalling definitions for FORM_INFO_*
- * COPYRIGHT:   Copyright 1998-2020 ReactOS
+ * COPYRIGHT:   Copyright 1998-2020 MenuOS
  */
 
 static const MARSHALLING FormInfo1Marshalling = {

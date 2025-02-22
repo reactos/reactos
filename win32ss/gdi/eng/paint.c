@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
+ * PROJECT:           MenuOS kernel
  * PURPOSE:           GDI Driver Paint Functions
  * FILE:              win32ss/gdi/eng/paint.c
  * PROGRAMERS:        Timo Kreuzer (timo.kreuzer@reactos.org)

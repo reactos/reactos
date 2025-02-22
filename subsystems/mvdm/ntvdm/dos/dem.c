@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         ReactOS Virtual DOS Machine
+ * PROJECT:         MenuOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/dos/dem.c
  * PURPOSE:         DOS 32-bit Emulation Support Library -
  *                  This library is used by the built-in NTVDM DOS32 and by

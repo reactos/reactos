@@ -1,5 +1,5 @@
 /*
- * PROJECT:    ReactOS Service Manager
+ * PROJECT:    MenuOS Service Manager
  * FILE:       base/applications/mscutils/servman/lang/sv-SE.rc
  * PURPOSE:    Swedish resource file
  * TRANSLATOR: Jaix Bly
@@ -275,10 +275,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRESS_INFO_START "ReactOS försöker att starta följande tjänst"
-    IDS_PROGRESS_INFO_STOP "ReactOS försöker att stoppa följande tjänst"
-    IDS_PROGRESS_INFO_PAUSE "ReactOS försöker att pausa följande tjänst"
-    IDS_PROGRESS_INFO_RESUME "ReactOS försöker att fortsätta följende tjänst"
+    IDS_PROGRESS_INFO_START "MenuOS försöker att starta följande tjänst"
+    IDS_PROGRESS_INFO_STOP "MenuOS försöker att stoppa följande tjänst"
+    IDS_PROGRESS_INFO_PAUSE "MenuOS försöker att pausa följande tjänst"
+    IDS_PROGRESS_INFO_RESUME "MenuOS försöker att fortsätta följende tjänst"
     IDS_CREATE_SUCCESS "Tjänsten blev skapad"
     IDS_DELETE_SUCCESS "Tjänsten togs bort"
     IDS_CREATE_REQ "Fält markerade med en\nasterisk är obligatoriska"
@@ -313,7 +313,7 @@ BEGIN
     IDS_HINT_DETAILS " Visa information om varje objekt i ett fönster."
     IDS_HINT_CUST " Anpassa vy."
     IDS_HINT_HELP " Visa hjälpfönstret."
-    IDS_HINT_ABOUT " Om ReactOS tjänster."
+    IDS_HINT_ABOUT " Om MenuOS tjänster."
     IDS_HINT_SYS_RESTORE " Återställ fönstret till normal storlek."
     IDS_HINT_SYS_MOVE " Flytta detta fönstret."
     IDS_HINT_SYS_SIZE " Ändra storleken på dette fönstret."
@@ -325,7 +325,7 @@ END
 /* Application title */
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "ReactOS tjänster"
+    IDS_APPNAME "MenuOS tjänster"
     IDS_APPAUTHORS "Copyright (C) 2005-2007 by Ged Murphy (gedmurphy@reactos.org)"
 END
 

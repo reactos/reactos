@@ -1,7 +1,7 @@
 /*
  * bdatypes.h
  *
- * This file is part of the ReactOS DXSDK package.
+ * This file is part of the MenuOS DXSDK package.
  *
  * THIS SOFTWARE IS NOT COPYRIGHTED
  *

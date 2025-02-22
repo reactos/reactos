@@ -8,7 +8,7 @@
     extern char NETCONFIG[];
 #else
 // XXX Should be in, or come from, the registry!!!
-#define NETCONFIG "C:\\ReactOS\\System32\\drivers\\etc\\netconfig"
+#define NETCONFIG "C:\\MenuOS\\System32\\drivers\\etc\\netconfig"
 #endif
 #define NETPATH	  "NETPATH"
 

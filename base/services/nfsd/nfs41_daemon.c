@@ -1,5 +1,5 @@
 /* NFSv4.1 client for Windows
- * Copyright © 2012 The Regents of the University of Michigan
+ * Copyright Â© 2012 The Regents of the University of Michigan
  *
  * Olga Kornievskaia <aglo@umich.edu>
  * Casey Bodley <cbodley@umich.edu>
@@ -42,7 +42,7 @@
 DWORD NFS41D_VERSION = 0;
 
 #ifndef __REACTOS__
-static const char FILE_NETCONFIG[] = "C:\\ReactOS\\System32\\drivers\\etc\\netconfig";
+static const char FILE_NETCONFIG[] = "C:\\MenuOS\\System32\\drivers\\etc\\netconfig";
 #endif
 
 /* Globals */

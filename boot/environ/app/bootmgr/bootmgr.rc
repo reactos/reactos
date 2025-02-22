@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
- * PROJECT:         ReactOS UEFI Boot Manager
+ * PROJECT:         MenuOS UEFI Boot Manager
  * FILE:            boot/environ/app/bootmgr.rc
  * PURPOSE:         Boot Manager Resource File
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)

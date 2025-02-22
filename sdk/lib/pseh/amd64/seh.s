@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS CRT
+ * PROJECT:         MenuOS CRT
  * FILE:            lib/pseh/amd64/seh.S
  * PURPOSE:         SEH Support for the CRT
  * PROGRAMMERS:

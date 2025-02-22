@@ -1,7 +1,7 @@
 #include "resource.h"
 #include <windows.h>
 
-#define REACTOS_STR_FILE_DESCRIPTION    "ReactOS MDI Sample Application by Robert Dickenson"
+#define REACTOS_STR_FILE_DESCRIPTION    "MenuOS MDI Sample Application by Robert Dickenson"
 #define REACTOS_STR_INTERNAL_NAME       "mdi"
 #define REACTOS_STR_ORIGINAL_FILENAME   "mdi.exe"
 #define REACTOS_STR_ORIGINAL_COPYRIGHT  "Copyright © 2002 Robert Dickenson"
@@ -74,15 +74,15 @@ CAPTION "About"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON            IDI_MDI_APP,IDI_MDI_APP,14,9,16,16
-    LTEXT           "ReactOS MDI Template Application Version 1.0",IDC_STATIC,49,10,119,8,
+    LTEXT           "MenuOS MDI Template Application Version 1.0",IDC_STATIC,49,10,119,8,
                     SS_NOPREFIX
-    LTEXT           "Copyright (C) 2002 ReactOS Team",IDC_STATIC,49,20,119,8
+    LTEXT           "Copyright (C) 2002 MenuOS Team",IDC_STATIC,49,20,119,8
     DEFPUSHBUTTON   "OK",IDOK,195,6,30,11,WS_GROUP
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "ReactOS Application"
+    IDS_APP_TITLE           "MenuOS Application"
 
     ID_FILE_MENU            "Commands for working with files"
     ID_OPTIONS_MENU         "Commands for setting options"

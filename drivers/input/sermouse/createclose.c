@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS Serial mouse driver
+ * PROJECT:     MenuOS Serial mouse driver
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        drivers/input/sermouse/createclose.c
  * PURPOSE:     IRP_MJ_CREATE and IRP_MJ_CLOSE operations
- * PROGRAMMERS: Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS: Copyright 2005-2006 HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "sermouse.h"

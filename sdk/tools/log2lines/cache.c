@@ -1,5 +1,5 @@
 /*
- * ReactOS log2lines
+ * MenuOS log2lines
  * Written by Jan Roeloffzen
  *
  * - Image directory caching
@@ -102,7 +102,7 @@ check_directory(int force)
         sprintf(Line, UNZIP_FMT_7Z, opt_7z, opt_dir, compressed_7z_path);
 
         /* This of course only works if the .7z and .iso basenames are identical
-         * which is normally true for ReactOS trunk builds:
+         * which is normally true for MenuOS trunk builds:
          */
         strcpy(check_iso, ".iso");
         if (!file_exists(opt_dir) || force)

@@ -1,5 +1,5 @@
 /*
-    ReactOS Sound System
+    MenuOS Sound System
     Device type IDs and macros
 
     Author:

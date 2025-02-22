@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS System Libraries
+ * PROJECT:         MenuOS System Libraries
  * FILE:            win32ss/user/user32/include/user32.h
  * PURPOSE:         Win32 User Library
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)

@@ -1,6 +1,6 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 2004 ReactOS Team
+ *  MenuOS kernel
+ *  Copyright (C) 2004 MenuOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS text-mode setup
+ * PROJECT:         MenuOS text-mode setup
  * FILE:            base/setup/usetup/genlist.c
  * PURPOSE:         Generic list functions
  * PROGRAMMER:      Christoph von Wittich <christoph at reactos.org>

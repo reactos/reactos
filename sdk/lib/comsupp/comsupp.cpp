@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS crt library
+ * PROJECT:     MenuOS crt library
  * LICENSE:     BSD-2-Clause (https://spdx.org/licenses/BSD-2-Clause)
  * PURPOSE:     Compiler support for COM
  * COPYRIGHT:   Copyright 2013 Thomas Faber (thomas.faber@reactos.org)

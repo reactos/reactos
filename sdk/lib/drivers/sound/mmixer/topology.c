@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
+ * PROJECT:         MenuOS Kernel Streaming
  * FILE:            lib/drivers/sound/mmixer/topology.c
  * PURPOSE:         Topology Handling Functions
  * PROGRAMMER:      Johannes Anderwald

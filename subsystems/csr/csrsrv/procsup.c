@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Client/Server Runtime SubSystem
+ * PROJECT:         MenuOS Client/Server Runtime SubSystem
  * FILE:            subsystems/win32/csrsrv/procsup.c
  * PURPOSE:         CSR Server DLL Process Management
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROGRAMMERS:     MenuOS Portable Systems Group
  *                  Alex Ionescu (alex@relsoft.net)
  */
 

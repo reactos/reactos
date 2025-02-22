@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS VFAT filesystem library
+ * PROJECT:     MenuOS VFAT filesystem library
  * FILE:        include/reactos/libs/fslib/vfatxlib.h
  * PURPOSE:     Public definitions for vfat filesystem library
  */

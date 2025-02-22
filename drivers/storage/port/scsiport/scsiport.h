@@ -50,7 +50,7 @@
 #define LUNEX_REQUEST_PENDING            0x0020
 #define SCSI_PORT_SCAN_IN_PROGRESS       0x8000
 
-// we need this to be compatible with ReactOS' classpnp (which is compiled with NTDDI_WIN8)
+// we need this to be compatible with MenuOS' classpnp (which is compiled with NTDDI_WIN8)
 typedef struct _STORAGE_ADAPTER_DESCRIPTOR_WIN8 {
     ULONG Version;
     ULONG Size;

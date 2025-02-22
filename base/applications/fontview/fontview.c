@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Font Viewer
+ * PROJECT:     MenuOS Font Viewer
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Main source file
  * COPYRIGHT:   Copyright 2007 Timo Kreuzer <timo.kreuzer@reactos.org>

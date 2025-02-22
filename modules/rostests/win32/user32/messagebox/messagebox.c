@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Tests
+ * PROJECT:     MenuOS Tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Tests the undocumented user32.dll API SoftModalMessageBox()
  *              and the MB_SERVICE_NOTIFICATION flag of the MessageBox*() APIs.
@@ -16,7 +16,7 @@
 
 #include "resource.h"
 
-/* Adjust according to your platform! -- ReactOS is currently compatible with Windows Server 2003 */
+/* Adjust according to your platform! -- MenuOS is currently compatible with Windows Server 2003 */
 #undef _WIN32_WINNT
 #define _WIN32_WINNT _WIN32_WINNT_WS03 // _WIN32_WINNT_WIN2K // _WIN32_WINNT_WS03 // _WIN32_WINNT_WIN7
 

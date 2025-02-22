@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS Kernel
+ * PROJECT:     MenuOS Kernel
  * LICENSE:     BSD - See COPYING.ARM in the top level directory
  * PURPOSE:     Configuration Manager - Boot Initialization
  * COPYRIGHT:   Copyright 2007 Alex Ionescu (alex.ionescu@reactos.org)
- *              Copyright 2010 ReactOS Portable Systems Group
+ *              Copyright 2010 MenuOS Portable Systems Group
  *              Copyright 2022 Hermès Bélusca-Maïto
  *
  * NOTE: This module is shared by both the kernel and the bootloader.

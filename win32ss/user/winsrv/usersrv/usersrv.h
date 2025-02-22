@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS User API Server DLL
+ * PROJECT:         MenuOS User API Server DLL
  * FILE:            win32ss/user/winsrv/usersrv/usersrv.h
  * PURPOSE:         Main header - Definitions
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

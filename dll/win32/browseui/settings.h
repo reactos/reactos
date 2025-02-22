@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS browseui
+ * PROJECT:     MenuOS browseui
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Settings header file
  * COPYRIGHT:   Copyright 2023 Carl Bialorucki <cbialo2@outlook.com>

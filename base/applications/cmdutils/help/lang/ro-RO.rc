@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS help utility
+ * PROJECT:     MenuOS help utility
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2014-2018 Ștefan Fulea <stefan.fulea@mail.com>
@@ -15,7 +15,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Oferă informații de manual referitoare la comenzile ReactOS.\n\n\
+    IDS_USAGE "Oferă informații de manual referitoare la comenzile MenuOS.\n\n\
 HELP [comandă]\n\n\
   comandă - Afișează informații de manual pentru această comandă.\n"
     IDS_HELP1 "Enumeră toate comenzile disponibile (+ descriere)\n\n\
@@ -32,7 +32,7 @@ CHCP      Afișează sau stabilește numărul codificării curente a paginii.\n\
 CHDIR     Afișează sau schimbă directorul curent.\n\
 CHOICE    Așteaptă alegerea unei opțiuni (din mai multe furnizate).\n\
 CLS       Curăță ecranul.\n\
-CMD       Lansează o nouă instanță a interpretorului de comenzi ReactOS.\n\
+CMD       Lansează o nouă instanță a interpretorului de comenzi MenuOS.\n\
 COLOR     Stabilește culorile implicite pentru text și fundal.\n\
 COPY      Copiază unul sau mai multe fișiere dintr-un loc în altul.\n\
 DATE      Afișează sau stabilește data.\n\
@@ -53,7 +53,7 @@ FOR       Execută o comandă pentru fiecare fișier dintr-un grup (de fișiere)
 FREE      Oferă informații despre unitatea de stocare.\n\
 GOTO      Execută salturi către rânduri etichetate în interiorul unui\n\
           fișier de comenzi.\n\
-HELP      Oferă informații referitoare la comenzile ReactOS.\n\
+HELP      Oferă informații referitoare la comenzile MenuOS.\n\
 HISTORY   Enumeră toate comenzile care au fost utilizate.\n\
 IF        Realizează execuții condiționate în fișierele de comenzi.\n\
 LABEL     Crează, modifică, sau șterge eticheta unei unități de stocare.\n\
@@ -75,7 +75,7 @@ RENAME    Redenumește un fișier/director sau un grup (de fișiere/directoare).
 REPLACE   Înlocuiește fișiere.\n\
 RMDIR     Elimină un director.\n\
 SCREEN    Mută cursorul și (opțional) afișează un text.\n\
-SET       Afișează, stabilește sau elimină variabile de mediu ReactOS.\n\
+SET       Afișează, stabilește sau elimină variabile de mediu MenuOS.\n\
 SHIFT     Schimbă poziția argumentelor înlocuibile într-un fișier de comenzi.\n\
 START     Deschide o fereastră separată pentru execuția unui executabil sau\n\
           (fișier de) comenzi.\n\
@@ -83,7 +83,7 @@ TIME      Afișează sau stabilește data sistemului.\n\
 TIMER     Gestionează cronometre.\n\
 TITLE     Stabilește titlul pentru fereastra unei sesiuni CMD.EXE\n\
 TYPE      Afișează conținutul unui fișier text.\n\
-VER       Afișează versiunea ReactOS.\n\
+VER       Afișează versiunea MenuOS.\n\
 VERIFY    Verifică scrierea corectă a fișierelor pe disc.\n\
 VOL       Afișează eticheta și numărul de serie a unui volum.\n"
 END

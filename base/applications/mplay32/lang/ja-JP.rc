@@ -61,7 +61,7 @@ BEGIN
     IDS_TOOLTIP_SEEKFORW "前へシーク"
     IDS_TOOLTIP_FORWARD "前へスキップ"
     IDS_TOOLTIP_PAUSE "Pause"
-    IDS_APPTITLE "ReactOS マルチメディア プレーヤー"
+    IDS_APPTITLE "MenuOS マルチメディア プレーヤー"
     IDS_PLAY "再生"
     IDS_DEFAULTMCIERRMSG "No description is available for this error."
 END

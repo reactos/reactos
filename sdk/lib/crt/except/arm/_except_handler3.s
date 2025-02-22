@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         BSD - See COPYING.ARM in the top level directory
- * PROJECT:           ReactOS CRT librariy
+ * PROJECT:           MenuOS CRT librariy
  * PURPOSE:           Implementation of _except_handler3
  * PROGRAMMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */

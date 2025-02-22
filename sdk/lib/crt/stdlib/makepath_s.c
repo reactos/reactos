@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS CRT library
+ * PROJECT:     MenuOS CRT library
  * LICENSE:     See COPYING in the top level directory
  * FILE:        lib/sdk/crt/stdlib/makepath_s.c
  * PURPOSE:     Creates a path

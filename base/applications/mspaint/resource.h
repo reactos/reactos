@@ -1,5 +1,5 @@
 /*
- * PROJECT:    PAINT for ReactOS
+ * PROJECT:    PAINT for MenuOS
  * LICENSE:    LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:    Defines the resource IDs
  * COPYRIGHT:  Copyright 2009 Benedikt Freisen <b.freisen@gmx.net>

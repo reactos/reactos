@@ -404,7 +404,7 @@ _FUNCTION_ {
                     }
 
 #ifdef __REACTOS__
-                    /* ReactOS: don't inline float processing (kernel/freeldr don't like that! */
+                    /* MenuOS: don't inline float processing (kernel/freeldr don't like that! */
                     _internal_handle_float(negative, exp, suppress, d, l_prefix || L_prefix, &ap);
                     st = 1;
 #else

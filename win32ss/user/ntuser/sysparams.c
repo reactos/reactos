@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        GPL, see COPYING in the top level directory
- * PROJECT:          ReactOS win32 kernel mode subsystem server
+ * PROJECT:          MenuOS win32 kernel mode subsystem server
  * PURPOSE:          System parameters functions
  * FILE:             win32ss/user/ntuser/sysparams.c
  * PROGRAMER:        Timo Kreuzer (timo.kreuzer@reactos.org)

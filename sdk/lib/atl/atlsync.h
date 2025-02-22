@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS ATL
+ * PROJECT:     MenuOS ATL
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     ATL Synchronization
  * COPYRIGHT:   Copyright 2022 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)

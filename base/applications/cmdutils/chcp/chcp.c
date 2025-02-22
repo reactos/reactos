@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Change CodePage Command
+ * PROJECT:     MenuOS Change CodePage Command
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Displays or changes the active console input and output code pages.
  * COPYRIGHT:   Copyright 1999 Eric Kohl

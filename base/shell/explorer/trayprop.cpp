@@ -1,5 +1,5 @@
 /*
- * ReactOS Explorer
+ * MenuOS Explorer
  *
  * Copyright 2006 - 2007 Thomas Weidenmueller <w3seek@reactos.org>
  *                  2015 Robert Naumann <gonzomdx@gmail.com>

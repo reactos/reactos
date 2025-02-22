@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS EventCreate Command
+ * PROJECT:         MenuOS EventCreate Command
  * FILE:            base/applications/cmdutils/eventcreate/evtmsggen.c
  * PURPOSE:         Generator for the event message string templates file.
  *                  Creates the message string file in the current directory.

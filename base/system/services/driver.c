@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Service Control Manager
+ * PROJECT:     MenuOS Service Control Manager
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/system/services/driver.c
  * PURPOSE:     Driver control interface

@@ -47,7 +47,7 @@ MIDIERR_STILLPLAYING, 		"Nuk mund të ktheni këtë operacion, ndërsa të dhën
 MIDIERR_NOMAP, 			"Një hartë MIDI nuk u gjet. Nuk mund të jetë një problem me të shoferit, ose fotografi MIDIMAP.CFG mund të jenë të korruptuar ose të humbur."
 MIDIERR_NOTREADY, 		"Porti është duke transmetuar të dhënat për pajisjen. Prisni derisa të dhënat janë transmetuar, dhe pastaj provoni përsëri."
 MIDIERR_NODEVICE, 		"Ndërtuesi aktual MIDI Mapper i referohet një pajisje MIDI që nuk është i instaluar në sistemin. Përdorimi MIDI Mapper për të redaktuar ndërtuesin."
-MIDIERR_INVALIDSETUP, 		"Skema aktuale MIDI është i dëmtuar. Kopjoni origjinal MIDIMAP.CFG dokument e skedarëve të SISTEMIT ReactOS, dhe pastaj provoni përsëri."
+MIDIERR_INVALIDSETUP, 		"Skema aktuale MIDI është i dëmtuar. Kopjoni origjinal MIDIMAP.CFG dokument e skedarëve të SISTEMIT MenuOS, dhe pastaj provoni përsëri."
 
 /* MCI errors */
 MCIERR_INVALID_DEVICE_ID, 	"ID MCI pajisje pavlefshme. Përdorimi ID kthyer kur hapni pajisjen MCI."
@@ -68,7 +68,7 @@ MCIERR_MISSING_PARAMETER, 	"Komanda e përcaktuar kërkon një parametër. Ju lu
 MCIERR_UNSUPPORTED_FUNCTION, 	"Pajisja MCI që ju jeni duke përdorur nuk ka mbështetjen e komandës së specifikuar."
 MCIERR_FILE_NOT_FOUND, 		"Nuk mund të gjeni skedarin e specifikuar. Sigurohuni që rruga dhe emri dokumentit janë të sakta."
 MCIERR_DEVICE_NOT_READY, 	"Drejtuesi i pjesës nuk është i gatshëm."
-MCIERR_INTERNAL, 		"Një problem i ndodhur në inicializimin e MCI. Provoni të rifilloni ReactOS."
+MCIERR_INTERNAL, 		"Një problem i ndodhur në inicializimin e MCI. Provoni të rifilloni MenuOS."
 MCIERR_DRIVER, 			"Ka një problem me drejtuesin e pajisjes. Drejtuesi ka mbyllur. Gabim, nuk mund të hyni."
 MCIERR_CANNOT_USE_ALL, 		"Nuk mund të përdorni 'të gjithë' si emer të pajisjes me komandën e specifikuar."
 MCIERR_MULTIPLE, 		"Gabimet ndodhen në më shumë se një pajisje. Specifikoni çdo komandën dhe pajisje veçmas për të përcaktuar se cilat pajisje shkaktuan gabim"

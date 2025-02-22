@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         ReactOS Virtual DOS Machine
+ * PROJECT:         MenuOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/bios/bios32/bios32.c
  * PURPOSE:         VDM 32-bit BIOS
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
@@ -135,8 +135,8 @@ static const BIOS_CONFIG_TABLE BiosConfigTable =
  * WARNING! For compatibility purposes the string "IBM" should be at F000:E00E .
  * Some programs otherwise look for "COPR. IBM" at F000:E008 .
  */
-static const CHAR BiosCopyright[] = "0000000 NTVDM IBM COMPATIBLE 486 BIOS COPYRIGHT (C) ReactOS Team 1996-"COPYRIGHT_YEAR;
-static const CHAR BiosVersion[]   = "ReactOS NTVDM 32-bit BIOS Version "KERNEL_VERSION_STR"\0"
+static const CHAR BiosCopyright[] = "0000000 NTVDM IBM COMPATIBLE 486 BIOS COPYRIGHT (C) MenuOS Team 1996-"COPYRIGHT_YEAR;
+static const CHAR BiosVersion[]   = "MenuOS NTVDM 32-bit BIOS Version "KERNEL_VERSION_STR"\0"
                                     "BIOS32 Version "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")";
 static const CHAR BiosDate[]      = "06/17/13";
 

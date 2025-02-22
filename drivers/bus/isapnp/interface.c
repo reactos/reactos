@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS ISA PnP Bus driver
+ * PROJECT:     MenuOS ISA PnP Bus driver
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Driver interface
  * COPYRIGHT:   Copyright 2021 Dmitry Borisov <di.sean@protonmail.com>

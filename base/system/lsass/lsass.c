@@ -1,7 +1,7 @@
 /*
  * reactos/subsys/system/lsass/lsass.c
  *
- * ReactOS Operating System
+ * MenuOS Operating System
  *
  * --------------------------------------------------------------------
  *

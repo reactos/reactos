@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS System Libraries
+ * PROJECT:         MenuOS System Libraries
  * FILE:            lib/advapi32/advapi32.h
  * PURPOSE:         Win32 Advanced API Library Header
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)

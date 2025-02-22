@@ -3,7 +3,7 @@
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            win32ss/drivers/miniport/vga_new/vbe.h
  * PURPOSE:         VESA VBE Registers and Structures
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROGRAMMERS:     MenuOS Portable Systems Group
  */
 
 #pragma once

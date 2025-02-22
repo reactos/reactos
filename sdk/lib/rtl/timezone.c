@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS system libraries
+ * PROJECT:           MenuOS system libraries
  * PURPOSE:           Timezone functions
  * FILE:              lib/rtl/timezone.c
  * PROGRAMER:         Eric Kohl

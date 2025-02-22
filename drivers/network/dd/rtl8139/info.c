@@ -1,5 +1,5 @@
 /*
- * ReactOS Realtek 8139 Driver
+ * MenuOS Realtek 8139 Driver
  *
  * Copyright (C) 2013 Cameron Gutman
  *
@@ -143,7 +143,7 @@ MiniportQueryInformation (
 
         case OID_GEN_VENDOR_DESCRIPTION:
         {
-            static UCHAR vendorDesc[] = "ReactOS Team";
+            static UCHAR vendorDesc[] = "MenuOS Team";
             copySource = vendorDesc;
             copyLength = sizeof(vendorDesc);
             break;

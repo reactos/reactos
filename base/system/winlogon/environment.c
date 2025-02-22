@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Winlogon
+ * PROJECT:         MenuOS Winlogon
  * FILE:            base/system/winlogon/environment.c
  * PURPOSE:         User environment routines
  * PROGRAMMERS:     Thomas Weidenmueller (w3seek@users.sourceforge.net)
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
  *                  Eric Kohl
  */
 

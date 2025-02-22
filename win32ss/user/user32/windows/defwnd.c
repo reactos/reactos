@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS user32.dll
+ * PROJECT:         MenuOS user32.dll
  * PURPOSE:         Window management
  * PROGRAMMER:      2001 Casper S. Hornstrup <chorns@users.sourceforge.net>
  */

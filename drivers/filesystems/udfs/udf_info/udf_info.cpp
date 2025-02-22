@@ -3203,7 +3203,7 @@ UDFRenameMoveFile__(
            (j==FileInfo->Index) ) {
             // case-only rename
             uint8* CS0;
-            SIZE_T Nlen, /* l, FIXME ReactOS */ IUl;
+            SIZE_T Nlen, /* l, FIXME MenuOS */ IUl;
 
             // prepare filename
             UDFCompressUnicode(fn, &CS0, &Nlen);

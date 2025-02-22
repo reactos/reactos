@@ -1,7 +1,7 @@
 
-; Main ReactOS package
+; Main MenuOS package
 
-.Set DiskLabelTemplate="ReactOS"                ; Label of disk
+.Set DiskLabelTemplate="MenuOS"                ; Label of disk
 .Set CabinetNameTemplate="reactos.cab"          ; reactos.cab
 .Set InfFileName="reactos.inf"                  ; reactos.inf
 

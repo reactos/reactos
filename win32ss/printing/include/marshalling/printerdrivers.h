@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Printing Stack Marshalling Functions
+ * PROJECT:     MenuOS Printing Stack Marshalling Functions
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Marshalling definitions for DRIVER_INFO_*
  * COPYRIGHT:   Copyright 2018 Mark Jansen (mark.jansen@reactos.org)

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS cabinet manager
+ * PROJECT:     MenuOS cabinet manager
  * FILE:        base/setup/usetup/cabinet.h
  * PURPOSE:     Cabinet definitions
  */

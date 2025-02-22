@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         MenuOS kernel
  * FILE:            lib/ntdll/ldr/ldrpe.c
  * PURPOSE:         Loader Functions dealing low-level PE Format structures
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)

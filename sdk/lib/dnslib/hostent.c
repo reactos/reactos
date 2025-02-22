@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS DNS Shared Library
+ * PROJECT:     MenuOS DNS Shared Library
  * FILE:        lib/dnslib/hostent.c
  * PURPOSE:     Functions for dealing with Host Entry structures
  */

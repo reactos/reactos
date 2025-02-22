@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS api tests
+ * PROJECT:         MenuOS api tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Test for DnsQuery_A, DnsQuery_UTF8
  * PROGRAMMER:      Victor Martinez Calvo <victor.martinez@reactos.org>

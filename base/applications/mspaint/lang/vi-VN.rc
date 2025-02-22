@@ -1,5 +1,5 @@
 /*
- * PROJECT:     PAINT for ReactOS
+ * PROJECT:     PAINT for MenuOS
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Vietnamese (Vietnam) resource file
  * TRANSLATOR:  Copyright 2018 Nguyễn Thanh Sơn <dummynosrev@gmail.com>
@@ -234,7 +234,7 @@ STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Vẽ"
     IDS_WINDOWTITLE "%s - Vẽ"
-    IDS_INFOTITLE "Trình Vẽ cho ReactOS"
+    IDS_INFOTITLE "Trình Vẽ cho MenuOS"
     IDS_INFOTEXT "Được cung cấp theo điều lệ trong GNU Lesser General Public License (LGPL, xem www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Bạn có muốn lưu lại những thay đổi trong %s?"
     IDS_DEFAULTFILENAME "Khongten"

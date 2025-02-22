@@ -1,6 +1,6 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 2005 ReactOS Team
+ *  MenuOS kernel
+ *  Copyright (C) 2005 MenuOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          MenuOS kernel
  * FILE:             base/services/umpnpmgr/event.c
  * PURPOSE:          PNP Event thread
  * PROGRAMMER:       Eric Kohl (eric.kohl@reactos.org)

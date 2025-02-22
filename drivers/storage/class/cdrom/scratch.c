@@ -484,7 +484,7 @@ Return Value:
 
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 ScratchBuffer_ReadWriteTimerRoutine(
     struct _KDPC *Dpc,
     PVOID         DeferredContext,
@@ -568,7 +568,7 @@ Return Value:
 EVT_WDF_REQUEST_CANCEL  ScratchBuffer_ReadWriteEvtRequestCancel;
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 ScratchBuffer_ReadWriteEvtRequestCancel(
     _In_ WDFREQUEST  Request
     )
@@ -624,7 +624,7 @@ Return Value:
 }
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 ScratchBuffer_ReadWriteCompletionRoutine(
     _In_ WDFREQUEST  Request,
     _In_ WDFIOTARGET  Target,

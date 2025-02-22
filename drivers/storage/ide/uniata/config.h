@@ -87,7 +87,7 @@
 /*  Compiler dependencies                          */
 /***************************************************/
 
-/* ReactOS-specific defines */
+/* MenuOS-specific defines */
 #ifdef __REACTOS__
  #define USE_REACTOS_DDK
 #endif //__REACTOS__
@@ -113,7 +113,7 @@
  #define  DEF_U64(x)     (x##ULL)
  #define  DEF_I64(x)     (x##LL)
 
- /* ReactOS-specific defines */
+ /* MenuOS-specific defines */
 
  #ifndef DDKAPI
   #define DDKAPI          __attribute__((stdcall))
@@ -132,7 +132,7 @@
  #define  DEF_U64(x)     (x##UI64)
  #define  DEF_I64(x)     (x##I64)
 
- /* ReactOS-specific defines */
+ /* MenuOS-specific defines */
 
  #ifndef DDKAPI
   #define DDKAPI          __stdcall

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         ReactOS Virtual DOS Machine
+ * PROJECT:         MenuOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/vddsup.c
  * PURPOSE:         Virtual Device Drivers (VDD) Support
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

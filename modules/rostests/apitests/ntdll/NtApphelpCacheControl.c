@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS API Tests
+ * PROJECT:         MenuOS API Tests
  * LICENSE:         LGPL - See COPYING.LIB in the top level directory
  * PURPOSE:         Tests for SHIM engine caching.
  * PROGRAMMER:      Mark Jansen

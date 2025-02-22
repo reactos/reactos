@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS CRT library
+ * PROJECT:     MenuOS CRT library
  * FILE:        lib/sdk/crt/time/wstrtime.c
  * PURPOSE:     Fills a buffer with a formatted time representation
  * PROGRAMER:   Ariadne

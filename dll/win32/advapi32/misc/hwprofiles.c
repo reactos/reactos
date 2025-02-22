@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         MenuOS system libraries
  * FILE:            dll/win32/advapi32/misc/hwprofiles.c
  * PURPOSE:         advapi32.dll Hardware Functions
  * PROGRAMMER:      Steven Edwards

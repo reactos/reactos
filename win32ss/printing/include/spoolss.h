@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Printing Include files
+ * PROJECT:     MenuOS Printing Include files
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Undocumented APIs of the Spooler Router "spoolss.dll" and internally shared interfaces
  * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)

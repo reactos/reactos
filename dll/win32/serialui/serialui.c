@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS SerialUI DLL
+ * PROJECT:     MenuOS SerialUI DLL
  * FILE:        serialui.c
  * PUROPSE:     A dialog box to configure COM port.
  *              Functions to set (and get too) default configuration.

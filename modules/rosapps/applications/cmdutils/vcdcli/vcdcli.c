@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS FS utility tool
+ * PROJECT:         MenuOS FS utility tool
  * FILE:            modules/rosapps/applications/cmdutils/vcdcli/vcdcli.c
  * PURPOSE:         Virtual CD-ROM management application
  * PROGRAMMERS:     Pierre Schweitzer <pierre@reactos.org>

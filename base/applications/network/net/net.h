@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS net command
+ * PROJECT:         MenuOS net command
  * PROGRAMMERS:     Magnus Olsen (greatlord@reactos.org)
  */
 

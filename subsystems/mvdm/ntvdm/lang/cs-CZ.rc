@@ -10,7 +10,7 @@ STRINGTABLE
 BEGIN
     IDS_CAPTURE_MOUSE, "&Zachytit ukazatel myši"
     IDS_RELEASE_MOUSE, "&Uvolnit ukazatel myši"
-    IDS_VDM_MENU     , "ReactOS &VDM"
+    IDS_VDM_MENU     , "MenuOS &VDM"
 END
 
 STRINGTABLE
@@ -19,7 +19,7 @@ BEGIN
     IDS_VDM_DUMPMEM_BIN ,   "Výpis paměti (&Binárně)"
     IDS_VDM_MOUNT_FLOPPY,   "Vložte disketu do jednotky %d <%s>..."
     IDS_VDM_EJECT_FLOPPY,   "Vyjměte disketu z jednotky %d"
-    IDS_VDM_QUIT        ,   "&Ukončit ReactOS VDM"
+    IDS_VDM_QUIT        ,   "&Ukončit MenuOS VDM"
 END
 
 STRINGTABLE

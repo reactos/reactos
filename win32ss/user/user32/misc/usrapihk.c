@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS user32.dll
+ * PROJECT:         MenuOS user32.dll
  * FILE:            win32ss/user/user32/misc/usrapihk.c
  * PURPOSE:         User32.dll User32 Api Hook interface and support functions
  * PROGRAMMER:

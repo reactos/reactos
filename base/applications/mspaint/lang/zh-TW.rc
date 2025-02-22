@@ -1,5 +1,5 @@
 /*
- * PROJECT:     PAINT for ReactOS
+ * PROJECT:     PAINT for MenuOS
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2011 Elton Chung <elton328@gmail.com>
@@ -235,7 +235,7 @@ STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "小畫家"
     IDS_WINDOWTITLE "%s - 小畫家"
-    IDS_INFOTITLE "ReactOS 小畫家"
+    IDS_INFOTITLE "MenuOS 小畫家"
     IDS_INFOTEXT "以 GNU LGPL 條款發布（詳見 www.gnu.org）"
     IDS_SAVEPROMPTTEXT "您想把變更儲存到 %s 嗎？"
     IDS_DEFAULTFILENAME "未命名"

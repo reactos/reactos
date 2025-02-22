@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS GUI first stage setup application
+ * PROJECT:     MenuOS GUI first stage setup application
  * LICENSE:     GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later)
  * PURPOSE:     Implements a TreeList control: a tree window with columns.
  * COPYRIGHT:   Copyright (C) Anton Zechner (az_software@inode.at) 2007
- *              Copyright (C) Sébastien Kirche (sebastien.kirche@free.fr) 2014
+ *              Copyright (C) SÃ©bastien Kirche (sebastien.kirche@free.fr) 2014
  *
  * NOTE: Taken from the TreeList code found at https://github.com/sebkirche/treelist
  */
@@ -20,7 +20,7 @@
 //
 //
 //	Copyright (C) Anton Zechner (az_software@inode.at) 2007
-//	Copyright (C) Sébastien Kirche (sebastien.kirche@free.fr) 2014
+//	Copyright (C) SÃ©bastien Kirche (sebastien.kirche@free.fr) 2014
 //
 //	TreeListWnd is distributed under the GNU GENERAL PUBLIC LICENSE (GPL)
 //	Sourcecode which use TreeListWnd must be published. Commercial users
@@ -28,8 +28,8 @@
 //
 //
 //	TreeListWnd wird unter GNU GENERAL PUBLIC LICENSE (GPL) vertreiben.
-//	Sourcecode welcher TreeListWnd verwendet muss veröffendlicht werden.
-//	Komerzielle Nutzer müssen ihren Code ebenfalls veröffentlichen, oder
+//	Sourcecode welcher TreeListWnd verwendet muss verÃ¶ffendlicht werden.
+//	Komerzielle Nutzer mÃ¼ssen ihren Code ebenfalls verÃ¶ffentlichen, oder
 //	eine Nutzungsvereinbarung mit mir treffen.
 //
 //
@@ -179,12 +179,12 @@ typedef struct {
 	unsigned	uFirstChild;								// Ist die Nummer des ersten Kind-Eintrages (0=keines)
 	unsigned	uLastChild;									// Ist die Nummer des letzten Kind-Eintrages (0=keines)
 	unsigned	uPrevItem;									// Ist die Nummer des vorherigen Eintrages (0=keines)
-	unsigned	uNextItem; 									// Ist die Nummer des nächsten Eintrages (0=keines)
+	unsigned	uNextItem; 									// Ist die Nummer des nÃ¤chsten Eintrages (0=keines)
 	unsigned	uParent; 									// Ist die Nummer des Elterneintrages (0=Root)
 	unsigned 	uLevel;										// Ist die Ebene des Eintrages (0=Root)
 	int 		iTextPixels;								// Ist die Breites des Textes in Pixel
-	WORD		uTextSize;									// Länge des Textes in Zeichen
-	BYTE		bCallback;									// Sind Bits für Callbacks
+	WORD		uTextSize;									// LÃ¤nge des Textes in Zeichen
+	BYTE		bCallback;									// Sind Bits fÃ¼r Callbacks
 	BYTE		bFlags;										// Diverse Flags
 	COLORREF	uColorText;									// Spezielle Textfarbe
 	COLORREF	uColorBk;									// Spezielle Hintergrundfarbe
@@ -195,8 +195,8 @@ typedef struct {
 	UINT		uState;										// Zustand des Eintrages
 	int			iImage;										// Ist die Nummer des an zu zeigenden Icons
 	int 		iTextPixels;								// Ist die Breites des Textes in Pixel
-	WORD		uTextSize;									// Länge des Textes in Zeichen
-	BYTE		bCallback;									// Sind Bits für Callbacks
+	WORD		uTextSize;									// LÃ¤nge des Textes in Zeichen
+	BYTE		bCallback;									// Sind Bits fÃ¼r Callbacks
 	BYTE		bFlags;										// Diverse Flags
 	COLORREF	uColorText;									// Spezielle Textfarbe
 	COLORREF	uColorBk;									// Spezielle Hintergrundfarbe
@@ -226,13 +226,13 @@ typedef struct {
 typedef struct {
 	HWND		hWnd;										// handle of the control
 	HANDLE		hSem;										// access semaphore
-	LPVOID		hTheme;										// Handle für benutztes Thema (TREELIST)
-	LPVOID		hThemeBt;									// Handle für benutztes Thema (BUTTON)
-	WNDPROC		pProcId3;									// Fenster Funktion für ID3 Fenster
-	HIMAGELIST	hStates;									// Handle der Icon-Liste für States und Overlay
+	LPVOID		hTheme;										// Handle fÃ¼r benutztes Thema (TREELIST)
+	LPVOID		hThemeBt;									// Handle fÃ¼r benutztes Thema (BUTTON)
+	WNDPROC		pProcId3;									// Fenster Funktion fÃ¼r ID3 Fenster
+	HIMAGELIST	hStates;									// Handle der Icon-Liste fÃ¼r States und Overlay
 	HIMAGELIST	hImages;									// Handle der Icon-Liste
-	HIMAGELIST	hChecks;									// Handle der Icon-Liste für die Checkboxen in den Spalten
-	HIMAGELIST	hSubImg;									// Handle der Icon-Liste für die Spalten
+	HIMAGELIST	hChecks;									// Handle der Icon-Liste fÃ¼r die Checkboxen in den Spalten
+	HIMAGELIST	hSubImg;									// Handle der Icon-Liste fÃ¼r die Spalten
 	HIMAGELIST	hHeadImg;									// Handle for header images
 	HFONT		hFontN;										// Normal font
 	HFONT		hFontB;										// Bold fonts
@@ -242,103 +242,103 @@ typedef struct {
 	HWND		hHeader;									// Handle des Header Fensters
 	HWND		hToolTip;									// Handle des Tooltip-Fensters
 	WNDPROC		pToolProc;									// Alte Fensterfunktion des Tooltips
-	COLORREF	uColors[MAX_COLORS];						// 0=Hintergrundfarbe  1=Abwechselnte Farbe  2=Farbe für Trennlinien  3=Textfarbe
-	int			iFontHeight;								// Ist die Höhe des Fonts
+	COLORREF	uColors[MAX_COLORS];						// 0=Hintergrundfarbe  1=Abwechselnte Farbe  2=Farbe fÃ¼r Trennlinien  3=Textfarbe
+	int			iFontHeight;								// Ist die HÃ¶he des Fonts
 	int			iFontLine;									// Ist die Position der Linie beim unterstreichen
 	int			iFontOff;									// Ist die Position um der ein Text horizontal verschoben wird
-	int			iStatesMode;								// Die hStates Image-Liste wurde für die Checkboxen erzeugt
+	int			iStatesMode;								// Die hStates Image-Liste wurde fÃ¼r die Checkboxen erzeugt
 	int			iStatesXsize;								// Breite der States und Overlay Icons
-	int			iStatesYsize;								// Höhe   der States und Overlay Icons
-	int			iChecksMode;								// Die hChecks Image-Liste wurde für die Checkboxen erzeugt
+	int			iStatesYsize;								// HÃ¶he   der States und Overlay Icons
+	int			iChecksMode;								// Die hChecks Image-Liste wurde fÃ¼r die Checkboxen erzeugt
 	int			iChecksXsize;								// Breite der States und Overlay Icons
-	int			iChecksYsize;								// Höhe   der States und Overlay Icons
+	int			iChecksYsize;								// HÃ¶he   der States und Overlay Icons
 	int			iImagesXsize;								// Breite der Icons
-	int			iImagesYsize;								// Höhe   der Icons
+	int			iImagesYsize;								// HÃ¶he   der Icons
 	int			iSubImgMode;								// Die SubImg Image-Liste ist nicht die hImages Liste
 	int			iSubImgXsize;								// Breite der Icons
-	int			iSubImgYsize;								// Höhe   der Icons
-	int			iRowHeight;									// Ist die Höhe einer Zeile
+	int			iSubImgYsize;								// HÃ¶he   der Icons
+	int			iRowHeight;									// Ist die HÃ¶he einer Zeile
 	int			iAllWeight;									// Das Gewicht aller variablen Spalten
 	int			iVarSize;									// Ist die Breite aller variablen Spalten
 	int			iFixSize;									// Ist die Breite aller fixen Spalten
-	int			iIndent;									// Einrückung der Kindereintäge
-	int			iShift;										// Einrückung der vertikalen Linien
-	int			iAutoAdd;									// Offset zum Open-Icon  für TVS_EX_AUTOEXPANDICON
-	int			iMaxSizeX;									// Die Größe des breitesten sichtbaren Eintrages
-	unsigned	uItemPosCount;								// Anzahl der sichtbaren Einträge
-	unsigned   *pItemPos;									// Liste mit den Offsets der sichtbaren Einträge
+	int			iIndent;									// EinrÃ¼ckung der KindereintÃ¤ge
+	int			iShift;										// EinrÃ¼ckung der vertikalen Linien
+	int			iAutoAdd;									// Offset zum Open-Icon  fÃ¼r TVS_EX_AUTOEXPANDICON
+	int			iMaxSizeX;									// Die GrÃ¶ÃŸe des breitesten sichtbaren Eintrages
+	unsigned	uItemPosCount;								// Anzahl der sichtbaren EintrÃ¤ge
+	unsigned   *pItemPos;									// Liste mit den Offsets der sichtbaren EintrÃ¤ge
 	BaseItem  **pTreeItems;									// Zeiger auf Item Zeiger
-	ExtraItem **pExtraItems[MAX_COLUMNS - 1];				// Zeiger auf die Spalteneinträge
-	unsigned	uTreeItemsMax;								// Größe der Liste mit den vorhanden Einträge (alociert um 1 größer)
-	unsigned	uTreeItemsCount;							// Anzahl der vorhanden Einträge
-	unsigned	uNextSeachPos;								// Nächste Position zum suchen von freien Einträgen
-	unsigned	uUserDataSize;								// Ist die Größe der Userdaten in einem Eintrag
+	ExtraItem **pExtraItems[MAX_COLUMNS - 1];				// Zeiger auf die SpalteneintrÃ¤ge
+	unsigned	uTreeItemsMax;								// GrÃ¶ÃŸe der Liste mit den vorhanden EintrÃ¤ge (alociert um 1 grÃ¶ÃŸer)
+	unsigned	uTreeItemsCount;							// Anzahl der vorhanden EintrÃ¤ge
+	unsigned	uNextSeachPos;								// NÃ¤chste Position zum suchen von freien EintrÃ¤gen
+	unsigned	uUserDataSize;								// Ist die GrÃ¶ÃŸe der Userdaten in einem Eintrag
 	unsigned	uFirstChild;								// Ist die Nummer des ersten Kind-Eintrages (0=keines)
 	unsigned	uLastChild;									// Ist die Nummer des letzten Kind-Eintrages (0=keines)
-	unsigned	uSingleSel;									// Ist die Nummer des gewählten Eintrages (bei Checkboxen)
+	unsigned	uSingleSel;									// Ist die Nummer des gewÃ¤hlten Eintrages (bei Checkboxen)
 	unsigned	uScrollX;									// Aktuelle X-Scroll-Position
 	unsigned	uScrollY;									// Aktuelle Y-Scroll-Position
-	unsigned	uSizeX;										// Aktuelle X-Fenster-Größe
-	unsigned	uSizeY;										// Aktuelle Y-Fenster-Größe
-	unsigned	uSizeYsub;									// Aktuelle Y-Fenster-Größe ohne Header
+	unsigned	uSizeX;										// Aktuelle X-Fenster-GrÃ¶ÃŸe
+	unsigned	uSizeY;										// Aktuelle Y-Fenster-GrÃ¶ÃŸe
+	unsigned	uSizeYsub;									// Aktuelle Y-Fenster-GrÃ¶ÃŸe ohne Header
 	unsigned	uStyle;										// Ist der aktuele Style des Fensters
 	unsigned	uStyleEx;									// Erweiterte Sytle-Flags (siehe TVS_EX_???)
 	unsigned	uStartPixel;								// Ist die Y-Koordinate bei der der erste Eintrag beginnt
-	unsigned	uMaxEnties;									// Anzahl der sichtbaren Einträge (inkl. halbsichtbare)
-	unsigned	uPageEnties;								// Anzahl der sichtbaren Einträge (ohne  halbsichtbare)
+	unsigned	uMaxEnties;									// Anzahl der sichtbaren EintrÃ¤ge (inkl. halbsichtbare)
+	unsigned	uPageEnties;								// Anzahl der sichtbaren EintrÃ¤ge (ohne  halbsichtbare)
 	unsigned	uColumnCount;								// Anzahl der Spalten
 	unsigned	uColumnCountVar;							// Anzahl der variabeln Spalten
-	unsigned	uSelectedCount;								// Anzahl der ausgewählten Einträge
-	unsigned	uSelectedBase;								// Ist der Eintrag ab dem gewählt wurde
-	unsigned	uSelectedItem;								// Ist der Eintrag der gerade gewählt ist
-	unsigned	uSelectedSub;								// Ist die Spalte die gerade gewählt ist
+	unsigned	uSelectedCount;								// Anzahl der ausgewÃ¤hlten EintrÃ¤ge
+	unsigned	uSelectedBase;								// Ist der Eintrag ab dem gewÃ¤hlt wurde
+	unsigned	uSelectedItem;								// Ist der Eintrag der gerade gewÃ¤hlt ist
+	unsigned	uSelectedSub;								// Ist die Spalte die gerade gewÃ¤hlt ist
 	unsigned	uFocusItem;									// Ist der Eintrag der einen leeren Focus hat
 	unsigned	uFocusSub;									// Ist die Spalte die einen leeren Focus hat
-	unsigned	uToolTipItem;								// Ist der ToolTip-Eintrag der gerade gewählt ist
-	unsigned	uToolTipShow;								// Ist die Zeitverzögerung in 500 ms Schritten für das Tooltip
-	unsigned	uToolTipSub;								// Ist die ToolTip-Spalte die gerade gewählt ist
+	unsigned	uToolTipItem;								// Ist der ToolTip-Eintrag der gerade gewÃ¤hlt ist
+	unsigned	uToolTipShow;								// Ist die ZeitverzÃ¶gerung in 500 ms Schritten fÃ¼r das Tooltip
+	unsigned	uToolTipSub;								// Ist die ToolTip-Spalte die gerade gewÃ¤hlt ist
 	POINT		sToolTipPos;								// Ist die globale Koordinate des ToolTips
 	unsigned	uEditMode;									// Ist der Modus des Editfensters (0=Edit 1=ComboBox 2=ComboBox fix)
 	unsigned	uEditItem;									// Ist der Eintrag der gerade editiert wird
 	unsigned	uEditSub;									// Ist die Spalte die gerade editiert wird
-	unsigned	uOldXPage;									// Alte Werte für X-Scroll-Bar
+	unsigned	uOldXPage;									// Alte Werte fÃ¼r X-Scroll-Bar
 	unsigned	uOldXCount;									//			*
-	unsigned	uOldYPage;									// Alte Werte für Y-Scroll-Bar
+	unsigned	uOldYPage;									// Alte Werte fÃ¼r Y-Scroll-Bar
 	unsigned	uOldYCount;									//			*
-	unsigned	uTrippleB;									// Bereite des "..." Strings für den fetten Fonts
-	unsigned	uTrippleN;									// Bereite des "..." Strings für den normalen Fonts
+	unsigned	uTrippleB;									// Bereite des "..." Strings fÃ¼r den fetten Fonts
+	unsigned	uTrippleN;									// Bereite des "..." Strings fÃ¼r den normalen Fonts
 	unsigned	uTrackedItem;								// Ist der Eintrag der unterstrichen werden soll
 	unsigned	uTrackedSub;								// Ist die Spalte des Eintrages der unterstrichen werden soll
-	unsigned	uInsertMark;								// Ist der Eintrag mit der Einfügemarke
+	unsigned	uInsertMark;								// Ist der Eintrag mit der EinfÃ¼gemarke
 	unsigned	uMarkedCols;								// Anzahl der markierten Spalten
 	unsigned	uDragFlags;									// Welche Maustasten sind an
-	unsigned	uDragItem;									// Eintrag für Dragoperation
-	unsigned	uDragSub;									// Untereintrag für Dragoperation
+	unsigned	uDragItem;									// Eintrag fÃ¼r Dragoperation
+	unsigned	uDragSub;									// Untereintrag fÃ¼r Dragoperation
 	unsigned	uLastSel;									// Letzte Textauswahl beim Editieren
 	unsigned	uLastMove;									// Letzte Cursorposition bei WM_MOUSEMOVE
-	unsigned 	uButtonPos;									// Wo wurde eine Maustaste wurde zuletzt gedrückt
-	unsigned 	uButtonLast;								// Wann wurde eine Maustaste wurde zuletzt gedrückt
-	unsigned	uToolTipSize;								// Textspeichergröße für Tooltip
-	LPTSTR		pToolTipText;								// Textspeicher für Tooltip
-	TCHAR		cTempText1   [260];							// Erster Textpuffer für Callbacks
-	TCHAR		cTempText2   [260];							// Zeiter Textpuffer für Callbacks
+	unsigned 	uButtonPos;									// Wo wurde eine Maustaste wurde zuletzt gedrÃ¼ckt
+	unsigned 	uButtonLast;								// Wann wurde eine Maustaste wurde zuletzt gedrÃ¼ckt
+	unsigned	uToolTipSize;								// TextspeichergrÃ¶ÃŸe fÃ¼r Tooltip
+	LPTSTR		pToolTipText;								// Textspeicher fÃ¼r Tooltip
+	TCHAR		cTempText1   [260];							// Erster Textpuffer fÃ¼r Callbacks
+	TCHAR		cTempText2   [260];							// Zeiter Textpuffer fÃ¼r Callbacks
 	ColumnData	aColumn      [MAX_COLUMNS];					// Daten der Spalten
 	int			aColumnXpos  [MAX_COLUMNS + 2];				// Array mit den Positionen der Spalten
 	BYTE		aColumnPos   [MAX_COLUMNS + 2];				// Array mit Anzeigepositionen der Spalten
-	char		cColorChanged[MAX_COLORS ];					// Welche Farbe wurden verändert
+	char		cColorChanged[MAX_COLORS ];					// Welche Farbe wurden verÃ¤ndert
 	char   	    cColumnStart;								// Wurde das Autoeditiren mit einer WM_CHAR Eingabe gestartet
-	char 		cFixedHeight;								// Ist eine fixe Höhe eingestellt
-	char		cLockChanges;								// Sperren von Fensteränderungen
-	char		cHasRootRow;								// Wird gesetzt wenn eine Root-Spalte eingefügt wird
-	char		cKeyIgnore;									// Die nächste Taste nicht für Sucher verwenden
-	char		cClickFlag;									// Merker für LBUTTON-DOWN bei Multiselect
-	char		cClickEdit;									// Merker für LBUTTON-DOWN bei Edit-Click
+	char 		cFixedHeight;								// Ist eine fixe HÃ¶he eingestellt
+	char		cLockChanges;								// Sperren von FensterÃ¤nderungen
+	char		cHasRootRow;								// Wird gesetzt wenn eine Root-Spalte eingefÃ¼gt wird
+	char		cKeyIgnore;									// Die nÃ¤chste Taste nicht fÃ¼r Sucher verwenden
+	char		cClickFlag;									// Merker fÃ¼r LBUTTON-DOWN bei Multiselect
+	char		cClickEdit;									// Merker fÃ¼r LBUTTON-DOWN bei Edit-Click
 	char		cIsEnabled;									// Ist das Fenster freigegeben
 	char		cHasFocus;									// Hat das Fenster den Focus
 	char		cReSelect;									// Soll die Auswahl neu selektiert werden
-	char		cGlyphOk;									// Die Schaltfäche über Themen zeichnen
+	char		cGlyphOk;									// Die SchaltfÃ¤che Ã¼ber Themen zeichnen
 	char		cEditCb;									// Muss das Edit-Fenster einen Callback aufrufen
-	char		cButtonFlag;								// Welche Maustaste wurde zuletzt gedrückt
+	char		cButtonFlag;								// Welche Maustaste wurde zuletzt gedrÃ¼ckt
 } TreeListData;
 
 typedef	HRESULT(WINAPI *SetWindowThemeT)(HWND, LPCWSTR, LPCWSTR);
@@ -526,7 +526,7 @@ static void GlobalDeinit() {
 //	Sendet eine WM_NOTIFY Nachricht and das Elternfenster
 //	pData		: Zeiger auf die Fensterdaten
 //	pNotify		: Zeiger auf die Notify-Daten
-//	Ergibt den Rückgabewert der WM_NOTIFY Nachrich
+//	Ergibt den RÃ¼ckgabewert der WM_NOTIFY Nachrich
 static LRESULT SendNotify(TreeListData *pData, NMHDR	*pNotify) {
 
 	pNotify->hwndFrom	= pData->hWnd;
@@ -546,7 +546,7 @@ static LRESULT SendNotify(TreeListData *pData, NMHDR	*pNotify) {
 //	pEntry		: Zeiger auf den Eintrag
 //	uItem		: Nummer des Eintrages
 //	uFlags		: Welche Daten sollen abgefragt werden
-//	Ergibt den Rückgabewert der WM_NOTIFY Nachrich
+//	Ergibt den RÃ¼ckgabewert der WM_NOTIFY Nachrich
 static void CallbackEntry(TreeListData *pData, BaseItem *pEntry, unsigned uItem, unsigned uFlags, int *iImage, unsigned *uTextSize, LPCTSTR *pText) {
 
 	NMTVDISPINFO	sInfo;
@@ -635,7 +635,7 @@ static void CallbackEntry(TreeListData *pData, BaseItem *pEntry, unsigned uItem,
 //	pEntry		: Zeiger auf den Eintrag
 //	uItem		: Nummer des Eintrages
 //	uFlags		: Welche Daten sollen abgefragt werden
-//	Ergibt den Rückgabewert der WM_NOTIFY Nachrich
+//	Ergibt den RÃ¼ckgabewert der WM_NOTIFY Nachrich
 static void CallbackExtra(TreeListData *pData, BaseItem *pEntry, ExtraItem *pExtra, unsigned uItem, unsigned uSub, unsigned uFlags, int *iImage, unsigned *uTextSize, LPCTSTR *pText) {
 
 	NMTVDISPINFO	sInfo;
@@ -683,7 +683,7 @@ static void CallbackExtra(TreeListData *pData, BaseItem *pEntry, ExtraItem *pExt
 //*		EditProc
 //*
 //*****************************************************************************
-//	Ist die Fensterfunktion für das Edit Fenster
+//	Ist die Fensterfunktion fÃ¼r das Edit Fenster
 static LRESULT CALLBACK EditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 	TreeListData   *pData;
@@ -822,7 +822,7 @@ static LRESULT CALLBACK EditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 //*		ToolProc
 //*
 //*****************************************************************************
-//	Ist die Fensterfunktion für das ToolTip Fenster
+//	Ist die Fensterfunktion fÃ¼r das ToolTip Fenster
 static LRESULT CALLBACK ToolProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 	TreeListData   *pData;
@@ -856,9 +856,9 @@ static LRESULT CALLBACK ToolProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 //*		ChangeColSize
 //*
 //*****************************************************************************
-//	Ändert die Größe der variablen Spalten
+//	Ã„ndert die GrÃ¶ÃŸe der variablen Spalten
 //	pData		: Zeiger auf die Fensterdaten
-//	iDelta		: Ist die Größenänderung in Pixel
+//	iDelta		: Ist die GrÃ¶ÃŸenÃ¤nderung in Pixel
 static void ChangeColSize(TreeListData *pData, int iDelta) {
 
 	unsigned 	uPos;
@@ -899,7 +899,7 @@ static void ChangeColSize(TreeListData *pData, int iDelta) {
 				sItem.cxy = pData->aColumn[uPos].sMin;
 			}
 
-			if(pData->aColumn[uPos].sReal != sItem.cxy) {	// Ändert sich die Breite
+			if(pData->aColumn[uPos].sReal != sItem.cxy) {	// Ã„ndert sich die Breite
 				pData->aColumn[uPos].sReal	= (short)sItem.cxy;
 				Header_SetItem(pData->hHeader, uPos, &sItem);
 
@@ -1007,7 +1007,7 @@ static void ChangeColSize(TreeListData *pData, int iDelta) {
 			sItem.cxy = pData->aColumn[uPos].sMin;
 		}
 
-		if(pData->aColumn[uPos].sReal != sItem.cxy) {		// Ändert sich die Breite
+		if(pData->aColumn[uPos].sReal != sItem.cxy) {		// Ã„ndert sich die Breite
 			pData->aColumn[uPos].sReal  = (short)sItem.cxy;
 			Header_SetItem(pData->hHeader, uPos, &sItem);
 
@@ -1088,7 +1088,7 @@ static void CreateStateImageList(TreeListData *pData, int iMode) {
 	RECT		sRect;
 	int			iBits;
 
-	if(pOpenThemeData) {									// Über Thema zeichnen
+	if(pOpenThemeData) {									// Ãœber Thema zeichnen
 		if(!pData->hThemeBt) {
 			pData->hThemeBt = pOpenThemeData(pData->hWnd, L"BUTTON");
 		}
@@ -1199,7 +1199,7 @@ static void CreateStateImageList(TreeListData *pData, int iMode) {
 //*****************************************************************************
 //	Erzeugt eine Image-Liste mit zwei Checkboxen
 //	pData		: Zeiger auf die Fensterdaten
-//	uSub		: Ist die Spalte für die das Drag-Image erzeugt werden soll
+//	uSub		: Ist die Spalte fÃ¼r die das Drag-Image erzeugt werden soll
 //	Ergibt ein Handle mit der Imageliste oder NULL bei einem Fehler
 static HIMAGELIST CreateDragImage(TreeListData *pData, unsigned uItem, unsigned uSub) {
 
@@ -1231,7 +1231,7 @@ static HIMAGELIST CreateDragImage(TreeListData *pData, unsigned uItem, unsigned 
 
 	iHeigh = pData->iFontHeight;
 
-	if(uSub) {												// Image für Extraeintrag erzeugen
+	if(uSub) {												// Image fÃ¼r Extraeintrag erzeugen
 		if(uSub >= pData->uColumnCount)
 			return 0;
 
@@ -1251,7 +1251,7 @@ static HIMAGELIST CreateDragImage(TreeListData *pData, unsigned uItem, unsigned 
 				CallbackExtra(pData, pEntry, pExtra, uItem, uSub, pExtra->bCallback, &iImage, &uTSize, &pText);
 			}
 		}
-	} else {													// Image für Haupteintrag erzeugen
+	} else {													// Image fÃ¼r Haupteintrag erzeugen
 		pText  = pEntry->pText;
 		uTSize = pEntry->uTextSize;
 		iImage = pEntry->iImage;
@@ -1262,7 +1262,7 @@ static HIMAGELIST CreateDragImage(TreeListData *pData, unsigned uItem, unsigned 
 		}
 	}
 
-	if(pData->hImages && iImage >= 0) {							// Größen für Images anpassen
+	if(pData->hImages && iImage >= 0) {							// GrÃ¶ÃŸen fÃ¼r Images anpassen
 		if(iHeigh < pData->iImagesYsize)
 			iHeigh = pData->iImagesYsize;
 		iAdd    = pData->iImagesXsize + 2;
@@ -1597,7 +1597,7 @@ static int UpdateColRect(TreeListData *pData, unsigned uColumn) {
 //*		UpdateRow
 //*
 //*****************************************************************************
-//	Zeichnet einen Eintrag über die ganze Zeile neu
+//	Zeichnet einen Eintrag Ã¼ber die ganze Zeile neu
 //	pData		: Zeiger auf die Fensterdaten
 //	uItem		: Ist die Nummer des Eintrages
 //	Ergibt 1 wenn der Eintrag sichtbar war
@@ -1654,7 +1654,7 @@ static void UpdateView(TreeListData *pData) {
 //*****************************************************************************
 //	Aktualisiert die X-Scroolbar
 //	pData		: Zeiger auf die Fensterdaten
-//	Ergibt 1 wenn der sich Einstellungen verändert haben
+//	Ergibt 1 wenn der sich Einstellungen verÃ¤ndert haben
 static void UpdateScrollX(TreeListData *pData) {
 
 	SCROLLINFO  sInfo;
@@ -1720,7 +1720,7 @@ static void UpdateScrollX(TreeListData *pData) {
 //*****************************************************************************
 //	Aktualisiert die Y-Scroolbar
 //	pData		: Zeiger auf die Fensterdaten
-//	Ergibt 1 wenn der sich Einstellungen verändert haben
+//	Ergibt 1 wenn der sich Einstellungen verÃ¤ndert haben
 static void UpdateScrollY(TreeListData *pData) {
 
 	SCROLLINFO  sInfo;
@@ -1764,7 +1764,7 @@ static void UpdateScrollY(TreeListData *pData) {
 //*		UpdateToolTip
 //*
 //*****************************************************************************
-//	Aktualisiert den Text für das Tootip
+//	Aktualisiert den Text fÃ¼r das Tootip
 //	pData	: Zeiger auf Fensterdaten
 //	uItem	: Item auf den der Mauszeiger zeigt
 //	uFlags	: Flags vom HitTest
@@ -1871,7 +1871,7 @@ static void UpdateToolTip(TreeListData *pData, unsigned uItem, unsigned uFlags) 
 					goto ExitTip;
 
 				uLen = str_len(pText) + 1;
-				if(uLen >= pData->uToolTipSize) {				// Tooltipspeicher vergrößern
+				if(uLen >= pData->uToolTipSize) {				// Tooltipspeicher vergrÃ¶ÃŸern
 					delete(pData->pToolTipText);
 					pData->uToolTipSize = (uLen + 255)&~0xFF;
 					pData->pToolTipText = new(TCHAR, pData->uToolTipSize + 4);
@@ -1979,7 +1979,7 @@ static void UpdateToolTip(TreeListData *pData, unsigned uItem, unsigned uFlags) 
 						goto ExitTip;
 
 					uLen = str_len(pText) + 1;
-					if(uLen >= pData->uToolTipSize) {			// Tooltipspeicher vergrößern
+					if(uLen >= pData->uToolTipSize) {			// Tooltipspeicher vergrÃ¶ÃŸern
 						delete(pData->pToolTipText);
 						pData->uToolTipSize = (uLen + 255)&~0xFF;
 						pData->pToolTipText = new(TCHAR, pData->uToolTipSize + 4);
@@ -2063,7 +2063,7 @@ UserTip:
 		goto ExitTip;
 
 	uLen = str_len(pText) + 1;
-	if(uLen >= pData->uToolTipSize) {							// Tooltipspeicher vergrößern
+	if(uLen >= pData->uToolTipSize) {							// Tooltipspeicher vergrÃ¶ÃŸern
 
 		delete(pData->pToolTipText);
 		pData->uToolTipSize = (uLen + 255)&~0xFF;
@@ -2078,7 +2078,7 @@ UserTip:
 #ifndef __REACTOS__
 	hToolTip			= pData->hToolTip;
 #endif
-	// Tooltip verzögert anzeigen
+	// Tooltip verzÃ¶gert anzeigen
 	if((sNotify.itemNew.mask & TVIF_TOOLTIPTIME) && sNotify.itemNew.lParam > 0) {
 		pData->uToolTipShow = (unsigned)(sNotify.itemNew.lParam + 499) / 500;
 		pData->uToolTipSub	= sNotify.itemNew.cChildren;
@@ -2143,10 +2143,10 @@ static int CreateFontset(TreeListData *pData, HFONT hFont){
 //*		UpdateFont
 //*
 //*****************************************************************************
-//	Erzeugt einen den fetten Font für das Fenster
+//	Erzeugt einen den fetten Font fÃ¼r das Fenster
 //	pData		: Zeiger auf die Fensterdaten
 //	iRedraw		: Soll das Fenster neugezeichnet werden
-//	Ergibt 1 wenn der Font verändert wurde
+//	Ergibt 1 wenn der Font verÃ¤ndert wurde
 static int UpdateFont(TreeListData *pData) {
 
 	int			iPos;
@@ -2197,7 +2197,7 @@ static int UpdateFont(TreeListData *pData) {
 		pList = pData->pTreeItems;
 		iPos  = pData->uTreeItemsMax;
 
-		for(; iPos >= 0; iPos--) {								// Alle Textbreiten zurücksetzen
+		for(; iPos >= 0; iPos--) {								// Alle Textbreiten zurÃ¼cksetzen
 			pEntry = pList[iPos];
 			if(!pEntry)
 				continue;
@@ -2243,7 +2243,7 @@ static int UpdateFont(TreeListData *pData) {
 //*		UpdateItems
 //*
 //*****************************************************************************
-//	Berechnet die Positionen der Zeilen für die sichtbaren Einträge
+//	Berechnet die Positionen der Zeilen fÃ¼r die sichtbaren EintrÃ¤ge
 //	pData		: Zeiger auf die Fensterdaten
 //	uItem		: Ist der Eintrag ab dem begonnen wird
 static void UpdateItems(TreeListData *pData, unsigned uItem) {
@@ -2269,7 +2269,7 @@ static void UpdateItems(TreeListData *pData, unsigned uItem) {
 			if(!uOld)
 				return;
 
-			for(uNum = 0; uNum < uOld; uNum++) {					// Die alten Einträge zurücksetzen
+			for(uNum = 0; uNum < uOld; uNum++) {					// Die alten EintrÃ¤ge zurÃ¼cksetzen
 				uTemp = pLines[uNum];
 				if(!uTemp)
 					continue;
@@ -2289,7 +2289,7 @@ static void UpdateItems(TreeListData *pData, unsigned uItem) {
 			return;
 		}
 
-		for(uNum = 0; uNum < uOld; uNum++) {						// Die alten Einträge zurücksetzen
+		for(uNum = 0; uNum < uOld; uNum++) {						// Die alten EintrÃ¤ge zurÃ¼cksetzen
 			uTemp = pLines[uNum];
 			if(!uTemp)
 				continue;
@@ -2313,7 +2313,7 @@ static void UpdateItems(TreeListData *pData, unsigned uItem) {
 		else
 			uStart	 = 0;
 
-		for(uNum = uPos; uNum < uOld; uNum++) {						// Die alten Einträge zurücksetzen
+		for(uNum = uPos; uNum < uOld; uNum++) {						// Die alten EintrÃ¤ge zurÃ¼cksetzen
 			uTemp = pLines[uNum];
 			if(!uTemp)
 				continue;
@@ -2385,9 +2385,9 @@ static void UpdateItems(TreeListData *pData, unsigned uItem) {
 //*		UpdateColumns
 //*
 //*****************************************************************************
-//	Prüft ob es Veränderungen in Spaltenbreiten gab
+//	PrÃ¼ft ob es VerÃ¤nderungen in Spaltenbreiten gab
 //	pData		: Zeiger auf die Fensterdaten
-//	Ergibt die Breite ab der die Spalten verändert wurden oder 0x10000
+//	Ergibt die Breite ab der die Spalten verÃ¤ndert wurden oder 0x10000
 static int UpdateColumns(TreeListData *pData) {
 #ifndef __REACTOS__
 	HWND	hHeader;
@@ -2410,7 +2410,7 @@ static int UpdateColumns(TreeListData *pData) {
 	iOld = 0;
 	iNow = 0;
 
-	for(uCol = 0; uCol < pData->uColumnCount;) {					// Suche die erste geänderte Spalte
+	for(uCol = 0; uCol < pData->uColumnCount;) {					// Suche die erste geÃ¤nderte Spalte
 		uSub  = pData->aColumnPos[uCol];
 		iSize = pData->aColumn[uSub].sReal;
 		uSub  = pData->aColumn[uSub].bNext;
@@ -2438,7 +2438,7 @@ static int UpdateColumns(TreeListData *pData) {
 		} else {
 			iRet = iOld;
 
-			if(pData->uSelectedItem) {						// Problem bei ausgewählten leeren Einträgen
+			if(pData->uSelectedItem) {						// Problem bei ausgewÃ¤hlten leeren EintrÃ¤gen
 				uNext = pData->aColumn[pData->uSelectedSub].bNext;
 				if(uNext == uSub) {
 					UpdateRect(pData, pData->uSelectedItem, pData->uSelectedSub);
@@ -2485,7 +2485,7 @@ static int UpdateColumns(TreeListData *pData) {
 //	Stellt die anzeige Reihenfolge der Spalten ein
 //	pData		: Zeiger auf die Fensterdaten
 //	uItems		: Ist die Nummer des Eintrages
-//	pArray		: Zeiger auf die Einträge. Null steht für die Standartreihenfolge.
+//	pArray		: Zeiger auf die EintrÃ¤ge. Null steht fÃ¼r die Standartreihenfolge.
 //				  z.B. {0,2,1} meint die sichtbare Reihenfolge Col0,Col2,Col1
 //				  Der erste Eintrag muss 0 immer sein.
 //	Ergibt   1 = Ok
@@ -2517,7 +2517,7 @@ static int TreeListSetOrderArray(TreeListData *pData, unsigned uItems, unsigned 
 
 		uItems = pData->uColumnCount;
 		pArray = aArray;
-	} else {													// Prüfe Array
+	} else {													// PrÃ¼fe Array
 		if(pData->uColumnCount != uItems || uItems == 0 || *pArray) {
 			return 0;
 		}
@@ -2525,7 +2525,7 @@ static int TreeListSetOrderArray(TreeListData *pData, unsigned uItems, unsigned 
 
 	memset(aFlags, 0, sizeof(aFlags) - 1);
 
-	for(uCol = 0, uDiff = 0; uCol < uItems; uCol++) {					// Die Einträge prüfen
+	for(uCol = 0, uDiff = 0; uCol < uItems; uCol++) {					// Die EintrÃ¤ge prÃ¼fen
 		uSub	= pArray[uCol];
 		if(uSub >= uItems)
 			return 0;
@@ -2544,7 +2544,7 @@ static int TreeListSetOrderArray(TreeListData *pData, unsigned uItems, unsigned 
 	aFlags[0     ] = 0;
 	aFlags[uItems] = (BYTE)uItems;
 
-	for(uCol = 1; uCol < uItems; uCol++) {							// Die Einträge anpassen
+	for(uCol = 1; uCol < uItems; uCol++) {							// Die EintrÃ¤ge anpassen
 		pData->aColumnPos[uCol]		= (BYTE)pArray[uCol];
 	}
 
@@ -2558,7 +2558,7 @@ static int TreeListSetOrderArray(TreeListData *pData, unsigned uItems, unsigned 
 	UpdateColumns(pData);
 	UpdateView(pData);
 
-	if(pData->uStyleEx & TVS_EX_HEADERCHGNOTIFY) {				// Alle Spalten haben sich verändert
+	if(pData->uStyleEx & TVS_EX_HEADERCHGNOTIFY) {				// Alle Spalten haben sich verÃ¤ndert
 		UNLOCK(pData);
 
 		for(uCol = 0; uCol < uItems; uCol++) {
@@ -2585,10 +2585,10 @@ static int TreeListSetOrderArray(TreeListData *pData, unsigned uItems, unsigned 
 //	Klappt bei einem Eintrag die Kinder um, und schickt alle Notify-Nachrichten.
 //	pData		: Zeiger auf die Fensterdaten
 //	uItem		: Ist die Nummer des Eintrages
-//	uAddFlags	: Sind die State-Flags die hinzugefügt werden sollen
+//	uAddFlags	: Sind die State-Flags die hinzugefÃ¼gt werden sollen
 //				  Bits 0..3 entahlen das Kommando, bei automatisch ermitteln
 //	Ergibt  -1 = Fehler
-//			 0 = Ausgeführt
+//			 0 = AusgefÃ¼hrt
 //			 1 = Abbruch
 static int TreeListToggleItem(TreeListData *pData, unsigned uItem, unsigned uAddFlags) {
 
@@ -2638,7 +2638,7 @@ static int TreeListToggleItem(TreeListData *pData, unsigned uItem, unsigned uAdd
 	pEntry = pList[uItem];
 
 	if(pEntry == 0)
-		return -1;									// Eintrag inzischen gelöscht ?
+		return -1;									// Eintrag inzischen gelÃ¶scht ?
 	if(lRet  != 0)
 		return  1;									// User-Abbruch ?
 
@@ -2711,13 +2711,13 @@ static int TreeListToggleItem(TreeListData *pData, unsigned uItem, unsigned uAdd
 	pEntry = pData->pTreeItems[uItem];
 
 	if(!pEntry)
-		return -1;									// Eintrag inzischen gelöscht ?
+		return -1;									// Eintrag inzischen gelÃ¶scht ?
 
 	if(uAction == TVE_EXPAND) {									// ONCE setzen nach Expandieren
 		pEntry->uState |= TVIS_EXPANDEDONCE;
 	}
 
-	if(pData->uSelectedItem && bDo) {							// Ist der ausgewählten Eintrag sichtbar ?
+	if(pData->uSelectedItem && bDo) {							// Ist der ausgewÃ¤hlten Eintrag sichtbar ?
 		pEntry = pList[pData->uSelectedItem];
 		if(!pEntry) {
 			pData->uSelectedItem = 0;
@@ -2975,11 +2975,11 @@ static int TreeListEnsureVisible(TreeListData *pData, unsigned uItem, unsigned u
 //*		TreeListIsVisible
 //*
 //*****************************************************************************
-//	Prüft ob ein Eintrag sichtbar ist
+//	PrÃ¼ft ob ein Eintrag sichtbar ist
 //	pData		: Zeiger auf die Fensterdaten
 //	uItem		: Ist die Nummer des Eintrages
-//	uSub		: Untereintrag der geprüft werden soll
-//						0xFFFFFFFF nur Zeile prüfen
+//	uSub		: Untereintrag der geprÃ¼ft werden soll
+//						0xFFFFFFFF nur Zeile prÃ¼fen
 //	Ergibt den Zustand des Eintrages:
 //				   -1 = Unbekannter Eintrag
 //					0 = Eintrag ist zugeklappt
@@ -3036,7 +3036,7 @@ static int TreeListIsVisible(TreeListData *pData, unsigned uItem, unsigned uSub)
 		return 2;
 	}
 
-	if(uSub < pData->uColumnCount) {							// Spalte prüfen
+	if(uSub < pData->uColumnCount) {							// Spalte prÃ¼fen
 		uNext = pData->aColumn[uSub].bNext;
 		iNum  = pData->uSizeX;
 		iOff  = pData->uScrollX;
@@ -3061,14 +3061,14 @@ static int TreeListIsVisible(TreeListData *pData, unsigned uItem, unsigned uSub)
 //*		TreeListDeleteItem
 //*
 //*****************************************************************************
-//	Löscht einen Eintrag aus dem Fenster
+//	LÃ¶scht einen Eintrag aus dem Fenster
 //	pData		: Zeiger auf die Fensterdaten
-//	uItem		: Ist die Nummer des Eintrages der gelöscht werden soll
-//	iMode		: Wie soll der Eintrag gelöscht werden
-//					0 = Eintrag löschen und nicht neu zeichnen
-//					1 = Eintrag löschen und neu zeichnen
-//					2 = Nur Kindereinträge löschen und neu zeichnen
-//	Ergibt 1 wenn der Eintrag gelöscht wurde.
+//	uItem		: Ist die Nummer des Eintrages der gelÃ¶scht werden soll
+//	iMode		: Wie soll der Eintrag gelÃ¶scht werden
+//					0 = Eintrag lÃ¶schen und nicht neu zeichnen
+//					1 = Eintrag lÃ¶schen und neu zeichnen
+//					2 = Nur KindereintrÃ¤ge lÃ¶schen und neu zeichnen
+//	Ergibt 1 wenn der Eintrag gelÃ¶scht wurde.
 static int TreeListDeleteItem(TreeListData *pData, unsigned uItem, int iMode) {
 
 	NMTREEVIEW	sNotify;
@@ -3083,9 +3083,9 @@ static int TreeListDeleteItem(TreeListData *pData, unsigned uItem, int iMode) {
 	if(pData->cLockChanges)
 		return 0;
 
-	if(uItem > pData->uTreeItemsMax) {							// Prüfe den Eintrag
+	if(uItem > pData->uTreeItemsMax) {							// PrÃ¼fe den Eintrag
 		if(uItem != U(TVI_ROOT))
-			return 0;					// Alles löschen
+			return 0;					// Alles lÃ¶schen
 		if(pData->uLastChild == 0)
 			return 0;
 
@@ -3102,9 +3102,9 @@ static int TreeListDeleteItem(TreeListData *pData, unsigned uItem, int iMode) {
 	}
 
 	pEntry = pData->pTreeItems[uItem];
-	if(!pEntry) {												// Prüfe den Eintrag
+	if(!pEntry) {												// PrÃ¼fe den Eintrag
 		if(uItem != 0)
-			return 0;							// Alles löschen
+			return 0;							// Alles lÃ¶schen
 		if(pData->uLastChild == 0)
 			return 0;
 
@@ -3120,12 +3120,12 @@ static int TreeListDeleteItem(TreeListData *pData, unsigned uItem, int iMode) {
 		return 1;
 	}
 
-	if(iMode == 2) {											// Nur Kindereinträge löschen
+	if(iMode == 2) {											// Nur KindereintrÃ¤ge lÃ¶schen
 		if(!pEntry->uFirstChild) {
 			return 0;
 		}
 
-		while(pEntry->uLastChild) {							// Alle Kinder löschen
+		while(pEntry->uLastChild) {							// Alle Kinder lÃ¶schen
 			TreeListDeleteItem(pData, pEntry->uLastChild, 0);
 		}
 
@@ -3137,11 +3137,11 @@ static int TreeListDeleteItem(TreeListData *pData, unsigned uItem, int iMode) {
 		return 1;
 	}
 
-	while(pEntry->uLastChild) {								// Alle Kinder löschen
+	while(pEntry->uLastChild) {								// Alle Kinder lÃ¶schen
 		TreeListDeleteItem(pData, pEntry->uLastChild, 0);
 	}
 
-	if(uItem == pData->uSelectedItem) {							// Einen ausgewählten Eintrag löschen
+	if(uItem == pData->uSelectedItem) {							// Einen ausgewÃ¤hlten Eintrag lÃ¶schen
 		sNotify.hdr.code			= TVN_SELCHANGED;
 		sNotify.action				= TVC_UNKNOWN;
 		sNotify.itemOld.mask		= TVIF_HANDLE | TVIF_PARAM | TVIF_STATE | TVIF_SUBITEM | TVIF_PARAM;
@@ -3164,7 +3164,7 @@ static int TreeListDeleteItem(TreeListData *pData, unsigned uItem, int iMode) {
 		sNotify.ptDrag.y			= 0;
 
 		UNLOCK(pData);
-		SendNotify(pData, &sNotify.hdr);						// Bekant geben das der Eintrag nicht mehr ausgewählt ist
+		SendNotify(pData, &sNotify.hdr);						// Bekant geben das der Eintrag nicht mehr ausgewÃ¤hlt ist
 		LOCK(pData);
 
 		pData->uSelectedItem = 0;
@@ -3187,11 +3187,11 @@ static int TreeListDeleteItem(TreeListData *pData, unsigned uItem, int iMode) {
 	SendNotify(pData, &sNotify.hdr);
 	LOCK(pData);
 
-	pEntry = pData->pTreeItems[uItem];					// Prüfen ob der Eintrag noch existiert
+	pEntry = pData->pTreeItems[uItem];					// PrÃ¼fen ob der Eintrag noch existiert
 	if(!pEntry)
 		return 0;
 
-	if(uItem == pData->uTrackedItem) {							// Einen unterstrichenen Eintrag löschen
+	if(uItem == pData->uTrackedItem) {							// Einen unterstrichenen Eintrag lÃ¶schen
 		pData->uTrackedItem  = 0;
 		pData->uTrackedSub   = 0;
 	}
@@ -3232,7 +3232,7 @@ static int TreeListDeleteItem(TreeListData *pData, unsigned uItem, int iMode) {
 		}
 	}
 
-	for(uPos = 1; uPos < pData->uColumnCount; uPos++) {				// Alle Extraeinträge löschen
+	for(uPos = 1; uPos < pData->uColumnCount; uPos++) {				// Alle ExtraeintrÃ¤ge lÃ¶schen
 		pList = pData->pExtraItems[uPos - 1];
 
 		pExtra = pList[uItem];
@@ -3250,7 +3250,7 @@ static int TreeListDeleteItem(TreeListData *pData, unsigned uItem, int iMode) {
 	}
 
 
-	pData->pTreeItems[uItem] = NULL;						// Den Eintrag löschen
+	pData->pTreeItems[uItem] = NULL;						// Den Eintrag lÃ¶schen
 
 	if(pEntry->pText) {
 		pEntry->uTextSize = 0;
@@ -3274,7 +3274,7 @@ static int TreeListDeleteItem(TreeListData *pData, unsigned uItem, int iMode) {
 		}
 	}
 
-	if(pEntry->uState & TVIS_SELECTED)						// Ausgewählte Einträge runterzählen
+	if(pEntry->uState & TVIS_SELECTED)						// AusgewÃ¤hlte EintrÃ¤ge runterzÃ¤hlen
 		if(pData->uSelectedCount > 0) {
 			pData->uSelectedCount--;
 		}
@@ -3283,7 +3283,7 @@ static int TreeListDeleteItem(TreeListData *pData, unsigned uItem, int iMode) {
 
 	pData->uTreeItemsCount--;
 
-	iOff  = pData->uScrollY;								// Prüfe die Scrollposition
+	iOff  = pData->uScrollY;								// PrÃ¼fe die Scrollposition
 	iMax  = pData->uItemPosCount;
 	iMax -=	pData->uPageEnties - 1;
 
@@ -3305,15 +3305,15 @@ static int TreeListDeleteItem(TreeListData *pData, unsigned uItem, int iMode) {
 //*		TreeListXorSelectItem
 //*
 //*****************************************************************************
-//	Wählt einen Eintrag ab bzw. an
+//	WÃ¤hlt einen Eintrag ab bzw. an
 //	pData		: Zeiger auf die Fensterdaten
-//	uItem		: Ist die Nummer des Eintrages der ausgewählt werden soll
-//	iMode		: Ist der Grund für die Änderung
+//	uItem		: Ist die Nummer des Eintrages der ausgewÃ¤hlt werden soll
+//	iMode		: Ist der Grund fÃ¼r die Ã„nderung
 //						TVC_BYKEYBOARD
 //						TVC_BYMOUSE
 //						TVC_UNKNOWN
-//	Ergibt		1 wenn der Eintrag ab/angewählt wurde
-//				0 wenn der Eintrag nicht verändert wurde
+//	Ergibt		1 wenn der Eintrag ab/angewÃ¤hlt wurde
+//				0 wenn der Eintrag nicht verÃ¤ndert wurde
 static int TreeListXorSelectItem(TreeListData *pData, unsigned uItem, int iMode) {
 
 	NMTREEVIEW	sNotify;
@@ -3413,7 +3413,7 @@ static int TreeListXorSelectItem(TreeListData *pData, unsigned uItem, int iMode)
 //*		TreeListRemoveFocus
 //*
 //*****************************************************************************
-//	Wählt den Focus ab
+//	WÃ¤hlt den Focus ab
 //	pData		: Zeiger auf die Fensterdaten
 static void TreeListRemoveFocus(TreeListData *pData) {
 
@@ -3451,10 +3451,10 @@ static void TreeListRemoveFocus(TreeListData *pData) {
 //*		TreeListSetFocus
 //*
 //*****************************************************************************
-//	Wählt den Focus-Eintrag
+//	WÃ¤hlt den Focus-Eintrag
 //	pData		: Zeiger auf die Fensterdaten
-//	uItem		: Eintrag für den Focus (0xFFFFFFFF=keine Änderung)
-//	uSub		: Spalte für den Focus	(0xFFFFFFFF=keine Änderung)
+//	uItem		: Eintrag fÃ¼r den Focus (0xFFFFFFFF=keine Ã„nderung)
+//	uSub		: Spalte fÃ¼r den Focus	(0xFFFFFFFF=keine Ã„nderung)
 //	Ergibt 1 wenn der Focus gesetzt wurde, bzw 0 bei einem Fehler
 static int  TreeListSetFocus(TreeListData *pData, unsigned uItem, unsigned uSub) {
 
@@ -3480,13 +3480,13 @@ static int  TreeListSetFocus(TreeListData *pData, unsigned uItem, unsigned uSub)
 		if(pData->uFocusSub == uSub)
 			return 1;
 
-	if(!uItem) {												// Focus abwählen
+	if(!uItem) {												// Focus abwÃ¤hlen
 		TreeListRemoveFocus(pData);
 		return 1;
 	}
 
 
-	if(uItem > pData->uTreeItemsMax) {							// Den Eintrag prüfen
+	if(uItem > pData->uTreeItemsMax) {							// Den Eintrag prÃ¼fen
 		return 0;
 	}
 
@@ -3505,7 +3505,7 @@ static int  TreeListSetFocus(TreeListData *pData, unsigned uItem, unsigned uSub)
 	uTemp  = pData->uFocusItem;
 	pTemp  = pData->pTreeItems[uTemp];
 
-	if(pTemp) {												// Den alten Eintrag abwählen
+	if(pTemp) {												// Den alten Eintrag abwÃ¤hlen
 		pTemp->bFlags &= ~TVIX_FOCUSED;
 		uCol = pData->uFocusSub;
 
@@ -3519,7 +3519,7 @@ static int  TreeListSetFocus(TreeListData *pData, unsigned uItem, unsigned uSub)
 	}
 
 
-	if(uSub) {												// Neuen Eintrag wählen
+	if(uSub) {												// Neuen Eintrag wÃ¤hlen
 		pExtra = pData->pExtraItems[uSub - 1][uItem];
 		if(pExtra)
 			pExtra->bFlags |= TVIX_FOCUSED;
@@ -3570,20 +3570,20 @@ static int  TreeListSetFocus(TreeListData *pData, unsigned uItem, unsigned uSub)
 //*		TreeListSelectItem
 //*
 //*****************************************************************************
-//	Wählt einen Eintrag aus
+//	WÃ¤hlt einen Eintrag aus
 //	pData		: Zeiger auf die Fensterdaten
-//	uItem		: Ist die Nummer des Eintrages der ausgewählt werden soll
-//	uSubItem	: Ist die Spalte die gewählt werden soll
-//	iMode		: Ist der Grund für die Änderung
+//	uItem		: Ist die Nummer des Eintrages der ausgewÃ¤hlt werden soll
+//	uSubItem	: Ist die Spalte die gewÃ¤hlt werden soll
+//	iMode		: Ist der Grund fÃ¼r die Ã„nderung
 //						TVC_BYKEYBOARD
 //						TVC_BYMOUSE
 //						TVC_UNKNOWN
-//						TVC_ONLYFOCUS	(nur der Focus hat sich verändert)
-//						TVC_DESELECT	(dieses Flag löscht die alte Auswahl)
-//						TVC_UNSELECT	(dieses Flag löscht Auswahl bei MultiSel)
-//	Ergibt		2 wenn der Eintrag gewählt und umgeklapt wurde
-//				1 wenn der Eintrag gewählt wurde
-//				0 wenn der Eintrag nicht gewählt wurde
+//						TVC_ONLYFOCUS	(nur der Focus hat sich verÃ¤ndert)
+//						TVC_DESELECT	(dieses Flag lÃ¶scht die alte Auswahl)
+//						TVC_UNSELECT	(dieses Flag lÃ¶scht Auswahl bei MultiSel)
+//	Ergibt		2 wenn der Eintrag gewÃ¤hlt und umgeklapt wurde
+//				1 wenn der Eintrag gewÃ¤hlt wurde
+//				0 wenn der Eintrag nicht gewÃ¤hlt wurde
 static int TreeListSelectItem(TreeListData *pData, unsigned uItem, unsigned uSubItem, int iMode) {
 
 	NMTREEVIEW	sNotify;
@@ -3615,7 +3615,7 @@ static int TreeListSelectItem(TreeListData *pData, unsigned uItem, unsigned uSub
 				return 1;
 			}
 
-	if(pData->uStyleEx & TVS_EX_MULTISELECT) {					// Ist die Mehrfachauswahl möglich
+	if(pData->uStyleEx & TVS_EX_MULTISELECT) {					// Ist die Mehrfachauswahl mÃ¶glich
 		iSel = iMode & TVC_UNSELECT;
 		iDel = iMode & TVC_DESELECT;
 		if(!iDel) {
@@ -3626,7 +3626,7 @@ static int TreeListSelectItem(TreeListData *pData, unsigned uItem, unsigned uSub
 
 			uOld = 0;
 			uSub = 0;
-		} else {												// Alle gewählten Einträge abwählen
+		} else {												// Alle gewÃ¤hlten EintrÃ¤ge abwÃ¤hlen
 			if(pData->uSelectedCount > 1 && pData->uTreeItemsMax) {
 				for(uPos = pData->uTreeItemsMax; uPos; uPos--) {
 					pEntry = pData->pTreeItems[uPos];
@@ -3634,11 +3634,11 @@ static int TreeListSelectItem(TreeListData *pData, unsigned uItem, unsigned uSub
 						continue;
 					if(TreeListXorSelectItem(pData, uPos, iMode))
 						if(!pData->uSelectedCount)
-							break;		// Wurden alle Einträge abgewählt
+							break;		// Wurden alle EintrÃ¤ge abgewÃ¤hlt
 				}
 			}
 		}
-	} else {													// Altes Select löschen
+	} else {													// Altes Select lÃ¶schen
 		iMode &= ~TVC_ONLYFOCUS;
 		iDel   =  1;
 		iSel   =  0;
@@ -3704,14 +3704,14 @@ static int TreeListSelectItem(TreeListData *pData, unsigned uItem, unsigned uSub
 
 	UNLOCK(pData);
 
-	if(SendNotify(pData, &sNotify.hdr)) {						// Abfragen ob der Eintrag gewählt werden darf
+	if(SendNotify(pData, &sNotify.hdr)) {						// Abfragen ob der Eintrag gewÃ¤hlt werden darf
 		LOCK(pData);
 		return 0;
 	}
 
 	LOCK(pData);
 
-	if(uItem) {												// Prüfen ob der Eintrag noch existiert
+	if(uItem) {												// PrÃ¼fen ob der Eintrag noch existiert
 		pEntry = pData->pTreeItems[uItem];
 		if(!pEntry)
 			return 0;
@@ -3723,7 +3723,7 @@ static int TreeListSelectItem(TreeListData *pData, unsigned uItem, unsigned uSub
 	}
 
 
-	if(pTemp) {												// Den alten Eintrag abwählen
+	if(pTemp) {												// Den alten Eintrag abwÃ¤hlen
 		if(pTemp->uShowPos) {									// Den Eintrag neu zeichnen
 			if((pData->uStyleEx & TVS_EX_FULLROWMARK) || pData->uSelectedSub)
 				UpdateRow(pData, uOld);
@@ -3747,7 +3747,7 @@ static int TreeListSelectItem(TreeListData *pData, unsigned uItem, unsigned uSub
 	}
 
 
-	if(uItem) {												// Den neuen Eintrag wählen
+	if(uItem) {												// Den neuen Eintrag wÃ¤hlen
 		if(iSel) {
 			if(pEntry->uState & TVIS_SELECTED) {
 				uState				  &= ~TVIS_SELECTED;
@@ -3852,11 +3852,11 @@ static int TreeListSelectItem(TreeListData *pData, unsigned uItem, unsigned uSub
 	sNotify.ptDrag.y			= 0;
 
 	UNLOCK(pData);
-	uRet = U(SendNotify(pData, &sNotify.hdr));					// Anfragen ob die Zweige umgeklappt werden dürfen
+	uRet = U(SendNotify(pData, &sNotify.hdr));					// Anfragen ob die Zweige umgeklappt werden dÃ¼rfen
 	LOCK(pData);
 
 
-	pTemp	= pData->pTreeItems[uOld ];						// Zeiger neu holen falls es Änderungen gab
+	pTemp	= pData->pTreeItems[uOld ];						// Zeiger neu holen falls es Ã„nderungen gab
 	pEntry	= pData->pTreeItems[uItem];
 
 	while(pTemp && pEntry) {									// Beide Zweige sysnchronisieren
@@ -3936,11 +3936,11 @@ EndSel:
 //*		TreeListSelectChilds
 //*
 //*****************************************************************************
-//	Wählt einen Eintrag aus
+//	WÃ¤hlt einen Eintrag aus
 //	pData		: Zeiger auf die Fensterdaten
-//	uItem		: Ist die Nummer des Eintrages der ausgewählt werden soll
-//	iMode		: Bit 0 = Untereintäge auch ändern
-//				  Bit 1 = Einträge abwählen
+//	uItem		: Ist die Nummer des Eintrages der ausgewÃ¤hlt werden soll
+//	iMode		: Bit 0 = UntereintÃ¤ge auch Ã¤ndern
+//				  Bit 1 = EintrÃ¤ge abwÃ¤hlen
 //	Ergibt 1 wenn die Auswahl funktioniert hat, bzw. 0 bei einem Fehler
 static int TreeListSelectChilds(TreeListData *pData, unsigned uItem, int iMode) {
 
@@ -3975,13 +3975,13 @@ static int TreeListSelectChilds(TreeListData *pData, unsigned uItem, int iMode) 
 			TreeListXorSelectItem(pData, uItem, TVC_UNKNOWN);
 		}
 
-		if(iMode && pEntry->uFirstChild) {					// Auch Kinder ändern
+		if(iMode && pEntry->uFirstChild) {					// Auch Kinder Ã¤ndern
 			uItem = pEntry->uFirstChild;
 			uLevel++;
 			continue;
 		}
 
-		for(;;) {												// Eine Ebene höher
+		for(;;) {												// Eine Ebene hÃ¶her
 			uItem = pEntry->uNextItem;
 			if(uItem != 0)
 				break;
@@ -4001,10 +4001,10 @@ static int TreeListSelectChilds(TreeListData *pData, unsigned uItem, int iMode) 
 //*		TreeListInsertItem
 //*
 //*****************************************************************************
-//	Fügt einen Eintrag ins Fenster ein
+//	FÃ¼gt einen Eintrag ins Fenster ein
 //	pData		: Zeiger auf die Fensterdaten
-//	pInsert		: Zeiger auf die ein zu fügenden Daten
-//	Ergibt die Einfügeposition des neuen Eintrages oder 0 bei einem Fehler
+//	pInsert		: Zeiger auf die ein zu fÃ¼genden Daten
+//	Ergibt die EinfÃ¼geposition des neuen Eintrages oder 0 bei einem Fehler
 static unsigned TreeListInsertItem(TreeListData *pData, TV_INSERTSTRUCT *pInsert) {
 
 	char	   *pTemp;
@@ -4043,7 +4043,7 @@ static unsigned TreeListInsertItem(TreeListData *pData, TV_INSERTSTRUCT *pInsert
 		return 0;
 
 	uParent = U(pInsert->hParent);
-	if(uParent > pData->uTreeItemsMax) {						// Prüfe das Elternelement
+	if(uParent > pData->uTreeItemsMax) {						// PrÃ¼fe das Elternelement
 		if(pInsert->hParent != TVI_ROOT) {
 			return 0;
 		}
@@ -4058,7 +4058,7 @@ static unsigned TreeListInsertItem(TreeListData *pData, TV_INSERTSTRUCT *pInsert
 		}
 	}
 
-	if(pData->uTreeItemsCount + 1 > pData->uTreeItemsMax) {		// Größe der Liste erhöhen
+	if(pData->uTreeItemsCount + 1 > pData->uTreeItemsMax) {		// GrÃ¶ÃŸe der Liste erhÃ¶hen
 		pPosOld = pData->pItemPos;
 		pOld	= pData->pTreeItems;
 		uMax	= pData->uTreeItemsMax;
@@ -4162,7 +4162,7 @@ static unsigned TreeListInsertItem(TreeListData *pData, TV_INSERTSTRUCT *pInsert
 			pNew->bCallback |= TVIF_SELECTEDIMAGE;
 	}
 
-	if(uBits & TVIF_CHILDREN) {									// Art der Schaltflächen
+	if(uBits & TVIF_CHILDREN) {									// Art der SchaltflÃ¤chen
 		switch(pInsert->item.cChildren) {
 			case  0:
 				break;
@@ -4185,7 +4185,7 @@ static unsigned TreeListInsertItem(TreeListData *pData, TV_INSERTSTRUCT *pInsert
 		pNew->uState &= ~TVIS_EXPANDED;
 	}
 
-	if(uBits & TVIF_TEXT) {										// Text einfügen
+	if(uBits & TVIF_TEXT) {										// Text einfÃ¼gen
 		if(pInsert->item.pszText == LPSTR_TEXTCALLBACK) {
 			pNew->bCallback |= TVIF_TEXT;
 			pNew->uTextSize = 0;
@@ -4201,14 +4201,14 @@ static unsigned TreeListInsertItem(TreeListData *pData, TV_INSERTSTRUCT *pInsert
 		pNew->uTextSize	= 0;
 	}
 
-	if(!pParent) {											// Einen Root-Eintrag einfügen
+	if(!pParent) {											// Einen Root-Eintrag einfÃ¼gen
 		pNew->uParent	= 0;
 		uParent			= 0;
 		bFlag			= 0;
 		uFirst			= 0xFFFFFFFF;
 		pFirst			= &pData->uFirstChild;
 		pLast			= &pData->uLastChild;
-	} else {													// Einen Tree-Eintrag einfügen
+	} else {													// Einen Tree-Eintrag einfÃ¼gen
 		pNew->uParent	=  uParent;
 		pNew->uLevel	=  pParent->uLevel + 1;
 		uFirst			=  pParent->uFirstChild;
@@ -4221,12 +4221,12 @@ static unsigned TreeListInsertItem(TreeListData *pData, TV_INSERTSTRUCT *pInsert
 		}
 	}
 
-	//******************** Eintrage einfügen **************************************
+	//******************** Eintrage einfÃ¼gen **************************************
 	uAfter = U(pInsert->hInsertAfter);
 
 	switch(uAfter) {
-		case U(TVI_BEFORE):										// Nach einem Eintrag einfügen
-			if(pParent) {										// Einen Root-Eintrag einfügen
+		case U(TVI_BEFORE):										// Nach einem Eintrag einfÃ¼gen
+			if(pParent) {										// Einen Root-Eintrag einfÃ¼gen
 				pEntry  = pParent;
 				pParent ->bFlags  = bFlag;
 				uParent = pParent->uParent;
@@ -4239,7 +4239,7 @@ static unsigned TreeListInsertItem(TreeListData *pData, TV_INSERTSTRUCT *pInsert
 					uFirst			= 0xFFFFFFFF;
 					pFirst			= &pData->uFirstChild;
 					pLast			= &pData->uLastChild;
-				} else {										// Einen Tree-Eintrag einfügen
+				} else {										// Einen Tree-Eintrag einfÃ¼gen
 					pNew->uParent	=  uParent;
 					pNew->uLevel	=  pParent->uLevel + 1;
 					uFirst			=  pParent->uFirstChild;
@@ -4257,8 +4257,8 @@ static unsigned TreeListInsertItem(TreeListData *pData, TV_INSERTSTRUCT *pInsert
 				}
 			}
 
-		case U(TVI_FIRST):										// Am Anfang einfügen
-			if(pFirst[0]) {									// Gibt es schon Einträge
+		case U(TVI_FIRST):										// Am Anfang einfÃ¼gen
+			if(pFirst[0]) {									// Gibt es schon EintrÃ¤ge
 				pEntry = pItems[pFirst[0]];
 				pEntry->uPrevItem = uPos;
 			} else {
@@ -4267,18 +4267,18 @@ static unsigned TreeListInsertItem(TreeListData *pData, TV_INSERTSTRUCT *pInsert
 				break;
 			}
 
-			pNew ->uNextItem = pFirst[0];					// Eintrag einfügen
+			pNew ->uNextItem = pFirst[0];					// Eintrag einfÃ¼gen
 			pFirst[0]		 = uPos;
 			break;
 
-		case U(TVI_ROOT):										// Als Root-Eintrag einfügen
+		case U(TVI_ROOT):										// Als Root-Eintrag einfÃ¼gen
 			pNew->uParent	= 0;
 			uParent			= 0;
 			pFirst			= &pData->uFirstChild;
 			pLast			= &pData->uLastChild;
 
-		case U(TVI_LAST):										// Am Ende einfügen
-			if(pLast[0]) {									// Gibt es schon Einträge
+		case U(TVI_LAST):										// Am Ende einfÃ¼gen
+			if(pLast[0]) {									// Gibt es schon EintrÃ¤ge
 				pEntry = pItems[pLast[0]];
 				pEntry->uNextItem = uPos;
 			} else {
@@ -4287,20 +4287,20 @@ static unsigned TreeListInsertItem(TreeListData *pData, TV_INSERTSTRUCT *pInsert
 				break;
 			}
 
-			pNew ->uPrevItem = pLast[0];					// Eintrag einfügen
+			pNew ->uPrevItem = pLast[0];					// Eintrag einfÃ¼gen
 			pLast[0]		 = uPos;
 			break;
 
 
-		case U(TVI_SORTEX):										// Einfügen mittels Funktion
+		case U(TVI_SORTEX):										// EinfÃ¼gen mittels Funktion
 			uItem = pFirst[0];
-			if(!uItem) {										// Gibt es keine Kindeinträge
+			if(!uItem) {										// Gibt es keine KindeintrÃ¤ge
 				pFirst[0] = uPos;
 				pLast [0] = uPos;
 				break;
 			}
 
-			if(pNew->bCallback & TVIF_TEXT) {					// Text über Callback holen
+			if(pNew->bCallback & TVIF_TEXT) {					// Text Ã¼ber Callback holen
 				uSize = 1;
 				LOCK(pData);
 				CallbackEntry(pData, pNew, uPos, TVIF_TEXT, &iNone, &uSize, &pText);
@@ -4318,7 +4318,7 @@ static unsigned TreeListInsertItem(TreeListData *pData, TV_INSERTSTRUCT *pInsert
 			iCount	 = 0;
 			uBefore  = 0;
 
-			while(uNext) {									// Zähle die Einträge
+			while(uNext) {									// ZÃ¤hle die EintrÃ¤ge
 				iCount++;
 				uNext = pItems[uNext]->uNextItem;
 			}
@@ -4333,7 +4333,7 @@ static unsigned TreeListInsertItem(TreeListData *pData, TV_INSERTSTRUCT *pInsert
 				}
 
 				pEntry  = pItems[uNext];
-				if(pEntry->bCallback & TVIF_TEXT) {				// Text über Callback holen
+				if(pEntry->bCallback & TVIF_TEXT) {				// Text Ã¼ber Callback holen
 					uSize = 0;
 					LOCK(pData);
 					CallbackEntry(pData, pEntry, uItem, TVIF_TEXT, &iNone, &uSize, &pTextTemp);
@@ -4368,27 +4368,27 @@ static unsigned TreeListInsertItem(TreeListData *pData, TV_INSERTSTRUCT *pInsert
 			if(uBefore) {										// Vorherigen Eintrag anpassen
 				pEntry = pItems[uBefore];
 				pEntry->uNextItem = uPos;
-			} else {											// Am Anfang einfügen
+			} else {											// Am Anfang einfÃ¼gen
 				pFirst[0] = uPos;
 			}
 
-			if(uItem) {										// Nächsten Eintrag anpassen
+			if(uItem) {										// NÃ¤chsten Eintrag anpassen
 				pEntry = pItems[uItem];
 				pEntry->uPrevItem = uPos;
-			} else {											// Am Ende anhängen
+			} else {											// Am Ende anhÃ¤ngen
 				pLast[0] = uPos;
 			}
 			break;
 
-		case U(TVI_SORT):										// Alphapetisch einfügen
+		case U(TVI_SORT):										// Alphapetisch einfÃ¼gen
 			uItem = pFirst[0];
-			if(!uItem) {										// Gibt es keine Kindeinträge
+			if(!uItem) {										// Gibt es keine KindeintrÃ¤ge
 				pFirst[0] = uPos;
 				pLast [0] = uPos;
 				break;
 			}
 
-			if(pNew->bCallback & TVIF_TEXT) {					// Text über Callback holen
+			if(pNew->bCallback & TVIF_TEXT) {					// Text Ã¼ber Callback holen
 				uSize = 1;
 				LOCK(pData);
 				CallbackEntry(pData, pNew, uPos, TVIF_TEXT, &iNone, &uSize, &pText);
@@ -4403,7 +4403,7 @@ static unsigned TreeListInsertItem(TreeListData *pData, TV_INSERTSTRUCT *pInsert
 			iCount	= 0;
 			uBefore = 0;
 
-			while(uNext) {									// Zähle die Einträge
+			while(uNext) {									// ZÃ¤hle die EintrÃ¤ge
 				iCount++;
 				uNext = pItems[uNext]->uNextItem;
 			}
@@ -4419,7 +4419,7 @@ static unsigned TreeListInsertItem(TreeListData *pData, TV_INSERTSTRUCT *pInsert
 
 
 				pEntry  = pItems[uNext];
-				if(pEntry->bCallback & TVIF_TEXT) {				// Text über Callback holen
+				if(pEntry->bCallback & TVIF_TEXT) {				// Text Ã¼ber Callback holen
 					uSize = 0;
 					LOCK(pData);
 					CallbackEntry(pData, pEntry, uItem, TVIF_TEXT, &iNone, &uSize, &pTextTemp);
@@ -4456,22 +4456,22 @@ static unsigned TreeListInsertItem(TreeListData *pData, TV_INSERTSTRUCT *pInsert
 			if(uBefore) {										// Vorherigen Eintrag anpassen
 				pEntry = pItems[uBefore];
 				pEntry->uNextItem = uPos;
-			} else {											// Am Anfang einfügen
+			} else {											// Am Anfang einfÃ¼gen
 				pFirst[0] = uPos;
 			}
 
-			if(uItem) {										// Nächsten Eintrag anpassen
+			if(uItem) {										// NÃ¤chsten Eintrag anpassen
 				pEntry = pItems[uItem];
 				pEntry->uPrevItem = uPos;
-			} else {											// Am Ende anhängen
+			} else {											// Am Ende anhÃ¤ngen
 				pLast[0] = uPos;
 			}
 			break;
 
-		case U(TVI_AFTER):										// Nach einem Eintrag einfügen
+		case U(TVI_AFTER):										// Nach einem Eintrag einfÃ¼gen
 			uAfter  = uParent;
 
-			if(pParent) {										// Einen Root-Eintrag einfügen
+			if(pParent) {										// Einen Root-Eintrag einfÃ¼gen
 				pParent ->bFlags  = bFlag;
 				uParent = pParent->uParent;
 				pParent = pItems  [uParent];
@@ -4483,7 +4483,7 @@ static unsigned TreeListInsertItem(TreeListData *pData, TV_INSERTSTRUCT *pInsert
 					uFirst			= 0xFFFFFFFF;
 					pFirst			= &pData->uFirstChild;
 					pLast			= &pData->uLastChild;
-				} else {										// Einen Tree-Eintrag einfügen
+				} else {										// Einen Tree-Eintrag einfÃ¼gen
 					pNew->uParent	=  uParent;
 					pNew->uLevel	=  pParent->uLevel + 1;
 					uFirst			=  pParent->uFirstChild;
@@ -4497,27 +4497,27 @@ static unsigned TreeListInsertItem(TreeListData *pData, TV_INSERTSTRUCT *pInsert
 			}
 
 		default
-				:												// Hinter einen Eintrag einfügen
+				:												// Hinter einen Eintrag einfÃ¼gen
 DoInsert:
 			uItem = pFirst[0];
-			if(!uItem) {										// Gibt es keine Kindeinträge
+			if(!uItem) {										// Gibt es keine KindeintrÃ¤ge
 				pFirst[0] = uPos;
 				pLast [0] = uPos;
 				break;
 			}
 
 			if(uAfter > pData->uTreeItemsMax) {
-				if((uAfter & 0xFFF00000) == 0xFFE00000) {			// In einer genauen Reihe nach Patent einfügen
+				if((uAfter & 0xFFF00000) == 0xFFE00000) {			// In einer genauen Reihe nach Patent einfÃ¼gen
 					uAfter &= 0xFFFFF;
 
 					uItem = pFirst[0];
-					if(!uItem) {								// Gibt es keine Kindeinträge
+					if(!uItem) {								// Gibt es keine KindeintrÃ¤ge
 						pFirst[0] = uPos;
 						pLast [0] = uPos;
 						break;
 					}
 
-					if(uAfter == 0) {							// In die erste Reihe einfügen
+					if(uAfter == 0) {							// In die erste Reihe einfÃ¼gen
 						pEntry = pItems[uItem];
 						pEntry->uPrevItem = uPos;
 						pNew  ->uNextItem = uItem;
@@ -4527,7 +4527,7 @@ DoInsert:
 
 					uNum    = 1;
 					uBefore	= 0;
-					// Suche Einfügereihe
+					// Suche EinfÃ¼gereihe
 					for(; uItem; uItem = pItems[uItem]->uNextItem) {
 						uBefore = uItem;
 
@@ -4545,14 +4545,14 @@ DoInsert:
 					if(uBefore) {								// Vorherigen Eintrag anpassen
 						pEntry = pItems[uBefore];
 						pEntry->uNextItem = uPos;
-					} else {									// Am Anfang einfügen
+					} else {									// Am Anfang einfÃ¼gen
 						pFirst[0] = uPos;
 					}
 
-					if(uItem) {								// Nächsten Eintrag anpassen
+					if(uItem) {								// NÃ¤chsten Eintrag anpassen
 						pEntry = pItems[uItem];
 						pEntry->uPrevItem = uPos;
-					} else {									// Am Ende anhängen
+					} else {									// Am Ende anhÃ¤ngen
 						pLast[0] = uPos;
 					}
 
@@ -4578,14 +4578,14 @@ DoInsert:
 
 			if(uBefore) {										// Vorherigen Eintrag anpassen
 				pEntry->uNextItem = uPos;
-			} else {											// Am Anfang einfügen
+			} else {											// Am Anfang einfÃ¼gen
 				pFirst[0] = uPos;
 			}
 
-			if(uItem) {										// Nächsten Eintrag anpassen
+			if(uItem) {										// NÃ¤chsten Eintrag anpassen
 				pEntry = pItems[uItem];
 				pEntry->uPrevItem = uPos;
-			} else {											// Am Ende anhängen
+			} else {											// Am Ende anhÃ¤ngen
 				pLast[0] = uPos;
 			}
 
@@ -4609,7 +4609,7 @@ DoInsert:
 		}
 	}
 
-	if(pNew->uState & TVIS_SELECTED) {							// Den ausgewählten Eintrag auswählen
+	if(pNew->uState & TVIS_SELECTED) {							// Den ausgewÃ¤hlten Eintrag auswÃ¤hlen
 		TreeListSelectItem(pData, uPos, 0, TVC_UNKNOWN);
 	}
 
@@ -4621,9 +4621,9 @@ DoInsert:
 //*		TreeListSetItem
 //*
 //*****************************************************************************
-//	Ändert einen Eintrag im Fenster
+//	Ã„ndert einen Eintrag im Fenster
 //	pData		: Zeiger auf die Fensterdaten
-//	pItem		: Zeiger auf die ein zu ändernden Daten
+//	pItem		: Zeiger auf die ein zu Ã¤ndernden Daten
 //	Ergibt 1 wenn ok oder 0 bei einem Fehler
 static int TreeListSetItem(TreeListData *pData, const TV_ITEM *pItem) {
 
@@ -4653,7 +4653,7 @@ static int TreeListSetItem(TreeListData *pData, const TV_ITEM *pItem) {
 
 	uBits = pItem->mask;
 
-	if(uBits & TVIF_SUBITEM) {									// Einen Extraeintrag ändern
+	if(uBits & TVIF_SUBITEM) {									// Einen Extraeintrag Ã¤ndern
 		uSub = pItem->cChildren;
 		if(uSub > 0) {
 			if(uSub >= pData->uColumnCount)
@@ -4708,7 +4708,7 @@ static int TreeListSetItem(TreeListData *pData, const TV_ITEM *pItem) {
 				}
 			}
 
-			if(uBits & TVIF_STATE) {							// Den Status ändern
+			if(uBits & TVIF_STATE) {							// Den Status Ã¤ndern
 				uMask			=  pItem->stateMask&~TVIS_BASEFLAGS;
 				uBits			=  uMask & (pExtra->uState ^ pItem->state);
 				uBits		   |= (pItem->stateMask & TVIS_BASEFLAGS) & (pEntry->uState ^ pItem->state);
@@ -4716,7 +4716,7 @@ static int TreeListSetItem(TreeListData *pData, const TV_ITEM *pItem) {
 				pExtra->uState |=  uMask & pItem->state;
 
 				if((uBits & (TVIS_OVERLAYMASK | TVIS_CUT)) && (pData->hImages || pData->aColumn[uSub].bEdit >= TVAX_CHECK)) {
-					uChange = 1;								// Ein Icon hats sich verändert
+					uChange = 1;								// Ein Icon hats sich verÃ¤ndert
 				}
 
 				if(uBits & (TVIS_BOLD | TVIS_DROPHILITED)) {
@@ -4734,7 +4734,7 @@ static int TreeListSetItem(TreeListData *pData, const TV_ITEM *pItem) {
 						return 0;
 				}
 
-				if(uBits & TVIS_SELECTED) {						// Hat sich die Auswahl geändert
+				if(uBits & TVIS_SELECTED) {						// Hat sich die Auswahl geÃ¤ndert
 					iVal = (pData->uStyleEx & TVS_EX_SUBSELECT) ? uSub : 0;
 
 					if(pItem->state & TVIS_SELECTED) {
@@ -4774,7 +4774,7 @@ static int TreeListSetItem(TreeListData *pData, const TV_ITEM *pItem) {
 		uBits &= ~TVIF_CHILDREN;
 	}
 
-	//******************** Einen Basis Eintrag ändern *****************************
+	//******************** Einen Basis Eintrag Ã¤ndern *****************************
 	if(uBits & TVIF_PARAM) {
 		pEntry->lParam	= pItem->lParam;
 	}
@@ -4878,7 +4878,7 @@ static int TreeListSetItem(TreeListData *pData, const TV_ITEM *pItem) {
 			uChange = 1;
 		}
 
-		if(uBits & TVIS_STATEIMAGEMASK) {						// Haben sich die State-Bits verändert
+		if(uBits & TVIS_STATEIMAGEMASK) {						// Haben sich die State-Bits verÃ¤ndert
 			if(pData->hStates) {
 				uChange = 1;
 			}
@@ -4905,7 +4905,7 @@ static int TreeListSetItem(TreeListData *pData, const TV_ITEM *pItem) {
 			uChange = 1;
 		}
 
-		if(uBits & TVIS_SELECTED) {								// Hat sich die Auswahl geändert
+		if(uBits & TVIS_SELECTED) {								// Hat sich die Auswahl geÃ¤ndert
 			pEntry->uState ^= TVIS_SELECTED;
 
 			if(pItem->state & TVIS_SELECTED) {
@@ -5057,7 +5057,7 @@ static unsigned TreeListGetItem(TreeListData *pData, TV_ITEM *pItem) {
 	}
 
 
-	//******************** Einen Basis Eintrag ändern *****************************
+	//******************** Einen Basis Eintrag Ã¤ndern *****************************
 	if(uBits & TVIF_PARAM) {
 		pItem->lParam = pEntry->lParam;
 	}
@@ -5112,10 +5112,10 @@ static unsigned TreeListGetItem(TreeListData *pData, TV_ITEM *pItem) {
 //*		TreeListDeleteColumn
 //*
 //*****************************************************************************
-//	Löscht eine Spalte aus dem Header
+//	LÃ¶scht eine Spalte aus dem Header
 //	pData		: Zeiger auf die Fensterdaten
-//	uCol		: Ist die Nummer der Spalte die gelöscht werden soll
-//	Ergibt 1 wenn die Spalte gelöscht wurde
+//	uCol		: Ist die Nummer der Spalte die gelÃ¶scht werden soll
+//	Ergibt 1 wenn die Spalte gelÃ¶scht wurde
 static int TreeListDeleteColumn(TreeListData *pData, unsigned uCol) {
 
 	ExtraItem **pList;
@@ -5168,7 +5168,7 @@ static int TreeListDeleteColumn(TreeListData *pData, unsigned uCol) {
 	iFix	= 0;
 	iAll	= 0;
 
-	for(uPos = 0; uPos < pData->uColumnCount; uPos++) {				// Zählern der variablen Spalten
+	for(uPos = 0; uPos < pData->uColumnCount; uPos++) {				// ZÃ¤hlern der variablen Spalten
 		if(uPos == uCol)
 			continue;
 		if(pData->aColumn[uPos].bWeight == 0) {
@@ -5184,14 +5184,14 @@ static int TreeListDeleteColumn(TreeListData *pData, unsigned uCol) {
 	Header_DeleteItem(pData->hHeader, uCol);
 	pData->uColumnCount--;
 
-	if(pData->uColumnCount > 0) {								// Liste mit Extraeinträgen löschen
+	if(pData->uColumnCount > 0) {								// Liste mit ExtraeintrÃ¤gen lÃ¶schen
 		iNum = uCol - 1;
 		if(iNum < 0)
 			iNum = 0;
 
 		pList = pData->pExtraItems[iNum];
 		if(pList) {
-			for(uItem = 0; uItem <= pData->uTreeItemsMax; uItem++) { // Alle Einträge aus der Liste löschen
+			for(uItem = 0; uItem <= pData->uTreeItemsMax; uItem++) { // Alle EintrÃ¤ge aus der Liste lÃ¶schen
 				pExtra = pList[uItem];
 				if(!pExtra)
 					continue;
@@ -5283,7 +5283,7 @@ static int TreeListDeleteColumn(TreeListData *pData, unsigned uCol) {
 		pData->uTrackedSub--;
 	}
 
-	if(!pData->uColumnCount) {								// Den Header löschen
+	if(!pData->uColumnCount) {								// Den Header lÃ¶schen
 		DestroyWindow(pData->hHeader);
 		pData->hHeader	   = NULL;
 		pData->uStartPixel = 0;
@@ -5292,7 +5292,7 @@ static int TreeListDeleteColumn(TreeListData *pData, unsigned uCol) {
 		InvalidateRect(pData->hWnd, &sRect, FALSE);
 	}
 
-	iXoff = UpdateColumns(pData);							// Hat sich die Spaltenbreiten verändert
+	iXoff = UpdateColumns(pData);							// Hat sich die Spaltenbreiten verÃ¤ndert
 	if(iXoff < 0x10000) {
 		sRect.left  = iXoff;
 		sRect.left -= pData->uScrollX;
@@ -5313,8 +5313,8 @@ static int TreeListDeleteColumn(TreeListData *pData, unsigned uCol) {
 //*****************************************************************************
 //	Adds a new column in the header
 //	pData		: Zeiger auf die Fensterdaten
-//	uCol		: Ist die Nummer der Spalte die eingefügt wird
-//	pInsert		: Zeiger auf die ein zu fügenden Daten
+//	uCol		: Ist die Nummer der Spalte die eingefÃ¼gt wird
+//	pInsert		: Zeiger auf die ein zu fÃ¼genden Daten
 //	Returns the positio of the new column or -1 if an error occurs.
 static int TreeListInsertColumn(TreeListData *pData, unsigned uCol, TV_COLUMN *pColumn) {
 
@@ -5374,7 +5374,7 @@ static int TreeListInsertColumn(TreeListData *pData, unsigned uCol, TV_COLUMN *p
 			pData->uSizeYsub = pData->uSizeX - pData->uStartPixel;
 	}
 
-	if(pData->uColumnCount >= MAX_COLUMNS) {					// Prüfe die Anzahl der Spalten
+	if(pData->uColumnCount >= MAX_COLUMNS) {					// PrÃ¼fe die Anzahl der Spalten
 		return -1;
 	}
 
@@ -5408,12 +5408,12 @@ static int TreeListInsertColumn(TreeListData *pData, unsigned uCol, TV_COLUMN *p
 		sItem.iImage   =  pColumn->iImage;
 	}
 
-	if(pColumn->mask & TVCF_TEXT) {								// Auch einen Text übergeben
+	if(pColumn->mask & TVCF_TEXT) {								// Auch einen Text Ã¼bergeben
 		sItem.mask    |=  HDI_TEXT;
 		sItem.pszText  =  pColumn->pszText;
 	}
 
-	if(pColumn->mask & TVCF_MIN) {								// Auch einen Min-Wert übergeben
+	if(pColumn->mask & TVCF_MIN) {								// Auch einen Min-Wert Ã¼bergeben
 		iMin		   =  pColumn->iOrder;
 		bMinEx		   =  1;
 
@@ -5426,7 +5426,7 @@ static int TreeListInsertColumn(TreeListData *pData, unsigned uCol, TV_COLUMN *p
 		bMinEx		   =  0;
 	}
 
-	if(pColumn->mask & TVCF_WIDTH) {							// Fixe Breite für die Spalte
+	if(pColumn->mask & TVCF_WIDTH) {							// Fixe Breite fÃ¼r die Spalte
 		iWeight		   =  0;
 		sItem.mask    |=  HDI_WIDTH;
 		sItem.cxy	   =  pColumn->cx;
@@ -5468,7 +5468,7 @@ static int TreeListInsertColumn(TreeListData *pData, unsigned uCol, TV_COLUMN *p
 	if(uCol & 0x80000000)
 		return -1;
 
-	if(pData->uColumnCount > 0) {								// Liste mit Extraeinträgen erzeugen
+	if(pData->uColumnCount > 0) {								// Liste mit ExtraeintrÃ¤gen erzeugen
 		pList = new(ExtraItem*, pData->uTreeItemsMax + 1);
 		if(!pList) {
 			Header_DeleteItem(pData->hHeader, uCol);
@@ -5546,7 +5546,7 @@ static int TreeListInsertColumn(TreeListData *pData, unsigned uCol, TV_COLUMN *p
 	pData->uMarkedCols			+= 	bMark;
 
 
-	for(uIndex = pData->uColumnCount;;) {						// Nächste sichtbare Spalten aktualisieren
+	for(uIndex = pData->uColumnCount;;) {						// NÃ¤chste sichtbare Spalten aktualisieren
 		bByte						 = pData->aColumn[uIndex].bIndex;
 		pData->aColumn[uIndex].bNext = pData->aColumnPos[bByte + 1];
 		if(uIndex == 0)
@@ -5589,7 +5589,7 @@ static int TreeListInsertColumn(TreeListData *pData, unsigned uCol, TV_COLUMN *p
 		pData->uEditSub++;
 	}
 
-	iXoff = UpdateColumns(pData);							// Hat sich die Spaltenbreiten verändert
+	iXoff = UpdateColumns(pData);							// Hat sich die Spaltenbreiten verÃ¤ndert
 	if(iXoff < 0x10000) {
 		sRect.left  = iXoff;
 		sRect.left -= pData->uScrollX;
@@ -5599,7 +5599,7 @@ static int TreeListInsertColumn(TreeListData *pData, unsigned uCol, TV_COLUMN *p
 
 	UpdateScrollX(pData);
 
-	if(pData->uInsertMark) {									// Fehlende Infomarken einfügen
+	if(pData->uInsertMark) {									// Fehlende Infomarken einfÃ¼gen
 		TV_ITEM		sSet;
 		ExtraItem  *pExtra;
 
@@ -5616,7 +5616,7 @@ static int TreeListInsertColumn(TreeListData *pData, unsigned uCol, TV_COLUMN *p
 		}
 	}
 
-	if(pData->uStyleEx & TVS_EX_HEADERCHGNOTIFY) {				// Geänderte Spalten melden
+	if(pData->uStyleEx & TVS_EX_HEADERCHGNOTIFY) {				// GeÃ¤nderte Spalten melden
 		sNotify.hdr.code			= TVN_COLUMNCHANGED;
 		sNotify.uColumn				= uCol;
 		sNotify.uIndex				= pData->aColumn[uCol].bIndex;
@@ -5636,7 +5636,7 @@ static int TreeListInsertColumn(TreeListData *pData, unsigned uCol, TV_COLUMN *p
 //*		TreeListScanColumn
 //*
 //*****************************************************************************
-//	Berechnet die Breite der sichtbaren Einträge einer Spalte
+//	Berechnet die Breite der sichtbaren EintrÃ¤ge einer Spalte
 //	pData		: Zeiger auf die Fensterdaten
 //	uSub		: Ist die Spalte
 //	Ergibt sie gescannte Breite
@@ -5719,9 +5719,9 @@ static int TreeListScanColumn(TreeListData *pData, unsigned uSub) {
 //*		TreeListHitTest
 //*
 //*****************************************************************************
-//	Prüft wo eine Koordinate im Fenster ist
+//	PrÃ¼ft wo eine Koordinate im Fenster ist
 //	pData		: Zeiger auf die Fensterdaten
-//	pInfo		: Zeiger auf die ein zu fügenden Daten
+//	pInfo		: Zeiger auf die ein zu fÃ¼genden Daten
 //	Ergibt das Item auf dem die Koordinate zeigt
 static unsigned TreeListHitTest(TreeListData *pData, TV_HITTESTINFO *pInfo) {
 
@@ -5855,7 +5855,7 @@ static unsigned TreeListHitTest(TreeListData *pData, TV_HITTESTINFO *pInfo) {
 
 	iXpos -= pData->iIndent * pEntry->uLevel;
 
-	if(iXpos < pData->iIndent) {								// Auf eingerücktem Bereich
+	if(iXpos < pData->iIndent) {								// Auf eingerÃ¼cktem Bereich
 		if(pData->uStyle & TVS_HASBUTTONS)
 			if(pEntry->bFlags & TVIX_HASBUTTON) {
 				if(iXpos >= pData->iShift - 6)
@@ -5915,11 +5915,11 @@ static unsigned TreeListHitTest(TreeListData *pData, TV_HITTESTINFO *pInfo) {
 //*		TreeListSetTrackItem
 //*
 //*****************************************************************************
-//	Setzt das den Einfügeeintrag
+//	Setzt das den EinfÃ¼geeintrag
 //	pData	: Zeiger auf die Fensterdaten
-//	uItem	: Ist die Nummer des Eintrages bei dem eingefügt werden soll
-//	iMode	: 0=davor einfügen  1=nachher einfügen
-//	Ergibt 1 wenn der Eintrag eingefügt wurde
+//	uItem	: Ist die Nummer des Eintrages bei dem eingefÃ¼gt werden soll
+//	iMode	: 0=davor einfÃ¼gen  1=nachher einfÃ¼gen
+//	Ergibt 1 wenn der Eintrag eingefÃ¼gt wurde
 static unsigned TreeListSetInsertMark(TreeListData *pData, unsigned uItem, int iMode) {
 
 	TV_INSERTSTRUCT	sInsert;
@@ -6053,7 +6053,7 @@ static COLORREF TreeListSetItemColor(TreeListData *pData, unsigned uItem, unsign
 	if(!pEntry)
 		return TV_NOCOLOR;
 
-	if(uSub >= 255) {											// Die Ganze Zeile ändern
+	if(uSub >= 255) {											// Die Ganze Zeile Ã¤ndern
 		if(pData->uColumnCount) {
 			for(uSub = pData->uColumnCount; uSub > 0; uSub--) {
 				TreeListSetItemColor(pData, uItem, uSub, uColor, iMode);
@@ -6063,7 +6063,7 @@ static COLORREF TreeListSetItemColor(TreeListData *pData, unsigned uItem, unsign
 		uSub = 0;
 	}
 
-	if(uSub) {												// Extra-Eintrag verändern
+	if(uSub) {												// Extra-Eintrag verÃ¤ndern
 		if(uSub >= pData->uColumnCount)
 			return TV_NOCOLOR;
 
@@ -6164,7 +6164,7 @@ static int TreeListSetTrackItem(TreeListData *pData, unsigned uItem, unsigned uS
 			}
 	}
 
-	if(pData->uTrackedItem) {									// Den alten Eintrag zurücksetzen
+	if(pData->uTrackedItem) {									// Den alten Eintrag zurÃ¼cksetzen
 		if(pData->uTrackedSub) {
 			pExtra = pData->pExtraItems[pData->uTrackedSub - 1][pData->uTrackedItem];
 			if(pExtra) {
@@ -6215,7 +6215,7 @@ static int TreeListSetTrackItem(TreeListData *pData, unsigned uItem, unsigned uS
 //*		TreeListGetNextItem
 //*
 //*****************************************************************************
-//	Sucht den nächsten Eintrag
+//	Sucht den nÃ¤chsten Eintrag
 //	pData	: Zeiger auf die Fensterdaten
 //	uItem	: Ist die Nummer des Eintrages
 //	uFlags	: Bestimmt nach welchem Eintrag gesucht werden soll
@@ -6562,11 +6562,11 @@ static unsigned TreeListFindItem(TreeListData *pData, unsigned uItem, TVFIND *pF
 			uItem = pEntry->uFirstChild;
 		}
 	} else {
-		if(uItem > pData->uTreeItemsMax) {					// Ist der Eintrag gültig
+		if(uItem > pData->uTreeItemsMax) {					// Ist der Eintrag gÃ¼ltig
 			return 0;
 		}
 
-		if(pFind->uFlags & TVIF_NEXT) {						// Beim nächsten Eintrag weitersuchen
+		if(pFind->uFlags & TVIF_NEXT) {						// Beim nÃ¤chsten Eintrag weitersuchen
 			pEntry = pData->pTreeItems[uItem];
 			if(!pEntry)
 				return 0;
@@ -6630,7 +6630,7 @@ static unsigned TreeListFindItem(TreeListData *pData, unsigned uItem, TVFIND *pF
 		if(uTextLen != uTextSize)
 			continue;
 
-		if(uChkCase) {									// Zwischen Groß/Kleinbuchstaben unterscheiden
+		if(uChkCase) {									// Zwischen GroÃŸ/Kleinbuchstaben unterscheiden
 			if(!str_icmp(pCmpText, pFind->pText))
 				break;
 		} else {
@@ -6647,7 +6647,7 @@ static unsigned TreeListFindItem(TreeListData *pData, unsigned uItem, TVFIND *pF
 //*		TreeListNextSelUntil
 //*
 //*****************************************************************************
-//	Sucht rekursiv ausgewählte Einträge
+//	Sucht rekursiv ausgewÃ¤hlte EintrÃ¤ge
 //	pData	: Zeiger auf die Fensterdaten
 //	uItem	: Ist die Nummer des Eintrages nach dem mit der Suche begonnen werden soll
 //	uStop	: Bestimmt bei welchem Eintrag abgebrochen werden soll werden soll
@@ -6719,7 +6719,7 @@ static unsigned TreeListNextSelUntil(TreeListData *pData, unsigned uItem, unsign
 //*		TreeListNextUnselUntil
 //*
 //*****************************************************************************
-//	Sucht rekursiv nicht ausgewählte Einträge
+//	Sucht rekursiv nicht ausgewÃ¤hlte EintrÃ¤ge
 //	pData	: Zeiger auf die Fensterdaten
 //	uItem	: Ist die Nummer des Eintrages nach dem mit der Suche begonnen werden soll
 //	uStop	: Bestimmt bei welchem Eintrag abgebrochen werden soll werden soll
@@ -6793,7 +6793,7 @@ static unsigned TreeListNextUnselUntil(TreeListData *pData, unsigned uItem, unsi
 //*****************************************************************************
 //	Schaltet eine Checkboc um
 //	pData	: Zeiger auf die Fensterdaten
-//	uItem	: Ist der Eintrag der geändert werden soll
+//	uItem	: Ist der Eintrag der geÃ¤ndert werden soll
 //	pInfo	:
 static void TreeListChangeCheckbox(TreeListData *pData, UINT uItem, int iPosX, int iPosY) {
 
@@ -6821,7 +6821,7 @@ static void TreeListChangeCheckbox(TreeListData *pData, UINT uItem, int iPosX, i
 					return;
 			}
 		} else
-			if(pData->uSingleSel && pTemp) {				// Anderer Eintrag gewählt
+			if(pData->uSingleSel && pTemp) {				// Anderer Eintrag gewÃ¤hlt
 				sItem.hItem		= (HTREEITEM)(ULONG_PTR)pData->uSingleSel;
 				sItem.mask		= TVIF_STATE;
 				sItem.stateMask	= TVIS_STATEIMAGEMASK;
@@ -6875,7 +6875,7 @@ static void TreeListChangeCheckbox(TreeListData *pData, UINT uItem, int iPosX, i
 //*		TreeListMouseNotify
 //*
 //*****************************************************************************
-//	Soll für einen Mausklick eine
+//	Soll fÃ¼r einen Mausklick eine
 //	pData	: Zeiger auf die Fensterdaten
 //	uMsg	: Message des Mausklicks
 //	wParam	: WPARAM des Mausklicks
@@ -6923,7 +6923,7 @@ static void TreeListMouseNotify(TreeListData *pData, UINT uMsg, WPARAM wParam, L
 //*		TreeListMouseClick
 //*
 //*****************************************************************************
-//	Soll ein Mausklick ausgeführt werden. ACHTUNG UNLOCK wird ausgeführt
+//	Soll ein Mausklick ausgefÃ¼hrt werden. ACHTUNG UNLOCK wird ausgefÃ¼hrt
 //	pData	: Zeiger auf die Fensterdaten
 //	uMsg	: Message des Mausklicks
 //	wParam	: WPARAM des Mausklicks
@@ -6977,7 +6977,7 @@ static void TreeListMouseClick(TreeListData *pData, UINT uMsg, WPARAM wParam, LP
 	uMsgOld		= uMsg;
 	uToggle		= 0;
 
-	if(uItem) {											// Wurde auf einen Eintrag getrückt
+	if(uItem) {											// Wurde auf einen Eintrag getrÃ¼ckt
 		pEntry = pData->pTreeItems[uItem];
 
 		if(pData->uStyle & TVS_FULLROWSELECT) {
@@ -7004,7 +7004,7 @@ static void TreeListMouseClick(TreeListData *pData, UINT uMsg, WPARAM wParam, LP
 						TreeListChangeCheckbox(pData, uItem, sInfo.pt.x, sInfo.pt.y);
 					}
 			} else
-				if(sInfo.flags & uMaskItem) {					// Eintrag auswählen
+				if(sInfo.flags & uMaskItem) {					// Eintrag auswÃ¤hlen
 					if(!(pData->uStyle & TVS_DISABLEDRAGDROP)) {
 						if(uMsg == WM_LBUTTONDOWN) {
 							pData->uDragFlags = MK_LBUTTON;
@@ -7020,7 +7020,7 @@ static void TreeListMouseClick(TreeListData *pData, UINT uMsg, WPARAM wParam, LP
 					}
 
 					if(pData->uStyleEx & TVS_EX_MULTISELECT) {		// Mehrfachauswahl erlaubt
-						if(uMsg == WM_RBUTTONDOWN)					// Keine Abwahl wenn mehrer Einträge aus gewählt
+						if(uMsg == WM_RBUTTONDOWN)					// Keine Abwahl wenn mehrer EintrÃ¤ge aus gewÃ¤hlt
 							if(pData->uSelectedCount > 1) {
 								pEntry = pData->pTreeItems[uItem];
 								if(pEntry->uState & TVIS_SELECTED) {
@@ -7028,7 +7028,7 @@ static void TreeListMouseClick(TreeListData *pData, UINT uMsg, WPARAM wParam, LP
 								}
 							}
 
-						if(uMsg == WM_LBUTTONDOWN)					// Spezialsteuerung für Multiselect bei Darg
+						if(uMsg == WM_LBUTTONDOWN)					// Spezialsteuerung fÃ¼r Multiselect bei Darg
 							if(!(wParam & (MK_CONTROL | MK_SHIFT)))
 								if(pData->uSelectedCount > 0) {
 									pEntry =   pData->pTreeItems[uItem];
@@ -7044,7 +7044,7 @@ static void TreeListMouseClick(TreeListData *pData, UINT uMsg, WPARAM wParam, LP
 							uMsg    =   WM_LBUTTONDOWN;
 						}
 
-						if(wParam & MK_SHIFT) {						// Bis zum angeklicken Auswählen
+						if(wParam & MK_SHIFT) {						// Bis zum angeklicken AuswÃ¤hlen
 							if(uMsg != WM_LBUTTONDOWN)
 								if(uMsg != WM_LBUTTONDBLCLK)
 									goto End;
@@ -7072,7 +7072,7 @@ static void TreeListMouseClick(TreeListData *pData, UINT uMsg, WPARAM wParam, LP
 								pData->uSelectedBase = uTemp;
 							}
 
-							// Shift-Select neu auswählen
+							// Shift-Select neu auswÃ¤hlen
 							if(pData->cReSelect && pData->uSelectedBase) {
 								TreeListSelectItem(pData, uItem, 0, TVC_BYMOUSE | TVC_DESELECT);
 								TreeListEnsureVisible(pData, pData->uSelectedItem, pData->uSelectedSub);
@@ -7135,7 +7135,7 @@ static void TreeListMouseClick(TreeListData *pData, UINT uMsg, WPARAM wParam, LP
 								}
 							}
 
-							for(;; uPos += iAdd) {					// Einträge wählen
+							for(;; uPos += iAdd) {					// EintrÃ¤ge wÃ¤hlen
 								uTemp  = pData->pItemPos  [uPos - 1];
 								pEntry = pData->pTreeItems[uTemp ];
 								uSel   = pEntry->uState & TVIS_SELECTED;
@@ -7145,18 +7145,18 @@ static void TreeListMouseClick(TreeListData *pData, UINT uMsg, WPARAM wParam, LP
 									uSel = pEntry->uState & TVIS_SELECTED;
 								}
 
-								// Auch unsichtbare Kinder wählen
+								// Auch unsichtbare Kinder wÃ¤hlen
 								pTemp =   pData->pTreeItems[pEntry->uFirstChild];
 								if(pTemp && !pTemp->uShowPos) {
 									if(uSel) {
-										for(uNum = uTemp;;) {		// Kinder auswählen
+										for(uNum = uTemp;;) {		// Kinder auswÃ¤hlen
 											uNum = TreeListNextUnselUntil(pData, uNum, uTemp);
 											if(!uNum)
 												break;
 											TreeListXorSelectItem(pData, uNum, TVC_BYMOUSE);
 										}
 									} else {
-										for(uNum = uTemp;;) {		// Kinder abwählen
+										for(uNum = uTemp;;) {		// Kinder abwÃ¤hlen
 											uNum = TreeListNextSelUntil(pData, uNum, uTemp);
 											if(!uNum)
 												break;
@@ -7209,7 +7209,7 @@ static void TreeListMouseClick(TreeListData *pData, UINT uMsg, WPARAM wParam, LP
 								TreeListSelectItem(pData, 0, 0, TVC_BYMOUSE);
 
 								if(TreeListXorSelectItem(pData, uItem, TVC_BYMOUSE)) {
-									// Auch unsichtbare Kinder abwählen
+									// Auch unsichtbare Kinder abwÃ¤hlen
 									pTemp =   pData->pTreeItems[pEntry->uFirstChild];
 									if(pTemp && !pTemp->uShowPos)
 										for(uTemp = uItem;;) {
@@ -7247,7 +7247,7 @@ static void TreeListMouseClick(TreeListData *pData, UINT uMsg, WPARAM wParam, LP
 						}
 					}
 
-					if(wParam & MK_CONTROL) {						// Ist die Ctrl-Taste gedrückt
+					if(wParam & MK_CONTROL) {						// Ist die Ctrl-Taste gedrÃ¼ckt
 						iMode = TVC_BYMOUSE;
 					} else {
 						iMode = TVC_BYMOUSE | TVC_DESELECT;
@@ -7303,7 +7303,7 @@ static void TreeListMouseClick(TreeListData *pData, UINT uMsg, WPARAM wParam, LP
 								}
 							}
 				} else
-					if(sInfo.flags & uMaskSub) {					// Extra-Eintrag auswählen
+					if(sInfo.flags & uMaskSub) {					// Extra-Eintrag auswÃ¤hlen
 						if(pData->uStyleEx & TVS_EX_SUBSELECT)
 							uSub = TVHT_SUBTOCOL(sInfo.flags);
 						else
@@ -7334,7 +7334,7 @@ static void TreeListMouseClick(TreeListData *pData, UINT uMsg, WPARAM wParam, LP
 									TreeListSelectItem(pData, 0, 0, TVC_BYMOUSE);
 
 									if(TreeListXorSelectItem(pData, uItem, TVC_BYMOUSE)) {
-										// Auch unsichtbare Kinder abwählen
+										// Auch unsichtbare Kinder abwÃ¤hlen
 										pTemp =   pData->pTreeItems[pEntry->uFirstChild];
 										if(pTemp && !pTemp->uShowPos)
 											for(uTemp = uItem;;) {
@@ -7485,7 +7485,7 @@ End:
 //*		TreeListChar
 //*
 //*****************************************************************************
-//	Eingabe von Buchstaben über die WM_CHAR Nachricht
+//	Eingabe von Buchstaben Ã¼ber die WM_CHAR Nachricht
 //	pData	: Zeiger auf die Fensterdaten
 //	nChar	: Ist das Zeichen das eingegeben wurde
 static void TreeListChar(TreeListData *pData, UINT nChar, LPARAM lParam) {
@@ -7564,7 +7564,7 @@ static void TreeListChar(TreeListData *pData, UINT nChar, LPARAM lParam) {
 				if(iMax <= 0)
 					break;
 
-				for(i = iNum + 1; i != iNum; i++) {				// Suche Übereinstimmung
+				for(i = iNum + 1; i != iNum; i++) {				// Suche Ãœbereinstimmung
 					if(i >= iMax) {i = -1; continue;}
 					uItem = pData->pItemPos[i];
 
@@ -7627,7 +7627,7 @@ static void TreeListChar(TreeListData *pData, UINT nChar, LPARAM lParam) {
 //*		TreeListKeyDown
 //*
 //*****************************************************************************
-//	Soll ein Tastentruck ausgeführt werden. ACHTUNG UNLOCK wird ausgeführt
+//	Soll ein Tastentruck ausgefÃ¼hrt werden. ACHTUNG UNLOCK wird ausgefÃ¼hrt
 //	pData	: Zeiger auf die Fensterdaten
 //	wParam	: WPARAM des Mausklicks
 //	lParam	: LPARAM des Mausklicks
@@ -7675,7 +7675,7 @@ static void TreeListKeyDown(TreeListData *pData, WPARAM wParam, LPARAM lParam) {
 		}
 	}
 
-	if(wParam == VK_RETURN) {								// Wurde Enter gedrückt
+	if(wParam == VK_RETURN) {								// Wurde Enter gedrÃ¼ckt
 		UNLOCK(pData);
 
 		sNotify.hdr.code	=  NM_RETURN;
@@ -7705,7 +7705,7 @@ static void TreeListKeyDown(TreeListData *pData, WPARAM wParam, LPARAM lParam) {
 	iDel   = (GetAsyncKeyState(VK_SHIFT) & 0x8000) ? 0 : TVC_DESELECT;
 	iScr   =  GetAsyncKeyState(VK_CONTROL) & 0x8000;
 
-	if(iDel && iScr)										// Ende oder Anfang wählen
+	if(iDel && iScr)										// Ende oder Anfang wÃ¤hlen
 		if(wParam == VK_HOME || wParam == VK_END)
 			if(pData->uStyleEx & TVS_EX_HOMEENDSELECT) {
 				iDel = TVC_DESELECT;
@@ -7752,7 +7752,7 @@ static void TreeListKeyDown(TreeListData *pData, WPARAM wParam, LPARAM lParam) {
 
 			case VK_SPACE:
 				if(pEntry == NULL)
-					break;				// Expantieren und schließen
+					break;				// Expantieren und schlieÃŸen
 				if(pEntry->bFlags & TVIX_HASBUTTON) {
 					TreeListToggleItem(pData, pData->uSelectedItem, 0);
 				}
@@ -7803,7 +7803,7 @@ static void TreeListKeyDown(TreeListData *pData, WPARAM wParam, LPARAM lParam) {
 					}
 				}
 		}
-	} else {													// Einen anderen Eintrag auswählen
+	} else {													// Einen anderen Eintrag auswÃ¤hlen
 		iSub  = pData->uSelectedSub;
 		iCol  = pData->aColumn[iSub].bIndex;
 
@@ -7920,7 +7920,7 @@ static void TreeListKeyDown(TreeListData *pData, WPARAM wParam, LPARAM lParam) {
 				iLine += iAdd;
 				break;
 
-			case VK_BACK:		  								// Eine Ebene höher
+			case VK_BACK:		  								// Eine Ebene hÃ¶her
 				if(pEntry) {
 					uItem = pEntry->uParent;
 					if(!uItem)
@@ -7959,7 +7959,7 @@ static void TreeListKeyDown(TreeListData *pData, WPARAM wParam, LPARAM lParam) {
 			iCol = 0;
 
 		if(pData->uItemPosCount > 0)
-			if(iLine != iOldLine || iCol != iOldCol) {			// Wurde ein anderer Eintrag ausgewählt
+			if(iLine != iOldLine || iCol != iOldCol) {			// Wurde ein anderer Eintrag ausgewÃ¤hlt
 				if(pData->uSelectedCount > 1) {
 					TreeListRemoveFocus(pData);
 				} else {
@@ -7983,7 +7983,7 @@ static void TreeListKeyDown(TreeListData *pData, WPARAM wParam, LPARAM lParam) {
 					TreeListEnsureVisible(pData, pData->uSelectedItem, pData->uSelectedSub);
 				}
 
-				if(pData->cReSelect && pData->uSelectedBase) {	// Shift-Select neu auswählen
+				if(pData->cReSelect && pData->uSelectedBase) {	// Shift-Select neu auswÃ¤hlen
 					uTemp = pData->uSelectedBase;
 					pTemp = pData->pTreeItems[uTemp];
 					uStop = uItem;
@@ -8035,7 +8035,7 @@ static void TreeListKeyDown(TreeListData *pData, WPARAM wParam, LPARAM lParam) {
 							iPos = 0;
 					}
 
-					for(; iPos >= iMax; iPos--) {					// Übersprungene Einträge mit aus/abwählen
+					for(; iPos >= iMax; iPos--) {					// Ãœbersprungene EintrÃ¤ge mit aus/abwÃ¤hlen
 						uItem = pData->pItemPos[iPos];
 
 						if(iPos != iLine && iPos != iBase) {
@@ -8043,7 +8043,7 @@ static void TreeListKeyDown(TreeListData *pData, WPARAM wParam, LPARAM lParam) {
 								continue;
 						}
 
-						pTemp = pData->pTreeItems[uItem];	// Auch unsichtbare Kinder abwählen
+						pTemp = pData->pTreeItems[uItem];	// Auch unsichtbare Kinder abwÃ¤hlen
 						if(pTemp) {
 							iSel  =  pTemp->uState & TVIS_SELECTED;
 							pTemp =  pData->pTreeItems[pTemp->uFirstChild];
@@ -8088,7 +8088,7 @@ Exit:
 //*		TreeListSortItemsEx
 //*
 //*****************************************************************************
-//	Sortiert die Kindereinträge eines Eintrages mitteles einer Funktion
+//	Sortiert die KindereintrÃ¤ge eines Eintrages mitteles einer Funktion
 //	pData		: Zeiger auf die Fensterdaten
 //	pSortData	: Ist ein Zeiger auf die Sortiertaten
 //	iMode		: 1=Rekursiv sortieren
@@ -8171,7 +8171,7 @@ static int TreeListSortItemsEx(TreeListData *pData, TV_SORTEX *pSortData, int iM
 		}
 	}
 
-	if(iMode) {											// Sortiere die Untereinträge
+	if(iMode) {											// Sortiere die UntereintrÃ¤ge
 		pNext				= pList[uFirst];
 		sSort.hParent		= (HTREEITEM)(ULONG_PTR)uFirst;
 		sSort.lParam		= pSortData->lParam;
@@ -8196,7 +8196,7 @@ static int TreeListSortItemsEx(TreeListData *pData, TV_SORTEX *pSortData, int iM
 	uMax		= 128;
 	uPos		= 0;
 
-	do	{													// Alle Kindeinträge suchen
+	do	{													// Alle KindeintrÃ¤ge suchen
 		if(uPos >= uMax) {
 			uMax *= 2;
 			pItemNew	= new(unsigned, uMax);
@@ -8299,7 +8299,7 @@ static int TreeListSortItemsEx(TreeListData *pData, TV_SORTEX *pSortData, int iM
 	LOCK(pData);
 	pData->cLockChanges = 0;
 
-//******************** Einträge neu einsortirenen *****************************
+//******************** EintrÃ¤ge neu einsortirenen *****************************
 	uPos--;
 
 	pEntry = pList[uParent];
@@ -8314,7 +8314,7 @@ static int TreeListSortItemsEx(TreeListData *pData, TV_SORTEX *pSortData, int iM
 	uLast  = 0;
 	uItem  = pItemList[0];
 
-	for(uNum = 0; uNum < uPos;) {								// Kinder neu einhängen
+	for(uNum = 0; uNum < uPos;) {								// Kinder neu einhÃ¤ngen
 		pEntry = pList[uItem];
 		pEntry->uPrevItem = uLast;
 
@@ -8350,7 +8350,7 @@ static int TreeListSortItemsEx(TreeListData *pData, TV_SORTEX *pSortData, int iM
 //*		TreeListSortItemsCb
 //*
 //*****************************************************************************
-//	Sortiert die Kindereinträge eines Eintrages mitteles einer Funktion
+//	Sortiert die KindereintrÃ¤ge eines Eintrages mitteles einer Funktion
 //	pData		: Zeiger auf die Fensterdaten
 //	pSortData	: Ist ein Zeiger auf die Sortiertaten
 //	iMode		: 1=Rekursiv sortieren
@@ -8430,7 +8430,7 @@ static int TreeListSortItemsCb(TreeListData *pData, TV_SORTCB *pSortData, int iM
 		}
 	}
 
-	if(iMode) {											// Sortiere die Untereinträge
+	if(iMode) {											// Sortiere die UntereintrÃ¤ge
 		pNext				= pList[uFirst];
 		sSort.hParent		= (HTREEITEM)(ULONG_PTR)uFirst;
 		sSort.lParam		= pSortData->lParam;
@@ -8455,7 +8455,7 @@ static int TreeListSortItemsCb(TreeListData *pData, TV_SORTCB *pSortData, int iM
 	uMax		= 128;
 	uPos		= 0;
 
-	do	{													// Alle Kindeinträge suchen
+	do	{													// Alle KindeintrÃ¤ge suchen
 		if(uPos >= uMax) {
 			uMax *= 2;
 			pItemNew	= new(unsigned, uMax);
@@ -8555,7 +8555,7 @@ static int TreeListSortItemsCb(TreeListData *pData, TV_SORTCB *pSortData, int iM
 	LOCK(pData);
 	pData->cLockChanges = 0;
 
-//******************** Einträge neu einsortirenen *****************************
+//******************** EintrÃ¤ge neu einsortirenen *****************************
 	uPos--;
 
 	pEntry = pList[uParent];
@@ -8570,7 +8570,7 @@ static int TreeListSortItemsCb(TreeListData *pData, TV_SORTCB *pSortData, int iM
 	uLast  = 0;
 	uItem  = pItemList[0];
 
-	for(uNum = 0; uNum < uPos;) {								// Kinder neu einhängen
+	for(uNum = 0; uNum < uPos;) {								// Kinder neu einhÃ¤ngen
 		pEntry = pList[uItem];
 		pEntry->uPrevItem = uLast;
 
@@ -8606,7 +8606,7 @@ static int TreeListSortItemsCb(TreeListData *pData, TV_SORTCB *pSortData, int iM
 //*		TreeListSortItems
 //*
 //*****************************************************************************
-//	Sortiert die Kindereinträge eines Eintrages via Text
+//	Sortiert die KindereintrÃ¤ge eines Eintrages via Text
 //	pData		: Zeiger auf die Fensterdaten
 //	pSortData	: Ist ein Zeiger auf die Sortiertaten
 //	iMode		: 1=Rekursiv sortieren
@@ -8679,7 +8679,7 @@ static int TreeListSortItems(TreeListData *pData, unsigned uParent, int iMode) {
 		}
 	}
 
-	if(iMode) {											// Sortiere die Untereinträge
+	if(iMode) {											// Sortiere die UntereintrÃ¤ge
 		uItem = uFirst;
 
 		while(uItem) {
@@ -8701,7 +8701,7 @@ static int TreeListSortItems(TreeListData *pData, unsigned uParent, int iMode) {
 	uMax		= 128;
 	uPos		= 0;
 
-	do	{													// Alle Kindeinträge suchen
+	do	{													// Alle KindeintrÃ¤ge suchen
 		if(uPos >= uMax) {
 			uMax *= 2;
 			pItemNew	= new(unsigned, uMax);
@@ -8828,7 +8828,7 @@ static int TreeListSortItems(TreeListData *pData, unsigned uParent, int iMode) {
 	LOCK(pData);
 	pData->cLockChanges = 0;
 
-//******************** Einträge neu einsortirenen *****************************
+//******************** EintrÃ¤ge neu einsortirenen *****************************
 	uPos--;
 
 	pEntry = pList[uParent];
@@ -8843,7 +8843,7 @@ static int TreeListSortItems(TreeListData *pData, unsigned uParent, int iMode) {
 	uLast  = 0;
 	uItem  = pItemList[0];
 
-	for(uNum = 0; uNum < uPos;) {								// Kinder neu einhängen
+	for(uNum = 0; uNum < uPos;) {								// Kinder neu einhÃ¤ngen
 		pEntry = pList[uItem];
 		pEntry->uPrevItem = uLast;
 
@@ -8950,7 +8950,7 @@ static int TreeListEndLabelEdit(TreeListData *pData, int iMode) {
 	sNotify.item.stateMask		= 0xFFFFFFFF;
 	sNotify.item.cChildren		= uSub;
 
-	if(uSub) {											// Wurde der Text in einer Sub-Spalte geändert
+	if(uSub) {											// Wurde der Text in einer Sub-Spalte geÃ¤ndert
 		pExtra = pData->pExtraItems[uSub - 1][uItem];
 		if(!pExtra) {
 			sNotify.item.state	= 0;
@@ -9049,10 +9049,10 @@ static int TreeListEndLabelEdit(TreeListData *pData, int iMode) {
 			}
 		}
 
-		if(pData->aColumn[uSub].bFlags & TVAE_NEXTLINE &&			// In die nächste Zeile springen
+		if(pData->aColumn[uSub].bFlags & TVAE_NEXTLINE &&			// In die nÃ¤chste Zeile springen
 		        iMode == 2 && iAuto != TVAX_NONE && iAuto != TVAX_STEP) {
 			if(!pData->cColumnStart) {
-				if(uSub) {									// Hat sich der Text verändert ?
+				if(uSub) {									// Hat sich der Text verÃ¤ndert ?
 					pExtra = pData->pExtraItems[uSub - 1][uItem];
 					if(pExtra && pExtra->pText) {
 						if(!_tcscmp(pGetT, pExtra->pText))
@@ -9098,12 +9098,12 @@ static int TreeListEndLabelEdit(TreeListData *pData, int iMode) {
 //	uItem	: Item das editiert werden soll
 //	uSub	: Spalte die editiert werden soll und andere Flags
 //				TVIR_EDITCOL(n)		= Spalte angeben
-//				TVIR_SELAREA(a,b)	= Einen Textbereich auswählen
+//				TVIR_SELAREA(a,b)	= Einen Textbereich auswÃ¤hlen
 //				TVIR_SETCURSOR(n)	= Den Cursor auf eine bestimmte Textstelle
 //				TVIR_SETAT(n)		= Den Cursor auf eine bestimmte Pixelstelle
-//				TVIR_SELALL			= Den gesammten Text wählen
+//				TVIR_SELALL			= Den gesammten Text wÃ¤hlen
 //				TVIR_EDITCOMBOLIST	= Statt dem Edit-Fenster eine ComboBox nur mit Listenauswahl einblenden
-//				TVIR_EDITFULL		= Das Edit-Fenster über die volle Breite einblenden
+//				TVIR_EDITFULL		= Das Edit-Fenster Ã¼ber die volle Breite einblenden
 //				TVIR_EDITCOMBOBOX	= Statt dem Edit-Fenster eine ComboBox einblenden
 //	Ergibt das Handle des Edit-Controlls oder NULL bei einem Fehler
 static HWND TreeListEditLabel(TreeListData *pData, unsigned uItem, unsigned uSub) {
@@ -9153,7 +9153,7 @@ static HWND TreeListEditLabel(TreeListData *pData, unsigned uItem, unsigned uSub
 
 	TreeListEnsureVisible(pData, uItem, uSub);
 
-	if(pData->hEdit) {									// Editfenster löschen
+	if(pData->hEdit) {									// Editfenster lÃ¶schen
 		DestroyWindow(pData->hEdit);
 		pData->hEdit = 0;
 	}
@@ -9463,19 +9463,19 @@ static HWND TreeListEditLabel(TreeListData *pData, unsigned uItem, unsigned uSub
 //*		TreeListStartAutoEdit
 //*
 //*****************************************************************************
-//	Startet die Editierung für einen Wert via Notyfy-Rückfrage.
+//	Startet die Editierung fÃ¼r einen Wert via Notyfy-RÃ¼ckfrage.
 //	pData		: Zeiger auf die Fensterdaten
 //	uItem		: Ist der Eintrag der Editiert werden soll
 //	uSub		: Ist die Nummer der Spalte
 //	wParam		: Ist der W-Parameter des Tastendrucks
-//					VK_EDITCLK	bei einem Clickauf das ausgewählte Feld
+//					VK_EDITCLK	bei einem Clickauf das ausgewÃ¤hlte Feld
 //					VK_DBLCLK	bei einem Doppelclick
 //					VK_RETURN	bei einen Enter-Druck
 //					VK_ISACHAR	bei WM_CHAR Nachrichten
 //					<char>		bei einer Zeicheneingabe
 //	lParam		: Ist der L-Parameter des Tastendrucks (bzw. die Koordinaten)
 //	Ergibt 1 das Editieren gestartet wurde, ansonsten 0
-//				0 wenn der Eintrag nicht gewählt wurde
+//				0 wenn der Eintrag nicht gewÃ¤hlt wurde
 static int TreeListStartNotifyEdit(TreeListData *pData, unsigned uItem, unsigned uSub, WPARAM wParam, LPARAM lParam) {
 
 	TCHAR			cText[1024];
@@ -9510,7 +9510,7 @@ static int TreeListStartNotifyEdit(TreeListData *pData, unsigned uItem, unsigned
 		return 0;
 	}
 
-	if(wParam >= ' ' && wParam <= 0xFFFF) {					// Shift und Cltr prüfen
+	if(wParam >= ' ' && wParam <= 0xFFFF) {					// Shift und Cltr prÃ¼fen
 		if(GetKeyState(VK_MENU) & 0x8000) {
 			return 0;
 		}
@@ -9587,11 +9587,11 @@ static int TreeListStartNotifyEdit(TreeListData *pData, unsigned uItem, unsigned
 	if(!hWnd)
 		return 0;
 
-	if(lRet & TVIR_EDITCOMBOBOX) {							// Die Combobox füllen
+	if(lRet & TVIR_EDITCOMBOBOX) {							// Die Combobox fÃ¼llen
 		uMax = sNotify.uMaxEntries;
 		iSel = -1;
 
-		if(sNotify.pTextList) {							// Texte über Listenfeld
+		if(sNotify.pTextList) {							// Texte Ã¼ber Listenfeld
 			for(uCnt = 0; uCnt < uMax; uCnt++) {
 				pText = sNotify.pTextList[uCnt];
 				if(!pText)
@@ -9610,7 +9610,7 @@ static int TreeListStartNotifyEdit(TreeListData *pData, unsigned uItem, unsigned
 				pText = _T("\0");
 
 			for(uCnt = 0; uCnt < uMax; uCnt++) {
-				for(uLen = 0; pText[uLen]; uLen++) {			// Subtextlänge holen
+				for(uLen = 0; pText[uLen]; uLen++) {			// SubtextlÃ¤nge holen
 					if(pText[uLen] == cChar)
 						break;
 				}
@@ -9636,16 +9636,16 @@ static int TreeListStartNotifyEdit(TreeListData *pData, unsigned uItem, unsigned
 					pText++;
 			}
 
-			if(lRet & TVIR_EDITCOMBODEL) {					// Den Puffer löschen
+			if(lRet & TVIR_EDITCOMBODEL) {					// Den Puffer lÃ¶schen
 				delete((TCHAR*)sNotify.pTextEntries);
 			}
 		}
 
-		if(iSel >= 0) {										// Listeneintrag auswählen
+		if(iSel >= 0) {										// Listeneintrag auswÃ¤hlen
 			SendMessage(hWnd, CB_SETCURSEL, iSel, 0);
 		}
 
-		if(sNotify.uHeight) {								// Höhe der Dropdown-Liste einstellen
+		if(sNotify.uHeight) {								// HÃ¶he der Dropdown-Liste einstellen
 			SendMessage(hWnd, CB_SETDROPPEDWIDTH, sNotify.uHeight, 0);
 		}
 
@@ -9682,16 +9682,16 @@ static int TreeListStartNotifyEdit(TreeListData *pData, unsigned uItem, unsigned
 //*		TreeListStartAutoEdit
 //*
 //*****************************************************************************
-//	Startet die Autoeditierung für eine Spalte
+//	Startet die Autoeditierung fÃ¼r eine Spalte
 //	pData		: Zeiger auf die Fensterdaten
 //	uColumn		: Ist die Nummer der Spalte
 //	wParam		: Ist der W-Parameter des Tastendrucks
-//					VK_EDITCLK	bei einem Clickauf das ausgewählte Feld
+//					VK_EDITCLK	bei einem Clickauf das ausgewÃ¤hlte Feld
 //					VK_ICONCLK	bei einem Clickauf das Iion
 //					VK_DBLCLK	bei einem Doppelclick
 //	lParam		: Ist der L-Parameter des Tastendrucks (bzw. die Koordinaten)
 //	Ergibt 1 das Editieren gestartet wurde, ansonsten 0
-//				0 wenn der Eintrag nicht gewählt wurde
+//				0 wenn der Eintrag nicht gewÃ¤hlt wurde
 static int TreeListStartAutoEdit(TreeListData *pData, unsigned uColumn, WPARAM wParam, LPARAM lParam) {
 	
 	TCHAR		cBuffer[256];
@@ -9766,7 +9766,7 @@ static int TreeListStartAutoEdit(TreeListData *pData, unsigned uColumn, WPARAM w
 		if(!TreeListGetItem(pData, &sItem))
 			return 0;
 
-		if((uMode & 1) && wParam != VK_ICONCLK) {					// Ein Edit-Feld öffnen
+		if((uMode & 1) && wParam != VK_ICONCLK) {					// Ein Edit-Feld Ã¶ffnen
 			uMode = TVAX_EDIT;
 			goto EditField;
 		}
@@ -9839,7 +9839,7 @@ static int TreeListStartAutoEdit(TreeListData *pData, unsigned uColumn, WPARAM w
 					break;
 				}
 
-				for(uLen = 0; pText[uLen]; uLen++) {				// Subtextlänge bestimmen
+				for(uLen = 0; pText[uLen]; uLen++) {				// SubtextlÃ¤nge bestimmen
 					if(pText[uLen] == cChar)
 						break;
 				}
@@ -9876,7 +9876,7 @@ static int TreeListStartAutoEdit(TreeListData *pData, unsigned uColumn, WPARAM w
 
 			}
 
-			for(uLen = 0; pText[uLen] && uLen < 256; uLen++) {		// Ausgewählten Text kopiren
+			for(uLen = 0; pText[uLen] && uLen < 256; uLen++) {		// AusgewÃ¤hlten Text kopiren
 				if(pText[uLen] == cChar)
 					break;
 				cBuffer[uLen] = pText[uLen];
@@ -10011,7 +10011,7 @@ EditField:
 		SendMessage(hWnd, CB_SHOWDROPDOWN, 1, 0);
 	}
 
-	// Ersten Buchstaben ans Fenster übergeben
+	// Ersten Buchstaben ans Fenster Ã¼bergeben
 	if(TVIS_EDIT(uMode) && pData->cColumnStart && wParam != VK_EDITCLK) {
 		SendMessage(hWnd, WM_CHAR, wParam, 0);
 	}
@@ -10024,7 +10024,7 @@ EditField:
 //*		TreeListProc
 //*
 //*****************************************************************************
-//	Ist die Fensterfunktion für das TreeList Fenster
+//	Ist die Fensterfunktion fÃ¼r das TreeList Fenster
 static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	
 	TreeListData   *pData;
@@ -10120,7 +10120,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
 			return 0;
 
-		case WM_DESTROY:											// Das Fenster zerstören
+		case WM_DESTROY:											// Das Fenster zerstÃ¶ren
 
 			pData = GetHandle(hWnd);
 
@@ -10209,7 +10209,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
 			return 0;
 
-		case WM_NCDESTROY:										// Das Fenster zerstören
+		case WM_NCDESTROY:										// Das Fenster zerstÃ¶ren
 
 			pData = GetHandle(hWnd);
 
@@ -10255,7 +10255,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
 			return 0;
 
-		case WM_SIZE:												// Die Fenstergröße wurde verändert
+		case WM_SIZE:												// Die FenstergrÃ¶ÃŸe wurde verÃ¤ndert
 
 			pData = GetHandle(hWnd);
 			uFlag = 0;
@@ -10267,7 +10267,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				uOld			= pData->uSizeX;
 				pData->uSizeX	= uVal;
 
-				if(pData->uColumnCountVar) {					// Spalten mit variabler Breite nach führen
+				if(pData->uColumnCountVar) {					// Spalten mit variabler Breite nach fÃ¼hren
 					RECT	sRect;
 					int		iDelta;
 					int		iNum;
@@ -10284,7 +10284,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 					InvalidateRect(hWnd, &sRect, FALSE);
 				}
 
-				if(uVal > uOld) {								// Hat sich die Breite vergrößert
+				if(uVal > uOld) {								// Hat sich die Breite vergrÃ¶ÃŸert
 					RECT	sRect;
 
 					GetClientRect(hWnd, &sRect);
@@ -10301,7 +10301,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
 			uVal = HIWORD(lParam);
 			if(uVal && uVal != pData->uSizeY) {
-				if(uVal > pData->uSizeY) {						// Hat sich die Höhe vergrößert
+				if(uVal > pData->uSizeY) {						// Hat sich die HÃ¶he vergrÃ¶ÃŸert
 					RECT	sRect;
 
 					GetClientRect(hWnd, &sRect);
@@ -10327,7 +10327,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				pData->uMaxEnties	+= pData->iRowHeight - 1;
 				pData->uMaxEnties   /= pData->iRowHeight;
 				pData->uPageEnties  /= pData->iRowHeight;
-				// Wenn Höhe vergrößert dann Scroll-Position prüfen
+				// Wenn HÃ¶he vergrÃ¶ÃŸert dann Scroll-Position prÃ¼fen
 				if(uFlag && pData->uPageEnties > 2 && pData->uScrollY > 0) {
 					if(pData->uScrollY + pData->uPageEnties + 1 > pData->uItemPosCount) {
 						iPos = pData->uItemPosCount - pData->uPageEnties + 1;
@@ -10549,7 +10549,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
 			uTime = GetTickCount();
 
-			if(pData->cButtonFlag && pData->uToolTipItem) {	// Doppelklick simulieren über ToolTip
+			if(pData->cButtonFlag && pData->uToolTipItem) {	// Doppelklick simulieren Ã¼ber ToolTip
 				pData->cButtonFlag = 0;
 				uDelta = uTime - pData->uButtonLast;
 
@@ -10755,7 +10755,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
 			return 0;
 
-		case WM_SYSCOLORCHANGE:										// Wurden die Systemfarben verändert
+		case WM_SYSCOLORCHANGE:										// Wurden die Systemfarben verÃ¤ndert
 
 			pData	= GetHandle(hWnd);
 
@@ -10814,7 +10814,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
 			return 0;
 
-		case WM_STYLECHANGED:										// Hat sich der Fenstersytle geändert
+		case WM_STYLECHANGED:										// Hat sich der Fenstersytle geÃ¤ndert
 
 			if(wParam == GWL_STYLE) {
 				pData	= GetHandle(hWnd);
@@ -10919,7 +10919,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 			if(wParam == ID_TOOLTIPCHECK) {
 				pData	= GetHandle(hWnd);
 				if(pData->uToolTipItem) {
-					if(pData->uToolTipShow) {					// Verzögertes einblenden
+					if(pData->uToolTipShow) {					// VerzÃ¶gertes einblenden
 						pData->uToolTipShow--;
 						if(pData->uToolTipShow)
 							return 0;
@@ -11021,7 +11021,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 						if(pData->uEditMode)
 							SetFocus(pData->hWnd);
 					}
-				}													// Änderung in Edit-Fenster
+				}													// Ã„nderung in Edit-Fenster
 				else
 					if(wParam == MAKELONG(3, EN_CHANGE) || wParam == MAKELONG(3, CBN_EDITCHANGE) || wParam == MAKELONG(3, CBN_SELCHANGE) || wParam == MAKELONG(3, EN_SETTEXT)) {
 						pData = GetHandle(hWnd);
@@ -11045,7 +11045,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 				int			iSub;
 
 				iCode = pHdr->hdr.code;
-				// Hat sich die Spaltenbreite verändert
+				// Hat sich die Spaltenbreite verÃ¤ndert
 				if(iCode == HDN_ITEMCHANGED && (pHdr->pitem->mask & HDI_WIDTH)) {
 					pData	= GetHandle(hWnd);
 					iCol	= pHdr->iItem;
@@ -11081,21 +11081,21 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 					return 0;
 				}
 
-				if(iCode == HDN_BEGINTRACK) {					// User will die Spaltenbreite ändern
+				if(iCode == HDN_BEGINTRACK) {					// User will die Spaltenbreite Ã¤ndern
 					pData	= GetHandle(hWnd);
 
 					if(!pData->cHasFocus) {
 						SetFocus(pData->hWnd);
 					}
 
-					if(pData->uStyleEx & TVS_EX_NOCOLUMNRESIZE) {	// Darf der User die Spaltenbreite ändern
+					if(pData->uStyleEx & TVS_EX_NOCOLUMNRESIZE) {	// Darf der User die Spaltenbreite Ã¤ndern
 						return 1;
 					}
 
 					if(pData->uStyleEx & TVS_EX_FIXEDCOLSIZE) {	// Fixe gesammte Spaltenbreite
 						iNext = pData->aColumn[pHdr->iItem].bIndex;
 
-						for(iNext++;; iNext++) {				// Suche nächste veränerbare Spalte
+						for(iNext++;; iNext++) {				// Suche nÃ¤chste verÃ¤nerbare Spalte
 							if(U(iNext) >= pData->uColumnCount) {
 								return 1;
 							}
@@ -11108,7 +11108,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 						}
 					}
 
-					if(U(pHdr->iItem) < pData->uColumnCount)		// Darf die Spalte verändert werden
+					if(U(pHdr->iItem) < pData->uColumnCount)		// Darf die Spalte verÃ¤ndert werden
 						if(pData->aColumn[pHdr->iItem].sFixed) {
 							POINT	sPoint;
 							int		iCol;
@@ -11118,7 +11118,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 								return 1;
 							}
 
-							GetCursorPos(&sPoint);					// Die nächste veränderbare Spalte greifen
+							GetCursorPos(&sPoint);					// Die nÃ¤chste verÃ¤nderbare Spalte greifen
 							ScreenToClient(pData->hHeader, &sPoint);
 
 							PostMessage(pData->hHeader, WM_LBUTTONUP, 0, MAKELONG(sPoint.x, sPoint.y));
@@ -11139,11 +11139,11 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 						SetFocus(pData->hWnd);
 					}
 
-					if(pData->uStyleEx & TVS_EX_NOCOLUMNRESIZE) {	// Darf der User die Spaltenbreite ändern
+					if(pData->uStyleEx & TVS_EX_NOCOLUMNRESIZE) {	// Darf der User die Spaltenbreite Ã¤ndern
 						return 0;
 					}
 
-					if(U(pHdr->iItem) < pData->uColumnCount)		// Darf die Spalte verändert werden
+					if(U(pHdr->iItem) < pData->uColumnCount)		// Darf die Spalte verÃ¤ndert werden
 						if(pData->aColumn[pHdr->iItem].sFixed) {
 							return 0;
 						}
@@ -11156,7 +11156,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 						pHdr->pitem	= &sItem;
 						iCode		= HDN_ENDTRACK;
 
-						if(pData->aColumn[pHdr->iItem].bMinEx)	// Minimale Breite prüfen
+						if(pData->aColumn[pHdr->iItem].bMinEx)	// Minimale Breite prÃ¼fen
 							if(pData->aColumn[pHdr->iItem].sMin > sItem.cxy) {
 								sItem.cxy	 = pData->aColumn[pHdr->iItem].sMin;
 							}
@@ -11165,7 +11165,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 					UNLOCK(pData);
 				}
 
-				if(iCode == HDN_TRACK || iCode == HDN_ENDTRACK) {	// Wurde die Spaltenbreite verändert
+				if(iCode == HDN_TRACK || iCode == HDN_ENDTRACK) {	// Wurde die Spaltenbreite verÃ¤ndert
 					pData	= GetHandle(hWnd);
 
 					if(!pData->cHasFocus && iCode == HDN_ENDTRACK) {
@@ -11178,7 +11178,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 					sItem.mask	= HDI_WIDTH;
 					sItem.cxy	= pHdr->pitem->cxy;
 
-					if(pData->aColumn[iCol].bMinEx)				// Minimale Breite prüfen
+					if(pData->aColumn[iCol].bMinEx)				// Minimale Breite prÃ¼fen
 						if(pData->aColumn[iCol].sMin > sItem.cxy) {
 							sItem.cxy		 = pData->aColumn[iCol].sMin;
 							pHdr->pitem->cxy = sItem.cxy;
@@ -11202,7 +11202,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
 						iNext = pData->aColumn[iCol].bIndex;
 
-						for(iNext++;; iNext++) {				// Überspringe fixierte Spalten
+						for(iNext++;; iNext++) {				// Ãœberspringe fixierte Spalten
 							if(U(iNext) >= pData->uColumnCount) {
 								UNLOCK(pData);
 								return 0;
@@ -11218,14 +11218,14 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 						iDelta    = pData->aColumn[iCol].sReal - sItem.cxy;
 						sTemp.cxy = pData->aColumn[iSub].sReal + iDelta;
 
-						if(iDelta < 0) {						// Nächste Spalte wird zu klein
+						if(iDelta < 0) {						// NÃ¤chste Spalte wird zu klein
 							if(sTemp.cxy < 0) {
 								sTemp.cxy  =  0;
 								iDelta     = -pData->aColumn[iSub].sReal;
 								sItem.cxy  =  pData->aColumn[iCol].sReal - iDelta;
 							}
 
-							if(pData->aColumn[iSub].bMinEx)		// Minimale Breite prüfen
+							if(pData->aColumn[iSub].bMinEx)		// Minimale Breite prÃ¼fen
 								if(pData->aColumn[iSub].sMin > sTemp.cxy) {
 									iDelta    +=  pData->aColumn[iSub].sMin - sTemp.cxy;
 									sTemp.cxy  =  pData->aColumn[iSub].sMin;
@@ -11234,7 +11234,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
 							pHdr->pitem->cxy = sItem.cxy;
 
-							if(iDelta >= 0) {					// Keine Änderung
+							if(iDelta >= 0) {					// Keine Ã„nderung
 								UNLOCK(pData);
 								return 0;
 							}
@@ -11255,7 +11255,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 						pData->aColumn[iSub].sReal	= (short)sTemp.cxy;
 						Header_SetItem(pData->hHeader, iSub, &sTemp);
 
-						// Breite verändert
+						// Breite verÃ¤ndert
 						if(iDif != sTemp.cxy && (pData->uStyleEx & TVS_EX_HEADERCHGNOTIFY)) {
 							TV_COLSIZE	sNotify;
 
@@ -11295,7 +11295,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 					UpdateScrollX(pData);
 					UNLOCK(pData);
 
-					// Breite verändert
+					// Breite verÃ¤ndert
 					if(iDif != sItem.cxy && (pData->uStyleEx & TVS_EX_HEADERCHGNOTIFY)) {
 						TV_COLSIZE	sNotify;
 
@@ -11598,7 +11598,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 			lRet	= 0;
 
 			switch(U(wParam) & ~TVOP_WRITEOPTION) {
-				case TVOP_AUTOEXPANDOFF:							// Icon Offset für TVS_EX_AUTOEXPANDICON
+				case TVOP_AUTOEXPANDOFF:							// Icon Offset fÃ¼r TVS_EX_AUTOEXPANDICON
 
 					lRet = pData->iAutoAdd;
 
@@ -11640,7 +11640,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
 			return lRet;
 
-		case TVM_GETITEM:											// Einträge abfragen
+		case TVM_GETITEM:											// EintrÃ¤ge abfragen
 
 			pData = GetHandle(hWnd);
 			LOCK(pData);
@@ -11649,7 +11649,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
 			return lRet;
 
-		case TVM_SETITEM:											// Einträge einfügen
+		case TVM_SETITEM:											// EintrÃ¤ge einfÃ¼gen
 
 			pData = GetHandle(hWnd);
 			LOCK(pData);
@@ -11658,7 +11658,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
 			return lRet;
 
-		case TVM_INSERTITEM:										// Einträge einfügen
+		case TVM_INSERTITEM:										// EintrÃ¤ge einfÃ¼gen
 
 			pData = GetHandle(hWnd);
 			LOCK(pData);
@@ -11667,7 +11667,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
 			return lRet;
 
-		case TVM_DELETEITEM:										// Einträge löschen
+		case TVM_DELETEITEM:										// EintrÃ¤ge lÃ¶schen
 
 			pData = GetHandle(hWnd);
 			LOCK(pData);
@@ -11676,7 +11676,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
 			return lRet;
 
-		case TVM_FINDITEM:											// Einträge suchen
+		case TVM_FINDITEM:											// EintrÃ¤ge suchen
 
 			pData = GetHandle(hWnd);
 			LOCK(pData);
@@ -11685,7 +11685,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
 			return lRet;
 
-		case TVM_DELETECOLUMN:										// Löschen einer Salte im Header
+		case TVM_DELETECOLUMN:										// LÃ¶schen einer Salte im Header
 
 			pData = GetHandle(hWnd);
 			LOCK(pData);
@@ -11694,7 +11694,7 @@ static LRESULT CALLBACK TreeListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
 			return lRet;
 
-		case TVM_INSERTCOLUMN:										// Einfügen einer Salte im Header
+		case TVM_INSERTCOLUMN:										// EinfÃ¼gen einer Salte im Header
 
 			pData = GetHandle(hWnd);
 			LOCK(pData);
@@ -11839,7 +11839,7 @@ ColSet:
 
 			return lRet;
 
-		case TVM_SELECTCHILDS:										// Mehrere Einträge auswählen
+		case TVM_SELECTCHILDS:										// Mehrere EintrÃ¤ge auswÃ¤hlen
 
 			pData = GetHandle(hWnd);
 
@@ -11849,7 +11849,7 @@ ColSet:
 
 			return lRet;
 
-		case TVM_SELECTSUBITEM:										// Einen (Sub)Eintrag auswählen
+		case TVM_SELECTSUBITEM:										// Einen (Sub)Eintrag auswÃ¤hlen
 
 			pData = GetHandle(hWnd);
 
@@ -11863,7 +11863,7 @@ ColSet:
 
 			return lRet;
 
-		case TVM_SELECTDROP:										// Den unterstrichenen Eintrags auswählen
+		case TVM_SELECTDROP:										// Den unterstrichenen Eintrags auswÃ¤hlen
 
 			pData = GetHandle(hWnd);
 
@@ -11873,7 +11873,7 @@ ColSet:
 
 			return lRet;
 
-		case TVM_SELECTITEM:										// Einen Eintrag auswählen
+		case TVM_SELECTITEM:										// Einen Eintrag auswÃ¤hlen
 
 			pData = GetHandle(hWnd);
 
@@ -11924,17 +11924,17 @@ ColSet:
 
 			return lRet;
 
-		case TVM_GETCOUNT:											// Anzahl der Einträge abfragen
+		case TVM_GETCOUNT:											// Anzahl der EintrÃ¤ge abfragen
 
 			pData = GetHandle(hWnd);
 			return pData->uTreeItemsCount;
 
-		case TVM_GETINDENT:											// Einrückung abfragen
+		case TVM_GETINDENT:											// EinrÃ¼ckung abfragen
 
 			pData = GetHandle(hWnd);
 			return pData->iIndent;
 
-		case TVM_SETINDENT:											// Einrückung einstellen
+		case TVM_SETINDENT:											// EinrÃ¼ckung einstellen
 
 			pData = GetHandle(hWnd);
 			lRet  = pData->iIndent;
@@ -11951,12 +11951,12 @@ ColSet:
 
 			return lRet;
 
-		case TVM_GETITEMHEIGHT:										// Zeilenhöhe abfragen
+		case TVM_GETITEMHEIGHT:										// ZeilenhÃ¶he abfragen
 
 			pData = GetHandle(hWnd);
 			return pData->iRowHeight;
 
-		case TVM_SETITEMHEIGHT:										// Zeilenhöhe abfragen
+		case TVM_SETITEMHEIGHT:										// ZeilenhÃ¶he abfragen
 
 			pData = GetHandle(hWnd);
 			lRet  = pData->iRowHeight;
@@ -12062,11 +12062,11 @@ NextExp:
 						case TVE_COLLAPSE:
 							if(pEntry->uState & TVIS_EXPANDED) {
 								lRet = (TreeListToggleItem(pData, U(lParam), 0)) ? 0 : 1;
-							} else {					// Nur Flag löschen
+							} else {					// Nur Flag lÃ¶schen
 								pEntry->uState &= ~TVIS_EXPANDPARTIAL;
 								lRet = 1;
 							}
-							// Kinder löschen
+							// Kinder lÃ¶schen
 							if(wParam & TVE_COLLAPSERESET) {
 								pEntry->uState &= TVIS_EXPANDEDONCE;
 
@@ -12157,7 +12157,7 @@ NextExp:
 
 			return lRet;
 
-		case TVM_SETINSERTMARK:										// Einfügemarke eintellen
+		case TVM_SETINSERTMARK:										// EinfÃ¼gemarke eintellen
 
 			pData = GetHandle(hWnd);
 
@@ -12167,7 +12167,7 @@ NextExp:
 
 			return lRet;
 
-		case TVM_SETITEMBKCOLOR:									// Hintergrundfarbe eines Eintrages ändern
+		case TVM_SETITEMBKCOLOR:									// Hintergrundfarbe eines Eintrages Ã¤ndern
 
 			pData = GetHandle(hWnd);
 
@@ -12177,7 +12177,7 @@ NextExp:
 
 			return lRet;
 
-		case TVM_SETITEMTEXTCOLOR:									// Textfarbe eines Eintrages ändern
+		case TVM_SETITEMTEXTCOLOR:									// Textfarbe eines Eintrages Ã¤ndern
 
 			pData = GetHandle(hWnd);
 
@@ -12227,7 +12227,7 @@ NextExp:
 
 			return lRet;
 
-		case TVM_SORTCHILDREN:										// Sortieren der Kindereinträge
+		case TVM_SORTCHILDREN:										// Sortieren der KindereintrÃ¤ge
 
 			pData = GetHandle(hWnd);
 
@@ -12311,14 +12311,14 @@ NextExp:
 			pData = GetHandle(hWnd);
 			return (LRESULT)pData->hToolTip;
 
-		case TVM_SETTOOLTIPS:										// Das Handle für das ToolTip-Fensters setzen
+		case TVM_SETTOOLTIPS:										// Das Handle fÃ¼r das ToolTip-Fensters setzen
 
 			pData = GetHandle(hWnd);
 			lRet  = (LRESULT)pData->hToolTip;
 			pData->hToolTip = (HWND)wParam;
 			return lRet;
 
-		case TVM_SETUSERDATASIZE:									// Einstellen der Größe der User-Daten
+		case TVM_SETUSERDATASIZE:									// Einstellen der GrÃ¶ÃŸe der User-Daten
 
 			if(lParam < 0 || lParam > 0x1000000)
 				return -1;
@@ -12337,7 +12337,7 @@ NextExp:
 
 			return lRet;
 
-		case TVM_GETUSERDATASIZE:									// Abfragen der Größe der User-Daten
+		case TVM_GETUSERDATASIZE:									// Abfragen der GrÃ¶ÃŸe der User-Daten
 
 			pData = GetHandle(hWnd);
 			return pData->uUserDataSize;
@@ -12418,7 +12418,7 @@ NextExp:
 					lRet = 1;
 				}
 
-				if(lRet && (pCol->mask & TVCF_FMT)) {			// Hat sich die Ausrichtung verändert
+				if(lRet && (pCol->mask & TVCF_FMT)) {			// Hat sich die Ausrichtung verÃ¤ndert
 					BYTE bAlign;
 
 					switch(pCol->fmt) {
@@ -12542,7 +12542,7 @@ NextExp:
 
 			return lRet;
 
-		case TVM_COLUMNAUTOEDIT:									// AutoEdit für eine Spalte einstellen
+		case TVM_COLUMNAUTOEDIT:									// AutoEdit fÃ¼r eine Spalte einstellen
 
 			pData = GetHandle(hWnd);
 			uVal  = (wParam >> 11) & 0x3F;
@@ -12592,7 +12592,7 @@ NextExp:
 
 			return 1;
 
-		case TVM_COLUMNAUTOICON:									// Icons für AutoEdit einstellen
+		case TVM_COLUMNAUTOICON:									// Icons fÃ¼r AutoEdit einstellen
 
 			pData = GetHandle(hWnd);
 			uVal  = U(wParam);
@@ -12835,8 +12835,8 @@ static void TreeListDraw(HWND hWnd, HDC hDc, RECT *pRect) {
 	SetTextAlign(hDc, TA_LEFT | TA_TOP);
 	SetTextColor(hDc, pData->uColors[TVC_TEXT]);
 
-//******************** Einträge zeichnen **************************************
-	for(; uPos < uMax; uPos++) {									// Alle Einträge ausgeben
+//******************** EintrÃ¤ge zeichnen **************************************
+	for(; uPos < uMax; uPos++) {									// Alle EintrÃ¤ge ausgeben
 		uItem = pData->pItemPos[uPos];
 
 		pEntry	= pData->pTreeItems[uItem];
@@ -12852,7 +12852,7 @@ static void TreeListDraw(HWND hWnd, HDC hDc, RECT *pRect) {
 			uMark     = (unsigned)~TVIS_BKCOLOR;
 			uColMark  =  0;
 		} else
-			if(uPos & 1) {										// Farbe wechselweise ändern
+			if(uPos & 1) {										// Farbe wechselweise Ã¤ndern
 				uColMark  =  pData->aColumn[0].bMark;
 				uOutColor = (uColMark) ? uOcColor : uOdColor;
 				uMark     = 0xFFFFFFFF;
@@ -12932,7 +12932,7 @@ static void TreeListDraw(HWND hWnd, HDC hDc, RECT *pRect) {
 			ExtTextOut(hDc, 0, 0, ETO_OPAQUE, &sArea, NULL, 0, NULL);
 			sArea.left += iIndent * iLevel + 1;
 
-			for(i = iLevel; i > 0; i--) {							// Bereich vor Schaltflächen
+			for(i = iLevel; i > 0; i--) {							// Bereich vor SchaltflÃ¤chen
 				sArea.right = sArea.left;
 				sArea.left -= iIndent;
 
@@ -12959,14 +12959,14 @@ static void TreeListDraw(HWND hWnd, HDC hDc, RECT *pRect) {
 			}
 		}
 
-		if(uStyle & TVS_HASBUTTONS) {							// Fenster mit Schaltflächen ?
+		if(uStyle & TVS_HASBUTTONS) {							// Fenster mit SchaltflÃ¤chen ?
 			sArea.right = sArea.left + iIndent;
 			iXpos		= sArea.left + iShift;
 			iYpos		= sArea.top + pData->iRowHeight / 2;
 
 			ExtTextOut(hDc, 0, 0, ETO_OPAQUE, &sArea, NULL, 0, NULL);
 
-			if(uStyle & TVS_HASLINES) {							// Linien unter Schaltflächen
+			if(uStyle & TVS_HASLINES) {							// Linien unter SchaltflÃ¤chen
 				MoveToEx(hDc, iXpos, sArea.top | 1, NULL);
 
 				if(pEntry->uNextItem)
@@ -12978,7 +12978,7 @@ static void TreeListDraw(HWND hWnd, HDC hDc, RECT *pRect) {
 				LineTo(hDc, sArea.right      , iYpos);
 			}
 
-			if(pEntry->bFlags & TVIX_HASBUTTON) {				// Schaltflächen zeichnen
+			if(pEntry->bFlags & TVIX_HASBUTTON) {				// SchaltflÃ¤chen zeichnen
 				sButton.left    = iXpos - 4;
 				sButton.top	    = iYpos - 4;
 				sButton.right   = iXpos + 5;
@@ -13007,7 +13007,7 @@ static void TreeListDraw(HWND hWnd, HDC hDc, RECT *pRect) {
 					SetBkColor(hDc, uInColor);
 					ExtTextOut(hDc, 0, 0, ETO_OPAQUE, &sButton, NULL, 0, NULL);
 
-					// '+' statt '-' Schaltfläsche zeichnenen
+					// '+' statt '-' SchaltflÃ¤sche zeichnenen
 					if((uBits ^ TVIS_EXPANDED) & (TVIS_EXPANDED | TVIS_EXPANDPARTIAL)) {
 						sButton.left    = iXpos  ;
 						sButton.top	    = iYpos - 2;
@@ -13022,7 +13022,7 @@ static void TreeListDraw(HWND hWnd, HDC hDc, RECT *pRect) {
 
 			sArea.left += iIndent;
 		} else
-			if(uStyle & TVS_HASLINES) {						// Nur Linien zeichnen ohne Schaltflächen
+			if(uStyle & TVS_HASLINES) {						// Nur Linien zeichnen ohne SchaltflÃ¤chen
 				sArea.right = sArea.left + iIndent;
 				ExtTextOut(hDc, 0, 0, ETO_OPAQUE, &sArea, NULL, 0, NULL);
 
@@ -13184,7 +13184,7 @@ NoRootLines:
 				} else {
 					GetTextExtentExPoint(hDc, pText, uTextSize, iSize, &iCount, pPos, &sSize);
 				}
-				// Temporären Text mit "..." erzeugen
+				// TemporÃ¤ren Text mit "..." erzeugen
 				memcpy(pPtr       , pText, iCount * sizeof(TCHAR));
 				memcpy(pPtr + iCount, _T("..."), 4 * sizeof(TCHAR));
 
@@ -13205,7 +13205,7 @@ NoRootLines:
 					SelectObject(hDc, GetStockObject(NULL_PEN));
 					Rectangle(hDc, sButton.left - 2, sButton.top - 1, sButton.right + 2, sButton.bottom + 1);
 				} else
-					if(uBits & TVIS_SELECTED) {				// Ist das Feld ohne Focus ausgewählt
+					if(uBits & TVIS_SELECTED) {				// Ist das Feld ohne Focus ausgewÃ¤hlt
 						if(pData->cHasFocus) {
 							uTempColor =     GetSysColor(COLOR_HIGHLIGHTTEXT);
 							SelectObject(hDc, GetSysColorBrush(COLOR_HIGHLIGHT));
@@ -13276,7 +13276,7 @@ NoRootLines:
 				pEntry->iTextPixels = sButton.right - sButton.left;
 			}
 
-			// Ist der Text größer als die Spalte
+			// Ist der Text grÃ¶ÃŸer als die Spalte
 			if(sArea.left + pEntry->iTextPixels >= (int)(sArea.right - pData->uScrollX)) {
 				INT	*pPos = (INT *)new(INT, uTextSize);
 
@@ -13316,7 +13316,7 @@ NoRootLines:
 		if(uStyleEx & TVS_EX_ITEMLINES) {						// Linien um den Eintrag zeichnen
 			SetBkColor(hDc, uFrColor);
 
-			if(iLast > iStart) {								// Ist das Feld nach links eingerückt gegenüber dem oberen
+			if(iLast > iStart) {								// Ist das Feld nach links eingerÃ¼ckt gegenÃ¼ber dem oberen
 				sArea.top--;
 				sArea.bottom = sArea.top + 1;
 				sArea.left	 = iStart - 1;
@@ -13334,11 +13334,11 @@ NoRootLines:
 			sArea.top    -= iHeight;
 		}
 
-		//************ Extraeinträge zeichnen *********************************
+		//************ ExtraeintrÃ¤ge zeichnen *********************************
 
 ExtraDraw:
 
-		uNextColor		 = uOutColor;							// Hintergrundfarbe für die nächste Spalte
+		uNextColor		 = uOutColor;							// Hintergrundfarbe fÃ¼r die nÃ¤chste Spalte
 
 		if(pData->aColumn[0].bMark) {							// Ist die erste Spalte markiert
 			uBkColor = pData->uColors[TVC_BK];
@@ -13428,7 +13428,7 @@ ExtraDraw:
 					uBits &= ~TVIS_SELECTED;
 				}
 
-				if(pExtra->bCallback) {						// Text über Callback holen
+				if(pExtra->bCallback) {						// Text Ã¼ber Callback holen
 					CallbackExtra(pData, pEntry, pExtra, uItem, uExtra, pExtra->bCallback, &iImage, &uTextSize, &pText);
 					pExtra = pData->pExtraItems[uExtra - 1][uItem];
 					if(!pExtra)
@@ -13548,7 +13548,7 @@ ExtraDraw:
 							break;
 
 					}
-					// Ist das Feld ohne Focus ausgewählt
+					// Ist das Feld ohne Focus ausgewÃ¤hlt
 					if((uBits & TVIS_SELECTED) && pData->cHasFocus && uItem == pData->uSelectedItem) {
 						uTempColor = GetSysColor(COLOR_HIGHLIGHTTEXT);
 						SelectObject(hDc, GetSysColorBrush(COLOR_HIGHLIGHT));
@@ -13627,7 +13627,7 @@ ExtraDraw:
 							pExtra->iTextPixels = 0;
 						}
 					}
-					// Ist der Text größer als die Spalte
+					// Ist der Text grÃ¶ÃŸer als die Spalte
 					if(sArea.left + pExtra->iTextPixels >= sArea.right) {
 						INT	*pPos = (INT *)new(INT, uTextSize);
 
@@ -13681,7 +13681,7 @@ ExtraDraw:
 		sArea.top += pData->iRowHeight;
 	}
 
-	if(sArea.top < sRect.bottom) {								// Untere Fläche ohne Einträge füllen
+	if(sArea.top < sRect.bottom) {								// Untere FlÃ¤che ohne EintrÃ¤ge fÃ¼llen
 		SelectObject(hDc, hRgnMain);
 
 		// Gibt es markierte Spalten

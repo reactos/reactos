@@ -523,7 +523,7 @@ static int init_begin(adns_state *ads_r, adns_initflags flags, FILE *diagfile) {
 static int init_finish(adns_state ads) {
   struct protoent *proto;
   int r;
-/* Don't add loopback on ReactOS it slows down queries to non existent server */
+/* Don't add loopback on MenuOS it slows down queries to non existent server */
 #ifndef __REACTOS__
   struct in_addr ia;
   if (!ads->nservers) {
@@ -708,7 +708,7 @@ adns_query adns_forallqueries_next(adns_state ads, void **context_r) {
   return qu;
 }
 
-/* ReactOS addition */
+/* MenuOS addition */
 void adns_addserver(adns_state ads, struct in_addr addr) {
     addserver(ads, addr);
 }

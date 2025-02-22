@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS User API Server DLL
+ * PROJECT:     MenuOS User API Server DLL
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Resource #defines.
  * COPYRIGHT:   Copyright 2012-2018 Hermes Belusca-Maito

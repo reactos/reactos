@@ -245,7 +245,7 @@ typedef struct tagHOOK
     INT_PTR ihmod;
     struct _THREADINFO *ptiHooked;
     struct _DESKTOP *rpdesk;
-    /* ReactOS */
+    /* MenuOS */
     LIST_ENTRY Chain; /* Hook chain entry */
     HOOKPROC Proc; /* Hook function */
     BOOLEAN Ansi; /* Is it an Ansi hook? */
@@ -388,7 +388,7 @@ typedef struct tagITEM
     HBITMAP hbmp; /* bitmap */
     INT cxBmp; /* Width Maximum size of the bitmap items in MIIM_BITMAP state */
     INT cyBmp; /* Height " */
-    /* ReactOS */
+    /* MenuOS */
     UNICODE_STRING lpstr;
 } ITEM, *PITEM;
 
@@ -432,7 +432,7 @@ typedef struct tagMENU
     INT iTop; /* Current scroll position Top */
     INT iMaxTop; /* Current scroll position Max Top */
     DWORD dwArrowsOn:2; /* Arrows: 0 off, 1 on, 2 to the top, 3 to the bottom. */
-    /* ReactOS */
+    /* MenuOS */
     LIST_ENTRY ListEntry;
     HWND hWnd; /* Window containing the menu, use POPUPMENU */
     BOOL TimeToHide;
@@ -744,7 +744,7 @@ typedef struct _WND
     struct _WND *spwndClipboardListener;
     DWORD ExStyle2;
 
-    /* ReactOS */
+    /* MenuOS */
     struct
     {
         RECT NormalRect;
@@ -3574,7 +3574,7 @@ NTAPI
 NtUserYieldTask(VOID);
 
 /* NtUserBad
- * ReactOS-specific NtUser calls and their related structures, both which shouldn't exist.
+ * MenuOS-specific NtUser calls and their related structures, both which shouldn't exist.
  */
 
 #define NOPARAM_ROUTINE_ISCONSOLEMODE             0xffff0001

@@ -61,7 +61,7 @@ BEGIN
     IDS_TOOLTIP_SEEKFORW "Avance rapide"
     IDS_TOOLTIP_FORWARD "Suivant"
     IDS_TOOLTIP_PAUSE "Pause"
-    IDS_APPTITLE "ReactOS Multimedia Player"
+    IDS_APPTITLE "MenuOS Multimedia Player"
     IDS_PLAY "Lire"
     IDS_DEFAULTMCIERRMSG "Aucune description pour cette erreur."
 END

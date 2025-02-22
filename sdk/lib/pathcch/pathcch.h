@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS PSDK
+ * PROJECT:     MenuOS PSDK
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     "Secure" shell path manipulation functions
  * COPYRIGHT:   MinGW-64 and Microsoft Corporation.

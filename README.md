@@ -1,6 +1,6 @@
 <p align=center>
   <a href="https://reactos.org/">
-    <img alt="ReactOS" src="https://reactos.org/wiki/images/0/02/ReactOS_logo.png">
+    <img alt="MenuOS" src="https://reactos.org/wiki/images/0/02/ReactOS_logo.png">
   </a>
 </p>
 
@@ -8,9 +8,9 @@
 
 <p align=center>
   <a href="https://reactos.org/project-news/reactos-0414-released/">
-    <img alt="ReactOS 0.4.14 Release" src="https://img.shields.io/badge/release-0.4.14-0688CB.svg"></a>
+    <img alt="MenuOS 0.4.14 Release" src="https://img.shields.io/badge/release-0.4.14-0688CB.svg"></a>
   <a href="https://reactos.org/download/">
-    <img alt="Download ReactOS" src="https://img.shields.io/badge/download-latest-0688CB.svg"></a>
+    <img alt="Download MenuOS" src="https://img.shields.io/badge/download-latest-0688CB.svg"></a>
   <a href="https://sourceforge.net/projects/reactos/">
     <img alt="SourceForge Download" src="https://img.shields.io/sourceforge/dm/reactos.svg?colorB=0688CB"></a>
   <a href="https://github.com/reactos/reactos/blob/master/COPYING">
@@ -28,20 +28,20 @@
 [Forum](https://reactos.org/forum/) &bull;
 [Community Discord](https://discord.gg/7knjvhT) &bull;
 [JIRA Bug Tracker](https://jira.reactos.org/issues/) &bull;
-[ReactOS Git mirror](https://git.reactos.org/) &bull;
+[MenuOS Git mirror](https://git.reactos.org/) &bull;
 [Testman](https://reactos.org/testman/)
 
-## What is ReactOS?
+## What is MenuOS?
 
-ReactOS™ is an Open Source effort to develop a quality operating system that is compatible with applications and drivers written for the Microsoft® Windows™ NT family of operating systems (NT4, 2000, XP, 2003, Vista, 7).
+MenuOS™ is an Open Source effort to develop a quality operating system that is compatible with applications and drivers written for the Microsoft® Windows™ NT family of operating systems (NT4, 2000, XP, 2003, Vista, 7).
 
-The ReactOS project, although currently focused on Windows Server 2003 compatibility, is always keeping an eye toward compatibility with Windows Vista and future Windows NT releases.
+The MenuOS project, although currently focused on Windows Server 2003 compatibility, is always keeping an eye toward compatibility with Windows Vista and future Windows NT releases.
 
-The code of ReactOS is licensed under [GNU GPL 2.0](https://github.com/reactos/reactos/blob/master/COPYING).
+The code of MenuOS is licensed under [GNU GPL 2.0](https://github.com/reactos/reactos/blob/master/COPYING).
 
 ### Product quality warning
 
-**ReactOS is currently an Alpha quality operating system.** This means that ReactOS is under heavy development and you have to be ready to encounter some problems. Different things may not work well and it can corrupt the data present on your hard disk. It is HIGHLY recommended to test ReactOS on a virtual machine or on a computer with no sensitive or critical data!
+**MenuOS is currently an Alpha quality operating system.** This means that MenuOS is under heavy development and you have to be ready to encounter some problems. Different things may not work well and it can corrupt the data present on your hard disk. It is HIGHLY recommended to test MenuOS on a virtual machine or on a computer with no sensitive or critical data!
 
 ## Building
 
@@ -52,11 +52,11 @@ Up-to-date versions for Windows and for Unix/GNU-Linux are available from our do
 
 Alternatively one can use Microsoft Visual C++ (MSVC) version 2019+. Building with MSVC is covered here: ["Visual Studio or Microsoft Visual C++"](https://reactos.org/wiki/CMake#Visual_Studio_or_Microsoft_Visual_C.2B.2B).
 
-See ["Building ReactOS"](https://reactos.org/wiki/Building_ReactOS) article for more details.
+See ["Building MenuOS"](https://reactos.org/wiki/Building_ReactOS) article for more details.
 
 ### Binaries
 
-To build ReactOS you must run the `configure` script in the directory you want to have your build files. Choose `configure.cmd` or `configure.sh` depending on your system. Then run `ninja <modulename>` to build a module you want or just `ninja` to build all modules.
+To build MenuOS you must run the `configure` script in the directory you want to have your build files. Choose `configure.cmd` or `configure.sh` depending on your system. Then run `ninja <modulename>` to build a module you want or just `ninja` to build all modules.
 
 ### Bootable images
 
@@ -66,19 +66,19 @@ You can always download fresh binary builds of bootable images from the ["Daily 
 
 ## Installing
 
-By default, ReactOS currently can only be installed on a machine that has a FAT16 or FAT32 partition as the active (bootable) partition.
-The partition on which ReactOS is to be installed (which may or may not be the bootable partition) must also be formatted as FAT16 or FAT32.
-ReactOS Setup can format the partitions if needed.
+By default, MenuOS currently can only be installed on a machine that has a FAT16 or FAT32 partition as the active (bootable) partition.
+The partition on which MenuOS is to be installed (which may or may not be the bootable partition) must also be formatted as FAT16 or FAT32.
+MenuOS Setup can format the partitions if needed.
 
-Starting with 0.4.10, ReactOS can be installed using the BtrFS file system. But consider this as an experimental feature and thus regressions not triggered on FAT setup may be observed.
+Starting with 0.4.10, MenuOS can be installed using the BtrFS file system. But consider this as an experimental feature and thus regressions not triggered on FAT setup may be observed.
 
-To install ReactOS from the bootable CD distribution, extract the archive contents. Then burn the CD image, boot from it, and follow the instructions.
+To install MenuOS from the bootable CD distribution, extract the archive contents. Then burn the CD image, boot from it, and follow the instructions.
 
-See ["Installing ReactOS"](https://reactos.org/wiki/Installing_ReactOS) Wiki page or [INSTALL](INSTALL) for more details.
+See ["Installing MenuOS"](https://reactos.org/wiki/Installing_ReactOS) Wiki page or [INSTALL](INSTALL) for more details.
 
 ## Testing
 
-If you discover a bug in ReactOS search on JIRA first - it might be reported already. If not report the bug providing logs and as much information as possible.
+If you discover a bug in MenuOS search on JIRA first - it might be reported already. If not report the bug providing logs and as much information as possible.
 
 See ["File Bugs"](https://reactos.org/wiki/File_Bugs) for a guide.
 
@@ -90,20 +90,20 @@ We are always looking for developers! Check [how to contribute](CONTRIBUTING.md)
 
 __Legal notice__: If you have seen proprietary Microsoft Windows source code (including but not limited to the leaked Windows NT 3.5, NT 4, 2000 source code and the Windows Research Kernel), your contribution won't be accepted because of potential copyright violation.
 
-Try out cloud-based ReactOS development using Gitpod and Docker:
+Try out cloud-based MenuOS development using Gitpod and Docker:
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/reactos/reactos)
 
-You can also support ReactOS by [donating](https://reactos.org/donate/)! We rely on our backers to maintain our servers and accelerate development by [hiring full-time devs](https://reactos.org/contributing/#paid-jobs).
+You can also support MenuOS by [donating](https://reactos.org/donate/)! We rely on our backers to maintain our servers and accelerate development by [hiring full-time devs](https://reactos.org/contributing/#paid-jobs).
 
 ## More information
 
-ReactOS is a Free and Open Source operating system based on the Windows architecture,
+MenuOS is a Free and Open Source operating system based on the Windows architecture,
 providing support for existing applications and drivers, and an alternative to the current dominant consumer operating system.
 
-It is not another wrapper built on Linux, like WINE. It does not attempt or plan to compete with WINE; in fact, the user-mode part of ReactOS is almost entirely WINE-based and our two teams have cooperated closely in the past.
+It is not another wrapper built on Linux, like WINE. It does not attempt or plan to compete with WINE; in fact, the user-mode part of MenuOS is almost entirely WINE-based and our two teams have cooperated closely in the past.
 
-ReactOS is also not "yet another OS". It does not attempt to be a third player like any other alternative OS out there. People are not meant to uninstall Linux and use ReactOS instead; ReactOS is a replacement for Windows users who want a Windows replacement that behaves just like Windows.
+MenuOS is also not "yet another OS". It does not attempt to be a third player like any other alternative OS out there. People are not meant to uninstall Linux and use MenuOS instead; MenuOS is a replacement for Windows users who want a Windows replacement that behaves just like Windows.
 
 More information is available at: [reactos.org](https://reactos.org/).
 

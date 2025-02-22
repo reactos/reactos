@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS API tests
+ * PROJECT:         MenuOS API tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Test for the RegEnumKey API
  * PROGRAMMER:      Thomas Faber & Doug Lyons

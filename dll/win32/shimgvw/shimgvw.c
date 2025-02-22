@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Picture and Fax Viewer
+ * PROJECT:     MenuOS Picture and Fax Viewer
  * LICENSE:     GPL-2.0 (https://spdx.org/licenses/GPL-2.0)
  * PURPOSE:     Image file browsing and manipulation
  * COPYRIGHT:   Copyright Dmitry Chapyshev (dmitry@reactos.org)
@@ -903,7 +903,7 @@ ImageView_LoadSettings(VOID)
     DWORD dwSize;
     LSTATUS nError;
 
-    nError = RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\shimgvw", 0, KEY_READ, &hKey);
+    nError = RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\MenuOS\\shimgvw", 0, KEY_READ, &hKey);
     if (nError != ERROR_SUCCESS)
         return FALSE;
 
@@ -920,7 +920,7 @@ ImageView_SaveSettings(VOID)
     HKEY hKey;
     LSTATUS nError;
 
-    nError = RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\shimgvw",
+    nError = RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\MenuOS\\shimgvw",
                              0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL);
     if (nError != ERROR_SUCCESS)
         return;

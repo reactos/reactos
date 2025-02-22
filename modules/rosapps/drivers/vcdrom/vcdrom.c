@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS FS utility tool
+ * PROJECT:         MenuOS FS utility tool
  * FILE:            modules/rosapps/drivers/vcdrom/vcdrom.c
  * PURPOSE:         Virtual CD-ROM class driver
  * PROGRAMMERS:     Pierre Schweitzer <pierre@reactos.org>

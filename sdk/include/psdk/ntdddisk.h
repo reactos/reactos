@@ -434,7 +434,7 @@ typedef enum _PARTITION_STYLE {
   PARTITION_STYLE_GPT,
   PARTITION_STYLE_RAW,
 #ifdef __REACTOS__
-  /* ReactOS custom partition handlers */
+  /* MenuOS custom partition handlers */
   PARTITION_STYLE_BRFR = 128 /* Xbox-BRFR partitioning scheme */
 #endif
 } PARTITION_STYLE;

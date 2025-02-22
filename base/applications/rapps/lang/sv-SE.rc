@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Applications Manager
+ * PROJECT:     MenuOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Swedish resource file
  * TRANSLATOR:  Copyright 2011 Jan Blomqvist Kinander (Jaix Bly) <jaixbly@spray.se>
@@ -170,9 +170,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS programhanterare"
+    IDS_APPTITLE "MenuOS programhanterare"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_WELCOME_TITLE "Välkommen till ReactOS programhanterare!"
+    IDS_WELCOME_TITLE "Välkommen till MenuOS programhanterare!"
     IDS_WELCOME_TEXT "Välj en kategori till vänster, och sedan ett program för att installera eller avinstallera.\nReactOS Web sida: "
     IDS_WELCOME_URL "https://reactos.org"
 

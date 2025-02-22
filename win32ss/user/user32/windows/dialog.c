@@ -1,6 +1,6 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
+ *  MenuOS kernel
+ *  Copyright (C) 1998, 1999, 2000, 2001 MenuOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /*
- * PROJECT:         ReactOS user32.dll
+ * PROJECT:         MenuOS user32.dll
  * FILE:            win32ss/user/user32/windows/dialog.c
  * PURPOSE:         Dialog Manager
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -35,7 +35,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 /* MACROS/DEFINITIONS ********************************************************/
 
 #define DF_END  0x0001
-#define DF_DIALOGACTIVE 0x4000 // ReactOS
+#define DF_DIALOGACTIVE 0x4000 // MenuOS
 #define GETDLGINFO(hwnd) DIALOG_get_info(hwnd, FALSE)
 #define GET_WORD(ptr)  (*(WORD *)(ptr))
 #define GET_DWORD(ptr) (*(DWORD *)(ptr))
@@ -69,7 +69,7 @@ typedef struct
     UINT       id;
     LPCWSTR    className;
     LPCWSTR    windowName;
-    BOOL       windowNameFree; // ReactOS
+    BOOL       windowNameFree; // MenuOS
     LPCVOID    data;
 } DLG_CONTROL_INFO;
 
@@ -126,7 +126,7 @@ const struct builtin_class_descr DIALOG_builtin_class =
 * Get the DIALOGINFO structure of a window, allocating it if needed
 * and 'create' is TRUE.
 *
-* ReactOS
+* MenuOS
 */
 DIALOGINFO *DIALOG_get_info( HWND hWnd, BOOL create )
 {
@@ -232,7 +232,7 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
 
     if (GET_WORD(p) == 0xffff)  /* Is it an integer id? */
     {
-//// ReactOS Rev 6478
+//// MenuOS Rev 6478
         info->windowName = HeapAlloc( GetProcessHeap(), 0, sizeof(L"#65535") );
         if (info->windowName != NULL)
         {
@@ -471,7 +471,7 @@ static HWND DIALOG_FindMsgDestination( HWND hwndDlg )
         PWND pWnd;
         HWND hParent = GetParent(hwndDlg);
         if (!hParent) break;
-// ReactOS
+// MenuOS
         if (!IsWindow(hParent)) break;
 
         pWnd = ValidateHwnd(hParent);
@@ -986,7 +986,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     will be valid only after WM_CREATE message has been handled in DefDlgProc
     All the members of the structure get filled here using temp variables */
     dlgInfo = DIALOG_get_info( hwnd, TRUE );
-    // ReactOS
+    // MenuOS
     if (dlgInfo == NULL)
     {
         if (hUserFont) DeleteObject( hUserFont );
@@ -1040,12 +1040,12 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
                         SetFocus( hwnd );
                 }
             }
-//// ReactOS see 43396, Fixes setting focus on Open and Close dialogs to the FileName edit control in OpenOffice.
+//// MenuOS see 43396, Fixes setting focus on Open and Close dialogs to the FileName edit control in OpenOffice.
 //// This now breaks test_SaveRestoreFocus.
             //DEFDLG_SaveFocus( hwnd );
 ////
         }
-//// ReactOS Rev 30613 & 30644
+//// MenuOS Rev 30613 & 30644
         if (!(GetWindowLongPtrW( hwnd, GWL_STYLE ) & WS_CHILD))
             SendMessageW( hwnd, WM_CHANGEUISTATE, MAKEWPARAM(UIS_INITIALIZE, 0), 0);
 ////
@@ -1062,7 +1062,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     if( IsWindow(hwnd) )
     {
       DestroyWindow( hwnd );
-      //// ReactOS
+      //// MenuOS
       if (owner)
       {  ERR("DIALOG_CreateIndirect 1\n");
          if ( NtUserGetThreadState(THREADSTATE_FOREGROUNDTHREAD) && // Rule #1.
@@ -1248,7 +1248,7 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
             return 1;
         }
         case WM_NCDESTROY:
-//// ReactOS
+//// MenuOS
             dlgInfo = DIALOG_get_info(hwnd, FALSE);
             if (dlgInfo != NULL)
             {
@@ -1266,7 +1266,7 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
             return DefWindowProcA( hwnd, msg, wParam, lParam );
 
         case WM_ACTIVATE:
-            { // ReactOS
+            { // MenuOS
                DWORD dwSetFlag;
                HWND hwndparent = DIALOG_FindMsgDestination( hwnd );
                // if WA_CLICK/ACTIVE ? set dialog is active.
@@ -1900,7 +1900,7 @@ DialogBoxParamA(
     HWND hwnd;
     HRSRC hrsrc;
     LPCDLGTEMPLATE ptr;
-//// ReactOS rev 33532
+//// MenuOS rev 33532
     if (!(hrsrc = FindResourceA( hInstance, lpTemplateName, (LPCSTR)RT_DIALOG )) ||
         !(ptr = LoadResource(hInstance, hrsrc)))
     {
@@ -1933,7 +1933,7 @@ DialogBoxParamW(
     HWND hwnd;
     HRSRC hrsrc;
     LPCDLGTEMPLATE ptr;
-//// ReactOS rev 33532
+//// MenuOS rev 33532
     if (!(hrsrc = FindResourceW( hInstance, lpTemplateName, (LPCWSTR)RT_DIALOG )) ||
         !(ptr = LoadResource(hInstance, hrsrc)))
     {
@@ -2076,7 +2076,7 @@ DlgDirSelectExW(
 
 
 /*
- * @implemented Modified for ReactOS. Do not Port Sync!!!
+ * @implemented Modified for MenuOS. Do not Port Sync!!!
  */
 BOOL
 WINAPI
@@ -2689,7 +2689,7 @@ IsDialogMessageW(
              return TRUE;
          }
          break;
-//// ReactOS
+//// MenuOS
      case WM_SYSKEYDOWN:
          /* If the ALT key is being pressed display the keyboard cues */
          if ( HIWORD(lpMsg->lParam) & KF_ALTDOWN &&
@@ -2758,7 +2758,7 @@ SendDlgItemMessageA(
   LPARAM lParam)
 {
 	HWND hwndCtrl;
-	if ( hDlg == HWND_TOPMOST || hDlg == HWND_BROADCAST ) return 0; // ReactOS
+	if ( hDlg == HWND_TOPMOST || hDlg == HWND_BROADCAST ) return 0; // MenuOS
 	hwndCtrl = GetDlgItem( hDlg, nIDDlgItem );
 	if (hwndCtrl) return SendMessageA( hwndCtrl, Msg, wParam, lParam );
 	else return 0;
@@ -2778,7 +2778,7 @@ SendDlgItemMessageW(
   LPARAM lParam)
 {
 	HWND hwndCtrl;
-	if ( hDlg == HWND_TOPMOST || hDlg == HWND_BROADCAST ) return 0; // ReactOS
+	if ( hDlg == HWND_TOPMOST || hDlg == HWND_BROADCAST ) return 0; // MenuOS
 	hwndCtrl = GetDlgItem( hDlg, nIDDlgItem );
 	if (hwndCtrl) return SendMessageW( hwndCtrl, Msg, wParam, lParam );
 	else return 0;
@@ -2815,7 +2815,7 @@ SetDlgItemTextA(
   int nIDDlgItem,
   LPCSTR lpString)
 {
-  HWND hwndCtrl = GetDlgItem( hDlg, nIDDlgItem ); // ReactOS Themes
+  HWND hwndCtrl = GetDlgItem( hDlg, nIDDlgItem ); // MenuOS Themes
   if (hwndCtrl) return SetWindowTextA( hwndCtrl, lpString );
   return FALSE;
 }
@@ -2831,7 +2831,7 @@ SetDlgItemTextW(
   int nIDDlgItem,
   LPCWSTR lpString)
 {
-  HWND hwndCtrl = GetDlgItem( hDlg, nIDDlgItem ); // ReactOS Themes
+  HWND hwndCtrl = GetDlgItem( hDlg, nIDDlgItem ); // MenuOS Themes
   if (hwndCtrl) return SetWindowTextW( hwndCtrl, lpString );
   return FALSE;
 }

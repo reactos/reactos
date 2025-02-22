@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS CRT library
+ * PROJECT:     MenuOS CRT library
  * LICENSE:     CC0-1.0 (https://spdx.org/licenses/CC0-1.0)
  * PURPOSE:     Thread safe initialization support routines for MSVC and Clang-CL
  * COPYRIGHT:   Copyright 2019 Timo Kreuzer (timo.kreuzer@reactos.org)

@@ -71,7 +71,7 @@ BootEnvironmentIsWinPE(
 #endif
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DriverEntry(
     _In_ PDRIVER_OBJECT  DriverObject,
     _In_ PUNICODE_STRING RegistryPath
@@ -198,7 +198,7 @@ Return Value:
 
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DriverEvtCleanup(
     _In_ WDFOBJECT Driver
     )
@@ -234,7 +234,7 @@ Return Value:
 
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DriverEvtDeviceAdd(
     _In_    WDFDRIVER        Driver,
     _Inout_ PWDFDEVICE_INIT  DeviceInit
@@ -852,7 +852,7 @@ Exit:
 
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DeviceEvtCleanup(
     _In_ WDFOBJECT Device
     )
@@ -898,7 +898,7 @@ Return Value:
 
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DeviceEvtSelfManagedIoCleanup(
     _In_ WDFDEVICE    Device
     )
@@ -989,7 +989,7 @@ Return Value:
 }
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DeviceEvtD0Entry(
     _In_ WDFDEVICE Device,
     _In_ WDF_POWER_DEVICE_STATE PreviousState
@@ -1071,7 +1071,7 @@ Return Value:
 }
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DeviceEvtD0Exit(
     _In_ WDFDEVICE Device,
     _In_ WDF_POWER_DEVICE_STATE TargetState
@@ -1219,7 +1219,7 @@ Return Value:
 
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DeviceEvtSurpriseRemoval(
     _In_ WDFDEVICE    Device
     )
@@ -1262,7 +1262,7 @@ Return Value:
 
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 CreateQueueEvtIoDefault(
     _In_ WDFQUEUE Queue,
     _In_ WDFREQUEST Request
@@ -1323,7 +1323,7 @@ Return Value:
 }
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DeviceEvtFileClose(
     _In_ WDFFILEOBJECT FileObject
     )
@@ -1550,7 +1550,7 @@ NormalizeIoctl(
 }
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DeviceEvtIoInCallerContext(
     _In_ WDFDEVICE    Device,
     _In_ WDFREQUEST   Request
@@ -3211,7 +3211,7 @@ Return Value:
 //
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 SequentialQueueEvtIoReadWrite(
     _In_ WDFQUEUE    Queue,
     _In_ WDFREQUEST  Request,
@@ -3341,7 +3341,7 @@ Return Value:
 
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 ReadWriteWorkItemRoutine(
     _In_ WDFWORKITEM  WorkItem
     )
@@ -3404,7 +3404,7 @@ Return Value:
 
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 SequentialQueueEvtIoDeviceControl(
     _In_ WDFQUEUE   Queue,
     _In_ WDFREQUEST Request,
@@ -3499,7 +3499,7 @@ Return Value:
 
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 IoctlWorkItemRoutine(
     _In_ WDFWORKITEM  WorkItem
     )
@@ -3844,7 +3844,7 @@ Return Value:
 }
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 SequentialQueueEvtCanceledOnQueue(
     _In_ WDFQUEUE   Queue,
     _In_ WDFREQUEST Request
@@ -4211,7 +4211,7 @@ Return Value:
 }
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 RequestEvtCleanup(
     _In_ WDFOBJECT Request
     )

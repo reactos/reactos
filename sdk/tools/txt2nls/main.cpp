@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS TXT to NLS Converter
+ * PROJECT:     MenuOS TXT to NLS Converter
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * FILE:        sdk/tools/txt2nls/main.c
  * COPYRIGHT:   Copyright 2021 Jérôme Gardou <jerome.gardou@reactos.org>

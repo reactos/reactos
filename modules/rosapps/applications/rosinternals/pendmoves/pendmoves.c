@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS pending moves operations Information tool
+ * PROJECT:         MenuOS pending moves operations Information tool
  * FILE:            cmdutils/pendmoves/pendmoves.c
  * PURPOSE:         Query information from registry about pending moves
  * PROGRAMMERS:     Pierre Schweitzer <pierre@reactos.org>

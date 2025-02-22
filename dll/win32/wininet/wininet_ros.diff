@@ -95,7 +95,7 @@ diff -pudN e:\wine\dlls\wininet/urlcache.c e:\reactos\dll\win32\wininet/urlcache
  
  /* List of all containers available */
  static struct list UrlContainers = LIST_INIT(UrlContainers);
-+/* ReactOS r54992 */
++/* MenuOS r54992 */
 +BOOL bDefaultContainersAdded = FALSE;
  
  static inline char *heap_strdupWtoUTF8(LPCWSTR str)
@@ -104,7 +104,7 @@ diff -pudN e:\wine\dlls\wininet/urlcache.c e:\reactos\dll\win32\wininet/urlcache
      static const WCHAR UrlSuffix[] = {'C','o','n','t','e','n','t','.','I','E','5',0};
      static const WCHAR HistorySuffix[] = {'H','i','s','t','o','r','y','.','I','E','5',0};
      static const WCHAR CookieSuffix[] = {0};
-+    /* ReactOS r50916 */
++    /* MenuOS r50916 */
 +    static const WCHAR UserProfile[] = {'U','S','E','R','P','R','O','F','I','L','E',0};
      static const struct
      {
@@ -113,7 +113,7 @@ diff -pudN e:\wine\dlls\wininet/urlcache.c e:\reactos\dll\win32\wininet/urlcache
      };
      DWORD i;
  
-+    /* ReactOS r50916 */
++    /* MenuOS r50916 */
 +    if (GetEnvironmentVariableW(UserProfile, NULL, 0) == 0 && GetLastError() == ERROR_ENVVAR_NOT_FOUND)
 +    {
 +        ERR("Environment variable 'USERPROFILE' does not exist!\n");
@@ -139,7 +139,7 @@ diff -pudN e:\wine\dlls\wininet/urlcache.c e:\reactos\dll\win32\wininet/urlcache
          return ERROR_INVALID_PARAMETER;
  
 +#ifdef __REACTOS__
-+    /* ReactOS r54992 */
++    /* MenuOS r54992 */
 +    if (!bDefaultContainersAdded)
 +        cache_containers_init();
 +#endif
@@ -152,7 +152,7 @@ diff -pudN e:\wine\dlls\wininet/urlcache.c e:\reactos\dll\win32\wininet/urlcache
          return FALSE;
  
 +#ifdef __REACTOS__
-+    /* ReactOS r54992 */
++    /* MenuOS r54992 */
 +    if (!bDefaultContainersAdded)
 +        cache_containers_init();
 +#endif
@@ -177,7 +177,7 @@ diff -pudN e:\wine\dlls\wininet/utility.c e:\reactos\dll\win32\wininet/utility.c
  
  #include "internet.h"
  
-+// ReactOS
++// MenuOS
 +#include "inet_ntop.c"
 +
  #define TIME_STRING_LEN  30

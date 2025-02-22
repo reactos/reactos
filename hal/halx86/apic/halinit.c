@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Hardware Abstraction Layer
+ * PROJECT:     MenuOS Hardware Abstraction Layer
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Initialize the APIC HAL
  * COPYRIGHT:   Copyright 2011 Timo Kreuzer <timo.kreuzer@reactos.org>

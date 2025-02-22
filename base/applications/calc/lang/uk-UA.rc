@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Calc
+ * PROJECT:     MenuOS Calc
  * LICENSE:     GPL - See COPYING in the top level directory
  * PURPOSE:     Ukrainian Language File
  * TRANSLATORS: Artem Reznikov & Sakara Yevhen
@@ -336,7 +336,7 @@ BEGIN
     BEGIN
         MENUITEM "Зміст", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Про Калькулятор ReactOS", IDM_HELP_ABOUT
+        MENUITEM "Про Калькулятор MenuOS", IDM_HELP_ABOUT
     END
 END
 
@@ -369,7 +369,7 @@ BEGIN
     BEGIN
         MENUITEM "Зміст", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Про Калькулятор ReactOS", IDM_HELP_ABOUT
+        MENUITEM "Про Калькулятор MenuOS", IDM_HELP_ABOUT
     END
 END
 
@@ -392,7 +392,7 @@ BEGIN
     BEGIN
         MENUITEM "Зміст", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Про Калькулятор ReactOS", IDM_HELP_ABOUT
+        MENUITEM "Про Калькулятор MenuOS", IDM_HELP_ABOUT
     END
 END
 
@@ -407,7 +407,7 @@ END
 /* About */
 STRINGTABLE
 BEGIN
-    IDS_CALC_NAME "Калькулятор ReactOS"
+    IDS_CALC_NAME "Калькулятор MenuOS"
     IDS_AUTHOR "Написав Карло Браміні"
 END
 

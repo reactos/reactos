@@ -9,12 +9,12 @@ LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-1000, "ReactOS"
+1000, "MenuOS"
 }
 
 STRINGTABLE
 {
-2000, "Lunar ReactOS"
+2000, "Lunar MenuOS"
 }
 
 STRINGTABLE
@@ -35,11 +35,11 @@ STRINGTABLE
 {
 5000, "Lunar"
 5001, "Görsel Biçim"
-5002, "ReactOS Vakfı"
+5002, "MenuOS Vakfı"
 5003, "Cernodile & Illen, Lautus tabanlı"
 5004, "GNU/GPL 2.0 altında yayımlanmaktadır, 2019"
 5005, "https://reactos.org/"
 5006, "1.1"
-5007, "ReactOS İçin Görsel Biçim"
+5007, "MenuOS İçin Görsel Biçim"
 }
 

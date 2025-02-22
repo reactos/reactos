@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        GPL, see COPYING in the top level directory
- * PROJECT:          ReactOS win32 kernel mode subsystem server
+ * PROJECT:          MenuOS win32 kernel mode subsystem server
  * PURPOSE:          File access support routines
  * FILE:             win32ss/user/ntuser/misc/file.c
  * PROGRAMER:        Timo Kreuzer (timo.kreuzer@reactos.org)

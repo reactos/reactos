@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS kernel-mode tests
+ * PROJECT:         MenuOS kernel-mode tests
  * LICENSE:         LGPLv2+ - See COPYING.LIB in the top level directory
  * PURPOSE:         Kernel-Mode Test Suite Io Regressions KM-Test (Irp)
  * PROGRAMMER:      Aleksey Bragin <aleksey@reactos.org>

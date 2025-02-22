@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
+ * PROJECT:         MenuOS Kernel Streaming
  * FILE:            drivers/wdm/audio/filters/kmixer/filter.c
  * PURPOSE:         Filter File Context Header header
  * PROGRAMMER:      Johannes Anderwald

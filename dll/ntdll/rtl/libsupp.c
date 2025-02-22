@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS NT User-Mode DLL
+ * PROJECT:         MenuOS NT User-Mode DLL
  * FILE:            lib/ntdll/rtl/libsup.c
  * PURPOSE:         RTL Support Routines
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)

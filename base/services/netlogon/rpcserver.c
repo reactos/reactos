@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS NetLogon Service
+ * PROJECT:     MenuOS NetLogon Service
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     NetLogon service RPC server
  * COPYRIGHT:   Eric Kohl 2019 <eric.kohl@reactos.org>

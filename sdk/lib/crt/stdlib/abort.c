@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS C runtime library
+ * PROJECT:         MenuOS C runtime library
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            lib/sdk/crt/stdlib/abort.c
  * PURPOSE:         abort implementation

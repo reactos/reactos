@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Application compatibility module
+ * PROJECT:     MenuOS Application compatibility module
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Shim engine structures
  * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
@@ -8,7 +8,7 @@
 #ifndef SHIMENG_H
 #define SHIMENG_H
 
-/* This header is ReactOS specific */
+/* This header is MenuOS specific */
 
 /* Structure that allows dynamic growing.
    Be aware, the data may move! */

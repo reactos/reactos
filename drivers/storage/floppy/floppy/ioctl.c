@@ -1,5 +1,5 @@
 /*
- *  ReactOS Floppy Driver
+ *  MenuOS Floppy Driver
  *  Copyright (C) 2004, Vizzini (vizzini@plasmic.com)
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -16,7 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * PROJECT:         ReactOS Floppy Driver
+ * PROJECT:         MenuOS Floppy Driver
  * FILE:            ioctl.c
  * PURPOSE:         IOCTL Routines
  * PROGRAMMER:      Vizzini (vizzini@plasmic.com)

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Applications Manager
+ * PROJECT:     MenuOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Turkish resource file
  * TRANSLATORS: Copyright 2013-2016 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
@@ -172,9 +172,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS Uygulama Yöneticisi"
+    IDS_APPTITLE "MenuOS Uygulama Yöneticisi"
     IDS_APP_AUTHORS "Telif Hakkı: 2009 Dmitry Chapyshev"
-    IDS_WELCOME_TITLE "ReactOS Uygulama Yöneticisi'ne hoş geldiniz."
+    IDS_WELCOME_TITLE "MenuOS Uygulama Yöneticisi'ne hoş geldiniz."
     IDS_WELCOME_TEXT "Solda bir kategori seçiniz, ardından kurmak ya da kaldırmak için bir uygulama seçiniz.\nReactOS'un İnternet sitesi: "
     IDS_WELCOME_URL "https://reactos.org"
 

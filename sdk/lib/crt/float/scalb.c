@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS system libraries
+ * PROJECT:     MenuOS system libraries
  * FILE:        lib/sdk/crt/float/scalb.c
  * PURPOSE:     Floating-point number scaling
  * PROGRAMER:   Pierre Schweitzer (pierre@reactos.org)

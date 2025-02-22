@@ -519,7 +519,7 @@ read_vc(xprtp, buf, len)
 		pollfd.revents = 0;
 		switch (poll(&pollfd, 1, milliseconds)) {
 #else
-		/* ReactOS: use select instead of poll */
+		/* MenuOS: use select instead of poll */
 		fd_set infd;
 		struct timeval timeout;
 

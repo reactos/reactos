@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         MenuOS system libraries
  * PURPOSE:         Runtime code
  * FILE:            lib/rtl/version.c
  * PROGRAMERS:      Filip Navara

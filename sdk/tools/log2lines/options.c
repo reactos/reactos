@@ -1,5 +1,5 @@
 /*
- * ReactOS log2lines
+ * MenuOS log2lines
  * Written by Jan Roeloffzen
  *
  * - Option init and parsing

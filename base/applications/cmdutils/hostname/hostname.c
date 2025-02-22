@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Hostname Command
+ * PROJECT:     MenuOS Hostname Command
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     Retrieves the current DNS host name of the computer.
  * COPYRIGHT:   Copyright 2005-2019 Emanuele Aliberti (ea@reactos.com)

@@ -1,5 +1,5 @@
 /*
-* PROJECT:     ReactOS Device Manager
+* PROJECT:     MenuOS Device Manager
 * LICENSE:     GPL - See COPYING in the top level directory
 * FILE:        dll/win32/devmgr/devmgmt/ClassNode.cpp
 * PURPOSE:     Class object for

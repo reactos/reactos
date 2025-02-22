@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS File System Recognizer
+ * PROJECT:     MenuOS File System Recognizer
  * LICENSE:     GPL-2.0 (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     CDFS Recognizer
  * COPYRIGHT:   Copyright 2017 Colin Finck <colin@reactos.org>

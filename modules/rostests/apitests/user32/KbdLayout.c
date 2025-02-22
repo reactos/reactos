@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS API tests
+ * PROJECT:     MenuOS API tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Tests for Keyboard Layouts DLL files
  * COPYRIGHT:   Copyright 2022 Stanislav Motylkov <x86corez@gmail.com>

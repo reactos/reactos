@@ -18,7 +18,7 @@
 Signature="$CHICAGO$"
 Class=MEDIA
 ClassGUID={4d36e96c-e325-11ce-bfc1-08002be10318}
-Provider=%ReactOS%
+Provider=%MenuOS%
 ;;The following line is used only when the INF comes with the Windows system
 ;;IHV needs to comment out the following line for their OEM redistributed disk.
 ;;LayoutFile=layout.inf, layout1.inf, layout2.inf
@@ -335,7 +335,7 @@ AddService = ac97, 0x00000002, ac97_Service_Inst
 
 [Strings]
 ; Non-localizable
-ReactOS="ReactOS Project"
+MenuOS="MenuOS Project"
 MfgName="Intel"
 
 ; Localizable
@@ -488,7 +488,7 @@ ICHPin.LFE              ="Bass Lautsprecher"
 ICHPin.Front            ="Lautsprecher Vorne"
 
 [Strings.0419]
-ReactOS="Команда ReactOS"
+MenuOS="Команда MenuOS"
 DiskDescription="Диск с драйвером AC'97 WDM"
 
 ac97_440MX.DeviceDesc="Intel 82440MX AC'97 аудиоконтроллер"

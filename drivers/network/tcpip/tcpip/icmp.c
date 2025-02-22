@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS TCP/IP protocol driver
+ * PROJECT:     MenuOS TCP/IP protocol driver
  * LICENCE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     ICMP functions implementation
  * COPYRIGHT:   2019 Victor Perevertkin (victor.perevertkin@reactos.org)

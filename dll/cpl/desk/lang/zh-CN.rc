@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Display Control Panel
+ * PROJECT:     MenuOS Display Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2008 Zhang Bing <e_zb@21cn.com> <ezb@mail.gywb.cn>
@@ -86,7 +86,7 @@ CAPTION "高级外观"
 FONT 9, "宋体"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "如果您选择 ReactOS 经典 之外的其他主题，它会覆盖下面的设置，除了在某些老旧的程序内以外。", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
+    LTEXT "如果您选择 MenuOS 经典 之外的其他主题，它会覆盖下面的设置，除了在某些老旧的程序内以外。", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
     LTEXT "项目(&E)：", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP

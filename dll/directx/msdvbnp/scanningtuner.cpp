@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Network Provider for MPEG2 based networks
+ * PROJECT:         MenuOS Network Provider for MPEG2 based networks
  * FILE:            dll/directx/msdvbnp/scanningtuner.cpp
  * PURPOSE:         IScanningTunner interface
  *

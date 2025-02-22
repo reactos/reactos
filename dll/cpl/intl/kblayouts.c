@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS International Control Panel
+ * PROJECT:         MenuOS International Control Panel
  * FILE:            dll/cpl/intl/kblayouts.c
  * PURPOSE:         Functions for manipulation with keyboard layouts
  * PROGRAMMER:      Dmitry Chapyshev (dmitry@reactos.org)

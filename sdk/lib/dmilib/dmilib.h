@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS DMI/SMBIOS Library
+ * PROJECT:     MenuOS DMI/SMBIOS Library
  * LICENSE:     GPL - See COPYING in the top level directory
  * PURPOSE:     SMBIOS table parsing functions
  * PROGRAMMERS: Timo Kreuzer (timo.kreuzer@reactos.org)

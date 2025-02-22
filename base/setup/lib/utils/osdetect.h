@@ -1,7 +1,7 @@
 /*
- * PROJECT:     ReactOS Setup Library
+ * PROJECT:     MenuOS Setup Library
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     NT 5.x family (MS Windows <= 2003, and ReactOS)
+ * PURPOSE:     NT 5.x family (MS Windows <= 2003, and MenuOS)
  *              operating systems detection code.
  * COPYRIGHT:   Copyright 2017-2024 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
@@ -9,7 +9,7 @@
 #pragma once
 
 /* Language-independent Vendor strings */
-#define VENDOR_REACTOS      L"ReactOS"
+#define VENDOR_REACTOS      L"MenuOS"
 #define VENDOR_MICROSOFT    L"Microsoft"
 
 typedef struct _NTOS_INSTALLATION

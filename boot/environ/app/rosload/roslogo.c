@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
- * PROJECT:         ReactOS UEFI OS Loader
+ * PROJECT:         MenuOS UEFI OS Loader
  * FILE:            boot/environ/app/rosload/roslogo.c
  * PURPOSE:         OS Loader Logo Drawing
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)
@@ -9774,7 +9774,7 @@ OslDrawLogo (
     EFI_GRAPHICS_OUTPUT_PROTOCOL* GraphicsOutput;
     EFI_STATUS EfiStatus;
 
-    /* Convert ReactOS Logo */
+    /* Convert MenuOS Logo */
     ConvertBmpToGopBlt(g_Logo,
                        sizeof(g_Logo),
                        (PVOID*)&GopBlt,

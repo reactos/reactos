@@ -7,7 +7,7 @@ Signature  = "$Windows NT$"
 LayoutFile = layout.inf
 Class      = Display
 ClassGUID  = {4D36E968-E325-11CE-BFC1-08002BE10318}
-Provider   = %ReactOS%
+Provider   = %MenuOS%
 DriverVer  = 10/17/2022,1.00
 
 [DestinationDirs]
@@ -52,7 +52,7 @@ LoadOrderGroup = Video
 
 [Strings]
 ; Non-localizable
-ReactOS = "ReactOS Project"
+MenuOS = "MenuOS Project"
 Bochs = "Bochs"
 
 REG_MULTI_SZ   = 0x00010000

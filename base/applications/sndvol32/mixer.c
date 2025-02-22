@@ -1,5 +1,5 @@
 /*
- * ReactOS Sound Volume Control
+ * MenuOS Sound Volume Control
  * Copyright (C) 2004-2005 Thomas Weidenmueller
  *
  * This library is free software; you can redistribute it and/or
@@ -18,7 +18,7 @@
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS Sound Volume Control
+ * PROJECT:     MenuOS Sound Volume Control
  * FILE:        base/applications/sndvol32/mixer.c
  * PROGRAMMERS: Thomas Weidenmueller <w3seek@reactos.com>
  */

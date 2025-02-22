@@ -1,6 +1,6 @@
 /*
- * ReactOS Device Manager Applet
- * Copyright (C) 2004 - 2005 ReactOS Team
+ * MenuOS Device Manager Applet
+ * Copyright (C) 2004 - 2005 MenuOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,9 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 /*
- * PROJECT:         ReactOS devmgr.dll
+ * PROJECT:         MenuOS devmgr.dll
  * FILE:            lib/devmgr/devprblm.c
- * PURPOSE:         ReactOS Device Manager
+ * PURPOSE:         MenuOS Device Manager
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  * UPDATE HISTORY:
  *      04-04-2004  Created

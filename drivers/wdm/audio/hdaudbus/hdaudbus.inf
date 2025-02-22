@@ -2,7 +2,7 @@
 Signature = "$Windows NT$"
 Class = System
 ClassGuid = {4D36E97D-E325-11CE-BFC1-08002BE10318}
-Provider = ReactOS
+Provider = MenuOS
 DriverVer=11/19/2010,6.1.7601.17514
 PnPLockdown=1
 
@@ -59,36 +59,36 @@ hdaudbus.sys=SignatureAttributes.DRM
 DRMLevel=1300
 
 [Strings]
-DiskId1 = "ReactOS UAA Bus Driver for High Definition Audio. Installation Disk #1"
+DiskId1 = "MenuOS UAA Bus Driver for High Definition Audio. Installation Disk #1"
 HDAudio.DeviceDesc = "High Definition Audio Controller"
-HDAudBus.SVCDESC = "ReactOS UAA Bus Driver for High Definition Audio"
+HDAudBus.SVCDESC = "MenuOS UAA Bus Driver for High Definition Audio"
 AUDIOFG = "Audio Device on High Definition Audio Bus"
 MODEMFG = "Modem Device on High Definition Audio Bus"
 UNKNOWNFG = "Unknown Device on High Definition Audio Bus"
 HDAudioBUS = "Internal High Definition Audio Bus"
 
 [Strings.0415]
-DiskId1 = "Sterownik magistrali ReactOS UAA dla High Definition Audio. Dysk instalacyjny #1"
+DiskId1 = "Sterownik magistrali MenuOS UAA dla High Definition Audio. Dysk instalacyjny #1"
 HDAudio.DeviceDesc = "Kontroler High Definition Audio"
-HDAudBus.SVCDESC = "Sterownik magistrali ReactOS UAA dla High Definition Audio."
+HDAudBus.SVCDESC = "Sterownik magistrali MenuOS UAA dla High Definition Audio."
 AUDIOFG = "Urządzenie audio na High Definition Audio Bus"
 MODEMFG = "Urządzenie telefoniczne na High Definition Audio Bus"
 UNKNOWNFG = "Nieznane urządzenie na High Definition Audio Bus"
 HDAudioBUS = "Wewnętrzna magistrala High Definition Audio"
 
 [Strings.0418]
-DiskId1 = "Driver ReactOS de magistrală UAA pentru dispozitive audio de înaltă definiție. Disc de instalare №1"
+DiskId1 = "Driver MenuOS de magistrală UAA pentru dispozitive audio de înaltă definiție. Disc de instalare №1"
 HDAudio.DeviceDesc = "Dispozitiv de control audio de înaltă definiție"
-HDAudBus.SVCDESC = "Driver ReactOS pentru magistrală UAA pentru dispozitive audio de înaltă definiție"
+HDAudBus.SVCDESC = "Driver MenuOS pentru magistrală UAA pentru dispozitive audio de înaltă definiție"
 AUDIOFG = "Dispozitiv audio pe magistrala audio de înaltă definiție"
 MODEMFG = "Dispozitiv modem pe magistrala audio de înaltă definiție"
 UNKNOWNFG = "Dispozitiv nespecificat pe magistrala audio de înaltă definiție"
 HDAudioBUS = "Magistrală internă audio de înaltă definiție"
 
 [Strings.041f]
-DiskId1 = "Yüksek Tanımlı Ses İçin ReactOS UAA Veri Yolu Sürücüsü. 1. Kurulum Diski"
+DiskId1 = "Yüksek Tanımlı Ses İçin MenuOS UAA Veri Yolu Sürücüsü. 1. Kurulum Diski"
 HDAudio.DeviceDesc = "Yüksek Tanımlı Ses Denetleyicisi"
-HDAudBus.SVCDESC = "Yüksek Tanımlı Ses için ReactOS UAA Veri Yolu Sürücüsü"
+HDAudBus.SVCDESC = "Yüksek Tanımlı Ses için MenuOS UAA Veri Yolu Sürücüsü"
 AUDIOFG = "Yüksek Tanımlı Ses Veri Yolu Üzerinde Ses Aygıtı"
 MODEMFG = "Yüksek Tanımlı Ses Veri Yolu Üzerinde Çevirge Aygıtı"
 UNKNOWNFG = "Yüksek Tanımlı Ses Veri Yolu Üzerinde Bilinmeyen Aygıt"
@@ -96,16 +96,16 @@ HDAudioBUS = "İç Yüksek Tanımlı Ses Veri Yolu"
 
 [Strings.0804]
 HDAudio.DeviceDesc = "高保真音频控制器"
-HDAudBus.SVCDESC = "ReactOS 高保真音频 UAA 总线驱动"
+HDAudBus.SVCDESC = "MenuOS 高保真音频 UAA 总线驱动"
 AUDIOFG = "HDA 总线上的音频设备"
 MODEMFG = "HDA 总线上的 Modem 设备"
 UNKNOWNFG = "HDA 总线上的未知设备"
 HDAudioBUS = "内部 HDA 总线"
 
 [Strings.0a]
-DiskId1 = "Driver Bus UAA de ReactOS para Audio de Alta Fidelidad. Disco de instalación 1"
+DiskId1 = "Driver Bus UAA de MenuOS para Audio de Alta Fidelidad. Disco de instalación 1"
 HDAudio.DeviceDesc = "Controlador de Audio de Alta Fidelidad"
-HDAudBus.SVCDESC = "Driver Bus UAA de ReactOS para Audio de Alta Fidelidad"
+HDAudBus.SVCDESC = "Driver Bus UAA de MenuOS para Audio de Alta Fidelidad"
 AUDIOFG = "Dispositivo de Audio en el Bus de Audio de Alta Fidelidad"
 MODEMFG = "Dispositivo Modem en el Bus de Audio de Alta Fidelidad"
 UNKNOWNFG = "Dispositivo desconocido en el Bus de Audio de Alta Fidelidad"

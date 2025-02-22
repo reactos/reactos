@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
+ * PROJECT:         MenuOS Kernel Streaming
  * FILE:            drivers/wdm/audio/legacy/stream/dll.c
  * PURPOSE:         kernel mode driver initialization
  * PROGRAMMER:      Johannes Anderwald

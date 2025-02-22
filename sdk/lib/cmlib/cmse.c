@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         MenuOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            lib/cmlib/cmse.c
  * PURPOSE:         Configuration Manager Library - Security Subsystem Interface
@@ -77,10 +77,10 @@ CmpFreeSecurityDescriptor(IN PHHIVE Hive,
 
     ASSERT(CellData->Signature == CM_KEY_NODE_SIGNATURE);
 
-    // FIXME: ReactOS-specific: check whether this key has a security block.
+    // FIXME: MenuOS-specific: check whether this key has a security block.
     // On Windows there is no such check, all keys seem to have a valid
     // security block.
-    // If we remove this check on ReactOS (and continue running) then we get
+    // If we remove this check on MenuOS (and continue running) then we get
     // a BSOD at the end...
     if (CellData->Security == HCELL_NIL)
     {

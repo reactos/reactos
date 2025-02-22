@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Console Server
+ * PROJECT:     MenuOS Console Server
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Spanish language file
  * COPYRIGHT:   2008 Javier Remacha
@@ -28,7 +28,7 @@ BEGIN
     IDS_SCROLLUP "Desplazar arriba"
     IDS_SCROLLDOWN "Desplazar abajo"
 */
-    IDS_TERMINAL_TITLE "Consola de ReactOS"
+    IDS_TERMINAL_TITLE "Consola de MenuOS"
 END
 
 STRINGTABLE

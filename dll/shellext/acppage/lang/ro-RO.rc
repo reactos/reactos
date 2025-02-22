@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Compatibility Layer Shell Extension
+ * PROJECT:     MenuOS Compatibility Layer Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2016-2018 Ștefan Fulea <stefan.fulea@mail.com>
@@ -13,7 +13,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Compatibilitate"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Dacă aveți probleme cu acest program în ReactOS, selectați un sistem de operare care să fie raportat aplicației.\nConștientizați că aceasta este o funcționalitate în dezvoltare.", IDC_EXPLANATION, 7, 7, 210, 31
+    LTEXT "Dacă aveți probleme cu acest program în MenuOS, selectați un sistem de operare care să fie raportat aplicației.\nConștientizați că aceasta este o funcționalitate în dezvoltare.", IDC_EXPLANATION, 7, 7, 210, 31
     GROUPBOX "Modul de compatibilitate", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "Rulare a acestui program în modul de compatibilitate pentru:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 196, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
@@ -46,6 +46,6 @@ STRINGTABLE
 BEGIN
     IDS_COMPAT_TITLE "Compatibilitate"
     IDS_FAILED_NETWORK "Modurile de compatibilitate nu pot fi setate pentru acest program pentru că este un disc de rețea."
-    IDS_FAILED_PROTECTED "Modurile de compatibilitate nu pot fi setate pentru acest program deoarece este parte din ReactOS."
+    IDS_FAILED_PROTECTED "Modurile de compatibilitate nu pot fi setate pentru acest program deoarece este parte din MenuOS."
 END
 

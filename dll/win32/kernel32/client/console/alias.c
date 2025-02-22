@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         MenuOS system libraries
  * FILE:            dll/win32/kernel32/client/console/alias.c
  * PURPOSE:         Win32 Console Client Alias support functions
  * PROGRAMMERS:     David Welch (welch@cwcom.net) (welch@mcmail.com)

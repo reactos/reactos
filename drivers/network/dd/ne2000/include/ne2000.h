@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS Novell Eagle 2000 driver
+ * PROJECT:     MenuOS Novell Eagle 2000 driver
  * FILE:        include/ne2000.h
  * PURPOSE:     NE2000 driver definitions
  */

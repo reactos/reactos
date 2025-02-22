@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Services
+ * PROJECT:     MenuOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/sc/start.c
  * PURPOSE:     Start a service

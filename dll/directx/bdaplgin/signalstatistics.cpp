@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS BDA Proxy
+ * PROJECT:         MenuOS BDA Proxy
  * FILE:            dll/directx/bdaplgin/signalstatistics.cpp
  * PURPOSE:         IBDA_FrequencyFilter interface
  *

@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         MenuOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Routines for IRQL support
  * PROGRAMMERS:     Timo Kreuzer

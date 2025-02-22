@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         MenuOS system libraries
  * FILE:            lib/rtl/byteswap.c
  * PURPOSE:         Memory functions
  * PROGRAMMER:      David Welch (welch@mcmail.com)

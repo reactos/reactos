@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS CRT library
+ * PROJECT:     MenuOS CRT library
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     ARM fpscr getter
  * COPYRIGHT:   Copyright 2021 Roman Masanin <36927roma@gmail.com>

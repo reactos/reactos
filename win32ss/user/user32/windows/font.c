@@ -1,6 +1,6 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
+ *  MenuOS kernel
+ *  Copyright (C) 1998, 1999, 2000, 2001 MenuOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /*
- * PROJECT:         ReactOS user32.dll
+ * PROJECT:         MenuOS user32.dll
  * FILE:            win32ss/user/user32/windows/font.c
  * PURPOSE:         Draw Text
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)

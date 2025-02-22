@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS C runtime library
+ * PROJECT:         MenuOS C runtime library
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            lib/sdk/crt/stdlib/_set_abort_behavior.c
  * PURPOSE:         _set_abort_behavior implementation

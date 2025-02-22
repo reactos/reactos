@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS HTTP Daemon
+ * PROJECT:     MenuOS HTTP Daemon
  * FILE:        include/http.h
  */
 #ifndef __HTTP_H

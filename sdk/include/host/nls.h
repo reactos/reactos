@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Host Headers
+ * PROJECT:     MenuOS Host Headers
  * LICENSE:     CC0-1.0 (https://spdx.org/licenses/CC0-1.0)
  * PURPOSE:     NLS definitions for host tools
  * COPYRIGHT:   Copyright 2007-2017 Colin Finck (colin@reactos.org)

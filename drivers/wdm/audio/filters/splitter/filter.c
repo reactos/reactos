@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
+ * PROJECT:         MenuOS Kernel Streaming
  * FILE:            drivers/wdm/audio/filters/splitter/filter.c
  * PURPOSE:         Filter File Context Handling
  * PROGRAMMER:      Johannes Anderwald

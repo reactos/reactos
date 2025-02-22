@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Automatic Testing Utility
+ * PROJECT:     MenuOS Automatic Testing Utility
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Class that manages an unidirectional anonymous byte stream pipe
  * COPYRIGHT:   Copyright 2015 Thomas Faber (thomas.faber@reactos.org)

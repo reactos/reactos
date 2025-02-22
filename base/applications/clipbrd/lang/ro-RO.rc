@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Clipboard
+ * PROJECT:     MenuOS Clipboard
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
@@ -44,7 +44,7 @@ BEGIN
     STRING_CLIPFILE  "Element de Clipboard"
     STRING_DELETE_MSG "Eliminare conținut din Clipboard?"
     STRING_DELETE_TITLE "Curățare Clipboard"
-    STRING_FORMAT_NT "Fișiere clipboard pentru ReactOS (*.clp)"
+    STRING_FORMAT_NT "Fișiere clipboard pentru MenuOS (*.clp)"
     STRING_FORMAT_GEN "Fișiere clipboard (*.clp)"
 END
 

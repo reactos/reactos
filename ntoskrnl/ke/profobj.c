@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         MenuOS Kernel
  * FILE:            ntoskrnl/ke/profobj.c
  * PURPOSE:         Kernel Profiling
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)

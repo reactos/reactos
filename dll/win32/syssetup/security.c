@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS system libraries
+ * PROJECT:           MenuOS system libraries
  * PURPOSE:           System setup
  * FILE:              dll/win32/syssetup/security.c
  * PROGRAMER:         Eric Kohl

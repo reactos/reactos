@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS API Tests
+ * PROJECT:         MenuOS API Tests
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
  * PURPOSE:         Tests for GetNetworkParams function
  * PROGRAMMERS:     Peter Hater

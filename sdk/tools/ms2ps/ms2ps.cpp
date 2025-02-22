@@ -1,6 +1,6 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 2004 ReactOS Team
+ *  MenuOS kernel
+ *  Copyright (C) 2004 MenuOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS seh conversion tool
+ * PROJECT:         MenuOS seh conversion tool
  * FILE:            tools/ms2ps/ms2ps.cpp
  * PURPOSE:         Conversion tool from msvc to pseh style seh
  * PROGRAMMER:      Art Yerkes

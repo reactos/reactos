@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS Build Tools [Keyboard Layout Compiler]
+ * PROJECT:         MenuOS Build Tools [Keyboard Layout Compiler]
  * LICENSE:         BSD - See COPYING.BSD in the top level directory
  * FILE:            tools/kbdtool/kbdtool.h
  * PURPOSE:         Main Header File
- * PROGRAMMERS:     ReactOS Foundation
+ * PROGRAMMERS:     MenuOS Foundation
  */
 
 /* INCLUDES *******************************************************************/

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS API Tests
+ * PROJECT:     MenuOS API Tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Tests for UEFI Firmware functions
  * COPYRIGHT:   Copyright 2023 Ratin Gao <ratin@knsoft.org>

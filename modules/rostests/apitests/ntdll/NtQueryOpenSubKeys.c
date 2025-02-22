@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS API tests
+ * PROJECT:     MenuOS API tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Tests for the NtQueryOpenSubKeys API
  * COPYRIGHT:   Copyright 2023 George Bișoc <george.bisoc@reactos.org>
@@ -43,7 +43,7 @@ START_TEST(NtQueryOpenSubKeys)
      * memory address of the object attributes so that it resides in the boundary
      * of the UM memory range so the function lets this NULL parameter
      * slide through until ObOpenObjectByName hits this parameter as being
-     * NULL and returns STATUS_INVALID_PARAMETER. Currently ReactOS follows
+     * NULL and returns STATUS_INVALID_PARAMETER. Currently MenuOS follows
      * the behavior of Windows 10.
      */
     Status = NtQueryOpenSubKeys(NULL, &Subkeys);

@@ -1,7 +1,7 @@
 /*
- * PROJECT:         ReactOS devmgr.dll
+ * PROJECT:         MenuOS devmgr.dll
  * FILE:            dll/win32/devmgr/hwresource.c
- * PURPOSE:         ReactOS Device Manager
+ * PURPOSE:         MenuOS Device Manager
  * PROGRAMMER:      Johannes Anderwald <johannes.anderwald@reactos.org>
  * UPDATE HISTORY:
  *      2005/11/24  Created

@@ -51,7 +51,7 @@ BOOL        g_bModified = FALSE;
 BOOL        g_bNeedsReboot = FALSE;
 INT         g_iItem = 0;
 
-LPCWSTR     g_pszClassName = L"ReactOS Font Substitutes Editor";
+LPCWSTR     g_pszClassName = L"MenuOS Font Substitutes Editor";
 LPCWSTR     g_pszFileHeader = L"Windows Registry Editor Version 5.00";
 
 WCHAR       g_szTitle[MAX_STRING];

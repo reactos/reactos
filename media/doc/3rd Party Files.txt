@@ -1,4 +1,4 @@
-This file contains 3rd party projects which are used by the ReactOS
+This file contains 3rd party projects which are used by the MenuOS
 Files synced with Wine can be found in /media/doc/WINESYNC.txt
 
 Projects are sorted alphabetically by a path.

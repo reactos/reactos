@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS kernel-mode tests
+ * PROJECT:     MenuOS kernel-mode tests
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Kernel-Mode Test Suite Volume Device test
  * COPYRIGHT:   Copyright 2019 Thomas Faber (thomas.faber@reactos.org)

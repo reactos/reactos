@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS kernel-mode tests
+ * PROJECT:     MenuOS kernel-mode tests
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     Kernel-Mode Test Suite Struct alignment tests
  * COPYRIGHT:   Copyright 2018 Mark Jansen (mark.jansen@reactos.org)

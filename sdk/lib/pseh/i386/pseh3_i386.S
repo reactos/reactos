@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         MenuOS system libraries
  * LICENSE:         GNU GPL - See COPYING in the top level directory
  * PURPOSE:         Support library for PSEH3
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)

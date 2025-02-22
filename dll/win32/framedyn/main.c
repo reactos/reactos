@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         MenuOS system libraries
  * FILE:            dll/win32/framedyn/main.c
  * PURPOSE:         framedyn entry point
  * PROGRAMMERS:     Pierre Schweitzer (pierre@reactos.org)

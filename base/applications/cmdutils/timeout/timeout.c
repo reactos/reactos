@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Timeout utility
+ * PROJECT:         MenuOS Timeout utility
  * FILE:            base/applications/cmdutils/timeout/timeout.c
  * PURPOSE:         An enhanced alternative to the Pause command.
  * PROGRAMMERS:     Lee Schroeder (spaceseel at gmail dot com)

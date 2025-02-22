@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Base API Server DLL
+ * PROJECT:         MenuOS Base API Server DLL
  * FILE:            include/reactos/subsys/win/basemsg.h
  * PURPOSE:         Public definitions for communication
  *                  between Base API Clients and Servers

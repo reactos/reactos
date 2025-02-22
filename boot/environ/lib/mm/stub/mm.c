@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
- * PROJECT:         ReactOS UEFI Boot Library
+ * PROJECT:         MenuOS UEFI Boot Library
  * FILE:            boot/environ/lib/mm/stub/mm.c
  * PURPOSE:         Boot Library Memory Manager Skeleton Code
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)

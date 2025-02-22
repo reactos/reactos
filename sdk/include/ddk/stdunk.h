@@ -1,5 +1,5 @@
 /*
-    ReactOS Kernel-Mode COM
+    MenuOS Kernel-Mode COM
     IUnknown implementations
 
     This file is in the public domain.

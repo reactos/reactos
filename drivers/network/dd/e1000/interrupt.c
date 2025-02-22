@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Intel PRO/1000 Driver
+ * PROJECT:     MenuOS Intel PRO/1000 Driver
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Interrupt handlers
  * COPYRIGHT:   2013 Cameron Gutman (cameron.gutman@reactos.org)

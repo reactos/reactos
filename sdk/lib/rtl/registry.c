@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS system libraries
+ * PROJECT:           MenuOS system libraries
  * PURPOSE:           Rtl registry functions
  * FILE:              lib/rtl/registry.c
  * PROGRAMER:         Alex Ionescu (alex.ionescu@reactos.org)

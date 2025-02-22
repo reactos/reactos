@@ -270,10 +270,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRESS_INFO_START "ReactOS, aşağıdaki hizmeti başlatmaya çalışıyor:"
-    IDS_PROGRESS_INFO_STOP "ReactOS, aşağıdaki hizmeti durdurmaya çalışıyor:"
-    IDS_PROGRESS_INFO_PAUSE "ReactOS, aşağıdaki hizmeti duraklatmaya çalışıyor:"
-    IDS_PROGRESS_INFO_RESUME "ReactOS, aşağıdaki hizmeti devam ettirmeye çalışıyor:"
+    IDS_PROGRESS_INFO_START "MenuOS, aşağıdaki hizmeti başlatmaya çalışıyor:"
+    IDS_PROGRESS_INFO_STOP "MenuOS, aşağıdaki hizmeti durdurmaya çalışıyor:"
+    IDS_PROGRESS_INFO_PAUSE "MenuOS, aşağıdaki hizmeti duraklatmaya çalışıyor:"
+    IDS_PROGRESS_INFO_RESUME "MenuOS, aşağıdaki hizmeti devam ettirmeye çalışıyor:"
     IDS_CREATE_SUCCESS "Hizmet, başarıyla oluşturuldu."
     IDS_DELETE_SUCCESS "Hizmet, başarıyla silindi."
     IDS_CREATE_REQ "Yıldızla belirtilen\nyerler zorunludur."

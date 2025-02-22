@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Version Program
+ * PROJECT:     MenuOS Version Program
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Retrieve OS name and simple compatibility information
  * COPYRIGHT:   Copyright 2025 Thamatip Chitpong <thamatip.chitpong@reactos.org>

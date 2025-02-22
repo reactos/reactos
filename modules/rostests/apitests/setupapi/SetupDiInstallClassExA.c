@@ -1,7 +1,7 @@
 /*
  * SetupAPI device class-related functions tests
  *
- * Copyright 2015 Víctor Martínez (victor.martinez@reactos.org)
+ * Copyright 2015 VÃ­ctor MartÃ­nez (victor.martinez@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public Licence as
@@ -145,7 +145,7 @@ static void test_SetupDiInstallClassExA(void)
     }
 
     /* [Version]Signature+Class+ClassGUID;[ClassInstall32.NT]AddReg; [SampleClassAddReg]HKR;*/
-    strcat(inf, "HKR,,,,\"ReactOS Test SetupDiInstallClassExA\"\n");
+    strcat(inf, "HKR,,,,\"MenuOS Test SetupDiInstallClassExA\"\n");
     create_inf_file(inffile, inf);
     StringCbPrintfA(path, sizeof(path), "%s\\%s", CURR_DIR, inffile);
 

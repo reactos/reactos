@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS api tests
+ * PROJECT:         MenuOS api tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         COM interface test for shdocvw classes
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>

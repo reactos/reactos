@@ -1,5 +1,5 @@
 /*
- *  ReactOS Application MDI Child Window
+ *  MenuOS Application MDI Child Window
  *
  *  childwnd.c
  *

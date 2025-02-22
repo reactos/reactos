@@ -35,7 +35,7 @@ END
 /* Information and error messages */
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Narzędzie Zamykania ReactOS\n\
+    IDS_USAGE "Narzędzie Zamykania MenuOS\n\
 \n\
 Sposób użycia: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
        [/m \\\\komputer][/t xxx][/d [p|u:]xx:yy [/c ""komentarz""]]\n\

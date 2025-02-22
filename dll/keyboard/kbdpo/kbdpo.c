@@ -1,6 +1,6 @@
 /*
- * ReactOS Portuguese keyboard layout
- * Copyright (C) 2006 ReactOS
+ * MenuOS Portuguese keyboard layout
+ * Copyright (C) 2006 MenuOS
  * License: LGPL, see: LGPL.txt
  * Based on kbdes, skbdda and skbdfr
  *
@@ -177,7 +177,7 @@ ROSDATA VSC_VK extcode0_to_vk[] = {
   { 0x24, VK_MEDIA_STOP          | KBDEXT },	// Stop
   { 0x2E, VK_VOLUME_DOWN         | KBDEXT },	// Baixar volume
   { 0x30, VK_VOLUME_UP           | KBDEXT },	// Subir volume
-  { 0x32, VK_BROWSER_HOME        | KBDEXT },	// Pagina predefinida do navegador de internet, ou abri-lo se não estiver activo
+  { 0x32, VK_BROWSER_HOME        | KBDEXT },	// Pagina predefinida do navegador de internet, ou abri-lo se nÃ£o estiver activo
   { 0x35, VK_DIVIDE              | KBDEXT },	// Tecla /
   { 0x37, VK_SNAPSHOT            | KBDEXT },	// Tecla de Print Screen
   { 0x38, VK_RMENU               | KBDEXT },	// Tecla Alt
@@ -198,7 +198,7 @@ ROSDATA VSC_VK extcode0_to_vk[] = {
   { 0x65, VK_BROWSER_SEARCH      | KBDEXT },	// Pagina de pesquisa do navegador de internet
   { 0x66, VK_BROWSER_FAVORITES   | KBDEXT },	// Favoritos, not yet implemented
   { 0x67, VK_BROWSER_REFRESH     | KBDEXT },	// Actualizar pagina do navegador de internet
-  { 0x68, VK_BROWSER_STOP        | KBDEXT },	// Parar navegação na internet internet
+  { 0x68, VK_BROWSER_STOP        | KBDEXT },	// Parar navegaÃ§Ã£o na internet internet
   { 0x69, VK_BROWSER_FORWARD     | KBDEXT },	// Frente no historico de paginas no navegador de internet
   { 0x6a, VK_BROWSER_BACK        | KBDEXT },	// Atras no historico de paginas no navegador de internet (Backspace)
   { 0x6b, VK_LAUNCH_APP1         | KBDEXT },	// Tecla Meu Computador
@@ -301,15 +301,15 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { TIDLE_CIRC,		0, {   WCH_DEAD,   WCH_DEAD} },
   {   VK_EMPTY,		0, { TIDLE_CHAR,  CIRC_CHAR} },
 
-  { CCEDIL,		  CAPLOK, {       0xe7,       0xc7} }, // ç
+  { CCEDIL,		  CAPLOK, {       0xe7,       0xc7} }, // Ã§
   { QUOTE,		0, {       0xb4,        '?'} }, // ' ?
   { BACKSLASH_BAR,	0, {       0x5c,       0x7c} }, // \ |
-  { CLASSIC_QUOTES,	0, {       0xab,       0xbb} }, // « »
+  { CLASSIC_QUOTES,	0, {       0xab,       0xbb} }, // Â« Â»
 
   { ACUTE_GRAVE,  	0, {   WCH_DEAD,   WCH_DEAD} }, // ` '
   {    VK_EMPTY,  	0, { ACUTE_CHAR, GRAVE_CHAR} },
 
-  { ORDERN_SUPERSCRIPT,	0, {       0xBA,       0xAA} }, // º ª
+  { ORDERN_SUPERSCRIPT,	0, {       0xBA,       0xAA} }, // Âº Âª
   { MATH_RELATE,	0, {        '<',        '>'} },
   { VK_OEM_COMMA,	0, {        ',',        ';'} },
   { VK_OEM_PERIOD,	0, {        '.',        ':'} },
@@ -367,19 +367,19 @@ ROSDATA VK_TO_WCHAR_TABLE vk_to_wchar_master_table[] = {
 
 ROSDATA DEADKEY  deadkey[] =
 {
-            //*´* DEADKEY	00B4
-            { DEADTRANS(L'a', 0xb4, 0xe1, 0x00) }, // letra a com ´
-            { DEADTRANS(L'A', 0xb4, 0xc1, 0x00) }, // letra A com ´
-            { DEADTRANS(L'e', 0xb4, 0xe9, 0x00) }, // letra e com ´
-            { DEADTRANS(L'E', 0xb4, 0xc9, 0x00) }, // letra E com ´
-            { DEADTRANS(L'i', 0xb4, 0xed, 0x00) }, // letra i com ´
-            { DEADTRANS(L'I', 0xb4, 0xcd, 0x00) }, // letra I com ´
-            { DEADTRANS(L'o', 0xb4, 0xf3, 0x00) }, // letra o com ´
-            { DEADTRANS(L'O', 0xb4, 0xd3, 0x00) }, // letra O com ´
-            { DEADTRANS(L'u', 0xb4, 0xfa, 0x00) }, // letra u com ´
-            { DEADTRANS(L'U', 0xb4, 0xda, 0x00) }, // letra U com ´
-            { DEADTRANS(L'y', 0xb4, 0xfd, 0x00) }, // letra y com ´
-            { DEADTRANS(0x20, 0xb4, 0xb4, 0x00) }, // letra 'space' (0x0020) com ´
+            //*Â´* DEADKEY	00B4
+            { DEADTRANS(L'a', 0xb4, 0xe1, 0x00) }, // letra a com Â´
+            { DEADTRANS(L'A', 0xb4, 0xc1, 0x00) }, // letra A com Â´
+            { DEADTRANS(L'e', 0xb4, 0xe9, 0x00) }, // letra e com Â´
+            { DEADTRANS(L'E', 0xb4, 0xc9, 0x00) }, // letra E com Â´
+            { DEADTRANS(L'i', 0xb4, 0xed, 0x00) }, // letra i com Â´
+            { DEADTRANS(L'I', 0xb4, 0xcd, 0x00) }, // letra I com Â´
+            { DEADTRANS(L'o', 0xb4, 0xf3, 0x00) }, // letra o com Â´
+            { DEADTRANS(L'O', 0xb4, 0xd3, 0x00) }, // letra O com Â´
+            { DEADTRANS(L'u', 0xb4, 0xfa, 0x00) }, // letra u com Â´
+            { DEADTRANS(L'U', 0xb4, 0xda, 0x00) }, // letra U com Â´
+            { DEADTRANS(L'y', 0xb4, 0xfd, 0x00) }, // letra y com Â´
+            { DEADTRANS(0x20, 0xb4, 0xb4, 0x00) }, // letra 'space' (0x0020) com Â´
 
             //*`* DEADKEY	0060
             { DEADTRANS(L'a', 0x60, 0xe0, 0x00) }, // letra a com `
@@ -511,7 +511,7 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x4b, L"Esquerda" },
   { 0x4d, L"Direita" },
 
-  { 0x54, L"<ReactOS>" },
+  { 0x54, L"<MenuOS>" },
   { 0x56, L"Ajuda" },
   { 0x5b, L"Windows Esquerda" },
   { 0x5c, L"Windows Direita" },

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS
+ * PROJECT:     MenuOS
  * LICENSE:     GPL - See COPYING in the top level directory
  * PURPOSE:     Keyboard layout testapp
  * COPYRIGHT:   Copyright 2007 Saveliy Tretiakov

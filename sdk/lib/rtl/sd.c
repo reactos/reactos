@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS system libraries
+ * PROJECT:           MenuOS system libraries
  * PURPOSE:           Security descriptor functions
  * FILE:              lib/rtl/sd.c
  * PROGRAMER:         David Welch <welch@cwcom.net>

@@ -732,7 +732,7 @@ static	void	Control_DoWindow(CPanel* panel, HWND hWnd, HINSTANCE hInst)
 #else
 static	void	Control_DoWindow(CPanel* panel, HWND hWnd, HINSTANCE hInst)
 {
-    /* NOTE: If Explorer shell is not available, use ReactOS's alternative file browser instead */
+    /* NOTE: If Explorer shell is not available, use MenuOS's alternative file browser instead */
     ShellExecuteW(NULL,
                   L"open",
                   GetShellWindow() ? L"explorer.exe" : L"filebrowser.exe",

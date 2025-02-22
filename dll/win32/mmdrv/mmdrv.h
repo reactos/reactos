@@ -1,13 +1,13 @@
 /*
  *
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS Multimedia
+ * PROJECT:              MenuOS Multimedia
  * FILE:                 dll/win32/mmdrv/mmdrv.h
  * PURPOSE:              Multimedia User Mode Driver (header)
  * PROGRAMMER:           Andrew Greenwood
  *                       Aleksey Bragin
  * UPDATE HISTORY:
- *                       Jan 30, 2004: Imported into ReactOS tree
+ *                       Jan 30, 2004: Imported into MenuOS tree
  *                       Jan 10, 2007: Rewritten and tidied up
  */
 

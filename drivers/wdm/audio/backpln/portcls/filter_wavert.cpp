@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
+ * PROJECT:         MenuOS Kernel Streaming
  * FILE:            drivers/wdm/audio/backpln/portcls/filter_wavert.cpp
  * PURPOSE:         portcls wave RT filter
  * PROGRAMMER:      Johannes Anderwald

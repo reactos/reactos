@@ -1,5 +1,5 @@
 /*
- *  ReactOS Floppy Driver
+ *  MenuOS Floppy Driver
  *  Copyright (C) 2004, Vizzini (vizzini@plasmic.com)
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -16,7 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * PROJECT:         ReactOS Floppy Driver
+ * PROJECT:         MenuOS Floppy Driver
  * FILE:            hardware.c
  * PURPOSE:         FDC Hardware control routines
  * PROGRAMMER:      Vizzini (vizzini@plasmic.com)
@@ -30,7 +30,7 @@
  *     - These routines are generally designed to be small, atomic operations.  They
  *       do not wait for interrupts, deal with DMA, or do any other Windows-
  *       specific things, unless they have to.
- *     - If you compare this to Microsoft samples or to the old ReactOS driver,
+ *     - If you compare this to Microsoft samples or to the old MenuOS driver,
  *       or even to the linux driver, you will notice a big difference:  we use
  *       a system thread to drain the queue.  This is because it's illegal to block
  *       in a dispatch routine, unless you're a top-level driver (which we absolutely

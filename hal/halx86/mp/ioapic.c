@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:             See COPYING in the top level directory
- * PROJECT:               ReactOS kernel
+ * PROJECT:               MenuOS kernel
  * FILE:                  hal/halx86/mp/ioapic.c
  * PURPOSE:
  * PROGRAMMER:

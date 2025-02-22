@@ -69,7 +69,7 @@ BEGIN
     IDS_TOOLTIP_SEEKFORW "Przewiń do przodu"
     IDS_TOOLTIP_FORWARD "Przeskocz do przodu"
     IDS_TOOLTIP_PAUSE "Pauza"
-    IDS_APPTITLE "Odtwarzacz multimedialny ReactOS"
+    IDS_APPTITLE "Odtwarzacz multimedialny MenuOS"
     IDS_PLAY "Odtwórz"
     IDS_DEFAULTMCIERRMSG "Brak dostępnego opisu dla tego błędu."
 END

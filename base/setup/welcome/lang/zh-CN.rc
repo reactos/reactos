@@ -8,9 +8,9 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 /* Default settings */
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS - 欢迎"
-    IDS_DEFAULT_TOPIC_TITLE "ReactOS"
-    IDS_DEFAULT_TOPIC_DESC "欢迎使用 ReactOS 操作系统。\n\n 请点击左边的小标题以继续。"
+    IDS_APPTITLE "MenuOS - 欢迎"
+    IDS_DEFAULT_TOPIC_TITLE "MenuOS"
+    IDS_DEFAULT_TOPIC_DESC "欢迎使用 MenuOS 操作系统。\n\n 请点击左边的小标题以继续。"
     IDS_FONTNAME "宋体"
     IDS_CHECKTEXT "再次显示此对话框(&S)"
     IDS_CLOSETEXT "退出(&Q)"
@@ -19,7 +19,7 @@ END
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_BUTTON0 "安装 &ReactOS"
+    IDS_TOPIC_BUTTON0 "安装 &MenuOS"
     IDS_TOPIC_BUTTON1 "浏览 &CD"
     IDS_TOPIC_BUTTON2 "退出(&Q)"
 END
@@ -27,7 +27,7 @@ END
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_TITLE0 "安装 ReactOS"
+    IDS_TOPIC_TITLE0 "安装 MenuOS"
     IDS_TOPIC_TITLE1 "浏览 CD"
     IDS_TOPIC_TITLE2 "退出"
 END
@@ -35,7 +35,7 @@ END
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_DESC0 "重新安装 ReactOS 或更新你的 ReactOS。"
+    IDS_TOPIC_DESC0 "重新安装 MenuOS 或更新你的 MenuOS。"
     IDS_TOPIC_DESC1 "浏览此 CD 的内容。"
     IDS_TOPIC_DESC2 "点击退出应用程序。"
 END

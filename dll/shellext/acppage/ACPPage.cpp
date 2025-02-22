@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Compatibility Layer Shell Extension
+ * PROJECT:     MenuOS Compatibility Layer Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     acppage entrypoint
  * COPYRIGHT:   Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)

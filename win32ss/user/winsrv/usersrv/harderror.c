@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS User API Server DLL
+ * PROJECT:     MenuOS User API Server DLL
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Hard errors support.
  * COPYRIGHT:   Copyright 2007-2018 Dmitry Philippov (shedon@mail.ru)
@@ -540,7 +540,7 @@ UserpFormatMessages(
     {
         /*
          * Fall back to unknown hard error format string.
-         * NOTE: The value used here is ReactOS-specific: it allows specifying
+         * NOTE: The value used here is MenuOS-specific: it allows specifying
          * the exact hard error status value and the parameters, contrary to
          * the one on Windows that only says: "Unknown Hard Error".
          */

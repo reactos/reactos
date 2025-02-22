@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          MenuOS kernel
  * PURPOSE:          Keyboard functions
  * FILE:             win32ss/user/ntuser/keyboard.c
  * PROGRAMERS:       Casper S. Hornstrup (chorns@users.sourceforge.net)

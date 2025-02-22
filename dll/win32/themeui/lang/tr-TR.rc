@@ -16,8 +16,8 @@ BEGIN
     IDS_PUMPKIN "Kabak"
     IDS_RAIN "Yağmurlu Gün"
     IDS_RWB "Red, White, and Blue"
-    IDS_CLASSIC "ReactOS Klasik"
-    IDS_STANDARD "ReactOS Standart"
+    IDS_CLASSIC "MenuOS Klasik"
+    IDS_STANDARD "MenuOS Standart"
     IDS_ROSE "Gül"
     IDS_SAND "Kum" //Desert
     IDS_SLATE "Kayağan Taş"

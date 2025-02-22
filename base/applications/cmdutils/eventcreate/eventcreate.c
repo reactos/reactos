@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS EventCreate Command
+ * PROJECT:         MenuOS EventCreate Command
  * FILE:            base/applications/cmdutils/eventcreate/eventcreate.c
  * PURPOSE:         Allows reporting custom user events in event logs,
  *                  by using the old-school NT <= 2k3 logging API.
@@ -56,7 +56,7 @@
  *    contains the identity template for all IDs from 0 to 65535, making it a
  *    large file.
  *
- *    For ReactOS I want to have a compromise between disk space and usage
+ *    For MenuOS I want to have a compromise between disk space and usage
  *    flexibility, therefore I choose to include as well the identity template
  *    for all IDs from 0 to 65535 included, as done by Powershell. If somebody
  *    wants to change these limits, one has to perform the following steps:
@@ -96,7 +96,7 @@
  * Windows' EventCreate.exe command   : ID_min = 1 and ID_max = 1000
  * Powershell "Write-EventLog" command: ID_min = 0 and ID_max = 65535
  *
- * ReactOS' EventCreate.exe command uses the same limits as Powershell.
+ * MenuOS' EventCreate.exe command uses the same limits as Powershell.
  */
 #define EVENT_ID_MIN    0
 #define EVENT_ID_MAX    65535
@@ -206,7 +206,7 @@ InstallEventSource(
     /*
      * Retrieve the full path of the current running executable.
      * We need it to install our custom event source.
-     * - In case of success, try to replace the ReactOS installation path
+     * - In case of success, try to replace the MenuOS installation path
      *   (if present in the executable path) by %SystemRoot%.
      * - In case of failure, use a default path.
      */
@@ -1090,7 +1090,7 @@ int wmain(int argc, WCHAR* argv[])
                    1,
                    sizeof(szEventType), &szEventType),
 
-        /* Event category (ReactOS additional option) */
+        /* Event category (MenuOS additional option) */
         NEW_OPT(L"C", TYPE_U32,
                 0,
                 1,

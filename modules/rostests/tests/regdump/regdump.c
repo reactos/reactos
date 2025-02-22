@@ -1,5 +1,5 @@
 /*
- *  ReactOS regedit
+ *  MenuOS regedit
  *
  *  regdump.c
  *

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         MenuOS kernel
  * FILE:            ntoskrnl/ex/i386/ioport.S
  * PURPOSE:         FASTCALL Interlocked Functions
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)

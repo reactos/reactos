@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS EventLog Service
+ * PROJECT:         MenuOS EventLog Service
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/services/eventlog/eventlog.c
  * PURPOSE:         Event logging service

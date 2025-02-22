@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS Win32k subsystem
+ * PROJECT:          MenuOS Win32k subsystem
  * PURPOSE:          Message queues
  * FILE:             win32ss/user/ntuser/msgqueue.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -466,14 +466,14 @@ ClearMsgBitsMask(PTHREADINFO pti, UINT MessageBits)
    {
       if (--pti->nCntsQBits[QSRosPostMessage] == 0) ClrMask |= QS_POSTMESSAGE;
    }
-   if (MessageBits & QS_TIMER) // ReactOS hard coded.
+   if (MessageBits & QS_TIMER) // MenuOS hard coded.
    {  // Handle timer bits here.
       if ( pti->cTimersReady )
       {
          if (--pti->cTimersReady == 0) ClrMask |= QS_TIMER;
       }
    }
-   if (MessageBits & QS_PAINT) // ReactOS hard coded.
+   if (MessageBits & QS_PAINT) // MenuOS hard coded.
    {  // Handle paint bits here.
       if ( pti->cPaintsReady )
       {

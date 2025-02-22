@@ -329,7 +329,7 @@ BEGIN
     BEGIN
         MENUITEM "Guida in linea", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Informazioni su ReactOS Calc", IDM_HELP_ABOUT
+        MENUITEM "Informazioni su MenuOS Calc", IDM_HELP_ABOUT
     END
 END
 
@@ -362,7 +362,7 @@ BEGIN
     BEGIN
         MENUITEM "Guida in linea", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Informazioni su ReactOS Calc", IDM_HELP_ABOUT
+        MENUITEM "Informazioni su MenuOS Calc", IDM_HELP_ABOUT
     END
 END
 
@@ -385,7 +385,7 @@ BEGIN
     BEGIN
         MENUITEM "Guida in linea", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Informazioni su ReactOS Calc", IDM_HELP_ABOUT
+        MENUITEM "Informazioni su MenuOS Calc", IDM_HELP_ABOUT
     END
 END
 
@@ -400,7 +400,7 @@ END
 /* About */
 STRINGTABLE
 BEGIN
-    IDS_CALC_NAME "Calcolatrice ReactOS"
+    IDS_CALC_NAME "Calcolatrice MenuOS"
     IDS_AUTHOR "Scritto da Carlo Bramini"
 END
 

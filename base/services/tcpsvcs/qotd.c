@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS simple TCP/IP services
+ * PROJECT:     MenuOS simple TCP/IP services
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/services/tcpsvcs/qotd.c
  * PURPOSE:     Sends a random quote to the client

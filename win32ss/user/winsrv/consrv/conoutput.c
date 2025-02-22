@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Console Server DLL
+ * PROJECT:         MenuOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/conoutput.c
  * PURPOSE:         General Console Output Functions
  * PROGRAMMERS:     Jeffrey Morlan
@@ -83,7 +83,7 @@ CON_API(SrvSetConsolePalette,
     // and otherwise it returns FALSE + sets last error to invalid handle.
     // I think it's ridiculous, because if you are in text mode, simulating
     // a change of VGA palette via DAC registers (done by a call to SetConsolePalette)
-    // cannot be done... So I allow it in ReactOS !
+    // cannot be done... So I allow it in MenuOS !
     /*
     Status = ConSrvGetGraphicsBuffer(ProcessData,
                                      SetPaletteRequest->OutputHandle,
@@ -424,7 +424,7 @@ DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
     if (!NT_SUCCESS(Status)) return Status;
 
     /*
-     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * For optimization purposes, Windows (and hence MenuOS, too, for
      * compatibility reasons) uses a static buffer if no more than eighty
      * bytes are written. Otherwise a new buffer is used.
      * The client-side expects that we know this behaviour.
@@ -508,7 +508,7 @@ CON_API(SrvReadConsoleOutput,
                ConioRectHeight(&ReadOutputRequest->ReadRegion);
 
     /*
-     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * For optimization purposes, Windows (and hence MenuOS, too, for
      * compatibility reasons) uses a static buffer if no more than one
      * cell is read. Otherwise a new buffer is used.
      * The client-side expects that we know this behaviour.
@@ -589,7 +589,7 @@ CON_API(SrvWriteConsoleOutput,
     if (!WriteOutputRequest->UseVirtualMemory)
     {
         /*
-         * For optimization purposes, Windows (and hence ReactOS, too, for
+         * For optimization purposes, Windows (and hence MenuOS, too, for
          * compatibility reasons) uses a static buffer if no more than one
          * cell is written. Otherwise a new buffer is used.
          * The client-side expects that we know this behaviour.
@@ -668,7 +668,7 @@ CON_API(SrvWriteConsole,
     DPRINT("SrvWriteConsole\n");
 
     /*
-     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * For optimization purposes, Windows (and hence MenuOS, too, for
      * compatibility reasons) uses a static buffer if no more than eighty
      * bytes are written. Otherwise a new buffer is used.
      * The client-side expects that we know this behaviour.
@@ -737,7 +737,7 @@ CON_API(SrvReadConsoleOutputString,
     }
 
     /*
-     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * For optimization purposes, Windows (and hence MenuOS, too, for
      * compatibility reasons) uses a static buffer if no more than eighty
      * bytes are read. Otherwise a new buffer is used.
      * The client-side expects that we know this behaviour.
@@ -825,7 +825,7 @@ CON_API(SrvWriteConsoleOutputString,
     }
 
     /*
-     * For optimization purposes, Windows (and hence ReactOS, too, for
+     * For optimization purposes, Windows (and hence MenuOS, too, for
      * compatibility reasons) uses a static buffer if no more than eighty
      * bytes are written. Otherwise a new buffer is used.
      * The client-side expects that we know this behaviour.

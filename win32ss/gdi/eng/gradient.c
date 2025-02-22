@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
+ * PROJECT:           MenuOS kernel
  * PURPOSE:           GDI Driver Gradient Functions
  * FILE:              win32ss/gdi/eng/gradient.c
  * PROGRAMER:         Thomas Weidenmueller

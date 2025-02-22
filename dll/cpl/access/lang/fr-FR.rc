@@ -13,7 +13,7 @@ BEGIN
     AUTOCHECKBOX "&Utiliser les touches rémanentes", IDC_STICKY_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Paramètres", IDC_STICKY_BUTTON, 144, 49, 90, 14
     GROUPBOX "Touches filtres", -1, 6, 79, 234, 62
-    LTEXT "Utilisez les touches filtres si vous voulez que ReactOS ignore les frappes brèves ou répétées ou si vous voulez diminuer la fréquence de répétition.",
+    LTEXT "Utilisez les touches filtres si vous voulez que MenuOS ignore les frappes brèves ou répétées ou si vous voulez diminuer la fréquence de répétition.",
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "Utiliser les touches &filtre", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "P&aramètres", IDC_FILTER_BUTTON, 144, 121, 90, 14
@@ -32,7 +32,7 @@ CAPTION "Son"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Sons visuels", -1, 6, 11, 234, 98
-    LTEXT "Utilisez les sons visuels si vous voulez que ReactOS génère un avertissement visuel lorsque votre système émet un son.",
+    LTEXT "Utilisez les sons visuels si vous voulez que MenuOS génère un avertissement visuel lorsque votre système émet un son.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Utiliser les &sons visuels", IDC_SENTRY_BOX, 12, 49, 90, 14
     LTEXT "Utiliser l'avertissement suivant :", IDC_SENTRY_TEXT, 12, 72, 222, 11
@@ -50,7 +50,7 @@ CAPTION "Affichage"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Contraste élevé", -1, 6, 11, 234, 62
-    LTEXT "Utilisez cette option si vous voulez que ReactOS utilise les couleurs et les polices conçues pour une lecture facilitée.",
+    LTEXT "Utilisez cette option si vous voulez que MenuOS utilise les couleurs et les polices conçues pour une lecture facilitée.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Utiliser un contraste élevé", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Paramètres", IDC_CONTRAST_BUTTON, 144, 49, 90, 14

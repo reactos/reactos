@@ -2,7 +2,7 @@
  * [ maze ] ...
  *
  * modified:  [ 03-08-15 ] Ge van Geldorp <ge@gse.nl>
- *        ported to ReactOS
+ *        ported to MenuOS
  * modified:  [ 94-10-8 ] Ge van Geldorp <Ge.vanGeldorp@lr.tudelft.nl>
  *        ported to MS Windows
  * modified:  [ 3-7-93 ]  Jamie Zawinski <jwz@lucid.com>
@@ -588,7 +588,7 @@ static BOOL OnCreate(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
     bw = (size > 6 ? 3 : (size - 1) / 2);
 
 #if 0
-    /* FIXME Pattern brushes not yet implemented in ReactOS */
+    /* FIXME Pattern brushes not yet implemented in MenuOS */
     {
         static long grayPattern [] = {
             0x55555555,

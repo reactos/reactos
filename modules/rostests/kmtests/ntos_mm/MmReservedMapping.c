@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS kernel-mode tests
+ * PROJECT:     MenuOS kernel-mode tests
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Kernel-Mode Test Suite Reserved Mapping test
  * COPYRIGHT:   Copyright 2015,2023 Thomas Faber (thomas.faber@reactos.org)
@@ -115,7 +115,7 @@ ValidateMapping(
 
     if (g_IsReactOS || g_OsVersion >= 0x0600)
     {
-        /* On ReactOS and on Vista+ the size is stored in
+        /* On MenuOS and on Vista+ the size is stored in
          * the NextEntry field of a MMPTE_LIST structure */
 #ifdef _M_IX86
         ExpectedValue = (TotalPtes + 2) << 12;

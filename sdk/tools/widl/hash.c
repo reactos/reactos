@@ -544,7 +544,7 @@ unsigned int lhash_val_of_name_sys( syskind_t skind, LCID lcid, LPCSTR lpStr)
   case LANG_SAMI:       case LANG_UPPER_SORBIAN: case LANG_TSWANA:
   case LANG_XHOSA:      case LANG_ZULU:       case LANG_WELSH:
   case LANG_BRETON:     case LANG_SCOTTISH_GAELIC: case LANG_NEUTRAL:
-/* some languages not in all windows versions or ReactOS */
+/* some languages not in all windows versions or MenuOS */
 #ifdef LANG_MANX_GAELIC
   case LANG_MANX_GAELIC:
 #endif

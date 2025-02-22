@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS API tests
+ * PROJECT:     MenuOS API tests
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Test for SEH
  * COPYRIGHT:   Copyright 2020 Timo Kreuzer <timo.kreuzer@reactos.org>

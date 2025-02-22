@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Storport Driver
+ * PROJECT:     MenuOS Storport Driver
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Storport helper functions
  * COPYRIGHT:   Copyright 2017 Eric Kohl (eric.kohl@reactos.org)

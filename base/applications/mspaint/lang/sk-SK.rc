@@ -1,5 +1,5 @@
 /*
- * PROJECT:     PAINT for ReactOS
+ * PROJECT:     PAINT for MenuOS
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Slovak resource file
  * TRANSLATOR:  Copyright 2009 Mário Kačmár aka Kario <kario@szm.sk>
@@ -234,7 +234,7 @@ STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME "Skicár"
     IDS_WINDOWTITLE "%s - Skicár"
-    IDS_INFOTITLE "Skicár systému ReactOS"
+    IDS_INFOTITLE "Skicár systému MenuOS"
     IDS_INFOTEXT "Dostupný za podmienok GNU Lesser General Public License (LGPL, viď www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Chcete uložiť vykonané zmeny do %s?"
     IDS_DEFAULTFILENAME "Bez názvu"

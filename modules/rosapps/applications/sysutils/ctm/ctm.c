@@ -5,14 +5,14 @@
    Written by: Aleksey Bragin (aleksey@reactos.org)
 
    Most of the code dealing with getting system parameters is taken from
-   ReactOS Task Manager written by Brian Palmer (brianp@reactos.org)
+   MenuOS Task Manager written by Brian Palmer (brianp@reactos.org)
 
-   Localization features added by Hervé Poussineau (hpoussin@reactos.org)
+   Localization features added by HervÃ© Poussineau (hpoussin@reactos.org)
 
    History:
     24 October 2004 - added localization features
 	09 April 2003 - v0.1, fixed bugs, added features, ported to mingw
-   	20 March 2003 - v0.03, works good under ReactOS, and allows process
+   	20 March 2003 - v0.03, works good under MenuOS, and allows process
 			killing
 	18 March 2003 - Initial version 0.01, doesn't work under RectOS
 

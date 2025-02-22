@@ -1,5 +1,5 @@
 /*
- * PROJECT:        ReactOS Kernel
+ * PROJECT:        MenuOS Kernel
  * LICENSE:        GNU GPLv2 only as published by the Free Software Foundation
  * PURPOSE:        To Implement AHCI Miniport driver targeting storport NT 5.2
  * PROGRAMMERS:    Aman Priyadarshi (aman.eureka@gmail.com)

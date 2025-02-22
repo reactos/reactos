@@ -1,6 +1,6 @@
 /*
- *  ReactOS kill
- *  Copyright (C) 2003 ReactOS Team
+ *  MenuOS kill
+ *  Copyright (C) 2003 MenuOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kill.exe
+ * PROJECT:         MenuOS kill.exe
  * FILE:            apps/utils/kill/kill.c
  * PURPOSE:         Kill a running Process
  * PROGRAMMER:      Steven Edwards (Steven_Ed4153@yahoo.com)

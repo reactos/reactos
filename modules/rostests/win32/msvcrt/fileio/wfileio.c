@@ -1,5 +1,5 @@
 /*
- *  ReactOS test program -
+ *  MenuOS test program -
  *
  *  wfileio.c
  *

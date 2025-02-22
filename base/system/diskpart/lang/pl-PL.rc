@@ -3,7 +3,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 /* Basic application information */
 STRINGTABLE
 BEGIN
-    IDS_APP_HEADER "ReactOS DiskPart"
+    IDS_APP_HEADER "MenuOS DiskPart"
     IDS_APP_USAGE "\nInterpreter partycjonowania dysku.\n\n\
 Sposób użycia: DISKPART [/S nazwa_pliku] [/T limit_czasu] [/?]\n\n\
 /S nazwa_pliku\tUruchamia podany skrypt.\n\

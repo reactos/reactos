@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS 'General' Shim library
+ * PROJECT:     MenuOS 'General' Shim library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Test shim used to verify the inner working of the shim engine
  * COPYRIGHT:   Copyright 2019 Mark Jansen (mark.jansen@reactos.org)

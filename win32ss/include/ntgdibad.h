@@ -33,7 +33,7 @@
  *                              are the ICM and Metafile APIs, which can simply
  *                              be removed and added into gdi32.
  * - Does not exist: GDI Shared Objects. This is by far the hardest case. This
- *                                       class cannot be fixed until ReactOS
+ *                                       class cannot be fixed until MenuOS
  *                                       has a working Shared GDI Object table
  *                                       and a DC_ATTR structure in which the
  *                                       attributes, selection and deletion of

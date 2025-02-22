@@ -2,7 +2,7 @@
  * test.h
  *
  * This file is a combination of a couple different headers
- * from ReactOS's include/ folder, and a little bit of custom
+ * from MenuOS's include/ folder, and a little bit of custom
  * hacking as well for the purpose of testing sdkparse.
  *
  *  THIS SOFTWARE IS NOT COPYRIGHTED

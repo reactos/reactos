@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS runonce.exe
+ * PROJECT:         MenuOS runonce.exe
  * FILE:            base/system/runonce/runonce.c
  * PROGRAMMER:      Dmitry Chapyshev (dmitry@reactos.org)
  */

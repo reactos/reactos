@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS WinSock 2 DLL
+ * PROJECT:     MenuOS WinSock 2 DLL
  * FILE:        dll/win32/ws2help/context.c
  * PURPOSE:     WinSock 2 DLL header
  */

@@ -1,4 +1,4 @@
-/* ReactOS PSDK/DDK
+/* MenuOS PSDK/DDK
 
 This file is in the public domain.
 

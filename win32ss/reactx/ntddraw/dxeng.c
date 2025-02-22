@@ -1,5 +1,5 @@
 /*
- * PROJECT:          ReactOS Win32 Subsystem
+ * PROJECT:          MenuOS Win32 Subsystem
  * LICENSE:          GPL - See COPYING in the top level directory
  * FILE:             win32ss/reactx/ntddraw/dxeng.c
  * PURPOSE:          Implementation of DxEng functions
@@ -171,7 +171,7 @@ DxEngUnlockDC(PDC pDC)
 *
 * @remarks.
 * It is being used in various ntuser* functions and ntgdi*
-* ReactOS specific: It is not in use yet?
+* MenuOS specific: It is not in use yet?
 *SystemResourcesList
 *--*/
 BOOLEAN
@@ -194,7 +194,7 @@ DxEngLockShareSem(VOID)
 * This function returns TRUE no matter what.
 *
 * @remarks.
-* ReactOS specific: It is not in use yet?
+* MenuOS specific: It is not in use yet?
 *
 *--*/
 BOOLEAN
@@ -272,7 +272,7 @@ DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Test)
 * Returns the data we requested
 *
 * @remarks.
-* ReactOS specific: Implementation is incomplete, I do not save the value into the hdev yet.
+* MenuOS specific: Implementation is incomplete, I do not save the value into the hdev yet.
 *
 *--*/
 DWORD_PTR
@@ -599,7 +599,7 @@ BOOLEAN
 APIENTRY
 DxEngNUIsTermSrv(VOID)
 {
-    /* FIXME: ReactOS does not suport terminal server yet, we can not check if we got connections or not */
+    /* FIXME: MenuOS does not suport terminal server yet, we can not check if we got connections or not */
     UNIMPLEMENTED;
     return FALSE;
 }

@@ -1,7 +1,7 @@
 /* tcpServer.c
  *
  * Simple Winsock TCP server test.
- * Later will be used as base for ReactOS telnetd
+ * Later will be used as base for MenuOS telnetd
  *
  * HISTORY:
  * 6-15-02 - Added Winsock support to UNIX tcp test

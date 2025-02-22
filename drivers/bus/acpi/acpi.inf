@@ -8,7 +8,7 @@ Signature  = "$Windows NT$"
 LayoutFile = layout.inf
 Class      = System
 ClassGUID  = {4D36E97D-E325-11CE-BFC1-08002BE10318}
-Provider   = %ReactOS%
+Provider   = %MenuOS%
 DriverVer  = 10/11/2005,1.01.0.0
 
 [DestinationDirs]
@@ -61,7 +61,7 @@ LoadOrderGroup = System Bus Extender
 
 [Strings]
 ; Non-localizable
-ReactOS = "ReactOS Project"
+MenuOS = "MenuOS Project"
 
 ; Localizable
 GenericMfg = "(Generic system devices)"

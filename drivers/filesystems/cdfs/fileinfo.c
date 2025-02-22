@@ -466,7 +466,7 @@ _Function_class_(FAST_IO_QUERY_BASIC_INFO)
 _IRQL_requires_same_
 _Success_(return != FALSE)
 BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 CdFastQueryBasicInfo (
     _In_ PFILE_OBJECT FileObject,
     _In_ BOOLEAN Wait,
@@ -589,7 +589,7 @@ _Function_class_(FAST_IO_QUERY_STANDARD_INFO)
 _IRQL_requires_same_
 _Success_(return != FALSE)
 BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 CdFastQueryStdInfo (
     _In_ PFILE_OBJECT FileObject,
     _In_ BOOLEAN Wait,
@@ -722,7 +722,7 @@ _Function_class_(FAST_IO_QUERY_NETWORK_OPEN_INFO)
 _IRQL_requires_same_
 _Success_(return != FALSE)
 BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 CdFastQueryNetworkInfo (
     _In_ PFILE_OBJECT FileObject,
     _In_ BOOLEAN Wait,
@@ -1277,7 +1277,7 @@ Return Value:
     PUNICODE_STRING NameToUse;
     ULONG DirentOffset;
 
-    COMPOUND_PATH_ENTRY CompoundPathEntry = {{0}};/* ReactOS Change: GCC "missing braces around initializer" */
+    COMPOUND_PATH_ENTRY CompoundPathEntry = {{0}};/* MenuOS Change: GCC "missing braces around initializer" */
     FILE_ENUM_CONTEXT FileContext;
 
     PFCB ParentFcb = NULL;
@@ -1428,7 +1428,7 @@ Return Value:
         if (CleanupFileLookup) {
 
             CdCleanupDirContext( IrpContext, &DirContext );
-            CdCleanupDirent( IrpContext, &Dirent );/* ReactOS Change: GCC "passing argument 1 from incompatible pointer type" */
+            CdCleanupDirent( IrpContext, &Dirent );/* MenuOS Change: GCC "passing argument 1 from incompatible pointer type" */
 
         } else if (CleanupDirectoryLookup) {
 

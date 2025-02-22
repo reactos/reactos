@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS user32.dll
+ * PROJECT:         MenuOS user32.dll
  * FILE:            win32ss/user/user32/misc/imm.c
  * PURPOSE:         User32.dll Imm functions
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
@@ -932,7 +932,7 @@ LRESULT ImeWnd_OnImeSetContext(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
 /* The window procedure of the default IME window */
 /* Win: ImeWndProcWorker(pWnd, msg, wParam, lParam, !unicode) */
 LRESULT WINAPI
-ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode) // ReactOS
+ImeWndProc_common(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL unicode) // MenuOS
 {
     PWND pWnd;
     PIMEUI pimeui;

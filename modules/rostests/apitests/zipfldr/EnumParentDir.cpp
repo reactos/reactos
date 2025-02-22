@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS api tests
+ * PROJECT:     MenuOS api tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Test the result of enumerating over a folder with a zip in it
  * COPYRIGHT:   Copyright 2020-2023 Mark Jansen (mark.jansen@reactos.org)

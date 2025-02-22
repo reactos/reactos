@@ -9,8 +9,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON            IDI_APPICON, IDC_STATIC, 14, 14, 20, 20
     LTEXT           "Sistem Yapılandırma Programı\nSürüm 1.0", IDC_STATIC, 42, 14, 182, 17, SS_NOPREFIX
-//  "Telif Hakkı: ReactOS Takımı 2005-"COPYRIGHT_YEAR"\n"
-    LTEXT           "Telif Hakkı: ReactOS Takımı 2005-2015\n\
+//  "Telif Hakkı: MenuOS Takımı 2005-"COPYRIGHT_YEAR"\n"
+    LTEXT           "Telif Hakkı: MenuOS Takımı 2005-2015\n\
 Christoph von Wittich (Christoph@ApiViewer.de)\n\
 Gregor Schneider (Gregor.Schneider@reactos.org)\n\
 Hermès BÉLUSCA - MAÏTO (hermes.belusca@sfr.fr)",

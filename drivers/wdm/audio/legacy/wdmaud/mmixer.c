@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
+ * PROJECT:         MenuOS Kernel Streaming
  * FILE:            drivers/wdm/audio/legacy/wdmaud/mmixer.c
  * PURPOSE:         WDM Legacy Mixer
  * PROGRAMMER:      Johannes Anderwald

@@ -1,11 +1,11 @@
 /*
  * COPYRIGHT:       GPL, See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         MenuOS kernel
  * FILE:            ntoskrnl/mm/amd64/procsup.c
  * PURPOSE:         Low level memory management manipulation
  *
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
- *                  ReactOS Portable Systems Group
+ *                  MenuOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/

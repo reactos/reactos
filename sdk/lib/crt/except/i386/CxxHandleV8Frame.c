@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS C++ runtime library
+ * PROJECT:         MenuOS C++ runtime library
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         __CxxFrameHandler3 to __CxxFrameHandler wrapper
  * PROGRAMMER:      Thomas Faber (thomas.faber@reactos.org)

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   LGPL, See LGPL.txt in the top level directory
- * PROJECT:     ReactOS CRT library
+ * PROJECT:     MenuOS CRT library
  * FILE:        lib/sdk/crt/time/utime.c
  * PURPOSE:     Implementation of utime, _wutime
  * PROGRAMERS:  Wine team

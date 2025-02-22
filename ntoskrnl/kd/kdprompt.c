@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS KDBG Kernel Debugger Terminal Driver
+ * PROJECT:     MenuOS KDBG Kernel Debugger Terminal Driver
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Terminal line-editing (Prompt) interface
  * COPYRIGHT:   Copyright 2001-2004 David Welch <welch@cwcom.net>

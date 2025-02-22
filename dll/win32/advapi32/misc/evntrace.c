@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS system libraries
+ * PROJECT:     MenuOS system libraries
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     advapi32.dll Event tracing stubs
  * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)

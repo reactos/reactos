@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          MenuOS kernel
  * FILE:             services/parallel/parallel.c
  * PURPOSE:          Parallel port driver
  * PROGRAMMER:       David Welch (welch@mcmail.com)

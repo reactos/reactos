@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Applications Manager
+ * PROJECT:     MenuOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Cabinet extraction using FDI API
  * COPYRIGHT:   Copyright 2018 Alexander Shaposhnikov (sanchaez@reactos.org)

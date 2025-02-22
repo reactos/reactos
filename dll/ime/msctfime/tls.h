@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS msctfime.ime
+ * PROJECT:     MenuOS msctfime.ime
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Thread-local storage
  * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>

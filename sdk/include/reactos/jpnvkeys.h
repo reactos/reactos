@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS header
+ * PROJECT:     MenuOS header
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     The special virtual keys for Japanese
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>

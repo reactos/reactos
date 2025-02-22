@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:            This file is in the public domain.
- * PROJECT:              ReactOS kernel
+ * PROJECT:              MenuOS kernel
  * FILE:                 include/psdk/ddkernel.h
  * PURPOSE:              Directx headers
  * PROGRAMMER:           Magnus Olsen (greatlrd)

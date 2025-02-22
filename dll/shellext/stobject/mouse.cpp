@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS system libraries
+ * PROJECT:     MenuOS system libraries
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Mouse keys notification icon handler
  * COPYRIGHT:   Copyright 2022 Mark Jansen <mark.jansen@reactos.org>

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         MenuOS kernel
  * FILE:            hal/halx86/mp/mpsirql.c
  * PURPOSE:         Implements IRQLs for multiprocessor systems
  * PROGRAMMERS:     David Welch (welch@cwcom.net)

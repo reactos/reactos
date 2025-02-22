@@ -1,1 +1,1 @@
-ReactOS "Palatino Linotype" fonts are based on TeXGyrePagella fonts.
+MenuOS "Palatino Linotype" fonts are based on TeXGyrePagella fonts.

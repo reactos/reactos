@@ -1,7 +1,7 @@
 /*
- * Edit Control Test for ReactOS, quick n' dirty. There you go
+ * Edit Control Test for MenuOS, quick n' dirty. There you go
  * This source code is in the PUBLIC DOMAIN and has NO WARRANTY.
- * by Waldo Alvarez Cañizares <wac at ghost.matcom.uh.cu>, June 22, 2003.
+ * by Waldo Alvarez CaÃ±izares <wac at ghost.matcom.uh.cu>, June 22, 2003.
  */
 
 #include <windows.h>

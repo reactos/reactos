@@ -51,7 +51,7 @@ rm -f CMakeCache.txt host-tools/CMakeCache.txt
 
 cmake -G "$CMAKE_GENERATOR" -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-gcc.cmake -DARCH:STRING=$ARCH $EXTRA_ARGS $ROS_CMAKEOPTS "$REACTOS_SOURCE_DIR"
 if [ $? -ne 0 ]; then
-    echo "An error occured while configuring ReactOS"
+    echo "An error occured while configuring MenuOS"
     exit 1
 fi
 

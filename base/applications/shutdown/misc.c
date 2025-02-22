@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS shutdown/logoff utility
+ * PROJECT:         MenuOS shutdown/logoff utility
  * FILE:            base/applications/shutdown/misc.c
  * PURPOSE:         Misc. functions used for the shutdown utility
  * PROGRAMMERS:     Lee Schroeder

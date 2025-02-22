@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS Ancillary Function Driver
+ * PROJECT:     MenuOS Ancillary Function Driver
  * FILE:        afd/tdi.c
  * PURPOSE:     Transport Driver Interface functions
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

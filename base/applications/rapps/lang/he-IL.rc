@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Applications Manager
+ * PROJECT:     MenuOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Hebrew resource file
  * TRANSLATORS: Copyright 2013-2019 Baruch Rutman <peterooch@gmail.com>
@@ -175,10 +175,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "מנהל היישומים של ReactOS"
+    IDS_APPTITLE "מנהל היישומים של MenuOS"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_WELCOME_TITLE "ברוכים הבאים למנהל היישומים של ReactOS!"
-    IDS_WELCOME_TEXT "בחר קטגוריה בצד שמאל, לאחר מכן בחר יישום להתקנה או להסרה.\nהאתר של ReactOS: "
+    IDS_WELCOME_TITLE "ברוכים הבאים למנהל היישומים של MenuOS!"
+    IDS_WELCOME_TEXT "בחר קטגוריה בצד שמאל, לאחר מכן בחר יישום להתקנה או להסרה.\nהאתר של MenuOS: "
     IDS_WELCOME_URL "https://reactos.org"
 
     IDS_APPWIZ_TITLE "Add/Remove Programs"

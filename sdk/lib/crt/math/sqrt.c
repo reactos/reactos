@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       BSD - See COPYING.ARM in the top level directory
- * PROJECT:         ReactOS CRT library
+ * PROJECT:         MenuOS CRT library
  * PURPOSE:         Portable implementation of sqrt
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
  */

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         MenuOS system libraries
  * FILE:            lib/lsalib/lsa.c
  * PURPOSE:         Client-side LSA functions
  * UPDATE HISTORY:

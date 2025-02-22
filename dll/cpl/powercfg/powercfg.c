@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Power Configuration Applet
+ * PROJECT:         MenuOS Power Configuration Applet
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/cpl/powercfg/powercfg.c
  * PURPOSE:         initialization of applet

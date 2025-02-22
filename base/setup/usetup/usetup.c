@@ -1,6 +1,6 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 2002, 2003, 2004 ReactOS Team
+ *  MenuOS kernel
+ *  Copyright (C) 2002, 2003, 2004 MenuOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS text-mode setup
+ * PROJECT:         MenuOS text-mode setup
  * FILE:            base/setup/usetup/usetup.c
  * PURPOSE:         Text-mode setup
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -1711,14 +1711,14 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 continue;
 
             /*
-             * Check whether the user wants to install ReactOS on a disk that
+             * Check whether the user wants to install MenuOS on a disk that
              * is not recognized by the computer's firmware and if so, display
              * a warning since such disks may not be bootable.
              */
             if (CurrentPartition->DiskEntry->MediaType == FixedMedia &&
                 !CurrentPartition->DiskEntry->BiosFound)
             {
-                PopupError("The disk you have selected for installing ReactOS\n"
+                PopupError("The disk you have selected for installing MenuOS\n"
                            "is not visible by the firmware of your computer,\n"
                            "and so may not be bootable.\n"
                            "Press ENTER to continue anyway.",
@@ -2640,9 +2640,9 @@ FsVolCallback(
             // or use an external drive as the system drive/partition
             // (e.g. floppy, USB drive, etc...)
             //
-            PopupError("The ReactOS Setup could not find a supported system partition\n"
+            PopupError("The MenuOS Setup could not find a supported system partition\n"
                        "on your system or could not create a new one. Without such a partition\n"
-                       "the Setup program cannot install ReactOS.\n"
+                       "the Setup program cannot install MenuOS.\n"
                        "Press ENTER to return to the partition selection list.",
                        MUIGetString(STRING_CONTINUE),
                        Ir, POPUP_WAIT_ENTER);
@@ -2890,7 +2890,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     else if (USetupData.InstallationDirectory[0])
         wcscpy(InstallDir, USetupData.InstallationDirectory);
     else
-        wcscpy(InstallDir, L"\\ReactOS");
+        wcscpy(InstallDir, L"\\MenuOS");
 
     /*
      * Check the validity of the predefined 'InstallDir'. If we are either
@@ -3045,7 +3045,7 @@ InitInstallDir:
     }
 
     /*
-     * Check whether the user attempts to install ReactOS within the
+     * Check whether the user attempts to install MenuOS within the
      * installation source directory, or in a subdirectory thereof.
      * If so, fail with an error.
      */
@@ -4047,7 +4047,7 @@ RunUSetup(VOID)
         CONSOLE_ClearScreen();
         CONSOLE_Flush();
 
-        // CONSOLE_SetUnderlinedTextXY(4, 3, " ReactOS " KERNEL_VERSION_STR " Setup ");
+        // CONSOLE_SetUnderlinedTextXY(4, 3, " MenuOS " KERNEL_VERSION_STR " Setup ");
 
         switch (Page)
         {

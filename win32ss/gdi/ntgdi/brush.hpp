@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS win32 subsystem
+ * PROJECT:           MenuOS win32 subsystem
  * PURPOSE:           BRUSH class definition
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@reactos.org)
  */

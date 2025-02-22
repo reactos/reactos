@@ -1,4 +1,4 @@
-ReactOS Audio Service (audiosrv.exe)
+MenuOS Audio Service (audiosrv.exe)
 ====================================
 
 This is intended to operate in a similar manner to how the Windows Audio
@@ -10,7 +10,7 @@ have any impact on functionality.
 AudioSrv on Windows creates a mapped file at:
 Global\mmGlobalPnpInfo
 
-The ReactOS audio device list lives at:
+The MenuOS audio device list lives at:
 Global\AudioDeviceList
 
 This file appears to contain a list of devices that WinMM accesses and
@@ -43,7 +43,7 @@ AudioSrv registers for device notifications and obtains a list of the
 current audio devices in the system (devices registered against the
 KSCATEGORY_AUDIO interface).
 
-ReactOS does not currently have RegisterDeviceNotification implemented,
+MenuOS does not currently have RegisterDeviceNotification implemented,
 so for the moment this service considers the failure of this API call
 to be non-fatal and will proceed without device event notification. This
 behaviour will be amended in a future revision (ie once this API call

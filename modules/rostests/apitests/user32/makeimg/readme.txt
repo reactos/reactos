@@ -7,7 +7,7 @@ Simply copy the MSVC created 'image.dll' into the 'modules\rostests\apitests\use
 This file already exists there so that this step is not necessary, but only presents another option.
 
 Unfortunately, this test will not work correctly using Windows 2003 Server SP2.
-I have not looked into the details of why this is the case, but it works under ReactOS.
+I have not looked into the details of why this is the case, but it works under MenuOS.
 This is what is important for now in any case.
 
 Doug Lyons

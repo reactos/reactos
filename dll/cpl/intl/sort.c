@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS International Control Panel
+ * PROJECT:         MenuOS International Control Panel
  * FILE:            dll/cpl/intl/sort.c
  * PURPOSE:         Sorting property page
  * PROGRAMMER:      Eric Kohl

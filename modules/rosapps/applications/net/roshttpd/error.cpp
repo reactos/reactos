@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS HTTP Daemon
+ * PROJECT:     MenuOS HTTP Daemon
  * FILE:        error.cpp
  * PURPOSE:     Error reporting
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

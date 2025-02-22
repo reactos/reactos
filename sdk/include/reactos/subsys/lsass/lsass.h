@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         MenuOS system libraries
  * FILE:            include/reactos/subsys/lsass/lsass.h
  * PURPOSE:         LSASS API declarations
  * UPDATE HISTORY:

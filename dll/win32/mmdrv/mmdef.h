@@ -1,7 +1,7 @@
 /*
  *
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS kernel
+ * PROJECT:              MenuOS kernel
  * FILE:                 lib/mmdrv/mmdef.h
  * PURPOSE:              Multimedia Definitions (for mmdrv.dll)
  * PROGRAMMER:           Andrew Greenwood

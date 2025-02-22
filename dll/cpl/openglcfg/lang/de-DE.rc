@@ -19,7 +19,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_RENDERER_DEFAULT "Standard"
-    IDS_RENDERER_RSWR "ReactOS Software Implementierung"
+    IDS_RENDERER_RSWR "MenuOS Software Implementierung"
     IDS_CPLNAME "OpenGL Konfiguration"
     IDS_CPLDESCRIPTION "Konfiguriert den OpenGL Renderer."
     IDS_DEBUG_SET "Setzen"

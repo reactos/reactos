@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS API Tests
+ * PROJECT:         MenuOS API Tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Test for the NtQuerySystemEnvironmentValue.
  * PROGRAMMER:      Hermès BÉLUSCA - MAÏTO <hermes.belusca@sfr.fr>

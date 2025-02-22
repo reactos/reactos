@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS HTTP Daemon
+ * PROJECT:     MenuOS HTTP Daemon
  * FILE:        roshttpd.cpp
  * PURPOSE:     Main program
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -57,7 +57,7 @@ VOID Run()
 /* Program entry point */
 int main(int argc, char* argv[])
 {
-    printf("ReactOS HTTP Daemon\n");
+    printf("MenuOS HTTP Daemon\n");
     printf("Type Control-C to stop.\n");
 
     Run();

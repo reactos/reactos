@@ -1,5 +1,5 @@
 /*
- * PROJECT:        ReactOS Generic CPU Driver
+ * PROJECT:        MenuOS Generic CPU Driver
  * LICENSE:        GNU GPLv2 only as published by the Free Software Foundation
  * FILE:           drivers/processor/processr/misc.c
  * PURPOSE:        Misc routines

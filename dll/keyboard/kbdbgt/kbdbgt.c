@@ -1,7 +1,7 @@
 /*
  * Tundzha - Bulgarian keyboard layout
- * Тунджа - Българска клавиатурна позвукова подредба 'явертъ' за РеактОС
- * Copyright (C) 2007 ReactOS
+ * Г’ГіГ­Г¤Г¦Г  - ГЃГєГ«ГЈГ Г°Г±ГЄГ  ГЄГ«Г ГўГЁГ ГІГіГ°Г­Г  ГЇГ®Г§ГўГіГЄГ®ГўГ  ГЇГ®Г¤Г°ГҐГ¤ГЎГ  'ГїГўГҐГ°ГІГє' Г§Г  ГђГҐГ ГЄГІГЋГ‘
+ * Copyright (C) 2007 MenuOS
  * License: LGPL, see: LGPL.txt
  *
  * Thanks to: http://www.barcodeman.com/altek/mule/scandoc.php
@@ -31,7 +31,7 @@
 #define KMEXT     KBDEXT|KBDMULTIVK    /* Multi + ext */
 
 ROSDATA USHORT scancode_to_vk[] = {
-  /* Numbers Row Цифров ред*/
+  /* Numbers Row Г–ГЁГґГ°Г®Гў Г°ГҐГ¤*/
   /* - 00 - */
   /* 1 ...         2 ...         3 ...         4 ... */
   VK_EMPTY,     VK_ESCAPE,    '1',          '2',
@@ -39,20 +39,20 @@ ROSDATA USHORT scancode_to_vk[] = {
   '7',          '8',          '9',          '0',
   VK_OEM_MINUS, VK_OEM_PLUS,  VK_BACK,
   /* - 0f - */
-  /* First Letters Row Първи буквен ред*/
+  /* First Letters Row ГЏГєГ°ГўГЁ ГЎГіГЄГўГҐГ­ Г°ГҐГ¤*/
   VK_TAB,       'Q',          'W',          'E',
   'R',          'T',          'Y',          'U',
   'I',          'O',          'P',
   VK_OEM_4,     VK_OEM_6,     VK_RETURN,
   /* - 1d - */
-  /* Second Letters Row Втори буквен ред*/
+  /* Second Letters Row Г‚ГІГ®Г°ГЁ ГЎГіГЄГўГҐГ­ Г°ГҐГ¤*/
   VK_LCONTROL,
   'A',          'S',          'D',          'F',
   'G',          'H',          'J',          'K',
   'L',          VK_OEM_1,     VK_OEM_7,     VK_OEM_3,
   VK_LSHIFT,    VK_OEM_5,
   /* - 2c - */
-  /* Third letters row Трети буквен ред*/
+  /* Third letters row Г’Г°ГҐГІГЁ ГЎГіГЄГўГҐГ­ Г°ГҐГ¤*/
   'Z',          'X',          'C',          'V',
   'B',          'N',          'M',          VK_OEM_COMMA,
   VK_OEM_PERIOD,VK_OEM_2,     VK_RSHIFT | KBDEXT,
@@ -69,7 +69,7 @@ ROSDATA USHORT scancode_to_vk[] = {
   VK_NUMLOCK | KMEXT,
   VK_SCROLL | KBDMULTIVK,
   /* - 47 - */
-  /* Number-Pad Цифрова подложка */
+  /* Number-Pad Г–ГЁГґГ°Г®ГўГ  ГЇГ®Г¤Г«Г®Г¦ГЄГ  */
   VK_HOME | KNUMS,      VK_UP | KNUMS,         VK_PRIOR | KNUMS, VK_SUBTRACT,
   VK_LEFT | KNUMS,      VK_CLEAR | KNUMS,      VK_RIGHT | KNUMS, VK_ADD,
   VK_END | KNUMS,       VK_DOWN | KNUMS,       VK_NEXT | KNUMS,
@@ -162,8 +162,8 @@ ROSDATA MODIFIERS modifier_bits = {
   { 0, 1, 2, 4, SHFT_INVALID, SHFT_INVALID, 3 }
 };
 
-/* Цифров ред */
-/* VK_OEM_3 = чЧ */
+/* Г–ГЁГґГ°Г®Гў Г°ГҐГ¤ */
+/* VK_OEM_3 = Г·Г— */
 
 ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   {VK_OEM_3,     CAPLOK, {0x447, 0x427} },
@@ -179,7 +179,7 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { '0',         0, {'0', ')'} },
   { VK_OEM_PLUS, 0, {'=', '+'} },
 
-  /* First letter row Първи ред букви явертъуиопшщ*/
+  /* First letter row ГЏГєГ°ГўГЁ Г°ГҐГ¤ ГЎГіГЄГўГЁ ГїГўГҐГ°ГІГєГіГЁГ®ГЇГёГ№*/
   { 'Q',         CAPLOK,   {0x44f, 0x42f} },
   { 'W',         CAPLOK,   {0x432, 0x412} },
 //  { 'E',         CAPLOK,   {0x435, 0x415} },
@@ -193,7 +193,7 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { VK_OEM_4,    CAPLOK,   {0x448, 0x428} },
   { VK_OEM_6,    CAPLOK,   {0x449, 0x429} },
 
-  /* Second letter row Втори ред букви асдфгхйкл ;:'" */
+  /* Second letter row Г‚ГІГ®Г°ГЁ Г°ГҐГ¤ ГЎГіГЄГўГЁ Г Г±Г¤ГґГЈГµГ©ГЄГ« ;:'" */
   { 'A',         CAPLOK,   {0x430, 0x410} },
   { 'S',         CAPLOK,   {0x441, 0x421} },
   { 'D',         CAPLOK,   {0x434, 0x414} },
@@ -206,7 +206,7 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { VK_OEM_1,    0, {';', ':'} },
 //  { VK_OEM_7,    0, {'\'','\"'} },
 
-  /* Third letter row Трети ред букви */
+  /* Third letter row Г’Г°ГҐГІГЁ Г°ГҐГ¤ ГЎГіГЄГўГЁ */
   { 'Z',         CAPLOK,   {0x437, 0x417} },
   { 'X',         CAPLOK,   {0x44c, 0x42c} },
   { 'C',         CAPLOK,   {0x446, 0x426} },
@@ -234,8 +234,8 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
   /* Normal, Shifted, Ctrl */
   /* Legacy (telnet-style) ascii escapes */
-  { VK_OEM_5, CAPLOK, {0x44e, 0x42e} }, //юЮ
-  { VK_OEM_102, 0, {0x5c, 0x7c} }, // \| Този клавиш липсва на много клавиатури
+  { VK_OEM_5, CAPLOK, {0x44e, 0x42e} }, //ГѕГћ
+  { VK_OEM_102, 0, {0x5c, 0x7c} }, // \| Г’Г®Г§ГЁ ГЄГ«Г ГўГЁГё Г«ГЁГЇГ±ГўГ  Г­Г  Г¬Г­Г®ГЈГ® ГЄГ«Г ГўГЁГ ГІГіГ°ГЁ
   { VK_BACK, 0, {0x8, 0x8, 0x7f} },
   { VK_ESCAPE, 0, {0x1b, 0x1b, 0x1b} },
   { VK_RETURN, 0, {'\r', '\r', '\n'} },
@@ -246,9 +246,9 @@ ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
 
 ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   /* Normal, Shifted, Ctrl, Ctrl-Alt */
-/*Чист, Шифт, Ктрл, Ктрл+ Шифт */
+/*Г—ГЁГ±ГІ, ГГЁГґГІ, ГЉГІГ°Г«, ГЉГІГ°Г«+ ГГЁГґГІ */
   /* Legacy Ascii generators */
-  { VK_OEM_MINUS, 0, {'-', '_', WCH_NONE, 0x2014} }, //-_—
+  { VK_OEM_MINUS, 0, {'-', '_', WCH_NONE, 0x2014} }, //-_вЂ”
 //  { '3',   0, {'3', '#', WCH_NONE, 0x2116} },
 //  { '6',   0, {'6', '^', WCH_NONE, 0x20AC} },
 //  { '7',   0, {'7', '&', WCH_NONE, 0xA7} },
@@ -257,16 +257,16 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
 
 ROSDATA VK_TO_WCHARS5 key_to_chars_5mod[] = {
   /* Normal, Shifted, Ctrl, Ctrl+Alt, Ctrl+Shift */
-  { 'E',   CAPLOK,   {0x435, 0x415, WCH_NONE, 0x44d, 0x42d} }, //eEэЭ
-  { 'I',   CAPLOK,   {0x438, 0x418, WCH_NONE, 0x44b, 0x42b} }, //иИыЫ
-  { 'O',   CAPLOK,   {0x43e, 0x41e, WCH_NONE, 0x451, 0x401} }, //oOёЁ
-  { 'J',   CAPLOK,   {0x439, 0x419, WCH_NONE, 0x45d, 0x40d} }, //йЙ малко и главно „и” с ударение
-//Следващите редове могат да са и в ROSDATA VK_TO_WCHARS4,
-//като последното им попълнение трябва да се махне
-  { '3',   0, {'3', '#', WCH_NONE, 0x2116, 0x2116} }, //3#№№
-  { '6',   0, {'6', '^', WCH_NONE, 0x20AC,0x20AC } }, //6^€€
-  { '7',   0, {'7', '&', WCH_NONE, 0xA7, 0xA7} }, //7&§§
-  { VK_OEM_7,    0, {'\'','\"', WCH_NONE, 0x201e, 0x201C } }, //'"„“
+  { 'E',   CAPLOK,   {0x435, 0x415, WCH_NONE, 0x44d, 0x42d} }, //eEГЅГќ
+  { 'I',   CAPLOK,   {0x438, 0x418, WCH_NONE, 0x44b, 0x42b} }, //ГЁГ€Г»Г›
+  { 'O',   CAPLOK,   {0x43e, 0x41e, WCH_NONE, 0x451, 0x401} }, //oOВёВЁ
+  { 'J',   CAPLOK,   {0x439, 0x419, WCH_NONE, 0x45d, 0x40d} }, //Г©Г‰ Г¬Г Г«ГЄГ® ГЁ ГЈГ«Г ГўГ­Г® вЂћГЁвЂќ Г± ГіГ¤Г Г°ГҐГ­ГЁГҐ
+//Г‘Г«ГҐГ¤ГўГ Г№ГЁГІГҐ Г°ГҐГ¤Г®ГўГҐ Г¬Г®ГЈГ ГІ Г¤Г  Г±Г  ГЁ Гў ROSDATA VK_TO_WCHARS4,
+//ГЄГ ГІГ® ГЇГ®Г±Г«ГҐГ¤Г­Г®ГІГ® ГЁГ¬ ГЇГ®ГЇГєГ«Г­ГҐГ­ГЁГҐ ГІГ°ГїГЎГўГ  Г¤Г  Г±ГҐ Г¬Г ГµГ­ГҐ
+  { '3',   0, {'3', '#', WCH_NONE, 0x2116, 0x2116} }, //3#В№В№
+  { '6',   0, {'6', '^', WCH_NONE, 0x20AC,0x20AC } }, //6^Л†Л†
+  { '7',   0, {'7', '&', WCH_NONE, 0xA7, 0xA7} }, //7&В§В§
+  { VK_OEM_7,    0, {'\'','\"', WCH_NONE, 0x201e, 0x201C } }, //'"вЂћвЂњ
   { 0, 0 }
 };
 
@@ -369,10 +369,10 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x51, L"Page Down" },
   { 0x52, L"Insert" },
   { 0x53, L"Delete" },
-  { 0x54, L"<ReactOS>" },
+  { 0x54, L"<MenuOS>" },
   { 0x56, L"Help" },
-  { 0x5b, L"Left <ReactOS>" },
-  { 0x5c, L"Right <ReactOS>" },
+  { 0x5b, L"Left <MenuOS>" },
+  { 0x5c, L"Right <MenuOS>" },
   { 0x5d, L"Application" },
   { 0, NULL }
 };

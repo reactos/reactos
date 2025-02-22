@@ -19,7 +19,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_RENDERER_DEFAULT "システム デフォルト"
-    IDS_RENDERER_RSWR "ReactOS ソフトウェア実装"
+    IDS_RENDERER_RSWR "MenuOS ソフトウェア実装"
     IDS_CPLNAME "OpenGL 設定"
     IDS_CPLDESCRIPTION "OpenGL レンダラーの設定を変更します"
     IDS_DEBUG_SET "設定"

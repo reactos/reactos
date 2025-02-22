@@ -70,7 +70,7 @@ BOOLEAN ClasspMyStringMatches(_In_opt_z_ PCHAR StringToMatch, _In_z_ PCHAR Targe
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 ClassGetDeviceParameter(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     _In_opt_ PWSTR SubkeyName,
@@ -228,7 +228,7 @@ ClassGetDeviceParameter(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 ClassSetDeviceParameter(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     _In_opt_ PWSTR SubkeyName,
@@ -309,7 +309,7 @@ ClassSetDeviceParameter(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 ClassScanForSpecial(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     _In_ CLASSPNP_SCAN_FOR_SPECIAL_INFO DeviceList[],
@@ -5137,7 +5137,7 @@ _Function_class_(IO_WORKITEM_ROUTINE)
 _IRQL_requires_(PASSIVE_LEVEL)
 _IRQL_requires_same_
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 ClassLogThresholdEvent(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_opt_ PVOID Context
@@ -5426,7 +5426,7 @@ _Function_class_(IO_WORKITEM_ROUTINE)
 _IRQL_requires_(PASSIVE_LEVEL)
 _IRQL_requires_same_
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 ClassLogResourceExhaustionEvent(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_opt_ PVOID Context
@@ -5578,7 +5578,7 @@ _Function_class_(IO_WORKITEM_ROUTINE)
 _IRQL_requires_(PASSIVE_LEVEL)
 _IRQL_requires_same_
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 ClassLogCapacityChangedProcess(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_opt_ PVOID Context
@@ -5685,7 +5685,7 @@ _Function_class_(IO_WORKITEM_ROUTINE)
 _IRQL_requires_(PASSIVE_LEVEL)
 _IRQL_requires_same_
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 ClassLogProvisioningTypeChangedEvent(
     PDEVICE_OBJECT DeviceObject,
     PVOID Context
@@ -5774,7 +5774,7 @@ _Function_class_(IO_WORKITEM_ROUTINE)
 _IRQL_requires_(PASSIVE_LEVEL)
 _IRQL_requires_same_
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 ClasspLogIOEventWithContext(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_opt_ PVOID Context

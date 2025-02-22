@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS
+ * PROJECT:              MenuOS
  * PURPOSE:              LPK Library
  * PROGRAMMER:           Magnus Olsen (greatlrd)
  *

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         MenuOS system libraries
  * FILE:            lib/rtl/heap.c
  * PURPOSE:         RTL Heap backend allocator
  * PROGRAMMERS:     Copyright 2010 Aleksey Bragin

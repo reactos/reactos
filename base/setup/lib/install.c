@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Setup Library
+ * PROJECT:         MenuOS Setup Library
  * FILE:            base/setup/lib/install.c
  * PURPOSE:         Installation functions
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
@@ -32,7 +32,7 @@ LookupDirectoryById(
 {
     BOOL Success;
 
-    // ReactOS-specific
+    // MenuOS-specific
     Success = SpInfFindFirstLine(InfHandle, L"Directories", DirId, InfContext);
     if (!Success)
     {
@@ -279,7 +279,7 @@ BuildFullDirectoryPath(
  * respective directories.
  */
 /*
- * IMPORTANT NOTE: The INF file specification used for the .CAB in ReactOS
+ * IMPORTANT NOTE: The INF file specification used for the .CAB in MenuOS
  * is not compliant with respect to TXTSETUP.SIF syntax or the standard syntax.
  */
 static BOOLEAN
@@ -611,7 +611,7 @@ PrepareCopyInfFile(
     }
 
     /* Search for the 'Directories' section */
-    // ReactOS-specific
+    // MenuOS-specific
     if (!SpInfFindFirstLine(InfFile, L"Directories", NULL, &DirContext))
     {
         // Windows-compatible

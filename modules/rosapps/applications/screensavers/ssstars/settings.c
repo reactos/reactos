@@ -212,14 +212,14 @@ static void SetupControls(HWND hWnd)
 
     x = LoadString(hInstance, IDS_DESCRIPTION, Strings, sizeof(Strings)/sizeof(TCHAR));
 
-    GetTextExtentPoint32(hMemDC, _T("ReactOS"), 7, &sizeReactOS);
+    GetTextExtentPoint32(hMemDC, _T("MenuOS"), 7, &sizeReactOS);
     GetTextExtentPoint32(hMemDC, Strings,       x, &sizeStarfield);
 
     GetObject(hCosmos, sizeof(BITMAP), &bm);
 
     gap = bm.bmHeight - sizeReactOS.cy - sizeStarfield.cy;
 
-    TextOut(hMemDC, 16, gap * 2 / 5, _T("ReactOS"), 7);
+    TextOut(hMemDC, 16, gap * 2 / 5, _T("MenuOS"), 7);
     TextOut(hMemDC, 16, gap * 3 / 5 + sizeReactOS.cy, Strings, x);
 
     SelectObject(hMemDC, hOldBmp);

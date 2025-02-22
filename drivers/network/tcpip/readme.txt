@@ -13,7 +13,7 @@ DDK environment variables must be set! (run setenv.bat)
     - Run "build" to build the driver
 
 
-Building with Mingw32 and ReactOS include files:
+Building with Mingw32 and MenuOS include files:
 
     - Build NDIS.SYS (i.e. "make ndis")
-    - Run "make tcpip" FROM THE ReactOS ROOT DIRECTORY to build the driver
+    - Run "make tcpip" FROM THE MenuOS ROOT DIRECTORY to build the driver

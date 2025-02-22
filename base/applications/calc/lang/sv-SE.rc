@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS CALC
+ * PROJECT:     MenuOS CALC
  * PURPOSE:     Swedish resource file
  * Translation: Jaix Bly
  */
@@ -335,7 +335,7 @@ BEGIN
     BEGIN
         MENUITEM "Visa hjälp", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Om ReactOS Kalkylator", IDM_HELP_ABOUT
+        MENUITEM "Om MenuOS Kalkylator", IDM_HELP_ABOUT
     END
 END
 
@@ -368,7 +368,7 @@ BEGIN
     BEGIN
         MENUITEM "Visa hjälp", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Om ReactOS Kalkylator", IDM_HELP_ABOUT
+        MENUITEM "Om MenuOS Kalkylator", IDM_HELP_ABOUT
     END
 END
 
@@ -391,7 +391,7 @@ BEGIN
     BEGIN
         MENUITEM "Visa hjälp", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Om ReactOS Kalkylator", IDM_HELP_ABOUT
+        MENUITEM "Om MenuOS Kalkylator", IDM_HELP_ABOUT
     END
 END
 
@@ -406,7 +406,7 @@ END
 /* About */
 STRINGTABLE
 BEGIN
-    IDS_CALC_NAME "ReactOS Kalkylator"
+    IDS_CALC_NAME "MenuOS Kalkylator"
     IDS_AUTHOR "Skriven av Carlo Bramini"
 END
 

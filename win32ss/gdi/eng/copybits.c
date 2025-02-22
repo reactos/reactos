@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          MenuOS kernel
  * PURPOSE:          GDI EngCopyBits Function
  * FILE:             win32ss/gdi/eng/copybits.c
  * PROGRAMERS:       Jason Filby

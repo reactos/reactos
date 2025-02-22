@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS pending moves operations interactions tool
+ * PROJECT:         MenuOS pending moves operations interactions tool
  * FILE:            cmdutils/movefile/movefile.c
  * PURPOSE:         Queue move operations for next reboot
  * PROGRAMMERS:     Pierre Schweitzer <pierre@reactos.org>

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS BtrFS filesystem library
+ * PROJECT:     MenuOS BtrFS filesystem library
  * FILE:        include/reactos/libs/fslib/btrfslib.h
  * PURPOSE:     Public definitions for BtrFS filesystem library
  */

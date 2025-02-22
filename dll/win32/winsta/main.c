@@ -1,6 +1,6 @@
 /*
- * ReactOS WinStation
- * Copyright (C) 2005 ReactOS Team
+ * MenuOS WinStation
+ * Copyright (C) 2005 MenuOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 /*
- * PROJECT:         ReactOS winsta.dll
+ * PROJECT:         MenuOS winsta.dll
  * FILE:            lib/winsta/main.c
  * PURPOSE:         WinStation
  * PROGRAMMER:      Emanuele Aliberti <ea@reactos.com>

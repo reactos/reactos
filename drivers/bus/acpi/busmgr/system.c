@@ -23,7 +23,7 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
 
-/* Modified for ReactOS and latest ACPICA
+/* Modified for MenuOS and latest ACPICA
  * Copyright (C)2009  Samuel Serapion
  */
 

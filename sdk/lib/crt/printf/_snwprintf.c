@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
- * PROJECT:         ReactOS crt library
+ * PROJECT:         MenuOS crt library
  * FILE:            lib/sdk/crt/printf/_snwprintf.c
  * PURPOSE:         Implementation of _snwprintf
  * PROGRAMMER:      Timo Kreuzer

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS User Manager Control Panel
+ * PROJECT:         MenuOS User Manager Control Panel
  * FILE:            dll/cpl/usrmgr/users.c
  * PURPOSE:         Users property page
  *

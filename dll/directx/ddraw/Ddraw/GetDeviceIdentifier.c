@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS DirectX
+ * PROJECT:              MenuOS DirectX
  * FILE:                 dll/directx/ddraw/Ddraw/GetDeviceIdentifier.c
  * PURPOSE:              IDirectDraw7 Implementation
  * PROGRAMMER:           Magnus Olsen

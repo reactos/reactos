@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Win32 Base API
+ * PROJECT:         MenuOS Win32 Base API
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         System Information Functions
  * COPYRIGHT:       Emanuele Aliberti

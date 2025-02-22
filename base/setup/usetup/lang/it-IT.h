@@ -5,14 +5,14 @@ static MUI_ENTRY itITSetupInitPageEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         0,
         20,
-        "Please wait while the ReactOS Setup initializes itself",
+        "Please wait while the MenuOS Setup initializes itself",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -43,7 +43,7 @@ static MUI_ENTRY itITLanguagePageEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -95,21 +95,21 @@ static MUI_ENTRY itITWelcomePageEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "Benvenuto all'installazione di ReactOS",
+        "Benvenuto all'installazione di MenuOS",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
     {
         6,
         11,
-        "Questa parte dell'installazione copia ReactOS nel vostro computer",
+        "Questa parte dell'installazione copia MenuOS nel vostro computer",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -123,14 +123,14 @@ static MUI_ENTRY itITWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Press ENTER to install or upgrade ReactOS.",
+        "\x07  Press ENTER to install or upgrade MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-        "\x07  Premere R per riparare ReactOS.",
+        "\x07  Premere R per riparare MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -144,14 +144,14 @@ static MUI_ENTRY itITWelcomePageEntries[] =
     {
         8,
         21,
-        "\x07  Premere F3 per uscire senza installare ReactOS.",
+        "\x07  Premere F3 per uscire senza installare MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         23,
-        "Per maggiori informazioni riguardo ReactOS, visitate il sito:",
+        "Per maggiori informazioni riguardo MenuOS, visitate il sito:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -182,21 +182,21 @@ static MUI_ENTRY itITIntroPageEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "Status versione ReactOS",
+        "Status versione MenuOS",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
     {
         6,
         11,
-        "ReactOS \x8A nello stadio di sviluppo Alpha, significa che non tutte le",
+        "MenuOS \x8A nello stadio di sviluppo Alpha, significa che non tutte le",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -231,14 +231,14 @@ static MUI_ENTRY itITIntroPageEntries[] =
     {
         8,
         18,
-        "\x07  Premere INVIO per continuare l'installazione di ReactOS.",
+        "\x07  Premere INVIO per continuare l'installazione di MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         20,
-        "\x07  Premere F3 per uscire senza installare ReactOS.",
+        "\x07  Premere F3 per uscire senza installare MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -262,7 +262,7 @@ static MUI_ENTRY itITLicensePageEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -276,7 +276,7 @@ static MUI_ENTRY itITLicensePageEntries[] =
     {
         8,
         8,
-        "ReactOS aderisce ai termini di licenza",
+        "MenuOS aderisce ai termini di licenza",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -297,7 +297,7 @@ static MUI_ENTRY itITLicensePageEntries[] =
     {
         8,
         11,
-        "Tutto il software che fa parte del sistema ReactOS viene",
+        "Tutto il software che fa parte del sistema MenuOS viene",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -332,7 +332,7 @@ static MUI_ENTRY itITLicensePageEntries[] =
     {
         8,
         17,
-        "di ReactOS copre solo la distribuzione a terze parti.",
+        "di MenuOS copre solo la distribuzione a terze parti.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -346,7 +346,7 @@ static MUI_ENTRY itITLicensePageEntries[] =
     {
         8,
         19,
-        "della licenza GNU GPL con ReactOS, visiti il sito:",
+        "della licenza GNU GPL con MenuOS, visiti il sito:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -405,7 +405,7 @@ static MUI_ENTRY itITDevicePageEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -512,14 +512,14 @@ static MUI_ENTRY itITRepairPageEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "Il setup di ReactOS \x8A ancora in una fase preliminare.",
+        "Il setup di MenuOS \x8A ancora in una fase preliminare.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -585,21 +585,21 @@ static MUI_ENTRY itITUpgradePageEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        "The MenuOS Setup can upgrade one of the available MenuOS installations",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         9,
-        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        "listed below, or, if a MenuOS installation is damaged, the Setup program",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -641,7 +641,7 @@ static MUI_ENTRY itITUpgradePageEntries[] =
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  Press F3 to quit without installing MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -665,7 +665,7 @@ static MUI_ENTRY itITComputerPageEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -724,7 +724,7 @@ static MUI_ENTRY itITFlushPageEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -769,14 +769,14 @@ static MUI_ENTRY itITQuitPageEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         10,
         6,
-        "ReactOS non \x8A stato installato completamente.",
+        "MenuOS non \x8A stato installato completamente.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -821,7 +821,7 @@ static MUI_ENTRY itITDisplayPageEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -880,14 +880,14 @@ static MUI_ENTRY itITSuccessPageEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         10,
         6,
-        "I componenti base di ReactOS sono stati installati correttamente.",
+        "I componenti base di MenuOS sono stati installati correttamente.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -932,7 +932,7 @@ static MUI_ENTRY itITSelectPartitionEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -960,7 +960,7 @@ static MUI_ENTRY itITSelectPartitionEntries[] =
     {
         8,
         13,
-        "\x07  Premere INVIO per installare ReactOS sulla partizione selezionata.",
+        "\x07  Premere INVIO per installare MenuOS sulla partizione selezionata.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1006,7 +1006,7 @@ static MUI_ENTRY itITChangeSystemPartition[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1027,14 +1027,14 @@ static MUI_ENTRY itITChangeSystemPartition[] =
     {
         6,
         16,
-        "uses a format not supported by ReactOS.",
+        "uses a format not supported by MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         18,
-        "In order to successfully install ReactOS, the Setup program must change",
+        "In order to successfully install MenuOS, the Setup program must change",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1104,7 +1104,7 @@ static MUI_ENTRY itITChangeSystemPartition[] =
     {
         6,
         35,
-        "to the original one after finishing the installation of ReactOS.",
+        "to the original one after finishing the installation of MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1128,7 +1128,7 @@ static MUI_ENTRY itITConfirmDeleteSystemPartitionEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1156,7 +1156,7 @@ static MUI_ENTRY itITConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         12,
-        "sistema operativo (come ReactOS o altri), programmi forniti",
+        "sistema operativo (come MenuOS o altri), programmi forniti",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1191,7 +1191,7 @@ static MUI_ENTRY itITConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         18,
-        "il computer dall'harddisk fino al termine dell'installazione di ReactOS.",
+        "il computer dall'harddisk fino al termine dell'installazione di MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1243,7 +1243,7 @@ static MUI_ENTRY itITFormatPartitionEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1281,7 +1281,7 @@ static MUI_ENTRY itITCheckFSEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1312,21 +1312,21 @@ static MUI_ENTRY itITInstallDirectoryEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "Il setup installer\x85 i file di ReactOS nella partizione selezionata.",
+        "Il setup installer\x85 i file di MenuOS nella partizione selezionata.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         9,
-        "Scegliere una cartella dove si vuole che ReactOS venga installato:",
+        "Scegliere una cartella dove si vuole che MenuOS venga installato:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1340,7 +1340,7 @@ static MUI_ENTRY itITInstallDirectoryEntries[] =
     {
         6,
         15,
-        "la cartella desiderata per l'installazione di ReactOS.",
+        "la cartella desiderata per l'installazione di MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1371,21 +1371,21 @@ static MUI_ENTRY itITFileCopyEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         11,
         12,
-        "Attendere mentre il setup di ReactOS copia i file nella",
+        "Attendere mentre il setup di MenuOS copia i file nella",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         18,
         13,
-        "cartella di installazione di ReactOS.",
+        "cartella di installazione di MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1416,7 +1416,7 @@ static MUI_ENTRY itITBootLoaderSelectPageEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1475,7 +1475,7 @@ static MUI_ENTRY itITBootLoaderInstallPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1506,7 +1506,7 @@ static MUI_ENTRY itITBootLoaderRemovableDiskPageEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1552,7 +1552,7 @@ static MUI_ENTRY itITKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1611,7 +1611,7 @@ static MUI_ENTRY itITLayoutSettingsEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1671,14 +1671,14 @@ static MUI_ENTRY itITPrepareCopyEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "Setup sta preparando il computer per la copia dei file di ReactOS.",
+        "Setup sta preparando il computer per la copia dei file di MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1703,7 +1703,7 @@ static MUI_ENTRY itITSelectFSEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1751,7 +1751,7 @@ static MUI_ENTRY itITDeletePartitionEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1803,7 +1803,7 @@ static MUI_ENTRY itITRegistryEntries[] =
     {
         4,
         3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        " Installazione di MenuOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1838,9 +1838,9 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         // ERROR_NOT_INSTALLED
-        "ReactOS non \x8A stato installato completamente nel\n"
+        "MenuOS non \x8A stato installato completamente nel\n"
         "vostro computer. Se esce adesso, dovr\x85 eseguire il\n"
-        "Setup nuovamente per installare ReactOS.\n"
+        "Setup nuovamente per installare MenuOS.\n"
         "\n"
         "  \x07  Premere INVIO per continuare il setup.\n"
         "  \x07  Premere F3 per uscire.",
@@ -1848,7 +1848,7 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         // ERROR_NO_BUILD_PATH
-        "Failed to build the installation paths for the ReactOS installation directory!\n"
+        "Failed to build the installation paths for the MenuOS installation directory!\n"
         "ENTER = Reboot computer"
     },
     {
@@ -1858,7 +1858,7 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         // ERROR_SOURCE_DIR
-        "You cannot install ReactOS within the installation source directory!\n"
+        "You cannot install MenuOS within the installation source directory!\n"
         "ENTER = Reboot computer"
     },
     {
@@ -2050,7 +2050,7 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "Spazio nella partizione insufficiente per installare ReactOS.\n"
+        "Spazio nella partizione insufficiente per installare MenuOS.\n"
         "La partizione deve avere una dimensione di almeno %lu MB.\n"
         "\n"
         "  * Premere un tasto qualsiasi per continuare.",
@@ -2235,13 +2235,13 @@ MUI_STRING itITStrings[] =
     {STRING_PARTFORMAT,
     "Questa partizione sar\x85 formattata successivamente."},
     {STRING_NONFORMATTEDPART,
-    "Avete scelto di installare ReactOS su una partizione nuova o non formattata."},
+    "Avete scelto di installare MenuOS su una partizione nuova o non formattata."},
     {STRING_NONFORMATTEDSYSTEMPART,
     "La partizione di sistema non \x8A stata ancora formattata."},
     {STRING_NONFORMATTEDOTHERPART,
     "La nuova partizione non \x8A stata ancora formattata."},
     {STRING_INSTALLONPART,
-    "Il setup installer\x85 ReactOS sulla partitione"},
+    "Il setup installer\x85 MenuOS sulla partitione"},
     {STRING_CONTINUE,
     "INVIO = Continua"},
     {STRING_QUITCONTINUE,

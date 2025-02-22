@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
- * PROJECT:         ReactOS crt library
+ * PROJECT:         MenuOS crt library
  * FILE:            lib/sdk/crt/printf/wprintf.c
  * PURPOSE:         Implementation of wprintf
  * PROGRAMMER:      Timo Kreuzer
- *                  Samuel Serapión
+ *                  Samuel SerapiÃ³n
  */
 
 #include <stdio.h>

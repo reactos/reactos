@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS TCP/IP protocol driver
+ * PROJECT:     MenuOS TCP/IP protocol driver
  * FILE:        tcpip/buffer.c
  * PURPOSE:     Miscellaneous operations on NDIS_BUFFERs and packets.
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

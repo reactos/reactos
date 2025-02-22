@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS Build Tools [Keyboard Layout Compiler]
+ * PROJECT:         MenuOS Build Tools [Keyboard Layout Compiler]
  * LICENSE:         BSD - See COPYING.BSD in the top level directory
  * FILE:            tools/kbdtool/data.c
  * PURPOSE:         Internal Keyboard (Scancode/Virtual Key) Tables
- * PROGRAMMERS:     ReactOS Foundation
+ * PROGRAMMERS:     MenuOS Foundation
  */
 
 /* INCLUDES *******************************************************************/

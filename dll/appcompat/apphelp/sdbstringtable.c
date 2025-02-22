@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Application compatibility module
+ * PROJECT:     MenuOS Application compatibility module
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Shim database string table builder
  * COPYRIGHT:   Copyright 2016-2019 Mark Jansen (mark.jansen@reactos.org)

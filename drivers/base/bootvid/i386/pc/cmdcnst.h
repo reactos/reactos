@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS VGA Miniport Driver
+ * PROJECT:         MenuOS VGA Miniport Driver
  * LICENSE:         Microsoft NT4 DDK Sample Code License
  * PURPOSE:         Command Code Definitions for VGA Command Streams
  * PROGRAMMERS:     Copyright (c) 1992  Microsoft Corporation

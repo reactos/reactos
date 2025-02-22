@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS IMM32
+ * PROJECT:     MenuOS IMM32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Defining internal codes (C1K_...) of IME Soft Keyboard Type C1
  * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>

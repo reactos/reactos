@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS VGA Font Editor
+ * PROJECT:     MenuOS VGA Font Editor
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     PSFv1 (PC Screen) Fonts - Version 1
  * COPYRIGHT:   Copyright 2008 Colin Finck (colin@reactos.org)

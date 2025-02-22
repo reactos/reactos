@@ -1,10 +1,10 @@
 /*
- * PROJECT:         ReactOS VGA Miniport Driver
+ * PROJECT:         MenuOS VGA Miniport Driver
  * LICENSE:         Microsoft NT4 DDK Sample Code License
  * FILE:            win32ss/drivers/miniport/vga_new/vga.c
  * PURPOSE:         Main Standard VGA-compatible Minport Handling Code
  * PROGRAMMERS:     Copyright (c) 1992  Microsoft Corporation
- *                  ReactOS Portable Systems Group
+ *                  MenuOS Portable Systems Group
  */
 
 //---------------------------------------------------------------------------

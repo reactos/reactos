@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * LICENSE:     See LGPL.txt in the top level directory
- * PROJECT:     ReactOS system libraries
+ * PROJECT:     MenuOS system libraries
  * FILE:        reactos/lib/psapi/misc/win32.c
  * PURPOSE:     Win32 interfaces for PSAPI
  * PROGRAMMER:  KJK::Hyperion <noog@libero.it>

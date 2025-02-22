@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS NDIS library
+ * PROJECT:     MenuOS NDIS library
  * FILE:        ndis/control.c
  * PURPOSE:     Program control routines
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

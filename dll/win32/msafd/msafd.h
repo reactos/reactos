@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS Ancillary Function Driver DLL
+ * PROJECT:     MenuOS Ancillary Function Driver DLL
  * FILE:        dll/win32/msafd/msafd.h
  * PURPOSE:     Ancillary Function Driver DLL header
  */

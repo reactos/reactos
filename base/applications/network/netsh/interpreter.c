@@ -1,5 +1,5 @@
 /*
- * PROJECT:    ReactOS NetSh
+ * PROJECT:    MenuOS NetSh
  * LICENSE:    GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:    Network Shell command interpreter
  * COPYRIGHT:  Copyright 2023 Eric Kohl <eric.kohl@reactos.org>

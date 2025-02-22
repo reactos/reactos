@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS header
+ * PROJECT:     MenuOS header
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Encoding, charsets and codepages for Chinese, Japanese and Korean (CJK)
  * COPYRIGHT:   Copyright 2017-2022 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>

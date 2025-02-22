@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS DNSAPI Header
+ * PROJECT:     MenuOS DNSAPI Header
  * FILE:        include/libs/dns/windnsp.h
  * PURPOSE:     DNSLIB Precompiled Header
  */

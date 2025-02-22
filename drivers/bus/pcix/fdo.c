@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS PCI Bus Driver
+ * PROJECT:         MenuOS PCI Bus Driver
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            drivers/bus/pci/fdo.c
  * PURPOSE:         FDO Device Management
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROGRAMMERS:     MenuOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/
@@ -573,14 +573,14 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
             }
             else
             {
-                /* Root PDO in ReactOS does not assign boot resources */
+                /* Root PDO in MenuOS does not assign boot resources */
                 UNIMPLEMENTED_DBGBREAK("Encountered during setup\n");
                 Descriptor = NULL;
             }
 
             if (Descriptor)
             {
-                /* Root PDO in ReactOS does not assign boot resources */
+                /* Root PDO in MenuOS does not assign boot resources */
                 UNIMPLEMENTED_DBGBREAK();
             }
             else

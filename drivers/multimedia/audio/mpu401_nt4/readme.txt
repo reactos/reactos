@@ -17,7 +17,7 @@ or other synth on-board your card (note: this is NOT an FM synth
 driver!)
 
 
-Thanks to Vizzini and all the other great ReactOS developers for
+Thanks to Vizzini and all the other great MenuOS developers for
 helping me code this driver and also for giving me encouragement.
 
 I'd also like to thank Jeff Glatt, whose MIDI and MPU-401

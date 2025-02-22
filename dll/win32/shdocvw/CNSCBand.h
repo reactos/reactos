@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS shdocvw
+ * PROJECT:     MenuOS shdocvw
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     NameSpace Control Band
  * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
@@ -7,7 +7,7 @@
 
 #pragma once
 
-#define NSCBANDCLASSNAME L"ReactOS NameSpace Control Band"
+#define NSCBANDCLASSNAME L"MenuOS NameSpace Control Band"
 
 #define WM_USER_SHELLEVENT (WM_USER + 88)
 

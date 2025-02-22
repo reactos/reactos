@@ -1,6 +1,6 @@
 /*
  *  COPYRIGHT:        See COPYING in the top level directory
- *  PROJECT:          ReactOS kernel
+ *  PROJECT:          MenuOS kernel
  *  PURPOSE:          pMonitor support
  *  FILE:             subsys/win32k/ntuser/monitor.c
  *  PROGRAMERS:       Anich Gregor (blight@blight.eu.org)

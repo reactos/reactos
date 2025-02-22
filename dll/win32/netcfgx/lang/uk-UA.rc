@@ -225,7 +225,7 @@ BEGIN
     IDS_DHCPACTIVE "DHCP включено"
     IDS_AUTOMATIC "Автоматично"
     IDS_NOITEMSEL "Не вибрано ні одного елементу. Виберіть хоча б один."
-    IDS_TCPIP "ReactOS-TCP/IP"
+    IDS_TCPIP "MenuOS-TCP/IP"
     IDS_ADD "Додати"
     IDS_MOD "OK"
     IDS_TCP_PORTS "TCP-порти"

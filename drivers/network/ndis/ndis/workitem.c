@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS NDIS library
+ * PROJECT:     MenuOS NDIS library
  * FILE:        workitem.c
  * PURPOSE:     Implements the NDIS 6.0 work item interface
  * PROGRAMMERS: Cameron Gutman (aicommander@gmail.com)

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     	ReactOS Modem Properties
+ * PROJECT:     	MenuOS Modem Properties
  * LICENSE:     	GPL - See COPYING in the top level directory
  * FILE:        	dll/win32/modemui/modemui.c
  * PURPOSE:     	Modem Properties

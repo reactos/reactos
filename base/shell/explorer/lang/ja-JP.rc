@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Explorer
+ * PROJECT:     MenuOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Japanese resource file
  * TRANSLATORS: Copyright 2009 pcds90net <ds200xnet-ros@yahoo.co.jp>
@@ -120,7 +120,7 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "通知のカスタマイズ"
 FONT 9, "MS UI Gothic", 0, 0, 0x1
 BEGIN
-    LTEXT            "ReactOS は、アクティブで緊急な通知に対してアイコンを表示し、非アクティブなものを隠します。以下のリストの中の項目に対してこの動作を変更できます。", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "MenuOS は、アクティブで緊急な通知に対してアイコンを表示し、非アクティブなものを隠します。以下のリストの中の項目に対してこの動作を変更できます。", IDC_STATIC, 6, 6, 220, 30
     LTEXT            "項目を選択し、通知の動作を選んで下さい:", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS

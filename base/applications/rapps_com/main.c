@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Applications Manager Command-Line Launcher (rapps.com)
+ * PROJECT:     MenuOS Applications Manager Command-Line Launcher (rapps.com)
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Allow explorer / cmd to wait for rapps.exe when passing commandline arguments
  * COPYRIGHT:   Copyright 2020 Mark Jansen (mark.jansen@reactos.org)

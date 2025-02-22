@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS GDI32
+ * PROJECT:          MenuOS GDI32
  * PURPOSE:          GDI DirectX interface
  * FILE:             win32ss/gdi/gdi32/misc/gdientry.c
  * PROGRAMERS:       Alex Ionescu (alex@relsoft.net)
@@ -697,9 +697,9 @@ DvpUpdateVideoPort(LPDDHAL_UPDATEVPORTDATA pDvdUpdateVideoPort)
 {
     /*
      * Windows XP limit to max 10 handles of videoport surface and Vbi
-     * ReactOS doing same to keep compatible, if it is more that 10
+     * MenuOS doing same to keep compatible, if it is more that 10
      * videoport surface or vbi the stack will be curpted in windows xp
-     * ReactOS safe guard againts that
+     * MenuOS safe guard againts that
      *
      */
 
@@ -1002,7 +1002,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
 
         /* Windows XP never repot back the true return value,
          *  it only report back if we have a driver or not
-         *  ReactOS keep this behoir to be compatible with
+         *  MenuOS keep this behoir to be compatible with
          *  Windows XP
          */
         pData->ddRVal = retValue;
@@ -1038,7 +1038,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
 
         /* Windows XP never repot back the true return value,
          *  it only report back if we have a driver or not
-         *  ReactOS keep this behoir to be compatible with
+         *  MenuOS keep this behoir to be compatible with
          *  Windows XP
          */
         pData->ddRVal = retValue;
@@ -1067,14 +1067,14 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
         pUserMisc->dwFlags = pMisc.dwFlags & DDHAL_MISCCB32_GETAVAILDRIVERMEMORY;
         pUserMisc->GetAvailDriverMemory = (LPDDHAL_GETAVAILDRIVERMEMORY) DdGetAvailDriverMemory;
 
-        /* This callbacks are only for win9x and theirfor it is not longer use in NT or ReactOS
+        /* This callbacks are only for win9x and theirfor it is not longer use in NT or MenuOS
          * pUserMisc->UpdateNonLocalHeap;
          * pUserMisc->GetHeapAlignment;
          * pUserMisc->GetSysmemBltStatus; */
 
         /* Windows XP never repot back the true return value,
          *  it only report back if we have a driver or not
-         *  ReactOS keep this behoir to be compatible with
+         *  MenuOS keep this behoir to be compatible with
          *  Windows XP
          */
         pData->ddRVal = retValue;
@@ -1121,7 +1121,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
 
         /* Windows XP never repot back the true return value,
          *  it only report back if we have a driver or not
-         *  ReactOS keep this behoir to be compatible with
+         *  MenuOS keep this behoir to be compatible with
          *  Windows XP
          */
         pData->ddRVal = retValue;
@@ -1165,7 +1165,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
 
         /* Windows XP never repot back the true return value,
          *  it only report back if we have a driver or not
-         *  ReactOS keep this behoir to be compatible with
+         *  MenuOS keep this behoir to be compatible with
          *  Windows XP
          */
         pData->ddRVal = retValue;
@@ -1214,7 +1214,7 @@ DdGetDriverInfo(LPDDHAL_GETDRIVERINFODATA pData)
         pData->lpvData = pDrvInfoData.lpvData;
         /* Windows XP never repot back the true return value,
          *  it only report back if we have a driver or not
-         *  ReactOS keep this behoir to be compatible with
+         *  MenuOS keep this behoir to be compatible with
          *  Windows XP
          */
         pData->ddRVal = retValue;

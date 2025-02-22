@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * LICENSE:     See LGPL.txt in the top level directory
- * PROJECT:     ReactOS system libraries
+ * PROJECT:     MenuOS system libraries
  * FILE:        reactos/lib/epsapi/enum/drivers.c
  * PURPOSE:     Enumerate system modules
  * PROGRAMMER:  KJK::Hyperion <noog@libero.it>

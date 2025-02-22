@@ -1,8 +1,8 @@
 /*
- * ReactOS User32 Library
+ * MenuOS User32 Library
  * - Window non-client area management
  *
- * Copyright (C) 2003 ReactOS Team
+ * Copyright (C) 2003 MenuOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

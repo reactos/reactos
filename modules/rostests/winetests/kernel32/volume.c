@@ -548,7 +548,7 @@ static void test_enum_vols(void)
     hFind = pFindFirstVolumeA( Volume_2, MAX_PATH );
     ok(hFind != INVALID_HANDLE_VALUE, "FindFirstVolume failed, err=%u\n",
                 GetLastError());
-    /* ReactOS */
+    /* MenuOS */
     if (hFind != INVALID_HANDLE_VALUE) {
     do
     {

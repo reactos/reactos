@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS system libraries
+ * PROJECT:     MenuOS system libraries
  * FILE:        base/services/dnsrslvr/hostsfile.c
  * PURPOSE:     HOSTS file routines
  * PROGRAMERS:  Art Yerkes

@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS TDI driver
+ * PROJECT:         MenuOS TDI driver
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            drivers/network/tdi/cte/timer.c
  * PURPOSE:         CTE timer support

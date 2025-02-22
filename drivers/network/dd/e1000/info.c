@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Intel PRO/1000 Driver
+ * PROJECT:     MenuOS Intel PRO/1000 Driver
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Miniport information callbacks
  * COPYRIGHT:   2013 Cameron Gutman (cameron.gutman@reactos.org)
@@ -158,7 +158,7 @@ MiniportQueryInformation(
 
     case OID_GEN_VENDOR_DESCRIPTION:
     {
-        static UCHAR vendorDesc[] = "ReactOS Team";
+        static UCHAR vendorDesc[] = "MenuOS Team";
         copySource = vendorDesc;
         copyLength = sizeof(vendorDesc);
         break;

@@ -1,11 +1,11 @@
 /*
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         MenuOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/io/iomgr/driver.c
  * PURPOSE:         Driver Object Management
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Filip Navara (navaraf@reactos.org)
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES *******************************************************************/
@@ -1120,7 +1120,7 @@ IopInitializeBootDrivers(VOID)
 #if 0
             if (NT_SUCCESS(Status))
 #else // Hack still needed...
-            if ((NT_SUCCESS(Status)) || /* ReactOS HACK for SETUPLDR */
+            if ((NT_SUCCESS(Status)) || /* MenuOS HACK for SETUPLDR */
                 ((KeLoaderBlock->SetupLdrBlock) && ((KeyHandle = (PVOID)1)))) // yes, it's an assignment!
 #endif
             {

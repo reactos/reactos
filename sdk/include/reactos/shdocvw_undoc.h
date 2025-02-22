@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Headers
+ * PROJECT:     MenuOS Headers
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     shdocvw.dll undocumented APIs
  * COPYRIGHT:   Copyright 2024-2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>

@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS Service Host
+ * PROJECT:     MenuOS Service Host
  * LICENSE:     BSD - See COPYING.ARM in the top level directory
  * FILE:        base/services/svchost/svchost.c
  * PURPOSE:     Main Service Host Implementation Routines
- * PROGRAMMERS: ReactOS Portable Systems Group
+ * PROGRAMMERS: MenuOS Portable Systems Group
  */
 
 /* INCLUDES ******************************************************************/

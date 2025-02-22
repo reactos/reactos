@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          MenuOS kernel
  * PURPOSE:          Clipboard routines
  * FILE:             win32ss/user/ntuser/clipboard.c
  * PROGRAMER:        Filip Navara <xnavara@volny.cz>

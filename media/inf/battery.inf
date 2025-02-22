@@ -6,7 +6,7 @@ Signature  = "$Windows NT$"
 LayoutFile = layout.inf
 Class      = Battery
 ClassGUID  = {72631E54-78A4-11D0-BCF7-00AA00B7B32A}
-Provider   = %ReactOS%
+Provider   = %MenuOS%
 DriverVer  = 02/28/2010,1.00
 
 [DestinationDirs]
@@ -70,7 +70,7 @@ ServiceBinary = %12%\cmbatt.sys
 
 [Strings]
 ; Non-localizable
-ReactOS = "ReactOS Project"
+MenuOS = "MenuOS Project"
 
 REG_BINARY = 1
 

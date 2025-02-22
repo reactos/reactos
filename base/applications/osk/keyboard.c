@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS On-Screen Keyboard
+ * PROJECT:         MenuOS On-Screen Keyboard
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         Keyboard layout data.
  * COPYRIGHT:       Baruch Rutman (peterooch at gmail dot com)

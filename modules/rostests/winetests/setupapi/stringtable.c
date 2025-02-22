@@ -1,7 +1,7 @@
 /*
  * Unit test suite for StringTable functions
  *
- * Copyright 2005 Steven Edwards for ReactOS
+ * Copyright 2005 Steven Edwards for MenuOS
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

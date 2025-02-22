@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS Winsock 2 IRDA Helper DLL
+ * PROJECT:     MenuOS Winsock 2 IRDA Helper DLL
  * FILE:        wshirda.c
  * PURPOSE:     DLL entry
  * PROGRAMMERS: Robert D. Dickenson (robertdickenson@users.sourceforge.net)

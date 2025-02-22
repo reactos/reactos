@@ -9,12 +9,12 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 {
-1000, "ReactOS"
+1000, "MenuOS"
 }
 
 STRINGTABLE
 {
-2000, "Lunar ReactOS"
+2000, "Lunar MenuOS"
 }
 
 STRINGTABLE
@@ -35,10 +35,10 @@ STRINGTABLE
 {
 5000, "Lunar"
 5001, "视觉样式"
-5002, "ReactOS 基金会"
+5002, "MenuOS 基金会"
 5003, "Cernodile & Illen，基于 Lautus 主题"
 5004, "以 GNU/GPL 2.0 在 2019 年发行"
 5005, "https://reactos.org/"
 5006, "版本 1.1"
-5007, "ReactOS 视觉样式"
+5007, "MenuOS 视觉样式"
 }

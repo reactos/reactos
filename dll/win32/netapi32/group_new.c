@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS NetAPI DLL
+ * PROJECT:     MenuOS NetAPI DLL
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     SAM service group interface code
  * COPYRIGHT:   Copyright 2018 Eric Kohl (eric.kohl@reactos.org)

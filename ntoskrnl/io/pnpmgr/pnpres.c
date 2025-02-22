@@ -1,10 +1,10 @@
 /*
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         MenuOS Kernel
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/io/pnpmgr/pnpres.c
  * PURPOSE:         Resource handling code
  * PROGRAMMERS:     Cameron Gutman (cameron.gutman@reactos.org)
- *                  ReactOS Portable Systems Group
+ *                  MenuOS Portable Systems Group
  */
 
 #include <ntoskrnl.h>

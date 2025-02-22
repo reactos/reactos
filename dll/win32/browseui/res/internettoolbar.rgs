@@ -2,7 +2,7 @@ HKCR
 {
 	NoRemove CLSID
 	{
-		ForceRemove {5E6AB780-7743-11CF-A12B-00AA004AE837} = s 'ReactOS Internet Toolbar'
+		ForceRemove {5E6AB780-7743-11CF-A12B-00AA004AE837} = s 'MenuOS Internet Toolbar'
 		{
 			InprocServer32 = s '%MODULE%'
 			{

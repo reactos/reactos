@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS API Tests
+ * PROJECT:     MenuOS API Tests
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Tests for VerQueryValue[A/W]
  * COPYRIGHT:   Copyright 2024 Timo Kreuzer <timo.kreuzer@reactos.org>
@@ -37,7 +37,7 @@ typedef struct
                 WORD wType;
                 WCHAR szKey[12]; // L"CompanyName"
                 WORD Padding1;
-                WCHAR Value[16]; // L"ReactOS Project"
+                WCHAR Value[16]; // L"MenuOS Project"
             } CompanyName;
 
             struct _String_Comments
@@ -113,7 +113,7 @@ static const TEST_VERSIONINFO g_VersionInfo =
                 .wType = 1,
                 .szKey = L"CompanyName",
                 .Padding1 = 0,
-                .Value = L"ReactOS Project",
+                .Value = L"MenuOS Project",
             },
             .Comments =
             {
@@ -257,7 +257,7 @@ Test_StaticVersionInfo(void)
                             &cbLen);
     ok(result, "VerQueryValueW failed\n");
     ok_eq_int(cbLen, 16);
-    ok_eq_wstr((WCHAR*)pvData, L"ReactOS Project");
+    ok_eq_wstr((WCHAR*)pvData, L"MenuOS Project");
     ExpectedOffset = FIELD_OFFSET(TEST_VERSIONINFO, StringFileInfo.StringTable.CompanyName.Value);
     ok(pvData == (PVOID)((ULONG_PTR)pVersionInfo + ExpectedOffset), "Unexpected offset\n");
 

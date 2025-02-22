@@ -1,5 +1,5 @@
 /* NFSv4.1 client for Windows
- * Copyright © 2012 The Regents of the University of Michigan
+ * Copyright Â© 2012 The Regents of the University of Michigan
  *
  * Olga Kornievskaia <aglo@umich.edu>
  * Casey Bodley <cbodley@umich.edu>
@@ -76,7 +76,7 @@ struct idmap_lookup {
 
 #ifndef __REACTOS__
 /* configuration */
-static const char CONFIG_FILENAME[] = "C:\\ReactOS\\System32\\drivers\\etc\\ms-nfs41-idmap.conf";
+static const char CONFIG_FILENAME[] = "C:\\MenuOS\\System32\\drivers\\etc\\ms-nfs41-idmap.conf";
 #endif
 
 struct idmap_config {

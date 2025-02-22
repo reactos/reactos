@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS Named Pipe FileSystem
+ * PROJECT:     MenuOS Named Pipe FileSystem
  * LICENSE:     BSD - See COPYING.ARM in the top level directory
  * FILE:        drivers/filesystems/npfs/seinfo.c
  * PURPOSE:     Pipes Security Information
- * PROGRAMMERS: ReactOS Portable Systems Group
+ * PROGRAMMERS: MenuOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/

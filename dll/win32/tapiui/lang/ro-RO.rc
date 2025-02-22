@@ -1,6 +1,6 @@
 /*
  * FILE:        dll/win32/tapiui/lang/ro-RO.rc
- *              ReactOS Project (https://reactos.org)
+ *              MenuOS Project (https://reactos.org)
  *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
  *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
@@ -284,7 +284,7 @@ CAPTION "Informaţii amplasare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 10, 10, 88, 155
-    LTEXT "Înainte de a efectua orice conexiuni la modem sau telefon, ReactOS are nevoie de următoarele informaţii despre amplasarea curentă.", 2000, 107, 15, 188, 25
+    LTEXT "Înainte de a efectua orice conexiuni la modem sau telefon, MenuOS are nevoie de următoarele informaţii despre amplasarea curentă.", 2000, 107, 15, 188, 25
     LTEXT "În ce ţară/&regiune vă aflaţi acum?", -1, 107, 43, 189, 10
     COMBOBOX 1006, 107, 55, 180, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "&Ce cod are zona (oraşul) în care vă aflaţi?", -1, 107, 74, 189, 10
@@ -305,7 +305,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 302, 302, "STATIC", SS_BITMAP, 0, 0, 88, 155
-    LTEXT "Înainte de a efectua orice conexiuni la modem sau telefon, ReactOS are nevoie de următoarele informaţii despre amplasarea curentă.", 2000, 95, 2, 188, 25
+    LTEXT "Înainte de a efectua orice conexiuni la modem sau telefon, MenuOS are nevoie de următoarele informaţii despre amplasarea curentă.", 2000, 95, 2, 188, 25
     LTEXT "În ce ţară/&regiune vă aflaţi acum?", -1, 95, 30, 188, 10
     COMBOBOX 1006, 95, 41, 177, 68, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     LTEXT "&Ce cod are zona (oraşul) în care vă aflaţi?", -1, 95, 61, 188, 10
@@ -319,7 +319,7 @@ END
 
 500 DIALOGEX 0, 0, 235, 88
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "ReactOS Explorer"
+CAPTION "MenuOS Explorer"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 504, 501, 13, 14, 21, 20
@@ -413,7 +413,7 @@ BEGIN
     80 "Sigur ştergeţi această regulă pentru codul zonal?"
     81 "Este necesar să introduceţi cifrele care să se formeze."
     82 "Numele cartelei telefonice pe care l-aţi introdus este deja în utilizare. Introduceţi un nume unic."
-    83 "ReactOS are nevoie de informaţii pentru telefon despre amplasarea din care veţi face apel. Dacă revocaţi fără a furniza aceste informaţii, programul poate să nu funcţioneze corect la apelare. În plus, unele aplicaţii răspund la revocarea acestei casete de dialog prin reafişarea imediată a ei.\nSigur revocaţi?"
+    83 "MenuOS are nevoie de informaţii pentru telefon despre amplasarea din care veţi face apel. Dacă revocaţi fără a furniza aceste informaţii, programul poate să nu funcţioneze corect la apelare. În plus, unele aplicaţii răspund la revocarea acestei casete de dialog prin reafişarea imediată a ei.\nSigur revocaţi?"
     84 "Confirmare revocare"
     85 "Amplasarea propriea"
     86 "<nici un furnizor de servicii disponibil pentru instalare>"

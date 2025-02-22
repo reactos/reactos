@@ -49,7 +49,7 @@ static const VDM_MENUITEM VdmMainMenuItems[] =
 {
     { -1, NULL, 0 },    /* Separator */
     { IDS_CAPTURE_MOUSE, NULL, ID_CAPTURE_MOUSE },  /* "Capture mouse"; can be renamed to "Release mouse" */
-    { IDS_VDM_MENU , VdmMenuItems, 0 },             /* ReactOS VDM Menu */
+    { IDS_VDM_MENU , VdmMenuItems, 0 },             /* MenuOS VDM Menu */
 
     { 0, NULL, 0 }      /* End of list */
 };

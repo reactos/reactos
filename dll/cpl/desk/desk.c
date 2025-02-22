@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Display Control Panel
+ * PROJECT:         MenuOS Display Control Panel
  * FILE:            dll/cpl/desk/desk.c
- * PURPOSE:         ReactOS Display Control Panel
+ * PURPOSE:         MenuOS Display Control Panel
  *
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
  */

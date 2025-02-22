@@ -11,7 +11,7 @@ CAPTION "Nome do computador"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT "O ReactOS utiliza as seguintes informações para identificar o computador na rede.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT "O MenuOS utiliza as seguintes informações para identificar o computador na rede.", IDC_STATIC, 40, 5, 204, 20
     LTEXT "Descrição do computador:", IDC_STATIC, 7, 40, 90, 9
     EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "Nome completo do computador:", IDC_STATIC, 7, 64, 85, 18
@@ -71,7 +71,7 @@ BEGIN
     4 "Alterar o nome do computador"
     5 "Grupo de trabalho:"
     6 "Domínio:"
-    7 "O nome de domínio ""%1"" não está em conformidade com as especificações do Serviço de Nomes de Domínio da Internet, embora seja um nome ReactOS legal. Deve usar o servidor DNS ReactOS para nomes não padrão."
+    7 "O nome de domínio ""%1"" não está em conformidade com as especificações do Serviço de Nomes de Domínio da Internet, embora seja um nome MenuOS legal. Deve usar o servidor DNS MenuOS para nomes não padrão."
     8 "O nome de domínio ""%1"" não está formatado correctamente. Pontos (.) são usados para separar domínios. Cada domínio é limitado a 63 caracteres. Exemplo: domínio-1.reactos.org."
     10 "O novo nome do computador ""%1"" é muito longo. O nome não pode ter mais de 63 caracteres."
     11 "O novo nome de computador inserido não está formatado correctamente. Os nomes padrão podem conter letras (az, AZ), números (0-9) e hifens (-), mas sem espaços ou pontos (.). O nome não pode consistir inteiramente de dígitos."

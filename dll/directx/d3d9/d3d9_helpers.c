@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS ReactX
+ * PROJECT:         MenuOS ReactX
  * FILE:            dll/directx/d3d9/d3d9_helpers.c
  * PURPOSE:         d3d9.dll helper functions
  * PROGRAMERS:      Gregor Brunmar <gregor (dot) brunmar (at) home (dot) se>

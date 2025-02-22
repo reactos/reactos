@@ -10,7 +10,7 @@
 
 #define PRODUCT_NAME        _T("Registry Explorer")
 
-#define HELLO_MSG           _T("ReactOS ") PRODUCT_NAME _T(" version ") CURRENT_VERSION _T("\n")\
+#define HELLO_MSG           _T("MenuOS ") PRODUCT_NAME _T(" version ") CURRENT_VERSION _T("\n")\
                             _T("License is GNU GPL. Type `help gpl` for details.\n\n")
 
 #define NOWARANTY_MSG       _T("Registry Explorer comes with ABSOLUTELY NO WARRANTY\n")\
@@ -20,7 +20,7 @@
 #define COPYRIGHT_MSG       _T("Copyright (C) 2000-2005 Nedko Arnaudov\n")
 
 #define CREDITS_MSG         _T("Registry Explorer is written by Nedko Arnaudov\n")\
-                            _T("Special thanks to ReactOS team.\n")
+                            _T("Special thanks to MenuOS team.\n")
 
 #define BUGS_MSG            _T("Please report bugs to ") EMAIL _T("\n")
 

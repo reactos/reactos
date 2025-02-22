@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Win32k Subsystem
+ * PROJECT:         MenuOS Win32k Subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            win32ss/gdi/ntgdi/icm.c
  * PURPOSE:         Icm functions
@@ -344,7 +344,7 @@ IntSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Test)
                     (B != (IcmGR * 256)) ) TstPeak = FALSE; // W/i range.
             }
         }
-        // ReactOS allocates a ramp even if it is 8BPP and Palette only.
+        // MenuOS allocates a ramp even if it is 8BPP and Palette only.
         // This way we have a record of the change in memory.
         if (!pGDev->pvGammaRamp && !(pGDev->flFlags & PDEV_GAMMARAMP_TABLE))
         {

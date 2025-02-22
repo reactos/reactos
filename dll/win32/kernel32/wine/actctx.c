@@ -1,13 +1,13 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         MenuOS system libraries
  * FILE:            dll/win32/kernel32/wine/actctx.c
  * PURPOSE:         Activation contexts
  * PROGRAMMERS:     Jacek Caban for CodeWeavers
  *                  Eric Pouech
  *                  Jon Griffiths
  *                  Dmitry Chapyshev (dmitry@reactos.org)
- *                  Samuel Serapión
+ *                  Samuel SerapiÃ³n
  */
 
 /* Synched with Wine 1.7.55 */

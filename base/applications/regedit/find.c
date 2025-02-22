@@ -547,7 +547,7 @@ static DWORD GetFindFlags(void)
                 dwFlags = (dwFlags & ~0x0000FFFF) | ((dwValue & 0x0000FFFF) << 0);
         }
 
-        /* Retrieve ReactOS Regedit specific flags from registry key */
+        /* Retrieve MenuOS Regedit specific flags from registry key */
         cbData = sizeof(dwValue);
         if (RegQueryValueExW(hKey, s_szFindFlagsR, NULL, &dwType, (LPBYTE) &dwValue, &cbData) == ERROR_SUCCESS)
         {

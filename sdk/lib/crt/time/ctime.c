@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   LGPL, See LGPL.txt in the top level directory
- * PROJECT:     ReactOS CRT library
+ * PROJECT:     MenuOS CRT library
  * FILE:        lib/sdk/crt/time/ctime.c
  * PURPOSE:     Implementation of ctime, _ctime_s
  * PROGRAMERS:  Timo Kreuzer

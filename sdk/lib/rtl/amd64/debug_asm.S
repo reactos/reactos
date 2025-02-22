@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS Run-Time Library
+ * PROJECT:           MenuOS Run-Time Library
  * PURPOSE:           Debug Routines
  * FILE:              lib/rtl/amd64/debug_asm.S
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@reactos.org)

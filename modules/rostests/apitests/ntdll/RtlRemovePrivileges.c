@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS api tests
+ * PROJECT:         MenuOS api tests
  * LICENSE:         See COPYING in the top level directory
  * PURPOSE:         Test for RtlRemovePrivileges
  * PROGRAMMER:      Ratin Gao <ratin@knsoft.org>

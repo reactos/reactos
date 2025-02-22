@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS cabinet manager
+ * PROJECT:     MenuOS cabinet manager
  * FILE:        tools/cabman/cabman.cxx
  * PURPOSE:     Main program
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -190,7 +190,7 @@ void CCABManager::Usage()
  * FUNCTION: Display usage information on screen
  */
 {
-    printf("ReactOS Cabinet Manager\n\n");
+    printf("MenuOS Cabinet Manager\n\n");
     printf("CABMAN [-D | -E] [-A] [-L dir] cabinet [filename ...]\n");
     printf("CABMAN [-M mode] -C dirfile [-I] [-RC file] [-P dir]\n");
     printf("CABMAN [-M mode] -S cabinet filename [-F folder] [filename] [...]\n");
@@ -577,7 +577,7 @@ bool CCABManager::Run()
 {
     if (Verbose)
     {
-        printf("ReactOS Cabinet Manager\n\n");
+        printf("MenuOS Cabinet Manager\n\n");
     }
 
     switch (Mode)

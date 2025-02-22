@@ -12,7 +12,7 @@ END
 
 IDD_WELCOME DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Üdvözöljük a ReactOS-ben"
+CAPTION "Üdvözöljük a MenuOS-ben"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -108,7 +108,7 @@ END
 
 IDD_LOGOFF DIALOGEX 0, 0, 188, 60
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP
-CAPTION "Kijelentkezés a ReactOS-ből"
+CAPTION "Kijelentkezés a MenuOS-ből"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOGOFF, IDC_STATIC, 7, 7, 20, 20
@@ -120,7 +120,7 @@ END
 IDD_SHUTDOWN DIALOGEX 0, 0, 275, 146
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 // STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "ReactOS leállítása"
+CAPTION "MenuOS leállítása"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -140,7 +140,7 @@ END
 IDD_SHUTDOWN_REASON DIALOGEX 0, 0, 275, 297
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 // STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "ReactOS leállítása"
+CAPTION "MenuOS leállítása"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -184,7 +184,7 @@ BEGIN
     PUSHBUTTON "&Leállítás", IDC_BUTTON_SHUTDOWN, 93, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Új&raindítás", IDC_BUTTON_REBOOT, 150, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Mégse", IDCANCEL, 162, 103, 40, 12, BS_FLAT | WS_GROUP
-    LTEXT "ReactOS leállítása", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
+    LTEXT "MenuOS leállítása", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
     CTEXT "Alvás", IDC_SLEEP_STATIC, 22, 70, 51, 11
     CTEXT "Leállítás", IDC_SHUTDOWN_STATIC, 79, 70, 51, 11
     CTEXT "Újraindítás", IDC_RESTART_STATIC, 136, 70, 51, 11
@@ -201,7 +201,7 @@ BEGIN
     PUSHBUTTON "&Leállítás", IDC_BUTTON_SHUTDOWN, 150, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Új&raindítás", IDC_BUTTON_REBOOT, 207, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Mégse", IDCANCEL, 218, 103, 40, 12, BS_FLAT | WS_GROUP
-    LTEXT "ReactOS leállítása", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
+    LTEXT "MenuOS leállítása", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
     CTEXT "Hibernálás", IDC_HIBERNATE_STATIC, 22, 70, 51, 11
     CTEXT "Alvás", IDC_SLEEP_STATIC, 79, 70, 51, 11
     CTEXT "Leállítás", IDC_SHUTDOWN_STATIC, 136, 70, 51, 11
@@ -235,7 +235,7 @@ BEGIN
     IDS_INVALIDLOGONHOURS "A fiókján olyan időkorlátozás van, amely miatt jelenleg nem tud belépni. Kérjük próbálja újra később."
     IDS_INVALIDWORKSTATION "A fiókja úgy van beállítva hogy nem használhatja ezt a számítógépet. Kérjük próbálkozzon egy másik számítógéppel."
     IDS_ACCOUNTRESTRICTION "Fiókkorlátozás miatt nem sikerült a bejelentkezés."
-    IDS_EMERGENCYLOGOFFTITLE "Kijelentkezés a ReactOS-ből"
+    IDS_EMERGENCYLOGOFFTITLE "Kijelentkezés a MenuOS-ből"
     IDS_EMERGENCYLOGOFF "Kattintson az OK-ra az azonnali kijelentkezéshez. Minden nem mentett adat el fog veszni. Csak végső megoldásként használja ezt."
     IDS_EMERGENCYRESTARTTITLE "Vészhelyzeti újraindítás"
     IDS_EMERGENCYRESTART "Kattintson az OK-ra az azonnali újraindításhoz. Minden nem mentett adat el fog veszni. Csak végső megoldásként használja ezt."

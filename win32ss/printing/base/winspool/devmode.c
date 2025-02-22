@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Spooler API
+ * PROJECT:     MenuOS Spooler API
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions giving information about DEVMODE structures
  * COPYRIGHT:   Copyright 2016-2017 Colin Finck (colin@reactos.org)

@@ -3,7 +3,7 @@
  *
  * Mount Manager driver interface
  *
- * This file is part of the ReactOS DDK package.
+ * This file is part of the MenuOS DDK package.
  *
  * Contributors:
  *   Magnus Olsen <greatlord@reactos.org>

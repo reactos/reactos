@@ -556,7 +556,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
         if ((bTopToBottom) && (DestHeight > 1))
          {
           /* Note: It is very important that this code remain optimized for time used.
-           *   Otherwise you will have random crashes in ReactOS that are undesirable.
+           *   Otherwise you will have random crashes in MenuOS that are undesirable.
            *   For an example of this just try executing the code here two times.
            */
 

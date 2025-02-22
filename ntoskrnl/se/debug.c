@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Kernel
+ * PROJECT:     MenuOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Security subsystem debug routines support
  * COPYRIGHT:   Copyright 2022-2023 George Bișoc <george.bisoc@reactos.org>

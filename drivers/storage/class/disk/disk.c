@@ -104,7 +104,7 @@ const GUID GUID_NULL = { 0 };
 #define IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS_ADMIN  CTL_CODE(IOCTL_VOLUME_BASE, 0, METHOD_BUFFERED, FILE_READ_ACCESS)
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DiskDriverReinit(
     IN PDRIVER_OBJECT DriverObject,
     IN PVOID Nothing,
@@ -119,7 +119,7 @@ DiskDriverReinit(
 }
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DiskBootDriverReinit(
     IN PDRIVER_OBJECT DriverObject,
     IN PVOID Nothing,
@@ -142,7 +142,7 @@ DiskBootDriverReinit(
 }
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath
@@ -277,7 +277,7 @@ Return Value:
 
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DiskUnload(
     IN PDRIVER_OBJECT DriverObject
     )
@@ -542,7 +542,7 @@ DiskCreateFdoExit:
 
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DiskReadWriteVerification(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -933,7 +933,7 @@ SkipTable:
 }
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DiskDeviceControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp
@@ -1118,7 +1118,7 @@ Return Value:
 } // end DiskDeviceControl()
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DiskShutdownFlush(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -1259,7 +1259,7 @@ Return Value:
                     }
 
 #ifndef __REACTOS__
-                    // ReactOS hits this assert, because CurrIrp can already be freed at this point
+                    // MenuOS hits this assert, because CurrIrp can already be freed at this point
                     // and it's possible that NextIrp has the same pointer value
                     NT_ASSERT(diskData->FlushContext.CurrIrp != diskData->FlushContext.NextIrp);
 #endif
@@ -1695,7 +1695,7 @@ Return Value:
 
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DiskFlushComplete(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP Irp,
@@ -2008,7 +2008,7 @@ Retry:
 // This routine is structured as a work-item routine
 //
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DisableWriteCache(
     IN PDEVICE_OBJECT Fdo,
     IN PVOID Context
@@ -2042,7 +2042,7 @@ DisableWriteCache(
 // This routine is structured as a work-item routine
 //
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DiskIoctlVerifyThread(
     IN PDEVICE_OBJECT Fdo,
     IN PVOID Context
@@ -2272,7 +2272,7 @@ DiskIoctlVerifyThread(
 
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DiskFdoProcessError(
     PDEVICE_OBJECT Fdo,
     PSCSI_REQUEST_BLOCK Srb,
@@ -2598,7 +2598,7 @@ Return Value:
 
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DiskSetSpecialHacks(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN ULONG_PTR Data
@@ -3015,7 +3015,7 @@ DiskSetInfoExceptionInformation(
 }
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DiskGetCacheInformation(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PDISK_CACHE_INFORMATION CacheInfo
@@ -3163,7 +3163,7 @@ Return Value:
 
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DiskSetCacheInformation(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PDISK_CACHE_INFORMATION CacheInfo

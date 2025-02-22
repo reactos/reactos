@@ -1,9 +1,9 @@
 ====================
-ReactOS Tests
+MenuOS Tests
 ====================
 
-This directory contains various tests for ReactOS.
-Make sure you also have a copy of the rest of the ReactOS
+This directory contains various tests for MenuOS.
+Make sure you also have a copy of the rest of the MenuOS
 source before you attempt to build anything in this module.
 It is to be placed under "modules" subdirectory of a trunk checkout.
 The module requires to be enabled during the "configure" process.

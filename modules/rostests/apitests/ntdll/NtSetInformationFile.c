@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Kernel
+ * PROJECT:     MenuOS Kernel
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Test for NtSetInformationFile
  * COPYRIGHT:   Copyright 2019 Thomas Faber (thomas.faber@reactos.org)

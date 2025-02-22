@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS user32.dll
+ * PROJECT:         MenuOS user32.dll
  * FILE:            win32ss/user/user32/misc/misc.c
  * PURPOSE:         Misc
  * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)

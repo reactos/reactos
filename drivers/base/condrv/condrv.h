@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Console Driver
+ * PROJECT:         MenuOS Console Driver
  * FILE:            drivers/base/condrv/condrv.h
  * PURPOSE:         Console Driver Management Functions
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

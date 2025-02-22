@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS user32.dll
+ * PROJECT:     MenuOS user32.dll
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     cursor and icons implementation
  * COPYRIGHT:   Copyright Jérôme Gardou <jerome.gardou@reactos.org>

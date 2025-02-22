@@ -100,7 +100,7 @@ Return Value:
 
 _Requires_lock_held_(_Global_critical_region_)
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 CdPrePostIrp (
     _Inout_ PIRP_CONTEXT IrpContext,
     _Inout_ PIRP Irp
@@ -225,7 +225,7 @@ Return Value:
 
 _Requires_lock_held_(_Global_critical_region_)
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 CdOplockComplete (
     _Inout_ PIRP_CONTEXT IrpContext,
     _Inout_ PIRP Irp
@@ -407,7 +407,7 @@ Return Value:
 #pragma prefast(suppress:28155, "the function prototype is correct")
 #endif
     ExInitializeWorkItem( &IrpContext->WorkQueueItem,
-                          (PVOID)CdFspDispatch,/* ReactOS Change: GCC "assignment from incompatible pointer type" */
+                          (PVOID)CdFspDispatch,/* MenuOS Change: GCC "assignment from incompatible pointer type" */
                           IrpContext );
 
 #ifdef _MSC_VER

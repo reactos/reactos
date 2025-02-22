@@ -50,7 +50,7 @@ CHOICE  [/C[:]選択肢][/N][/S][/T[:]c,nn][文字列]\n\n\
     STRING_CMD_HELP5 "  [Bash ファイル名補完]"
     STRING_CMD_HELP6 "  [ディレクトリ スタック]"
     STRING_CMD_HELP7 "  [リダイレクトとパイプ]"
-    STRING_CMD_HELP8 "ReactOS コマンド ライン インタープリタの新しいインスタンスを開始します。\n\n\
+    STRING_CMD_HELP8 "MenuOS コマンド ライン インタープリタの新しいインスタンスを開始します。\n\n\
 CMD [/[C|K] コマンド][/P][/Q][/T:bf]\n\n\
   /C コマンド  指定されたコマンドを実行した後、終了します。\n\
   /K コマンド  指定されたコマンドを実行しますが、終了しません。\n\
@@ -506,9 +506,9 @@ RESTORE       ウィンドウを元のサイズに戻します。\n\
     STRING_ERROR_UNEXPECTED "%s は予期されていませんでした。\n"
     STRING_ERROR_WHILE_PROCESSING "%s の処理中にエラーが発生しました\n"
     STRING_SET_ENV_ERROR "環境変数 '%s' は未定義です。\n"
-    STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
-    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
-    STRING_REACTOS_VERSION "ReactOS [Version %s %s]\n"
+    STRING_CMD_INFOLINE "  MenuOS Command Prompt                                      Type HELP = Help  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s MenuOS Team.\n"
+    STRING_REACTOS_VERSION "MenuOS [Version %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Command Line Interpreter\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "実行中: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"

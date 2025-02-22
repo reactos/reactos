@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS DNS Shared Library
+ * PROJECT:     MenuOS DNS Shared Library
  * FILE:        lib/dnslib/name.c
  * PURPOSE:     Functions dealing with DNS (Canonical, FQDN, Host) Names
  */

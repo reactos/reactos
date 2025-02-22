@@ -1,6 +1,6 @@
-﻿/*
- * ReactOS Spanish Keyboard Layout
- * Copyright (C) 2003-2014 ReactOS
+/*
+ * MenuOS Spanish Keyboard Layout
+ * Copyright (C) 2003-2014 MenuOS
  * License: LGPL, see: LGPL.txt
  *
  * (c) 2003 - Created by HUMA2000 <huma2000@terra.es> from kbdus, kbdgr, kbdda and kbdfr.
@@ -494,7 +494,7 @@ ROSDATA VSC_LPWSTR extended_key_names[] =
   { 0x51, L"Avpág" },
   { 0x52, L"Ins" },
   { 0x53, L"Supr" },
-  { 0x54, L"<ReactOS>" },
+  { 0x54, L"<MenuOS>" },
   { 0x55, L"Ayuda" },
   { 0x5b, L"Windows izq." },
   { 0x5c, L"Windows der." },

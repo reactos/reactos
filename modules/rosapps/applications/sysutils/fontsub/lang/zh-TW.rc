@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Font Substitute Editor
+ * PROJECT:     MenuOS Font Substitute Editor
  * LICENSE:     CC0-1.0 (https://spdx.org/licenses/CC0-1.0)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2018 Luke Luo <njlyf2011@hotmail.com>
@@ -66,7 +66,7 @@ BEGIN
     IDS_QUERYDELETE,    "您確定要刪除此項目嗎？"
     IDS_CANTOPENKEY,    "無法開啟登錄鍵值。"
     IDS_REBOOTNOW,      "登錄已經更新。現在需要重新啟動系統嗎？"
-    IDS_ABOUT,          "FontSub（字型名稱替代）版本 0.5\r\nby 片山博文MZ 和 The ReactOS Team\r\n\r\n本軟體基於 CC0 1.0 授權發佈。"
+    IDS_ABOUT,          "FontSub（字型名稱替代）版本 0.5\r\nby 片山博文MZ 和 The MenuOS Team\r\n\r\n本軟體基於 CC0 1.0 授權發佈。"
 END
 
 IDD_ADD DIALOGEX 0, 0, 315, 65

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS Novell Eagle 2000 driver
+ * PROJECT:     MenuOS Novell Eagle 2000 driver
  * FILE:        ne2000/8390.c
  * PURPOSE:     DP8390 NIC specific routines
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

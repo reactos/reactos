@@ -1,5 +1,5 @@
 /*
- * PROJECT:    ReactOS Magnifier
+ * PROJECT:    MenuOS Magnifier
  * LICENSE:    GPL - See COPYING in the top level directory
  * FILE:       base/applications/magnify/lang/uk-UA.rc
  * PURPOSE:    Ukraianian Language File for Magnifier
@@ -63,7 +63,7 @@ END
 
 IDD_WARNINGDIALOG DIALOGEX 0, 0, 250, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
-CAPTION "Екранна лупа ReactOS"
+CAPTION "Екранна лупа MenuOS"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 193, 76, 50, 14

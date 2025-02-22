@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS Run-Time Library
+ * PROJECT:           MenuOS Run-Time Library
  * PURPOSE:           Debug Routines
  * FILE:              lib/rtl/i386/debug_asm.S
  * PROGRAMER:         Alex Ionescu (alex@relsoft.net)

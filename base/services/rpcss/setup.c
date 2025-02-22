@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS RPC Subsystem Service
+ * PROJECT:     MenuOS RPC Subsystem Service
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     One-time service setup configuration.
  * COPYRIGHT:   Copyright 2018 Hermes Belusca-Maito

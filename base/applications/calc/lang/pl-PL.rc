@@ -1,6 +1,6 @@
 /*
  * Translated by Caemyr - Olaf Siejka 2008-2011
- * Use ReactOS forum PM or IRC to contact me
+ * Use MenuOS forum PM or IRC to contact me
  * IRC: irc.freenode.net #reactos-pl;
  * Updated by Saibamen - Adam Stachowicz <saibamenppl@gmail.com> 2011
  */
@@ -336,7 +336,7 @@ BEGIN
     BEGIN
         MENUITEM "Tematy pomocy", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "O Kalkulatorze ReactOS", IDM_HELP_ABOUT
+        MENUITEM "O Kalkulatorze MenuOS", IDM_HELP_ABOUT
     END
 END
 
@@ -369,7 +369,7 @@ BEGIN
     BEGIN
         MENUITEM "Tematy pomocy", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "O Kalkulatorze ReactOS", IDM_HELP_ABOUT
+        MENUITEM "O Kalkulatorze MenuOS", IDM_HELP_ABOUT
     END
 END
 
@@ -392,7 +392,7 @@ BEGIN
     BEGIN
         MENUITEM "Tematy pomocy", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "O Kalkulatorze ReactOS", IDM_HELP_ABOUT
+        MENUITEM "O Kalkulatorze MenuOS", IDM_HELP_ABOUT
     END
 END
 
@@ -407,7 +407,7 @@ END
 /* About */
 STRINGTABLE
 BEGIN
-    IDS_CALC_NAME "Kalkulator ReactOS"
+    IDS_CALC_NAME "Kalkulator MenuOS"
     IDS_AUTHOR "Autorstwa: Carlo Bramini"
 END
 

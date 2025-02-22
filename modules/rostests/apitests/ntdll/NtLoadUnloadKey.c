@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS API Tests
+ * PROJECT:         MenuOS API Tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Test for NtLoadKey and NtUnloadKey
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

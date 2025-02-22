@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
+ * PROJECT:         MenuOS Kernel Streaming
  * FILE:            drivers/wdm/audio/backpln/portcls/version.cpp
  * PURPOSE:         Implements IPortClsVersion interface
  * PROGRAMMER:      Johannes Anderwald

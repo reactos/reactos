@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS API tests
+ * PROJECT:         MenuOS API tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Test for DeferWindowPos function family
  * PROGRAMMERS:     Thomas Faber <thomas.faber@reactos.org>

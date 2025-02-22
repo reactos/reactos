@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Software Control Panel
+ * PROJECT:     MenuOS Software Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Traditional) resource file
  * TRANSLATORS: Copyright 2016 Henry Tang Ih <henrytang2@hotmail.com>
@@ -67,7 +67,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Wine Gecko 套件"
 FONT 9, "新細明體"
 BEGIN
-    CONTROL "ReactOS 無法找到使內嵌 HTML 的應用程式正常工作的 Wine Gecko 套件。\nReactOS 能為您自動下載並安裝。",
+    CONTROL "MenuOS 無法找到使內嵌 HTML 的應用程式正常工作的 Wine Gecko 套件。\nReactOS 能為您自動下載並安裝。",
           ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
     CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
     DEFPUSHBUTTON "安裝(&I)", ID_DWL_INSTALL, 144, 76, 50, 14

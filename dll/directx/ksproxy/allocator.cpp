@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS WDM Streaming ActiveMovie Proxy
+ * PROJECT:         MenuOS WDM Streaming ActiveMovie Proxy
  * FILE:            dll/directx/ksproxy/allocator.cpp
  * PURPOSE:         IKsAllocator interface
  *

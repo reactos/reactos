@@ -172,7 +172,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance, LPSTR lpszCmdPar
 	RegisterClass(&WndClass);
 
 	// Create and show window (change styles !!!!!!!!)
-	hWnd = CreateWindow(szName, "ReactOS palette bitblt test",
+	hWnd = CreateWindow(szName, "MenuOS palette bitblt test",
 		WS_CAPTION|WS_MINIMIZEBOX|WS_SYSMENU,
 		CW_USEDEFAULT,CW_USEDEFAULT,W_WIDTH,W_HEIGHT,
 		0,0,hInstance,0);

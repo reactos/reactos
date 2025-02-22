@@ -1,5 +1,5 @@
 /*
- * ReactOS log2lines
+ * MenuOS log2lines
  * Written by Jan Roeloffzen
  *
  * - Help text and functions
@@ -40,7 +40,7 @@ char *verboseUsage =
 "       <ISO image>: This option also takes an ISO image as argument:\n"
 "       - The image is recognized by the '.iso' or '.7z' extension.\n"
 "       - NOTE: The '.7z' and extracted '.iso' basenames must be identical,\n"
-"         which is normally true for ReactOS trunk builds.\n"
+"         which is normally true for MenuOS trunk builds.\n"
 "       - The image will be unpacked to a directory with the same name.\n"
 "       - The embedded reactos.cab file will also be unpacked.\n"
 "       - Combined with -f the file will be re-unpacked.\n"

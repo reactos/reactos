@@ -49,7 +49,7 @@ BEGIN
     IDS_PREPARETOSTANDBY "Подготовка к переходу в режим ожидания..."
     IDS_PREPARETOHIBERNATE "Подготовка к переходу в спящий режим..."
     IDS_SAVEYOURSETTINGS "Сохраняются настройки..."
-    IDS_REACTOSISSTARTINGUP "ReactOS загружается..."
+    IDS_REACTOSISSTARTINGUP "MenuOS загружается..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
     IDS_TIMEOUTLONGFORMAT "%d дней"
 END

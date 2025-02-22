@@ -19,7 +19,7 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-/* ReactOS modifications */
+/* MenuOS modifications */
 #include <asm.inc>
 
 #define ALIGNARG(log2) log2
@@ -91,7 +91,7 @@ _pow:
 	cmp	ah, HEX(040)	// is y == 0 ?
 	je	L11
 
-	cmp ah, 5	// is y == ±inf ?
+	cmp ah, 5	// is y == Â±inf ?
 	je	L12
 
 	cmp ah, 1	// is y == NaN ?
@@ -107,10 +107,10 @@ _pow:
 	mov dh, ah
 	and ah, HEX(45)
 	cmp ah, HEX(040)
-	je	L20		// x is ±0
+	je	L20		// x is Â±0
 
 	cmp ah, 5
-	je	L15		// x is ±inf
+	je	L15		// x is Â±inf
 
 	fxch st(1)			// y : x
 
@@ -160,7 +160,7 @@ L5:	fmul st, st	// x*x : ST*x
 	fstp st		// ST*x
 	ret
 
-	/* y is ±NAN */
+	/* y is Â±NAN */
 L30:
 	fld qword ptr [esp + 4]		// x : y
 	fld qword ptr MO(one)		// 1.0 : x : y
@@ -205,13 +205,13 @@ L8:	fmul st, st(1)		// y*log2(x) : y
 	ret
 
 
-	// pow(x,±0) = 1
+	// pow(x,Â±0) = 1
 	.align ALIGNARG(4)
 L11:fstp st(0)		// pop y
 	fld qword ptr MO(one)
 	ret
 
-	// y == ±inf
+	// y == Â±inf
 	.align ALIGNARG(4)
 L12:	fstp st(0)		// pop y
 	fld qword ptr MO(one)		// 1
@@ -242,7 +242,7 @@ L13:fld qword ptr [esp + 4]		// load x == NaN
 
 	cfi_adjust_cfa_offset (8)
 	.align ALIGNARG(4)
-	// x is ±inf
+	// x is Â±inf
 L15:	fstp st(0)		// y
 	test dh, 2
 	jz	L16		// jump if x == +inf
@@ -298,12 +298,12 @@ L18:	shr edx, 31
 
 	cfi_adjust_cfa_offset (8)
 	.align ALIGNARG(4)
-	// x is ±0
+	// x is Â±0
 L20:	fstp st(0)		// y
 	test dl, 2
 	jz	L21		// y > 0
 
-	// x is ±0 and y is < 0.  We must find out whether y is an odd integer.
+	// x is Â±0 and y is < 0.  We must find out whether y is an odd integer.
 	test dh, 2
 	jz	L25
 
@@ -343,7 +343,7 @@ L27:	// Raise divide-by-zero exception and get infinity value.
 
 	cfi_adjust_cfa_offset (8)
 	.align ALIGNARG(4)
-	// x is ±0 and y is > 0.  We must find out whether y is an odd integer.
+	// x is Â±0 and y is > 0.  We must find out whether y is an odd integer.
 L21:test dh, 2
 	jz	L22
 

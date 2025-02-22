@@ -8,7 +8,7 @@ Signature  = "$Windows NT$"
 LayoutFile = layout.inf
 Class      = SCSIAdapter
 ClassGUID  = {4D36E97B-E325-11CE-BFC1-08002BE10318}
-Provider   = %ReactOS%
+Provider   = %MenuOS%
 DriverVer  = 11/02/2007,1.1
 
 [ClassInstall32.NT]
@@ -71,7 +71,7 @@ LoadOrderGroup = SCSI Miniport
 
 [Strings]
 ; Non-localizable
-ReactOS = "ReactOS Project"
+MenuOS = "MenuOS Project"
 
 ; Localizable
 SCSIClassName = "SCSI and RAID Controllers"

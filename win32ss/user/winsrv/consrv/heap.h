@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Console Server DLL
+ * PROJECT:         MenuOS Console Server DLL
  * FILE:            win32ss/user/winsrv/consrv/heap.h
  * PURPOSE:         Heap Helpers
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

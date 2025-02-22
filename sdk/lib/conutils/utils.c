@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS Console Utilities Library
+ * PROJECT:     MenuOS Console Utilities Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Base set of functions for loading string resources
  *              and message strings, and handle type identification.
- * COPYRIGHT:   Copyright 2017-2021 ReactOS Team
+ * COPYRIGHT:   Copyright 2017-2021 MenuOS Team
  *              Copyright 2017-2021 Hermes Belusca-Maito
  */
 

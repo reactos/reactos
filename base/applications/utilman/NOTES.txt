@@ -1,4 +1,4 @@
-ReactOS Accessibility Utility Manager
+MenuOS Accessibility Utility Manager
 =======================================
 
 Currently the application can manage the state of the accessibility tools however there are some things which needs to be DONE in order to consider the program as fully complete. The following are:

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:  See COPYING in the top level directory
- * PROJECT:    ReactOS kernel
+ * PROJECT:    MenuOS kernel
  * FILE:       drivers/filesystems/msfs/msfssup.c
  * PURPOSE:    Mailslot filesystem
  * PROGRAMMER: Nikita Pechenkin (n.pechenkin@mail.ru)

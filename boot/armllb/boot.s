@@ -1,9 +1,9 @@
 /*
- * PROJECT:         ReactOS Boot Loader
+ * PROJECT:         MenuOS Boot Loader
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            boot/armllb/boot.s
  * PURPOSE:         Implements the entry point for ARM machines
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROGRAMMERS:     MenuOS Portable Systems Group
  */
 
     .title "ARM LLB Entry Point"
@@ -53,7 +53,7 @@
 	.byte 2 		 // ARM
 	.byte 2 		 // Kernel
 	.byte 0 		 // No compression
-	.ascii "ReactOS ARM Low-Level Bootloader"
+	.ascii "MenuOS ARM Low-Level Bootloader"
 #endif
 
     /* Load C entrypoint and setup LLB stack */

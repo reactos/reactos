@@ -8,7 +8,7 @@
 
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         MenuOS Kernel
  * PURPOSE:         Kernel Debugger Safe Memory Support
  *
  * PROGRAMMERS:     arty

@@ -1,5 +1,5 @@
 /*
- * PROJECT:    ReactOS
+ * PROJECT:    MenuOS
  * LICENSE:    LGPL v2.1 or any later version
  * PURPOSE:    Map Wine's Unicode functions to native wcs* functions wherever possible
  * AUTHORS:    ?

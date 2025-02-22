@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS CRT library
+ * PROJECT:         MenuOS CRT library
  * LICENSE:         GPL (?) - See COPYING in the top level directory
  * FILE:            lib/sdk/crt/process/process.c
  * PURPOSE:         Process management functions

@@ -1,6 +1,6 @@
 *** This file contains messages I've culled off the net as well
 as previous discussions all of which have useful info on fixes
-that need to be added to ReactOS. messages are between five
+that need to be added to MenuOS. messages are between five
 dashes on a line by themselves.  If you implement the fix
 reffered to in a message, feel free to delete it from the file.
 Rex ***
@@ -11,7 +11,7 @@ From: Emanuele Aliberti <ea@iol.it>
 
 For those working on the boot loader: in WinNt Magazine november 1998
 issue (http://www.winntmag.com/) there is a detailed description, by
-Mark Russinovich, of the rôle the MBR, NTLDR, boot.ini, ntdetect.com...
+Mark Russinovich, of the rÃ´le the MBR, NTLDR, boot.ini, ntdetect.com...
 play in the boot process ("Inside the Boot Process, Part 1").
 -----
 Yes with DPCs, KeDrainDpcQueue should go to HIGH_LEVEL because

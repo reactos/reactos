@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         ReactOS Virtual DOS Machine
+ * PROJECT:         MenuOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/hardware/video/console.c
  * PURPOSE:         Console driver for the video subsystem
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
@@ -62,7 +62,7 @@ static BOOLEAN DoubleHeight = FALSE;
 
 /*
  * Activate this line if you want to use the real
- * RegisterConsoleVDM API of ReactOS/Windows.
+ * RegisterConsoleVDM API of MenuOS/Windows.
  */
 // #define USE_REAL_REGISTERCONSOLEVDM
 
@@ -730,9 +730,9 @@ VgaConsoleCreateTextScreen(// OUT PCHAR_CELL* TextFramebuffer,
      *
      * INFORMATION: This call should fail on Windows (and therefore
      * we get the default palette and our external behaviour is
-     * just like Windows' one), but it should success on ReactOS
+     * just like Windows' one), but it should success on MenuOS
      * (so that we get console palette changes even for text-mode
-     * screen buffers, which is a new feature on ReactOS).
+     * screen buffers, which is a new feature on MenuOS).
      */
     SetConsolePalette(TextConsoleBuffer,
                       PaletteHandle,

@@ -1,5 +1,5 @@
 /*
- * ReactOS Calc (Utility functions for IEEE-754 engine)
+ * MenuOS Calc (Utility functions for IEEE-754 engine)
  *
  * Copyright 2007-2017, Carlo Bramini
  *

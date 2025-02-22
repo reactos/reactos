@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS VGA Font Editor
+ * PROJECT:     MenuOS VGA Font Editor
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Norwegian resource file
  * COPYRIGHT:   Copyright 2008 Colin Finck (colin@reactos.org)
@@ -14,7 +14,7 @@ CAPTION "Om"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON           IDI_MAIN,                     IDC_STATIC, 10, 10, 20, 20
-    LTEXT          "ReactOS VGA skriftredigering",    IDC_STATIC, 37, 10, 93, 10
+    LTEXT          "MenuOS VGA skriftredigering",    IDC_STATIC, 37, 10, 93, 10
     LTEXT          "Enerett 2008 Colin Finck", IDC_STATIC, 37, 20, 93, 10
     DEFPUSHBUTTON  "OK",                         IDCANCEL,   40, 44, 55, 15
 END
@@ -81,7 +81,7 @@ BEGIN
     IDS_UNSUPPORTEDPSF, "Ikke støttet PSF filformat/skriftformat! Programmet støtter bare 8x8 skrift med ingen spesielle modus."
     IDS_DOCNAME, "Skrifttype %1!u!"
     IDS_SAVEPROMPT, "Filen ""%1"" har blitt endret, men har ikke blitt lagret.\n\nVil du lagre denne?"
-    IDS_APPTITLE, "ReactOS VGA Skriftredigering"
+    IDS_APPTITLE, "MenuOS VGA Skriftredigering"
     IDS_CLOSEEDIT, "Vennligst lukk alle åpne vinduer først!"
 
     IDS_TOOLTIP_NEW, "Ny"

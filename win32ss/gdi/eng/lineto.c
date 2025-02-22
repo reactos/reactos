@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          MenuOS kernel
  * PURPOSE:          Line functions
  * FILE:             win32ss/gdi/eng/lineto.c
- * PROGRAMER:        ReactOS Team
+ * PROGRAMER:        MenuOS Team
  */
 
 #include <win32k.h>

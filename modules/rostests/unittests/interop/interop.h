@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS interoperability tests
+ * PROJECT:     MenuOS interoperability tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Main header file
  * COPYRIGHT:   Copyright 2024 Stanislav Motylkov <x86corez@gmail.com>

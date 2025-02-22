@@ -14,16 +14,16 @@ BEGIN
     IDS_NODEPENDENCY "Tidak dapat memuatkan fail pergantungan %1."
     IDS_SETUPERROR "Satu kesilapan telah berlaku semasa menyediakan %1. Kesilapan ini telah dilog, pemasangan akan terus"
     IDS_INCOMPLETE "Pemasangan aplikasi sebelum ini belum diselesaikan.\n\nLog masuk dengan akaun pentadbir untuk menyelesaikan pemasangan."
-    IDS_SETUP "ReactOS Persediaan"
+    IDS_SETUP "MenuOS Persediaan"
     IDS_SERVICEERROR "Beberapa perkhidmatan tidak dapat dimulakan. Persediaan perlu mulakan semula sistem anda untuk memulakan perkhidmatan."
 END
 
 IDD_DIALOG DIALOGEX 0, 0, 206, 166
 STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "ReactOS Persediaan"
+CAPTION "MenuOS Persediaan"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS sedang menyediakan perkara-perkara berikut:", -1, 36, 13, 163, 11
+    LTEXT "MenuOS sedang menyediakan perkara-perkara berikut:", -1, 36, 13, 163, 11
     LISTBOX IDC_LB_ITEMS, 36, 32, 163, 127, LBS_NOTIFY | LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
     ICON IDI_ICON, -1, 7, 7, 20, 20
 END

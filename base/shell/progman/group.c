@@ -19,7 +19,7 @@
  */
 
 /*
- * PROJECT:         ReactOS Program Manager
+ * PROJECT:         MenuOS Program Manager
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * FILE:            base/shell/progman/group.c
  * PURPOSE:         Program group files helper functions

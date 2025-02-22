@@ -1,5 +1,5 @@
 /*
-    ReactOS Sound System
+    MenuOS Sound System
     Sound Blaster DSP support
     Speaker commands
 

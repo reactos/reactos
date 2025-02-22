@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL, see COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         MenuOS kernel
  * FILE:            drivers/base/kddll/gdb_input.c
  * PURPOSE:         Base functions for the kernel debugger.
  */

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS simple TCP/IP services
+ * PROJECT:     MenuOS simple TCP/IP services
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/services/tcpsvcs/discard.c
  * PURPOSE:     Receives input from a client and discards it

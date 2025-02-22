@@ -3,7 +3,7 @@
 <assemblyIdentity
     version="1.0.0.0"
     processorArchitecture="X86"
-    name="ReactOS.Explorer"
+    name="MenuOS.Explorer"
     type="win32"
 />
 <description>ROS Explorer</description>

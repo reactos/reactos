@@ -21,7 +21,7 @@ BEGIN
     DEFPUSHBUTTON "Avbryt", IDCANCEL, 142, 98, 43, 17
     PUSHBUTTON "&Avsluta Nu", IDC_END_NOW, 78, 98, 43, 17
     LTEXT "Detta programmet svarar inte.", IDC_STATIC, 7, 7, 178, 8
-    LTEXT "För att återgå till ReactOS och undersöka programmets status klicka Avbryt.", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "För att återgå till MenuOS och undersöka programmets status klicka Avbryt.", IDC_STATIC, 7, 26, 178, 16
     LTEXT "Om du väljer att avsluta programmet omedelbart kommer du att förlora all osparad data. För att avsluta programmet, klicka Avsluta nu.", IDC_STATIC, 7, 53, 178, 26
 END
 

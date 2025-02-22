@@ -1,6 +1,6 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 2017 ReactOS Team
+ *  MenuOS kernel
+ *  Copyright (C) 2017 MenuOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          MenuOS kernel
  * FILE:             sdk/lib/drivers/copysup/copysup.c
  * PURPOSE:          CopySup library
  * PROGRAMMER:       Pierre Schweitzer (pierre@reactos.org)

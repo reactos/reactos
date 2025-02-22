@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS api tests
+ * PROJECT:         MenuOS api tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Test for the RegQueryValueW API
  * PROGRAMMER:      Victor Martinez Calvo <victor.martinez@reactos.org>
@@ -44,12 +44,12 @@ START_TEST(RegQueryValueExW)
 
 
     /* If the tree key already exist, delete it to ensure proper testing*/
-    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\advapi32_apitest", 0, KEY_ALL_ACCESS, &hkey_main) == ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\MenuOS\\advapi32_apitest", 0, KEY_ALL_ACCESS, &hkey_main) == ERROR_SUCCESS)
         delete_key(hkey_main);
 
     /* Ready to recreate it */
     SetLastError(0xdeadbeef);
-    ret = RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\advapi32_apitest", 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hkey_main, NULL);
+    ret = RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\MenuOS\\advapi32_apitest", 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hkey_main, NULL);
     ok(ret == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %lu\n", ret);
     ok(GetLastError(), "RegCreateKeyExW failed: %lx\n", GetLastError());
     if(ret != ERROR_SUCCESS)
@@ -319,6 +319,6 @@ START_TEST(RegQueryValueExW)
     RegCloseKey(subkey);
 
     /* Delete the whole test key */
-    RegOpenKeyW(HKEY_CURRENT_USER, L"Software\\ReactOS\\advapi32_apitest", &hkey_main);
+    RegOpenKeyW(HKEY_CURRENT_USER, L"Software\\MenuOS\\advapi32_apitest", &hkey_main);
     delete_key(hkey_main);
 }

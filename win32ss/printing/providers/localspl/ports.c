@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Local Spooler
+ * PROJECT:     MenuOS Local Spooler
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Functions related to Ports of the Print Monitors
  * COPYRIGHT:   Copyright 2015-2017 Colin Finck (colin@reactos.org)
@@ -332,7 +332,7 @@ LocalAddPort(LPWSTR pName, HWND hWnd, LPWSTR pMonitorName)
         PPORT_INFO_1 pPorts;
 
         //
-        // Play it safe,,, we know its Monitor2.... This is ReactOS.
+        // Play it safe,,, we know its Monitor2.... This is MenuOS.
         //
         if ( LocalEnumPorts( pName, 1, NULL, 0, &cbNeeded, &cReturned ) )
         {

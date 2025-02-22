@@ -1,5 +1,5 @@
 /*
- * ReactOS Explorer
+ * MenuOS Explorer
  *
  * Copyright 2006 - 2007 Thomas Weidenmueller <w3seek@reactos.org>
  * Copyright 2018-2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
@@ -476,7 +476,7 @@ public:
     {
         SaveState();
 
-        /* Display the ReactOS Shutdown Dialog */
+        /* Display the MenuOS Shutdown Dialog */
         ExitWindowsDialog(m_hWnd);
 
         /*

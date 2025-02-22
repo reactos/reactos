@@ -511,7 +511,7 @@
 																	<object class="NSTableHeaderCell" key="NSHeaderCell">
 																		<int key="NSCellFlags">75628032</int>
 																		<int key="NSCellFlags2">0</int>
-																		<string key="NSContents">ReactOS Shortcut</string>
+																		<string key="NSContents">MenuOS Shortcut</string>
 																		<object class="NSFont" key="NSSupport" id="26">
 																			<string key="NSName" id="240239231">LucidaGrande</string>
 																			<double key="NSSize">1.100000e+01</double>

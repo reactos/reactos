@@ -2388,7 +2388,7 @@ Return Value:
 IO_COMPLETION_ROUTINE CdSyncCompletionRoutine;
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 CdSyncCompletionRoutine (
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -3434,7 +3434,7 @@ Return Value:
 //
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 CdMultiSyncCompletionRoutine (
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -3522,7 +3522,7 @@ Return Value:
 //
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 CdMultiAsyncCompletionRoutine (
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -3642,7 +3642,7 @@ Return Value:
 //
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 CdSingleSyncCompletionRoutine (
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -3706,7 +3706,7 @@ Return Value:
 //
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 CdSingleAsyncCompletionRoutine (
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,

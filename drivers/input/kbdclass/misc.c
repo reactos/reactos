@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Keyboard class driver
+ * PROJECT:         MenuOS Keyboard class driver
  * FILE:            drivers/input/kbdclass/misc.c
  * PURPOSE:         Miscellaneous operations
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "kbdclass.h"

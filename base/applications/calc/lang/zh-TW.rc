@@ -331,7 +331,7 @@ BEGIN
     BEGIN
         MENUITEM "說明主題", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "關於 ReactOS 計算機", IDM_HELP_ABOUT
+        MENUITEM "關於 MenuOS 計算機", IDM_HELP_ABOUT
     END
 END
 
@@ -364,7 +364,7 @@ BEGIN
     BEGIN
         MENUITEM "說明主題", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "關於 ReactOS 計算機", IDM_HELP_ABOUT
+        MENUITEM "關於 MenuOS 計算機", IDM_HELP_ABOUT
     END
 END
 
@@ -387,7 +387,7 @@ BEGIN
     BEGIN
         MENUITEM "說明主題", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "關於 ReactOS 計算機", IDM_HELP_ABOUT
+        MENUITEM "關於 MenuOS 計算機", IDM_HELP_ABOUT
     END
 END
 
@@ -402,7 +402,7 @@ END
 /* About */
 STRINGTABLE
 BEGIN
-    IDS_CALC_NAME "ReactOS 計算機"
+    IDS_CALC_NAME "MenuOS 計算機"
     IDS_AUTHOR "作者 Carlo Bramini"
 END
 

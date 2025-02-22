@@ -1,5 +1,5 @@
 /*
- * ReactOS ATL
+ * MenuOS ATL
  *
  * Copyright 2009 Andrew Hill <ash77@reactos.org>
  *

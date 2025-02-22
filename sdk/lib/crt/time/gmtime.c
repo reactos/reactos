@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   LGPL, See LGPL.txt in the top level directory
- * PROJECT:     ReactOS CRT library
+ * PROJECT:     MenuOS CRT library
  * FILE:        lib/sdk/crt/time/gmtime.c
  * PURPOSE:     Implementation of gmtime, _gmtime32, _gmtime64
  * PROGRAMERS:  Timo Kreuzer

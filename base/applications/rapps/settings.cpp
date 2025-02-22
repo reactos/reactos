@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Applications Manager
+ * PROJECT:     MenuOS Applications Manager
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Functions to load / save settings from reg.
  * COPYRIGHT:   Copyright 2020 He Yang (1160386205@qq.com)
@@ -8,7 +8,7 @@
 #include "rapps.h"
 #include "settings.h"
 
-#define SETTINGSSUBKEY L"Software\\ReactOS\\" RAPPS_NAME
+#define SETTINGSSUBKEY L"Software\\MenuOS\\" RAPPS_NAME
 
 class SettingsField
 {

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Storage Stack
+ * PROJECT:         MenuOS Storage Stack
  * FILE:            drivers/storage/scsiport/stubs.c
  * PURPOSE:         SCSI port driver
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)

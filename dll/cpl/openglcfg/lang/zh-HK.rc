@@ -1,5 +1,5 @@
 /* 
- * PROJECT:     ReactOS OpenGL Configuration Control Panel
+ * PROJECT:     MenuOS OpenGL Configuration Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Chinese (Hong Kong) resource file
  * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
@@ -27,7 +27,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_RENDERER_DEFAULT "系統預設值"
-    IDS_RENDERER_RSWR "ReactOS Software Implementation"
+    IDS_RENDERER_RSWR "MenuOS Software Implementation"
     IDS_CPLNAME "OpenGL 設定"
     IDS_CPLDESCRIPTION "設定 OpenGL 轉譯器。"
     IDS_DEBUG_SET "設定"

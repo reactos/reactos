@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Console Text-Mode Device Driver
+ * PROJECT:     MenuOS Console Text-Mode Device Driver
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Driver Management Functions.
  * COPYRIGHT:   Copyright 1999 Boudewijn Dekker
@@ -152,7 +152,7 @@ ScrResetDisplayParameters(
 }
 
 /*
- * (Adapted for ReactOS/Win2k3 from an original comment
+ * (Adapted for MenuOS/Win2k3 from an original comment
  *  by Gé van Geldorp, June 2003, r4937)
  *
  * DISPLAY OWNERSHIP
@@ -174,7 +174,7 @@ ScrResetDisplayParameters(
  * modes is text mode -> graphics mode -> text mode (the latter hopefully
  * happening very infrequently).
  *
- * In ReactOS things are a little bit different. We want to have a functional
+ * In MenuOS things are a little bit different. We want to have a functional
  * interactive text mode. We should be able to switch back and forth from
  * text mode to graphics mode when a GUI app is started and then finished.
  * Also, when the system bugchecks in graphics mode we want to switch back to

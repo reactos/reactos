@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS DirectX
+ * PROJECT:              MenuOS DirectX
  * FILE:                 dll/directx/ddraw/Clipper/clipper_main.c
  * PURPOSE:              IDirectDrawClipper Implementation
  * PROGRAMMER:           Maarten Bosma

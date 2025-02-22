@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Kernel
+ * PROJECT:     MenuOS Kernel
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Defining kernel-to-user32 callbacks
  * COPYRIGHT:   Copyright 2018 James Tabor <james.tabor@reactos.org>

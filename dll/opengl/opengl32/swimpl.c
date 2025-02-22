@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS
+ * PROJECT:              MenuOS
  * FILE:                 dll/opengl/opengl32/swimpl.c
  * PURPOSE:              OpenGL32 DLL, opengl software implementation
  */
@@ -575,7 +575,7 @@ end:
 
 static const char* renderer_string(void)
 {
-    return "ReactOS SW Implementation";
+    return "MenuOS SW Implementation";
 }
 
 static inline void PUT_PIXEL_8(BYTE* Buffer, BYTE Value)

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
- * PROJECT:         ReactOS UEFI Boot Library
+ * PROJECT:         MenuOS UEFI Boot Library
  * FILE:            boot/environ/lib/io/etfs.c
  * PURPOSE:         Boot Library El Torito File System Management Routines
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)

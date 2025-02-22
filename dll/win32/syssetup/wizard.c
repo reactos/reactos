@@ -380,7 +380,7 @@ AckPageDlgProc(HWND hwndDlg,
 }
 
 static const WCHAR s_szProductOptions[] = L"SYSTEM\\CurrentControlSet\\Control\\ProductOptions";
-static const WCHAR s_szRosVersion[] = L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version";
+static const WCHAR s_szRosVersion[] = L"SYSTEM\\CurrentControlSet\\Control\\MenuOS\\Settings\\Version";
 static const WCHAR s_szControlWindows[] = L"SYSTEM\\CurrentControlSet\\Control\\Windows";
 static const WCHAR s_szWinlogon[] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon";
 static const WCHAR s_szDefaultSoundEvents[] = L"AppEvents\\Schemes\\Apps\\.Default";
@@ -560,7 +560,7 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
 
     RegCloseKey(hKey);
 
-    /* open ReactOS version key */
+    /* open MenuOS version key */
     error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szRosVersion, 0, KEY_WRITE, &hKey);
     if (error)
     {
@@ -858,7 +858,7 @@ OwnerPageDlgProc(HWND hwndDlg,
                     {
                         if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, ARRAYSIZE(Title)))
                         {
-                            wcscpy(Title, L"ReactOS Setup");
+                            wcscpy(Title, L"MenuOS Setup");
                         }
                         if (0 == LoadStringW(hDllInstance, IDS_WZD_NAME, ErrorName, ARRAYSIZE(ErrorName)))
                         {
@@ -914,7 +914,7 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
         {
             if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, ARRAYSIZE(Title)))
             {
-                wcscpy(Title, L"ReactOS Setup");
+                wcscpy(Title, L"MenuOS Setup");
             }
             if (0 == LoadStringW(hDllInstance, IDS_WZD_SETCOMPUTERNAME, ErrorComputerName,
                                  ARRAYSIZE(ErrorComputerName)))
@@ -1055,7 +1055,7 @@ ComputerPageDlgProc(HWND hwndDlg,
 
     if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, ARRAYSIZE(Title)))
     {
-        wcscpy(Title, L"ReactOS Setup");
+        wcscpy(Title, L"MenuOS Setup");
     }
 
     switch (uMsg)
@@ -1737,7 +1737,7 @@ WriteDateTimeSettings(HWND hwndDlg, PSETUPDATA SetupData)
     {
         if (0 == LoadStringW(hDllInstance, IDS_REACTOS_SETUP, Title, ARRAYSIZE(Title)))
         {
-            wcscpy(Title, L"ReactOS Setup");
+            wcscpy(Title, L"MenuOS Setup");
         }
         if (0 == LoadStringW(hDllInstance, IDS_WZD_LOCALTIME, ErrorLocalTime,
                              ARRAYSIZE(ErrorLocalTime)))
@@ -2294,7 +2294,7 @@ ShowItemError(
         if (LoadStringW(hDllInstance, IDS_REACTOS_SETUP,
                         Title, ARRAYSIZE(Title)) == 0)
         {
-            wcscpy(Title, L"ReactOS Setup");
+            wcscpy(Title, L"MenuOS Setup");
         }
 
         MessageBoxW(hwndDlg, ErrorMessage, Title, MB_ICONERROR | MB_OK);
@@ -2338,7 +2338,7 @@ ShowStepError(
         if (LoadStringW(hDllInstance, IDS_REACTOS_SETUP,
                         Title, ARRAYSIZE(Title)) == 0)
         {
-            wcscpy(Title, L"ReactOS Setup");
+            wcscpy(Title, L"MenuOS Setup");
         }
 
         MessageBoxW(hwndDlg, ErrorMessage,
@@ -2568,7 +2568,7 @@ FinishDlgProc(HWND hwndDlg,
 
 
 /*
- * GetInstallSourceWin32 retrieves the path to the ReactOS installation medium
+ * GetInstallSourceWin32 retrieves the path to the MenuOS installation medium
  * in Win32 format, for later use by syssetup and storage in the registry.
  */
 static BOOL
@@ -3180,7 +3180,7 @@ InstallWizard(VOID)
         LogItem(NULL, L"SetupData allocation failed!");
         MessageBoxW(NULL,
                     L"Setup failed to allocate global data!",
-                    L"ReactOS Setup",
+                    L"MenuOS Setup",
                     MB_ICONERROR | MB_OK);
         goto done;
     }
@@ -3210,7 +3210,7 @@ InstallWizard(VOID)
         LogItem(NULL, L"Page array allocation failed!");
         MessageBoxW(NULL,
                     L"Setup failed to allocate page array!",
-                    L"ReactOS Setup",
+                    L"MenuOS Setup",
                     MB_ICONERROR | MB_OK);
         goto done;
     }

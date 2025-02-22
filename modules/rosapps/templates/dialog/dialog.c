@@ -1,5 +1,5 @@
 /*
- *  ReactOS Standard Dialog Application Template
+ *  MenuOS Standard Dialog Application Template
  *
  *  Copyright (C) 2002 Robert Dickenson <robd@reactos.org>
  *

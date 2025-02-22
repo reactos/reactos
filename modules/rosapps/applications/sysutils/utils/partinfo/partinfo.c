@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Partition Information Tool
+ * PROJECT:     MenuOS Partition Information Tool
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Displays disk and partition information for MBR and GPT disks.
  * COPYRIGHT:   Copyright 2001-2002 Eric Kohl

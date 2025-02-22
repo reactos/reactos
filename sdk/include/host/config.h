@@ -130,10 +130,10 @@
 #define PACKAGE_BUGREPORT "ros-dev@reactos.org"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "ReactOS"
+#define PACKAGE_NAME "MenuOS"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "ReactOS"
+#define PACKAGE_TARNAME "MenuOS"
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "<undefined version>"

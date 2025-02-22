@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Kernel
+ * PROJECT:     MenuOS Kernel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Kernel Debugger Initialization
  * COPYRIGHT:   Copyright 2005 Alex Ionescu <alex.ionescu@reactos.org>

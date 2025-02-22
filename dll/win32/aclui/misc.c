@@ -1,6 +1,6 @@
 /*
- * ReactOS Access Control List Editor
- * Copyright (C) 2004-2005 ReactOS Team
+ * MenuOS Access Control List Editor
+ * Copyright (C) 2004-2005 MenuOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 /*
- * PROJECT:         ReactOS Access Control List Editor
+ * PROJECT:         MenuOS Access Control List Editor
  * FILE:            lib/aclui/misc.c
  * PURPOSE:         Access Control List Editor
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>

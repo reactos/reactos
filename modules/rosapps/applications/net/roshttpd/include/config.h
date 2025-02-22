@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS HTTP Daemon
+ * PROJECT:     MenuOS HTTP Daemon
  * FILE:        include/config.h
  */
 #ifndef __CONFIG_H
@@ -10,7 +10,7 @@
 #include <list.h>
 
 // General constants
-#define APP_DESCRIPTION _T("ReactOS HTTP Daemon")
+#define APP_DESCRIPTION _T("MenuOS HTTP Daemon")
 
 // Default configuration
 #define dcfgDescription     _T("Default configuration")

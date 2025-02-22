@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Clipboard Viewer
+ * PROJECT:     MenuOS Clipboard Viewer
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Implementation of Italian language for Clipboard Viewer
  * COPYRIGHT:   Copyright 2018 George Bișoc (george.bisoc@reactos.org)
@@ -43,7 +43,7 @@ BEGIN
     STRING_CLIPFILE  "Elemento Clipboard"
     STRING_DELETE_MSG "Cancella i contenuti del Clipboard?"
     STRING_DELETE_TITLE "Cancella Clipboard"
-    STRING_FORMAT_NT "I file del Clipboard di ReactOS (*.clp)"
+    STRING_FORMAT_NT "I file del Clipboard di MenuOS (*.clp)"
     STRING_FORMAT_GEN "I file Clipboard (*.clp)"
 END
 

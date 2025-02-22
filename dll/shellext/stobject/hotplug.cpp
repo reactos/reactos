@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS system libraries
+ * PROJECT:     MenuOS system libraries
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/shellext/stobject/hotplug.cpp
  * PURPOSE:     Removable devices notification icon handler

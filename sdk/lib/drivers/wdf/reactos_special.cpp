@@ -43,7 +43,7 @@ NTSTATUS
 STDCALL
 WdfApiNotImplemented()
 {
-	DbgPrint("ReactOS KMDF: %s non-implemented API called\n");
+	DbgPrint("MenuOS KMDF: %s non-implemented API called\n");
     __debugbreak();
 	return STATUS_UNSUCCESSFUL;
 }

@@ -8,7 +8,7 @@ Signature  = "$Windows NT$"
 LayoutFile = layout.inf
 Class      = MEDIA
 ClassGUID  = {4d36e96c-e325-11ce-bfc1-08002be10318}
-Provider   = %ReactOS%
+Provider   = %MenuOS%
 DriverVer  = 10/19/1999,5.00.2157.1
 
 [KS.Registration]
@@ -341,7 +341,7 @@ HKLM,System\CurrentControlSet\Control\MediaInterfaces\{EC529B00-1A1F-11D1-BAD9-0
 
 [Strings]
 ; Non-localizable
-ReactOS = "ReactOS Project"
+MenuOS = "MenuOS Project"
 
 KSSTRING_Clock="{53172480-4791-11D0-A5D6-28DB04C10000}"
 KSSTRING_Quality="{97EBAACB-95BD-11D0-A3EA-00A0C9223196}"
@@ -589,7 +589,7 @@ Pin.RadioXmit="Radio Transmitter"
 Pin.MultitrackRecorder="Multitrack Recorder"
 Pin.Synthesizer="Synthesizer"
 Pin.SWSynth="SW Synth"
-Pin.SWMidi="ReactOS GS Wavetable SW Synth"
+Pin.SWMidi="MenuOS GS Wavetable SW Synth"
 
 AudFName.Bass="Bass"
 AudFName.Treble="Treble"
@@ -744,7 +744,7 @@ Pin.RadioXmit="Radiosender"
 Pin.MultitrackRecorder="Mehrspurrekorder"
 Pin.Synthesizer="Synthesizer"
 Pin.SWSynth="SW-Synthesizer"
-Pin.SWMidi="ReactOS GS Wavetable SW Synth"
+Pin.SWMidi="MenuOS GS Wavetable SW Synth"
 
 AudFName.Bass="Tiefen"
 AudFName.Treble="Höhen"
@@ -899,7 +899,7 @@ Pin.RadioXmit="Trasmettitore Radio"
 Pin.MultitrackRecorder="Registratore a traccia multipla"
 Pin.Synthesizer="Sintetizzatore"
 Pin.SWSynth="Sintetizzatore SW"
-Pin.SWMidi="Sint. SW ReactOS GS Wavetable"
+Pin.SWMidi="Sint. SW MenuOS GS Wavetable"
 
 AudFName.Bass="Bassi"
 AudFName.Treble="Alti"
@@ -1054,7 +1054,7 @@ Pin.RadioXmit="Transmisor de radio"
 Pin.MultitrackRecorder="Grabadora multipista"
 Pin.Synthesizer="Sintetizador"
 Pin.SWSynth="Sintetizador por software"
-Pin.SWMidi="Sintetizador GS Wavetable por software de ReactOS"
+Pin.SWMidi="Sintetizador GS Wavetable por software de MenuOS"
 
 AudFName.Bass="Graves"
 AudFName.Treble="Agudos"
@@ -1208,7 +1208,7 @@ Pin.RadioXmit="Nadajnik radiowy"
 Pin.MultitrackRecorder="Nagrywarka wielościeżkowa"
 Pin.Synthesizer="Syntezator"
 Pin.SWSynth="Syntezator programowy"
-Pin.SWMidi="ReactOS GS Wavetable SW Synth"
+Pin.SWMidi="MenuOS GS Wavetable SW Synth"
 
 AudFName.Bass="Tony niskie"
 AudFName.Treble="Tony wysokie"
@@ -1518,7 +1518,7 @@ Pin.RadioXmit="Radyo Vericisi"
 Pin.MultitrackRecorder="Çok Kanallı Kaydedici"
 Pin.Synthesizer="Sentezleyici"
 Pin.SWSynth="Sentezleyici Yazılım"
-Pin.SWMidi="ReactOS GS Dalga Tablosu Birleştirici Yazılım"
+Pin.SWMidi="MenuOS GS Dalga Tablosu Birleştirici Yazılım"
 
 AudFName.Bass="Bas"
 AudFName.Treble="Tiz"
@@ -1818,7 +1818,7 @@ Pin.RadioXmit="Transmissor de rádio"
 Pin.MultitrackRecorder="Gravador multipista"
 Pin.Synthesizer="Sintetizador"
 Pin.SWSynth="Sintetizador por software"
-Pin.SWMidi="Sintetizador GS Wavetable por software de ReactOS"
+Pin.SWMidi="Sintetizador GS Wavetable por software de MenuOS"
 
 AudFName.Bass="Graves"
 AudFName.Treble="Agudos"

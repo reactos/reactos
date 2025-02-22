@@ -8,7 +8,7 @@ Signature  = "$Windows NT$"
 LayoutFile = layout.inf
 Class      = Mouse
 ClassGUID  = {4D36E96F-E325-11CE-BFC1-08002BE10318}
-Provider   = %ReactOS%
+Provider   = %MenuOS%
 DriverVer  = 06/04/2007,1.03
 
 [DestinationDirs]
@@ -161,7 +161,7 @@ LoadOrderGroup = Pointer Port
 
 [Strings]
 ; Non-localizable
-ReactOS = "ReactOS Project"
+MenuOS = "MenuOS Project"
 
 IbmMfg = "IBM"
 LogMfg = "Logitech"

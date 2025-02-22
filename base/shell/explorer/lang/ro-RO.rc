@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Explorer
+ * PROJECT:     MenuOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
@@ -50,7 +50,7 @@ BEGIN
         BEGIN
             MENUITEM "Pano&u de control", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "&Securitate ReactOS…", IDM_SECURITY, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Securitate MenuOS…", IDM_SECURITY, MFT_STRING, MFS_ENABLED
             MENUITEM "&Conexiuni în reţea", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
             MENUITEM "&Imprimante şi faxuri", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "Ba&ra de activităţi şi meniul Start", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
@@ -92,7 +92,7 @@ BEGIN
     LTEXT "Selectaţi acest stil de meniu pentru a avea acces uşor la Internet, la poşta electronică şi la programele preferate.", IDC_TASKBARPROP_STARTMENUMODERNTEXT, 20, 145, 150, 24
     PUSHBUTTON "Particul&arizare…", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14
     AUTORADIOBUTTON "&Meniul Start clasic", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
-    LTEXT "Selectaţi această opţiune pentru a utiliza stilul de meniu din versiunile anterioare ale ReactOS.", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
+    LTEXT "Selectaţi această opţiune pentru a utiliza stilul de meniu din versiunile anterioare ale MenuOS.", IDC_TASKBARPROP_STARTMENUCLASSICTEXT, 20, 185, 150, 24
     PUSHBUTTON "&Particularizare…", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14
 END
 
@@ -119,7 +119,7 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Particularizare notificări"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT            "ReactOS afişează pictograme pentru notificări active şi urgente, ascunzându-le pe cele inactive. Aveţi posibilitatea să schimbaţi acest comportament pentru elementele din lista de mai jos.", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "MenuOS afişează pictograme pentru notificări active şi urgente, ascunzându-le pe cele inactive. Aveţi posibilitatea să schimbaţi acest comportament pentru elementele din lista de mai jos.", IDC_STATIC, 6, 6, 220, 30
     LTEXT            "Selectaţi un element, apoi alegeţi comportamentul său de notificare:", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS

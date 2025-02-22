@@ -40,13 +40,13 @@ endif()
 
 if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
     set(TUNE "generic" CACHE STRING
-    "Which CPU ReactOS should be optimized for.")
+    "Which CPU MenuOS should be optimized for.")
 elseif(ARCH STREQUAL "arm")
     set(TUNE "generic-armv7-a" CACHE STRING
-    "Which CPU ReactOS should be optimized for.")
+    "Which CPU MenuOS should be optimized for.")
 elseif(ARCH STREQUAL "arm64")
     set(TUNE "generic" CACHE STRING
-    "Which CPU ReactOS should be optimized for.")
+    "Which CPU MenuOS should be optimized for.")
 endif()
 
 set(OPTIMIZE "4" CACHE STRING

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS API tests
+ * PROJECT:     MenuOS API tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     LOAD_CONFIG validation / registration
  * COPYRIGHT:   Copyright 2020 Mark Jansen (mark.jansen@reactos.org)

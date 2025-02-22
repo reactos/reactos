@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS net command
+ * PROJECT:         MenuOS net command
  * FILE:            base/applications/network/net/cmdHelpMsg.c
  * PURPOSE:
  *

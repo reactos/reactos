@@ -1,7 +1,7 @@
 /*
  *
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS Multimedia
+ * PROJECT:              MenuOS Multimedia
  * FILE:                 dll/win32/mmdrv/mmioctl.h
  * PURPOSE:              Multimedia system NT4 compatibility
  * PROGRAMMER:           Andrew Greenwood

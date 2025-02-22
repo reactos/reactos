@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS system libraries
+ * PROJECT:           MenuOS system libraries
  * PURPOSE:           Slim Reader/Writer (SRW) Routines
  * PROGRAMMER:        Thomas Weidenmueller <w3seek@reactos.com>
  *

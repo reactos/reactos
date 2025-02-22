@@ -1,5 +1,5 @@
 /*
- *  ReactOS Application
+ *  MenuOS Application
  *
  *  main.h
  *

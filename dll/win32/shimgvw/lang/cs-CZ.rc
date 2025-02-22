@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Picture and Fax Viewer
+ * PROJECT:     MenuOS Picture and Fax Viewer
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Czech resource file
  * TRANSLATORS: Copyright 2008 Radek Liška (Black_Fox) <radekliska@gmail.com>
@@ -10,7 +10,7 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS prohlížeč obrázků a faxů"
+    IDS_APPTITLE "MenuOS prohlížeč obrázků a faxů"
     IDS_SETASDESKBG "Nastavit jako pozadí plochy"
     IDS_NOPREVIEW "Náhled není k dispozici."
     IDS_PREVIEW "Náhled"

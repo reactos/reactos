@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Local Spooler API Tests
+ * PROJECT:     MenuOS Local Spooler API Tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Shared definitions for the test program and the test DLL
  * COPYRIGHT:   Copyright 2015 Colin Finck (colin@reactos.org)

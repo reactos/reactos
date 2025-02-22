@@ -78,7 +78,7 @@ FreeSysPartDiskSpace=450
 ; The 'destination_dir_id' and 'WinPE_directory_id' directory IDs refer to
 ; the directories listed in the [Directories] section.
 ;
-; ReactOS-specific: we don't use 'boot_media_id' yet and instead, we use
+; MenuOS-specific: we don't use 'boot_media_id' yet and instead, we use
 ; an identifier 'x' to signal the SetupLdr that it has to load the file.
 ; This must be replaced by handling the "DiskDrivers.Load", "FileSystems.Load",
 ; ("Hal.Load", "Display.Load"), "SCSI.Load", "BootBusExtenders.Load",
@@ -213,7 +213,7 @@ inport = inport.sys
 Cabinet=reactos.cab
 
 [SetupData]
-DefaultPath = \ReactOS
+DefaultPath = \MenuOS
 SetupDebugOptions = "/DEBUG /KDSERIAL /DEBUGPORT=COM1 /FIRSTCHANCE"
 ;SetupDebugOptions = "/DEBUG /SOS /DEBUGPORT=SCREEN"
 OsLoadOptions = "/FASTDETECT /NOGUIBOOT /NODEBUG"

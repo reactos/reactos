@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Kernel Streaming
+ * PROJECT:         MenuOS Kernel Streaming
  * FILE:            drivers/ksfilter/ks/swenum.c
  * PURPOSE:         KS Software BUS functions
  * PROGRAMMER:      Johannes Anderwald

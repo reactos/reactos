@@ -11,7 +11,7 @@ BEGIN
     AUTOCHECKBOX "&Bruk Trege taster", IDC_STICKY_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Innstillinger", IDC_STICKY_BUTTON, 144, 49, 90, 14
     GROUPBOX "Filtertaster", -1, 6, 79, 234, 62
-    LTEXT "Bruk filtertaster hvis du vil at ReactOS skal ignorere lette eller gjentatte tastetrykk, eller senke repetisjonshastigheten.",
+    LTEXT "Bruk filtertaster hvis du vil at MenuOS skal ignorere lette eller gjentatte tastetrykk, eller senke repetisjonshastigheten.",
           -1, 12, 89, 222, 29
     AUTOCHECKBOX "Bruk &filtertaster", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "I&nnstillinger", IDC_FILTER_BUTTON, 144, 121, 90, 14
@@ -30,7 +30,7 @@ CAPTION "Lyd"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Skjermsignal", -1, 6, 11, 234, 98
-    LTEXT "Bruk skjermsignal hvis du vil at ReactOS skal gi en visuell varsling når systemet lager lyd.",
+    LTEXT "Bruk skjermsignal hvis du vil at MenuOS skal gi en visuell varsling når systemet lager lyd.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "Bruk &skjermsignal", IDC_SENTRY_BOX, 12, 49, 90, 14
     LTEXT "Velg følgende varsling:", IDC_SENTRY_TEXT, 12, 72, 222, 11
@@ -48,7 +48,7 @@ CAPTION "Skjerm"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Høykontrast", -1, 6, 11, 234, 62
-    LTEXT "Velg dette alternativet hvis du vil at ReactOS skal bruke farger og skrifter som er laget for å gjøre det lett leselig.",
+    LTEXT "Velg dette alternativet hvis du vil at MenuOS skal bruke farger og skrifter som er laget for å gjøre det lett leselig.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Bruk høykontrast", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Innstillinger", IDC_CONTRAST_BUTTON, 144, 49, 90, 14

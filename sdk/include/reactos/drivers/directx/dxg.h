@@ -101,7 +101,7 @@
 
 
 /***********************************************************************************/
-/* Internal use in diffent part in Windows and ReactOS                             */
+/* Internal use in diffent part in Windows and MenuOS                             */
 /***********************************************************************************/
 /* not inuse yet */
 #define DXG_INDEX_DxDdEnableDirectDraw            0x4C

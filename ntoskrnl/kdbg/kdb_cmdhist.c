@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS KDBG Kernel Debugger
+ * PROJECT:     MenuOS KDBG Kernel Debugger
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Command History helpers
  * COPYRIGHT:   Copyright 2005 Gregor Anich <blight@blight.eu.org>

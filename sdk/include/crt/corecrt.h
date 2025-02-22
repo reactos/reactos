@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS CRT headers
+ * PROJECT:     MenuOS CRT headers
  * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Declarations used throughout the CoreCRT library.
  * COPYRIGHT:   Copyright (c) Microsoft Corporation. All rights reserved.

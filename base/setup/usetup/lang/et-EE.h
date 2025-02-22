@@ -8,14 +8,14 @@ static MUI_ENTRY etEESetupInitPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         0,
         20,
-        "Please wait while the ReactOS Setup initializes itself",
+        "Please wait while the MenuOS Setup initializes itself",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -46,7 +46,7 @@ static MUI_ENTRY etEELanguagePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -98,14 +98,14 @@ static MUI_ENTRY etEEWelcomePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "Tere tulemast ReactOS'i paigaldusse",
+        "Tere tulemast MenuOS'i paigaldusse",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
@@ -126,35 +126,35 @@ static MUI_ENTRY etEEWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Press ENTER to install or upgrade ReactOS.",
+        "\x07  Press ENTER to install or upgrade MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-        "\x07  Vajuta R, et ReactOS'i parandada.",
+        "\x07  Vajuta R, et MenuOS'i parandada.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  Vajuta L, et n\204ha ReactOS'i litsentsi ja kasutamise tingimusi",
+        "\x07  Vajuta L, et n\204ha MenuOS'i litsentsi ja kasutamise tingimusi",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         21,
-        "\x07  Vajuta F3, et v\204ljuda ReactOS'i paigaldamata.",
+        "\x07  Vajuta F3, et v\204ljuda MenuOS'i paigaldamata.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         23,
-        "ReactOS'i kohta saab rohkem infot:",
+        "MenuOS'i kohta saab rohkem infot:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -185,21 +185,21 @@ static MUI_ENTRY etEEIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "ReactOS'i versiooni seisund",
+        "MenuOS'i versiooni seisund",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
     {
         6,
         11,
-        "ReactOS on alfa etapis, mis t\204hendab et see ei ole veel funktsionaalselt",
+        "MenuOS on alfa etapis, mis t\204hendab et see ei ole veel funktsionaalselt",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -227,21 +227,21 @@ static MUI_ENTRY etEEIntroPageEntries[] =
     {
         6,
         16,
-        "ReactOS'i p\204ris riistvara peal'.",
+        "MenuOS'i p\204ris riistvara peal'.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  Vajuta ENTER, et siseneda ReactOS'i paigaldusse.",
+        "\x07  Vajuta ENTER, et siseneda MenuOS'i paigaldusse.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         21,
-        "\x07  Vajuta F3, et lahkuda ReactOS'i paigaldamata.",
+        "\x07  Vajuta F3, et lahkuda MenuOS'i paigaldamata.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -265,7 +265,7 @@ static MUI_ENTRY etEELicensePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -279,7 +279,7 @@ static MUI_ENTRY etEELicensePageEntries[] =
     {
         8,
         8,
-        "ReactOS kasutab GNU \201ldist avalikku litsentsi(GPL),",
+        "MenuOS kasutab GNU \201ldist avalikku litsentsi(GPL),",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -300,7 +300,7 @@ static MUI_ENTRY etEELicensePageEntries[] =
     {
         8,
         11,
-        "Kogu ReactOS'i s\201steem on seega kaitstud GPL litsentsiga",
+        "Kogu MenuOS'i s\201steem on seega kaitstud GPL litsentsiga",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -408,7 +408,7 @@ static MUI_ENTRY etEEDevicePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -515,14 +515,14 @@ static MUI_ENTRY etEERepairPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "ReactOS'i paigaldusprogramm on varajases arendusfaasis. Praegu ei ole",
+        "MenuOS'i paigaldusprogramm on varajases arendusfaasis. Praegu ei ole",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -588,21 +588,21 @@ static MUI_ENTRY etEEUpgradePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        "The MenuOS Setup can upgrade one of the available MenuOS installations",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         9,
-        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        "listed below, or, if a MenuOS installation is damaged, the Setup program",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -644,7 +644,7 @@ static MUI_ENTRY etEEUpgradePageEntries[] =
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  Press F3 to quit without installing MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -668,7 +668,7 @@ static MUI_ENTRY etEEComputerPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -727,7 +727,7 @@ static MUI_ENTRY etEEFlushPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -772,14 +772,14 @@ static MUI_ENTRY etEEQuitPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         10,
         6,
-        "ReactOS ei ole t\204ielikult paigaldatud.",
+        "MenuOS ei ole t\204ielikult paigaldatud.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -824,7 +824,7 @@ static MUI_ENTRY etEEDisplayPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -883,14 +883,14 @@ static MUI_ENTRY etEESuccessPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         10,
         6,
-        "ReactOS'i p\344hilised komponendid on edukalt paigaldatud.",
+        "MenuOS'i p\344hilised komponendid on edukalt paigaldatud.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -935,7 +935,7 @@ static MUI_ENTRY etEESelectPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -963,7 +963,7 @@ static MUI_ENTRY etEESelectPartitionEntries[] =
     {
         8,
         13,
-        "\x07  Vajuta ENTER, et paigaldada ReactOS valitud partitsioonile.",
+        "\x07  Vajuta ENTER, et paigaldada MenuOS valitud partitsioonile.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1009,7 +1009,7 @@ static MUI_ENTRY etEEChangeSystemPartition[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1030,14 +1030,14 @@ static MUI_ENTRY etEEChangeSystemPartition[] =
     {
         6,
         16,
-        "uses a format not supported by ReactOS.",
+        "uses a format not supported by MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         18,
-        "In order to successfully install ReactOS, the Setup program must change",
+        "In order to successfully install MenuOS, the Setup program must change",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1107,7 +1107,7 @@ static MUI_ENTRY etEEChangeSystemPartition[] =
     {
         6,
         35,
-        "to the original one after finishing the installation of ReactOS.",
+        "to the original one after finishing the installation of MenuOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1131,7 +1131,7 @@ static MUI_ENTRY etEEConfirmDeleteSystemPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1152,7 +1152,7 @@ static MUI_ENTRY etEEConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         11,
-        "programme, programme millega alustada ops\201steeme (nagu ReactOS) v\344i muid",
+        "programme, programme millega alustada ops\201steeme (nagu MenuOS) v\344i muid",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1187,7 +1187,7 @@ static MUI_ENTRY etEEConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         17,
-        "arvutit k\344vakettalt kuni l\344petate ReactOS'i paigalduse.",
+        "arvutit k\344vakettalt kuni l\344petate MenuOS'i paigalduse.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1239,7 +1239,7 @@ static MUI_ENTRY etEEFormatPartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1277,7 +1277,7 @@ static MUI_ENTRY etEECheckFSEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1308,21 +1308,21 @@ static MUI_ENTRY etEEInstallDirectoryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "ReactOS paigaldatakse valitud partitsioonile.",
+        "MenuOS paigaldatakse valitud partitsioonile.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         9,
-        "Vali kaust, kuhu ReactOS paigaldada:",
+        "Vali kaust, kuhu MenuOS paigaldada:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1336,7 +1336,7 @@ static MUI_ENTRY etEEInstallDirectoryEntries[] =
     {
         6,
         15,
-        "tr\201ki asemele kaust, kuhu ReactOS installeerida.",
+        "tr\201ki asemele kaust, kuhu MenuOS installeerida.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1367,14 +1367,14 @@ static MUI_ENTRY etEEFileCopyEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         0,
         12,
-        "Palun oota, kuni ReactOS paigaldatakse sihtkausta.",
+        "Palun oota, kuni MenuOS paigaldatakse sihtkausta.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -1412,7 +1412,7 @@ static MUI_ENTRY etEEBootLoaderSelectPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1471,7 +1471,7 @@ static MUI_ENTRY etEEBootLoaderInstallPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " MenuOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1502,7 +1502,7 @@ static MUI_ENTRY etEEBootLoaderRemovableDiskPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1548,7 +1548,7 @@ static MUI_ENTRY etEEKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1607,7 +1607,7 @@ static MUI_ENTRY etEELayoutSettingsEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1667,7 +1667,7 @@ static MUI_ENTRY etEEPrepareCopyEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1699,7 +1699,7 @@ static MUI_ENTRY etEESelectFSEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1747,7 +1747,7 @@ static MUI_ENTRY etEEDeletePartitionEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1799,7 +1799,7 @@ static MUI_ENTRY etEERegistryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        " MenuOS " KERNEL_VERSION_STR " paigaldus ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
@@ -1834,9 +1834,9 @@ MUI_ERROR etEEErrorEntries[] =
     },
     {
         // ERROR_NOT_INSTALLED
-        "ReactOS ei ole t\204ielikult paigaldatud.\n"
+        "MenuOS ei ole t\204ielikult paigaldatud.\n"
         "Kui paigaldamine praegu katkestada, siis tuleb\n"
-        "ReactOS'i paigaldamiseks paigaldusprogramm uuesti k\204ivitada.\n"
+        "MenuOS'i paigaldamiseks paigaldusprogramm uuesti k\204ivitada.\n"
         "\n"
         "  \x07  Vajuta ENTER paigalduse j\204tmaiseks.\n"
         "  \x07  Vajuta F3 paigalduse seiskamiseks.",
@@ -1844,7 +1844,7 @@ MUI_ERROR etEEErrorEntries[] =
     },
     {
         // ERROR_NO_BUILD_PATH
-        "Failed to build the installation paths for the ReactOS installation directory!\n"
+        "Failed to build the installation paths for the MenuOS installation directory!\n"
         "ENTER = Reboot computer"
     },
     {
@@ -1854,7 +1854,7 @@ MUI_ERROR etEEErrorEntries[] =
     },
     {
         // ERROR_SOURCE_DIR
-        "You cannot install ReactOS within the installation source directory!\n"
+        "You cannot install MenuOS within the installation source directory!\n"
         "ENTER = Reboot computer"
     },
     {
@@ -2044,7 +2044,7 @@ MUI_ERROR etEEErrorEntries[] =
     },
     {
         //ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "Valitud partitsioon ei ole piisavalt suur ReactOS'i paigaldamiseks.\n"
+        "Valitud partitsioon ei ole piisavalt suur MenuOS'i paigaldamiseks.\n"
         "Paigalduse partitsioon peab v\204heamlt %lu MB suur olema.\n"
         "\n"
         "  * Vajuta mis tahes klahvi, et j\204tkata.",
@@ -2230,13 +2230,13 @@ MUI_STRING etEEStrings[] =
     {STRING_PARTFORMAT,
     "J\204rgmisena vormindatakse seda partitsiooni."},
     {STRING_NONFORMATTEDPART,
-    "Oled valinud ReactOS'i paigaldamise uuele v\344i vormindamata partitsioonile."},
+    "Oled valinud MenuOS'i paigaldamise uuele v\344i vormindamata partitsioonile."},
     {STRING_NONFORMATTEDSYSTEMPART,
     "S\201steemipartitsioon on veel vormindamata."},
     {STRING_NONFORMATTEDOTHERPART,
     "Uus partitsioon on veel vormindamata."},
     {STRING_INSTALLONPART,
-    "ReactOS paigaldatakse partitsioonile"},
+    "MenuOS paigaldatakse partitsioonile"},
     {STRING_CONTINUE,
     "ENTER = J\204tka"},
     {STRING_QUITCONTINUE,

@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS dbghelp extension
+ * PROJECT:         MenuOS dbghelp extension
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Parse rsym information for use with dbghelp
  * PROGRAMMER:      Mark Jansen

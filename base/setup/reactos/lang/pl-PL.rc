@@ -15,49 +15,49 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator systemu ReactOS"
+CAPTION "Instalator systemu MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Witamy w Kreatorze instalacji systemu ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "This wizard will install or upgrade ReactOS on your computer, \
+    LTEXT "Witamy w Kreatorze instalacji systemu MenuOS", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "This wizard will install or upgrade MenuOS on your computer, \
 and prepare the second part of the setup.", IDC_STATIC, 115, 40, 195, 27
 ////
     GROUPBOX " IMPORTANT INFORMATION ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
-    LTEXT "ReactOS is in Alpha stage: it is not feature- complete and is \
+    LTEXT "MenuOS is in Alpha stage: it is not feature- complete and is \
 under heavy development. It is recommended to use it only for \
 evaluation and testing and not as your daily-usage OS.\n\
 It may corrupt your data or damage your hardware.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
     LTEXT "Backup your data or test on a secondary computer \
-if you attempt to run ReactOS on real hardware.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+if you attempt to run MenuOS on real hardware.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
 ////
     LTEXT "Kliknij Dalej, by kontynuować.", IDC_STATIC, 115, 169, 160, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator systemu ReactOS"
+CAPTION "Instalator systemu MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "&Zainstaluj system ReactOS", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "Zainstaluj nową kopię systemu ReactOS. Ta opcja nie zachowa plików, ustawień i programów. Możesz dokonać zmian w dyskach i partycjach.", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
-    AUTORADIOBUTTON "&Napraw lub uaktualnij ReactOS", IDC_UPDATE, 7, 80, 277, 10
-    LTEXT "Napraw istniejącą instalację lub wykonaj uaktualnienie do nowszej wersji systemu ReactOS. Ta opcja zachowa pliki, ustawienia i programy. Jest dostępna, jeżeli system ReactOS znajduje się już na tym komputerze.", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "&Zainstaluj system MenuOS", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
+    LTEXT "Zainstaluj nową kopię systemu MenuOS. Ta opcja nie zachowa plików, ustawień i programów. Możesz dokonać zmian w dyskach i partycjach.", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "&Napraw lub uaktualnij MenuOS", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "Napraw istniejącą instalację lub wykonaj uaktualnienie do nowszej wersji systemu MenuOS. Ta opcja zachowa pliki, ustawienia i programy. Jest dostępna, jeżeli system MenuOS znajduje się już na tym komputerze.", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator systemu ReactOS"
+CAPTION "Instalator systemu MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT       "Instalator może uaktualnić jedną z poniższych instalacji systemu ReactOS. Jeśl instalacja systemu ReactOS jest uszkodzona, instalator może podjąć próbę jej naprawy.", IDC_STATIC, 6, 6, 300, 18
+    LTEXT       "Instalator może uaktualnić jedną z poniższych instalacji systemu MenuOS. Jeśl instalacja systemu MenuOS jest uszkodzona, instalator może podjąć próbę jej naprawy.", IDC_STATIC, 6, 6, 300, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "&Nowa instalacja", IDC_SKIPUPGRADE, 230, 128, 80, 14
-    LTEXT       "Kliknij Dalej, aby uaktualnić wybraną instalację systemu, lub na 'Nowa instalacja' aby wykonać nową instalację systemu ReactOS.", IDC_STATIC, 7, 124, 216, 16
+    LTEXT       "Kliknij Dalej, aby uaktualnić wybraną instalację systemu, lub na 'Nowa instalacja' aby wykonać nową instalację systemu MenuOS.", IDC_STATIC, 7, 124, 216, 16
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator systemu ReactOS"
+CAPTION "Instalator systemu MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Komputer:", IDC_STATIC, 20, 15, 80, 10
@@ -71,7 +71,7 @@ END
 
 IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator systemu ReactOS"
+CAPTION "Instalator systemu MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
@@ -119,7 +119,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Advanced Installation Options"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Choose the &directory where you want to install ReactOS:", IDC_STATIC, 7, 9, 291, 10
+    LTEXT "Choose the &directory where you want to install MenuOS:", IDC_STATIC, 7, 9, 291, 10
     EDITTEXT IDC_PATH, 7, 23, 291, 13
     GROUPBOX "Bootloader", IDC_STATIC, 7, 45, 291, 60
     LTEXT "Select the location where the FreeLoader\nbootloader should be installed.\n\nBy default, it is installed on the system partition of the boot disk (and either in the Master or the Volume Boot Record for BIOS-based computers).", IDC_STATIC, 13, 57, 279, 44
@@ -130,7 +130,7 @@ END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator systemu ReactOS"
+CAPTION "Instalator systemu MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Typ instalacji:", IDC_STATIC, 18, 5, 74, 11
@@ -149,14 +149,14 @@ BEGIN
     EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Katalog docelowy:", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    AUTOCHECKBOX "Potwierdzam, że wszystkie ustawienia instalacji są poprawne. Przyjmuję równierz, że system ReactOS to oprogramowanie w fazie Alpha i może w każdej chwili przestać działać lub nieodwracalnie uszkodzić moje dane na dysku.",
+    AUTOCHECKBOX "Potwierdzam, że wszystkie ustawienia instalacji są poprawne. Przyjmuję równierz, że system MenuOS to oprogramowanie w fazie Alpha i może w każdej chwili przestać działać lub nieodwracalnie uszkodzić moje dane na dysku.",
         IDC_CONFIRM_INSTALL, 7, 100, 303, 24, BS_MULTILINE
     LTEXT "Potwierdź, że wszystkie ustawienia instalacji są poprawne, a następnie kliknij na Instaluj, aby rozpocząć proces instalacji.", IDC_STATIC, 7, 127, 303, 18
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator systemu ReactOS"
+CAPTION "Instalator systemu MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Instalacja plików...", IDC_ACTIVITY, 20, 50, 277, 10
@@ -166,11 +166,11 @@ END
 
 IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalator systemu ReactOS"
+CAPTION "Instalator systemu MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Kończenie pracy Kreatora instalacji systemu ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Pierwszy etap instalacji ReactOS został pomyślnie zakończony.", IDC_STATIC, 115, 50, 195, 17
+    LTEXT "Kończenie pracy Kreatora instalacji systemu MenuOS", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "Pierwszy etap instalacji MenuOS został pomyślnie zakończony.", IDC_STATIC, 115, 50, 195, 17
     LTEXT "Po kliknięciu na przycisk Zakończ, komputer zostanie uruchomiony ponownie.", IDC_STATIC, 115, 80, 195, 17
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
     LTEXT "Jeśli w napędzie jest płyta CD, wyjmij ją. Następnie Kliknij Zakończ, aby ponownie uruchomić komputer.", IDC_STATIC, 115, 169, 195, 17
@@ -180,11 +180,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CAPTION "Instalator systemu ReactOS"
+    IDS_CAPTION "Instalator systemu MenuOS"
     IDS_TYPETITLE "Installation Type"
-    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
-    IDS_UPDATETITLE "Update or Repair ReactOS"
-    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
+    IDS_TYPESUBTITLE "You can setup a new MenuOS installation, or update/repair an existing installation."
+    IDS_UPDATETITLE "Update or Repair MenuOS"
+    IDS_UPDATESUBTITLE "Choose which existing MenuOS installation you want to update or repair."
     IDS_DEVICETITLE "Ustawienia podstawowych urządzeń"
     IDS_DEVICESUBTITLE "Zmień ustawienia monitora i klawiatury."
     IDS_DRIVETITLE "Ustaw partycję instalacji i katalog systemowy"
@@ -195,7 +195,7 @@ BEGIN
     IDS_PROCESSSUBTITLE "Przygotuj i sformatuj partycję, skopiuj pliki, skopiuj i zainstaluj menedżer rozruchu."
     IDS_RESTARTTITLE "Pierwszy etap instalacji pomyślnie zakończony"
     IDS_RESTARTSUBTITLE "Pierwszy etap instalacji został zakończony, uruchom ponownie komputer, aby przejść do drugiego etapu."
-    IDS_ABORTSETUP "Instalacja systemu ReactOS nie została ukończona na tym komputerze. Jeśli teraz zakończysz instalację, wymagane będzie ponowne uruchomienie instalatora, aby zainstalować system ReactOS. Czy na pewno chcesz teraz zakończyć?"
+    IDS_ABORTSETUP "Instalacja systemu MenuOS nie została ukończona na tym komputerze. Jeśli teraz zakończysz instalację, wymagane będzie ponowne uruchomienie instalatora, aby zainstalować system MenuOS. Czy na pewno chcesz teraz zakończyć?"
     IDS_ABORTSETUP2 "Czy na pewno chcesz przerwać instalację?"
     IDS_NO_TXTSETUP_SIF "Nie można znaleźć pliku 'txtsetup.sif'.\nInstalator nie może kontynuować."
     IDS_INSTALLBTN "&Install"
@@ -277,7 +277,7 @@ alphanumericals (a-z, A-Z, 0-9), and\n . \\ - _\n\
 Spaces are not allowed."
 
     IDS_ERROR_DIRECTORY_NAME_TITLE "Invalid installation path"
-    IDS_ERROR_DIRECTORY_NAME "The ReactOS installation path must follow the DOS 8.3 naming scheme, \
+    IDS_ERROR_DIRECTORY_NAME "The MenuOS installation path must follow the DOS 8.3 naming scheme, \
 and only contain letters, digits, dashes and periods. Spaces are not allowed."
 
     IDS_ERROR_CREATE_PARTITION_TITLE "Create partition"
@@ -289,9 +289,9 @@ and only contain letters, digits, dashes and periods. Spaces are not allowed."
 
     IDS_ERROR_WRITE_PTABLE "Setup failed to write partition tables."
 
-    IDS_ERROR_SYSTEM_PARTITION "The ReactOS Setup could not find a supported system partition\n\
+    IDS_ERROR_SYSTEM_PARTITION "The MenuOS Setup could not find a supported system partition\n\
 on your system or could not create a new one. Without such a partition\n\
-the Setup program cannot install ReactOS.\
+the Setup program cannot install MenuOS.\
 \nClick on OK to return to the partition selection list."
 
     IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Unrecognized volume while attempting to format the partition."

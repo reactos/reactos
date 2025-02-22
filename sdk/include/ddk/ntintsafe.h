@@ -3,7 +3,7 @@
  *
  * Windows NT helper functions for integer overflow prevention
  *
- * This file is part of the ReactOS DDK package.
+ * This file is part of the MenuOS DDK package.
  *
  * Contributors:
  *   Timo Kreuzer (timo.kreuzer@reactos.org)

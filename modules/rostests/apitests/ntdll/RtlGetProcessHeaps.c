@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS api tests
+ * PROJECT:     MenuOS api tests
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Test for RtlGetProcessHeaps
  * COPYRIGHT:   Copyright 2023 Mark Jansen <mark.jansen@reactos.org>

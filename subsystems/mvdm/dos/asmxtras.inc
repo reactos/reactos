@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Virtual DOS Machine
+ * PROJECT:     MenuOS Virtual DOS Machine
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Extended ASM macros for GAS and MASM/ML64
  * COPYRIGHT:   Copyright 2015-2018 Hermes Belusca-Maito

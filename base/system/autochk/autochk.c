@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS AutoChk
+ * PROJECT:     MenuOS AutoChk
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     FileSystem checker in Native mode.
  * COPYRIGHT:   Copyright 2002-2018 Eric Kohl

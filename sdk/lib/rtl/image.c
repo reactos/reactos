@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         MenuOS system libraries
  * FILE:            lib/rtl/image.c
  * PURPOSE:         Image handling functions
  *                  Relocate functions were previously located in
@@ -122,7 +122,7 @@ LdrVerifyMappedImageMatchesChecksum(
     return (BOOLEAN)(CalcSum == HeaderSum);
 #else
     /*
-     * FIXME: Warning, this violates the PE standard and makes ReactOS drivers
+     * FIXME: Warning, this violates the PE standard and makes MenuOS drivers
      * and other system code when normally on Windows they would not, since
      * we do not write the checksum in them.
      * Our compilers should be made to write out the checksum and this function

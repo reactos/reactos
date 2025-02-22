@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS API tests
+ * PROJECT:         MenuOS API tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Test for NtQueryTimerResolution and NtSetTimerResolution.
  * PROGRAMMER:      Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>

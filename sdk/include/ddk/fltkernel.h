@@ -1,7 +1,7 @@
 /*
  * fltkernel.h
  *
- * This file is part of the ReactOS DDK package.
+ * This file is part of the MenuOS DDK package.
  *
  * Contributors:
  *   Amine Khaldi (amine.khaldi@reactos.org)

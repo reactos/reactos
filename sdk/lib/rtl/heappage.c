@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         MenuOS system libraries
  * FILE:            lib/rtl/heappage.c
  * PURPOSE:         RTL Page Heap implementation
  * PROGRAMMERS:     Copyright 2011 Aleksey Bragin

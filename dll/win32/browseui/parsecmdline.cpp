@@ -1,5 +1,5 @@
 /*
-* ReactOS browseui
+* MenuOS browseui
 *
 * Copyright 2014 David Quintana <gigaherz@gmail.com>
 *

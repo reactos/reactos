@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Boot Video Driver
+ * PROJECT:     MenuOS Boot Video Driver
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Platform-independent common helpers and defines
  * COPYRIGHT:   Copyright 2010 Gregor Schneider <gregor.schneider@reactos.org>

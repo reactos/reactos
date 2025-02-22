@@ -21,7 +21,7 @@ BEGIN
     DEFPUSHBUTTON "Cancelar", IDCANCEL, 142, 98, 43, 17
     PUSHBUTTON "&Finalizar ahora", IDC_END_NOW, 78, 98, 43, 17
     LTEXT "Este programa no responde.", IDC_STATIC, 7, 7, 178, 8
-    LTEXT "Para volver a ReactOS y ver el estado del programa, haga clic en Cancelar.", IDC_STATIC, 7, 26, 178, 16
+    LTEXT "Para volver a MenuOS y ver el estado del programa, haga clic en Cancelar.", IDC_STATIC, 7, 26, 178, 16
     LTEXT "Si elige finalizar el programa ahora, perderá todos los datos no guardados. Para finalizar el programa ahora, haga clic en Finalizar ahora.", IDC_STATIC, 7, 53, 178, 26
 END
 

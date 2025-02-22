@@ -1,6 +1,6 @@
 /*
- * ReactOS USASCII Keyboard layout
- * Copyright (C) 2003 ReactOS
+ * MenuOS USASCII Keyboard layout
+ * Copyright (C) 2003 MenuOS
  * License: LGPL, see: LGPL.txt
  *
  * Thanks to: http://www.barcodeman.com/altek/mule/scandoc.php

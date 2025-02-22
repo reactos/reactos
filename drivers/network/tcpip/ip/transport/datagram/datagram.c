@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS TCP/IP protocol driver
+ * PROJECT:     MenuOS TCP/IP protocol driver
  * FILE:        transport/datagram/datagram.c
  * PURPOSE:     Routines for sending and receiving datagrams
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

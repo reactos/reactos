@@ -35,7 +35,7 @@ extern void func_toolhelp(void);
 extern void func_version(void);
 extern void func_virtual(void);
 extern void func_volume(void);
-/* ReactOS */
+/* MenuOS */
 extern void func_dosdev(void);
 extern void func_interlck(void);
 
@@ -47,7 +47,7 @@ const struct test winetest_testlist[] =
     { "codepage", func_codepage },
     { "comm", func_comm },
     { "console", func_console },
-    /* ReactOS */
+    /* MenuOS */
     //{ "debugger", func_debugger },
     { "directory", func_directory },
     { "drive", func_drive },
@@ -55,7 +55,7 @@ const struct test winetest_testlist[] =
     { "fiber", func_fiber },
     { "file", func_file },
     { "format_msg", func_format_msg },
-    /* ReactOS */
+    /* MenuOS */
     //{ "generated", func_generated },
     { "heap", func_heap },
     { "loader", func_loader },

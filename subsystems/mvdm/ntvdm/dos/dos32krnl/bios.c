@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * PROJECT:         ReactOS Virtual DOS Machine
+ * PROJECT:         MenuOS Virtual DOS Machine
  * FILE:            subsystems/mvdm/ntvdm/dos/dos32krnl/bios.c
  * PURPOSE:         DOS32 Bios
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
@@ -184,7 +184,7 @@ BOOLEAN DosBuildSysEnvBlock(VOID)
          * - Ignore environment strings starting with a '=',
          *   they describe current directories.
          * - Ignore also the WINDIR environment variable since
-         *   DOS apps should ignore that we started from ReactOS.
+         *   DOS apps should ignore that we started from MenuOS.
          * - Upper-case the environment names, not their values.
          */
         if (*SourcePtr != '=' && _strnicmp(SourcePtr, "WINDIR", 6) != 0)

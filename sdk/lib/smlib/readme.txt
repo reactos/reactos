@@ -1,5 +1,5 @@
 
-SMLIB: Client Library to talk to the ReactOS NT-Compatible Session Manager (SM).
+SMLIB: Client Library to talk to the MenuOS NT-Compatible Session Manager (SM).
 
 It should be linked in the following components:
 

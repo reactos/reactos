@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS kernel-mode tests - Filter Manager
+ * PROJECT:         MenuOS kernel-mode tests - Filter Manager
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Tests for checking filters load and connect correctly
  * PROGRAMMER:      Ged Murphy <gedmurphy@reactos.org>

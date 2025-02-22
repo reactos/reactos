@@ -98,8 +98,8 @@ WarnDeprecated(
         "\n"
         "%s\n"
         "\n"
-        "Should you need assistance, please contact ReactOS developers\n"
-        "on the official ReactOS Mattermost server <chat.reactos.org>.",
+        "Should you need assistance, please contact MenuOS developers\n"
+        "on the official MenuOS Mattermost server <chat.reactos.org>.",
         msgString);
 }
 #endif // HAS_DEPRECATED_OPTIONS
@@ -433,7 +433,7 @@ VOID RunLoader(VOID)
         /* Show the operating system list menu */
         if (!UiDisplayMenu("Please select the operating system to start:",
                            "For troubleshooting and advanced startup options for "
-                               "ReactOS, press F8.",
+                               "MenuOS, press F8.",
                            OperatingSystemDisplayNames,
                            OperatingSystemCount,
                            DefaultOperatingSystem,

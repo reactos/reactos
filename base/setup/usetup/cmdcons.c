@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS text-mode setup
+ * PROJECT:         MenuOS text-mode setup
  * FILE:            base/setup/usetup/cmdcons.c
  * PURPOSE:         Recovery console
  * PROGRAMMER:
@@ -1174,7 +1174,7 @@ RecoveryConsole(VOID)
     CONSOLE_ClearScreen();
     CONSOLE_SetCursorXY(0, 0);
 
-    CONSOLE_ConOutPrintf("ReactOS Recovery Console\n\nEnter HELP to get a list of commands.\n\n");
+    CONSOLE_ConOutPrintf("MenuOS Recovery Console\n\nEnter HELP to get a list of commands.\n\n");
 
     while (!State.bExit)
     {

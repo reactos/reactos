@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS File System Recognizer
+ * PROJECT:          MenuOS File System Recognizer
  * FILE:             drivers/filesystems/fs_rec/udfs.h
  * PURPOSE:          UDFS Header File
  * PROGRAMMER:       Dmitry Chapyshev (dmitry@reactos.org)

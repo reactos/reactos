@@ -16,8 +16,8 @@ BEGIN
     IDS_PUMPKIN "Calabaza"
     IDS_RAIN "Días de lluvia"
     IDS_RWB "Rojo, Blanco y Azul"
-    IDS_CLASSIC "ReactOS clásico"
-    IDS_STANDARD "ReactOS estándar"
+    IDS_CLASSIC "MenuOS clásico"
+    IDS_STANDARD "MenuOS estándar"
     IDS_ROSE "Rosa"
     IDS_SAND "Arenisca" //Desert
     IDS_SLATE "Pizarra"

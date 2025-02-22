@@ -4,7 +4,7 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-#define REACTOS_STR_FILE_DESCRIPTION    "ReactOS Change CodePage Command"
+#define REACTOS_STR_FILE_DESCRIPTION    "MenuOS Change CodePage Command"
 #define REACTOS_STR_INTERNAL_NAME       "chcp"
 #define REACTOS_STR_ORIGINAL_FILENAME   "chcp.com"
 #include <reactos/version.rc>

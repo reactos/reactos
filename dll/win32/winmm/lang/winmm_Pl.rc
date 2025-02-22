@@ -47,7 +47,7 @@ MIDIERR_STILLPLAYING, 		"Nie można wykonać tej operacji w czasie, gdy dane mul
 MIDIERR_NOMAP, 			"Nie można odnaleźć mapowania urządzenia MIDI. Może to być spowodowane problemem ze sterownikiem albo brakiem lub uszkodzeniem pliku MIDIMAP.CFG."
 MIDIERR_NOTREADY, 		"Port przesyła dane do urządzenia. Poczekaj, aż dane zostaną przesłane i spróbuj ponownie."
 MIDIERR_NODEVICE, 		"Bieżące ustawienia mapowania MIDI odwołują się do urządzenia MIDI, które nie jest zainstalowane w systemie. Użyj Mapowania MIDI do edycji ustawień."
-MIDIERR_INVALIDSETUP, 		"Bieżące ustawienia MIDI są uszkodzone. Skopiuj oryginalny plik MIDIMAP.CFG do katalogu ReactOS SYSTEM, a następnie spróbuj ponownie."
+MIDIERR_INVALIDSETUP, 		"Bieżące ustawienia MIDI są uszkodzone. Skopiuj oryginalny plik MIDIMAP.CFG do katalogu MenuOS SYSTEM, a następnie spróbuj ponownie."
 
 /* MCI errors */
 MCIERR_INVALID_DEVICE_ID, 	"Nieprawidłowy identyfikator urządzenia MCI. Użyj identyfikatora zwróconego podczas otwierania urządzenia MCI."
@@ -68,7 +68,7 @@ MCIERR_MISSING_PARAMETER, 	"Określone polecenie wymaga parametru. Podaj ten par
 MCIERR_UNSUPPORTED_FUNCTION, 	"Używane urządzenie MCI nie obsługuje określonego polecenia."
 MCIERR_FILE_NOT_FOUND, 		"Nie można znaleźć określonego pliku. Sprawdź, czy ścieżka i nazwa pliku są poprawne."
 MCIERR_DEVICE_NOT_READY, 	"Sterownik urządzenia nie jest gotowy."
-MCIERR_INTERNAL, 		"Wystąpił problem podczas inicjowania MCI. Spróbuj uruchomić ponownie ReactOS."
+MCIERR_INTERNAL, 		"Wystąpił problem podczas inicjowania MCI. Spróbuj uruchomić ponownie MenuOS."
 MCIERR_DRIVER, 			"Wystąpił problem ze sterownikiem tego urządzenia. Sterownik został zamknięty. Nie ma dostępu do informacji o błędach."
 MCIERR_CANNOT_USE_ALL, 		"W określonym poleceniu nie można użyć parametru 'all' jako nazwy urządzenia."
 MCIERR_MULTIPLE, 		"Wystąpił błąd w więcej niż jednym urządzeniu. Określ każde polecenie i urządzenie oddzielnie, aby ustalić, które urządzenie spowodowało błędy."

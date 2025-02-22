@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS API Tests
+ * PROJECT:     MenuOS API Tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Test for imagelist
  * COPYRIGHT:   Copyright 2024 Whindmar Saksit <whindsaks@proton.me>
@@ -51,7 +51,7 @@ static BOOL IL_AddImagesForTest(HIMAGELIST himl)
     HICON hIco = (HICON)LoadImage(hInst, MAKEINTRESOURCE(100), /* Windows */
                                   IMAGE_ICON, IL_IMGSIZE, IL_IMGSIZE, 0);
     if (!hIco)
-        hIco = (HICON)LoadImage(hInst, MAKEINTRESOURCE(32512), /* ReactOS */
+        hIco = (HICON)LoadImage(hInst, MAKEINTRESOURCE(32512), /* MenuOS */
                                 IMAGE_ICON, IL_IMGSIZE, IL_IMGSIZE, 0);
 
     if (hIco)

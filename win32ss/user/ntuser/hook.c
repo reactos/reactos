@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          MenuOS kernel
  * PURPOSE:          Window hooks
  * PROGRAMER:        Casper S. Hornstrup <chorns@users.sourceforge.net>
  *                   James Tabor <james.tabor@reactos.org>

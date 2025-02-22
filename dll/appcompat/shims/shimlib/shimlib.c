@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Shim helper library
+ * PROJECT:     MenuOS Shim helper library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Shim helper functions
  * COPYRIGHT:   Copyright 2016-2018 Mark Jansen (mark.jansen@reactos.org)

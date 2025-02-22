@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS kernel-mode tests
+ * PROJECT:     MenuOS kernel-mode tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Kernel mode tests for logon session manipulation API
  * COPYRIGHT:   Copyright 2021 George Bișoc <george.bisoc@reactos.org>

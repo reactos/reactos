@@ -1,6 +1,6 @@
 /*
- *  ReactOS GINA
- *  Copyright (C) 2003-2004, 2006 ReactOS Team
+ *  MenuOS GINA
+ *  Copyright (C) 2003-2004, 2006 MenuOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
- * PROJECT:         ReactOS msgina.dll
+ * PROJECT:         MenuOS msgina.dll
  * FILE:            dll/win32/msgina/msgina.c
- * PURPOSE:         ReactOS Logon GINA DLL
+ * PURPOSE:         MenuOS Logon GINA DLL
  * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *                  Hervé Poussineau (hpoussin@reactos.org)
  */

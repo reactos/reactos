@@ -1,7 +1,7 @@
 /*
  * dllmain.c
  *
- * ReactOS MSVCRT.DLL Compatibility Library
+ * MenuOS MSVCRT.DLL Compatibility Library
  *
  *  THIS SOFTWARE IS NOT COPYRIGHTED
  *

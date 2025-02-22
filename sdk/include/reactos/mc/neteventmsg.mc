@@ -230,19 +230,19 @@ Severity=Warning
 Facility=System
 SymbolicName=EVENT_EventLogProductInfo
 Language=English
-ReactOS %1 %2 %3 %4.
+MenuOS %1 %2 %3 %4.
 .
 Language=Russian
-ReactOS %1 %2 %3 %4.
+MenuOS %1 %2 %3 %4.
 .
 Language=French
-ReactOS %1 %2 %3 %4.
+MenuOS %1 %2 %3 %4.
 .
 Language=Polish
-ReactOS %1 %2 %3 %4.
+MenuOS %1 %2 %3 %4.
 .
 Language=Romanian
-ReactOS %1 %2 %3 %4.
+MenuOS %1 %2 %3 %4.
 .
 
 MessageId=6010
@@ -860,19 +860,19 @@ Severity=Error
 Facility=System
 SymbolicName=EVENT_RUNNING_LASTKNOWNGOOD
 Language=English
-ReactOS could not be started as configured.  A previous working configuration was used instead.
+MenuOS could not be started as configured.  A previous working configuration was used instead.
 .
 Language=Russian
-ReactOS could not be started as configured.  A previous working configuration was used instead.
+MenuOS could not be started as configured.  A previous working configuration was used instead.
 .
 Language=French
-ReactOS n'a pas pu démarrer tel que configuré. Une précédente configuration fonctionnelle a été utilisé à la place.
+MenuOS n'a pas pu démarrer tel que configuré. Une précédente configuration fonctionnelle a été utilisé à la place.
 .
 Language=Polish
-Nie można uruchomić systemu ReactOS zgodnie z aktualną konfiguracją. Zamiast niej użyto poprzedniej działającej konfiguracji.
+Nie można uruchomić systemu MenuOS zgodnie z aktualną konfiguracją. Zamiast niej użyto poprzedniej działającej konfiguracji.
 .
 Language=Romanian
-ReactOS nu a putut fi pornit după configurație. În locul ei, a fost folosită o configurație funcțională anterioară.
+MenuOS nu a putut fi pornit după configurație. În locul ei, a fost folosită o configurație funcțională anterioară.
 .
 
 MessageId=7028
@@ -1101,7 +1101,7 @@ usługi %1. Element usługi: %2 jest obecnie w stanie nieprzewidywalnym.
 Jeśli ta konfiguracja nie zostanie naprawiona, ponowne uruchomienie usługi
 %1 może okazać się niemożliwe lub mogą wystąpić inne błędy. Aby upewnić się,
 że usługa jest skonfigurowana właściwie, użyj przystawki Usługi w programie
-ReactOS Management Console (MMC).
+MenuOS Management Console (MMC).
 .
 Language=Romanian
 Administratorul de control al serviciului a întâlnit o eroare în încercarea de a anula o schimbare de configurație
@@ -1138,7 +1138,7 @@ Language=Polish
 Usługa %1 nie mogła zalogować się jako %2 z aktualnie skonfigurowanym
 hasłem z powodu następującego błędu: %n%3%n%nAby upewnić się, że usługa
 jest skonfigurowana właściwie, użyj przystawki Usługi w programie
-ReactOS Management Console (MMC).
+MenuOS Management Console (MMC).
 .
 Language=Romanian
 Serviciul %1 nu a putut fi logat la %2 cu parola configurată din prezent,

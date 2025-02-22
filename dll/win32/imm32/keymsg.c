@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS IMM32
+ * PROJECT:     MenuOS IMM32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Implementing IMM32 keys and messages
  * COPYRIGHT:   Copyright 1998 Patrik Stridvall

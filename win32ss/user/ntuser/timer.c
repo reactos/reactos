@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          MenuOS kernel
  * PURPOSE:          Window timers messages
  * FILE:             win32ss/user/ntuser/timer.c
  * PROGRAMER:        Gunnar

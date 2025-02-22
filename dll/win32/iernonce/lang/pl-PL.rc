@@ -12,16 +12,16 @@ BEGIN
     IDS_NODEPENDENCY "Nie można załadować pliku zależności %1."
     IDS_SETUPERROR "Podczas ustawiania %1 wystąpił błąd. Ten błąd został zarejestrowany. Instalacja będzie kontynuowana."
     IDS_INCOMPLETE "Poprzednia instalacja aplikacji nie została zakończona.\n\nZaloguj się używając konta administratora, aby dokończyć instalację."
-    IDS_SETUP "Instalator systemu ReactOS"
+    IDS_SETUP "Instalator systemu MenuOS"
     IDS_SERVICEERROR "Niektóre usługi nie mogły zostać uruchomione. Instalator musi uruchomić ponownie system, aby uruchomić usługi."
 END
 
 IDD_DIALOG DIALOGEX 0, 0, 206, 166
 STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Instalator systemu ReactOS"
+CAPTION "Instalator systemu MenuOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "System ReactOS ustawia teraz następujące elementy:", -1, 36, 13, 163, 11
+    LTEXT "System MenuOS ustawia teraz następujące elementy:", -1, 36, 13, 163, 11
     LISTBOX IDC_LB_ITEMS, 36, 32, 163, 127, LBS_NOTIFY | LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
     ICON IDI_ICON, -1, 7, 7, 20, 20
 END

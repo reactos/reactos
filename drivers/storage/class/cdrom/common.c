@@ -1078,7 +1078,7 @@ Return Value:
 }
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 RequestAsynchronousIrpCompletion(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp,
@@ -1112,7 +1112,7 @@ Return Value:
 }
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DeviceAsynchronousCompletion(
     _In_ WDFREQUEST                       Request,
     _In_ WDFIOTARGET                      Target,
@@ -1253,7 +1253,7 @@ Return Value:
 } // end DeviceReleaseQueue()
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DeviceReleaseQueueCompletion(
     _In_ WDFREQUEST                       Request,
     _In_ WDFIOTARGET                      Target,
@@ -2627,7 +2627,7 @@ Return Value:
 
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 DeviceRestoreDefaultSpeed(
     _In_ WDFWORKITEM  WorkItem
     )
@@ -3516,7 +3516,7 @@ RequestCompletion(
 
 
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 RequestDummyCompletionRoutine(
     _In_ WDFREQUEST                     Request,
     _In_ WDFIOTARGET                    Target,
@@ -3838,10 +3838,10 @@ Return Value:
         // send request and check status
 
         // Disable SDV warning about infinitely waiting in caller's context:
-        //   1. Some requests (such as SCSI_PASS_THROUGH, contains buffer from user space) need to be sent down in caller’s context.
-        //      Consequently, these requests wait in caller’s context until they are allowed to be sent down.
+        //   1. Some requests (such as SCSI_PASS_THROUGH, contains buffer from user space) need to be sent down in callerâ€™s context.
+        //      Consequently, these requests wait in callerâ€™s context until they are allowed to be sent down.
         //   2. Considering the situation that during sleep, a request can be hold by storage port driver. When system resumes, any time out value (if we set using KMDF time out value) might be expires.
-        //      This will cause the waiting request being failed (behavior change). We’d rather not set time out value.
+        //      This will cause the waiting request being failed (behavior change). Weâ€™d rather not set time out value.
 
         _Analysis_assume_(options.Timeout != 0);
         requestSent = WdfRequestSend(Request, IoTarget, &options);

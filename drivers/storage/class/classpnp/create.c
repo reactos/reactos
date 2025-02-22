@@ -53,7 +53,7 @@ ClasspCleanupDisableMcn(
 #endif
 
 NTSTATUS
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 ClassCreateClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -1010,7 +1010,7 @@ ClasspEjectionControl(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 PFILE_OBJECT_EXTENSION
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 ClassGetFsContext(
     _In_ PCOMMON_DEVICE_EXTENSION CommonExtension,
     _In_ PFILE_OBJECT FileObject

@@ -22,7 +22,7 @@
 
 #include <winreg.h>
 
-TCHAR m_Text[MAX_PATH] = _T("ReactOS Rocks!");
+TCHAR m_Text[MAX_PATH] = _T("MenuOS Rocks!");
 
 VOID LoadSettings(VOID)
 {

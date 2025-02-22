@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS uxtheme.dll
+ * PROJECT:         MenuOS uxtheme.dll
  * FILE:            dll/win32/uxtheme/ncscrollbar.c
  * PURPOSE:         uxtheme scrollbar support
  * PROGRAMMER:      Giannis Adamopoulos

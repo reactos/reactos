@@ -1,6 +1,6 @@
 /*
  *    Translated by Caemyr - Olaf Siejka (Jan, 2008)
- *    Use ReactOS forum PM or IRC to contact me
+ *    Use MenuOS forum PM or IRC to contact me
  *    https://reactos.org
  *    IRC: irc.freenode.net #reactos-pl;
  *    UTF-8 conversion by Caemyr (May, 2011)
@@ -75,7 +75,7 @@ BEGIN
     AUTOCHECKBOX "Zezwól na starszą wersję MS-CHAP dla serwerów &Win 95", 200, 46, 162, 198, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "M&icrosoft CHAP Wersja 2 (MS-CHAP v2)", 1492, 28, 176, 200, 10, BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 28, 189, 208, 1
-    AUTOCHECKBOX "&Dla protokołów z rodziny MS-CHAP, automatycznie użyj mojej nazwy użytkownika i hasła z systemu ReactOS (także domeny jeśli występuje)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Dla protokołów z rodziny MS-CHAP, automatycznie użyj mojej nazwy użytkownika i hasła z systemu MenuOS (także domeny jeśli występuje)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "OK", 1, 127, 232, 60, 14
     PUSHBUTTON "Anuluj", 2, 192, 232, 60, 14
 END
@@ -169,7 +169,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Automatyczne wybieranie i zawieszanie połączeń"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS może automatycznie wybierać i zawieszać połączenie, w zależności od tego ile danych jest wysyłane i odbierane.", 1085, 9, 7, 253, 30
+    LTEXT "MenuOS może automatycznie wybierać i zawieszać połączenie, w zależności od tego ile danych jest wysyłane i odbierane.", 1085, 9, 7, 253, 30
     GROUPBOX "Wybieranie automatyczne", -1, 6, 38, 249, 71
     LTEXT "Użyj dodatkowej linii, kiedy to połączenie spełnia oba poniższe kryteria:", 1083, 16, 51, 237, 16, NOT WS_GROUP
     LTEXT "Aktywność co &najmniej:", -1, 16, 73, 100, 8
@@ -632,7 +632,7 @@ BEGIN
     AUTORADIOBUTTON "&Zaawansowane (ustawienia własne)", 1541, 14, 102, 198, 8, BS_NOTIFY
     LTEXT "&Uwiarygodnij moją tożsamość za pomocą:", 1537, 26, 29, 187, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "&Automagicznie użyj mojej nazwy użytkownika i hasła z ReactOS (domeny też o ile istniej)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Automagicznie użyj mojej nazwy użytkownika i hasła z MenuOS (domeny też o ile istniej)", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&Wymagaj szyfrowania danych (rozłącz się w razie braku)", 1169, 26, 82, 183, 10, BS_TOP | BS_MULTILINE
     LTEXT "Zmiana tych ustawień wymaga wiedzy o protokołach bezpieczeństwa.", 1539, 15, 114, 134, 20
     PUSHBUTTON "&Ustawienia", 1180, 151, 115, 60, 14
@@ -689,7 +689,7 @@ BEGIN
     GROUPBOX "Opcje wybierania", 1289, 7, 2, 213, 64
     AUTOCHECKBOX "&Wyświetlaj przebieg połączenia", 1284, 16, 14, 201, 10
     AUTOCHECKBOX "&Zapytaj o nazwę użytkownika, hasło, certyfikat itd.", 1554, 16, 27, 201, 10
-    AUTOCHECKBOX "Dołącz domenę logowania z &ReactOS", 1555, 16, 39, 201, 10
+    AUTOCHECKBOX "Dołącz domenę logowania z &MenuOS", 1555, 16, 39, 201, 10
     AUTOCHECKBOX "Zapytaj o &numer telefoniczny", 1285, 16, 52, 200, 10, BS_TOP | BS_MULTILINE
     GROUPBOX "Wybieranie ponowne", 1290, 6, 72, 213, 79
     LTEXT "&Ilość prób wybierania:", 1300, 16, 87, 123, 8
@@ -887,7 +887,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Połącz z %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS nie mógł połączyć się z siecią za pomocą podanej nazwy użytkownika i hasła. Proszę ponownie wprowadziź nazwę użytkownika i hasło.", 1396, 7, 6, 206, 36
+    LTEXT "MenuOS nie mógł połączyć się z siecią za pomocą podanej nazwy użytkownika i hasła. Proszę ponownie wprowadziź nazwę użytkownika i hasło.", 1396, 7, 6, 206, 36
     LTEXT "&Nazwa użytkownika:", 1399, 8, 51, 49, 8
     EDITTEXT 1394, 66, 46, 143, 14, ES_AUTOHSCROLL
     LTEXT "&Hasło:", 1397, 8, 70, 49, 8, NOT WS_GROUP
@@ -903,7 +903,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Połącz z %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS nie mógł połączyć się z siecią za pomocą podanej nazwy użytkownika i hasła. Proszę ponownie wprowadziź nazwę użytkownika i hasło.", 1396, 7, 6, 209, 26
+    LTEXT "MenuOS nie mógł połączyć się z siecią za pomocą podanej nazwy użytkownika i hasła. Proszę ponownie wprowadziź nazwę użytkownika i hasło.", 1396, 7, 6, 209, 26
     LTEXT "&Nazwa użytkownika:", 1399, 7, 72, 44, 8
     EDITTEXT 1394, 97, 69, 115, 14, ES_AUTOHSCROLL
     LTEXT "&Hasło:", 1397, 7, 90, 45, 8, NOT WS_GROUP
@@ -1280,7 +1280,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Kreator konfiguracji połączenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Wprowadź nazwę usługi w pole poniżej. Jeśli zostawisz je puste, ReactOS automagicznie wykryje i skonfiguruje tę usługę podczas łączenia.", -1, 10, 7, 301, 25
+    LTEXT "Wprowadź nazwę usługi w pole poniżej. Jeśli zostawisz je puste, MenuOS automagicznie wykryje i skonfiguruje tę usługę podczas łączenia.", -1, 10, 7, 301, 25
     LTEXT "&Nazwa Usługi (opcjonalnie):", -1, 22, 32, 229, 8
     EDITTEXT 1593, 22, 44, 275, 14, ES_AUTOHSCROLL
 END
@@ -1305,7 +1305,7 @@ BEGIN
     AUTORADIOBUTTON "&Zaawansowane (ustawienia własne)", 1541, 14, 100, 197, 8, BS_NOTIFY
     LTEXT "&Uwiarygodnij moją tożsamość za pomocą:", 1537, 26, 29, 183, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "&Automagicznie użyj mojej nazwy użytkownika i hasła z ReactOS (domeny też o ile istniej)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Automagicznie użyj mojej nazwy użytkownika i hasła z MenuOS (domeny też o ile istniej)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&Wymagaj szyfrowania danych (rozłącz się w razie braku)", 1169, 26, 83, 182, 10, BS_TOP | BS_MULTILINE
     LTEXT "Zmiana tych ustawień wymaga wiedzy o protokołach bezpieczeństwa.", 1539, 26, 111, 136, 20
     PUSHBUTTON "&Ustawienia", 1180, 151, 134, 60, 14
@@ -1464,7 +1464,7 @@ BEGIN
     LTEXT "Wprowadź &nazwę hosta albo adres IP celu (na przykład reactos.org albo 145.52.0.1):", 1430, 7, 5, 217, 18
     EDITTEXT 1427, 7, 25, 215, 14, ES_AUTOHSCROLL
     GROUPBOX "Połączenie wstępne", 1431, 9, 48, 213, 78
-    LTEXT "ReactOS może wpierw połączyć się z siecią publiczną, np z Internetem, przed próbą ustanowienia tego połączenia z VPN.", 1432, 17, 63, 199, 24
+    LTEXT "MenuOS może wpierw połączyć się z siecią publiczną, np z Internetem, przed próbą ustanowienia tego połączenia z VPN.", 1432, 17, 63, 199, 24
     AUTOCHECKBOX "&Wybierz najpierw inne połączenie:", 1428, 19, 89, 183, 10
     COMBOBOX 1429, 29, 103, 182, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "Po&każ ikonę w zasobniku systemowym podczas trwania połączenia", 1120, 10, 192, 213, 13
@@ -1478,7 +1478,7 @@ BEGIN
     GROUPBOX "Opcje wybierania", 1289, 8, 7, 214, 56
     AUTOCHECKBOX "&Wyświetlaj przebieg połączenia", 1284, 16, 17, 199, 10
     AUTOCHECKBOX "&Zapytaj o nazwę użytkownika, hasło, certyfikat itd.", 1554, 16, 32, 199, 10
-    AUTOCHECKBOX "Dołącz domenę logowania z &ReactOS", 1555, 16, 47, 178, 10
+    AUTOCHECKBOX "Dołącz domenę logowania z &MenuOS", 1555, 16, 47, 178, 10
     GROUPBOX "Wybieranie ponowne", 1290, 8, 68, 214, 89
     LTEXT "&Ilość prób wybierania:", 1300, 16, 81, 121, 8
     EDITTEXT 1287, 140, 77, 70, 14, ES_AUTOHSCROLL | ES_NUMBER
@@ -1503,7 +1503,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Kreator konfiguracji połączenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS może wpierw połączyć się z siecią publiczną, np z Internetem, przed próbą ustanowienia tego połączenia z VPN.", -1, 10, 6, 275, 24
+    LTEXT "MenuOS może wpierw połączyć się z siecią publiczną, np z Internetem, przed próbą ustanowienia tego połączenia z VPN.", -1, 10, 6, 275, 24
     AUTORADIOBUTTON "&Nie wykonuj połączenia wstępnego.", 1509, 32, 31, 271, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     AUTORADIOBUTTON "&Automagicznie wykonaj połączenie wstępne:", 1510, 32, 45, 269, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     COMBOBOX 1435, 43, 62, 253, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
@@ -1805,7 +1805,7 @@ BEGIN
     AUTORADIOBUTTON "&Zezwalaj na Wirtualne Połączenia Prywatne", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Nie zezwalaj na Wirtualne Połączenia Prywatne", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     LTEXT "Czy chcesz zezwolić na Wirtualne Połączenia Prywatne z tym komputerem?", -1, 17, 49, 275, 8
-    LTEXT " Jeśli tak, ReactOS zmodyfikuje Firewall Systemowy aby przepuszczał on pakiety VPN.", -1, 10, 25, 293, 25
+    LTEXT " Jeśli tak, MenuOS zmodyfikuje Firewall Systemowy aby przepuszczał on pakiety VPN.", -1, 10, 25, 293, 25
 END
 
 7055 DIALOGEX 0, 0, 317, 143
@@ -1894,7 +1894,7 @@ BEGIN
     244 "Jako, że to połączenie jest obecnie aktywne, niektóre ustawienia zostaną uwzględnione dopiero po rozłączeniu.\0"
     245 "Nie ma żadnych połączeń dostępnych dla dowolnego użytkownika. Musisz zalogować się przed połączeniem.\0"
     246 "Książka telefoniczna jest pusta.\n\nNaciśnij przycisk OK, aby dodać nową pozycję.\0"
-    247 "Ze względu na ograniczenia w imporcie/eksporcie, szyfrowanie danych nie jest dostępne w tej wersji ReactOS.\0"
+    247 "Ze względu na ograniczenia w imporcie/eksporcie, szyfrowanie danych nie jest dostępne w tej wersji MenuOS.\0"
     248 "Proszę wprowadzić adres X.25 na następnym ekranie.\0"
     249 "Błąd %1: %2\0"
     250 "%1\n\nBłąd %2: %3\0"
@@ -2117,7 +2117,7 @@ BEGIN
     501 "Jaka jest nazwa lub adres serwera sieci VPN?\0"
     502 "Nie można wyłączyć wybierania numeru na żądanie.\0"
     503 "Sieć publiczna\0"
-    504 "System ReactOS może zapewnić, że sieć publiczna zostanie połączona jako pierwsza.\0"
+    504 "System MenuOS może zapewnić, że sieć publiczna zostanie połączona jako pierwsza.\0"
     505 "VPN1\0"
     506 "Wsp\0"
     507 "Możesz zezwolić sieci lokalnej na dostęp do zasobów przez to połączenie dial-up.\0"
@@ -2244,7 +2244,7 @@ BEGIN
     1612 "Zostało wybrane użycie klucza wstępnego, ale nie został on wprowadzony.\nWprowadzić klucz wstępny.\0"
     1613 "Nie można wysłać danych do uwierzytelnienia\0"
     1634 "Z powodu wyłączenia usługi Instrumentacji Zarządzania Windows (WMI), nie może wyświetlić właściwości tego połączenia albo sieci lokalnej.\n\nAby uzyskać dostęp do właściwości, musisz wpierw uruchomić usługę WMI.\0"
-    1635 "ReactOS nie może wyświetlić właściwości tego połączenia. Informacja w Instrumentacji Zarządzania Windows (WMI) może być uszkodzona. Aby to poprawić, użyj Odtwarzania Systemu, by odtworzyć ReactOS z wcześniejszego momentu (punktu odtwarzania).\0"
+    1635 "MenuOS nie może wyświetlić właściwości tego połączenia. Informacja w Instrumentacji Zarządzania Windows (WMI) może być uszkodzona. Aby to poprawić, użyj Odtwarzania Systemu, by odtworzyć MenuOS z wcześniejszego momentu (punktu odtwarzania).\0"
     1646 "Zezwalaj na przychodzące żądanie echa\0"
     1647 "Zezwalaj na przychodzące żądanie sygnatury czasowej\0"
     1648 "Zezwalaj na przychodzące żądanie maski\0"
@@ -2357,7 +2357,7 @@ BEGIN
     7385 "Port Komunikacyjny (%s)\0"
     7386 "Połączenia Sieciowe nie wyświetlają niektórych zaawansowanych opcji dla połączeń przychodzących, które można ustawić za pomcą konsol Menedźera Użytkownika Lokalnego albo Zdalnego Dostępu do Ustawień Remote. Aby uzyskać aktualne i szczegółowe informacje o połączeniach przychodzących, będziesz musiał użyć tych konsol.\0"
     7387 "Własny tryb oddzwaniania, który wybrałeś, wymaga wprowadzenia właściwego numeru oddzwaniania.\0"
-    7388 "ReactOS musi zrestartować system by dokończyć konfigurację. Czy można zrestartować w tej cwili?\0"
+    7388 "MenuOS musi zrestartować system by dokończyć konfigurację. Czy można zrestartować w tej cwili?\0"
     7389 "Obecnie wybrane urządzenie nie posiada żadnych opcji konfiguracji.\0"
     7390 "Nieprawidłowy zasięg\0"
     7391 "Chcesz wyłączyć '%1' dla Połączeń Przychodzących.W tym celu musisz wpierw zatrzymać usługę 'Serwer'. Po zatrzymaniu, żaden z udostępnionych katalogów czy drukarek na tym komputerze nie będzie dostępny dla innych komputerów. Czy chcesz wywołać konsolę systemową która pozwoli ci zatrzymać usługę 'Serwer'?\r\n\nW Zarządzanie Komputerem kliknij na Narzędzia Systemowe a następnie na Usługi. W prawym panelu kliknij prawym przyciskiem na usługę 'Serwer' a następnie na 'Zatrzymaj'.\0"

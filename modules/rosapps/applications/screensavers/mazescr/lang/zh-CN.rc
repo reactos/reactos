@@ -36,7 +36,7 @@ BEGIN
     LTEXT           "[03-03-93] Jim Randell - UnHacked for X11",IDC_STATIC,7,47,215,8
     LTEXT           "[03-07-93] Jamie Zawinski - 清理和代码的整洁",IDC_STATIC,7,56,215,8
     LTEXT           "[10-08-94] Ge van Geldorp - 移植到 Windows",IDC_STATIC,7,65,215,8
-    LTEXT           "[08-15-03] Ge van Geldorp - 移植到 ReactOS",IDC_STATIC,7,74,215,8
+    LTEXT           "[08-15-03] Ge van Geldorp - 移植到 MenuOS",IDC_STATIC,7,74,215,8
     CTEXT           "愿你安息 Ge van Geldorp, 我们想念你 ！",IDC_STATIC,7,87,215,10,SS_SUNKEN
     DEFPUSHBUTTON   "确定",IDOK,87,100,56,14
 END

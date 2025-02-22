@@ -5,7 +5,7 @@
    Written by: Aleksey Bragin (aleksey@reactos.org)
 
    Most of this file content is taken from
-   ReactOS Task Manager written by Brian Palmer (brianp@reactos.org)
+   MenuOS Task Manager written by Brian Palmer (brianp@reactos.org)
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by

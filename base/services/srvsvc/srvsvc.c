@@ -1,6 +1,6 @@
 /*
- *  ReactOS Services
- *  Copyright (C) 2015 ReactOS Team
+ *  MenuOS Services
+ *  Copyright (C) 2015 MenuOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS Services
+ * PROJECT:          MenuOS Services
  * FILE:             base/services/srvsvc/srvsvc.c
  * PURPOSE:          Server service
  * PROGRAMMER:       Eric Kohl

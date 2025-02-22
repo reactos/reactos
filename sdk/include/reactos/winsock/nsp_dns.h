@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS WinSock 2 Headers
+ * PROJECT:     MenuOS WinSock 2 Headers
  * FILE:        include/reactos/winsock/nsp_dns.h
  * PURPOSE:     WinSock 2 Shared NSP Header
  */

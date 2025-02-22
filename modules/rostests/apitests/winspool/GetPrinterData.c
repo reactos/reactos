@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Print Spooler DLL API Tests
+ * PROJECT:     MenuOS Print Spooler DLL API Tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Tests for GetPrinterData(Ex)A/GetPrinterData(Ex)W/SetPrinterData(Ex)A/SetPrinterData(Ex)W
  * COPYRIGHT:   Copyright 2017 Colin Finck (colin@reactos.org)

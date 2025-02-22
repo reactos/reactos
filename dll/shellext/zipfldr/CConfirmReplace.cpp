@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Zip Shell Extension
+ * PROJECT:     MenuOS Zip Shell Extension
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Ask the user to replace a file
  * COPYRIGHT:   Copyright 2017-2019 Mark Jansen (mark.jansen@reactos.org)

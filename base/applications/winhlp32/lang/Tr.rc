@@ -1,5 +1,5 @@
 /*
- * Turkish Resources for ReactOS Winhlp32
+ * Turkish Resources for MenuOS Winhlp32
  *
  * Copyrights: 2006 Fatih Aşıcı (fasici [at] linux-sevenler [dot] org)
  * 2013-2016, 2019 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
@@ -74,7 +74,7 @@ END
 
 STRINGTABLE
 {
-STID_WINE_HELP, 	"ReactOS Yardım"
+STID_WINE_HELP, 	"MenuOS Yardım"
 STID_WHERROR, 		"HATA"
 STID_WARNING,  		"UYARI"
 STID_INFO,  		"Bilgi"

@@ -1,5 +1,5 @@
 /*
- * PROJECT:    ReactOS MPlay32
+ * PROJECT:    MenuOS MPlay32
  * LICENSE:    GPL - See COPYING in the top level directory
  * FILE:       base/applications/mplay32/lang/zh-TW.rc
  * PURPOSE:    Chinese (Traditional) Language File for MPlay32
@@ -69,7 +69,7 @@ BEGIN
     IDS_TOOLTIP_SEEKFORW "前進"
     IDS_TOOLTIP_FORWARD "快轉"
     IDS_TOOLTIP_PAUSE "暫停"
-    IDS_APPTITLE "ReactOS 多媒體播放器"
+    IDS_APPTITLE "MenuOS 多媒體播放器"
     IDS_PLAY "播放"
     IDS_DEFAULTMCIERRMSG "該錯誤沒有可用的描述。"
 END

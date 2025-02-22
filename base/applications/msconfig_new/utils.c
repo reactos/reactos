@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Applications
+ * PROJECT:     MenuOS Applications
  * LICENSE:     LGPL - See COPYING in the top level directory
  * FILE:        base/applications/msconfig_new/utils.c
  * PURPOSE:     Memory Management, Resources, ... Utility Functions
@@ -236,7 +236,7 @@ BOOL IsWindowsOS(VOID)
     if (osvi.dwPlatformId != VER_PLATFORM_WIN32_NT)
         return FALSE;
 
-    /* ReactOS reports as Windows NT 5.2 */
+    /* MenuOS reports as Windows NT 5.2 */
 
     if ( (osvi.dwMajorVersion == 5 && osvi.dwMinorVersion >= 2) ||
          (osvi.dwMajorVersion  > 5) )

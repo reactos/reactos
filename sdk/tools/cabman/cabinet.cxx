@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS cabinet manager
+ * PROJECT:     MenuOS cabinet manager
  * FILE:        tools/cabman/cabinet.cxx
  * PURPOSE:     Cabinet routines
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

@@ -1,6 +1,6 @@
 /*
- *  ReactOS Gdi32
- *  Copyright (C) 2003 ReactOS Team
+ *  MenuOS Gdi32
+ *  Copyright (C) 2003 MenuOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

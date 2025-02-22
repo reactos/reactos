@@ -1,7 +1,7 @@
 /*
  *
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS kernel
+ * PROJECT:              MenuOS kernel
  * FILE:                 drivers/dd/sndblst/sndblst.h
  * PURPOSE:              Sound Blaster driver header
  * PROGRAMMER:           Andrew Greenwood

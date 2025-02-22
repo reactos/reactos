@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS system libraries
+ * PROJECT:     MenuOS system libraries
  * FILE:        dll/win32/advapi32/misc/shutdown.c
  * PURPOSE:     System shutdown functions
  * PROGRAMMER:  Lee Schroeder <spaceseel at gmail dot com>

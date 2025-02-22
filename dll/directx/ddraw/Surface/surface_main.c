@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS DirectX
+ * PROJECT:              MenuOS DirectX
  * FILE:                 dll/directx/ddraw/Surface/surface_main.c
  * PURPOSE:              IDirectDrawSurface7 Implementation
  * PROGRAMMER:           Magnus Olsen, Maarten Bosma

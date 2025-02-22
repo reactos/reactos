@@ -76,7 +76,7 @@ Revision History:
 _IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 BOOLEAN
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 PsIsThreadTerminating(
     _In_ PETHREAD Thread
     );
@@ -890,7 +890,7 @@ EVT_WDF_IO_QUEUE_IO_DEFAULT CreateQueueEvtIoDefault;
 // We do not use KMDF annotation for the following function, because it handles
 // both read and write requests and there is no single annotation for that.
 VOID
-NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+NTAPI /* MenuOS Change: GCC Does not support STDCALL by default */
 SequentialQueueEvtIoReadWrite(
     _In_ WDFQUEUE     Queue,
     _In_ WDFREQUEST   Request,

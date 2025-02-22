@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Font Viewer
+ * PROJECT:     MenuOS Font Viewer
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Japanese resource file
  * TRANSLATORS: Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
@@ -11,7 +11,7 @@ STRINGTABLE
 BEGIN
     IDS_INSTALL "インストール(&I)"
     IDS_PRINT "印刷(&P)"
-    IDS_STRING "ReactOS は万人に開かれたコンピュータのシステムです。1234567890"
+    IDS_STRING "MenuOS は万人に開かれたコンピュータのシステムです。1234567890"
     IDS_OPEN "フォントを開く..."
     IDS_ERROR "エラー"
     IDS_ERROR_NOMEM "処理の完了に充分なメモリーがありません。"

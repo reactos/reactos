@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS
+ * PROJECT:     MenuOS
  * LICENSE:     GPL - See COPYING in the top level directory
  * PURPOSE:     Audio Service Plug and Play
  * COPYRIGHT:   Copyright 2009 Johannes Anderwald

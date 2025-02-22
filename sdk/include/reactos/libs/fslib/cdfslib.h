@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS CDFS filesystem library
+ * PROJECT:     MenuOS CDFS filesystem library
  * FILE:        include/reactos/libs/fslib/cdfslib.h
  * PURPOSE:     Public definitions for CDFS filesystem library
  */

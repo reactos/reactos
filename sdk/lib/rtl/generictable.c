@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Runtime Library
+ * PROJECT:         MenuOS Runtime Library
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            lib/rtl/generictable.c
  * PURPOSE:         Splay Tree Generic Table Implementation

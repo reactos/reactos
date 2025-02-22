@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS i8042 (ps/2 keyboard-mouse controller) driver
+ * PROJECT:     MenuOS i8042 (ps/2 keyboard-mouse controller) driver
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        drivers/input/i8042prt/hwhacks.c
  * PURPOSE:     Mouse specific functions

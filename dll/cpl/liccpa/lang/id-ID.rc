@@ -23,5 +23,5 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME_1 "Manajer Lisensi"
     IDS_CPLDESCRIPTION_1 "Manajer Lisensi"
-    IDS_REACTOS "ReactOS - SoftwareBebas"
+    IDS_REACTOS "MenuOS - SoftwareBebas"
 END

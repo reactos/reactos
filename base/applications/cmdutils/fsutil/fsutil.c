@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS FS utility tool
+ * PROJECT:         MenuOS FS utility tool
  * FILE:            base/applications/cmdutils/fsutil.c
  * PURPOSE:         FSutil main
  * PROGRAMMERS:     Pierre Schweitzer <pierre@reactos.org>

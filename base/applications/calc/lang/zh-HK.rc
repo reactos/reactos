@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Calc
+ * PROJECT:     MenuOS Calc
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Chinese (Hong Kong) resource file
  * TRANSLATORS: Copyright 2021 Chan Chilung <eason066@gmail.com>
@@ -337,7 +337,7 @@ BEGIN
     BEGIN
         MENUITEM "說明主題", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "關於 ReactOS 計數機", IDM_HELP_ABOUT
+        MENUITEM "關於 MenuOS 計數機", IDM_HELP_ABOUT
     END
 END
 
@@ -370,7 +370,7 @@ BEGIN
     BEGIN
         MENUITEM "說明主題", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "關於 ReactOS 計數機", IDM_HELP_ABOUT
+        MENUITEM "關於 MenuOS 計數機", IDM_HELP_ABOUT
     END
 END
 
@@ -393,7 +393,7 @@ BEGIN
     BEGIN
         MENUITEM "說明主題", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "關於 ReactOS 計數機", IDM_HELP_ABOUT
+        MENUITEM "關於 MenuOS 計數機", IDM_HELP_ABOUT
     END
 END
 
@@ -408,7 +408,7 @@ END
 /* About */
 STRINGTABLE
 BEGIN
-    IDS_CALC_NAME "ReactOS 計數機"
+    IDS_CALC_NAME "MenuOS 計數機"
     IDS_AUTHOR "作者 Carlo Bramini"
 END
 

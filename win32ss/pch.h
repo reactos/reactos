@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Win32k subsystem
+ * PROJECT:         MenuOS Win32k subsystem
  * FILE:            win32ss/pch.h
  * PURPOSE:         Main Win32K Header
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)

@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS PSDK Headers
+ * PROJECT:     MenuOS PSDK Headers
  * LICENSE:     CC0-1.0 (https://spdx.org/licenses/CC0-1.0)
  * PURPOSE:     Sets structure packing alignment to 4 bytes
  * COPYRIGHT:   Copyright 2017 Colin Finck (colin@reactos.org)
