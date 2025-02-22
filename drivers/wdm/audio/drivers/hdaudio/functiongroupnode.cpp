@@ -43,6 +43,28 @@ CFunctionGroupNode::EnumWidgets()
 
 NTSTATUS
 NTAPI
+CFunctionGroupNode::SetEAPD(
+    IN ULONG NodeId,
+    IN UCHAR Enable)
+{
+    NTSTATUS Status;
+    ULONG Verb;
+    ULONG Response = 0;
+
+    UCHAR Value = Enable ? 0x2 : 0x0;
+    Verb = (m_CodecAddress << 28) | (NodeId << 20) | (AC_VERB_SET_EAPD_BTLENABLE << 8) | Value;
+    Status = m_Adapter->TransferVerb(Verb, &Response);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("HDAUDIO: SetEAPD failed with %x\n", Status);
+        return Status;
+    }
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
 CFunctionGroupNode::AddNode(ULONG NodeId)
 {
     NTSTATUS Status;

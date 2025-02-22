@@ -293,7 +293,9 @@ class CFunctionGroupNode
     NTAPI
     SetConverterStream(IN ULONG NodeId, IN UCHAR StreamId);
 
-
+    NTSTATUS
+    NTAPI
+    SetEAPD(IN ULONG NodeId, IN UCHAR Enable);
 
   private:
     CAdapterCommon *m_Adapter;
