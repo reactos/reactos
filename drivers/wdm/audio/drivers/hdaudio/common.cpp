@@ -259,11 +259,8 @@ CAdapterCommon::ReadRegistryKey(
     return STATUS_NOT_FOUND;
 }
 
-VOID
-NTAPI
-HDAUDIO_UnsolicitedResponseCallback(
-    HDAUDIO_CODEC_RESPONSE Param,
-    PVOID Context)
+VOID NTAPI
+HDAUDIO_UnsolicitedResponseCallback(HDAUDIO_CODEC_RESPONSE Param, PVOID Context)
 {
     UNIMPLEMENTED;
 }
@@ -490,6 +487,7 @@ CAdapterCommon::FindConnectedWidgets(
 
     NodeContext->Visited = TRUE;
 
+    ULONG TotalFoundNodes = 0;
     if (NodeContext->NodeType == NodeType && NodeContext->Digital == Digital)
     {
         // found target node type
@@ -503,13 +501,12 @@ CAdapterCommon::FindConnectedWidgets(
                 return STATUS_SUCCESS;
             }
         }
-        *OutNodesCount = 1;
+        TotalFoundNodes += 1;
         OutNodes[NodeIndex] = NodeContext->NodeId;
-        DPRINT1("HDAUDIO: Adding I/O Node %u Type %u\n", NodeContext->NodeId, NodeType);
-        return STATUS_SUCCESS;
+        NodeIndex++;
+        DPRINT1("HDAUDIO: Adding Node %u Type %u\n", NodeContext->NodeId, NodeType);
     }
 
-    ULONG TotalFoundNodes = 0;
     ULONG ConnectionCount = NodeContext->ConnectionCount;
     for (ULONG CNodeIndex = 0; CNodeIndex < ConnectionCount; CNodeIndex++)
     {
@@ -1143,8 +1140,9 @@ CAdapterCommon::ProcessOutputNodes(
                 PinConfiguration.DefaultAssociation, PinConfiguration.Sequence);
             // FIXME support digital pins
             Status = AssociatePins(
-                DeviceObject, Irp, PinConfiguration.DefaultAssociation, (PVOID)OutNode, 0x00, PinNodeCount, PinNodes,
-                TRUE, 0, NULL, FALSE);
+                DeviceObject, Irp, PinConfiguration.DefaultAssociation, (PVOID)OutNode, PinNodeCount, PinNodes,
+                FALSE);
+
         }
         else
         {
@@ -1152,6 +1150,76 @@ CAdapterCommon::ProcessOutputNodes(
         }
     }
     return Status;
+}
+
+NTSTATUS
+NTAPI
+CAdapterCommon::IsInputNodeConnectedToPin(
+    IN PVOID Node,
+    IN UCHAR Digital,
+    ULONG InputNodeId,
+    ULONG PinNodeId,
+    ULONG PinNodeCount,
+    OUT PULONG Result)
+{
+    CFunctionGroupNode *OutNode = (CFunctionGroupNode *)Node;
+
+    PULONG ConnectedPins = (PULONG)ExAllocatePoolZero(NonPagedPool, sizeof(ULONG) * PinNodeCount, TAG_HDAUDIO);
+    if (!ConnectedPins)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    OutNode->ClearVisitedState();    
+    ULONG FoundNodes = 0;
+    NTSTATUS Status = FindConnectedWidgets(0x04, 0, InputNodeId, Node, 0, PinNodeCount, &FoundNodes, ConnectedPins, Digital);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePool(ConnectedPins);
+        return Status;
+    }
+    *Result = 0;
+    DPRINT1("Searched for %u FoundNodes %u\n", PinNodeId, FoundNodes);
+    for (ULONG Index = 0; Index < FoundNodes; Index++)
+    {
+        if (ConnectedPins[Index] == PinNodeId)
+        {
+            DPRINT1("Found\n");
+            *Result = 1;
+            break;
+        }
+    }
+    ExFreePool(ConnectedPins);
+    return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+CAdapterCommon::CollectPinWithType(
+    IN ULONG DeviceType,
+    IN ULONG PinNodeCount,
+    IN PULONG PinIds,
+    IN PULONG DefaultDeviceTypeList,
+    OUT PULONG ResultListCount,
+    OUT PULONG ResultList)
+{
+    ULONG Count = 0;
+    for (ULONG Index = 0; Index < PinNodeCount; Index++)
+    {
+        if (DefaultDeviceTypeList[Index] == DeviceType)
+            Count++;
+    }
+    *ResultListCount = Count;
+    if (ResultList)
+    {
+        Count = 0;
+        for (ULONG Index = 0; Index < PinNodeCount; Index++)
+        {
+            if (DefaultDeviceTypeList[Index] == DeviceType)
+            {
+                ResultList[Count] = PinIds[Index];
+                Count++;
+            }
+        }
+    }
 }
 
 NTSTATUS
@@ -1168,84 +1236,117 @@ CAdapterCommon::ProcessInputNodes(
     NTSTATUS Status;
     CFunctionGroupNode *OutNode = (CFunctionGroupNode *)Node;
 
-    PULONG AnalogInputNodes = (PULONG)ExAllocatePoolZero(NonPagedPool, sizeof(ULONG) * InputNodeCount, TAG_HDAUDIO);
-    if (!AnalogInputNodes)
+    PULONG FilteredPinNodes = (PULONG)ExAllocatePoolZero(NonPagedPool, sizeof(ULONG) * PinNodeCount, TAG_HDAUDIO);
+    if (!FilteredPinNodes)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    ULONG AnalogInputNodeCount = 0;
-    for (ULONG NodeIndex = 0; NodeIndex < InputNodeCount; NodeIndex++)
+    PULONG DefaultDeviceList = (PULONG)ExAllocatePoolZero(NonPagedPool, sizeof(ULONG) * PinNodeCount, TAG_HDAUDIO);
+    if (!DefaultDeviceList)
     {
-        PNODE_CONTEXT NodeContext = OutNode->FindNodeId(InputNodes[NodeIndex]);
-        if (!NodeContext || NodeContext->Digital)
+        ExFreePool(FilteredPinNodes);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    ULONG FilteredPinNodeCount = 0;
+
+    // filter pin nodes which are not input capable or default device is not input
+    for (ULONG NodeIndex = 0; NodeIndex < PinNodeCount; NodeIndex++)
+    {
+        if (PinNodes[NodeIndex] == (ULONG)-1)
+            continue;
+
+        PIN_CAPABILITIES PinCaps;
+        Status = OutNode->GetPinCapabilities(PinNodes[NodeIndex], &PinCaps);
+        if (!NT_SUCCESS(Status) || !PinCaps.InputCapable)
         {
-            // not yet supported
-            ClearRef(InputNodes[NodeIndex], InputNodeCount, InputNodes);
+            // ignoring
+            DPRINT1("Ignoring Pin %u\n", PinNodes[NodeIndex]);
+            continue;
+        }
+        // retrieve pin configuration
+        PIN_CONFIGURATION_DEFAULT PinConfiguration;
+        Status = OutNode->GetPinConfigurationDefault(PinNodes[NodeIndex], &PinConfiguration);
+        if (!NT_SUCCESS(Status) || PinConfiguration.DefaultDevice < 0x8)
+        {
+            // ignoring
+            DPRINT1("Ignoring Pin %u DefaultDevice %u\n", PinNodes[NodeIndex], PinConfiguration.DefaultDevice);
+            continue;
+        }
+        DPRINT1("Adding Input Pin %u\n", PinNodes[NodeIndex]);
+        FilteredPinNodes[FilteredPinNodeCount] = PinNodes[NodeIndex];
+        DefaultDeviceList[FilteredPinNodeCount] = PinConfiguration.DefaultDevice;
+        FilteredPinNodeCount++;
+    }
+
+    for (ULONG DeviceType = 8; DeviceType < 16; DeviceType++)
+    {
+        PULONG PinsOfSameType = (PULONG)ExAllocatePoolZero(NonPagedPool, sizeof(ULONG) * FilteredPinNodeCount, TAG_HDAUDIO);
+        if (!PinsOfSameType)
+        {
+            ExFreePool(FilteredPinNodes);
+            ExFreePool(DefaultDeviceList);
+            return Status;
+        }
+        ULONG PinsOfSameTypeCount = 0;
+        CollectPinWithType(
+            DeviceType, FilteredPinNodeCount, FilteredPinNodes, DefaultDeviceList, &PinsOfSameTypeCount,
+            PinsOfSameType);
+        if (!PinsOfSameTypeCount)
+        {
+            // no pins of that type
+            DPRINT1("No Pins of Type %u\n", DeviceType);
+            ExFreePool(PinsOfSameType);
             continue;
         }
 
-        AnalogInputNodes[AnalogInputNodeCount] = InputNodes[NodeIndex];
-        AnalogInputNodeCount++;
-    }
-    if (AnalogInputNodeCount)
-    {
-#if 0
-            PULONG OutNodes = (PULONG)ExAllocatePoolZero(NonPagedPool, sizeof(ULONG) * 128, TAG_HDAUDIO);
-            for (ULONG NodeIndex = 0; NodeIndex < AnalogInputNodeCount; NodeIndex++)
+        PULONG FilteredInputNodes = (PULONG)ExAllocatePoolZero(NonPagedPool, sizeof(ULONG) * InputNodeCount, TAG_HDAUDIO);
+        if (!FilteredInputNodes)
+        {
+            ExFreePool(PinsOfSameType);
+            ExFreePool(FilteredPinNodes);
+            ExFreePool(DefaultDeviceList);
+            return Status;
+        }
+        ULONG FilteredInputNodeCount = 0;
+        for (ULONG InputIndex = 0; InputIndex < InputNodeCount; InputIndex++)
+        {
+            ULONG Result = 0;
+            for (ULONG PinIndex = 0; PinIndex < PinsOfSameTypeCount; PinIndex++)
             {
-                ULONG FoundNodes = 0;   
-                Status = FindConnectedWidgets(
-                    0x04, 0, AnalogInputNodes[NodeIndex], (PVOID)OutNode, 0, 128, &FoundNodes,
-                    OutNodes, FALSE);
-                if (NT_SUCCESS(Status))
+                Status = IsInputNodeConnectedToPin(
+                    OutNode,
+                    0x0, // no digital yet
+                    InputNodes[InputIndex], PinsOfSameType[PinIndex], PinNodeCount, &Result);
+                if (!NT_SUCCESS(Status))
                 {
-                    for (ULONG SubIndex = 0; SubIndex < FoundNodes; SubIndex++)
-                    {
-                        ClearRef(OutNodes[SubIndex], PinNodeCount, PinNodes);
-                    }
+                    ExFreePool(PinsOfSameType);
+                    ExFreePool(FilteredPinNodes);
+                    ExFreePool(DefaultDeviceList);
+                    ExFreePool(FilteredInputNodes);
+                    return Status;
                 }
 
+                if (Result)
+                    break;
             }
-#endif
-        for (ULONG NodeIndex = 0; NodeIndex < PinNodeCount; NodeIndex++)
-        {
-            if (PinNodes[NodeIndex] == (ULONG)-1)
-                continue;
-
-            PIN_CAPABILITIES PinCaps;
-            Status = OutNode->GetPinCapabilities(PinNodes[NodeIndex], &PinCaps);
-            if (!NT_SUCCESS(Status) || !PinCaps.InputCapable)
+            if (Result)
             {
-                // ignoring
-                PinNodes[NodeIndex] = (ULONG)-1;
-                continue;
-            }
-
-            DPRINT1("HDAUDIO: PinId %u\n", PinNodes[NodeIndex]);
-            // retrieve pin configuration
-            PIN_CONFIGURATION_DEFAULT PinConfiguration;
-            Status = OutNode->GetPinConfigurationDefault(PinNodes[NodeIndex], &PinConfiguration);
-            if (!NT_SUCCESS(Status) || PinConfiguration.DefaultDevice < 0x8)
-            {
-                // ignoring
-                PinNodes[NodeIndex] = (ULONG)-1;
+                FilteredInputNodes[FilteredInputNodeCount] = InputNodes[InputIndex];
+                FilteredInputNodeCount++;
             }
         }
-        for (ULONG NodeIndex = 0; NodeIndex < PinNodeCount; NodeIndex++)
+        if (FilteredInputNodeCount && PinsOfSameTypeCount)
         {
-            if (PinNodes[NodeIndex] == (ULONG)-1)
-                continue;
-
-            PIN_CONFIGURATION_DEFAULT PinConfiguration;
-            Status = OutNode->GetPinConfigurationDefault(PinNodes[NodeIndex], &PinConfiguration);
-            if (NT_SUCCESS(Status) && PinConfiguration.DefaultAssociation)
-            {
-                Status = AssociatePins(
-                    DeviceObject, Irp, PinConfiguration.DefaultAssociation, OutNode, 0x01, PinNodeCount, PinNodes,
-                    FALSE, AnalogInputNodeCount, AnalogInputNodes, 0x0);
-            }
+            Status = BuildInstallFilter(
+                DeviceObject, Irp, FALSE, OutNode, FilteredInputNodeCount, FilteredInputNodes, PinsOfSameTypeCount,
+                PinsOfSameType);
+        }
+        else
+        {
+            DPRINT1("FilteredInputNodeCount %u PinsOfSameTypeCount %u\n", FilteredInputNodeCount, PinsOfSameTypeCount);
         }
     }
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -1345,39 +1446,21 @@ CAdapterCommon::AssociatePins(
     IN PIRP Irp,
     IN UCHAR DefaultAssociation,
     IN PVOID Node,
-    IN UCHAR NodeType,
     IN ULONG PinNodeCount,
     IN PULONG PinNodes,
-    IN UCHAR bOutput,
-    IN ULONG InputNodeCount,
-    IN PULONG InputNodes,
     IN UCHAR Digital)
 {
     CFunctionGroupNode *OutNode = (CFunctionGroupNode *)Node;
     NTSTATUS Status;
+
     ULONG AssociatedPinCount = 0;
     PULONG AssociatedPins = NULL;
 
     Status =
         OutNode->GetPinNodesWithDefaultAssociation(DefaultAssociation, Digital, &AssociatedPinCount, &AssociatedPins);
-
     if (NT_SUCCESS(Status))
     {
-        // lets clear the refs
-        for (ULONG AssociatedIndex = 0; AssociatedIndex < AssociatedPinCount; AssociatedIndex++)
-        {
-            // ClearRef(AssociatedPins[AssociatedIndex], InputNodeCount, InputNodes);
-        }
-        if (bOutput)
-        {
-            Status =
-                BuildInstallFilter(DeviceObject, Irp, bOutput, OutNode, AssociatedPinCount, AssociatedPins, 0, NULL);
-        }
-        else
-        {
-            Status = BuildInstallFilter(
-                DeviceObject, Irp, bOutput, OutNode, InputNodeCount, InputNodes, PinNodeCount, PinNodes);
-        }
+        Status = BuildInstallFilter(DeviceObject, Irp, TRUE, OutNode, AssociatedPinCount, AssociatedPins, 0, NULL);
     }
     return Status;
 }

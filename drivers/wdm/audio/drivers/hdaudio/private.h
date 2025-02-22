@@ -192,13 +192,30 @@ class CAdapterCommon : public CUnknownImpl<IAdapterPowerManagement>
         IN PIRP Irp,
         IN UCHAR DefaultAssociation,
         IN PVOID Node,
-        IN UCHAR NodeType,
         IN ULONG PinNodeCount,
         IN PULONG PinNodes,
-        IN UCHAR bOutput,
-        IN ULONG InputNodeCount,
-        IN PULONG InputNodes,
         IN UCHAR Digital);
+
+    NTSTATUS
+    NTAPI
+    IsInputNodeConnectedToPin(
+        IN PVOID Node,
+        IN UCHAR Digital,
+        ULONG InputNodeId,
+        ULONG PinNodeId,
+        ULONG PinNodeCount,
+        OUT PULONG Result);
+
+    VOID
+    NTAPI
+    CollectPinWithType(
+        IN ULONG DeviceType,
+        IN ULONG PinNodeCount,
+        IN PULONG PinIds,
+        IN PULONG DefaultDeviceTypeList,
+        OUT PULONG ResultListCount,
+        OUT PULONG ResultList);
+
 
     NTSTATUS
     NTAPI
