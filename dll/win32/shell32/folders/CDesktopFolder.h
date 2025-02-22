@@ -75,6 +75,8 @@ class CDesktopFolder :
         ~CDesktopFolder();
         HRESULT WINAPI FinalConstruct();
 
+        static inline BOOL IsCommonItem(LPCITEMIDLIST pidl) { return _ILGetFSType(pidl) & PT_FS_COMMON_FLAG; }
+
         // *** IShellFolder methods ***
         STDMETHOD(ParseDisplayName)(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes) override;
         STDMETHOD(EnumObjects)(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList) override;

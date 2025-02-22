@@ -49,9 +49,15 @@ static BOOL IsSelf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
 
 static const CLSID* IsRegItem(PCUITEMID_CHILD pidl)
 {
-    if (pidl && pidl->mkid.cb == 2 + 2 + sizeof(CLSID) && pidl->mkid.abID[0] == PT_GUID)
+    if (pidl && pidl->mkid.cb == 2 + 2 + sizeof(CLSID) && pidl->mkid.abID[0] == PT_DESKTOP_REGITEM)
         return (const CLSID*)(&pidl->mkid.abID[2]);
     return NULL;
+}
+
+static inline void MarkAsCommonItem(LPITEMIDLIST pidl)
+{
+    ASSERT(_ILGetFSType(pidl) & PT_FS);
+    ((PIDLDATA*)pidl->mkid.abID)->type |= PT_FS_COMMON_FLAG;
 }
 
 STDMETHODIMP
@@ -201,8 +207,19 @@ class CDesktopFolderEnum :
 
             /* Enumerate the items in the two fs folders */
             AppendItemsFromEnumerator(pDesktopEnumerator);
+            ENUMLIST *pCommon = this->mpLast;
             AppendItemsFromEnumerator(pCommonDesktopEnumerator);
-
+            if (pCommon != this->mpLast) // Any common items added?
+            {
+                ENUMLIST fake;
+                if (!pCommon) // In the unlikely case that there are no RegItems nor user items
+                {
+                    fake.pNext = this->mpFirst;
+                    pCommon = &fake;
+                }
+                while ((pCommon = pCommon->pNext) != NULL)
+                    MarkAsCommonItem(pCommon->pidl);
+            }
             return S_OK;
         }
 
@@ -281,22 +298,16 @@ HRESULT WINAPI CDesktopFolder::FinalConstruct()
 
 HRESULT CDesktopFolder::_GetSFFromPidl(LPCITEMIDLIST pidl, IShellFolder2** psf)
 {
-    WCHAR szFileName[MAX_PATH];
-
-    if (_ILIsSpecialFolder(pidl))
+    if (IsRegItem(pidl))
         return m_regFolder->QueryInterface(IID_PPV_ARG(IShellFolder2, psf));
-
-    lstrcpynW(szFileName, sPathTarget, MAX_PATH - 1);
-    PathAddBackslashW(szFileName);
-    int cLen = wcslen(szFileName);
-
-    if (!_ILSimpleGetTextW(pidl, szFileName + cLen, MAX_PATH - cLen))
-        return E_FAIL;
-
-    if (GetFileAttributes(szFileName) == INVALID_FILE_ATTRIBUTES)
-        return m_SharedDesktopFSFolder->QueryInterface(IID_PPV_ARG(IShellFolder2, psf));
+#if DBG
+    if (_ILIsDesktop(pidl))
+        FIXME("Desktop is unexpected here!\n");
     else
-        return m_DesktopFSFolder->QueryInterface(IID_PPV_ARG(IShellFolder2, psf));
+        ASSERT(!_ILIsSpecialFolder(pidl));
+#endif
+    IShellFolder *pSF = IsCommonItem(pidl) ? m_SharedDesktopFSFolder : m_DesktopFSFolder;
+    return pSF->QueryInterface(IID_PPV_ARG(IShellFolder2, psf));
 }
 
 HRESULT CDesktopFolder::_ParseDisplayNameByParent(
@@ -502,6 +513,8 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
                                                        pchEaten,
                                                        ppidl,
                                                        pdwAttributes);
+        if (SUCCEEDED(hr))
+            MarkAsCommonItem(*ppidl);
     }
 
     if (FAILED(hr) && bCreate && m_DesktopFSFolder)
@@ -604,7 +617,10 @@ HRESULT WINAPI CDesktopFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl
     if (_ILIsSpecialFolder(pidl1) || _ILIsSpecialFolder(pidl2))
         return m_regFolder->CompareIDs(lParam, pidl1, pidl2);
 
-    return m_DesktopFSFolder->CompareIDs(lParam, pidl1, pidl2);
+    HRESULT ret = m_DesktopFSFolder->CompareIDs(lParam, pidl1, pidl2);
+    if (ret == 0 && ((lParam & SHCIDS_COLUMNMASK) == SHFSF_COL_NAME || (lParam & (SHCIDS_ALLFIELDS | SHCIDS_CANONICALONLY))))
+        ret = MAKE_COMPARE_HRESULT(IsCommonItem(pidl1) - IsCommonItem(pidl2));
+    return ret;
 }
 
 /**************************************************************************
