@@ -25,6 +25,13 @@ SHELL_ErrorBox(CMINVOKECOMMANDINFO &cmi, UINT Error)
 #endif
 
 static inline BOOL
+IsEqualPersistClassID(IPersist *pPersist, REFCLSID clsid)
+{
+    CLSID temp;
+    return pPersist && SUCCEEDED(pPersist->GetClassID(&temp)) && IsEqualCLSID(clsid, temp);
+}
+
+static inline BOOL
 RegValueExists(HKEY hKey, LPCWSTR Name)
 {
     return RegQueryValueExW(hKey, Name, NULL, NULL, NULL, NULL) == ERROR_SUCCESS;

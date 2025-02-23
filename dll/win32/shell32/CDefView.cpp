@@ -272,7 +272,8 @@ private:
     CComPtr<IContextMenu>     m_pFileMenu;
 
     BOOL                      m_isEditing;
-    BOOL                      m_isParentFolderSpecial;
+    signed char               m_SpecialFolder;
+    bool                      m_isFullStatusBar;
     bool                      m_ScheduledStatusbarUpdate;
 
     CLSID m_Category;
@@ -292,6 +293,12 @@ private:
     void _DoCopyToMoveToFolder(BOOL bCopy);
     BOOL IsDesktop() const { return m_FolderSettings.fFlags & FWF_DESKTOP; }
 
+    inline BOOL IsSpecialFolder(int &csidl) const
+    {
+        csidl = m_SpecialFolder;
+        return m_SpecialFolder >= 0;
+    }
+
 public:
     CDefView();
     ~CDefView();
@@ -300,6 +307,7 @@ public:
     HRESULT OnDefaultCommand();
     HRESULT OnStateChange(UINT uFlags);
     void UpdateStatusbar();
+    void UpdateStatusbarLocation();
     void CheckToolbar();
     BOOL CreateList();
     void UpdateListColors();
@@ -590,7 +598,8 @@ CDefView::CDefView() :
     m_iDragOverItem(0),
     m_cScrollDelay(0),
     m_isEditing(FALSE),
-    m_isParentFolderSpecial(FALSE),
+    m_SpecialFolder(-1),
+    m_isFullStatusBar(true),
     m_ScheduledStatusbarUpdate(false),
     m_Destroyed(FALSE)
 {
@@ -709,8 +718,8 @@ void CDefView::CheckToolbar()
 
 void CDefView::UpdateStatusbar()
 {
-    WCHAR szFormat[MAX_PATH] = {0};
-    WCHAR szPartText[MAX_PATH] = {0};
+    WCHAR szFormat[MAX_PATH];
+    WCHAR szPartText[MAX_PATH];
     UINT cSelectedItems;
 
     if (!m_ListView)
@@ -732,11 +741,10 @@ void CDefView::UpdateStatusbar()
     m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 0, (LPARAM)szPartText, &lResult);
 
     // Don't bother with the extra processing if we only have one StatusBar part
-    if (!m_isParentFolderSpecial)
+    if (m_isFullStatusBar)
     {
         UINT64 uTotalFileSize = 0;
         WORD uFileFlags = LVNI_ALL;
-        LPARAM pIcon = NULL;
         INT nItem = -1;
         bool bIsOnlyFoldersSelected = true;
 
@@ -761,25 +769,11 @@ void CDefView::UpdateStatusbar()
         // Don't show the file size text if there is 0 bytes in the folder
         // OR we only have folders selected
         if ((cSelectedItems && !bIsOnlyFoldersSelected) || uTotalFileSize)
-        {
             StrFormatByteSizeW(uTotalFileSize, szPartText, _countof(szPartText));
-        }
         else
-        {
             *szPartText = 0;
-        }
 
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 1, (LPARAM)szPartText, &lResult);
-
-        // If we are in a Recycle Bin then show no text for the location part
-        if (!_ILIsBitBucket(m_pidlParent))
-        {
-            LoadStringW(shell32_hInstance, IDS_MYCOMPUTER, szPartText, _countof(szPartText));
-            pIcon = (LPARAM)m_hMyComputerIcon;
-        }
-
-        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETICON, 2, pIcon, &lResult);
-        m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 2, (LPARAM)szPartText, &lResult);
     }
 
     SFGAOF att = 0;
@@ -792,6 +786,32 @@ void CDefView::UpdateStatusbar()
     }
     m_pShellBrowser->SendControlMsg(FCW_TOOLBAR, TB_ENABLEBUTTON, FCIDM_SHVIEW_COPYTO, (att & SFGAO_CANCOPY) != 0, &lResult);
     m_pShellBrowser->SendControlMsg(FCW_TOOLBAR, TB_ENABLEBUTTON, FCIDM_SHVIEW_MOVETO, (att & SFGAO_CANMOVE) != 0, &lResult);
+}
+
+void CDefView::UpdateStatusbarLocation()
+{
+    LRESULT lResult;
+    LPARAM pIcon = NULL;
+    WCHAR szPartText[MAX_PATH];
+    *szPartText = 0;
+    if (m_isFullStatusBar)
+    {
+        // If we are in a Recycle Bin then show no text for the location part
+        int csidl;
+        if (!IsSpecialFolder(csidl) || (csidl != CSIDL_NETWORK && csidl != CSIDL_BITBUCKET))
+        {
+            LoadStringW(shell32_hInstance, IDS_MYCOMPUTER, szPartText, _countof(szPartText));
+            pIcon = (LPARAM)m_hMyComputerIcon;
+        }
+        /*else if (csidl == CSIDL_NETWORK) // TODO: Figure out the type of share (My Computer/Local Intranet/Internet?)
+        {
+            ImageList_GetIconSize(ListView_GetImageList(m_ListView, LVSIL_SMALL), &x, &y);
+            pIcon = (LPARAM)LoadImage(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_MY_NETWORK_PLACES),
+                                      IMAGE_ICON, x, y, LR_SHARED);
+        }*/
+    }
+    m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETICON, 2, pIcon, &lResult);
+    m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 2, (LPARAM)szPartText, &lResult);
 }
 
 LRESULT CDefView::OnUpdateStatusbar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -1572,6 +1592,9 @@ HRESULT CDefView::FillList(BOOL IsRefreshCommand)
         m_ListView.InvalidateRect(NULL, TRUE);
     }
 
+    if (IsRefreshCommand)
+        UpdateStatusbarLocation();
+
     _DoFolderViewCB(SFVM_LISTREFRESHED, 0, 0);
 
     return S_OK;
@@ -1759,22 +1782,27 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
     m_hAccel = LoadAcceleratorsW(shell32_hInstance, MAKEINTRESOURCEW(IDA_SHELLVIEW));
 
-    BOOL bPreviousParentSpecial = m_isParentFolderSpecial;
-
-    // A folder is special if it is the Desktop folder,
-    // a network folder, or a Control Panel folder
-    m_isParentFolderSpecial = IsDesktop() || _ILIsNetHood(m_pidlParent)
-        || _ILIsControlPanel(ILFindLastID(m_pidlParent));
-
-    // Only force StatusBar part refresh if the state
-    // changed from the previous folder
-    if (bPreviousParentSpecial != m_isParentFolderSpecial)
+    int bForceFullStatusBar = false;
+    BOOL bIsFileSystem = SHGetAttributes(NULL, m_pidlParent, SFGAO_FILESYSTEM) & SFGAO_FILESYSTEM;
+    m_SpecialFolder = bIsFileSystem ? -1 : 0x7f;
+    if (_ILIsDesktop(m_pidlParent))
     {
-        // This handles changing StatusBar parts
-        _ForceStatusBarResize();
+        m_SpecialFolder = CSIDL_DESKTOP;
     }
-
+    else if (IsEqualPersistClassID(ppf2, CLSID_RecycleBin))
+    {
+        m_SpecialFolder = bForceFullStatusBar = CSIDL_BITBUCKET;
+    }
+    else if (bIsFileSystem)
+    {
+        CComHeapPtr<ITEMIDLIST> pidlNet(SHCloneSpecialIDList(NULL, CSIDL_NETWORK, FALSE));
+        if (ILIsParent(pidlNet, m_pidlParent, FALSE) && ILGetSize(pidlNet) < ILGetSize(m_pidlParent))
+            m_SpecialFolder = CSIDL_NETWORK;
+    }
+    m_isFullStatusBar = bIsFileSystem || bForceFullStatusBar;
+    _ForceStatusBarResize(); // This handles changing StatusBar parts
     UpdateStatusbar();
+    UpdateStatusbarLocation();
 
     return S_OK;
 }
@@ -4384,7 +4412,7 @@ void CDefView::_HandleStatusBarResize(int nWidth)
 {
     LRESULT lResult;
 
-    if (m_isParentFolderSpecial)
+    if (!m_isFullStatusBar)
     {
         int nPartArray[] = {-1};
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETPARTS, _countof(nPartArray), (LPARAM)nPartArray, &lResult);
