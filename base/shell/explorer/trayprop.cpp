@@ -230,7 +230,7 @@ class CNotifySettingsPage : public CPropertyPageImpl<CNotifySettingsPage>
 private:
     HBITMAP m_hbmpTray;
     HWND m_hwndTaskbar;
-    static const WORD uImageIdLookupTable[2][2][2][2];
+    static const WORD wImageIdLookupTable[2][2][2][2];
 
     void _UpdateDialog()
     {
@@ -248,7 +248,7 @@ private:
         if (!bShowSeconds)
             CheckDlgButton(IDC_TASKBARPROP_SECONDS, BST_UNCHECKED);
 		
-		UINT uImageId = uImageIdLookupTable[bShowClock][bShowSeconds][bHideInactive][bShowDesktopButton];
+		UINT uImageId = wImageIdLookupTable[bShowClock][bShowSeconds][bHideInactive][bShowDesktopButton];
 
         SetBitmap(hwndTrayBitmap, &m_hbmpTray, uImageId);
     }
@@ -314,7 +314,7 @@ public:
     }
 };
 
-const WORD CNotifySettingsPage::uImageIdLookupTable[2][2][2][2] =
+const WORD CNotifySettingsPage::wImageIdLookupTable[2][2][2][2] =
 {
     {
         {
