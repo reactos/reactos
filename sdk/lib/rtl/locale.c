@@ -18,10 +18,12 @@
 #define MAX_PRIMARY_LANGUAGE 0xFF
 #define MAX_NON_EXTENDED_LCID 0x5FFF
 
-#define LCID_MASK     0x000FFFFF
 #define LCID_ALT_NAME 0x00100000 // Alternative name, OR'ed with LCID
 
 #define FL_EXTENDED 0x01
+
+LCID RtlpUserDefaultLcid;
+LCID RtlpSystemDefaultLcid;
 
 typedef struct _LOCALE_ENTRY
 {
@@ -531,6 +533,9 @@ RtlpInitializeLocaleTable(VOID)
     PSORT_ENTRY SortTable;
     SIZE_T SortTableSize;
 
+    NtQueryDefaultLocale(TRUE, &RtlpUserDefaultLcid);
+    NtQueryDefaultLocale(FALSE, &RtlpSystemDefaultLcid);
+
     SortTableSize = sizeof(SORT_ENTRY) * ARRAYSIZE(RtlpLocaleTable);
     SortTable = RtlAllocateHeap(RtlGetProcessHeap(), 0, SortTableSize);
     if (SortTable == NULL)
@@ -727,27 +732,6 @@ IsExtendedLocale(
     return FALSE;
 }
 
-static
-NTSTATUS
-CheckAndUpdateSpecialLcid(
-    _Inout_ PLCID Lcid)
-{
-    switch (*Lcid)
-    {
-        case LOCALE_USER_DEFAULT:
-            return NtQueryDefaultLocale(TRUE, Lcid);
-
-        case LOCALE_SYSTEM_DEFAULT:
-        case LOCALE_CUSTOM_DEFAULT:
-            return NtQueryDefaultLocale(FALSE, Lcid);
-
-        case LOCALE_CUSTOM_UI_DEFAULT:
-            return STATUS_UNSUCCESSFUL;
-    }
-
-    return STATUS_SUCCESS;
-}
-
 NTSTATUS
 NTAPI
 RtlLcidToLocaleName(
@@ -756,7 +740,6 @@ RtlLcidToLocaleName(
     _In_ ULONG Flags,
     _In_ BOOLEAN AllocateDestinationString)
 {
-    NTSTATUS Status;
     ULONG LocaleIndex;
 
     /* Check for invalid flags */
@@ -774,7 +757,7 @@ RtlLcidToLocaleName(
     }
 
     /* Validate LCID */
-    if (Lcid & ~LCID_MASK)
+    if (Lcid & ~NLS_VALID_LOCALE_MASK)
     {
         DPRINT1("RtlLcidToLocaleName: Invalid LCID: 0x%lx\n", Lcid);
         return STATUS_INVALID_PARAMETER_1;
@@ -792,11 +775,19 @@ RtlLcidToLocaleName(
     }
 
     /* Handle special LCIDs */
-    Status = CheckAndUpdateSpecialLcid(&Lcid);
-    if (!NT_SUCCESS(Status))
+    switch (Lcid)
     {
-        DPRINT1("CheckAndUpdateSpecialLcid: failed. Lcid 0x%lx, status 0x%lx\n", Lcid, Status);
-        return Status;
+        case LOCALE_USER_DEFAULT:
+            Lcid = RtlpUserDefaultLcid;
+            break;
+
+        case LOCALE_SYSTEM_DEFAULT:
+        case LOCALE_CUSTOM_DEFAULT:
+            Lcid = RtlpSystemDefaultLcid;
+            break;
+
+        case LOCALE_CUSTOM_UI_DEFAULT:
+            return STATUS_UNSUCCESSFUL;
     }
 
     /* Try to find the locale by LCID */
@@ -858,7 +849,7 @@ RtlpLocaleNameToLcidInternal(
     }
 
     /* Extract the LCID without the flags */
-    FoundLcid = RtlpLocaleTable[LocaleIndex].Lcid & LCID_MASK;
+    FoundLcid = RtlpLocaleTable[LocaleIndex].Lcid & NLS_VALID_LOCALE_MASK;
 
     /* Check if extended locales / culture names were requested */
     if ((Flags & 0x2) == 0)
