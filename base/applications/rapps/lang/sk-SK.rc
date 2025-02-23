@@ -50,9 +50,7 @@ CAPTION "Nastavenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Všeobecné", -1, 4, 2, 240, 61
-    AUTOCHECKBOX "&Uložiť pozíciu okna", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "&Aktualizovať zoznam dostupných programov pri spustení", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "&Záznam o inštalovaní a odstránení programov", IDC_LOG_ENABLED, 15, 46, 219, 12
+    CONTROL "", IDC_GENERALLIST, "SysListView32", WS_TABSTOP | LVCHECKSTYLES, 15, 12, 219, 46, WS_EX_STATICEDGE
     GROUPBOX "Sťahovanie", -1, 4, 65, 240, 51
     LTEXT "Priečinok pre sťahovanie:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
@@ -213,6 +211,10 @@ BEGIN
     IDS_APP_DISPLAY_LIST "Zoznam"
     IDS_APP_DISPLAY_TILE "Dlaždice"
     IDS_NO_SEARCH_RESULTS "Žiadne výsledky"
+    IDS_CFG_SAVE_WINDOW_POS "Uložiť pozíciu okna"
+    IDS_CFG_UPDATE_AVLIST "Aktualizovať zoznam dostupných programov pri spustení"
+    IDS_CFG_LOG_ENABLED "Záznam o inštalovaní a odstránení programov"
+    IDS_CFG_SMALL_ICONS "Malé ikony"
 END
 
 STRINGTABLE
