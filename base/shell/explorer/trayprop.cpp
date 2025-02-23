@@ -230,7 +230,7 @@ class CNotifySettingsPage : public CPropertyPageImpl<CNotifySettingsPage>
 private:
     HBITMAP m_hbmpTray;
     HWND m_hwndTaskbar;
-    static const UINT uImageIdLookupTable[2][2][2][2];
+    static const WORD uImageIdLookupTable[2][2][2][2];
 
     void _UpdateDialog()
     {
@@ -314,7 +314,7 @@ public:
     }
 };
 
-const UINT CNotifySettingsPage::uImageIdLookupTable[2][2][2][2] =
+const WORD CNotifySettingsPage::uImageIdLookupTable[2][2][2][2] =
 {
     {
         {
