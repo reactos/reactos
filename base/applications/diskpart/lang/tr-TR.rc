@@ -1,0 +1,6 @@
+    IDS_SELECT_NO_DISK "Bir disk seçilmedi.\nLütfen bir disk seçin ve tekrar deneyin.\n\n"
+    IDS_SELECT_DISK "Disk %lu seçili disk olarak ayarlandı.\n\n"
+    IDS_SELECT_DISK_INVALID "Geçersiz disk.\n\n"
+    IDS_SELECT_DISK_ENUM_NO_START "Disk numaralandırması henüz başlatılmadı.\n\nŞu anda seçili disk yok.\n\n"
+    IDS_SELECT_DISK_ENUM_FINISHED "Son disk numaralandırıldı.\n\nŞu anda seçili disk yok.\n\n"
+    IDS_SELECT_NO_PARTITION "Henüz bir bölüm seçilmedi.\nLütfen bir disk seçin ve tekrar deneyin.\n\n" 
