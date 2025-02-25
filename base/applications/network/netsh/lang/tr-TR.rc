@@ -1,0 +1,43 @@
+/*
+ * PROJECT:     ReactOS NetSh
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATOR:  Copyright 2024 <zaryob.dev@gmail.com>
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+/* Basic application information */
+STRINGTABLE
+BEGIN
+    IDS_APP_USAGE "\nKullanım: netsh [-a TakasDosyası] [-c Bağlam] [-r UzakMakine] \
+\n             [Komut | -f BetikDosyası]\n"
+    IDS_INVALID_COMMAND "Aşağıdaki komut bulunamadı: %ls.\n"
+    IDS_OPEN_FAILED     "%ls dosyası açılamadı.\n"
+    IDS_INVALID_SYNTAX  "Bu komut için sağlanan sözdizimi geçerli değil. Doğru sözdizimi için yardımı kontrol edin.\n\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_HELP_HEADER "\nKullanılabilir komutlar:\n"
+    IDS_SUBCONTEXT_HEADER "\nKullanılabilir alt bağlamlar:\n"
+    IDS_HLP_UP             "Bir bağlam seviyesi yukarı çıkar."
+    IDS_HLP_UP_EX          "Sözdizimi: ..\n\n        Bir bağlam seviyesi yukarı çıkar.\n\n"
+    IDS_HLP_EXIT           "Programdan çıkar."
+    IDS_HLP_EXIT_EX        "Sözdizimi: exit\n\n        Programdan çıkar.\n\n"
+    IDS_HLP_HELP           "Komutların listesini gösterir."
+    IDS_HLP_HELP_EX        "Sözdizimi: help\n\n        Komutların listesini gösterir.\n\n"
+
+    IDS_HLP_ADD_HELPER     "Bir yardımcı DLL yükler."
+    IDS_HLP_ADD_HELPER_EX  "Sözdizimi: add helper <dll dosya adı>\n\n        Belirtilen yardımcı DLL'i netsh'e yükler.\n\n"
+
+    IDS_HLP_DEL_HELPER     "Bir yardımcı DLL'i kaldırır."
+    IDS_HLP_DEL_HELPER_EX  "Sözdizimi: delete helper <dll dosya adı>\n\n        Belirtilen yardımcı DLL'i netsh'den kaldırır.\n\n"
+
+    IDS_HLP_SHOW_HELPER    "Tüm üst düzey yardımcıları listeler."
+    IDS_HLP_SHOW_HELPER_EX "Sözdizimi: show helper\n\n        Tüm üst düzey yardımcıları listeler.\n\n"
+
+    IDS_HLP_GROUP_ADD      "Bir girdi listesine yapılandırma girdisi ekler."
+    IDS_HLP_GROUP_DELETE   "Bir girdi listesinden yapılandırma girdisini siler."
+    IDS_HLP_GROUP_SHOW     "Bilgileri gösterir."
+END
