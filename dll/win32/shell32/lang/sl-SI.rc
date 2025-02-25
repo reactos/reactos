@@ -998,6 +998,8 @@ BEGIN
     IDS_OBJECTS "%d Objects"
     IDS_OBJECTS_SELECTED "%d Objects Selected"
 
+    IDS_SEARCH_BROWSEITEM "Prebrskaj..."
+
     IDS_TITLE_MYCOMP "My Computer"
     IDS_TITLE_MYNET "My Network Places"
     IDS_TITLE_BIN_1 "Recycle Bin (full)"
