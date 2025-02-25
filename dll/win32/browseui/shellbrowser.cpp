@@ -1274,11 +1274,8 @@ BOOL CShellBrowser::IsBandLoaded(const CLSID clsidBand, bool vertical, DWORD *pd
     if (FAILED_UNEXPECTEDLY(hResult))
         return FALSE;
 
-    hResult = bandSite->EnumBands(-1, &numBands);
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return FALSE;
-
-    for(i = 0; i < numBands; i++)
+    numBands = bandSite->EnumBands(-1, NULL);
+    for (i = 0; i < numBands; i++)
     {
         CComPtr<IPersist> bandPersist;
 
@@ -1502,7 +1499,6 @@ LRESULT CALLBACK CShellBrowser::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
             wParam = msg.wParam;
             lParam = msg.lParam;
         }
-        menuBand.Release();
     }
 
     handled = pThis->ProcessWindowMessage(hWnd, uMsg, wParam, lParam, lResult, 0);
@@ -3656,16 +3652,15 @@ LRESULT CShellBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     // TODO: rip down everything
     {
         m_Destroyed = true; // Ignore browse requests from Explorer band TreeView during destruction
+        fCurrentShellView->UIActivate(SVUIA_DEACTIVATE);
         fToolbarProxy.Destroy();
         fCurrentShellView->DestroyViewWindow();
-        fCurrentShellView->UIActivate(SVUIA_DEACTIVATE);
 
         for (int i = 0; i < 3; i++)
         {
             CComPtr<IDockingWindow> pdw;
             CComPtr<IDeskBar> bar;
             CComPtr<IUnknown> pBarSite;
-            CComPtr<IDeskBarClient> pClient;
 
             if (fClientBars[i].clientBar == NULL)
                 continue;
@@ -3681,6 +3676,7 @@ LRESULT CShellBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
                 hr = bar->GetClient(&pBarSite);
                 if (SUCCEEDED(hr) && pBarSite)
                 {
+                    CComPtr<IDeskBarClient> pClient;
                     hr = pBarSite->QueryInterface(IID_PPV_ARG(IDeskBarClient, &pClient));
                     if (SUCCEEDED(hr))
                         pClient->SetDeskBarSite(NULL);
@@ -3688,7 +3684,6 @@ LRESULT CShellBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
             }
             pdw->CloseDW(0);
 
-            pClient = NULL;
             pBarSite = NULL;
             pdw = NULL;
             bar = NULL;
@@ -3718,7 +3713,7 @@ LRESULT CShellBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
         GetEffectiveClientRect(m_hWnd, &availableBounds, excludeItems);
         for (INT x = 0; x < 3; x++)
         {
-            if (fClientBars[x].clientBar != NULL)
+            if (fClientBars[x].clientBar)
             {
                 hResult = fClientBars[x].clientBar->QueryInterface(
                     IID_PPV_ARG(IDockingWindow, &dockingWindow));

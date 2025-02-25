@@ -937,6 +937,28 @@ STDMETHODIMP CFindFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
             CComVariant searchBar(pwszGuid);
             return pWebBrowser2->ShowBrowserBar(&searchBar, NULL, NULL);
         }
+        case SFVM_WINDOWCLOSING:
+        {
+            m_shellFolderView = NULL;
+            m_shellBrowser = NULL;
+            return S_OK;
+        }
+        case SFVM_GETCOMMANDDIR:
+        {
+            HRESULT hr = E_FAIL;
+            if (m_shellFolderView)
+            {
+                PCUITEMID_CHILD *apidl;
+                UINT cidl = 0;
+                if (SUCCEEDED(hr = m_shellFolderView->GetSelectedObjects(&apidl, &cidl)))
+                {
+                    if (cidl)
+                        hr = StringCchCopyW((PWSTR)lParam, wParam, _ILGetPath(apidl[0]));
+                    LocalFree(apidl);
+                }
+            }
+            return hr;
+        }
     }
     return E_NOTIMPL;
 }

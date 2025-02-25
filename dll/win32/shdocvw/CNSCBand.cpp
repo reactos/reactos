@@ -93,7 +93,8 @@ CNSCBand::~CNSCBand()
 VOID CNSCBand::OnFinalMessage(HWND)
 {
     // The message loop is finished, now we can safely destruct!
-    static_cast<IDeskBand *>(this)->Release();
+    // HACKFIX: Who did this AddRef? Commenting out Release...
+    //static_cast<IDeskBand *>(this)->Release();
 }
 
 // *** helper methods ***
