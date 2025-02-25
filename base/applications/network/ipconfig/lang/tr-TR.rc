@@ -96,7 +96,7 @@ END
 
 STRINGTABLE
 BEGIN
-/* Please keep the spacing/formatting as per En.rc when translating */
+/* Çevirirken lütfen En.rc'deki boşluk/biçimlendirmeyi koruyun */
     IDS_USAGE
     "\nKULLANIM:\n\
         ipconfig [/? | /all | /renew [bağdaştırıcı] | /release [bağdaştırıcı] |\n\
