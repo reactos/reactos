@@ -898,6 +898,7 @@ interface IFolderView : IUnknown
         [in] DWORD flags
     );
 }
+cpp_quote("#define SID_SFolderView IID_IFolderView")
 
 [v1_enum] enum tagSORTDIRECTION
 {

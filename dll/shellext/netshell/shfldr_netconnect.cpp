@@ -661,7 +661,7 @@ HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
         {
             HRESULT hr;
             CComPtr<IShellView> psv;
-            hr = IUnknown_QueryService(m_pUnknown, SID_IFolderView, IID_PPV_ARG(IShellView, &psv));
+            hr = IUnknown_QueryService(m_pUnknown, SID_SFolderView, IID_PPV_ARG(IShellView, &psv));
             if (SUCCEEDED(hr))
             {
                 SVSIF selFlags = SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE | SVSI_FOCUSED | SVSI_SELECT;

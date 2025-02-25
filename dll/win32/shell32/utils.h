@@ -90,3 +90,39 @@ SHELL_CreateFallbackExtractIconForNoAssocFile(REFIID riid, LPVOID *ppvOut)
     const int id = IDI_SHELL_DOCUMENT;
     return SHELL_CreateShell32DefaultExtractIcon(id > 1 ? -id : 0, riid, ppvOut);
 }
+
+struct ClipboardViewerChain
+{
+    HWND m_hWndNext;
+
+    ClipboardViewerChain() : m_hWndNext(HWND_BOTTOM) {}
+
+    void Unhook(HWND hWnd)
+    {
+        if (m_hWndNext != HWND_BOTTOM)
+            ChangeClipboardChain(hWnd, m_hWndNext);
+        m_hWndNext = HWND_BOTTOM;
+    }
+
+    void Hook(HWND hWnd)
+    {
+        if (m_hWndNext == HWND_BOTTOM)
+            m_hWndNext = SetClipboardViewer(hWnd);
+    }
+
+    LRESULT HandleChangeCBChain(WPARAM wParam, LPARAM lParam)
+    {
+        if (m_hWndNext == (HWND)wParam)
+            return (LRESULT)(m_hWndNext = (HWND)lParam);
+        else if (m_hWndNext && m_hWndNext != HWND_BOTTOM)
+            return ::SendMessageW(m_hWndNext, WM_CHANGECBCHAIN, wParam, lParam);
+        return 0;
+    }
+
+    LRESULT HandleDrawClipboard(WPARAM wParam, LPARAM lParam)
+    {
+        if (m_hWndNext && m_hWndNext != HWND_BOTTOM)
+            return ::SendMessageW(m_hWndNext, WM_DRAWCLIPBOARD, wParam, lParam);
+        return 0;
+    }
+};

@@ -238,6 +238,7 @@ private:
     CComPtr<ICommDlgBrowser>  m_pCommDlgBrowser;
     CComPtr<IFolderFilter>    m_pFolderFilter;
     CComPtr<IShellFolderViewDual> m_pShellFolderViewDual;
+    ClipboardViewerChain      m_ClipboardChain;
     CListView                 m_ListView;
     HWND                      m_hWndParent;
     FOLDERSETTINGS            m_FolderSettings;
@@ -274,6 +275,7 @@ private:
     BOOL                      m_isEditing;
     BOOL                      m_isParentFolderSpecial;
     bool                      m_ScheduledStatusbarUpdate;
+    bool                      m_HasCutItems;
 
     CLSID m_Category;
     BOOL  m_Destroyed;
@@ -313,6 +315,9 @@ public:
     HRESULT LoadColumn(UINT FoldCol, UINT ListCol, BOOL Insert, UINT ForceWidth = 0);
     HRESULT LoadColumns(SIZE_T *pColList = NULL, UINT ColListCount = 0);
     void ColumnListChanged();
+    SFGAOF GetItemAttributes(PCUITEMID_CHILD pidl, UINT Query);
+    SFGAOF GetItemAttributes(int i, UINT Query);
+    void RefreshGhostedState();
     PCUITEMID_CHILD _PidlByItem(int i);
     PCUITEMID_CHILD _PidlByItem(LVITEM& lvItem);
     int LV_FindItemByPidl(PCUITEMID_CHILD pidl);
@@ -485,6 +490,8 @@ public:
     LRESULT OnCustomItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnChangeCBChain(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnDrawClipboard(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
     virtual VOID OnFinalMessage(HWND) override;
 
@@ -542,6 +549,8 @@ public:
     MESSAGE_HANDLER(CWM_GETISHELLBROWSER, OnGetShellBrowser)
     MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChange)
     MESSAGE_HANDLER(WM_INITMENUPOPUP, OnInitMenuPopup)
+    MESSAGE_HANDLER(WM_CHANGECBCHAIN, OnChangeCBChain)
+    MESSAGE_HANDLER(WM_DRAWCLIPBOARD, OnDrawClipboard)
     END_MSG_MAP()
 
     BEGIN_COM_MAP(CDefView)
@@ -592,6 +601,7 @@ CDefView::CDefView() :
     m_isEditing(FALSE),
     m_isParentFolderSpecial(FALSE),
     m_ScheduledStatusbarUpdate(false),
+    m_HasCutItems(false),
     m_Destroyed(FALSE)
 {
     ZeroMemory(&m_FolderSettings, sizeof(m_FolderSettings));
@@ -1287,6 +1297,18 @@ BOOL CDefView::_Sort(int Col)
     return m_ListView.SortItems(ListViewCompareItems, this);
 }
 
+SFGAOF CDefView::GetItemAttributes(PCUITEMID_CHILD pidl, UINT Query)
+{
+    SFGAOF Attr = (SFGAOF)Query;
+    return SUCCEEDED(m_pSFParent->GetAttributesOf(1, &pidl, &Attr)) ? (Attr & Query) : 0;
+}
+
+SFGAOF CDefView::GetItemAttributes(int i, UINT Query)
+{
+    PCUITEMID_CHILD pItem = _PidlByItem(i);
+    return pItem ? GetItemAttributes(pItem, Query) : 0;
+}
+
 PCUITEMID_CHILD CDefView::_PidlByItem(int i)
 {
     if (!m_ListView)
@@ -1342,13 +1364,15 @@ int CDefView::LV_AddItem(PCUITEMID_CHILD pidl)
     if (_DoFolderViewCB(SFVM_ADDINGOBJECT, 0, (LPARAM)pidl) == S_FALSE)
         return -1;
 
-    lvItem.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;    // set mask
+    lvItem.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM | LVIF_STATE;
     lvItem.iItem = m_ListView.GetItemCount();             // add item to lists end
     lvItem.iSubItem = 0;
     lvItem.lParam = reinterpret_cast<LPARAM>(ILClone(pidl)); // set item's data
     lvItem.pszText = LPSTR_TEXTCALLBACKW;                 // get text on a callback basis
     lvItem.iImage = I_IMAGECALLBACK;                      // get image on a callback basis
     lvItem.stateMask = LVIS_CUT;
+    if (m_HasCutItems)
+        lvItem.state = GetItemAttributes(pidl, SFGAO_HIDDEN | SFGAO_GHOSTED) ? LVIS_CUT : 0;
 
     return m_ListView.InsertItem(&lvItem);
 }
@@ -1422,14 +1446,21 @@ BOOLEAN CDefView::LV_UpdateItem(PCUITEMID_CHILD pidl)
 
     if (-1 != nItem)
     {
-        _DoFolderViewCB(SFVM_UPDATINGOBJECT, 0, (LPARAM)pidl);
+        _DoFolderViewCB(SFVM_UPDATINGOBJECT, nItem, (LPARAM)pidl);
 
-        lvItem.mask = LVIF_IMAGE;
+        lvItem.mask = LVIF_IMAGE | LVIF_STATE;
         lvItem.iItem = nItem;
         lvItem.iSubItem = 0;
         lvItem.iImage = SHMapPIDLToSystemImageListIndex(m_pSFParent, pidl, 0);
-        m_ListView.SetItem(&lvItem);
-        m_ListView.Update(nItem);
+        lvItem.stateMask = LVIS_CUT;
+        if (m_HasCutItems)
+            lvItem.state = GetItemAttributes(pidl, SFGAO_HIDDEN | SFGAO_GHOSTED) ? LVIS_CUT : 0;
+        PCUITEMID_CHILD pidlOld = _PidlByItem(nItem);
+        if (pidlOld && (lvItem.lParam = reinterpret_cast<LPARAM>(ILClone(pidl))) != NULL)
+            lvItem.mask |= LVIF_PARAM;
+        if (m_ListView.SetItem(&lvItem) && lvItem.lParam && pidlOld)
+            ILFree(const_cast<PUITEMID_CHILD>(pidlOld));
+        for (UINT i = 0; m_ListView.SetItemText(nItem, i, LPSTR_TEXTCALLBACK); ++i) {} // Update all columns
         return TRUE;
     }
 
@@ -1597,6 +1628,8 @@ LRESULT CDefView::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
         m_Destroyed = TRUE;
         RevokeDragDrop(m_hWnd);
         SHChangeNotifyDeregister(m_hNotify);
+        m_hNotify = NULL;
+        m_ClipboardChain.Unhook(m_hWnd);
         if (m_pFileMenu)
         {
             IUnknown_SetSite(m_pFileMenu, NULL);
@@ -1607,7 +1640,6 @@ LRESULT CDefView::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
             DestroyMenu(m_hMenu);
             m_hMenu = NULL;
         }
-        m_hNotify = NULL;
         SHFree(m_pidlParent);
         m_pidlParent = NULL;
     }
@@ -2672,18 +2704,14 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                     TRACE("-- text=%s\n", debugstr_w(lpdi->item.pszText));
                 }
             }
-            if(lpdi->item.mask & LVIF_IMAGE)    /* image requested */
+            if (lpdi->item.mask & LVIF_IMAGE)
             {
                 lpdi->item.iImage = SHMapPIDLToSystemImageListIndex(m_pSFParent, pidl, 0);
             }
-            if(lpdi->item.mask & LVIF_STATE)
+            if (lpdi->item.mask & LVIF_STATE)
             {
-                ULONG attributes = SFGAO_HIDDEN;
-                if (SUCCEEDED(m_pSFParent->GetAttributesOf(1, &pidl, &attributes)))
-                {
-                    if (attributes & SFGAO_HIDDEN)
-                        lpdi->item.state |= LVIS_CUT;
-                }
+                if ((lpdi->item.stateMask & LVIS_CUT) && GetItemAttributes(pidl, SFGAO_HIDDEN | SFGAO_GHOSTED))
+                    lpdi->item.state |= LVIS_CUT;
             }
             lpdi->item.mask |= LVIF_DI_SETITEM;
             break;
@@ -2924,7 +2952,10 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
             break;
         case SHCNE_UPDATEDIR:
         case SHCNE_ATTRIBUTES:
-            Refresh();
+            if (child0)
+                LV_UpdateItem(child0);
+            else
+                Refresh();
             UpdateStatusbar();
             break;
         case SHCNE_FREESPACE:
@@ -3029,6 +3060,31 @@ LRESULT CDefView::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     return FALSE;
 }
 
+LRESULT CDefView::OnChangeCBChain(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    bHandled = TRUE;
+    return m_ClipboardChain.HandleChangeCBChain(wParam, lParam);
+}
+
+LRESULT CDefView::OnDrawClipboard(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    bHandled = TRUE;
+    LRESULT res = m_ClipboardChain.HandleDrawClipboard(wParam, lParam);
+    if (m_HasCutItems)
+    {
+        m_ClipboardChain.Unhook(m_hWnd);
+        m_HasCutItems = false;
+        m_ListView.SetItemState(-1, 0, LVIS_CUT); // Somebody copied or pasted, nothing can be "cut" anymore
+        m_ListView.SendMessageW(LVM_SETCALLBACKMASK, m_ListView.SendMessageW(LVM_GETCALLBACKMASK, 0, 0) | LVIS_CUT, 0);
+    }
+    return res;
+}
+
+void CDefView::RefreshGhostedState()
+{
+    for (UINT i = 0, c = m_ListView.GetItemCount(); i < c; ++i)
+        m_ListView.SetItemState(i, GetItemAttributes(i, SFGAO_HIDDEN | SFGAO_GHOSTED) ? LVIS_CUT : 0, LVIS_CUT);
+}
 
 // The INTERFACE of the IShellView object
 
@@ -3563,12 +3619,12 @@ HRESULT STDMETHODCALLTYPE CDefView::Item(int iItemIndex, PITEMID_CHILD *ppidl)
 HRESULT STDMETHODCALLTYPE CDefView::ItemCount(UINT uFlags, int *pcItems)
 {
     TRACE("(%p)->(%u %p)\n", this, uFlags, pcItems);
-
-    if (uFlags != SVGIO_ALLVIEW)
-        FIXME("some flags unsupported, %x\n", uFlags & ~SVGIO_ALLVIEW);
-
-    *pcItems = m_ListView.GetItemCount();
-
+    if (uFlags != SVGIO_ALLVIEW && uFlags != SVGIO_SELECTION )
+        FIXME("some flags unsupported, %x\n", uFlags & ~(SVGIO_ALLVIEW | SVGIO_SELECTION));
+    if ((uFlags & SVGIO_TYPE_MASK) == SVGIO_SELECTION)
+        *pcItems = m_ListView.GetSelectedCount();
+    else
+        *pcItems = m_ListView.GetItemCount();
     return S_OK;
 }
 
@@ -3827,14 +3883,15 @@ HRESULT STDMETHODCALLTYPE CDefView::SelectAndPositionItem(LPCITEMIDLIST item, UI
 
 HRESULT STDMETHODCALLTYPE CDefView::Rearrange(LPARAM sort)
 {
-    FIXME("(%p)->(%ld) stub\n", this, sort);
-    return E_NOTIMPL;
+    _Sort(LOWORD(sort & SHCIDS_COLUMNMASK));
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::GetArrangeParam(LPARAM *sort)
 {
-    FIXME("(%p)->(%p) stub\n", this, sort);
-    return E_NOTIMPL;
+    int col = m_sortInfo.ListColumn;
+    *sort = col != LISTVIEW_SORT_INFO::UNSPECIFIEDCOLUMN ? col : 0;
+    return col != LISTVIEW_SORT_INFO::UNSPECIFIEDCOLUMN ? S_OK : S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::ArrangeGrid()
@@ -3927,8 +3984,8 @@ HRESULT STDMETHODCALLTYPE CDefView::SetRedraw(BOOL redraw)
 
 HRESULT STDMETHODCALLTYPE CDefView::GetSelectedCount(UINT *count)
 {
-    FIXME("(%p)->(%p) stub\n", this, count);
-    return E_NOTIMPL;
+    *count = m_ListView.GetSelectedCount();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::GetSelectedObjects(PCUITEMID_CHILD **pidl, UINT *items)
@@ -3998,8 +4055,26 @@ HRESULT STDMETHODCALLTYPE CDefView::IsBkDropTarget(IDropTarget *drop_target)
 
 HRESULT STDMETHODCALLTYPE CDefView::SetClipboard(BOOL move)
 {
-    FIXME("(%p)->(%d) stub\n", this, move);
-    return E_NOTIMPL;
+    if (move)
+    {
+        UINT CutCount = 0;
+        for (int i = -1; (i = m_ListView.GetNextItem(i, LVNI_SELECTED)) != -1;)
+        {
+            if (!CutCount++)
+            {
+                // Turn off the LVIS_CUT LVM_SETCALLBACKMASK optimization
+                m_ListView.SendMessageW(LVM_SETCALLBACKMASK, m_ListView.SendMessageW(LVM_GETCALLBACKMASK, 0, 0) & ~LVIS_CUT, 0);
+                RefreshGhostedState();
+            }
+            m_ListView.SetItemState(i, LVIS_CUT, LVIS_CUT);
+        }
+        if (CutCount)
+        {
+            m_ClipboardChain.Hook(m_hWnd);
+            m_HasCutItems = true;
+        }
+    }
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::SetPoints(IDataObject *obj)
@@ -4622,12 +4697,9 @@ HRESULT WINAPI CDefView::GetAdvise(DWORD *pAspects, DWORD *pAdvf, IAdviseSink **
 
 HRESULT STDMETHODCALLTYPE CDefView::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
 {
-    if (IsEqualIID(guidService, SID_IShellBrowser) && m_pShellBrowser)
-        return m_pShellBrowser->QueryInterface(riid, ppvObject);
-    else if (IsEqualIID(guidService, SID_IFolderView))
+    if (IsEqualIID(guidService, SID_SFolderView))
         return QueryInterface(riid, ppvObject);
-
-    return E_NOINTERFACE;
+    return m_pShellBrowser ? IUnknown_QueryService(m_pShellBrowser, guidService, riid, ppvObject) : E_NOINTERFACE;
 }
 
 HRESULT CDefView::_MergeToolbar()
@@ -4674,8 +4746,7 @@ HRESULT CDefView_CreateInstance(IShellFolder *pFolder, REFIID riid, LPVOID * ppv
     return ShellObjectCreatorInit<CDefView>(pFolder, riid, ppvOut);
 }
 
-HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv,
-    IShellView **ppsv)
+HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv, IShellView **ppsv)
 {
     CComPtr<IShellView> psv;
     HRESULT hRes;

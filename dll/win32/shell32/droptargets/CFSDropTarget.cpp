@@ -468,7 +468,7 @@ HRESULT WINAPI CFSDropTarget::Drop(IDataObject *pDataObject,
     if (*pdwEffect == DROPEFFECT_MOVE && m_site)
     {
         CComPtr<IShellFolderView> psfv;
-        HRESULT hr = IUnknown_QueryService(m_site, SID_IFolderView, IID_PPV_ARG(IShellFolderView, &psfv));
+        HRESULT hr = IUnknown_QueryService(m_site, SID_SFolderView, IID_PPV_ARG(IShellFolderView, &psfv));
         if (SUCCEEDED(hr) && psfv->IsDropOnSource(this) == S_OK)
         {
             _RepositionItems(psfv, pDataObject, pt);

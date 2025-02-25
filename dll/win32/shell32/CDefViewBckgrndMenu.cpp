@@ -70,7 +70,7 @@ BOOL CDefViewBckgrndMenu::_bIsDesktopBrowserMenu()
 
     /* Get a pointer to the shell browser */
     CComPtr<IShellView> psv;
-    HRESULT hr = IUnknown_QueryService(m_site, SID_IFolderView, IID_PPV_ARG(IShellView, &psv));
+    HRESULT hr = IUnknown_QueryService(m_site, SID_SFolderView, IID_PPV_ARG(IShellView, &psv));
     if (FAILED_UNEXPECTEDLY(hr))
         return FALSE;
 
@@ -265,7 +265,7 @@ CDefViewBckgrndMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 
         /* Get a pointer to the shell browser */
         CComPtr<IShellView> psv;
-        HRESULT hr = IUnknown_QueryService(m_site, SID_IFolderView, IID_PPV_ARG(IShellView, &psv));
+        HRESULT hr = IUnknown_QueryService(m_site, SID_SFolderView, IID_PPV_ARG(IShellView, &psv));
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
