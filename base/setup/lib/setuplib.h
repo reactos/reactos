@@ -170,9 +170,9 @@ InstallSetupInfFile(
 
 NTSTATUS
 GetSourcePaths(
-    OUT PUNICODE_STRING SourcePath,
-    OUT PUNICODE_STRING SourceRootPath,
-    OUT PUNICODE_STRING SourceRootDir);
+    _Out_ PUNICODE_STRING SourcePath,
+    _Out_ PUNICODE_STRING SourceRootPath,
+    _Out_ PUNICODE_STRING SourceRootDir);
 
 ERROR_NUMBER
 LoadSetupInf(
