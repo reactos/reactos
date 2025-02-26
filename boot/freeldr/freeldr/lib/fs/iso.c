@@ -25,8 +25,17 @@
 DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 #define SECTORSIZE 2048
+#define TAG_ISO_VOLUME 'VosI'
 #define TAG_ISO_BUFFER 'BosI'
 #define TAG_ISO_FILE 'FosI'
+
+typedef struct _ISO_VOLUME_INFO
+{
+    ULONG PvdDirectorySector;
+    ULONG PvdDirectoryLength;
+} ISO_VOLUME_INFO, *PISO_VOLUME_INFO;
+
+static PISO_VOLUME_INFO IsoVolumes[MAX_FDS];
 
 static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectoryLength, PCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 {
@@ -149,8 +158,7 @@ static ARC_STATUS IsoBufferDirectory(ULONG DeviceId, ULONG DirectoryStartSector,
  */
 static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO IsoFileInfoPointer)
 {
-    UCHAR Buffer[SECTORSIZE];
-    PPVD Pvd = (PPVD)Buffer;
+    PISO_VOLUME_INFO Volume;
     UINT32        i;
     ULONG            NumberOfPathParts;
     CHAR        PathPart[261];
@@ -158,8 +166,6 @@ static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO I
     ULONG        DirectorySector;
     ULONG        DirectoryLength;
     ISO_FILE_INFO    IsoFileInfo;
-    LARGE_INTEGER Position;
-    ULONG Count;
     ARC_STATUS Status;
 
     TRACE("IsoLookupFile() FileName = %s\n", FileName);
@@ -167,20 +173,10 @@ static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO I
     RtlZeroMemory(IsoFileInfoPointer, sizeof(ISO_FILE_INFO));
     RtlZeroMemory(&IsoFileInfo, sizeof(ISO_FILE_INFO));
 
-    //
-    // Read the Primary Volume Descriptor
-    //
-    Position.HighPart = 0;
-    Position.LowPart = 16 * SECTORSIZE;
-    Status = ArcSeek(DeviceId, &Position, SeekAbsolute);
-    if (Status != ESUCCESS)
-        return Status;
-    Status = ArcRead(DeviceId, Pvd, SECTORSIZE, &Count);
-    if (Status != ESUCCESS || Count < sizeof(PVD))
-        return EIO;
+    Volume = IsoVolumes[DeviceId];
 
-    DirectorySector = Pvd->RootDirRecord.ExtentLocationL;
-    DirectoryLength = Pvd->RootDirRecord.DataLengthL;
+    DirectorySector = Volume->PvdDirectorySector;
+    DirectoryLength = Volume->PvdDirectoryLength;
 
     /* Skip leading path separator, if any */
     if (*FileName == '\\' || *FileName == '/')
@@ -502,6 +498,7 @@ const DEVVTBL* IsoMount(ULONG DeviceId)
     LARGE_INTEGER Position;
     ULONG Count;
     ARC_STATUS Status;
+    PISO_VOLUME_INFO Volume;
 
     TRACE("Enter IsoMount(%lu)\n", DeviceId);
 
@@ -532,6 +529,17 @@ const DEVVTBL* IsoMount(ULONG DeviceId)
     Count = (ULONG)((ULONGLONG)Pvd->VolumeSpaceSizeL * SECTORSIZE / 1024 / 1024);
     TRACE("Recognized ISO9660 drive, size %lu MB (%lu sectors)\n",
           Count, Pvd->VolumeSpaceSizeL);
+
+    Volume = FrLdrTempAlloc(sizeof(*Volume), TAG_ISO_VOLUME);
+    if (!Volume)
+        return NULL;
+    RtlZeroMemory(Volume, sizeof(*Volume));
+
+    /* Cache the PVD information */
+    Volume->PvdDirectorySector = Pvd->RootDirRecord.ExtentLocationL;
+    Volume->PvdDirectoryLength = Pvd->RootDirRecord.DataLengthL;
+
+    IsoVolumes[DeviceId] = Volume;
 
     /* Everything OK, return the ISO9660 function table */
     return &Iso9660FuncTable;
