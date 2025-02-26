@@ -53,7 +53,7 @@ typedef struct _DCLEVEL
   PVOID             pColorSpace; /* COLORSPACE* */
   LONG              lIcmMode;
   LONG              lSaveDepth;
-  DWORD             unk1_00000000;
+  LONG              lSaveDepthStartDoc;
   HGDIOBJ           hdcSave;
   POINTL            ptlBrushOrigin;
   PBRUSH            pbrFill;
