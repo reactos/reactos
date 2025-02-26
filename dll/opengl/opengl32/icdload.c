@@ -147,8 +147,12 @@ custom_end:
 
         if(ret <= 0)
         {
-            ERR("Driver claims to support OPENGL_GETINFO escape code, but doesn't.\n");
-            return NULL;
+            ERR("Driver claims to support OPENGL_GETINFO escape code, but doesn't. Overriding.\n");
+            //TODO: import code that pulls this from reg
+            LPCWSTR driverName = L"ati2dvag";
+            memcpy(&DrvInfo.DriverName,driverName,16);
+            DrvInfo.DriverVersion = 1;
+            DrvInfo.Version = 2; 
         }
 
         pDrvInfo = &DrvInfo;
