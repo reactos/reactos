@@ -187,7 +187,8 @@ HDAUDIO_AllocateStream(
     IN BOOLEAN Capture,
     IN PKSDATAFORMAT DataFormat,
     IN ULONG NodeCount,
-    IN PULONG Nodes)
+    IN PULONG Nodes,
+    IN PPCFILTER_DESCRIPTOR FilterDescription)
 {
     HDAUDIO_STREAM_FORMAT StreamFormat;
     HANDLE hDmaEngine = NULL;
@@ -195,24 +196,78 @@ HDAUDIO_AllocateStream(
     NTSTATUS Status;
     HDAUDIO_BUS_INTERFACE_V2 Interface;
 
-    if (Pin != 0)
+    if (DataFormat->FormatSize < sizeof(KSDATARANGE))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (Pin >= FilterDescription->PinCount)
         return STATUS_INVALID_PARAMETER;
 
-    
-    // FIXME check guids of format
-    if (DataFormat->FormatSize == sizeof(KSDATAFORMAT_WAVEFORMATEX))
+    ULONG PinDataRangesCount = FilterDescription->Pins[Pin].KsPinDescriptor.DataRangesCount;
+    PKSDATARANGE * PinDataRanges = (PKSDATARANGE*)FilterDescription->Pins[Pin].KsPinDescriptor.DataRanges;
+
+    UCHAR bSupported = FALSE;
+    for (ULONG Index = 0; Index < PinDataRangesCount; Index++)
     {
-        PKSDATAFORMAT_WAVEFORMATEX WaveFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat;
-        StreamFormat.SampleRate = WaveFormat->WaveFormatEx.nSamplesPerSec;
-        StreamFormat.NumberOfChannels = WaveFormat->WaveFormatEx.nChannels;
-        StreamFormat.ValidBitsPerSample = WaveFormat->WaveFormatEx.wBitsPerSample;
-        StreamFormat.ContainerSize = WaveFormat->WaveFormatEx.wBitsPerSample;
+        PKSDATARANGE PinDataRange = PinDataRanges[Index];
+        if (IsEqualGUIDAligned(DataFormat->MajorFormat, PinDataRange->MajorFormat) &&
+            IsEqualGUIDAligned(DataFormat->SubFormat, PinDataRange->SubFormat) &&
+            IsEqualGUIDAligned(DataFormat->Specifier, PinDataRange->Specifier))
+        {
+            // matches format
+            // lets see if its pcm format
+            if (IsEqualGUIDAligned(PinDataRange->MajorFormat, KSDATAFORMAT_TYPE_AUDIO) &&
+                IsEqualGUIDAligned(PinDataRange->SubFormat, KSDATAFORMAT_SUBTYPE_PCM) &&
+                IsEqualGUIDAligned(PinDataRange->Specifier, KSDATAFORMAT_SPECIFIER_WAVEFORMATEX))
+            {
+                PKSDATARANGE_AUDIO PinRange = (PKSDATARANGE_AUDIO)PinDataRange;
+                PKSDATAFORMAT_WAVEFORMATEX RequestFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat;
+
+                if (RequestFormat->WaveFormatEx.nChannels > PinRange->MaximumChannels)
+                {
+                    DPRINT1(
+                        "ChannelsCount %u not supported, MaxChannels %u\n", RequestFormat->WaveFormatEx.nChannels,
+                        PinRange->MaximumChannels);
+                    return STATUS_NOT_SUPPORTED;
+                }
+
+                if (RequestFormat->WaveFormatEx.nSamplesPerSec < PinRange->MinimumSampleFrequency)
+                {
+                    DPRINT1("SampleRate %u not supported\n", RequestFormat->WaveFormatEx.nSamplesPerSec);
+                    return STATUS_NOT_SUPPORTED;
+                }
+
+                if (RequestFormat->WaveFormatEx.nSamplesPerSec > PinRange->MaximumSampleFrequency)
+                {
+                    DPRINT1("SampleRate %u not supported\n", RequestFormat->WaveFormatEx.nSamplesPerSec);
+                    return STATUS_NOT_SUPPORTED;
+                }
+
+                if (RequestFormat->WaveFormatEx.wBitsPerSample < PinRange->MinimumBitsPerSample)
+                {
+                    DPRINT1("wBitsPerSample %u not supported\n", RequestFormat->WaveFormatEx.wBitsPerSample);
+                    return STATUS_NOT_SUPPORTED;
+                }
+
+                if (RequestFormat->WaveFormatEx.wBitsPerSample > PinRange->MaximumBitsPerSample)
+                {
+                    DPRINT1("wBitsPerSample %u not supported\n", RequestFormat->WaveFormatEx.wBitsPerSample);
+                    return STATUS_NOT_SUPPORTED;
+                }
+
+                // init stream format
+                StreamFormat.SampleRate = RequestFormat->WaveFormatEx.nSamplesPerSec;
+                StreamFormat.NumberOfChannels = RequestFormat->WaveFormatEx.nChannels;
+                StreamFormat.ValidBitsPerSample = RequestFormat->WaveFormatEx.wBitsPerSample;
+                StreamFormat.ContainerSize = RequestFormat->WaveFormatEx.wBitsPerSample;
+                bSupported = TRUE;
+                break;
+            }
+        }
     }
-    else
-    {
-        // not supported
+    if (!bSupported)
         return STATUS_NOT_SUPPORTED;
-    }
 
     Status = Adapter->GetInterface(&Interface);
     if (!NT_SUCCESS(Status))
@@ -237,7 +292,7 @@ HDAUDIO_AllocateStream(
     }
 
     CMiniportWaveRTStream *This = new (NonPagedPool, TAG_HDAUDIO)
-        CMiniportWaveRTStream(NULL, Adapter, Node, Pin, Capture, &StreamFormat, &Converter, hDmaEngine, NodeCount, Nodes);
+        CMiniportWaveRTStream(NULL, Adapter, Node, Pin, Capture, &StreamFormat, &Converter, hDmaEngine, NodeCount, Nodes, FilterDescription);
     if (!This)
     {
         // out of memory

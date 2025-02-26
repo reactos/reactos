@@ -108,7 +108,7 @@ CMiniportWaveRT::NewStream(
     IN BOOLEAN Capture,
     IN PKSDATAFORMAT DataFormat)
 {
-    return HDAUDIO_AllocateStream(Stream, m_Adapter, m_Node, Pin, Capture, DataFormat, m_AssociatedPinCount, m_AssociatedPins); 
+    return HDAUDIO_AllocateStream(Stream, m_Adapter, m_Node, Pin, Capture, DataFormat, m_AssociatedPinCount, m_AssociatedPins, m_FilterDescription); 
 }
 
 NTSTATUS

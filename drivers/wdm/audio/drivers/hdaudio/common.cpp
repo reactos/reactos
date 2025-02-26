@@ -1111,7 +1111,9 @@ CAdapterCommon::ProcessOutputNodes(
                     {
                         // FIXME ignoring device
                         // setup unsolicited response pinnode to activate ondemand
-                        // continue;
+                        DPRINT1("HDAUDIO: Ignoring PinNode %u\n", PinNodes[NodeIndex]);
+                        PinNodes[NodeIndex] = (ULONG)-1;
+                        continue;
                     }
                 }
             }
@@ -1141,6 +1143,13 @@ CAdapterCommon::ProcessOutputNodes(
                 // no connection
                 DPRINT1("Ignoring PinNode %u\n", PinNodes[NodeIndex]);
                 ClearRef(PinNodes[NodeIndex], PinNodeCount, PinNodes);
+                continue;
+            }
+
+            if (PinConfiguration.DefaultDevice > 7)
+            {
+                // not an output pin
+                DPRINT1("Ignoring Pin %u DefaultDevice %u\n", PinNodes[NodeIndex], PinConfiguration.DefaultDevice);
                 continue;
             }
 
@@ -1273,6 +1282,21 @@ CAdapterCommon::ProcessInputNodes(
             DPRINT1("Ignoring Pin %u\n", PinNodes[NodeIndex]);
             continue;
         }
+        if (PinCaps.PresenceDetectCapable)
+        {
+            ULONG DevicePresent = 0;
+            Status = OutNode->GetPinSense(PinNodes[NodeIndex], &DevicePresent);
+            if (NT_SUCCESS(Status))
+            {
+                DPRINT1("HDAUDIO: PinNode %u DevicePresent %x\n", PinNodes[NodeIndex], DevicePresent);
+                if (!DevicePresent)
+                {
+                    DPRINT1("Ignoring Pin %u\n", PinNodes[NodeIndex]);
+                    continue;
+                }
+            }
+        }
+
         // retrieve pin configuration
         PIN_CONFIGURATION_DEFAULT PinConfiguration;
         Status = OutNode->GetPinConfigurationDefault(PinNodes[NodeIndex], &PinConfiguration);
@@ -1286,6 +1310,13 @@ CAdapterCommon::ProcessInputNodes(
         FilteredPinNodes[FilteredPinNodeCount] = PinNodes[NodeIndex];
         DefaultDeviceList[FilteredPinNodeCount] = PinConfiguration.DefaultDevice;
         FilteredPinNodeCount++;
+    }
+    if (!FilteredPinNodeCount)
+    {
+        DPRINT1("HDAUDIO: No PinNodes!\n");
+        ExFreePool(FilteredPinNodes);
+        ExFreePool(DefaultDeviceList);
+        return STATUS_SUCCESS;
     }
 
     for (ULONG DeviceType = 8; DeviceType < 16; DeviceType++)
@@ -1315,7 +1346,7 @@ CAdapterCommon::ProcessInputNodes(
             ExFreePool(PinsOfSameType);
             ExFreePool(FilteredPinNodes);
             ExFreePool(DefaultDeviceList);
-            return Status;
+            return STATUS_INSUFFICIENT_RESOURCES;
         }
         ULONG FilteredInputNodeCount = 0;
         for (ULONG InputIndex = 0; InputIndex < InputNodeCount; InputIndex++)
