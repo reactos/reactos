@@ -156,7 +156,7 @@ static ARC_STATUS IsoBufferDirectory(ULONG DeviceId, ULONG DirectoryStartSector,
  * specified filename and fills in an ISO_FILE_INFO structure
  * with info describing the file, etc. returns ARC error code
  */
-static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO IsoFileInfoPointer)
+static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO IsoFileInfo)
 {
     PISO_VOLUME_INFO Volume;
     UINT32        i;
@@ -165,13 +165,9 @@ static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO I
     PVOID        DirectoryBuffer;
     ULONG        DirectorySector;
     ULONG        DirectoryLength;
-    ISO_FILE_INFO    IsoFileInfo;
     ARC_STATUS Status;
 
     TRACE("IsoLookupFile() FileName = %s\n", FileName);
-
-    RtlZeroMemory(IsoFileInfoPointer, sizeof(ISO_FILE_INFO));
-    RtlZeroMemory(&IsoFileInfo, sizeof(ISO_FILE_INFO));
 
     Volume = IsoVolumes[DeviceId];
 
@@ -214,7 +210,7 @@ static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO I
         //
         // Search for file name in directory
         //
-        if (!IsoSearchDirectoryBufferForFile(DirectoryBuffer, DirectoryLength, PathPart, &IsoFileInfo))
+        if (!IsoSearchDirectoryBufferForFile(DirectoryBuffer, DirectoryLength, PathPart, IsoFileInfo))
         {
             FrLdrTempFree(DirectoryBuffer, TAG_ISO_BUFFER);
             return ENOENT;
@@ -228,17 +224,16 @@ static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO I
         //
         if ((i+1) < NumberOfPathParts)
         {
-            DirectorySector = IsoFileInfo.FileStart;
-            DirectoryLength = IsoFileInfo.FileSize;
+            DirectorySector = IsoFileInfo->FileStart;
+            DirectoryLength = IsoFileInfo->FileSize;
         }
 
     }
 
-    RtlCopyMemory(IsoFileInfoPointer, &IsoFileInfo, sizeof(ISO_FILE_INFO));
-
     return ESUCCESS;
 }
 
+static
 ARC_STATUS IsoClose(ULONG FileId)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
@@ -246,6 +241,7 @@ ARC_STATUS IsoClose(ULONG FileId)
     return ESUCCESS;
 }
 
+static
 ARC_STATUS IsoGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
@@ -260,9 +256,9 @@ ARC_STATUS IsoGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
     return ESUCCESS;
 }
 
+static
 ARC_STATUS IsoOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
-    ISO_FILE_INFO TempFileInfo;
     PISO_FILE_INFO FileHandle;
     ULONG DeviceId;
     ARC_STATUS Status;
@@ -274,21 +270,22 @@ ARC_STATUS IsoOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 
     TRACE("IsoOpen() FileName = %s\n", Path);
 
-    RtlZeroMemory(&TempFileInfo, sizeof(TempFileInfo));
-    Status = IsoLookupFile(Path, DeviceId, &TempFileInfo);
-    if (Status != ESUCCESS)
-        return ENOENT;
-
-    FileHandle = FrLdrTempAlloc(sizeof(ISO_FILE_INFO), TAG_ISO_FILE);
+    FileHandle = FrLdrTempAlloc(sizeof(*FileHandle), TAG_ISO_FILE);
     if (!FileHandle)
         return ENOMEM;
 
-    RtlCopyMemory(FileHandle, &TempFileInfo, sizeof(ISO_FILE_INFO));
+    Status = IsoLookupFile(Path, DeviceId, FileHandle);
+    if (Status != ESUCCESS)
+    {
+        FrLdrTempFree(FileHandle, TAG_ISO_FILE);
+        return ENOENT;
+    }
 
     FsSetDeviceSpecific(*FileId, FileHandle);
     return ESUCCESS;
 }
 
+static
 ARC_STATUS IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     ARC_STATUS Status;
@@ -455,6 +452,7 @@ ARC_STATUS IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     return ESUCCESS;
 }
 
+static
 ARC_STATUS IsoSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
@@ -481,7 +479,7 @@ ARC_STATUS IsoSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
     return ESUCCESS;
 }
 
-const DEVVTBL Iso9660FuncTable =
+static const DEVVTBL Iso9660FuncTable =
 {
     IsoClose,
     IsoGetFileInformation,
