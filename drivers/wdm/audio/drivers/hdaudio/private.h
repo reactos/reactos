@@ -319,9 +319,10 @@ class CMiniportWaveRTStream : public CUnknownImpl<IMiniportWaveRTStreamNotificat
         PHDAUDIO_CONVERTER_FORMAT Converter,
         HANDLE DmaEngine,
         ULONG NodeCount,
-        PULONG Nodes)
+        PULONG Nodes,
+        PPCFILTER_DESCRIPTOR FilterDescription)
         : m_Adapter(Adapter), m_OutNode(OutNode), m_Pin(Pin), m_Capture(Capture), m_DmaEngine(DmaEngine),
-          m_NodeCount(NodeCount), m_Nodes(Nodes)
+          m_NodeCount(NodeCount), m_Nodes(Nodes), m_FilterDescription(FilterDescription)
     {
        NTSTATUS Status = m_Adapter->GetInterface(&m_Interface);
        ASSERT(NT_SUCCESS(Status));
@@ -348,6 +349,7 @@ class CMiniportWaveRTStream : public CUnknownImpl<IMiniportWaveRTStreamNotificat
     ULONG m_FifoSize;
     ULONG m_NodeCount;
     PULONG m_Nodes;
+    PPCFILTER_DESCRIPTOR m_FilterDescription;
 };
 
 NTSTATUS
@@ -392,4 +394,5 @@ HDAUDIO_AllocateStream(
     IN BOOLEAN Capture,
     IN PKSDATAFORMAT DataFormat,
     IN ULONG NodeCount,
-    IN PULONG Nodes);
+    IN PULONG Nodes,
+    IN PPCFILTER_DESCRIPTOR FilterDescription);
