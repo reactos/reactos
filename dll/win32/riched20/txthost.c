@@ -1284,10 +1284,7 @@ static LRESULT RichEditWndProc_common( HWND hwnd, UINT msg, WPARAM wparam,
             /* fall through */
         default:
 #ifdef __REACTOS__
-            if(host->text_srv)
-                hr = ITextServices_TxSendMessage( host->text_srv, msg, wparam, lparam, &res );
-            else
-                hr = S_FALSE;
+            hr = (host->text_srv ? ITextServices_TxSendMessage( host->text_srv, msg, wparam, lparam, &res ) : S_FALSE);
 #else
             hr = ITextServices_TxSendMessage( host->text_srv, msg, wparam, lparam, &res );
 #endif
