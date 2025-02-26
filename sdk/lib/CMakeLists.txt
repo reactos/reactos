@@ -6,7 +6,6 @@ add_subdirectory(inflib)
 if(CMAKE_CROSSCOMPILING)
 
 add_subdirectory(3rdparty)
-add_subdirectory(apisets)
 add_subdirectory(cicero)
 add_subdirectory(comsupp)
 add_subdirectory(conutils)

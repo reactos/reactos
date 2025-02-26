@@ -1,5 +1,6 @@
 
 add_subdirectory(3rdparty)
+add_subdirectory(apisets)
 add_subdirectory(appcompat)
 add_subdirectory(cpl)
 add_subdirectory(directx)

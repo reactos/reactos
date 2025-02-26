@@ -5174,7 +5174,15 @@ void actctx_init(PVOID* pOldShimData)
     ctx.lpResourceName = NULL;
     ctx.lpSource = buffer;
     RtlStringCchCopyW(buffer, RTL_NUMBER_OF(buffer), SharedUserData->NtSystemRoot);
-    RtlStringCchCatW(buffer, RTL_NUMBER_OF(buffer), L"\\winsxs\\manifests\\systemcompatible.manifest");
+
+    if (RosGetProcessCompatVersion())
+    {
+        RtlStringCchCatW(buffer, RTL_NUMBER_OF(buffer), L"\\winsxs\\manifests\\forwardcompatible.manifest");
+    }
+    else
+    {
+        RtlStringCchCatW(buffer, RTL_NUMBER_OF(buffer), L"\\winsxs\\manifests\\systemcompatible.manifest");
+    }
 
     Status = RtlCreateActivationContext(0, (PVOID)&ctx, 0, NULL, NULL, &handle);
     if (NT_SUCCESS(Status))
