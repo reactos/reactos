@@ -11,12 +11,17 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(opengl32);
 
+/* based off https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/4305 */
 typedef struct
 {
-    DWORD Version;          /*!< Driver interface version */
-    DWORD DriverVersion;    /*!< Driver version */
-    WCHAR DriverName[256];  /*!< Driver name */
+    ULONG Version;                  /*!< Driver interface version */
+    ULONG DriverVersion;            /*!< Driver version */
+    WCHAR DriverName[MAX_PATH+1];  /*!< Driver name */
 } Drv_Opengl_Info, *pDrv_Opengl_Info;
+
+#ifndef OPENGL_GETINFO_DRVNAME
+#define OPENGL_GETINFO_DRVNAME  0
+#endif
 
 typedef enum
 {
@@ -142,12 +147,12 @@ custom_end:
             return NULL;
 
         /* Query for the ICD DLL name and version */
-        dwInput = 0;
+        dwInput = OPENGL_GETINFO_DRVNAME;
         ret = ExtEscape(hdc, OPENGL_GETINFO, sizeof(DWORD), (LPCSTR)&dwInput, sizeof(DrvInfo), (LPSTR)&DrvInfo);
 
         if(ret <= 0)
         {
-            ERR("Driver claims to support OPENGL_GETINFO escape code, but doesn't.\n");
+            ERR("Driver claims to support OPENGL_GETINFO escape code, but doesn't. ret: %X\n", ret);
             return NULL;
         }
 
