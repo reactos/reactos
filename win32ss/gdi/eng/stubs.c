@@ -870,34 +870,6 @@ NtGdiDeleteColorTransform(
 /*
  * @unimplemented
  */
-ULONG
-APIENTRY
-NtGdiGetPerBandInfo(
-    IN HDC hdc,
-    IN OUT PERBANDINFO *ppbi)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiDoBanding(
-    IN HDC hdc,
-    IN BOOL bStart,
-    OUT POINTL *pptl,
-    OUT PSIZE pSize)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 APIENTRY
 NtGdiEnumFontChunk(
