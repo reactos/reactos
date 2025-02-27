@@ -1,0 +1,90 @@
+/*
+ * Copyright 2018 Józef Kucia
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "oaidl.idl";
+import "ocidl.idl";
+import "d3d11.idl";
+import "d3d12.idl";
+
+typedef struct D3D11_RESOURCE_FLAGS
+{
+    UINT BindFlags;
+    UINT MiscFlags;
+    UINT CPUAccessFlags;
+    UINT StructureByteStride;
+} D3D11_RESOURCE_FLAGS;
+
+[
+    uuid(85611e73-70a9-490e-9614-a9e302777904),
+    object,
+    local,
+    pointer_default(unique)
+]
+interface ID3D11On12Device : IUnknown
+{
+    HRESULT CreateWrappedResource(IUnknown *d3d12_resource,
+            const D3D11_RESOURCE_FLAGS *flags,
+            D3D12_RESOURCE_STATES input_state,
+            D3D12_RESOURCE_STATES output_state,
+            REFIID iid, void **d3d11_resource);
+
+    void ReleaseWrappedResources(ID3D11Resource * const *resources, UINT count);
+
+    void AcquireWrappedResources(ID3D11Resource * const *resources, UINT count);
+}
+
+[local] HRESULT __stdcall D3D11On12CreateDevice(IUnknown *device, UINT flags,
+        const D3D_FEATURE_LEVEL *feature_levels, UINT feature_level_count,
+        IUnknown * const *queues, UINT queue_count, UINT node_mask,
+        ID3D11Device **d3d11_device, ID3D11DeviceContext **d3d11_immediate_context,
+        D3D_FEATURE_LEVEL *obtained_feature_level);
+
+typedef HRESULT (__stdcall *PFN_D3D11ON12_CREATE_DEVICE)(IUnknown *device, UINT flags,
+        const D3D_FEATURE_LEVEL *feature_levels, UINT feature_level_count,
+        IUnknown * const *queues, UINT queue_count, UINT node_mask,
+        ID3D11Device **d3d11_device, ID3D11DeviceContext **d3d11_immediate_context,
+        D3D_FEATURE_LEVEL *obtained_feature_level);
+
+[
+    uuid(bdb64df4-ea2f-4c70-b861-aaab1258bb5d),
+    object,
+    local,
+    pointer_default(unique)
+]
+interface ID3D11On12Device1 : ID3D11On12Device
+{
+    HRESULT GetD3D12Device(REFIID iid, ID3D12Device **d3d12_device);
+}
+
+[
+    uuid(dc90f331-4740-43fa-866e-67f12cb58223),
+    object,
+    local,
+    pointer_default(unique)
+]
+interface ID3D11On12Device2 : ID3D11On12Device1
+{
+    HRESULT UnwrapUnderlyingResource(ID3D11Resource *d3d11_resource,
+            ID3D12CommandQueue *d3d12_command_queue,
+            REFIID iid, void **d3d12_resource);
+
+    HRESULT ReturnUnderlyingResource(ID3D11Resource *d3d11_resource,
+            UINT num_sync,
+            UINT64 *signal_values,
+            ID3D12Fence **fences);
+}
