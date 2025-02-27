@@ -8,6 +8,8 @@ list(APPEND SOURCE
     activaut.idl
     activdbg.idl
     activscp.idl
+    amstream.idl
+    amvideo.idl
     asptlb.idl
 #   asynot.idl
 #   asysta.idl
@@ -31,12 +33,40 @@ list(APPEND SOURCE
 #   crtrow.idl
     ctffunc.idl
     ctxtcall.idl
+    d2d1_1.idl
+    d2d1_2.idl
+    d2d1_3.idl
+    d2d1.idl
+    d2d1effectauthor.idl
+    d2d1effects_1.idl
+    d2d1effects_2.idl
+    d2d1effects.idl
+    d3d9on12.idl
+    d3d10_1.idl
+    d3d10.idl
+    d3d10effect.idl
+    d3d10sdklayers.idl
+    d3d10shader.idl
+    d3d11_1.idl
+    d3d11_2.idl
+    d3d11_3.idl
+    d3d11_4.idl
+    d3d11.idl
+    d3d11on12.idl
+    d3d11sdklayers.idl
+    d3d12.idl
+    d3d12sdklayers.idl
+    d3d12shader.idl
+    d3d12video.idl
+    d3dx11core.idl
+    ddstream.idl
 #   dbccmd.idl
 #   dbcses.idl
 #   dbdsad.idl
 #   dbinit.idl
 #   dbprop.idl
 #   dbs.idl
+    dcommon.idl
     devenum.idl
     devicetopology.idl
     dimm.idl
@@ -45,7 +75,22 @@ list(APPEND SOURCE
     docobjectservice.idl
     downloadmgr.idl
     drmexternals.idl
+    dwrite_1.idl
+    dwrite_2.idl
+    dwrite_3.idl
+    dwrite.idl
+    dxgi.idl
+    dxgi1_2.idl
+    dxgi1_3.idl
+    dxgi1_4.idl
+    dxgi1_5.idl
+    dxgi1_6.idl
+    dxgicommon.idl
+    dxgidebug.idl
     dxgiformat.idl
+    dxgitype.idl
+    dxva2api.idl
+    dxvahd.idl
 #   dyngraph.idl
     endpointvolume.idl
     exdisp.idl

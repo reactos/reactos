@@ -1,0 +1,259 @@
+/*
+ * Copyright 2015 Steve Lhomme
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "oaidl.idl";
+
+const UINT DXGI_DEBUG_BINARY_VERSION = 1;
+
+typedef GUID DXGI_DEBUG_ID;
+
+cpp_quote("DEFINE_GUID(DXGI_DEBUG_ALL,   0xe48ae283, 0xda80, 0x490b,0x87, 0xe6, 0x43, 0xe9, 0xa9, 0xcf, 0xda, 0x08);")
+cpp_quote("DEFINE_GUID(DXGI_DEBUG_DX,    0x35cdd7fc, 0x13b2, 0x421d,0xa5, 0xd7, 0x7e, 0x44, 0x51, 0x28, 0x7d, 0x64);")
+cpp_quote("DEFINE_GUID(DXGI_DEBUG_DXGI,  0x25cddaa4, 0xb1c6, 0x47e1,0xac, 0x3e, 0x98, 0x87, 0x5b, 0x5a, 0x2e, 0x2a);")
+cpp_quote("DEFINE_GUID(DXGI_DEBUG_APP,   0x06cd6e01, 0x4219, 0x4ebd,0x87, 0x09, 0x27, 0xed, 0x23, 0x36, 0x0c, 0x62);")
+
+typedef enum DXGI_DEBUG_RLO_FLAGS {
+    DXGI_DEBUG_RLO_SUMMARY         = 0x0001,
+    DXGI_DEBUG_RLO_DETAIL          = 0x0002,
+    DXGI_DEBUG_RLO_IGNORE_INTERNAL = 0x0004,
+    DXGI_DEBUG_RLO_ALL             = 0x0007
+} DXGI_DEBUG_RLO_FLAGS;
+
+typedef enum DXGI_INFO_QUEUE_MESSAGE_CATEGORY {
+    DXGI_INFO_QUEUE_MESSAGE_CATEGORY_UNKNOWN,
+    DXGI_INFO_QUEUE_MESSAGE_CATEGORY_MISCELLANEOUS,
+    DXGI_INFO_QUEUE_MESSAGE_CATEGORY_INITIALIZATION,
+    DXGI_INFO_QUEUE_MESSAGE_CATEGORY_CLEANUP,
+    DXGI_INFO_QUEUE_MESSAGE_CATEGORY_COMPILATION,
+    DXGI_INFO_QUEUE_MESSAGE_CATEGORY_STATE_CREATION,
+    DXGI_INFO_QUEUE_MESSAGE_CATEGORY_STATE_SETTING,
+    DXGI_INFO_QUEUE_MESSAGE_CATEGORY_STATE_GETTING,
+    DXGI_INFO_QUEUE_MESSAGE_CATEGORY_RESOURCE_MANIPULATION,
+    DXGI_INFO_QUEUE_MESSAGE_CATEGORY_EXECUTION,
+    DXGI_INFO_QUEUE_MESSAGE_CATEGORY_SHADER,
+} DXGI_INFO_QUEUE_MESSAGE_CATEGORY;
+
+typedef enum DXGI_INFO_QUEUE_MESSAGE_SEVERITY {
+    DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION,
+    DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR,
+    DXGI_INFO_QUEUE_MESSAGE_SEVERITY_WARNING,
+    DXGI_INFO_QUEUE_MESSAGE_SEVERITY_INFO,
+    DXGI_INFO_QUEUE_MESSAGE_SEVERITY_MESSAGE
+} DXGI_INFO_QUEUE_MESSAGE_SEVERITY;
+
+typedef int DXGI_INFO_QUEUE_MESSAGE_ID;
+cpp_quote("#define DXGI_INFO_QUEUE_MESSAGE_ID_STRING_FROM_APPLICATION 0")
+
+typedef struct DXGI_INFO_QUEUE_MESSAGE {
+    DXGI_DEBUG_ID Producer;
+    DXGI_INFO_QUEUE_MESSAGE_CATEGORY Category;
+    DXGI_INFO_QUEUE_MESSAGE_SEVERITY Severity;
+    DXGI_INFO_QUEUE_MESSAGE_ID ID;
+    const char *pDescription;
+    SIZE_T DescriptionByteLength;
+} DXGI_INFO_QUEUE_MESSAGE;
+
+typedef struct DXGI_INFO_QUEUE_FILTER_DESC {
+    UINT NumCategories;
+    DXGI_INFO_QUEUE_MESSAGE_CATEGORY *pCategoryList;
+    UINT NumSeverities;
+    DXGI_INFO_QUEUE_MESSAGE_SEVERITY *pSeverityList;
+    UINT NumIDs;
+    DXGI_INFO_QUEUE_MESSAGE_ID *pIDList;
+} DXGI_INFO_QUEUE_FILTER_DESC;
+
+typedef struct DXGI_INFO_QUEUE_FILTER {
+    DXGI_INFO_QUEUE_FILTER_DESC AllowList;
+    DXGI_INFO_QUEUE_FILTER_DESC DenyList;
+} DXGI_INFO_QUEUE_FILTER;
+
+cpp_quote("#define DXGI_INFO_QUEUE_DEFAULT_MESSAGE_COUNT_LIMIT 1024")
+
+cpp_quote("HRESULT WINAPI DXGIGetDebugInterface(REFIID riid, void **ppDebug);")
+
+[
+    uuid(d67441c7-672a-476f-9e82-cd55b44949ce),
+    object,
+    local,
+    pointer_default(unique)
+]
+interface IDXGIInfoQueue : IUnknown
+{
+    HRESULT SetMessageCountLimit(
+        [in] DXGI_DEBUG_ID producer,
+        [in] UINT64 limit);
+
+    void ClearStoredMessages(
+        [in] DXGI_DEBUG_ID producer);
+
+    HRESULT GetMessage(
+        [in] DXGI_DEBUG_ID producer,
+        [in] UINT64 index,
+        [out] DXGI_INFO_QUEUE_MESSAGE *message,
+        [in, out] SIZE_T *length);
+
+    UINT64 GetNumStoredMessagesAllowedByRetrievalFilters(
+        [in] DXGI_DEBUG_ID producer);
+
+    UINT64 GetNumStoredMessages(
+        [in] DXGI_DEBUG_ID producer);
+
+    UINT64 GetNumMessagesDiscardedByMessageCountLimit(
+        [in] DXGI_DEBUG_ID producer);
+
+    UINT64 GetMessageCountLimit(
+        [in] DXGI_DEBUG_ID producer);
+
+    UINT64 GetNumMessagesAllowedByStorageFilter(
+        [in] DXGI_DEBUG_ID producer);
+
+    UINT64 GetNumMessagesDeniedByStorageFilter(
+        [in] DXGI_DEBUG_ID producer);
+
+    HRESULT AddStorageFilterEntries(
+        [in] DXGI_DEBUG_ID producer,
+        [in] DXGI_INFO_QUEUE_FILTER *filter);
+
+    HRESULT GetStorageFilter(
+        [in] DXGI_DEBUG_ID producer,
+        [out] DXGI_INFO_QUEUE_FILTER *filter,
+        [in, out] SIZE_T *length);
+
+    void ClearStorageFilter(
+        [in] DXGI_DEBUG_ID producer);
+
+    HRESULT PushEmptyStorageFilter(
+        [in] DXGI_DEBUG_ID producer);
+
+    HRESULT PushDenyAllStorageFilter(
+        [in] DXGI_DEBUG_ID producer);
+
+    HRESULT PushCopyOfStorageFilter(
+        [in] DXGI_DEBUG_ID producer);
+
+    HRESULT PushStorageFilter(
+        [in] DXGI_DEBUG_ID producer,
+        [in] DXGI_INFO_QUEUE_FILTER *filter);
+
+    void PopStorageFilter(
+        [in] DXGI_DEBUG_ID producer);
+
+    UINT GetStorageFilterStackSize(
+        [in] DXGI_DEBUG_ID producer);
+
+    HRESULT AddRetrievalFilterEntries(
+        [in] DXGI_DEBUG_ID producer,
+        [in] DXGI_INFO_QUEUE_FILTER *filter);
+
+    HRESULT GetRetrievalFilter(
+        [in] DXGI_DEBUG_ID producer,
+        [out] DXGI_INFO_QUEUE_FILTER *filter,
+        [in, out] SIZE_T *length);
+
+    void ClearRetrievalFilter(
+        [in] DXGI_DEBUG_ID producer);
+
+    HRESULT PushEmptyRetrievalFilter(
+        [in] DXGI_DEBUG_ID producer);
+
+    HRESULT PushDenyAllRetrievalFilter(
+        [in] DXGI_DEBUG_ID producer);
+
+    HRESULT PushCopyOfRetrievalFilter(
+        [in] DXGI_DEBUG_ID producer);
+
+    HRESULT PushRetrievalFilter(
+        [in] DXGI_DEBUG_ID producer,
+        [in] DXGI_INFO_QUEUE_FILTER *filter);
+
+    void PopRetrievalFilter(
+        [in] DXGI_DEBUG_ID producer);
+
+    UINT GetRetrievalFilterStackSize(
+        [in] DXGI_DEBUG_ID producer);
+
+    HRESULT AddMessage(
+        [in] DXGI_DEBUG_ID producer,
+        [in] DXGI_INFO_QUEUE_MESSAGE_CATEGORY category,
+        [in] DXGI_INFO_QUEUE_MESSAGE_SEVERITY severity,
+        [in] DXGI_INFO_QUEUE_MESSAGE_ID id,
+        [in] LPCSTR description);
+
+    HRESULT AddApplicationMessage(
+        [in] DXGI_INFO_QUEUE_MESSAGE_SEVERITY severity,
+        [in] LPCSTR description);
+
+    HRESULT SetBreakOnCategory(
+        [in] DXGI_DEBUG_ID producer,
+        [in] DXGI_INFO_QUEUE_MESSAGE_CATEGORY category,
+        [in] BOOL enable);
+
+    HRESULT SetBreakOnSeverity(
+        [in] DXGI_DEBUG_ID producer,
+        [in] DXGI_INFO_QUEUE_MESSAGE_SEVERITY severity,
+        [in] BOOL enable);
+
+    HRESULT SetBreakOnID(
+        [in] DXGI_DEBUG_ID producer,
+        [in] DXGI_INFO_QUEUE_MESSAGE_ID id,
+        [in] BOOL enable);
+
+    BOOL GetBreakOnCategory(
+        [in] DXGI_DEBUG_ID producer,
+        [in] DXGI_INFO_QUEUE_MESSAGE_CATEGORY category);
+
+    BOOL GetBreakOnSeverity(
+        [in] DXGI_DEBUG_ID producer,
+        [in] DXGI_INFO_QUEUE_MESSAGE_SEVERITY severity);
+
+    BOOL GetBreakOnID(
+        [in] DXGI_DEBUG_ID producer,
+        [in] DXGI_INFO_QUEUE_MESSAGE_ID id);
+
+    void SetMuteDebugOutput(
+        [in] DXGI_DEBUG_ID producer,
+        [in] BOOL mute);
+
+    BOOL GetMuteDebugOutput(
+        [in] DXGI_DEBUG_ID producer);
+}
+
+[
+    object,
+    local,
+    uuid(119e7452-de9e-40fe-8806-88f90c12b441)
+]
+interface IDXGIDebug : IUnknown
+{
+    HRESULT ReportLiveObjects(
+        [in] GUID apiid,
+        [in] DXGI_DEBUG_RLO_FLAGS flags);
+}
+
+[
+    uuid(c5a05f0c-16f2-4adf-9f4d-a8c4d58ac550),
+    object,
+    local,
+    pointer_default(unique)
+]
+interface IDXGIDebug1 : IDXGIDebug
+{
+    void EnableLeakTrackingForThread();
+    void DisableLeakTrackingForThread();
+    BOOL IsLeakTrackingEnabledForThread();
+}

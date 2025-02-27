@@ -1,0 +1,103 @@
+/*
+ * Copyright 2018 Nikolay Sivov for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "d2d1_1.idl";
+import "d2d1effects_1.idl";
+
+typedef enum D2D1_RENDERING_PRIORITY
+{
+    D2D1_RENDERING_PRIORITY_NORMAL = 0,
+    D2D1_RENDERING_PRIORITY_LOW = 1,
+    D2D1_RENDERING_PRIORITY_FORCE_DWORD = 0xffffffff,
+} D2D1_RENDERING_PRIORITY;
+
+[
+    object,
+    uuid(a16907d7-bc02-4801-99e8-8cf7f485f774),
+    local,
+]
+interface ID2D1GeometryRealization : ID2D1Resource
+{
+}
+
+[
+    object,
+    uuid(d37f57e4-6908-459f-a199-e72f24f79987),
+    local,
+]
+interface ID2D1DeviceContext1 : ID2D1DeviceContext
+{
+    HRESULT CreateFilledGeometryRealization(
+        [in] ID2D1Geometry *geometry,
+        [in] float tolerance,
+        [out] ID2D1GeometryRealization **realization
+    );
+    HRESULT CreateStrokedGeometryRealization(
+        [in] ID2D1Geometry *geometry,
+        [in] float tolerance,
+        [in] float stroke_width,
+        [in] ID2D1StrokeStyle *stroke_style,
+        [out] ID2D1GeometryRealization **realization
+    );
+    void DrawGeometryRealization(
+        [in] ID2D1GeometryRealization *realization,
+        [in] ID2D1Brush *brush
+    );
+}
+
+[
+    object,
+    uuid(d21768e1-23a4-4823-a14b-7c3eba85d658),
+    local,
+]
+interface ID2D1Device1 : ID2D1Device
+{
+    D2D1_RENDERING_PRIORITY GetRenderingPriority();
+    void SetRenderingPriority(
+        [in] D2D1_RENDERING_PRIORITY priority
+    );
+    HRESULT CreateDeviceContext(
+        [in] D2D1_DEVICE_CONTEXT_OPTIONS options,
+        [out] ID2D1DeviceContext1 **device_context
+    );
+}
+
+[
+    object,
+    uuid(94f81a73-9212-4376-9c58-b16a3a0d3992),
+    local,
+]
+interface ID2D1Factory2 : ID2D1Factory1
+{
+    HRESULT CreateDevice(
+        [in] IDXGIDevice *dxgi_device,
+        [out] ID2D1Device1 **device
+    );
+}
+
+[
+    object,
+    uuid(9eb767fd-4269-4467-b8c2-eb30cb305743),
+    local,
+]
+interface ID2D1CommandSink1 : ID2D1CommandSink
+{
+    HRESULT SetPrimitiveBlend1(
+        [in] D2D1_PRIMITIVE_BLEND primitive_blend
+    );
+}
