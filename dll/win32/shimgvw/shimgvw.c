@@ -33,6 +33,7 @@ HWND                g_hwndFullscreen    = NULL;
 SHIMGVW_FILENODE *  g_pCurrentFile      = NULL;
 GpImage *           g_pImage            = NULL;
 SHIMGVW_SETTINGS    g_Settings;
+UINT                g_ImageId;
 
 static const UINT s_ZoomSteps[] =
 {
@@ -402,6 +403,10 @@ Preview_pLoadImage(PPREVIEW_DATA pData, LPCWSTR szOpenFileName)
     Preview_ResetZoom(pData);
 
     Preview_UpdateTitle(pData, szOpenFileName);
+
+    ++g_ImageId;
+    EnableCommandIfVerbExists(g_ImageId, g_hMainWnd, IDC_PRINT, L"print", pData->m_szFile);
+    EnableCommandIfVerbExists(g_ImageId, g_hMainWnd, IDC_MODIFY, L"edit", pData->m_szFile);
 }
 
 static VOID
@@ -557,15 +562,17 @@ Preview_pSaveImageAs(PPREVIEW_DATA pData)
 static VOID
 Preview_pPrintImage(PPREVIEW_DATA pData)
 {
-    /* FIXME */
+    ShellExecuteVerb(g_hMainWnd, L"print", pData->m_szFile, FALSE);
 }
 
 static VOID
 Preview_UpdateUI(PPREVIEW_DATA pData)
 {
     BOOL bEnable = (g_pImage != NULL);
-    PostMessageW(pData->m_hwndToolBar, TB_ENABLEBUTTON, IDC_SAVEAS, bEnable);
-    PostMessageW(pData->m_hwndToolBar, TB_ENABLEBUTTON, IDC_PRINT, bEnable);
+    SendMessageW(pData->m_hwndToolBar, TB_ENABLEBUTTON, IDC_SAVEAS, bEnable);
+    // These will be validated and enabled later by EnableCommandIfVerbExists
+    SendMessageW(pData->m_hwndToolBar, TB_ENABLEBUTTON, IDC_PRINT, FALSE);
+    SendMessageW(pData->m_hwndToolBar, TB_ENABLEBUTTON, IDC_MODIFY, FALSE);
 }
 
 static VOID
@@ -1397,26 +1404,8 @@ Preview_Delete(PPREVIEW_DATA pData)
 static VOID
 Preview_Edit(HWND hwnd)
 {
-    SHELLEXECUTEINFOW sei;
-    PPREVIEW_DATA pData = Preview_GetData(hwnd);
-
-    if (!pData->m_szFile[0])
-        return;
-
-    ZeroMemory(&sei, sizeof(sei));
-    sei.cbSize = sizeof(sei);
-    sei.lpVerb = L"edit";
-    sei.lpFile = pData->m_szFile;
-    sei.nShow = SW_SHOWNORMAL;
-    if (!ShellExecuteExW(&sei))
-    {
-        DPRINT1("Preview_Edit: ShellExecuteExW() failed with code %ld\n", GetLastError());
-    }
-    else
-    {
-        // Destroy the window to quit the application
-        DestroyWindow(hwnd);
-    }
+    PPREVIEW_DATA pData = Preview_GetData(g_hMainWnd);
+    ShellExecuteVerb(pData->m_hwnd, L"edit", pData->m_szFile, TRUE);
 }
 
 static VOID
@@ -1715,6 +1704,13 @@ PreviewWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
             break;
         }
+        case WM_UPDATECOMMANDSTATE:
+        {
+            PPREVIEW_DATA pData = Preview_GetData(g_hMainWnd);
+            if (g_ImageId == lParam)
+                SendMessage(pData->m_hwndToolBar, TB_ENABLEBUTTON, LOWORD(wParam), HIWORD(wParam));
+            break;
+        }
         default:
         {
             return DefWindowProcW(hwnd, uMsg, wParam, lParam);
@@ -1738,6 +1734,7 @@ ImageView_Main(HWND hwnd, LPCWSTR szFileName)
     INITCOMMONCONTROLSEX Icc = { .dwSize = sizeof(Icc), .dwICC = ICC_WIN95_CLASSES };
 
     InitCommonControlsEx(&Icc);
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL); // Give UI higher priority than background threads
 
     /* Initialize COM */
     hrCoInit = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
