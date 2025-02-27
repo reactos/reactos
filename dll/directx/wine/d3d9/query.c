@@ -20,10 +20,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include "d3d9_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
+
+static D3DQUERYTYPE d3dquerytype_from_wined3d(enum wined3d_query_type type)
+{
+    return (D3DQUERYTYPE)type;
+}
+
+static enum wined3d_query_type wined3d_query_type_from_d3d(D3DQUERYTYPE type)
+{
+    return (enum wined3d_query_type)type;
+}
 
 static inline struct d3d9_query *impl_from_IDirect3DQuery9(IDirect3DQuery9 *iface)
 {
@@ -53,7 +62,7 @@ static ULONG WINAPI d3d9_query_AddRef(IDirect3DQuery9 *iface)
     struct d3d9_query *query = impl_from_IDirect3DQuery9(iface);
     ULONG refcount = InterlockedIncrement(&query->refcount);
 
-    TRACE("%p increasing refcount to %u.\n", iface, refcount);
+    TRACE("%p increasing refcount to %lu.\n", iface, refcount);
 
     return refcount;
 }
@@ -63,16 +72,13 @@ static ULONG WINAPI d3d9_query_Release(IDirect3DQuery9 *iface)
     struct d3d9_query *query = impl_from_IDirect3DQuery9(iface);
     ULONG refcount = InterlockedDecrement(&query->refcount);
 
-    TRACE("%p decreasing refcount to %u.\n", iface, refcount);
+    TRACE("%p decreasing refcount to %lu.\n", iface, refcount);
 
     if (!refcount)
     {
-        wined3d_mutex_lock();
         wined3d_query_decref(query->wined3d_query);
-        wined3d_mutex_unlock();
-
         IDirect3DDevice9Ex_Release(query->parent_device);
-        heap_free(query);
+        free(query);
     }
     return refcount;
 }
@@ -99,7 +105,7 @@ static D3DQUERYTYPE WINAPI d3d9_query_GetType(IDirect3DQuery9 *iface)
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    type = wined3d_query_get_type(query->wined3d_query);
+    type = d3dquerytype_from_wined3d(wined3d_query_get_type(query->wined3d_query));
     wined3d_mutex_unlock();
 
     return type;
@@ -117,15 +123,8 @@ static DWORD WINAPI d3d9_query_GetDataSize(IDirect3DQuery9 *iface)
 static HRESULT WINAPI d3d9_query_Issue(IDirect3DQuery9 *iface, DWORD flags)
 {
     struct d3d9_query *query = impl_from_IDirect3DQuery9(iface);
-    HRESULT hr;
-
-    TRACE("iface %p, flags %#x.\n", iface, flags);
-
-    wined3d_mutex_lock();
-    hr = wined3d_query_issue(query->wined3d_query, flags);
-    wined3d_mutex_unlock();
-
-    return hr;
+    TRACE("iface %p, flags %#lx.\n", iface, flags);
+    return wined3d_query_issue(query->wined3d_query, flags);
 }
 
 static HRESULT WINAPI d3d9_query_GetData(IDirect3DQuery9 *iface, void *data, DWORD size, DWORD flags)
@@ -134,8 +133,7 @@ static HRESULT WINAPI d3d9_query_GetData(IDirect3DQuery9 *iface, void *data, DWO
     enum wined3d_query_type type;
     HRESULT hr;
 
-    TRACE("iface %p, data %p, size %u, flags %#x.\n",
-            iface, data, size, flags);
+    TRACE("iface %p, data %p, size %lu, flags %#lx.\n", iface, data, size, flags);
 
     wined3d_mutex_lock();
     type = wined3d_query_get_type(query->wined3d_query);
@@ -199,11 +197,11 @@ HRESULT query_init(struct d3d9_query *query, struct d3d9_device *device, D3DQUER
     query->refcount = 1;
 
     wined3d_mutex_lock();
-    if (FAILED(hr = wined3d_query_create(device->wined3d_device, type,
+    if (FAILED(hr = wined3d_query_create(device->wined3d_device, wined3d_query_type_from_d3d(type),
             query, &d3d9_null_wined3d_parent_ops, &query->wined3d_query)))
     {
         wined3d_mutex_unlock();
-        WARN("Failed to create wined3d query, hr %#x.\n", hr);
+        WARN("Failed to create wined3d query, hr %#lx.\n", hr);
         return hr;
     }
 

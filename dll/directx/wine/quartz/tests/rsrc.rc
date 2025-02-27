@@ -1,0 +1,45 @@
+/*
+ * Resource file for quartz tests.
+ *
+ * Copyright 2017 Zebediah Figura
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "windef.h"
+
+/* ffmpeg -f lavfi -i smptebars -t 5 -r 1 -f avi -vcodec rawvideo -pix_fmt yuv420p -vf scale=32x24 test.avi */
+/* @makedep: test.avi */
+test.avi RCDATA "test.avi"
+
+/* ffmpeg -f lavfi -i smptebars -f lavfi -i "sine=frequency=1000" -t 0.16 -r 25 -f mpeg -vcodec mpeg1video -vf scale=32x24 -acodec mp2 test.mpg */
+/* @makedep: test.mpg */
+test.mpg RCDATA "test.mpg"
+
+/* ffmpeg -f lavfi -i "sine=frequency=500" -t 0.5 -ar 48000 -b:a 32k -f mp3 -acodec mp3 -write_xing 0 test.mp3 */
+/* @makedep: test.mp3 */
+test.mp3 RCDATA "test.mp3"
+
+/* ffmpeg -f lavfi -i "sine=frequency=600" -t 0.1 -ar 44100 -f wav -acodec pcm_u8 test.wav */
+/* @makedep: test.wav */
+test.wav RCDATA "test.wav"
+
+/* ffmpeg -f lavfi -i smptebars -f lavfi -i "sine=frequency=1000" -t 2.04 -r 25 -f mpeg -vcodec mpeg1video -vf scale=64x48 -acodec mp2 -ar 32k -ab 96k test2.mpg */
+/* @makedep: test2.mpg */
+test2.mpg RCDATA "test2.mpg"
+
+/* ffmpeg -f lavfi -i smptebars -t 5 -r 1 -f avi -vcodec cinepak -pix_fmt rgb24 -vf scale=32x24 test_cinepak.avi */
+/* @makedep: test_cinepak.avi */
+test_cinepak.avi RCDATA "test_cinepak.avi"

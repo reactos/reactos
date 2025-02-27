@@ -1,0 +1,17 @@
+MODULE    = qcap.dll
+UNIXLIB   = qcap.so
+IMPORTS   = strmbase strmiids uuid ole32 oleaut32 winmm msvcrt
+DELAYIMPORTS = msvfw32
+
+SOURCES = \
+	audiorecord.c \
+	avico.c \
+	avimux.c \
+	capturegraph.c \
+	filewriter.c \
+	qcap_classes.idl \
+	qcap_main.c \
+	smartteefilter.c \
+	v4l.c \
+	version.rc \
+	vfwcapture.c

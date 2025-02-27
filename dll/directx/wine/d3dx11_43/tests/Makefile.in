@@ -1,0 +1,5 @@
+TESTDLL = d3dx11_43.dll
+IMPORTS = d3dx11
+
+SOURCES = \
+	d3dx11.c

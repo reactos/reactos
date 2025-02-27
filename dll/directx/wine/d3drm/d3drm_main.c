@@ -20,22 +20,6 @@
 #include "initguid.h"
 #include "d3drm_private.h"
 
-/***********************************************************************
- *		DllMain  (D3DRM.@)
- */
-BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, void *reserved)
-{
-    switch(reason)
-    {
-    case DLL_WINE_PREATTACH:
-        return FALSE;  /* prefer native version */
-    case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls( inst );
-        break;
-    }
-    return TRUE;
-}
-
 void d3drm_object_init(struct d3drm_object *object, const char *classname)
 {
     object->ref = 1;
@@ -59,7 +43,7 @@ HRESULT d3drm_object_add_destroy_callback(struct d3drm_object *object, D3DRMOBJE
     if (!cb)
         return D3DRMERR_BADVALUE;
 
-    if (!(callback = heap_alloc(sizeof(*callback))))
+    if (!(callback = malloc(sizeof(*callback))))
         return E_OUTOFMEMORY;
 
     callback->cb = cb;
@@ -81,7 +65,7 @@ HRESULT d3drm_object_delete_destroy_callback(struct d3drm_object *object, D3DRMO
         if (callback->cb == cb && callback->ctx == ctx)
         {
             list_remove(&callback->entry);
-            heap_free(callback);
+            free(callback);
             break;
         }
     }
@@ -136,13 +120,13 @@ HRESULT d3drm_object_set_name(struct d3drm_object *object, const char *name)
 {
     DWORD req_size;
 
-    heap_free(object->name);
+    free(object->name);
     object->name = NULL;
 
     if (name)
     {
         req_size = strlen(name) + 1;
-        if (!(object->name = heap_alloc(req_size)))
+        if (!(object->name = malloc(req_size)))
             return E_OUTOFMEMORY;
         memcpy(object->name, name, req_size);
     }
@@ -158,9 +142,9 @@ void d3drm_object_cleanup(IDirect3DRMObject *iface, struct d3drm_object *object)
     {
         callback->cb(iface, callback->ctx);
         list_remove(&callback->entry);
-        heap_free(callback);
+        free(callback);
     }
 
-    heap_free(object->name);
+    free(object->name);
     object->name = NULL;
 }

@@ -1,6 +1,3 @@
-#ifdef __REACTOS__
-#include "precomp.h"
-#else
 /*
  * libtxc_dxtn
  * Version:  1.0
@@ -27,7 +24,6 @@
 
 #include <stdio.h>
 #include "txc_dxtn.h"
-#endif /* __REACTOS__ */
 
 #define EXP5TO8R(packedcol)					\
    ((((packedcol) >> 8) & 0xf8) | (((packedcol) >> 13) & 0x7))

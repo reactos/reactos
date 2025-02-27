@@ -1,6 +1,3 @@
-#ifdef __REACTOS__
-#include "precomp.h"
-#else
 /*
  * Copyright 2010 Christian Costa
  * Copyright 2011 Rico Schüller
@@ -20,7 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-
+#include <stdbool.h>
 #include <stdio.h>
 #include <assert.h>
 
@@ -28,7 +25,6 @@
 #include "d3dcompiler.h"
 #include "winternl.h"
 #include "wine/list.h"
-#endif /* __REACTOS__ */
 
 /* Constants for special INT/FLOAT conversation */
 #define INT_FLOAT_MULTI 255.0f
@@ -109,7 +105,7 @@ enum STATE_TYPE
 
 struct d3dx_object
 {
-    UINT size;
+    unsigned int size;
     void *data;
     struct d3dx_parameter *param;
     BOOL creation_failed;
@@ -117,8 +113,8 @@ struct d3dx_object
 
 struct d3dx_state
 {
-    UINT operation;
-    UINT index;
+    unsigned int operation;
+    unsigned int index;
     enum STATE_TYPE type;
     struct d3dx_parameter parameter;
     struct d3dx_parameter *referenced_param;
@@ -133,8 +129,8 @@ struct d3dx_sampler
 struct d3dx_pass
 {
     char *name;
-    UINT state_count;
-    UINT annotation_count;
+    unsigned int state_count;
+    unsigned int annotation_count;
 
     struct d3dx_state *states;
     struct d3dx_parameter *annotations;
@@ -145,8 +141,8 @@ struct d3dx_pass
 struct d3dx_technique
 {
     char *name;
-    UINT pass_count;
-    UINT annotation_count;
+    unsigned int pass_count;
+    unsigned int annotation_count;
 
     struct d3dx_parameter *annotations;
     struct d3dx_pass *passes;
@@ -175,17 +171,13 @@ struct d3dx_effect
     ID3DXEffect ID3DXEffect_iface;
     LONG ref;
 
-    unsigned int parameter_count;
     unsigned int technique_count;
     unsigned int object_count;
-    struct d3dx_top_level_parameter *parameters;
     struct d3dx_technique *techniques;
     struct d3dx_object *objects;
     DWORD flags;
 
-    struct wine_rb_tree param_tree;
-    char *full_name_tmp;
-    unsigned int full_name_tmp_size;
+    struct d3dx_parameters_store params;
 
     struct ID3DXEffectStateManager *manager;
     struct IDirect3DDevice9 *device;
@@ -203,6 +195,10 @@ struct d3dx_effect
 
     struct list parameter_block_list;
     struct d3dx_parameter_block *current_parameter_block;
+
+    char *source;
+    SIZE_T source_size;
+    char *skip_constants_string;
 };
 
 #define INITIAL_SHARED_DATA_SIZE 4
@@ -224,6 +220,9 @@ struct ID3DXEffectCompilerImpl
     LONG ref;
 };
 
+static HRESULT d3dx9_effect_init_from_binary(struct d3dx_effect *effect,
+        struct IDirect3DDevice9 *device, const char *data, SIZE_T data_size,
+        unsigned int flags, struct ID3DXEffectPool *pool, const char *skip_constants_string);
 static HRESULT d3dx_parse_state(struct d3dx_effect *effect, struct d3dx_state *state,
         const char *data, const char **ptr, struct d3dx_object *objects);
 static void free_parameter(struct d3dx_parameter *param, BOOL element, BOOL child);
@@ -433,23 +432,13 @@ state_table[] =
     {SC_SETSAMPLER, 0, "Sampler"},
 };
 
-static inline void read_dword(const char **ptr, DWORD *d)
+static inline uint32_t read_u32(const char **ptr)
 {
-    memcpy(d, *ptr, sizeof(*d));
-    *ptr += sizeof(*d);
-}
+    uint32_t u;
 
-static void skip_dword_unknown(const char **ptr, unsigned int count)
-{
-    unsigned int i;
-    DWORD d;
-
-    WARN("Skipping %u unknown DWORDs:\n", count);
-    for (i = 0; i < count; ++i)
-    {
-        read_dword(ptr, &d);
-        WARN("\t0x%08x\n", d);
-    }
+    memcpy(&u, *ptr, sizeof(u));
+    *ptr += sizeof(u);
+    return u;
 }
 
 static inline D3DXHANDLE get_parameter_handle(struct d3dx_parameter *parameter)
@@ -521,7 +510,7 @@ static struct d3dx_parameter *get_valid_parameter(struct d3dx_effect *effect, D3
             sizeof(parameter_magic_string)))
         return handle_param;
 
-    return effect->flags & D3DXFX_LARGEADDRESSAWARE ? NULL : get_parameter_by_name(effect, NULL, parameter);
+    return effect->flags & D3DXFX_LARGEADDRESSAWARE ? NULL : get_parameter_by_name(&effect->params, NULL, parameter);
 }
 
 static struct d3dx_parameter_block *get_valid_parameter_block(D3DXHANDLE handle)
@@ -539,7 +528,7 @@ static void free_state(struct d3dx_state *state)
 
 static void free_object(struct d3dx_object *object)
 {
-    HeapFree(GetProcessHeap(), 0, object->data);
+    free(object->data);
 }
 
 static void free_sampler(struct d3dx_sampler *sampler)
@@ -550,7 +539,7 @@ static void free_sampler(struct d3dx_sampler *sampler)
     {
         free_state(&sampler->states[i]);
     }
-    heap_free(sampler->states);
+    free(sampler->states);
 }
 
 static void d3dx_pool_release_shared_parameter(struct d3dx_top_level_parameter *param);
@@ -569,7 +558,7 @@ static void free_parameter_object_data(struct d3dx_parameter *param, const void 
         switch (param->type)
         {
             case D3DXPT_STRING:
-                heap_free(((char **)data)[i]);
+                free(((char **)data)[i]);
                 break;
 
             case D3DXPT_TEXTURE:
@@ -608,7 +597,7 @@ static void free_parameter_data(struct d3dx_parameter *param, BOOL child)
         free_parameter_object_data(param, param->data, param->bytes);
 
     if (!child || is_param_type_sampler(param->type))
-        heap_free(param->data);
+        free(param->data);
 }
 
 static void free_parameter(struct d3dx_parameter *param, BOOL element, BOOL child)
@@ -627,17 +616,17 @@ static void free_parameter(struct d3dx_parameter *param, BOOL element, BOOL chil
 
         for (i = 0; i < count; ++i)
             free_parameter(&param->members[i], param->element_count != 0, TRUE);
-        HeapFree(GetProcessHeap(), 0, param->members);
+        free(param->members);
     }
 
-    heap_free(param->full_name);
+    free(param->full_name);
     free_parameter_data(param, child);
 
     /* only the parent has to release name and semantic */
     if (!element)
     {
-        HeapFree(GetProcessHeap(), 0, param->name);
-        HeapFree(GetProcessHeap(), 0, param->semantic);
+        free(param->name);
+        free(param->semantic);
     }
 }
 
@@ -649,7 +638,7 @@ static void free_top_level_parameter(struct d3dx_top_level_parameter *param)
 
         for (i = 0; i < param->annotation_count; ++i)
             free_parameter(&param->annotations[i], FALSE, FALSE);
-        HeapFree(GetProcessHeap(), 0, param->annotations);
+        free(param->annotations);
     }
     d3dx_pool_release_shared_parameter(param);
     free_parameter(&param->param, FALSE, FALSE);
@@ -668,7 +657,7 @@ static void free_pass(struct d3dx_pass *pass)
     {
         for (i = 0; i < pass->annotation_count; ++i)
             free_parameter(&pass->annotations[i], FALSE, FALSE);
-        HeapFree(GetProcessHeap(), 0, pass->annotations);
+        free(pass->annotations);
         pass->annotations = NULL;
     }
 
@@ -676,11 +665,11 @@ static void free_pass(struct d3dx_pass *pass)
     {
         for (i = 0; i < pass->state_count; ++i)
             free_state(&pass->states[i]);
-        HeapFree(GetProcessHeap(), 0, pass->states);
+        free(pass->states);
         pass->states = NULL;
     }
 
-    HeapFree(GetProcessHeap(), 0, pass->name);
+    free(pass->name);
     pass->name = NULL;
 }
 
@@ -703,7 +692,7 @@ static void free_technique(struct d3dx_technique *technique)
     {
         for (i = 0; i < technique->annotation_count; ++i)
             free_parameter(&technique->annotations[i], FALSE, FALSE);
-        HeapFree(GetProcessHeap(), 0, technique->annotations);
+        free(technique->annotations);
         technique->annotations = NULL;
     }
 
@@ -711,11 +700,11 @@ static void free_technique(struct d3dx_technique *technique)
     {
         for (i = 0; i < technique->pass_count; ++i)
             free_pass(&technique->passes[i]);
-        HeapFree(GetProcessHeap(), 0, technique->passes);
+        free(technique->passes);
         technique->passes = NULL;
     }
 
-    HeapFree(GetProcessHeap(), 0, technique->name);
+    free(technique->name);
     technique->name = NULL;
 }
 
@@ -739,8 +728,42 @@ static void free_parameter_block(struct d3dx_parameter_block *block)
     }
     assert((BYTE *)record == block->buffer + block->offset);
 
-    heap_free(block->buffer);
-    heap_free(block);
+    free(block->buffer);
+    free(block);
+}
+
+static int param_rb_compare(const void *key, const struct wine_rb_entry *entry)
+{
+    const char *name = key;
+    struct d3dx_parameter *param = WINE_RB_ENTRY_VALUE(entry, struct d3dx_parameter, rb_entry);
+
+    return strcmp(name, param->full_name);
+}
+
+HRESULT d3dx_init_parameters_store(struct d3dx_parameters_store *store, unsigned int count)
+{
+    store->count = count;
+    wine_rb_init(&store->tree, param_rb_compare);
+
+    if (store->count && !(store->parameters = calloc(store->count, sizeof(*store->parameters))))
+        return E_OUTOFMEMORY;
+
+    return S_OK;
+}
+
+void d3dx_parameters_store_cleanup(struct d3dx_parameters_store *store)
+{
+    unsigned int i;
+
+    free(store->full_name_tmp);
+
+    if (store->parameters)
+    {
+        for (i = 0; i < store->count; ++i)
+            free_top_level_parameter(&store->parameters[i]);
+        free(store->parameters);
+        store->parameters = NULL;
+    }
 }
 
 static void d3dx_effect_cleanup(struct d3dx_effect *effect)
@@ -758,27 +781,20 @@ static void d3dx_effect_cleanup(struct d3dx_effect *effect)
         free_parameter_block(block);
     }
 
-    heap_free(effect->full_name_tmp);
-
-    if (effect->parameters)
-    {
-        for (i = 0; i < effect->parameter_count; ++i)
-            free_top_level_parameter(&effect->parameters[i]);
-        heap_free(effect->parameters);
-    }
+    d3dx_parameters_store_cleanup(&effect->params);
 
     if (effect->techniques)
     {
         for (i = 0; i < effect->technique_count; ++i)
             free_technique(&effect->techniques[i]);
-        heap_free(effect->techniques);
+        free(effect->techniques);
     }
 
     if (effect->objects)
     {
         for (i = 0; i < effect->object_count; ++i)
             free_object(&effect->objects[i]);
-        heap_free(effect->objects);
+        free(effect->objects);
     }
 
     if (effect->pool)
@@ -791,7 +807,7 @@ static void d3dx_effect_cleanup(struct d3dx_effect *effect)
         IUnknown_Release(effect->manager);
 
     IDirect3DDevice9_Release(effect->device);
-    heap_free(effect);
+    free(effect);
 }
 
 static void get_vector(struct d3dx_parameter *param, D3DXVECTOR4 *vector)
@@ -823,7 +839,7 @@ static void get_matrix(struct d3dx_parameter *param, D3DXMATRIX *matrix, BOOL tr
     {
         for (k = 0; k < 4; ++k)
         {
-            FLOAT *tmp = transpose ? (FLOAT *)&matrix->u.m[k][i] : (FLOAT *)&matrix->u.m[i][k];
+            FLOAT *tmp = transpose ? (FLOAT *)&matrix->m[k][i] : (FLOAT *)&matrix->m[i][k];
 
             if ((i < param->rows) && (k < param->columns))
                 set_number(tmp, D3DXPT_FLOAT, (DWORD *)param->data + i * param->columns + k, param->type);
@@ -841,12 +857,12 @@ static void set_matrix(struct d3dx_parameter *param, const D3DXMATRIX *matrix, v
     {
         if (param->columns == 4)
         {
-            memcpy(dst_data, matrix->u.m, param->rows * 4 * sizeof(float));
+            memcpy(dst_data, matrix->m, param->rows * 4 * sizeof(float));
         }
         else
         {
             for (i = 0; i < param->rows; ++i)
-                memcpy((float *)dst_data + i * param->columns, matrix->u.m + i, param->columns * sizeof(float));
+                memcpy((float *)dst_data + i * param->columns, matrix->m + i, param->columns * sizeof(float));
         }
         return;
     }
@@ -855,7 +871,7 @@ static void set_matrix(struct d3dx_parameter *param, const D3DXMATRIX *matrix, v
     {
         for (k = 0; k < param->columns; ++k)
             set_number((FLOAT *)dst_data + i * param->columns + k, param->type,
-                    &matrix->u.m[i][k], D3DXPT_FLOAT);
+                    &matrix->m[i][k], D3DXPT_FLOAT);
     }
 }
 
@@ -868,21 +884,20 @@ static void set_matrix_transpose(struct d3dx_parameter *param, const D3DXMATRIX 
         for (k = 0; k < param->columns; ++k)
         {
             set_number((FLOAT *)dst_data + i * param->columns + k, param->type,
-                    &matrix->u.m[k][i], D3DXPT_FLOAT);
+                    &matrix->m[k][i], D3DXPT_FLOAT);
         }
     }
 }
 
 static HRESULT set_string(char **param_data, const char *string)
 {
-    heap_free(*param_data);
-    *param_data = heap_alloc(strlen(string) + 1);
+    free(*param_data);
+    *param_data = strdup(string);
     if (!*param_data)
     {
         ERR("Out of memory.\n");
         return E_OUTOFMEMORY;
     }
-    strcpy(*param_data, string);
     return D3D_OK;
 }
 
@@ -941,7 +956,7 @@ static HRESULT set_value(struct d3dx_parameter *param, const void *data, unsigne
     return D3D_OK;
 }
 
-static struct d3dx_parameter *get_parameter_element_by_name(struct d3dx_effect *effect,
+static struct d3dx_parameter *get_parameter_element_by_name(struct d3dx_parameters_store *store,
         struct d3dx_parameter *parameter, const char *name)
 {
     UINT element;
@@ -963,7 +978,7 @@ static struct d3dx_parameter *get_parameter_element_by_name(struct d3dx_effect *
         switch (*part++)
         {
             case '.':
-                return get_parameter_by_name(effect, temp_parameter, part);
+                return get_parameter_by_name(store, temp_parameter, part);
 
             case '\0':
                 TRACE("Returning parameter %p\n", temp_parameter);
@@ -1007,10 +1022,10 @@ static struct d3dx_parameter *get_annotation_by_name(struct d3dx_effect *effect,
             switch (*part++)
             {
                 case '.':
-                    return get_parameter_by_name(effect, temp_parameter, part);
+                    return get_parameter_by_name(&effect->params, temp_parameter, part);
 
                 case '[':
-                    return get_parameter_element_by_name(effect, temp_parameter, part);
+                    return get_parameter_element_by_name(&effect->params, temp_parameter, part);
 
                 default:
                     FIXME("Unhandled case \"%c\"\n", *--part);
@@ -1023,7 +1038,7 @@ static struct d3dx_parameter *get_annotation_by_name(struct d3dx_effect *effect,
     return NULL;
 }
 
-struct d3dx_parameter *get_parameter_by_name(struct d3dx_effect* effect,
+struct d3dx_parameter *get_parameter_by_name(struct d3dx_parameters_store *store,
         struct d3dx_parameter *parameter, const char *name)
 {
     struct d3dx_parameter *temp_parameter;
@@ -1034,13 +1049,13 @@ struct d3dx_parameter *get_parameter_by_name(struct d3dx_effect* effect,
     const char *part;
     char *full_name;
 
-    TRACE("effect %p, parameter %p, name %s.\n", effect, parameter, debugstr_a(name));
+    TRACE("store %p, parameter %p, name %s.\n", store, parameter, debugstr_a(name));
 
     if (!name || !*name) return NULL;
 
     if (!parameter)
     {
-        if ((entry = wine_rb_get(&effect->param_tree, name)))
+        if ((entry = wine_rb_get(&store->tree, name)))
             return WINE_RB_ENTRY_VALUE(entry, struct d3dx_parameter, rb_entry);
         return NULL;
     }
@@ -1050,26 +1065,26 @@ struct d3dx_parameter *get_parameter_by_name(struct d3dx_effect* effect,
         name_len = strlen(name);
         param_name_len = strlen(parameter->full_name);
         full_name_size = name_len + param_name_len + 2;
-        if (effect->full_name_tmp_size < full_name_size)
+        if (store->full_name_tmp_size < full_name_size)
         {
-            if (!(full_name = heap_realloc(effect->full_name_tmp, full_name_size)))
+            if (!(full_name = realloc(store->full_name_tmp, full_name_size)))
             {
                 ERR("Out of memory.\n");
                 return NULL;
             }
-            effect->full_name_tmp = full_name;
-            effect->full_name_tmp_size = full_name_size;
+            store->full_name_tmp = full_name;
+            store->full_name_tmp_size = full_name_size;
         }
         else
         {
-            full_name = effect->full_name_tmp;
+            full_name = store->full_name_tmp;
         }
         memcpy(full_name, parameter->full_name, param_name_len);
         full_name[param_name_len] = '.';
         memcpy(full_name + param_name_len + 1, name, name_len);
         full_name[param_name_len + 1 + name_len] = 0;
 
-        if ((entry = wine_rb_get(&effect->param_tree, full_name)))
+        if ((entry = wine_rb_get(&store->tree, full_name)))
             return WINE_RB_ENTRY_VALUE(entry, struct d3dx_parameter, rb_entry);
         return NULL;
     }
@@ -1095,10 +1110,10 @@ struct d3dx_parameter *get_parameter_by_name(struct d3dx_effect* effect,
             switch (*part++)
             {
                 case '.':
-                    return get_parameter_by_name(effect, temp_parameter, part);
+                    return get_parameter_by_name(store, temp_parameter, part);
 
                 case '[':
-                    return get_parameter_element_by_name(effect, temp_parameter, part);
+                    return get_parameter_element_by_name(store, temp_parameter, part);
 
                 default:
                     FIXME("Unhandled case \"%c\"\n", *--part);
@@ -1293,11 +1308,7 @@ static void *record_parameter(struct d3dx_effect *effect, struct d3dx_parameter 
         BYTE *new_alloc;
 
         alloc_size = max(block->size * 2, max(new_size, INITIAL_PARAM_BLOCK_SIZE));
-        if (block->size)
-            new_alloc = heap_realloc(block->buffer, alloc_size);
-        else
-            new_alloc = heap_alloc(alloc_size);
-
+        new_alloc = realloc(block->buffer, alloc_size);
         if (!new_alloc)
         {
             ERR("Out of memory.\n");
@@ -1317,10 +1328,15 @@ static void *record_parameter(struct d3dx_effect *effect, struct d3dx_parameter 
 
 static void set_dirty(struct d3dx_parameter *param)
 {
-    struct d3dx_shared_data *shared_data;
     struct d3dx_top_level_parameter *top_param = param->top_level_param;
-    ULONG64 new_update_version = next_update_version(top_param->version_counter);
+    struct d3dx_shared_data *shared_data;
+    ULONG64 new_update_version;
 
+    /* This is true for annotations. */
+    if (!top_param)
+        return;
+
+    new_update_version = next_update_version(top_param->version_counter);
     if ((shared_data = top_param->shared_data))
         shared_data->update_version = new_update_version;
     else
@@ -1493,7 +1509,7 @@ static HRESULT d3dx_set_shader_const_state(struct d3dx_effect *effect, enum SHAD
         if (element_count > 1)
         {
             WARN("Setting %u elements.\n", element_count);
-            buffer = HeapAlloc(GetProcessHeap(), 0, const_tbl[op].elem_size * element_count);
+            buffer = calloc(element_count, const_tbl[op].elem_size);
             if (!buffer)
             {
                 ERR("Out of memory.\n");
@@ -1508,8 +1524,6 @@ static HRESULT d3dx_set_shader_const_state(struct d3dx_effect *effect, enum SHAD
         }
         param_data_size = min(param->bytes, const_tbl[op].elem_size);
         memcpy(buffer, value_ptr, param_data_size);
-        memset((unsigned char *)buffer + param_data_size, 0,
-                const_tbl[op].elem_size * element_count - param_data_size);
     }
 
     switch (op)
@@ -1538,7 +1552,7 @@ static HRESULT d3dx_set_shader_const_state(struct d3dx_effect *effect, enum SHAD
     }
 
     if (is_heap_buffer)
-        HeapFree(GetProcessHeap(), 0, buffer);
+        free(buffer);
 
     return ret;
 }
@@ -1625,11 +1639,11 @@ static HRESULT d3dx9_apply_state(struct d3dx_effect *effect, struct d3dx_pass *p
     switch (state_table[state->operation].class)
     {
         case SC_RENDERSTATE:
-            TRACE("%s, operation %u, value %u.\n", state_table[state->operation].name,
+            TRACE("%s, operation %u, value %lu.\n", state_table[state->operation].name,
                     state_table[state->operation].op, *(DWORD *)param_value);
             return SET_D3D_STATE(effect, SetRenderState, state_table[state->operation].op, *(DWORD *)param_value);
         case SC_FVF:
-            TRACE("%s, value %#x.\n", state_table[state->operation].name, *(DWORD *)param_value);
+            TRACE("%s, value %#lx.\n", state_table[state->operation].name, *(DWORD *)param_value);
             return SET_D3D_STATE(effect, SetFVF, *(DWORD *)param_value);
         case SC_TEXTURE:
         {
@@ -1641,7 +1655,7 @@ static HRESULT d3dx9_apply_state(struct d3dx_effect *effect, struct d3dx_pass *p
             return SET_D3D_STATE(effect, SetTexture, unit, *(IDirect3DBaseTexture9 **)param_value);
         }
         case SC_TEXTURESTAGE:
-            TRACE("%s, stage %u, value %u.\n", state_table[state->operation].name, state->index, *(DWORD *)param_value);
+            TRACE("%s, stage %u, value %lu.\n", state_table[state->operation].name, state->index, *(DWORD *)param_value);
             return SET_D3D_STATE(effect, SetTextureStageState, state->index,
                         state_table[state->operation].op, *(DWORD *)param_value);
         case SC_SETSAMPLER:
@@ -1666,7 +1680,7 @@ static HRESULT d3dx9_apply_state(struct d3dx_effect *effect, struct d3dx_pass *p
             UINT sampler;
 
             sampler = parent_index == ~0u ? state->index : parent_index;
-            TRACE("%s, sampler %u, value %u.\n", state_table[state->operation].name, sampler, *(DWORD *)param_value);
+            TRACE("%s, sampler %u, value %lu.\n", state_table[state->operation].name, sampler, *(DWORD *)param_value);
             return SET_D3D_STATE(effect, SetSamplerState, sampler, state_table[state->operation].op,
                     *(DWORD *)param_value);
         }
@@ -1675,7 +1689,7 @@ static HRESULT d3dx9_apply_state(struct d3dx_effect *effect, struct d3dx_pass *p
             if ((update_all || param_dirty)
                     && FAILED(hr = SET_D3D_STATE(effect, SetVertexShader,
                     *(IDirect3DVertexShader9 **)param_value)))
-                ERR("Could not set vertex shader, hr %#x.\n", hr);
+                ERR("Could not set vertex shader, hr %#lx.\n", hr);
             else if (*(IDirect3DVertexShader9 **)param_value)
                 hr = d3dx_set_shader_constants(effect, pass, param, TRUE, update_all || param_dirty);
             return hr;
@@ -1684,7 +1698,7 @@ static HRESULT d3dx9_apply_state(struct d3dx_effect *effect, struct d3dx_pass *p
             if ((update_all || param_dirty)
                     && FAILED(hr = SET_D3D_STATE(effect, SetPixelShader,
                     *(IDirect3DPixelShader9 **)param_value)))
-                ERR("Could not set pixel shader, hr %#x.\n", hr);
+                ERR("Could not set pixel shader, hr %#lx.\n", hr);
             else if (*(IDirect3DPixelShader9 **)param_value)
                 hr = d3dx_set_shader_constants(effect, pass, param, FALSE, update_all || param_dirty);
             return hr;
@@ -1742,7 +1756,7 @@ static HRESULT d3dx9_apply_pass_states(struct d3dx_effect *effect, struct d3dx_p
     {
         if (FAILED(hr = d3dx9_apply_state(effect, pass, &pass->states[i], ~0u, update_all)))
         {
-            WARN("Error applying state, hr %#x.\n", hr);
+            WARN("Error applying state, hr %#lx.\n", hr);
             ret = hr;
         }
     }
@@ -1754,7 +1768,7 @@ static HRESULT d3dx9_apply_pass_states(struct d3dx_effect *effect, struct d3dx_p
             if ((effect->light_updated & (1u << i))
                     && FAILED(hr = SET_D3D_STATE(effect, SetLight, i, &effect->current_light[i])))
             {
-                WARN("Error setting light, hr %#x.\n", hr);
+                WARN("Error setting light, hr %#lx.\n", hr);
                 ret = hr;
             }
         }
@@ -1764,7 +1778,7 @@ static HRESULT d3dx9_apply_pass_states(struct d3dx_effect *effect, struct d3dx_p
     if (effect->material_updated
             && FAILED(hr = SET_D3D_STATE(effect, SetMaterial, &effect->current_material)))
     {
-        WARN("Error setting material, hr %#x.\n", hr);
+        WARN("Error setting material, hr %#lx.\n", hr);
         ret = hr;
     }
     effect->material_updated = FALSE;
@@ -1840,24 +1854,16 @@ static HRESULT d3dx_pool_sync_shared_parameter(struct d3dx_effect_pool *pool, st
             if (!pool->size)
             {
                 new_size = INITIAL_POOL_SIZE;
-                new_alloc = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                        sizeof(*pool->shared_data) * new_size);
+                new_alloc = calloc(new_size, sizeof(*pool->shared_data));
                 if (!new_alloc)
-                {
-                    ERR("Out of memory.\n");
-                    return E_OUTOFMEMORY;
-                }
+                    goto oom;
             }
             else
             {
                 new_size = pool->size * 2;
-                new_alloc = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, pool->shared_data,
-                        sizeof(*pool->shared_data) * new_size);
+                new_alloc = _recalloc(pool->shared_data, new_size, sizeof(*pool->shared_data));
                 if (!new_alloc)
-                {
-                    ERR("Out of memory.\n");
-                    return E_OUTOFMEMORY;
-                }
+                    goto oom;
                 if (new_alloc != pool->shared_data)
                 {
                     unsigned int j, k;
@@ -1879,19 +1885,13 @@ static HRESULT d3dx_pool_sync_shared_parameter(struct d3dx_effect_pool *pool, st
     new_count = ++pool->shared_data[i].count;
     if (new_count >= pool->shared_data[i].size)
     {
-        if (!pool->shared_data[i].size)
-        {
-            new_size = INITIAL_SHARED_DATA_SIZE;
-            pool->shared_data[i].parameters = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                    sizeof(*pool->shared_data[i].parameters) * INITIAL_SHARED_DATA_SIZE);
-        }
-        else
-        {
-            new_size = pool->shared_data[i].size * 2;
-            pool->shared_data[i].parameters = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                    pool->shared_data[i].parameters,
-                    sizeof(*pool->shared_data[i].parameters) * new_size);
-        }
+        struct d3dx_top_level_parameter **new_alloc;
+
+        new_size = pool->shared_data[i].size ? pool->shared_data[i].size * 2 : INITIAL_SHARED_DATA_SIZE;
+        new_alloc = _recalloc(pool->shared_data[i].parameters, new_size, sizeof(*pool->shared_data[i].parameters));
+        if (!new_alloc)
+            goto oom;
+        pool->shared_data[i].parameters = new_alloc;
         pool->shared_data[i].size = new_size;
     }
 
@@ -1902,6 +1902,10 @@ static HRESULT d3dx_pool_sync_shared_parameter(struct d3dx_effect_pool *pool, st
             new_count);
 
     return D3D_OK;
+
+oom:
+    ERR("Out of memory.\n");
+    return E_OUTOFMEMORY;
 }
 
 static BOOL param_zero_data_func(void *dummy, struct d3dx_parameter *param)
@@ -1938,7 +1942,7 @@ static void d3dx_pool_release_shared_parameter(struct d3dx_top_level_parameter *
     }
     else
     {
-        HeapFree(GetProcessHeap(), 0, param->shared_data->parameters);
+        free(param->shared_data->parameters);
         /* Zeroing table size is required as the entry in pool parameters table can be reused. */
         param->shared_data->size = 0;
         param->shared_data = NULL;
@@ -1977,11 +1981,12 @@ static HRESULT WINAPI d3dx_effect_QueryInterface(ID3DXEffect *iface, REFIID riid
 
 static ULONG WINAPI d3dx_effect_AddRef(ID3DXEffect *iface)
 {
-    struct d3dx_effect *This = impl_from_ID3DXEffect(iface);
+    struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    ULONG refcount = InterlockedIncrement(&effect->ref);
 
-    TRACE("(%p)->(): AddRef from %u\n", This, This->ref);
+    TRACE("%p increasing refcount to %lu.\n", effect, refcount);
 
-    return InterlockedIncrement(&This->ref);
+    return refcount;
 }
 
 static ULONG WINAPI d3dx_effect_Release(ID3DXEffect *iface)
@@ -1989,7 +1994,7 @@ static ULONG WINAPI d3dx_effect_Release(ID3DXEffect *iface)
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
     ULONG refcount = InterlockedDecrement(&effect->ref);
 
-    TRACE("%p decreasing refcount to %u.\n", effect, refcount);
+    TRACE("%p decreasing refcount to %lu.\n", effect, refcount);
 
     if (!refcount)
         d3dx_effect_cleanup(effect);
@@ -2002,7 +2007,7 @@ static HRESULT WINAPI d3dx_effect_GetDesc(ID3DXEffect *iface, D3DXEFFECT_DESC *d
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
 
-    FIXME("iface %p, desc %p partial stub.\n", iface, desc);
+    TRACE("iface %p, desc %p.\n", iface, desc);
 
     if (!desc)
     {
@@ -2010,10 +2015,9 @@ static HRESULT WINAPI d3dx_effect_GetDesc(ID3DXEffect *iface, D3DXEFFECT_DESC *d
         return D3DERR_INVALIDCALL;
     }
 
-    /* TODO: add creator and function count. */
-    desc->Creator = NULL;
+    desc->Creator = "D3DX Effect Compiler";
     desc->Functions = 0;
-    desc->Parameters = effect->parameter_count;
+    desc->Parameters = effect->params.count;
     desc->Techniques = effect->technique_count;
 
     return D3D_OK;
@@ -2138,10 +2142,10 @@ static D3DXHANDLE WINAPI d3dx_effect_GetParameter(ID3DXEffect *iface, D3DXHANDLE
 
     if (!parameter)
     {
-        if (index < effect->parameter_count)
+        if (index < effect->params.count)
         {
-            TRACE("Returning parameter %p.\n", &effect->parameters[index]);
-            return get_parameter_handle(&effect->parameters[index].param);
+            TRACE("Returning parameter %p.\n", &effect->params.parameters[index]);
+            return get_parameter_handle(&effect->params.parameters[index].param);
         }
     }
     else
@@ -2174,7 +2178,7 @@ static D3DXHANDLE WINAPI d3dx_effect_GetParameterByName(ID3DXEffect *iface, D3DX
         return handle;
     }
 
-    handle = get_parameter_handle(get_parameter_by_name(effect, param, name));
+    handle = get_parameter_handle(get_parameter_by_name(&effect->params, param, name));
     TRACE("Returning parameter %p.\n", handle);
 
     return handle;
@@ -2192,9 +2196,9 @@ static D3DXHANDLE WINAPI d3dx_effect_GetParameterBySemantic(ID3DXEffect *iface, 
 
     if (!parameter)
     {
-        for (i = 0; i < effect->parameter_count; ++i)
+        for (i = 0; i < effect->params.count; ++i)
         {
-            temp_param = &effect->parameters[i].param;
+            temp_param = &effect->params.parameters[i].param;
 
             if (!temp_param->semantic)
             {
@@ -2251,10 +2255,10 @@ static D3DXHANDLE WINAPI d3dx_effect_GetParameterElement(ID3DXEffect *iface, D3D
 
     if (!param)
     {
-        if (index < effect->parameter_count)
+        if (index < effect->params.count)
         {
-            TRACE("Returning parameter %p.\n", &effect->parameters[index]);
-            return get_parameter_handle(&effect->parameters[index].param);
+            TRACE("Returning parameter %p.\n", &effect->params.parameters[index]);
+            return get_parameter_handle(&effect->params.parameters[index].param);
         }
     }
     else
@@ -3777,7 +3781,7 @@ static HRESULT WINAPI d3dx_effect_ValidateTechnique(ID3DXEffect *iface, D3DXHAND
         }
     }
 done:
-    TRACE("Returning %#x.\n", ret);
+    TRACE("Returning %#lx.\n", ret);
     return ret;
 }
 
@@ -3820,7 +3824,7 @@ static HRESULT WINAPI d3dx_effect_FindNextValidTechnique(ID3DXEffect *iface, D3D
         }
     }
 
-    *next_technique = get_technique_handle(&effect->techniques[0]);
+    *next_technique = NULL;
     return S_FALSE;
 }
 
@@ -3951,12 +3955,12 @@ static HRESULT WINAPI d3dx_effect_Begin(ID3DXEffect *iface, UINT *passes, DWORD 
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
     struct d3dx_technique *technique = effect->active_technique;
 
-    TRACE("iface %p, passes %p, flags %#x.\n", iface, passes, flags);
+    TRACE("iface %p, passes %p, flags %#lx.\n", iface, passes, flags);
 
     if (technique)
     {
         if (flags & ~(D3DXFX_DONOTSAVESTATE | D3DXFX_DONOTSAVESAMPLERSTATE | D3DXFX_DONOTSAVESHADERSTATE))
-            WARN("Invalid flags (%#x) specified.\n", flags);
+            WARN("Invalid flags %#lx specified.\n", flags);
 
         if (flags & D3DXFX_DONOTSAVESTATE)
         {
@@ -3974,15 +3978,15 @@ static HRESULT WINAPI d3dx_effect_Begin(ID3DXEffect *iface, UINT *passes, DWORD 
                 manager = effect->manager;
                 effect->manager = NULL;
                 if (FAILED(hr = IDirect3DDevice9_BeginStateBlock(effect->device)))
-                    ERR("BeginStateBlock failed, hr %#x.\n", hr);
+                    ERR("BeginStateBlock failed, hr %#lx.\n", hr);
                 for (i = 0; i < technique->pass_count; i++)
                     d3dx9_apply_pass_states(effect, &technique->passes[i], TRUE);
                 if (FAILED(hr = IDirect3DDevice9_EndStateBlock(effect->device, &technique->saved_state)))
-                    ERR("EndStateBlock failed, hr %#x.\n", hr);
+                    ERR("EndStateBlock failed, hr %#lx.\n", hr);
                 effect->manager = manager;
             }
             if (FAILED(hr = IDirect3DStateBlock9_Capture(technique->saved_state)))
-                ERR("StateBlock Capture failed, hr %#x.\n", hr);
+                ERR("StateBlock Capture failed, hr %#lx.\n", hr);
         }
 
         if (passes)
@@ -4004,6 +4008,12 @@ static HRESULT WINAPI d3dx_effect_BeginPass(ID3DXEffect *iface, UINT pass)
     struct d3dx_technique *technique = effect->active_technique;
 
     TRACE("iface %p, pass %u\n", effect, pass);
+
+    if (!effect->started)
+    {
+        WARN("Effect is not started, returning D3DERR_INVALIDCALL.\n");
+        return D3DERR_INVALIDCALL;
+    }
 
     if (technique && pass < technique->pass_count && !effect->active_pass)
     {
@@ -4074,7 +4084,7 @@ static HRESULT WINAPI d3dx_effect_End(ID3DXEffect *iface)
         if (technique && technique->saved_state)
         {
             if (FAILED(hr = IDirect3DStateBlock9_Apply(technique->saved_state)))
-                ERR("State block apply failed, hr %#x.\n", hr);
+                ERR("State block apply failed, hr %#lx.\n", hr);
         }
         else
             ERR("No saved state.\n");
@@ -4140,7 +4150,7 @@ static BOOL param_on_lost_device(void *data, struct d3dx_parameter *param)
                 cube_texture = *(IDirect3DCubeTexture9 **)param->data;
                 if (!cube_texture)
                     return FALSE;
-                IDirect3DTexture9_GetLevelDesc(cube_texture, 0, &surface_desc);
+                IDirect3DCubeTexture9_GetLevelDesc(cube_texture, 0, &surface_desc);
                 if (surface_desc.Pool != D3DPOOL_DEFAULT)
                     return FALSE;
                 break;
@@ -4160,8 +4170,8 @@ static HRESULT WINAPI d3dx_effect_OnLostDevice(ID3DXEffect *iface)
 
     TRACE("iface %p.\n", iface);
 
-    for (i = 0; i < effect->parameter_count; ++i)
-        walk_parameter_tree(&effect->parameters[i].param, param_on_lost_device, NULL);
+    for (i = 0; i < effect->params.count; ++i)
+        walk_parameter_tree(&effect->params.parameters[i].param, param_on_lost_device, NULL);
 
     return D3D_OK;
 }
@@ -4219,7 +4229,7 @@ static HRESULT WINAPI d3dx_effect_BeginParameterBlock(ID3DXEffect *iface)
         return D3DERR_INVALIDCALL;
     }
 
-    effect->current_parameter_block = heap_alloc_zero(sizeof(*effect->current_parameter_block));
+    effect->current_parameter_block = calloc(1, sizeof(*effect->current_parameter_block));
     memcpy(effect->current_parameter_block->magic_string, parameter_block_magic_string,
             sizeof(parameter_block_magic_string));
     effect->current_parameter_block->effect = effect;
@@ -4231,6 +4241,7 @@ static D3DXHANDLE WINAPI d3dx_effect_EndParameterBlock(ID3DXEffect *iface)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
     struct d3dx_parameter_block *ret;
+    BYTE *new_buffer;
 
     TRACE("iface %p.\n", iface);
 
@@ -4241,7 +4252,9 @@ static D3DXHANDLE WINAPI d3dx_effect_EndParameterBlock(ID3DXEffect *iface)
     }
     ret = effect->current_parameter_block;
 
-    ret->buffer = heap_realloc(ret->buffer, ret->offset);
+    new_buffer = realloc(ret->buffer, ret->offset);
+    if (new_buffer)
+        ret->buffer = new_buffer;
     ret->size = ret->offset;
 
     effect->current_parameter_block = NULL;
@@ -4297,25 +4310,121 @@ static HRESULT WINAPI d3dx_effect_DeleteParameterBlock(ID3DXEffect *iface, D3DXH
 }
 #endif
 
-static HRESULT WINAPI d3dx_effect_CloneEffect(ID3DXEffect *iface, IDirect3DDevice9 *device,
-        ID3DXEffect **new_effect)
+static bool copy_parameter(struct d3dx_effect *dst_effect, const struct d3dx_effect *src_effect,
+        struct d3dx_parameter *dst, const struct d3dx_parameter *src)
 {
-    struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    IUnknown *iface;
 
-    FIXME("iface %p, device %p, new_effect %p stub.\n", effect, device, new_effect);
+    if ((src->flags & PARAMETER_FLAG_SHARED) && dst_effect->pool)
+        return true;
 
-    if (!new_effect)
+    switch (src->type)
+    {
+        case D3DXPT_VOID:
+        case D3DXPT_BOOL:
+        case D3DXPT_INT:
+        case D3DXPT_FLOAT:
+            memcpy(dst->data, src->data, src->bytes);
+            break;
+
+        case D3DXPT_STRING:
+            free(*(char **)dst->data);
+            if (!(*(char **)dst->data = strdup(*(char **)src->data)))
+                return false;
+            break;
+
+        case D3DXPT_TEXTURE:
+        case D3DXPT_TEXTURE1D:
+        case D3DXPT_TEXTURE2D:
+        case D3DXPT_TEXTURE3D:
+        case D3DXPT_TEXTURECUBE:
+        case D3DXPT_PIXELSHADER:
+        case D3DXPT_VERTEXSHADER:
+            iface = *(IUnknown **)src->data;
+            if (src_effect->device == dst_effect->device && iface)
+            {
+                if (*(IUnknown **)dst->data)
+                    IUnknown_Release(*(IUnknown **)dst->data);
+                IUnknown_AddRef(iface);
+                *(IUnknown **)dst->data = iface;
+            }
+            break;
+
+        case D3DXPT_SAMPLER:
+        case D3DXPT_SAMPLER1D:
+        case D3DXPT_SAMPLER2D:
+        case D3DXPT_SAMPLER3D:
+        case D3DXPT_SAMPLERCUBE:
+            /* Nothing to do; these parameters are not mutable and cannot be
+             * retrieved using API calls. */
+            break;
+
+        default:
+            FIXME("Unhandled parameter type %#x.\n", src->type);
+    }
+
+    return true;
+}
+
+static HRESULT WINAPI d3dx_effect_CloneEffect(ID3DXEffect *iface, IDirect3DDevice9 *device, ID3DXEffect **out)
+{
+    struct d3dx_effect *src = impl_from_ID3DXEffect(iface);
+    struct d3dx_effect *dst;
+    unsigned int i, j, k;
+    HRESULT hr;
+
+    TRACE("iface %p, device %p, out %p.\n", iface, device, out);
+
+    if (!out)
         return D3DERR_INVALIDCALL;
 
-    if (effect->flags & D3DXFX_NOT_CLONEABLE)
+    if (src->flags & D3DXFX_NOT_CLONEABLE)
         return E_FAIL;
 
     if (!device)
         return D3DERR_INVALIDCALL;
 
-    iface->lpVtbl->AddRef(iface);
-    *new_effect = iface;
-    return S_OK;
+    if (!(dst = calloc(1, sizeof(*dst))))
+        return E_OUTOFMEMORY;
+
+    if (FAILED(hr = d3dx9_effect_init_from_binary(dst, device, src->source, src->source_size,
+            src->flags, &src->pool->ID3DXEffectPool_iface, src->skip_constants_string)))
+    {
+        free(dst);
+        return hr;
+    }
+
+    for (i = 0; i < src->params.count; ++i)
+    {
+        const struct d3dx_top_level_parameter *src_param = &src->params.parameters[i];
+        struct d3dx_top_level_parameter *dst_param = &dst->params.parameters[i];
+
+        copy_parameter(dst, src, &dst_param->param, &src_param->param);
+        for (j = 0; j < src_param->annotation_count; ++j)
+            copy_parameter(dst, src, &dst_param->annotations[j], &src_param->annotations[j]);
+    }
+
+    for (i = 0; i < src->technique_count; ++i)
+    {
+        const struct d3dx_technique *src_technique = &src->techniques[i];
+        struct d3dx_technique *dst_technique = &dst->techniques[i];
+
+        for (j = 0; j < src_technique->annotation_count; ++j)
+            copy_parameter(dst, src, &dst_technique->annotations[j], &src_technique->annotations[j]);
+
+        for (j = 0; j < src_technique->pass_count; ++j)
+        {
+            const struct d3dx_pass *src_pass = &src_technique->passes[j];
+            struct d3dx_pass *dst_pass = &dst_technique->passes[j];
+
+            for (k = 0; k < src_pass->annotation_count; ++k)
+                copy_parameter(dst, src, &dst_pass->annotations[k], &src_pass->annotations[k]);
+        }
+    }
+
+    *out = &dst->ID3DXEffect_iface;
+    TRACE("Created effect %p.\n", dst);
+    return D3D_OK;
 }
 
 #if D3DX_SDK_VERSION >= 27
@@ -4448,7 +4557,7 @@ static ULONG WINAPI ID3DXEffectCompilerImpl_AddRef(ID3DXEffectCompiler *iface)
     struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
     ULONG refcount = InterlockedIncrement(&compiler->ref);
 
-    TRACE("%p increasing refcount to %u.\n", iface, refcount);
+    TRACE("%p increasing refcount to %lu.\n", iface, refcount);
 
     return refcount;
 }
@@ -4458,11 +4567,11 @@ static ULONG WINAPI ID3DXEffectCompilerImpl_Release(ID3DXEffectCompiler *iface)
     struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
     ULONG refcount = InterlockedDecrement(&compiler->ref);
 
-    TRACE("%p decreasing refcount to %u.\n", iface, refcount);
+    TRACE("%p decreasing refcount to %lu.\n", iface, refcount);
 
     if (!refcount)
     {
-        heap_free(compiler);
+        free(compiler);
     }
 
     return refcount;
@@ -4907,7 +5016,7 @@ static HRESULT WINAPI ID3DXEffectCompilerImpl_GetLiteral(ID3DXEffectCompiler *if
 static HRESULT WINAPI ID3DXEffectCompilerImpl_CompileEffect(ID3DXEffectCompiler *iface, DWORD flags,
         ID3DXBuffer **effect, ID3DXBuffer **error_msgs)
 {
-    FIXME("iface %p, flags %#x, effect %p, error_msgs %p stub!\n", iface, flags, effect, error_msgs);
+    FIXME("iface %p, flags %#lx, effect %p, error_msgs %p stub!\n", iface, flags, effect, error_msgs);
 
     return E_NOTIMPL;
 }
@@ -4916,7 +5025,7 @@ static HRESULT WINAPI ID3DXEffectCompilerImpl_CompileShader(ID3DXEffectCompiler 
         const char *target, DWORD flags, ID3DXBuffer **shader, ID3DXBuffer **error_msgs,
         ID3DXConstantTable **constant_table)
 {
-    FIXME("iface %p, function %p, target %s, flags %#x, shader %p, error_msgs %p, constant_table %p stub!\n",
+    FIXME("iface %p, function %p, target %s, flags %#lx, shader %p, error_msgs %p, constant_table %p stub!\n",
             iface, function, debugstr_a(target), flags, shader, error_msgs, constant_table);
 
     return E_NOTIMPL;
@@ -4996,10 +5105,10 @@ static HRESULT d3dx_parse_sampler(struct d3dx_effect *effect, struct d3dx_sample
     HRESULT hr;
     UINT i;
 
-    read_dword(ptr, &sampler->state_count);
+    sampler->state_count = read_u32(ptr);
     TRACE("Count: %u\n", sampler->state_count);
 
-    sampler->states = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*sampler->states) * sampler->state_count);
+    sampler->states = calloc(sampler->state_count, sizeof(*sampler->states));
     if (!sampler->states)
     {
         ERR("Out of memory\n");
@@ -5024,7 +5133,7 @@ err_out:
     {
         free_state(&sampler->states[i]);
     }
-    HeapFree(GetProcessHeap(), 0, sampler->states);
+    free(sampler->states);
     sampler->states = NULL;
 
     return hr;
@@ -5096,7 +5205,7 @@ static HRESULT d3dx_parse_value(struct d3dx_effect *effect, struct d3dx_paramete
                 case D3DXPT_TEXTURECUBE:
                 case D3DXPT_PIXELSHADER:
                 case D3DXPT_VERTEXSHADER:
-                    read_dword(ptr, &param->object_id);
+                    param->object_id = read_u32(ptr);
                     TRACE("Id: %u\n", param->object_id);
                     objects[param->object_id].param = param;
                     param->data = value;
@@ -5110,14 +5219,14 @@ static HRESULT d3dx_parse_value(struct d3dx_effect *effect, struct d3dx_paramete
                 {
                     struct d3dx_sampler *sampler;
 
-                    sampler = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*sampler));
+                    sampler = calloc(1, sizeof(*sampler));
                     if (!sampler)
                         return E_OUTOFMEMORY;
 
                     hr = d3dx_parse_sampler(effect, sampler, data, ptr, objects);
                     if (hr != D3D_OK)
                     {
-                        HeapFree(GetProcessHeap(), 0, sampler);
+                        free(sampler);
                         WARN("Failed to parse sampler\n");
                         return hr;
                     }
@@ -5151,7 +5260,7 @@ static HRESULT d3dx_parse_init_value(struct d3dx_effect *effect, struct d3dx_par
 
     if (size)
     {
-        value = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+        value = calloc(1, size);
         if (!value)
         {
             ERR("Failed to allocate data memory.\n");
@@ -5182,7 +5291,7 @@ static HRESULT d3dx_parse_init_value(struct d3dx_effect *effect, struct d3dx_par
     if (hr != D3D_OK)
     {
         WARN("Failed to parse value\n");
-        HeapFree(GetProcessHeap(), 0, value);
+        free(value);
         return hr;
     }
 
@@ -5191,17 +5300,17 @@ static HRESULT d3dx_parse_init_value(struct d3dx_effect *effect, struct d3dx_par
 
 static HRESULT d3dx9_parse_name(char **name, const char *ptr)
 {
-    DWORD size;
+    unsigned int size;
 
-    read_dword(&ptr, &size);
-    TRACE("Name size: %#x\n", size);
+    size = read_u32(&ptr);
+    TRACE("Name size: %#x.\n", size);
 
     if (!size)
     {
         return D3D_OK;
     }
 
-    *name = HeapAlloc(GetProcessHeap(), 0, size);
+    *name = malloc(size);
     if (!*name)
     {
         ERR("Failed to allocate name memory.\n");
@@ -5225,17 +5334,17 @@ static HRESULT d3dx9_copy_data(struct d3dx_effect *effect, unsigned int object_i
         else
             TRACE("Overwriting object id 0.\n");
 
-        HeapFree(GetProcessHeap(), 0, object->data);
+        free(object->data);
         object->data = NULL;
     }
 
-    read_dword(ptr, &object->size);
+    object->size = read_u32(ptr);
     TRACE("Data size: %#x.\n", object->size);
 
     if (!object->size)
         return D3D_OK;
 
-    object->data = HeapAlloc(GetProcessHeap(), 0, object->size);
+    object->data = malloc(object->size);
     if (!object->data)
     {
         ERR("Failed to allocate object memory.\n");
@@ -5253,14 +5362,6 @@ static HRESULT d3dx9_copy_data(struct d3dx_effect *effect, unsigned int object_i
 static void param_set_magic_number(struct d3dx_parameter *param)
 {
     memcpy(param->magic_string, parameter_magic_string, sizeof(parameter_magic_string));
-}
-
-static int param_rb_compare(const void *key, const struct wine_rb_entry *entry)
-{
-    const char *name = key;
-    struct d3dx_parameter *param = WINE_RB_ENTRY_VALUE(entry, struct d3dx_parameter, rb_entry);
-
-    return strcmp(name, param->full_name);
 }
 
 static void add_param_to_tree(struct d3dx_effect *effect, struct d3dx_parameter *param,
@@ -5294,7 +5395,7 @@ static void add_param_to_tree(struct d3dx_effect *effect, struct d3dx_parameter 
         }
         len = parent_name_len + part_str_len + name_len + 1;
 
-        if (!(param->full_name = heap_alloc(len)))
+        if (!(param->full_name = malloc(len)))
         {
             ERR("Out of memory.\n");
             return;
@@ -5307,18 +5408,14 @@ static void add_param_to_tree(struct d3dx_effect *effect, struct d3dx_parameter 
     }
     else
     {
-        unsigned int len = strlen(param->name) + 1;
-
-        if (!(param->full_name = heap_alloc(len)))
+        if (!(param->full_name = strdup(param->name)))
         {
             ERR("Out of memory.\n");
             return;
         }
-
-        memcpy(param->full_name, param->name, len);
     }
     TRACE("Full name is %s.\n", param->full_name);
-    wine_rb_put(&effect->param_tree, param->full_name, &param->rb_entry);
+    wine_rb_put(&effect->params.tree, param->full_name, &param->rb_entry);
 
     if (is_top_level_parameter(param))
         for (i = 0; i < param->top_level_param->annotation_count; ++i)
@@ -5335,7 +5432,7 @@ static void add_param_to_tree(struct d3dx_effect *effect, struct d3dx_parameter 
 static HRESULT d3dx_parse_effect_typedef(struct d3dx_effect *effect, struct d3dx_parameter *param,
 	const char *data, const char **ptr, struct d3dx_parameter *parent, UINT flags)
 {
-    DWORD offset;
+    uint32_t offset;
     HRESULT hr;
     UINT i;
 
@@ -5343,14 +5440,14 @@ static HRESULT d3dx_parse_effect_typedef(struct d3dx_effect *effect, struct d3dx
 
     if (!parent)
     {
-        read_dword(ptr, (DWORD *)&param->type);
-        TRACE("Type: %s\n", debug_d3dxparameter_type(param->type));
+        param->type = read_u32(ptr);
+        TRACE("Type: %s.\n", debug_d3dxparameter_type(param->type));
 
-        read_dword(ptr, (DWORD *)&param->class);
-        TRACE("Class: %s\n", debug_d3dxparameter_class(param->class));
+        param->class = read_u32(ptr);
+        TRACE("Class: %s.\n", debug_d3dxparameter_class(param->class));
 
-        read_dword(ptr, &offset);
-        TRACE("Type name offset: %#x\n", offset);
+        offset = read_u32(ptr);
+        TRACE("Type name offset: %#x.\n", offset);
         hr = d3dx9_parse_name(&param->name, data + offset);
         if (hr != D3D_OK)
         {
@@ -5358,8 +5455,8 @@ static HRESULT d3dx_parse_effect_typedef(struct d3dx_effect *effect, struct d3dx
             goto err_out;
         }
 
-        read_dword(ptr, &offset);
-        TRACE("Type semantic offset: %#x\n", offset);
+        offset = read_u32(ptr);
+        TRACE("Type semantic offset: %#x.\n", offset);
         hr = d3dx9_parse_name(&param->semantic, data + offset);
         if (hr != D3D_OK)
         {
@@ -5367,17 +5464,17 @@ static HRESULT d3dx_parse_effect_typedef(struct d3dx_effect *effect, struct d3dx
             goto err_out;
         }
 
-        read_dword(ptr, &param->element_count);
-        TRACE("Elements: %u\n", param->element_count);
+        param->element_count = read_u32(ptr);
+        TRACE("Elements: %u.\n", param->element_count);
 
         switch (param->class)
         {
             case D3DXPC_VECTOR:
-                read_dword(ptr, &param->columns);
-                TRACE("Columns: %u\n", param->columns);
+                param->columns = read_u32(ptr);
+                TRACE("Columns: %u.\n", param->columns);
 
-                read_dword(ptr, &param->rows);
-                TRACE("Rows: %u\n", param->rows);
+                param->rows = read_u32(ptr);
+                TRACE("Rows: %u.\n", param->rows);
 
                 /* sizeof(DWORD) * rows * columns */
                 param->bytes = 4 * param->rows * param->columns;
@@ -5386,19 +5483,19 @@ static HRESULT d3dx_parse_effect_typedef(struct d3dx_effect *effect, struct d3dx
             case D3DXPC_SCALAR:
             case D3DXPC_MATRIX_ROWS:
             case D3DXPC_MATRIX_COLUMNS:
-                read_dword(ptr, &param->rows);
-                TRACE("Rows: %u\n", param->rows);
+                param->rows = read_u32(ptr);
+                TRACE("Rows: %u.\n", param->rows);
 
-                read_dword(ptr, &param->columns);
-                TRACE("Columns: %u\n", param->columns);
+                param->columns = read_u32(ptr);
+                TRACE("Columns: %u.\n", param->columns);
 
                 /* sizeof(DWORD) * rows * columns */
                 param->bytes = 4 * param->rows * param->columns;
                 break;
 
             case D3DXPC_STRUCT:
-                read_dword(ptr, &param->member_count);
-                TRACE("Members: %u\n", param->member_count);
+                param->member_count = read_u32(ptr);
+                TRACE("Members: %u.\n", param->member_count);
                 break;
 
             case D3DXPC_OBJECT:
@@ -5424,13 +5521,13 @@ static HRESULT d3dx_parse_effect_typedef(struct d3dx_effect *effect, struct d3dx
                         break;
 
                     default:
-                        FIXME("Unhandled type %s\n", debug_d3dxparameter_type(param->type));
+                        FIXME("Unhandled type %s.\n", debug_d3dxparameter_type(param->type));
                         break;
                 }
                 break;
 
             default:
-                FIXME("Unhandled class %s\n", debug_d3dxparameter_class(param->class));
+                FIXME("Unhandled class %s.\n", debug_d3dxparameter_class(param->class));
                 break;
         }
     }
@@ -5453,7 +5550,7 @@ static HRESULT d3dx_parse_effect_typedef(struct d3dx_effect *effect, struct d3dx
         unsigned int param_bytes = 0;
         const char *save_ptr = *ptr;
 
-        param->members = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*param->members) * param->element_count);
+        param->members = calloc(param->element_count, sizeof(*param->members));
         if (!param->members)
         {
             ERR("Out of memory\n");
@@ -5480,7 +5577,7 @@ static HRESULT d3dx_parse_effect_typedef(struct d3dx_effect *effect, struct d3dx
     }
     else if (param->member_count)
     {
-        param->members = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*param->members) * param->member_count);
+        param->members = calloc(param->member_count, sizeof(*param->members));
         if (!param->members)
         {
             ERR("Out of memory\n");
@@ -5511,14 +5608,14 @@ err_out:
 
         for (i = 0; i < count; ++i)
             free_parameter(&param->members[i], param->element_count != 0, TRUE);
-        HeapFree(GetProcessHeap(), 0, param->members);
+        free(param->members);
         param->members = NULL;
     }
 
     if (!parent)
     {
-        HeapFree(GetProcessHeap(), 0, param->name);
-        HeapFree(GetProcessHeap(), 0, param->semantic);
+        free(param->name);
+        free(param->semantic);
     }
     param->name = NULL;
     param->semantic = NULL;
@@ -5529,28 +5626,28 @@ err_out:
 static HRESULT d3dx_parse_effect_annotation(struct d3dx_effect *effect, struct d3dx_parameter *anno,
         const char *data, const char **ptr, struct d3dx_object *objects)
 {
-    DWORD offset;
     const char *ptr2;
+    uint32_t offset;
     HRESULT hr;
 
     anno->flags = D3DX_PARAMETER_ANNOTATION;
 
-    read_dword(ptr, &offset);
-    TRACE("Typedef offset: %#x\n", offset);
+    offset = read_u32(ptr);
+    TRACE("Typedef offset: %#x.\n", offset);
     ptr2 = data + offset;
     hr = d3dx_parse_effect_typedef(effect, anno, data, &ptr2, NULL, D3DX_PARAMETER_ANNOTATION);
     if (hr != D3D_OK)
     {
-        WARN("Failed to parse type definition\n");
+        WARN("Failed to parse type definition.\n");
         return hr;
     }
 
-    read_dword(ptr, &offset);
-    TRACE("Value offset: %#x\n", offset);
+    offset = read_u32(ptr);
+    TRACE("Value offset: %#x.\n", offset);
     hr = d3dx_parse_init_value(effect, anno, data, data + offset, objects);
     if (hr != D3D_OK)
     {
-        WARN("Failed to parse value\n");
+        WARN("Failed to parse value.\n");
         return hr;
     }
 
@@ -5563,26 +5660,25 @@ static HRESULT d3dx_parse_state(struct d3dx_effect *effect, struct d3dx_state *s
     struct d3dx_parameter *param = &state->parameter;
     enum STATE_CLASS state_class;
     const char *ptr2;
+    uint32_t offset;
     void *new_data;
-    DWORD offset;
     HRESULT hr;
 
     state->type = ST_CONSTANT;
 
-    read_dword(ptr, &state->operation);
+    state->operation = read_u32(ptr);
     if (state->operation >= ARRAY_SIZE(state_table))
     {
         WARN("Unknown state operation %u.\n", state->operation);
         return D3DERR_INVALIDCALL;
     }
+    TRACE("Operation: %#x (%s).\n", state->operation, state_table[state->operation].name);
 
-    TRACE("Operation: %#x (%s)\n", state->operation, state_table[state->operation].name);
+    state->index = read_u32(ptr);
+    TRACE("Index: %#x.\n", state->index);
 
-    read_dword(ptr, &state->index);
-    TRACE("Index: %#x\n", state->index);
-
-    read_dword(ptr, &offset);
-    TRACE("Typedef offset: %#x\n", offset);
+    offset = read_u32(ptr);
+    TRACE("Typedef offset: %#x.\n", offset);
     ptr2 = data + offset;
     hr = d3dx_parse_effect_typedef(effect, param, data, &ptr2, NULL, 0);
     if (hr != D3D_OK)
@@ -5591,8 +5687,8 @@ static HRESULT d3dx_parse_state(struct d3dx_effect *effect, struct d3dx_state *s
         goto err_out;
     }
 
-    read_dword(ptr, &offset);
-    TRACE("Value offset: %#x\n", offset);
+    offset = read_u32(ptr);
+    TRACE("Value offset: %#x.\n", offset);
     hr = d3dx_parse_init_value(effect, param, data, data + offset, objects);
     if (hr != D3D_OK)
     {
@@ -5612,7 +5708,7 @@ static HRESULT d3dx_parse_state(struct d3dx_effect *effect, struct d3dx_state *s
             goto err_out;
         }
 
-        new_data = heap_realloc(param->data, sizeof(void *));
+        new_data = realloc(param->data, sizeof(void *));
         if (!new_data)
         {
             ERR("Out of memory.\n");
@@ -5636,22 +5732,22 @@ err_out:
 static HRESULT d3dx_parse_effect_parameter(struct d3dx_effect *effect, struct d3dx_top_level_parameter *param,
         const char *data, const char **ptr, struct d3dx_object *objects)
 {
-    DWORD offset;
-    HRESULT hr;
-    unsigned int i;
     const char *ptr2;
+    uint32_t offset;
+    unsigned int i;
+    HRESULT hr;
 
-    read_dword(ptr, &offset);
+    offset = read_u32(ptr);
     TRACE("Typedef offset: %#x.\n", offset);
     ptr2 = data + offset;
 
-    read_dword(ptr, &offset);
+    offset = read_u32(ptr);
     TRACE("Value offset: %#x.\n", offset);
 
-    read_dword(ptr, &param->param.flags);
+    param->param.flags = read_u32(ptr);
     TRACE("Flags: %#x.\n", param->param.flags);
 
-    read_dword(ptr, &param->annotation_count);
+    param->annotation_count = read_u32(ptr);
     TRACE("Annotation count: %u.\n", param->annotation_count);
 
     hr = d3dx_parse_effect_typedef(effect, &param->param, data, &ptr2, NULL, param->param.flags);
@@ -5670,8 +5766,7 @@ static HRESULT d3dx_parse_effect_parameter(struct d3dx_effect *effect, struct d3
 
     if (param->annotation_count)
     {
-        param->annotations = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                sizeof(*param->annotations) * param->annotation_count);
+        param->annotations = calloc(param->annotation_count, sizeof(*param->annotations));
         if (!param->annotations)
         {
             ERR("Out of memory.\n");
@@ -5699,7 +5794,7 @@ err_out:
     {
         for (i = 0; i < param->annotation_count; ++i)
             free_parameter(&param->annotations[i], FALSE, FALSE);
-        HeapFree(GetProcessHeap(), 0, param->annotations);
+        free(param->annotations);
         param->annotations = NULL;
     }
 
@@ -5709,31 +5804,30 @@ err_out:
 static HRESULT d3dx_parse_effect_pass(struct d3dx_effect *effect, struct d3dx_pass *pass,
         const char *data, const char **ptr, struct d3dx_object *objects)
 {
-    DWORD offset;
-    HRESULT hr;
-    unsigned int i;
     struct d3dx_state *states = NULL;
     char *name = NULL;
+    uint32_t offset;
+    unsigned int i;
+    HRESULT hr;
 
-    read_dword(ptr, &offset);
-    TRACE("Pass name offset: %#x\n", offset);
+    offset = read_u32(ptr);
+    TRACE("Pass name offset: %#x.\n", offset);
     hr = d3dx9_parse_name(&name, data + offset);
     if (hr != D3D_OK)
     {
-        WARN("Failed to parse name\n");
+        WARN("Failed to parse name.\n");
         goto err_out;
     }
 
-    read_dword(ptr, &pass->annotation_count);
-    TRACE("Annotation count: %u\n", pass->annotation_count);
+    pass->annotation_count = read_u32(ptr);
+    TRACE("Annotation count: %u.\n", pass->annotation_count);
 
-    read_dword(ptr, &pass->state_count);
-    TRACE("State count: %u\n", pass->state_count);
+    pass->state_count = read_u32(ptr);
+    TRACE("State count: %u.\n", pass->state_count);
 
     if (pass->annotation_count)
     {
-        pass->annotations = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                sizeof(*pass->annotations) * pass->annotation_count);
+        pass->annotations = calloc(pass->annotation_count, sizeof(*pass->annotations));
         if (!pass->annotations)
         {
             ERR("Out of memory\n");
@@ -5755,7 +5849,7 @@ static HRESULT d3dx_parse_effect_pass(struct d3dx_effect *effect, struct d3dx_pa
 
     if (pass->state_count)
     {
-        states = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*states) * pass->state_count);
+        states = calloc(pass->state_count, sizeof(*states));
         if (!states)
         {
             ERR("Out of memory\n");
@@ -5785,7 +5879,7 @@ err_out:
     {
         for (i = 0; i < pass->annotation_count; ++i)
             free_parameter(&pass->annotations[i], FALSE, FALSE);
-        HeapFree(GetProcessHeap(), 0, pass->annotations);
+        free(pass->annotations);
         pass->annotations = NULL;
     }
 
@@ -5795,10 +5889,10 @@ err_out:
         {
             free_state(&states[i]);
         }
-        HeapFree(GetProcessHeap(), 0, states);
+        free(states);
     }
 
-    HeapFree(GetProcessHeap(), 0, name);
+    free(name);
 
     return hr;
 }
@@ -5806,13 +5900,13 @@ err_out:
 static HRESULT d3dx_parse_effect_technique(struct d3dx_effect *effect, struct d3dx_technique *technique,
         const char *data, const char **ptr, struct d3dx_object *objects)
 {
-    DWORD offset;
-    HRESULT hr;
-    unsigned int i;
     char *name = NULL;
+    uint32_t offset;
+    unsigned int i;
+    HRESULT hr;
 
-    read_dword(ptr, &offset);
-    TRACE("Technique name offset: %#x\n", offset);
+    offset = read_u32(ptr);
+    TRACE("Technique name offset: %#x.\n", offset);
     hr = d3dx9_parse_name(&name, data + offset);
     if (hr != D3D_OK)
     {
@@ -5820,16 +5914,15 @@ static HRESULT d3dx_parse_effect_technique(struct d3dx_effect *effect, struct d3
         goto err_out;
     }
 
-    read_dword(ptr, &technique->annotation_count);
-    TRACE("Annotation count: %u\n", technique->annotation_count);
+    technique->annotation_count = read_u32(ptr);
+    TRACE("Annotation count: %u.\n", technique->annotation_count);
 
-    read_dword(ptr, &technique->pass_count);
-    TRACE("Pass count: %u\n", technique->pass_count);
+    technique->pass_count = read_u32(ptr);
+    TRACE("Pass count: %u.\n", technique->pass_count);
 
     if (technique->annotation_count)
     {
-        technique->annotations = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                sizeof(*technique->annotations) * technique->annotation_count);
+        technique->annotations = calloc(technique->annotation_count, sizeof(*technique->annotations));
         if (!technique->annotations)
         {
             ERR("Out of memory\n");
@@ -5851,8 +5944,7 @@ static HRESULT d3dx_parse_effect_technique(struct d3dx_effect *effect, struct d3
 
     if (technique->pass_count)
     {
-        technique->passes = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                sizeof(*technique->passes) * technique->pass_count);
+        technique->passes = calloc(technique->pass_count, sizeof(*technique->passes));
         if (!technique->passes)
         {
             ERR("Out of memory\n");
@@ -5881,7 +5973,7 @@ err_out:
     {
         for (i = 0; i < technique->pass_count; ++i)
             free_pass(&technique->passes[i]);
-        HeapFree(GetProcessHeap(), 0, technique->passes);
+        free(technique->passes);
         technique->passes = NULL;
     }
 
@@ -5889,11 +5981,11 @@ err_out:
     {
         for (i = 0; i < technique->annotation_count; ++i)
             free_parameter(&technique->annotations[i], FALSE, FALSE);
-        HeapFree(GetProcessHeap(), 0, technique->annotations);
+        free(technique->annotations);
         technique->annotations = NULL;
     }
 
-    HeapFree(GetProcessHeap(), 0, name);
+    free(name);
 
     return hr;
 }
@@ -5910,7 +6002,7 @@ static HRESULT d3dx9_create_object(struct d3dx_effect *effect, struct d3dx_objec
     switch (param->type)
     {
         case D3DXPT_STRING:
-            *(char **)param->data = HeapAlloc(GetProcessHeap(), 0, object->size);
+            *(char **)param->data = malloc(object->size);
             if (!*(char **)param->data)
             {
                 ERR("Out of memory.\n");
@@ -5943,16 +6035,16 @@ static HRESULT d3dx9_create_object(struct d3dx_effect *effect, struct d3dx_objec
 static HRESULT d3dx_parse_array_selector(struct d3dx_effect *effect, struct d3dx_state *state,
         const char **skip_constants, unsigned int skip_constants_count)
 {
-    DWORD string_size;
     struct d3dx_parameter *param = &state->parameter;
     struct d3dx_object *object = &effect->objects[param->object_id];
     char *ptr = object->data;
+    uint32_t string_size;
     HRESULT ret;
 
     TRACE("Parsing array entry selection state for parameter %p.\n", param);
 
-    string_size = *(DWORD *)ptr;
-    state->referenced_param = get_parameter_by_name(effect, NULL, ptr + 4);
+    string_size = *(uint32_t *)ptr;
+    state->referenced_param = get_parameter_by_name(&effect->params, NULL, ptr + 4);
     if (state->referenced_param)
     {
         TRACE("Mapping to parameter %s.\n", debugstr_a(state->referenced_param->name));
@@ -5962,12 +6054,12 @@ static HRESULT d3dx_parse_array_selector(struct d3dx_effect *effect, struct d3dx
         FIXME("Referenced parameter %s not found.\n", ptr + 4);
         return D3DXERR_INVALIDDATA;
     }
-    TRACE("Unknown DWORD: 0x%.8x.\n", *(DWORD *)(ptr + string_size));
+    TRACE("Unknown u32: 0x%.8x.\n", *(uint32_t *)(ptr + string_size));
 
-    if (string_size % sizeof(DWORD))
+    if (string_size % sizeof(uint32_t))
         FIXME("Unaligned string_size %u.\n", string_size);
-    if (FAILED(ret = d3dx_create_param_eval(effect, (DWORD *)(ptr + string_size) + 1,
-            object->size - (string_size + sizeof(DWORD)), D3DXPT_INT, &param->param_eval,
+    if (FAILED(ret = d3dx_create_param_eval(&effect->params, (uint32_t *)(ptr + string_size) + 1,
+            object->size - (string_size + sizeof(uint32_t)), D3DXPT_INT, &param->param_eval,
             get_version_counter_ptr(effect), NULL, 0)))
         return ret;
     ret = D3D_OK;
@@ -5987,7 +6079,7 @@ static HRESULT d3dx_parse_array_selector(struct d3dx_effect *effect, struct d3dx
             {
                 TRACE("Creating preshader for object %u.\n", param->members[i].object_id);
                 object = &effect->objects[param->members[i].object_id];
-                if (FAILED(ret = d3dx_create_param_eval(effect, object->data, object->size, param->type,
+                if (FAILED(ret = d3dx_create_param_eval(&effect->params, object->data, object->size, param->type,
                         &param->members[i].param_eval, get_version_counter_ptr(effect),
                         skip_constants, skip_constants_count)))
                     break;
@@ -6000,45 +6092,44 @@ static HRESULT d3dx_parse_array_selector(struct d3dx_effect *effect, struct d3dx
 static HRESULT d3dx_parse_resource(struct d3dx_effect *effect, const char *data, const char **ptr,
         const char **skip_constants, unsigned int skip_constants_count)
 {
-    DWORD technique_index;
-    DWORD index, state_index, usage, element_index;
-    struct d3dx_state *state;
+    unsigned int index, state_index, usage, element_index, technique_index;
     struct d3dx_parameter *param;
     struct d3dx_object *object;
+    struct d3dx_state *state;
     HRESULT hr = E_FAIL;
 
-    read_dword(ptr, &technique_index);
-    TRACE("technique_index: %u\n", technique_index);
+    technique_index = read_u32(ptr);
+    TRACE("technique_index: %u.\n", technique_index);
 
-    read_dword(ptr, &index);
-    TRACE("index: %u\n", index);
+    index = read_u32(ptr);
+    TRACE("index: %u.\n", index);
 
-    read_dword(ptr, &element_index);
-    TRACE("element_index: %u\n", element_index);
+    element_index = read_u32(ptr);
+    TRACE("element_index: %u.\n", element_index);
 
-    read_dword(ptr, &state_index);
-    TRACE("state_index: %u\n", state_index);
+    state_index = read_u32(ptr);
+    TRACE("state_index: %u.\n", state_index);
 
-    read_dword(ptr, &usage);
-    TRACE("usage: %u\n", usage);
+    usage = read_u32(ptr);
+    TRACE("usage: %u.\n", usage);
 
     if (technique_index == 0xffffffff)
     {
         struct d3dx_parameter *parameter;
         struct d3dx_sampler *sampler;
 
-        if (index >= effect->parameter_count)
+        if (index >= effect->params.count)
         {
-            FIXME("Index out of bounds: index %u >= parameter_count %u\n", index, effect->parameter_count);
+            FIXME("Index out of bounds: index %u >= parameter count %u.\n", index, effect->params.count);
             return E_FAIL;
         }
 
-        parameter = &effect->parameters[index].param;
+        parameter = &effect->params.parameters[index].param;
         if (element_index != 0xffffffff)
         {
             if (element_index >= parameter->element_count && parameter->element_count != 0)
             {
-                FIXME("Index out of bounds: element_index %u >= element_count %u\n", element_index, parameter->element_count);
+                FIXME("Index out of bounds: element_index %u >= element_count %u.\n", element_index, parameter->element_count);
                 return E_FAIL;
             }
 
@@ -6049,7 +6140,7 @@ static HRESULT d3dx_parse_resource(struct d3dx_effect *effect, const char *data,
         sampler = parameter->data;
         if (state_index >= sampler->state_count)
         {
-            FIXME("Index out of bounds: state_index %u >= state_count %u\n", state_index, sampler->state_count);
+            FIXME("Index out of bounds: state_index %u >= state_count %u.\n", state_index, sampler->state_count);
             return E_FAIL;
         }
 
@@ -6070,14 +6161,14 @@ static HRESULT d3dx_parse_resource(struct d3dx_effect *effect, const char *data,
         technique = &effect->techniques[technique_index];
         if (index >= technique->pass_count)
         {
-            FIXME("Index out of bounds: index %u >= pass_count %u\n", index, technique->pass_count);
+            FIXME("Index out of bounds: index %u >= pass_count %u.\n", index, technique->pass_count);
             return E_FAIL;
         }
 
         pass = &technique->passes[index];
         if (state_index >= pass->state_count)
         {
-            FIXME("Index out of bounds: state_index %u >= state_count %u\n", state_index, pass->state_count);
+            FIXME("Index out of bounds: state_index %u >= state_count %u.\n", state_index, pass->state_count);
             return E_FAIL;
         }
 
@@ -6106,7 +6197,7 @@ static HRESULT d3dx_parse_resource(struct d3dx_effect *effect, const char *data,
                     {
                         if (FAILED(hr = d3dx9_create_object(effect, object)))
                             return hr;
-                        if (FAILED(hr = d3dx_create_param_eval(effect, object->data, object->size, param->type,
+                        if (FAILED(hr = d3dx_create_param_eval(&effect->params, object->data, object->size, param->type,
                                 &param->param_eval, get_version_counter_ptr(effect),
                                 skip_constants, skip_constants_count)))
                             return hr;
@@ -6120,7 +6211,7 @@ static HRESULT d3dx_parse_resource(struct d3dx_effect *effect, const char *data,
                     state->type = ST_FXLC;
                     if (FAILED(hr = d3dx9_copy_data(effect, param->object_id, ptr)))
                         return hr;
-                    if (FAILED(hr = d3dx_create_param_eval(effect, object->data, object->size, param->type,
+                    if (FAILED(hr = d3dx_create_param_eval(&effect->params, object->data, object->size, param->type,
                             &param->param_eval, get_version_counter_ptr(effect), NULL, 0)))
                         return hr;
                     break;
@@ -6137,7 +6228,7 @@ static HRESULT d3dx_parse_resource(struct d3dx_effect *effect, const char *data,
                 return hr;
 
             TRACE("Looking for parameter %s.\n", debugstr_a(object->data));
-            state->referenced_param = get_parameter_by_name(effect, NULL, object->data);
+            state->referenced_param = get_parameter_by_name(&effect->params, NULL, object->data);
             if (state->referenced_param)
             {
                 struct d3dx_parameter *refpar = state->referenced_param;
@@ -6149,7 +6240,7 @@ static HRESULT d3dx_parse_resource(struct d3dx_effect *effect, const char *data,
 
                     if (!refpar->param_eval)
                     {
-                        if (FAILED(hr = d3dx_create_param_eval(effect, refobj->data, refobj->size,
+                        if (FAILED(hr = d3dx_create_param_eval(&effect->params, refobj->data, refobj->size,
                                 refpar->type, &refpar->param_eval, get_version_counter_ptr(effect),
                                 skip_constants, skip_constants_count)))
                             return hr;
@@ -6171,7 +6262,7 @@ static HRESULT d3dx_parse_resource(struct d3dx_effect *effect, const char *data,
             break;
 
         default:
-            FIXME("Unknown usage %x\n", usage);
+            FIXME("Unknown usage %u.\n", usage);
             break;
     }
 
@@ -6185,26 +6276,28 @@ static BOOL param_set_top_level_param(void *top_level_param, struct d3dx_paramet
 }
 
 static HRESULT d3dx_parse_effect(struct d3dx_effect *effect, const char *data, UINT data_size,
-        DWORD start, const char **skip_constants, unsigned int skip_constants_count)
+        uint32_t start, const char **skip_constants, unsigned int skip_constants_count)
 {
+    unsigned int string_count, resource_count, params_count, shader_count;
     const char *ptr = data + start;
-    UINT stringcount, resourcecount;
+    unsigned int i;
     HRESULT hr;
-    UINT i;
 
-    read_dword(&ptr, &effect->parameter_count);
-    TRACE("Parameter count: %u.\n", effect->parameter_count);
+    params_count = read_u32(&ptr);
+    TRACE("Parameter count: %u.\n", params_count);
 
-    read_dword(&ptr, &effect->technique_count);
+    effect->technique_count = read_u32(&ptr);
     TRACE("Technique count: %u.\n", effect->technique_count);
 
-    skip_dword_unknown(&ptr, 1);
+    /* This value appears to be equal to a number of shader variables, with each pass contributing
+       one additional slot. */
+    shader_count = read_u32(&ptr);
+    TRACE("Shader count: %u.\n", shader_count);
 
-    read_dword(&ptr, &effect->object_count);
+    effect->object_count = read_u32(&ptr);
     TRACE("Object count: %u.\n", effect->object_count);
 
-    effect->objects = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-            sizeof(*effect->objects) * effect->object_count);
+    effect->objects = calloc(effect->object_count, sizeof(*effect->objects));
     if (!effect->objects)
     {
         ERR("Out of memory.\n");
@@ -6212,34 +6305,28 @@ static HRESULT d3dx_parse_effect(struct d3dx_effect *effect, const char *data, U
         goto err_out;
     }
 
-    wine_rb_init(&effect->param_tree, param_rb_compare);
-    if (effect->parameter_count)
+    if (FAILED(hr = d3dx_init_parameters_store(&effect->params, params_count)))
     {
-        effect->parameters = heap_alloc_zero(sizeof(*effect->parameters) * effect->parameter_count);
-        if (!effect->parameters)
+        hr = E_OUTOFMEMORY;
+        goto err_out;
+    }
+
+    for (i = 0; i < effect->params.count; ++i)
+    {
+        param_set_magic_number(&effect->params.parameters[i].param);
+        hr = d3dx_parse_effect_parameter(effect, &effect->params.parameters[i], data, &ptr, effect->objects);
+        if (hr != D3D_OK)
         {
-            ERR("Out of memory.\n");
-            hr = E_OUTOFMEMORY;
+            WARN("Failed to parse parameter %u.\n", i);
             goto err_out;
         }
-
-        for (i = 0; i < effect->parameter_count; ++i)
-        {
-            param_set_magic_number(&effect->parameters[i].param);
-            hr = d3dx_parse_effect_parameter(effect, &effect->parameters[i], data, &ptr, effect->objects);
-            if (hr != D3D_OK)
-            {
-                WARN("Failed to parse parameter %u.\n", i);
-                goto err_out;
-            }
-            walk_parameter_tree(&effect->parameters[i].param, param_set_top_level_param, &effect->parameters[i]);
-            add_param_to_tree(effect, &effect->parameters[i].param, NULL, 0, 0);
-        }
+        walk_parameter_tree(&effect->params.parameters[i].param, param_set_top_level_param, &effect->params.parameters[i]);
+        add_param_to_tree(effect, &effect->params.parameters[i].param, NULL, 0, 0);
     }
 
     if (effect->technique_count)
     {
-        effect->techniques = heap_alloc_zero(sizeof(*effect->techniques) * effect->technique_count);
+        effect->techniques = calloc(effect->technique_count, sizeof(*effect->techniques));
         if (!effect->techniques)
         {
             ERR("Out of memory.\n");
@@ -6259,17 +6346,17 @@ static HRESULT d3dx_parse_effect(struct d3dx_effect *effect, const char *data, U
         }
     }
 
-    read_dword(&ptr, &stringcount);
-    TRACE("String count: %u.\n", stringcount);
+    string_count = read_u32(&ptr);
+    TRACE("String count: %u.\n", string_count);
 
-    read_dword(&ptr, &resourcecount);
-    TRACE("Resource count: %u.\n", resourcecount);
+    resource_count = read_u32(&ptr);
+    TRACE("Resource count: %u.\n", resource_count);
 
-    for (i = 0; i < stringcount; ++i)
+    for (i = 0; i < string_count; ++i)
     {
-        DWORD id;
+        unsigned int id;
 
-        read_dword(&ptr, &id);
+        id = read_u32(&ptr);
         TRACE("id: %u.\n", id);
 
         if (FAILED(hr = d3dx9_copy_data(effect, id, &ptr)))
@@ -6282,7 +6369,7 @@ static HRESULT d3dx_parse_effect(struct d3dx_effect *effect, const char *data, U
         }
     }
 
-    for (i = 0; i < resourcecount; ++i)
+    for (i = 0; i < resource_count; ++i)
     {
         TRACE("parse resource %u.\n", i);
 
@@ -6294,12 +6381,12 @@ static HRESULT d3dx_parse_effect(struct d3dx_effect *effect, const char *data, U
         }
     }
 
-    for (i = 0; i < effect->parameter_count; ++i)
+    for (i = 0; i < effect->params.count; ++i)
     {
-        if (FAILED(hr = d3dx_pool_sync_shared_parameter(effect->pool, &effect->parameters[i])))
+        if (FAILED(hr = d3dx_pool_sync_shared_parameter(effect->pool, &effect->params.parameters[i])))
             goto err_out;
-        effect->parameters[i].version_counter = get_version_counter_ptr(effect);
-        set_dirty(&effect->parameters[i].param);
+        effect->params.parameters[i].version_counter = get_version_counter_ptr(effect);
+        set_dirty(&effect->params.parameters[i].param);
     }
     return D3D_OK;
 
@@ -6309,19 +6396,11 @@ err_out:
     {
         for (i = 0; i < effect->technique_count; ++i)
             free_technique(&effect->techniques[i]);
-        heap_free(effect->techniques);
+        free(effect->techniques);
         effect->techniques = NULL;
     }
 
-    if (effect->parameters)
-    {
-        for (i = 0; i < effect->parameter_count; ++i)
-        {
-            free_top_level_parameter(&effect->parameters[i]);
-        }
-        heap_free(effect->parameters);
-        effect->parameters = NULL;
-    }
+    d3dx_parameters_store_cleanup(&effect->params);
 
     if (effect->objects)
     {
@@ -6329,7 +6408,7 @@ err_out:
         {
             free_object(&effect->objects[i]);
         }
-        HeapFree(GetProcessHeap(), 0, effect->objects);
+        free(effect->objects);
         effect->objects = NULL;
     }
 
@@ -6364,7 +6443,7 @@ static const char **parse_skip_constants_string(char *skip_constants_string, uns
     char *s;
     unsigned int size = INITIAL_CONST_NAMES_SIZE;
 
-    names = HeapAlloc(GetProcessHeap(), 0, sizeof(*names) * size);
+    names = malloc(sizeof(*names) * size);
     if (!names)
         return NULL;
 
@@ -6375,47 +6454,51 @@ static const char **parse_skip_constants_string(char *skip_constants_string, uns
         if (*names_count == size)
         {
             size *= 2;
-            new_alloc = HeapReAlloc(GetProcessHeap(), 0, names, sizeof(*names) * size);
+            new_alloc = realloc(names, sizeof(*names) * size);
             if (!new_alloc)
             {
-                HeapFree(GetProcessHeap(), 0, names);
+                free(names);
                 return NULL;
             }
             names = new_alloc;
         }
         names[(*names_count)++] = name;
     }
-    new_alloc = HeapReAlloc(GetProcessHeap(), 0, names, *names_count * sizeof(*names));
+    new_alloc = realloc(names, *names_count * sizeof(*names));
     if (!new_alloc)
         return names;
     return new_alloc;
 }
 
-static HRESULT d3dx9_effect_init(struct d3dx_effect *effect, struct IDirect3DDevice9 *device,
-        const char *data, SIZE_T data_size, const D3D_SHADER_MACRO *defines, ID3DInclude *include,
-        UINT eflags, ID3DBlob **errors, struct ID3DXEffectPool *pool, const char *skip_constants_string)
+static HRESULT d3dx9_effect_init_from_binary(struct d3dx_effect *effect,
+        struct IDirect3DDevice9 *device, const char *data, SIZE_T data_size,
+        unsigned int flags, struct ID3DXEffectPool *pool, const char *skip_constants_string)
 {
-#if D3DX_SDK_VERSION <= 36
-    UINT compile_flags = D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY;
-#else
-    UINT compile_flags = 0;
-#endif
-    ID3DBlob *bytecode = NULL, *temp_errors = NULL;
     unsigned int skip_constants_count = 0;
     char *skip_constants_buffer = NULL;
     const char **skip_constants = NULL;
     const char *ptr = data;
-    DWORD tag, offset;
+    uint32_t tag, offset;
     unsigned int i, j;
     HRESULT hr;
 
-    TRACE("effect %p, device %p, data %p, data_size %lu, defines %p, include %p, eflags %#x, errors %p, "
-            "pool %p, skip_constants %s.\n",
-            effect, device, data, data_size, defines, include, eflags, errors, pool,
-            debugstr_a(skip_constants_string));
-
     effect->ID3DXEffect_iface.lpVtbl = &ID3DXEffect_Vtbl;
     effect->ref = 1;
+
+    effect->flags = flags;
+
+    list_init(&effect->parameter_block_list);
+
+    tag = read_u32(&ptr);
+    TRACE("Tag: %#x.\n", tag);
+
+    if (!(flags & D3DXFX_NOT_CLONEABLE))
+    {
+        if (!(effect->source = malloc(data_size)))
+            return E_OUTOFMEMORY;
+        memcpy(effect->source, data, data_size);
+        effect->source_size = data_size;
+    }
 
     if (pool)
     {
@@ -6426,99 +6509,43 @@ static HRESULT d3dx9_effect_init(struct d3dx_effect *effect, struct IDirect3DDev
     IDirect3DDevice9_AddRef(device);
     effect->device = device;
 
-    effect->flags = eflags;
-
-    list_init(&effect->parameter_block_list);
-
-    read_dword(&ptr, &tag);
-    TRACE("Tag: %x\n", tag);
-
-    if (tag != d3dx9_effect_version(9, 1))
-    {
-        TRACE("HLSL ASCII effect, trying to compile it.\n");
-        hr = D3DCompile(data, data_size, NULL, defines, include,
-                NULL, "fx_2_0", compile_flags, eflags, &bytecode, &temp_errors);
-        if (FAILED(hr))
-        {
-            WARN("Failed to compile ASCII effect.\n");
-            if (bytecode)
-                ID3D10Blob_Release(bytecode);
-            if (temp_errors)
-            {
-                const char *error_string = ID3D10Blob_GetBufferPointer(temp_errors);
-                const char *string_ptr;
-
-                while (*error_string)
-                {
-                    string_ptr = error_string;
-                    while (*string_ptr && *string_ptr != '\n' && *string_ptr != '\r'
-                           && string_ptr - error_string < 80)
-                        ++string_ptr;
-                    TRACE("%s\n", debugstr_an(error_string, string_ptr - error_string));
-                    error_string = string_ptr;
-                    while (*error_string == '\n' || *error_string == '\r')
-                        ++error_string;
-                }
-            }
-            if (errors)
-                *errors = temp_errors;
-            else if (temp_errors)
-                ID3D10Blob_Release(temp_errors);
-            return hr;
-        }
-        if (!bytecode)
-        {
-            FIXME("No output from effect compilation.\n");
-            return D3DERR_INVALIDCALL;
-        }
-        if (errors)
-            *errors = temp_errors;
-        else if (temp_errors)
-            ID3D10Blob_Release(temp_errors);
-
-        ptr = ID3D10Blob_GetBufferPointer(bytecode);
-        read_dword(&ptr, &tag);
-        TRACE("Tag: %x\n", tag);
-    }
-
     if (skip_constants_string)
     {
-        skip_constants_buffer = HeapAlloc(GetProcessHeap(), 0,
-                sizeof(*skip_constants_buffer) * (strlen(skip_constants_string) + 1));
-        if (!skip_constants_buffer)
+        if (!(flags & D3DXFX_NOT_CLONEABLE) && !(effect->skip_constants_string = strdup(skip_constants_string)))
         {
-            if (bytecode)
-                ID3D10Blob_Release(bytecode);
-            return E_OUTOFMEMORY;
+            hr = E_OUTOFMEMORY;
+            goto fail;
         }
-        strcpy(skip_constants_buffer, skip_constants_string);
+
+        if (!(skip_constants_buffer = strdup(skip_constants_string)))
+        {
+            hr = E_OUTOFMEMORY;
+            goto fail;
+        }
 
         if (!(skip_constants = parse_skip_constants_string(skip_constants_buffer, &skip_constants_count)))
         {
-            HeapFree(GetProcessHeap(), 0, skip_constants_buffer);
-            if (bytecode)
-                ID3D10Blob_Release(bytecode);
-            return E_OUTOFMEMORY;
+            free(skip_constants_buffer);
+            hr = E_OUTOFMEMORY;
+            goto fail;
         }
     }
-    read_dword(&ptr, &offset);
-    TRACE("Offset: %x\n", offset);
+    offset = read_u32(&ptr);
+    TRACE("Offset: %#x.\n", offset);
 
     hr = d3dx_parse_effect(effect, ptr, data_size, offset, skip_constants, skip_constants_count);
-    if (bytecode)
-        ID3D10Blob_Release(bytecode);
     if (hr != D3D_OK)
     {
         FIXME("Failed to parse effect.\n");
-        HeapFree(GetProcessHeap(), 0, skip_constants_buffer);
-        HeapFree(GetProcessHeap(), 0, skip_constants);
-        return hr;
+        free(skip_constants_buffer);
+        free(skip_constants);
+        goto fail;
     }
 
     for (i = 0; i < skip_constants_count; ++i)
     {
         struct d3dx_parameter *param;
-        param = get_parameter_by_name(effect, NULL, skip_constants[i]);
+        param = get_parameter_by_name(&effect->params, NULL, skip_constants[i]);
         if (param)
         {
             for (j = 0; j < effect->technique_count; ++j)
@@ -6527,9 +6554,10 @@ static HRESULT d3dx9_effect_init(struct d3dx_effect *effect, struct IDirect3DDev
                 {
                     WARN("skip_constants parameter %s is used in technique %u.\n",
                             debugstr_a(skip_constants[i]), j);
-                    HeapFree(GetProcessHeap(), 0, skip_constants_buffer);
-                    HeapFree(GetProcessHeap(), 0, skip_constants);
-                    return D3DERR_INVALIDCALL;
+                    free(skip_constants_buffer);
+                    free(skip_constants);
+                    hr = D3DERR_INVALIDCALL;
+                    goto fail;
                 }
             }
         }
@@ -6540,8 +6568,8 @@ static HRESULT d3dx9_effect_init(struct d3dx_effect *effect, struct IDirect3DDev
         }
     }
 
-    HeapFree(GetProcessHeap(), 0, skip_constants_buffer);
-    HeapFree(GetProcessHeap(), 0, skip_constants);
+    free(skip_constants_buffer);
+    free(skip_constants);
 
     /* initialize defaults - check because of unsupported ascii effects */
     if (effect->techniques)
@@ -6551,6 +6579,107 @@ static HRESULT d3dx9_effect_init(struct d3dx_effect *effect, struct IDirect3DDev
     }
 
     return D3D_OK;
+
+fail:
+    if (effect->techniques)
+    {
+        for (i = 0; i < effect->technique_count; ++i)
+            free_technique(&effect->techniques[i]);
+        free(effect->techniques);
+    }
+
+    if (effect->params.parameters)
+    {
+        for (i = 0; i < effect->params.count; ++i)
+            free_top_level_parameter(&effect->params.parameters[i]);
+        free(effect->params.parameters);
+    }
+
+    if (effect->objects)
+    {
+        for (i = 0; i < effect->object_count; ++i)
+            free_object(&effect->objects[i]);
+        free(effect->objects);
+    }
+
+    IDirect3DDevice9_Release(effect->device);
+    if (pool)
+        pool->lpVtbl->Release(pool);
+    free(effect->source);
+    free(effect->skip_constants_string);
+    return hr;
+}
+
+static HRESULT d3dx9_effect_init(struct d3dx_effect *effect, struct IDirect3DDevice9 *device,
+        const char *data, SIZE_T data_size, const D3D_SHADER_MACRO *defines, ID3DInclude *include,
+        UINT flags, ID3DBlob **errors, struct ID3DXEffectPool *pool, const char *skip_constants_string)
+{
+#if D3DX_SDK_VERSION <= 36
+    UINT compile_flags = D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY;
+#else
+    UINT compile_flags = 0;
+#endif
+    ID3DBlob *bytecode = NULL, *temp_errors = NULL;
+    const char *ptr = data;
+    unsigned int tag;
+    HRESULT hr;
+
+    TRACE("effect %p, device %p, data %p, data_size %Iu, defines %p, include %p, flags %#x, errors %p, "
+            "pool %p, skip_constants %s.\n",
+            effect, device, data, data_size, defines, include, flags, errors, pool,
+            debugstr_a(skip_constants_string));
+
+    tag = read_u32(&ptr);
+
+    if (tag == d3dx9_effect_version(9, 1))
+        return d3dx9_effect_init_from_binary(effect, device, data, data_size, flags, pool, skip_constants_string);
+
+    TRACE("HLSL ASCII effect, trying to compile it.\n");
+    compile_flags |= flags & ~(D3DXFX_NOT_CLONEABLE | D3DXFX_LARGEADDRESSAWARE);
+    hr = D3DCompile(data, data_size, NULL, defines, include,
+            NULL, "fx_2_0", compile_flags, 0, &bytecode, &temp_errors);
+    if (FAILED(hr))
+    {
+        WARN("Failed to compile ASCII effect.\n");
+        if (bytecode)
+            ID3D10Blob_Release(bytecode);
+        if (temp_errors)
+        {
+            const char *error_string = ID3D10Blob_GetBufferPointer(temp_errors);
+            const char *string_ptr;
+
+            while (*error_string)
+            {
+                string_ptr = error_string;
+                while (*string_ptr && *string_ptr != '\n' && *string_ptr != '\r'
+                       && string_ptr - error_string < 80)
+                    ++string_ptr;
+                TRACE("%s\n", debugstr_an(error_string, string_ptr - error_string));
+                error_string = string_ptr;
+                while (*error_string == '\n' || *error_string == '\r')
+                    ++error_string;
+            }
+        }
+        if (errors)
+            *errors = temp_errors;
+        else if (temp_errors)
+            ID3D10Blob_Release(temp_errors);
+        return hr;
+    }
+    if (!bytecode)
+    {
+        FIXME("No output from effect compilation.\n");
+        return D3DERR_INVALIDCALL;
+    }
+    if (errors)
+        *errors = temp_errors;
+    else if (temp_errors)
+        ID3D10Blob_Release(temp_errors);
+
+    hr = d3dx9_effect_init_from_binary(effect, device, ID3D10Blob_GetBufferPointer(bytecode),
+            ID3D10Blob_GetBufferSize(bytecode), flags, pool, skip_constants_string);
+    ID3D10Blob_Release(bytecode);
+    return hr;
 }
 
 HRESULT WINAPI D3DXCreateEffectEx(struct IDirect3DDevice9 *device, const void *srcdata, UINT srcdatalen,
@@ -6560,8 +6689,8 @@ HRESULT WINAPI D3DXCreateEffectEx(struct IDirect3DDevice9 *device, const void *s
     struct d3dx_effect *object;
     HRESULT hr;
 
-    TRACE("device %p, srcdata %p, srcdatalen %u, defines %p, include %p,"
-            " skip_constants %p, flags %#x, pool %p, effect %p, compilation_errors %p.\n",
+    TRACE("device %p, srcdata %p, srcdatalen %u, defines %p, include %p, "
+            "skip_constants %p, flags %#lx, pool %p, effect %p, compilation_errors %p.\n",
             device, srcdata, srcdatalen, defines, include,
             skip_constants, flags, pool, effect, compilation_errors);
 
@@ -6578,7 +6707,7 @@ HRESULT WINAPI D3DXCreateEffectEx(struct IDirect3DDevice9 *device, const void *s
     if (!effect)
         return D3D_OK;
 
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    object = calloc(1, sizeof(*object));
     if (!object)
         return E_OUTOFMEMORY;
 
@@ -6586,8 +6715,7 @@ HRESULT WINAPI D3DXCreateEffectEx(struct IDirect3DDevice9 *device, const void *s
             (ID3DInclude *)include, flags, (ID3DBlob **)compilation_errors, pool, skip_constants);
     if (FAILED(hr))
     {
-        WARN("Failed to create effect object, hr %#x.\n", hr);
-        d3dx_effect_cleanup(object);
+        WARN("Failed to create effect object, hr %#lx.\n", hr);
         return hr;
     }
 
@@ -6598,22 +6726,23 @@ HRESULT WINAPI D3DXCreateEffectEx(struct IDirect3DDevice9 *device, const void *s
     return D3D_OK;
 }
 
-HRESULT WINAPI D3DXCreateEffect(struct IDirect3DDevice9 *device, const void *srcdata, UINT srcdatalen,
+HRESULT WINAPI D3DXCreateEffect(struct IDirect3DDevice9 *device, const void *data, UINT data_size,
         const D3DXMACRO *defines, struct ID3DXInclude *include, DWORD flags,
-        struct ID3DXEffectPool *pool, struct ID3DXEffect **effect, struct ID3DXBuffer **compilation_errors)
+        struct ID3DXEffectPool *pool, struct ID3DXEffect **effect, struct ID3DXBuffer **messages)
 {
-    TRACE("(%p, %p, %u, %p, %p, %#x, %p, %p, %p): Forwarded to D3DXCreateEffectEx\n", device, srcdata, srcdatalen, defines,
-        include, flags, pool, effect, compilation_errors);
+    TRACE("device %p, data %p, data_size %u, defines %p, include %p, flags %#lx, pool %p, "
+            "effect %p, messages %p.\n", device, data, data_size, defines,
+            include, flags, pool, effect, messages);
 
-    return D3DXCreateEffectEx(device, srcdata, srcdatalen, defines, include, NULL, flags, pool, effect, compilation_errors);
+    return D3DXCreateEffectEx(device, data, data_size, defines, include, NULL, flags, pool, effect, messages);
 }
 
 static HRESULT d3dx9_effect_compiler_init(struct ID3DXEffectCompilerImpl *compiler,
         const char *data, SIZE_T data_size, const D3D_SHADER_MACRO *defines, ID3DInclude *include,
-        UINT eflags, ID3DBlob **error_messages)
+        UINT eflags, ID3DBlob **messages)
 {
-    TRACE("compiler %p, data %p, data_size %lu, defines %p, include %p, eflags %#x, error_messages %p.\n",
-            compiler, data, data_size, defines, include, eflags, error_messages);
+    TRACE("compiler %p, data %p, data_size %Iu, defines %p, include %p, eflags %#x, messages %p.\n",
+            compiler, data, data_size, defines, include, eflags, messages);
 
     compiler->ID3DXEffectCompiler_iface.lpVtbl = &ID3DXEffectCompiler_Vtbl;
     compiler->ref = 1;
@@ -6623,31 +6752,31 @@ static HRESULT d3dx9_effect_compiler_init(struct ID3DXEffectCompilerImpl *compil
     return D3D_OK;
 }
 
-HRESULT WINAPI D3DXCreateEffectCompiler(const char *srcdata, UINT srcdatalen, const D3DXMACRO *defines,
-        ID3DXInclude *include, DWORD flags, ID3DXEffectCompiler **compiler, ID3DXBuffer **parse_errors)
+HRESULT WINAPI D3DXCreateEffectCompiler(const char *data, UINT data_size, const D3DXMACRO *defines,
+        ID3DXInclude *include, DWORD flags, ID3DXEffectCompiler **compiler, ID3DXBuffer **messages)
 {
     struct ID3DXEffectCompilerImpl *object;
     HRESULT hr;
 
-    TRACE("srcdata %p, srcdatalen %u, defines %p, include %p, flags %#x, compiler %p, parse_errors %p\n",
-            srcdata, srcdatalen, defines, include, flags, compiler, parse_errors);
+    TRACE("data %p, data_size %u, defines %p, include %p, flags %#lx, compiler %p, messages %p.\n",
+            data, data_size, defines, include, flags, compiler, messages);
 
-    if (!srcdata || !compiler)
+    if (!data || !compiler)
     {
         WARN("Invalid arguments supplied\n");
         return D3DERR_INVALIDCALL;
     }
 
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    object = calloc(1, sizeof(*object));
     if (!object)
         return E_OUTOFMEMORY;
 
-    hr = d3dx9_effect_compiler_init(object, srcdata, srcdatalen, (const D3D_SHADER_MACRO *)defines,
-            (ID3DInclude *)include, flags, (ID3DBlob **)parse_errors);
+    hr = d3dx9_effect_compiler_init(object, data, data_size, (const D3D_SHADER_MACRO *)defines,
+            (ID3DInclude *)include, flags, (ID3DBlob **)messages);
     if (FAILED(hr))
     {
         WARN("Failed to initialize effect compiler\n");
-        HeapFree(GetProcessHeap(), 0, object);
+        free(object);
         return hr;
     }
 
@@ -6681,7 +6810,7 @@ static ULONG WINAPI d3dx_effect_pool_AddRef(ID3DXEffectPool *iface)
     struct d3dx_effect_pool *pool = impl_from_ID3DXEffectPool(iface);
     ULONG refcount = InterlockedIncrement(&pool->refcount);
 
-    TRACE("%p increasing refcount to %u.\n", pool, refcount);
+    TRACE("%p increasing refcount to %lu.\n", pool, refcount);
 
     return refcount;
 }
@@ -6706,11 +6835,11 @@ static void free_effect_pool(struct d3dx_effect_pool *pool)
                 walk_parameter_tree(&pool->shared_data[i].parameters[j]->param, param_zero_data_func, NULL);
                 pool->shared_data[i].parameters[j]->shared_data = NULL;
             }
-            HeapFree(GetProcessHeap(), 0, pool->shared_data[i].parameters);
+            free(pool->shared_data[i].parameters);
         }
     }
-    HeapFree(GetProcessHeap(), 0, pool->shared_data);
-    HeapFree(GetProcessHeap(), 0, pool);
+    free(pool->shared_data);
+    free(pool);
 }
 
 static ULONG WINAPI d3dx_effect_pool_Release(ID3DXEffectPool *iface)
@@ -6718,7 +6847,7 @@ static ULONG WINAPI d3dx_effect_pool_Release(ID3DXEffectPool *iface)
     struct d3dx_effect_pool *pool = impl_from_ID3DXEffectPool(iface);
     ULONG refcount = InterlockedDecrement(&pool->refcount);
 
-    TRACE("%p decreasing refcount to %u.\n", pool, refcount);
+    TRACE("%p decreasing refcount to %lu.\n", pool, refcount);
 
     if (!refcount)
         free_effect_pool(pool);
@@ -6752,7 +6881,7 @@ HRESULT WINAPI D3DXCreateEffectPool(ID3DXEffectPool **pool)
     if (!pool)
         return D3DERR_INVALIDCALL;
 
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    object = calloc(1, sizeof(*object));
     if (!object)
         return E_OUTOFMEMORY;
 
@@ -6766,7 +6895,7 @@ HRESULT WINAPI D3DXCreateEffectPool(ID3DXEffectPool **pool)
 
 HRESULT WINAPI D3DXCreateEffectFromFileExW(struct IDirect3DDevice9 *device, const WCHAR *srcfile,
         const D3DXMACRO *defines, struct ID3DXInclude *include, const char *skipconstants, DWORD flags,
-        struct ID3DXEffectPool *pool, struct ID3DXEffect **effect, struct ID3DXBuffer **compilationerrors)
+        struct ID3DXEffectPool *pool, struct ID3DXEffect **effect, struct ID3DXBuffer **messages)
 {
     struct d3dx_include_from_file include_from_file;
     const void *buffer;
@@ -6775,9 +6904,9 @@ HRESULT WINAPI D3DXCreateEffectFromFileExW(struct IDirect3DDevice9 *device, cons
     HRESULT ret;
 
     TRACE("device %p, srcfile %s, defines %p, include %p, skipconstants %s, "
-            "flags %#x, pool %p, effect %p, compilationerrors %p.\n",
+            "flags %#lx, pool %p, effect %p, messages %p.\n",
             device, debugstr_w(srcfile), defines, include, debugstr_a(skipconstants),
-            flags, pool, effect, compilationerrors);
+            flags, pool, effect, messages);
 
     if (!device || !srcfile)
         return D3DERR_INVALIDCALL;
@@ -6789,7 +6918,7 @@ HRESULT WINAPI D3DXCreateEffectFromFileExW(struct IDirect3DDevice9 *device, cons
     }
 
     size = WideCharToMultiByte(CP_ACP, 0, srcfile, -1, NULL, 0, NULL, NULL);
-    filename_a = heap_alloc(size);
+    filename_a = malloc(size);
     if (!filename_a)
         return E_OUTOFMEMORY;
     WideCharToMultiByte(CP_ACP, 0, srcfile, -1, filename_a, size, NULL, NULL);
@@ -6799,73 +6928,75 @@ HRESULT WINAPI D3DXCreateEffectFromFileExW(struct IDirect3DDevice9 *device, cons
     if (FAILED(ret))
     {
         LeaveCriticalSection(&from_file_mutex);
-        heap_free(filename_a);
+        free(filename_a);
         return D3DXERR_INVALIDDATA;
     }
 
     ret = D3DXCreateEffectEx(device, buffer, size, defines, include, skipconstants, flags, pool,
-            effect, compilationerrors);
+            effect, messages);
 
     ID3DXInclude_Close(include, buffer);
     LeaveCriticalSection(&from_file_mutex);
-    heap_free(filename_a);
+    free(filename_a);
     return ret;
 }
 
 HRESULT WINAPI D3DXCreateEffectFromFileExA(struct IDirect3DDevice9 *device, const char *srcfile,
         const D3DXMACRO *defines, struct ID3DXInclude *include, const char *skipconstants, DWORD flags,
-        struct ID3DXEffectPool *pool, struct ID3DXEffect **effect, struct ID3DXBuffer **compilationerrors)
+        struct ID3DXEffectPool *pool, struct ID3DXEffect **effect, struct ID3DXBuffer **messages)
 {
     WCHAR *srcfileW;
     HRESULT ret;
     DWORD len;
 
     TRACE("device %p, srcfile %s, defines %p, include %p, skipconstants %s, "
-            "flags %#x, pool %p, effect %p, compilationerrors %p.\n",
+            "flags %#lx, pool %p, effect %p, messages %p.\n",
             device, debugstr_a(srcfile), defines, include, debugstr_a(skipconstants),
-            flags, pool, effect, compilationerrors);
+            flags, pool, effect, messages);
 
     if (!srcfile)
         return D3DERR_INVALIDCALL;
 
     len = MultiByteToWideChar(CP_ACP, 0, srcfile, -1, NULL, 0);
-    srcfileW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(*srcfileW));
+    srcfileW = malloc(len * sizeof(*srcfileW));
     MultiByteToWideChar(CP_ACP, 0, srcfile, -1, srcfileW, len);
 
-    ret = D3DXCreateEffectFromFileExW(device, srcfileW, defines, include, skipconstants, flags, pool, effect, compilationerrors);
-    HeapFree(GetProcessHeap(), 0, srcfileW);
+    ret = D3DXCreateEffectFromFileExW(device, srcfileW, defines, include, skipconstants, flags, pool, effect, messages);
+    free(srcfileW);
 
     return ret;
 }
 
 HRESULT WINAPI D3DXCreateEffectFromFileW(struct IDirect3DDevice9 *device, const WCHAR *srcfile,
         const D3DXMACRO *defines, struct ID3DXInclude *include, DWORD flags, struct ID3DXEffectPool *pool,
-        struct ID3DXEffect **effect, struct ID3DXBuffer **compilationerrors)
+        struct ID3DXEffect **effect, struct ID3DXBuffer **messages)
 {
     TRACE("(void): relay\n");
-    return D3DXCreateEffectFromFileExW(device, srcfile, defines, include, NULL, flags, pool, effect, compilationerrors);
+    return D3DXCreateEffectFromFileExW(device, srcfile, defines, include, NULL, flags, pool,
+            effect, messages);
 }
 
 HRESULT WINAPI D3DXCreateEffectFromFileA(struct IDirect3DDevice9 *device, const char *srcfile,
         const D3DXMACRO *defines, struct ID3DXInclude *include, DWORD flags, struct ID3DXEffectPool *pool,
-        struct ID3DXEffect **effect, struct ID3DXBuffer **compilationerrors)
+        struct ID3DXEffect **effect, struct ID3DXBuffer **messages)
 {
     TRACE("(void): relay\n");
-    return D3DXCreateEffectFromFileExA(device, srcfile, defines, include, NULL, flags, pool, effect, compilationerrors);
+    return D3DXCreateEffectFromFileExA(device, srcfile, defines, include, NULL, flags, pool,
+            effect, messages);
 }
 
 HRESULT WINAPI D3DXCreateEffectFromResourceExW(struct IDirect3DDevice9 *device, HMODULE srcmodule,
         const WCHAR *srcresource, const D3DXMACRO *defines, struct ID3DXInclude *include, const char *skipconstants,
-        DWORD flags, struct ID3DXEffectPool *pool, struct ID3DXEffect **effect, struct ID3DXBuffer **compilationerrors)
+        DWORD flags, struct ID3DXEffectPool *pool, struct ID3DXEffect **effect, struct ID3DXBuffer **messages)
 {
     HRSRC resinfo;
     void *buffer;
     DWORD size;
 
     TRACE("device %p, srcmodule %p, srcresource %s, defines %p, include %p, skipconstants %s, "
-            "flags %#x, pool %p, effect %p, compilationerrors %p.\n",
+            "flags %#lx, pool %p, effect %p, messages %p.\n",
             device, srcmodule, debugstr_w(srcresource), defines, include, debugstr_a(skipconstants),
-            flags, pool, effect, compilationerrors);
+            flags, pool, effect, messages);
 
     if (!device)
         return D3DERR_INVALIDCALL;
@@ -6877,21 +7008,22 @@ HRESULT WINAPI D3DXCreateEffectFromResourceExW(struct IDirect3DDevice9 *device, 
         return D3DXERR_INVALIDDATA;
 
     return D3DXCreateEffectEx(device, buffer, size, defines, include,
-            skipconstants, flags, pool, effect, compilationerrors);
+            skipconstants, flags, pool, effect, messages);
 }
 
 HRESULT WINAPI D3DXCreateEffectFromResourceExA(struct IDirect3DDevice9 *device, HMODULE srcmodule,
-        const char *srcresource, const D3DXMACRO *defines, struct ID3DXInclude *include, const char *skipconstants,
-        DWORD flags, struct ID3DXEffectPool *pool, struct ID3DXEffect **effect, struct ID3DXBuffer **compilationerrors)
+        const char *srcresource, const D3DXMACRO *defines, struct ID3DXInclude *include,
+        const char *skipconstants, DWORD flags, struct ID3DXEffectPool *pool,
+        struct ID3DXEffect **effect, struct ID3DXBuffer **messages)
 {
     HRSRC resinfo;
     void *buffer;
     DWORD size;
 
     TRACE("device %p, srcmodule %p, srcresource %s, defines %p, include %p, skipconstants %s, "
-            "flags %#x, pool %p, effect %p, compilationerrors %p.\n",
+            "flags %#lx, pool %p, effect %p, messages %p.\n",
             device, srcmodule, debugstr_a(srcresource), defines, include, debugstr_a(skipconstants),
-            flags, pool, effect, compilationerrors);
+            flags, pool, effect, messages);
 
     if (!device)
         return D3DERR_INVALIDCALL;
@@ -6903,34 +7035,36 @@ HRESULT WINAPI D3DXCreateEffectFromResourceExA(struct IDirect3DDevice9 *device, 
         return D3DXERR_INVALIDDATA;
 
     return D3DXCreateEffectEx(device, buffer, size, defines, include,
-            skipconstants, flags, pool, effect, compilationerrors);
+            skipconstants, flags, pool, effect, messages);
 }
 
 HRESULT WINAPI D3DXCreateEffectFromResourceW(struct IDirect3DDevice9 *device, HMODULE srcmodule,
         const WCHAR *srcresource, const D3DXMACRO *defines, struct ID3DXInclude *include, DWORD flags,
-        struct ID3DXEffectPool *pool, struct ID3DXEffect **effect, struct ID3DXBuffer **compilationerrors)
+        struct ID3DXEffectPool *pool, struct ID3DXEffect **effect, struct ID3DXBuffer **messages)
 {
     TRACE("(void): relay\n");
-    return D3DXCreateEffectFromResourceExW(device, srcmodule, srcresource, defines, include, NULL, flags, pool, effect, compilationerrors);
+    return D3DXCreateEffectFromResourceExW(device, srcmodule, srcresource, defines, include, NULL,
+            flags, pool, effect, messages);
 }
 
 HRESULT WINAPI D3DXCreateEffectFromResourceA(struct IDirect3DDevice9 *device, HMODULE srcmodule,
         const char *srcresource, const D3DXMACRO *defines, struct ID3DXInclude *include, DWORD flags,
-        struct ID3DXEffectPool *pool, struct ID3DXEffect **effect, struct ID3DXBuffer **compilationerrors)
+        struct ID3DXEffectPool *pool, struct ID3DXEffect **effect, struct ID3DXBuffer **messages)
 {
     TRACE("(void): relay\n");
-    return D3DXCreateEffectFromResourceExA(device, srcmodule, srcresource, defines, include, NULL, flags, pool, effect, compilationerrors);
+    return D3DXCreateEffectFromResourceExA(device, srcmodule, srcresource, defines, include, NULL,
+            flags, pool, effect, messages);
 }
 
 HRESULT WINAPI D3DXCreateEffectCompilerFromFileW(const WCHAR *srcfile, const D3DXMACRO *defines,
-        ID3DXInclude *include, DWORD flags, ID3DXEffectCompiler **effectcompiler, ID3DXBuffer **parseerrors)
+        ID3DXInclude *include, DWORD flags, ID3DXEffectCompiler **compiler, ID3DXBuffer **messages)
 {
     void *buffer;
     HRESULT ret;
     DWORD size;
 
-    TRACE("srcfile %s, defines %p, include %p, flags %#x, effectcompiler %p, parseerrors %p.\n",
-            debugstr_w(srcfile), defines, include, flags, effectcompiler, parseerrors);
+    TRACE("srcfile %s, defines %p, include %p, flags %#lx, compiler %p, messages %p.\n",
+            debugstr_w(srcfile), defines, include, flags, compiler, messages);
 
     if (!srcfile)
         return D3DERR_INVALIDCALL;
@@ -6940,45 +7074,45 @@ HRESULT WINAPI D3DXCreateEffectCompilerFromFileW(const WCHAR *srcfile, const D3D
     if (FAILED(ret))
         return D3DXERR_INVALIDDATA;
 
-    ret = D3DXCreateEffectCompiler(buffer, size, defines, include, flags, effectcompiler, parseerrors);
+    ret = D3DXCreateEffectCompiler(buffer, size, defines, include, flags, compiler, messages);
     UnmapViewOfFile(buffer);
 
     return ret;
 }
 
 HRESULT WINAPI D3DXCreateEffectCompilerFromFileA(const char *srcfile, const D3DXMACRO *defines,
-        ID3DXInclude *include, DWORD flags, ID3DXEffectCompiler **effectcompiler, ID3DXBuffer **parseerrors)
+        ID3DXInclude *include, DWORD flags, ID3DXEffectCompiler **compiler, ID3DXBuffer **messages)
 {
     WCHAR *srcfileW;
     HRESULT ret;
     DWORD len;
 
-    TRACE("srcfile %s, defines %p, include %p, flags %#x, effectcompiler %p, parseerrors %p.\n",
-            debugstr_a(srcfile), defines, include, flags, effectcompiler, parseerrors);
+    TRACE("srcfile %s, defines %p, include %p, flags %#lx, compiler %p, messages %p.\n",
+            debugstr_a(srcfile), defines, include, flags, compiler, messages);
 
     if (!srcfile)
         return D3DERR_INVALIDCALL;
 
     len = MultiByteToWideChar(CP_ACP, 0, srcfile, -1, NULL, 0);
-    srcfileW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(*srcfileW));
+    srcfileW = malloc(len * sizeof(*srcfileW));
     MultiByteToWideChar(CP_ACP, 0, srcfile, -1, srcfileW, len);
 
-    ret = D3DXCreateEffectCompilerFromFileW(srcfileW, defines, include, flags, effectcompiler, parseerrors);
-    HeapFree(GetProcessHeap(), 0, srcfileW);
+    ret = D3DXCreateEffectCompilerFromFileW(srcfileW, defines, include, flags, compiler, messages);
+    free(srcfileW);
 
     return ret;
 }
 
 HRESULT WINAPI D3DXCreateEffectCompilerFromResourceA(HMODULE srcmodule, const char *srcresource,
         const D3DXMACRO *defines, ID3DXInclude *include, DWORD flags,
-        ID3DXEffectCompiler **effectcompiler, ID3DXBuffer **parseerrors)
+        ID3DXEffectCompiler **compiler, ID3DXBuffer **messages)
 {
     HRSRC resinfo;
     void *buffer;
     DWORD size;
 
-    TRACE("srcmodule %p, srcresource %s, defines %p, include %p, flags %#x, effectcompiler %p, parseerrors %p.\n",
-            srcmodule, debugstr_a(srcresource), defines, include, flags, effectcompiler, parseerrors);
+    TRACE("srcmodule %p, srcresource %s, defines %p, include %p, flags %#lx, compiler %p, messages %p.\n",
+            srcmodule, debugstr_a(srcresource), defines, include, flags, compiler, messages);
 
     if (!(resinfo = FindResourceA(srcmodule, srcresource, (const char *)RT_RCDATA)))
         return D3DXERR_INVALIDDATA;
@@ -6986,19 +7120,19 @@ HRESULT WINAPI D3DXCreateEffectCompilerFromResourceA(HMODULE srcmodule, const ch
     if (FAILED(load_resource_into_memory(srcmodule, resinfo, &buffer, &size)))
         return D3DXERR_INVALIDDATA;
 
-    return D3DXCreateEffectCompiler(buffer, size, defines, include, flags, effectcompiler, parseerrors);
+    return D3DXCreateEffectCompiler(buffer, size, defines, include, flags, compiler, messages);
 }
 
 HRESULT WINAPI D3DXCreateEffectCompilerFromResourceW(HMODULE srcmodule, const WCHAR *srcresource,
         const D3DXMACRO *defines, ID3DXInclude *include, DWORD flags,
-        ID3DXEffectCompiler **effectcompiler, ID3DXBuffer **parseerrors)
+        ID3DXEffectCompiler **compiler, ID3DXBuffer **messages)
 {
     HRSRC resinfo;
     void *buffer;
     DWORD size;
 
-    TRACE("srcmodule %p, srcresource %s, defines %p, include %p, flags %#x, effectcompiler %p, parseerrors %p.\n",
-            srcmodule, debugstr_w(srcresource), defines, include, flags, effectcompiler, parseerrors);
+    TRACE("srcmodule %p, srcresource %s, defines %p, include %p, flags %#lx, compiler %p, messages %p.\n",
+            srcmodule, debugstr_w(srcresource), defines, include, flags, compiler, messages);
 
     if (!(resinfo = FindResourceW(srcmodule, srcresource, (const WCHAR *)RT_RCDATA)))
         return D3DXERR_INVALIDDATA;
@@ -7006,7 +7140,7 @@ HRESULT WINAPI D3DXCreateEffectCompilerFromResourceW(HMODULE srcmodule, const WC
     if (FAILED(load_resource_into_memory(srcmodule, resinfo, &buffer, &size)))
         return D3DXERR_INVALIDDATA;
 
-    return D3DXCreateEffectCompiler(buffer, size, defines, include, flags, effectcompiler, parseerrors);
+    return D3DXCreateEffectCompiler(buffer, size, defines, include, flags, compiler, messages);
 }
 
 HRESULT WINAPI D3DXDisassembleEffect(ID3DXEffect *effect, BOOL enable_color_code, ID3DXBuffer **disassembly)

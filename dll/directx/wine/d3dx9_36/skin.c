@@ -1,11 +1,7 @@
-#ifdef __REACTOS__
-#include "precomp.h"
-#else
 /*
  * Skin Info operations specific to D3DX9.
  *
  * Copyright (C) 2011 Dylan Smith
- * Copyright (C) 2013 Christian Costa
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,7 +20,6 @@
 
 
 #include "d3dx9_private.h"
-#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
@@ -75,7 +70,7 @@ static ULONG WINAPI d3dx9_skin_info_AddRef(ID3DXSkinInfo *iface)
     struct d3dx9_skin_info *skin = impl_from_ID3DXSkinInfo(iface);
     ULONG refcount = InterlockedIncrement(&skin->ref);
 
-    TRACE("%p increasing refcount to %u.\n", skin, refcount);
+    TRACE("%p increasing refcount to %lu.\n", skin, refcount);
 
     return refcount;
 }
@@ -85,7 +80,7 @@ static ULONG WINAPI d3dx9_skin_info_Release(ID3DXSkinInfo *iface)
     struct d3dx9_skin_info *skin = impl_from_ID3DXSkinInfo(iface);
     ULONG refcount = InterlockedDecrement(&skin->ref);
 
-    TRACE("%p decreasing refcount to %u.\n", skin, refcount);
+    TRACE("%p decreasing refcount to %lu.\n", skin, refcount);
 
     if (!refcount)
     {
@@ -93,12 +88,12 @@ static ULONG WINAPI d3dx9_skin_info_Release(ID3DXSkinInfo *iface)
 
         for (i = 0; i < skin->num_bones; ++i)
         {
-            HeapFree(GetProcessHeap(), 0, skin->bones[i].name);
-            HeapFree(GetProcessHeap(), 0, skin->bones[i].vertices);
-            HeapFree(GetProcessHeap(), 0, skin->bones[i].weights);
+            free(skin->bones[i].name);
+            free(skin->bones[i].vertices);
+            free(skin->bones[i].weights);
         }
-        HeapFree(GetProcessHeap(), 0, skin->bones);
-        HeapFree(GetProcessHeap(), 0, skin);
+        free(skin->bones);
+        free(skin);
     }
 
     return refcount;
@@ -112,19 +107,19 @@ static HRESULT WINAPI d3dx9_skin_info_SetBoneInfluence(ID3DXSkinInfo *iface,
     DWORD *new_vertices = NULL;
     FLOAT *new_weights = NULL;
 
-    TRACE("iface %p, bone_num %u, num_influences %u, vertices %p, weights %p.\n",
+    TRACE("iface %p, bone_num %lu, num_influences %lu, vertices %p, weights %p.\n",
             iface, bone_num, num_influences, vertices, weights);
 
     if (bone_num >= skin->num_bones || !vertices || !weights)
         return D3DERR_INVALIDCALL;
 
     if (num_influences) {
-        new_vertices = HeapAlloc(GetProcessHeap(), 0, num_influences * sizeof(*vertices));
+        new_vertices = malloc(num_influences * sizeof(*vertices));
         if (!new_vertices)
             return E_OUTOFMEMORY;
-        new_weights = HeapAlloc(GetProcessHeap(), 0, num_influences * sizeof(*weights));
+        new_weights = malloc(num_influences * sizeof(*weights));
         if (!new_weights) {
-            HeapFree(GetProcessHeap(), 0, new_vertices);
+            free(new_vertices);
             return E_OUTOFMEMORY;
         }
         memcpy(new_vertices, vertices, num_influences * sizeof(*vertices));
@@ -132,8 +127,8 @@ static HRESULT WINAPI d3dx9_skin_info_SetBoneInfluence(ID3DXSkinInfo *iface,
     }
     bone = &skin->bones[bone_num];
     bone->num_influences = num_influences;
-    HeapFree(GetProcessHeap(), 0, bone->vertices);
-    HeapFree(GetProcessHeap(), 0, bone->weights);
+    free(bone->vertices);
+    free(bone->weights);
     bone->vertices = new_vertices;
     bone->weights = new_weights;
 
@@ -141,39 +136,39 @@ static HRESULT WINAPI d3dx9_skin_info_SetBoneInfluence(ID3DXSkinInfo *iface,
 }
 
 static HRESULT WINAPI d3dx9_skin_info_SetBoneVertexInfluence(ID3DXSkinInfo *iface,
-        DWORD bone_num, DWORD influence_num, float weight)
+        DWORD bone_idx, DWORD influence_idx, float weight)
 {
-    FIXME("iface %p, bone_num %u, influence_num %u, weight %.8e stub!\n",
-            iface, bone_num, influence_num, weight);
+    FIXME("iface %p, bone_idx %lu, influence_idx %lu, weight %.8e stub!\n",
+            iface, bone_idx, influence_idx, weight);
 
     return E_NOTIMPL;
 }
 
-static DWORD WINAPI d3dx9_skin_info_GetNumBoneInfluences(ID3DXSkinInfo *iface, DWORD bone_num)
+static DWORD WINAPI d3dx9_skin_info_GetNumBoneInfluences(ID3DXSkinInfo *iface, DWORD bone_idx)
 {
     struct d3dx9_skin_info *skin = impl_from_ID3DXSkinInfo(iface);
 
-    TRACE("iface %p, bone_num %u.\n", iface, bone_num);
+    TRACE("iface %p, bone_idx %lu.\n", iface, bone_idx);
 
-    if (bone_num >= skin->num_bones)
+    if (bone_idx >= skin->num_bones)
         return 0;
 
-    return skin->bones[bone_num].num_influences;
+    return skin->bones[bone_idx].num_influences;
 }
 
 static HRESULT WINAPI d3dx9_skin_info_GetBoneInfluence(ID3DXSkinInfo *iface,
-        DWORD bone_num, DWORD *vertices, float *weights)
+        DWORD bone_idx, DWORD *vertices, float *weights)
 {
     struct d3dx9_skin_info *skin = impl_from_ID3DXSkinInfo(iface);
     struct bone *bone;
 
-    TRACE("iface %p, bone_num %u, vertices %p, weights %p.\n",
-            iface, bone_num, vertices, weights);
+    TRACE("iface %p, bone_idx %lu, vertices %p, weights %p.\n",
+            iface, bone_idx, vertices, weights);
 
-    if (bone_num >= skin->num_bones || !vertices)
+    if (bone_idx >= skin->num_bones || !vertices)
         return D3DERR_INVALIDCALL;
 
-    bone = &skin->bones[bone_num];
+    bone = &skin->bones[bone_idx];
     if (!bone->num_influences)
         return D3D_OK;
 
@@ -185,10 +180,10 @@ static HRESULT WINAPI d3dx9_skin_info_GetBoneInfluence(ID3DXSkinInfo *iface,
 }
 
 static HRESULT WINAPI d3dx9_skin_info_GetBoneVertexInfluence(ID3DXSkinInfo *iface,
-        DWORD bone_num, DWORD influence_num, float *weight, DWORD *vertex_num)
+        DWORD bone_idx, DWORD influence_idx, float *weight, DWORD *vertex_idx)
 {
-    FIXME("iface %p, bone_num %u, influence_num %u, weight %p, vertex_num %p stub!\n",
-            iface, bone_num, influence_num, weight, vertex_num);
+    FIXME("iface %p, bone_idx %lu, influence_idx %lu, weight %p, vertex_idx %p stub!\n",
+            iface, bone_idx, influence_idx, weight, vertex_idx);
 
     return E_NOTIMPL;
 }
@@ -210,19 +205,19 @@ static DWORD WINAPI d3dx9_skin_info_GetNumBones(ID3DXSkinInfo *iface)
 }
 
 static HRESULT WINAPI d3dx9_skin_info_FindBoneVertexInfluenceIndex(ID3DXSkinInfo *iface,
-        DWORD bone_num, DWORD vertex_num, DWORD *influence_index)
+        DWORD bone_idx, DWORD vertex_idx, DWORD *influence_idx)
 {
-    FIXME("iface %p, bone_num %u, vertex_num %u, influence_index %p stub!\n",
-            iface, bone_num, vertex_num, influence_index);
+    FIXME("iface %p, bone_idx %lu, vertex_idx %lu, influence_idx %p stub!\n",
+            iface, bone_idx, vertex_idx, influence_idx);
 
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI d3dx9_skin_info_GetMaxFaceInfluences(struct ID3DXSkinInfo *iface,
-        struct IDirect3DIndexBuffer9 *index_buffer, DWORD num_faces, DWORD *max_face_influences)
+        struct IDirect3DIndexBuffer9 *index_buffer, DWORD face_count, DWORD *max_face_influences)
 {
-    FIXME("iface %p, index_buffer %p, num_faces %u, max_face_influences %p stub!\n",
-            iface, index_buffer, num_faces, max_face_influences);
+    FIXME("iface %p, index_buffer %p, face_count %lu, max_face_influences %p stub!\n",
+            iface, index_buffer, face_count, max_face_influences);
 
     return E_NOTIMPL;
 }
@@ -245,19 +240,16 @@ static HRESULT WINAPI d3dx9_skin_info_SetBoneName(ID3DXSkinInfo *iface, DWORD bo
 {
     struct d3dx9_skin_info *skin = impl_from_ID3DXSkinInfo(iface);
     char *new_name;
-    size_t size;
 
-    TRACE("iface %p, bone_idx %u, name %s.\n", iface, bone_idx, debugstr_a(name));
+    TRACE("iface %p, bone_idx %lu, name %s.\n", iface, bone_idx, debugstr_a(name));
 
     if (bone_idx >= skin->num_bones || !name)
         return D3DERR_INVALIDCALL;
 
-    size = strlen(name) + 1;
-    new_name = HeapAlloc(GetProcessHeap(), 0, size);
+    new_name = strdup(name);
     if (!new_name)
         return E_OUTOFMEMORY;
-    memcpy(new_name, name, size);
-    HeapFree(GetProcessHeap(), 0, skin->bones[bone_idx].name);
+    free(skin->bones[bone_idx].name);
     skin->bones[bone_idx].name = new_name;
 
     return D3D_OK;
@@ -267,7 +259,7 @@ static const char * WINAPI d3dx9_skin_info_GetBoneName(ID3DXSkinInfo *iface, DWO
 {
     struct d3dx9_skin_info *skin = impl_from_ID3DXSkinInfo(iface);
 
-    TRACE("iface %p, bone_idx %u.\n", iface, bone_idx);
+    TRACE("iface %p, bone_idx %lu.\n", iface, bone_idx);
 
     if (bone_idx >= skin->num_bones)
         return NULL;
@@ -276,29 +268,29 @@ static const char * WINAPI d3dx9_skin_info_GetBoneName(ID3DXSkinInfo *iface, DWO
 }
 
 static HRESULT WINAPI d3dx9_skin_info_SetBoneOffsetMatrix(ID3DXSkinInfo *iface,
-        DWORD bone_num, const D3DXMATRIX *bone_transform)
+        DWORD bone_idx, const D3DXMATRIX *bone_transform)
 {
     struct d3dx9_skin_info *skin = impl_from_ID3DXSkinInfo(iface);
 
-    TRACE("iface %p, bone_num %u, bone_transform %p.\n", iface, bone_num, bone_transform);
+    TRACE("iface %p, bone_idx %lu, bone_transform %p.\n", iface, bone_idx, bone_transform);
 
-    if (bone_num >= skin->num_bones || !bone_transform)
+    if (bone_idx >= skin->num_bones || !bone_transform)
         return D3DERR_INVALIDCALL;
 
-    skin->bones[bone_num].transform = *bone_transform;
+    skin->bones[bone_idx].transform = *bone_transform;
     return D3D_OK;
 }
 
-static D3DXMATRIX * WINAPI d3dx9_skin_info_GetBoneOffsetMatrix(ID3DXSkinInfo *iface, DWORD bone_num)
+static D3DXMATRIX * WINAPI d3dx9_skin_info_GetBoneOffsetMatrix(ID3DXSkinInfo *iface, DWORD bone_idx)
 {
     struct d3dx9_skin_info *skin = impl_from_ID3DXSkinInfo(iface);
 
-    TRACE("iface %p, bone_num %u.\n", iface, bone_num);
+    TRACE("iface %p, bone_idx %lu.\n", iface, bone_idx);
 
-    if (bone_num >= skin->num_bones)
+    if (bone_idx >= skin->num_bones)
         return NULL;
 
-    return &skin->bones[bone_num].transform;
+    return &skin->bones[bone_idx].transform;
 }
 
 static HRESULT WINAPI d3dx9_skin_info_Clone(ID3DXSkinInfo *iface, ID3DXSkinInfo **skin_info)
@@ -332,9 +324,9 @@ static HRESULT WINAPI d3dx9_skin_info_Clone(ID3DXSkinInfo *iface, ID3DXSkinInfo 
     return hr;
 }
 
-static HRESULT WINAPI d3dx9_skin_info_Remap(ID3DXSkinInfo *iface, DWORD num_vertices, DWORD *vertex_remap)
+static HRESULT WINAPI d3dx9_skin_info_Remap(ID3DXSkinInfo *iface, DWORD vertex_count, DWORD *vertex_remap)
 {
-    FIXME("iface %p, num_vertices %u, vertex_remap %p stub!\n", iface, num_vertices, vertex_remap);
+    FIXME("iface %p, vertex_count %lu, vertex_remap %p stub!\n", iface, vertex_count, vertex_remap);
 
     return E_NOTIMPL;
 }
@@ -344,7 +336,7 @@ static HRESULT WINAPI d3dx9_skin_info_SetFVF(ID3DXSkinInfo *iface, DWORD fvf)
     HRESULT hr;
     D3DVERTEXELEMENT9 declaration[MAX_FVF_DECL_SIZE];
 
-    TRACE("iface %p, fvf %#x.\n", iface, fvf);
+    TRACE("iface %p, fvf %#lx.\n", iface, fvf);
 
     hr = D3DXDeclaratorFromFVF(fvf, declaration);
     if (FAILED(hr)) return hr;
@@ -404,113 +396,35 @@ static HRESULT WINAPI d3dx9_skin_info_GetDeclaration(ID3DXSkinInfo *iface,
 static HRESULT WINAPI d3dx9_skin_info_UpdateSkinnedMesh(ID3DXSkinInfo *iface, const D3DXMATRIX *bone_transforms,
         const D3DXMATRIX *bone_inv_transpose_transforms, const void *src_vertices, void *dst_vertices)
 {
-    struct d3dx9_skin_info *skin = impl_from_ID3DXSkinInfo(iface);
-    DWORD size = D3DXGetFVFVertexSize(skin->fvf);
-    DWORD i, j;
+    FIXME("iface %p, bone_transforms %p, bone_inv_transpose_transforms %p, src_vertices %p, dst_vertices %p stub!\n",
+            iface, bone_transforms, bone_inv_transpose_transforms, src_vertices, dst_vertices);
 
-    TRACE("iface %p, bone_transforms %p, bone_inv_transpose_transforms %p, src_vertices %p, dst_vertices %p\n",
-            skin, bone_transforms, bone_inv_transpose_transforms, src_vertices, dst_vertices);
-
-    if (bone_inv_transpose_transforms)
-        FIXME("Skinning vertices with two position elements not supported\n");
-
-    if ((skin->fvf & D3DFVF_POSITION_MASK) != D3DFVF_XYZ) {
-        FIXME("Vertex type %#x not supported\n", skin->fvf & D3DFVF_POSITION_MASK);
-        return E_FAIL;
-    }
-
-    /* Reset all positions */
-    for (i = 0; i < skin->num_vertices; i++) {
-        D3DXVECTOR3 *position = (D3DXVECTOR3*)((BYTE*)dst_vertices + size * i);
-        position->x = 0.0f;
-        position->y = 0.0f;
-        position->z = 0.0f;
-    }
-
-    /* Update positions that are influenced by bones */
-    for (i = 0; i < skin->num_bones; i++) {
-        D3DXMATRIX bone_inverse, matrix;
-
-        D3DXMatrixInverse(&bone_inverse, NULL, &skin->bones[i].transform);
-        D3DXMatrixMultiply(&matrix, &bone_transforms[i], &bone_inverse);
-        D3DXMatrixMultiply(&matrix, &matrix, &skin->bones[i].transform);
-
-        for (j = 0; j < skin->bones[i].num_influences; j++) {
-            D3DXVECTOR3 position;
-            D3DXVECTOR3 *position_src = (D3DXVECTOR3*)((BYTE*)src_vertices + size * skin->bones[i].vertices[j]);
-            D3DXVECTOR3 *position_dest = (D3DXVECTOR3*)((BYTE*)dst_vertices + size * skin->bones[i].vertices[j]);
-            FLOAT weight = skin->bones[i].weights[j];
-
-            D3DXVec3TransformCoord(&position, position_src, &matrix);
-            position_dest->x += weight * position.x;
-            position_dest->y += weight * position.y;
-            position_dest->z += weight * position.z;
-        }
-    }
-
-    if (skin->fvf & D3DFVF_NORMAL) {
-        /* Reset all normals */
-        for (i = 0; i < skin->num_vertices; i++) {
-            D3DXVECTOR3 *normal = (D3DXVECTOR3*)((BYTE*)dst_vertices + size * i + sizeof(D3DXVECTOR3));
-            normal->x = 0.0f;
-            normal->y = 0.0f;
-            normal->z = 0.0f;
-        }
-
-        /* Update normals that are influenced by bones */
-        for (i = 0; i < skin->num_bones; i++) {
-            D3DXMATRIX bone_inverse, matrix;
-
-            D3DXMatrixInverse(&bone_inverse, NULL, &skin->bones[i].transform);
-            D3DXMatrixMultiply(&matrix, &skin->bones[i].transform, &bone_transforms[i]);
-
-            for (j = 0; j < skin->bones[i].num_influences; j++) {
-                D3DXVECTOR3 normal;
-                D3DXVECTOR3 *normal_src = (D3DXVECTOR3*)((BYTE*)src_vertices + size * skin->bones[i].vertices[j] + sizeof(D3DXVECTOR3));
-                D3DXVECTOR3 *normal_dest = (D3DXVECTOR3*)((BYTE*)dst_vertices + size * skin->bones[i].vertices[j] + sizeof(D3DXVECTOR3));
-                FLOAT weight = skin->bones[i].weights[j];
-
-                D3DXVec3TransformNormal(&normal, normal_src, &bone_inverse);
-                D3DXVec3TransformNormal(&normal, &normal, &matrix);
-                normal_dest->x += weight * normal.x;
-                normal_dest->y += weight * normal.y;
-                normal_dest->z += weight * normal.z;
-            }
-        }
-
-        /* Normalize all normals that are influenced by bones*/
-        for (i = 0; i < skin->num_vertices; i++) {
-            D3DXVECTOR3 *normal_dest = (D3DXVECTOR3*)((BYTE*)dst_vertices + (i * size) + sizeof(D3DXVECTOR3));
-            if ((normal_dest->x != 0.0f) && (normal_dest->y != 0.0f) && (normal_dest->z != 0.0f))
-                D3DXVec3Normalize(normal_dest, normal_dest);
-        }
-    }
-
-    return D3D_OK;
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI d3dx9_skin_info_ConvertToBlendedMesh(ID3DXSkinInfo *iface, ID3DXMesh *mesh_in,
         DWORD options, const DWORD *adjacency_in, DWORD *adjacency_out, DWORD *face_remap,
-        ID3DXBuffer **vertex_remap, DWORD *max_face_infl, DWORD *num_bone_combinations,
+        ID3DXBuffer **vertex_remap, DWORD *max_face_influences, DWORD *bone_combination_count,
         ID3DXBuffer **bone_combination_table, ID3DXMesh **mesh_out)
 {
-    FIXME("iface %p, mesh_in %p, options %#x, adjacency_in %p, adjacency_out %p, face_remap %p, vertex_remap %p, "
-            "max_face_infl %p, num_bone_combinations %p, bone_combination_table %p, mesh_out %p stub!\n",
+    FIXME("iface %p, mesh_in %p, options %#lx, adjacency_in %p, adjacency_out %p, face_remap %p, vertex_remap %p, "
+            "max_face_influences %p, bone_combination_count %p, bone_combination_table %p, mesh_out %p stub!\n",
             iface, mesh_in, options, adjacency_in, adjacency_out, face_remap, vertex_remap,
-            max_face_infl, num_bone_combinations, bone_combination_table, mesh_out);
+            max_face_influences, bone_combination_count, bone_combination_table, mesh_out);
 
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI d3dx9_skin_info_ConvertToIndexedBlendedMesh(ID3DXSkinInfo *iface, ID3DXMesh *mesh_in,
         DWORD options, DWORD palette_size, const DWORD *adjacency_in, DWORD *adjacency_out, DWORD *face_remap,
-        ID3DXBuffer **vertex_remap, DWORD *max_face_infl, DWORD *num_bone_combinations,
+        ID3DXBuffer **vertex_remap, DWORD *max_vertex_influences, DWORD *bone_combination_count,
         ID3DXBuffer **bone_combination_table, ID3DXMesh **mesh_out)
 {
-    FIXME("iface %p, mesh_in %p, options %#x, palette_size %u, adjacency_in %p, adjacency_out %p, face_remap %p, vertex_remap %p, "
-            "max_face_infl %p, num_bone_combinations %p, bone_combination_table %p, mesh_out %p stub!\n",
+    FIXME("iface %p, mesh_in %p, options %#lx, palette_size %lu, adjacency_in %p, adjacency_out %p, "
+            "face_remap %p, vertex_remap %p, max_vertex_influences %p, bone_combination_count %p, "
+            "bone_combination_table %p, mesh_out %p stub!\n",
             iface, mesh_in, options, palette_size, adjacency_in, adjacency_out, face_remap, vertex_remap,
-            max_face_infl, num_bone_combinations, bone_combination_table, mesh_out);
+            max_vertex_influences, bone_combination_count, bone_combination_table, mesh_out);
 
     return E_NOTIMPL;
 }
@@ -546,31 +460,31 @@ static const struct ID3DXSkinInfoVtbl d3dx9_skin_info_vtbl =
     d3dx9_skin_info_ConvertToIndexedBlendedMesh,
 };
 
-HRESULT WINAPI D3DXCreateSkinInfo(DWORD num_vertices, const D3DVERTEXELEMENT9 *declaration,
-        DWORD num_bones, ID3DXSkinInfo **skin_info)
+HRESULT WINAPI D3DXCreateSkinInfo(DWORD vertex_count, const D3DVERTEXELEMENT9 *declaration,
+        DWORD bone_count, ID3DXSkinInfo **skin_info)
 {
     HRESULT hr;
     static const D3DVERTEXELEMENT9 empty_declaration = D3DDECL_END();
     struct d3dx9_skin_info *object = NULL;
 
-    TRACE("num_vertices %u, declaration %p, num_bones %u, skin_info %p.\n",
-            num_vertices, declaration, num_bones, skin_info);
+    TRACE("vertex_count %lu, declaration %p, bone_count %lu, skin_info %p.\n",
+            vertex_count, declaration, bone_count, skin_info);
 
     if (!skin_info || !declaration)
         return D3DERR_INVALIDCALL;
 
-    object = HeapAlloc(GetProcessHeap(), 0, sizeof(*object));
+    object = calloc(1, sizeof(*object));
     if (!object)
         return E_OUTOFMEMORY;
 
     object->ID3DXSkinInfo_iface.lpVtbl = &d3dx9_skin_info_vtbl;
     object->ref = 1;
-    object->num_vertices = num_vertices;
-    object->num_bones = num_bones;
+    object->num_vertices = vertex_count;
+    object->num_bones = bone_count;
     object->vertex_declaration[0] = empty_declaration;
     object->fvf = 0;
 
-    object->bones = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, num_bones * sizeof(*object->bones));
+    object->bones = calloc(bone_count, sizeof(*object->bones));
     if (!object->bones) {
         hr = E_OUTOFMEMORY;
         goto error;
@@ -583,21 +497,22 @@ HRESULT WINAPI D3DXCreateSkinInfo(DWORD num_vertices, const D3DVERTEXELEMENT9 *d
 
     return D3D_OK;
 error:
-    HeapFree(GetProcessHeap(), 0, object->bones);
-    HeapFree(GetProcessHeap(), 0, object);
+    free(object->bones);
+    free(object);
     return hr;
 }
 
-HRESULT WINAPI D3DXCreateSkinInfoFVF(DWORD num_vertices, DWORD fvf, DWORD num_bones, ID3DXSkinInfo **skin_info)
+HRESULT WINAPI D3DXCreateSkinInfoFVF(DWORD vertex_count, DWORD fvf, DWORD bone_count, ID3DXSkinInfo **skin_info)
 {
     HRESULT hr;
     D3DVERTEXELEMENT9 declaration[MAX_FVF_DECL_SIZE];
 
-    TRACE("(%u, %x, %u, %p)\n", num_vertices, fvf, num_bones, skin_info);
+    TRACE("vertex_count %lu, fvf %#lx, bone_count %lu, skin_info %p.\n",
+            vertex_count, fvf, bone_count, skin_info);
 
     hr = D3DXDeclaratorFromFVF(fvf, declaration);
     if (FAILED(hr))
         return hr;
 
-    return D3DXCreateSkinInfo(num_vertices, declaration, num_bones, skin_info);
+    return D3DXCreateSkinInfo(vertex_count, declaration, bone_count, skin_info);
 }

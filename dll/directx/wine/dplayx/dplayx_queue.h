@@ -211,6 +211,6 @@ do                                               \
 #define DPQ_DECL_DELETECB( name, type ) void name( type elem )
 
 /* Prototype of a method which just performs a HeapFree on the elem */
-DPQ_DECL_DELETECB( cbDeleteElemFromHeap, LPVOID ) DECLSPEC_HIDDEN;
+DPQ_DECL_DELETECB( cbDeleteElemFromHeap, LPVOID );
 
 #endif /* __WINE_DPLAYX_QUEUE_H */

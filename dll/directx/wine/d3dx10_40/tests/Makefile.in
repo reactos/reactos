@@ -1,0 +1,7 @@
+EXTRADEFS = -DD3DX10_SDK_VERSION=40
+TESTDLL = d3dx10_40.dll
+IMPORTS = d3dx10_40 ole32 gdi32
+PARENTSRC = ../../d3dx10_43/tests
+
+SOURCES = \
+	d3dx10.c

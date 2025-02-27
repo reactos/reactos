@@ -1,0 +1,6 @@
+TESTDLL = d3dx11_42.dll
+IMPORTS = d3dx11_42
+PARENTSRC = ../../d3dx11_43/tests
+
+SOURCES = \
+	d3dx11.c

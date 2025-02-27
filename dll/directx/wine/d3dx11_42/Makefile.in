@@ -1,0 +1,13 @@
+EXTRADEFS = -DD3DX11_SDK_VERSION=42
+MODULE    = d3dx11_42.dll
+IMPORTLIB = d3dx11_42
+IMPORTS = d3dcompiler
+PARENTSRC = ../d3dx11_43
+
+EXTRADLLFLAGS = -Wb,--prefer-native
+
+SOURCES = \
+	async.c \
+	main.c \
+	texture.c \
+	version.rc

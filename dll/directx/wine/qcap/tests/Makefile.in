@@ -1,0 +1,12 @@
+TESTDLL   = qcap.dll
+IMPORTS   = strmbase strmiids uuid oleaut32 ole32 advapi32 msvfw32
+
+SOURCES = \
+	audiorecord.c \
+	avico.c \
+	avimux.c \
+	capturegraph.c \
+	filewriter.c \
+	qcap.c \
+	smartteefilter.c \
+	videocapture.c

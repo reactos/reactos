@@ -1,0 +1,821 @@
+/*
+ * Copyright 2017 Fabian Maurer
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#pragma makedep register
+
+#include "unknwn.idl"
+
+#include "d3d8types.h"
+
+interface Direct3DDevice8;
+interface D3DXFont;
+interface D3DXBuffer;
+interface Direct3DSurface8;
+interface Direct3DTexture8;
+interface Direct3DCubeTexture8;
+interface Direct3DVolume8;
+interface D3DXMesh;
+interface D3DXSPMesh;
+interface D3DXPMesh;
+interface D3DXBaseMesh;
+interface D3DXSkinMesh;
+interface D3DXSprite;
+interface D3DXRenderToSurface;
+interface Direct3DBaseTexture8;
+interface DirectSound8;
+interface DirectSoundCapture8;
+interface DirectSoundEnum8;
+interface DirectSoundEnum8;
+interface DirectInput8;
+interface DirectMusicLoader8;
+interface DirectMusicComposer8;
+interface DirectMusicPerformance8;
+interface DirectXEvent8;
+interface DirectPlayVoiceClient8;
+interface DirectPlayVoiceServer8;
+interface DirectPlayVoiceTest8;
+interface DirectXFile;
+interface DirectPlay8Peer;
+interface DirectPlay8Server;
+interface DirectPlay8Client;
+interface DirectPlay8Address;
+interface Direct3D8;
+interface DirectPlay8LobbyClient;
+interface DirectPlay8LobbiedApplication;
+
+typedef enum {
+    D3DXIFF_BMP = 0,
+    D3DXIFF_JPG = 1,
+    D3DXIFF_TGA = 2,
+    D3DXIFF_PNG = 3,
+    D3DXIFF_DDS = 4,
+    D3DXIFF_PPM = 5,
+    D3DXIFF_DIB = 6,
+    D3DXIFF_FORCE_DWORD = 0x7fffffff
+} D3DXIMAGE_FILEFORMAT;
+
+typedef struct tagD3DXDECLARATOR {
+    LONG value[32];
+} D3DXDECLARATOR;
+
+typedef struct tagD3DXMATERIAL {
+    D3DMATERIAL8 MatD3D;
+    BSTR TextureFilename;
+} D3DXMATERIAL;
+
+typedef struct tagD3DXBONECOMBINATION {
+    LONG AttribId;
+    LONG FaceStart;
+    LONG FaceCount;
+    LONG VertexStart;
+    LONG VertexCount;
+    LONG pBones;
+} D3DXBONECOMBINATION;
+
+[
+    object,
+    uuid(3ac50043-cf82-4c44-862e-b206b4f03301),
+    local
+]
+interface ID3DX8 : IUnknown {
+    HRESULT CreateFont(
+        [in] Direct3DDevice8 *device,
+        [in] LONG hFont,
+        [out, retval] D3DXFont **retFont
+    );
+    HRESULT DrawText(
+        [in] D3DXFont *d3dFont,
+        [in] LONG color,
+        [in] BSTR text,
+        [in] RECT *rect,
+        [in] LONG format
+    );
+    HRESULT GetFVFVertexSize(
+        [in] LONG fvf,
+        [out, retval] LONG *size
+    );
+    HRESULT AssembleShaderFromFile(
+        [in] BSTR file,
+        [in] LONG flags,
+        [in, out] BSTR *log,
+        [in, out] D3DXBuffer **constants,
+        [out, retval] D3DXBuffer **ppVertexShader
+    );
+    HRESULT AssembleShader(
+        [in] BSTR data,
+        [in] LONG flags,
+        [in, out] D3DXBuffer **constants,
+        [in, out, optional] BSTR *log,
+        [out, retval] D3DXBuffer **ppVertexShader
+    );
+    HRESULT GetErrorString(
+        [in] LONG hr,
+        [out, retval] BSTR *retStr
+    );
+    HRESULT LoadSurfaceFromFile(
+        [in] Direct3DSurface8 *destSurface,
+        [in] void *destPalette,
+        [in] void *destRect,
+        [in] BSTR srcFile,
+        [in] void *srcRect,
+        [in] LONG filter,
+        [in] LONG colorKey,
+        [in, out] void *srcInfo
+    );
+    HRESULT LoadSurfaceFromFileInMemory(
+        [in] Direct3DSurface8 *destSurface,
+        [in] void *destPalette,
+        [in] void *destRect,
+        [in] void *srcData,
+        [in] LONG lengthInBytes,
+        [in] void *srcRect,
+        [in] LONG filter,
+        [in] LONG colorKey,
+        [in, out] void *srcInfo
+    );
+    HRESULT LoadSurfaceFromSurface(
+        [in] Direct3DSurface8 *destSurface,
+        [in] void *destPalette,
+        [in] void *destRect,
+        [in] Direct3DSurface8 *srcSurface,
+        [in] void *srcPalette,
+        [in] void *srcRect,
+        [in] LONG filter,
+        [in] LONG colorKey
+    );
+    HRESULT LoadSurfaceFromMemory(
+        [in] Direct3DSurface8 *destSurface,
+        [in] void *destPalette,
+        [in] void *destRect,
+        [in] void *srcData,
+        [in] D3DFORMAT formatSrc,
+        [in] LONG srcPitch,
+        [in] void *srcPalette,
+        [in] RECT *srcRect,
+        [in] LONG filter,
+        [in] LONG colorKey
+    );
+    HRESULT CheckTextureRequirements(
+        [in, out] Direct3DDevice8 *device,
+        [in, out] LONG *width,
+        [in, out] LONG *height,
+        [in, out] LONG *mipLevels,
+        [in] LONG usage,
+        [in, out] D3DFORMAT *pixelformat,
+        [in] D3DPOOL pool
+    );
+    HRESULT CreateTexture(
+        [in] Direct3DDevice8 *device,
+        [in] LONG width,
+        [in] LONG height,
+        [in] LONG mipLevels,
+        [in] LONG usage,
+        [in] D3DFORMAT pixelformat,
+        [in] D3DPOOL pool,
+        [out, retval] Direct3DTexture8 **ppTexture
+    );
+    HRESULT CreateTextureFromResource(
+        [in] Direct3DDevice8 *device,
+        [in] LONG hModule,
+        [in] BSTR srcResource,
+        [out, retval] Direct3DTexture8 **ppTexture
+    );
+    HRESULT CreateTextureFromFile(
+        [in] Direct3DDevice8 *device,
+        [in] BSTR srcFile,
+        [out, retval] Direct3DTexture8 **ppTexture
+    );
+    HRESULT CreateTextureFromFileEx(
+        [in] Direct3DDevice8 *device,
+        [in] BSTR srcFile,
+        [in] LONG width,
+        [in] LONG height,
+        [in] LONG mipLevels,
+        [in] LONG usage,
+        [in] D3DFORMAT pixelformat,
+        [in] D3DPOOL pool,
+        [in] LONG filter,
+        [in] LONG mipFilter,
+        [in] LONG colorKey,
+        [in, out] void *srcInfo,
+        [in] void *palette,
+        [out, retval] Direct3DTexture8 **ppTexture
+    );
+    HRESULT CreateTextureFromFileInMemory(
+        [in] Direct3DDevice8 *device,
+        [in] void *srcData,
+        [in] LONG lengthInBytes,
+        [out, retval] Direct3DTexture8 **ppTexture
+    );
+    HRESULT CreateTextureFromFileInMemoryEx(
+        [in] Direct3DDevice8 *device,
+        [in] void *srcData,
+        [in] LONG lengthInBytes,
+        [in] LONG width,
+        [in] LONG height,
+        [in] LONG mipLevels,
+        [in] LONG usage,
+        [in] D3DFORMAT pixelformat,
+        [in] D3DPOOL pool,
+        [in] LONG filter,
+        [in] LONG mipFilter,
+        [in] LONG colorKey,
+        [in, out] void *srcInfo,
+        [in] void *palette,
+        [out, retval] Direct3DTexture8 **ppTexture
+    );
+    HRESULT FilterTexture(
+        [in] Direct3DTexture8 *texture,
+        [in] void *palette,
+        [in] LONG srcLevel,
+        [in] LONG filter
+    );
+    HRESULT CheckCubeTextureRequirements(
+        [in] Direct3DDevice8 *device,
+        [in, out] LONG *size,
+        [in, out] LONG *mipLevels,
+        [in] LONG usage,
+        [in, out] D3DFORMAT *pixelformat,
+        [in] D3DPOOL pool
+    );
+    HRESULT CreateCubeTexture(
+        [in] Direct3DDevice8 *device,
+        [in] LONG size,
+        [in] LONG mipLevels,
+        [in] LONG usage,
+        [in] D3DFORMAT pixelformat,
+        [in] D3DPOOL pool,
+        [out, retval] Direct3DCubeTexture8 **ppCubeTexture
+    );
+    HRESULT CreateCubeTextureFromFile(
+        [in] Direct3DDevice8 *device,
+        [in] BSTR srcFile,
+        [out, retval] Direct3DCubeTexture8 **ppCubeTexture
+    );
+    HRESULT CreateCubeTextureFromFileEx(
+        [in] Direct3DDevice8 *device,
+        [in] BSTR srcFile,
+        [in] LONG textureSize,
+        [in] LONG mipLevels,
+        [in] LONG usage,
+        [in] D3DFORMAT pixelformat,
+        [in] D3DPOOL pool,
+        [in] LONG filter,
+        [in] LONG mipFilter,
+        [in] LONG colorKey,
+        [in, out] void *srcInfo,
+        [in] void *palette,
+        [out, retval] Direct3DCubeTexture8 **ppTexture
+    );
+    HRESULT CreateCubeTextureFromFileInMemory(
+        [in] Direct3DDevice8 *device,
+        [in] void *srcData,
+        [in] LONG lengthInBytes,
+        [out, retval] Direct3DCubeTexture8 **ppTexture
+    );
+    HRESULT CreateCubeTextureFromFileInMemoryEx(
+        [in] Direct3DDevice8 *device,
+        [in] void *srcData,
+        [in] LONG lengthInBytes,
+        [in] LONG textureSize,
+        [in] LONG mipLevels,
+        [in] LONG usage,
+        [in] D3DFORMAT pixelformat,
+        [in] D3DPOOL pool,
+        [in] LONG filter,
+        [in] LONG mipFilter,
+        [in] LONG colorKey,
+        [in, out] void *srcInfo,
+        [in] void *palette,
+        [out, retval] Direct3DCubeTexture8 **ppTexture
+    );
+    HRESULT FilterCubeTexture(
+        [in] Direct3DCubeTexture8 *cubeTexture,
+        [in] void *palette,
+        [in] LONG srcLevel,
+        [in] LONG filter
+    );
+    HRESULT CheckVolumeTextureRequirements(
+        [in] Direct3DDevice8 *device,
+        [out] LONG *width,
+        [out] LONG *height,
+        [out] LONG *depth,
+        [out] LONG *mipLevels,
+        [in] LONG usage,
+        [in, out] D3DFORMAT *pixelformat,
+        [in] D3DPOOL pool
+    );
+    HRESULT CreateTextureFromResourceEx(
+        [in] Direct3DDevice8 *device,
+        [in] LONG hSrcModule,
+        [in] BSTR srcResource,
+        [in] LONG width,
+        [in] LONG height,
+        [in] LONG mipLevels,
+        [in] LONG usage,
+        [in] D3DFORMAT pixelformat,
+        [in] D3DPOOL pool,
+        [in] LONG filter,
+        [in] LONG mipFilter,
+        [in] LONG colorKey,
+        [in, out] void *srcInfo,
+        [in] void *palette,
+        [out, retval] Direct3DTexture8 **retTexture
+    );
+    HRESULT CreateVolumeTexture(
+        [in] Direct3DDevice8 *device,
+        [in] LONG width,
+        [in] LONG height,
+        [in] LONG depth,
+        [in] LONG mipLevels,
+        [in] LONG usage,
+        [in] D3DFORMAT pixelformat,
+        [in] D3DPOOL pool,
+        [out, retval] Direct3DVolume8 **ppVolumeTexture
+    );
+    HRESULT FilterVolumeTexture(
+        [in] Direct3DVolume8 *volumeTexture,
+        [in] void *palette,
+        [in] LONG srcLevel,
+        [in] LONG filter
+    );
+    HRESULT LoadSurfaceFromResource(
+        [in] Direct3DSurface8 *destSurface,
+        [in] void *destPalette,
+        [in] void *destRect,
+        [in] LONG hSrcModule,
+        [in] BSTR srcResource,
+        [in] void *srcRect,
+        [in] LONG filter,
+        [in] LONG colorKey,
+        [in, out] void *srcInfo
+    );
+    HRESULT LoadVolumeFromVolume(
+        [in] Direct3DVolume8 *destVolume,
+        [in] void *destPalette,
+        [in] void *destBox,
+        [in] Direct3DVolume8 *srcVolume,
+        [in] void *srcPalette,
+        [in] void *srcBox,
+        [in] LONG filter,
+        [in] LONG colorKey
+    );
+    HRESULT LoadVolumeFromMemory(
+        [in] Direct3DVolume8 *destVolume,
+        [in] void *destPalette,
+        [in] void *destBox,
+        [in] void *srcMemory,
+        [in] LONG srcFormat,
+        [in] LONG srcRowPitch,
+        [in] LONG srcSlicePitch,
+        [in] void *srcPalette,
+        [in] void *srcBox,
+        [in] LONG filter,
+        [in] LONG colorKey
+    );
+    HRESULT CreateMesh(
+        [in] LONG numFaces,
+        [in] LONG numVertices,
+        [in] LONG options,
+        [in] void *declaration,
+        [in] Direct3DDevice8 *pD3D,
+        [out, retval] D3DXMesh **ppMesh
+    );
+    HRESULT CreateMeshFVF(
+        [in] LONG numFaces,
+        [in] LONG numVertices,
+        [in] LONG options,
+        [in] LONG fvf,
+        [in] Direct3DDevice8 *pD3D,
+        [out, retval] D3DXMesh **ppMesh
+    );
+    HRESULT CreateSPMesh(
+        [in] D3DXMesh *pMesh,
+        [in] void *adjacency,
+        [in] void *vertexAttributeWeights,
+        [in] void *vertexWeights,
+        [out, retval] D3DXSPMesh **ppSMesh
+    );
+    HRESULT GeneratePMesh(
+        [in] D3DXMesh *mesh,
+        [in] void *adjacency,
+        [in] void *vertexAttributeWeights,
+        [in] void *vertexWeights,
+        [in] LONG minValue,
+        [in] LONG options,
+        [out, retval] D3DXPMesh **ppPMesh
+    );
+    HRESULT SimplifyMesh(
+        [in] D3DXMesh *mesh,
+        [in] void *adjacency,
+        [in] void *vertexAttributeWeights,
+        [in] void *vertexWeights,
+        [in] LONG minValue,
+        [in] LONG options,
+        [out, retval] D3DXMesh **ppMesh
+    );
+    HRESULT ComputeBoundingSphere(
+        [in] void *pointsFVF,
+        [in] LONG numVertices,
+        [in] LONG fvf,
+        [in] D3DVECTOR *centers,
+        [in, out] float *radiusArray
+    );
+    HRESULT ComputeBoundingBox(
+        [in] void *pointsFVF,
+        [in] LONG numVertices,
+        [in] LONG fvf,
+        [in, out] D3DVECTOR *minVert,
+        [in, out] D3DVECTOR *maxVert
+    );
+    HRESULT ComputeNormals(
+        [in] D3DXBaseMesh *pMesh
+    );
+    HRESULT DeclaratorFromFVF(
+        [in] LONG fvf,
+        [out] D3DXDECLARATOR *declarator
+    );
+    HRESULT FVFFromDeclarator(
+        [in] D3DXDECLARATOR *declarator,
+        [out, retval] LONG *fvf
+    );
+    HRESULT CreateBuffer(
+        [in] LONG numBytes,
+        [out, retval] D3DXBuffer **ppBuffer
+    );
+    HRESULT LoadMeshFromX(
+        [in] BSTR filename,
+        [in] LONG options,
+        [in] Direct3DDevice8 *device,
+        [in, out] D3DXBuffer **retAdjacency,
+        [in, out] D3DXBuffer **retMaterials,
+        [in, out] LONG *retMaterialCount,
+        [out, retval] D3DXMesh **retMesh
+    );
+    HRESULT SaveMeshToX(
+        [in] BSTR filename,
+        [in] D3DXMesh *mesh,
+        [in] void *adjacencyArray,
+        [in] D3DXMATERIAL *materialArray,
+        [in] LONG materialCount,
+        [in] LONG xFormat
+    );
+    HRESULT LoadMeshFromXof(
+        [in] IUnknown *xofobjMesh,
+        [in] LONG options,
+        [in] Direct3DDevice8 *device,
+        [in, out] D3DXBuffer **retBufAdjacency,
+        [in, out] D3DXBuffer **retMaterials,
+        [in, out] LONG *retMaterialCount,
+        [out, retval] D3DXMesh **retMesh
+    );
+    HRESULT TessellateNPatches(
+        [in] D3DXMesh *meshIn,
+        [in] void *adjacencyIn,
+        [in] float numSegs,
+        [in] VARIANT_BOOL quadraticInterpNormals,
+        [in, out, optional] D3DXBuffer **adjacencyOut,
+        [out, retval] D3DXMesh **meshOut
+    );
+    HRESULT BufferGetMaterial(
+        [in] D3DXBuffer *materialBuffer,
+        [in] LONG index,
+        [out] D3DMATERIAL8 *mat
+    );
+    HRESULT BufferGetTextureName(
+        [in] D3DXBuffer *materialBuffer,
+        [in] LONG index,
+        [out, retval] BSTR *retName
+    );
+    HRESULT BufferGetData(
+        [in] D3DXBuffer *buffer,
+        [in] LONG index,
+        [in] LONG typesize,
+        [in] LONG typecount,
+        [in, out] void *data
+    );
+    HRESULT BufferSetData(
+        [in] D3DXBuffer *buffer,
+        [in] LONG index,
+        [in] LONG typesize,
+        [in] LONG typecount,
+        [in, out] void *data
+    );
+    HRESULT Intersect(
+        [in] D3DXMesh *meshIn,
+        [in] D3DVECTOR *rayPos,
+        [in] D3DVECTOR *rayDir,
+        [out] LONG *retHit,
+        [out] LONG *retFaceIndex,
+        [out] float *u,
+        [out] float *v,
+        [out] float *retDist,
+        [out] LONG *countHits,
+        [out, retval] D3DXBuffer **allHits
+    );
+    HRESULT SphereBoundProbe(
+        [in] D3DVECTOR *center,
+        [in] float radius,
+        [in] D3DVECTOR *rayPosition,
+        [in] D3DVECTOR *rayDirection,
+        [out, retval] VARIANT_BOOL *retHit
+    );
+    HRESULT ComputeBoundingSphereFromMesh(
+        [in] D3DXMesh *meshIn,
+        [in, out] D3DVECTOR *centers,
+        [in, out] float *radiusArray
+    );
+    HRESULT ComputeBoundingBoxFromMesh(
+        [in] D3DXMesh *meshIn,
+        [in, out] D3DVECTOR *minArray,
+        [in, out] D3DVECTOR *maxArray
+    );
+    HRESULT CreateSkinMesh(
+        [in] LONG numFaces,
+        [in] LONG numVertices,
+        [in] LONG numBones,
+        [in] LONG options,
+        [in] void *declaration,
+        [in] Direct3DDevice8 *device,
+        [out, retval] D3DXSkinMesh **ppSkinMesh
+    );
+    HRESULT CreateSkinMeshFVF(
+        [in] LONG numFaces,
+        [in] LONG numVertices,
+        [in] LONG numBones,
+        [in] LONG options,
+        [in] LONG fvf,
+        [in] Direct3DDevice8 *device,
+        [out, retval] D3DXSkinMesh **ppSkinMesh
+    );
+    HRESULT CreateSkinMeshFromMesh(
+        [in] D3DXMesh *mesh,
+        [in] LONG numBones,
+        [out, retval] D3DXSkinMesh **ppSkinMesh
+    );
+    HRESULT LoadSkinMeshFromXof(
+        [in] IUnknown *xofobjMesh,
+        [in] LONG options,
+        [in] Direct3DDevice8 *device,
+        [in, out] D3DXBuffer **adjacencyOut,
+        [in, out] D3DXBuffer **materialsOut,
+        [in, out] LONG *numMatOut,
+        [in, out] D3DXBuffer **boneNamesOut,
+        [in, out] D3DXBuffer **boneTransformsOut,
+        [out, retval] D3DXSkinMesh **ppMesh
+    );
+    HRESULT CreatePolygon(
+        [in] Direct3DDevice8 *device,
+        [in] float length,
+        [in] LONG sides,
+        [in, out] D3DXBuffer **retAdjacency,
+        [out, retval] D3DXMesh **retMesh
+    );
+    HRESULT CreateBox(
+        [in] Direct3DDevice8 *device,
+        [in] float width,
+        [in] float height,
+        [in] float depth,
+        [in, out] D3DXBuffer **retAdjacency,
+        [out, retval] D3DXMesh **retMesh
+    );
+    HRESULT CreateCylinder(
+        [in] Direct3DDevice8 *device,
+        [in] float radius1,
+        [in] float radius2,
+        [in] float length,
+        [in] LONG slices,
+        [in] LONG stacks,
+        [in, out] D3DXBuffer **retAdjacency,
+        [out, retval] D3DXMesh **retMesh
+    );
+    HRESULT CreateSphere(
+        [in] Direct3DDevice8 *device,
+        [in] float radius,
+        [in] LONG slices,
+        [in] LONG stacks,
+        [in, out] D3DXBuffer **retAdjacency,
+        [out, retval] D3DXMesh **retMesh
+    );
+    HRESULT CreateTorus(
+        [in] Direct3DDevice8 *device,
+        [in] float innerRadius,
+        [in] float outerRadius,
+        [in] LONG sides,
+        [in] LONG rings,
+        [in, out] D3DXBuffer **retAdjacency,
+        [out, retval] D3DXMesh **retMesh
+    );
+    HRESULT CreateTeapot(
+        [in] Direct3DDevice8 *device,
+        [in, out] D3DXBuffer **retAdjacency,
+        [out, retval] D3DXMesh **retMesh
+    );
+    HRESULT CreateText(
+        [in] Direct3DDevice8 *device,
+        [in] LONG hDC,
+        [in] BSTR text,
+        [in] float deviation,
+        [in] float extrusion,
+        [in, out] D3DXMesh **retMesh,
+        [in, out] D3DXBuffer **adjacencyOut,
+        [in, out] void *glyphMetrics
+    );
+    HRESULT BufferGetBoneName(
+        [in] D3DXBuffer *boneNameBuffer,
+        [in] LONG index,
+        [out, retval] BSTR *retName
+    );
+    HRESULT CreateSprite(
+        [in] Direct3DDevice8 *device,
+        [out, retval] D3DXSprite **retSprite
+    );
+    HRESULT CreateRenderToSurface(
+        [in] Direct3DDevice8 *device,
+        [in] LONG width,
+        [in] LONG height,
+        [in] D3DFORMAT format,
+        [in] LONG depthStencil,
+        [in] D3DFORMAT depthStencilFormat,
+        [out, retval] D3DXRenderToSurface **retRenderToSurface
+    );
+    HRESULT CleanMesh(
+        [in] D3DXMesh *meshIn,
+        [in] void *adjacency,
+        [in, out] BSTR *log,
+        [in, out] D3DXBuffer *adjacencyOut,
+        [out, retval] D3DXMesh **meshOut
+    );
+    HRESULT ValidMesh(
+        [in] D3DXMesh *meshIn,
+        [in] void *adjacency,
+        [in, out, optional] BSTR *log,
+        [out, retval] VARIANT_BOOL *ret
+    );
+    HRESULT BoxBoundProbe(
+        [in] D3DVECTOR *minVert,
+        [in] D3DVECTOR *maxVert,
+        [in] D3DVECTOR *rayPosition,
+        [in] D3DVECTOR *rayDirection,
+        [out, retval] VARIANT_BOOL *ret
+    );
+    HRESULT SavePMeshToFile(
+        [in] BSTR filename,
+        [in] D3DXPMesh *mesh,
+        [in] D3DXMATERIAL *materialArray,
+        [in] LONG materialCount
+    );
+    HRESULT LoadPMeshFromFile(
+        [in] BSTR filename,
+        [in] LONG options,
+        [in] Direct3DDevice8 *device,
+        [out] D3DXBuffer **retMaterials,
+        [out] LONG *retNumMaterials,
+        [out, retval] D3DXPMesh **retPMesh
+    );
+    HRESULT BufferGetBoneCombo(
+        [in] D3DXBuffer *boneComboBuffer,
+        [in] LONG index,
+        [in, out] D3DXBONECOMBINATION *boneCombo
+    );
+    HRESULT BufferGetBoneComboBoneIds(
+        [in] D3DXBuffer *boneComboBuffer,
+        [in] LONG index,
+        [in] LONG paletteSize,
+        [in] void *boneIds
+    );
+    HRESULT SaveSurfaceToFile(
+        [in] BSTR destFile,
+        [in] D3DXIMAGE_FILEFORMAT destFormat,
+        [in] Direct3DSurface8 *srcSurface,
+        [in] PALETTEENTRY *srcPalette,
+        [in] RECT *srcRect
+    );
+    HRESULT SaveVolumeToFile(
+        [in] BSTR destFile,
+        [in] D3DXIMAGE_FILEFORMAT destFormat,
+        [in] Direct3DVolume8 *srcVolume,
+        [in] PALETTEENTRY *srcPalette,
+        [in] void *srcBox
+    );
+    HRESULT SaveTextureToFile(
+        [in] BSTR destFile,
+        [in] D3DXIMAGE_FILEFORMAT destFormat,
+        [in] Direct3DBaseTexture8 *srcTexture,
+        [in] PALETTEENTRY *srcPalette
+    );
+};
+
+[
+    object,
+    uuid(e7ff1301-96a5-11d3-ac85-00c04fc2c602),
+    helpstring("DirectX8 root object functions"),
+    local
+]
+interface IDirectX8 : IUnknown {
+    HRESULT DirectSoundCreate(
+        [in] BSTR guid,
+        [out, retval] DirectSound8 **ret
+    );
+    HRESULT DirectSoundCaptureCreate(
+        [in] BSTR guid,
+        [out, retval] DirectSoundCapture8 **ret
+    );
+    HRESULT GetDSEnum(
+        [out, retval] DirectSoundEnum8 **ret
+    );
+    HRESULT GetDSCaptureEnum(
+        [out, retval] DirectSoundEnum8 **ret
+    );
+    HRESULT DirectInputCreate(
+        [out, retval] DirectInput8 **ret
+    );
+    HRESULT DirectMusicLoaderCreate(
+        [out, retval] DirectMusicLoader8 **ret
+    );
+    HRESULT DirectMusicComposerCreate(
+        [out, retval] DirectMusicComposer8 **ret
+    );
+    HRESULT DirectMusicPerformanceCreate(
+        [out, retval] DirectMusicPerformance8 **ret
+    );
+    HRESULT CreateEvent(
+        [in] DirectXEvent8 *event,
+        [out, retval] LONG *h
+    );
+    HRESULT SetEvent(
+        [in] LONG eventid
+    );
+    HRESULT DestroyEvent(
+        [in] LONG eventid
+    );
+    HRESULT CreateNewGuid(
+        [out, retval] BSTR *retGuid
+    );
+    HRESULT DirectPlayVoiceClientCreate(
+        [out, retval] DirectPlayVoiceClient8 **ret
+    );
+    HRESULT DirectPlayVoiceServerCreate(
+        [out, retval] DirectPlayVoiceServer8 **ret
+    );
+    HRESULT DirectPlayVoiceTestCreate(
+        [out, retval] DirectPlayVoiceTest8 **ret
+    );
+    HRESULT DirectXFileCreate(
+        [out, retval] DirectXFile **ret
+    );
+    HRESULT DirectPlayPeerCreate(
+        [out, retval] DirectPlay8Peer **ret
+    );
+    HRESULT DirectPlayServerCreate(
+        [out, retval] DirectPlay8Server **ret
+    );
+    HRESULT DirectPlayClientCreate(
+        [out, retval] DirectPlay8Client **ret
+    );
+    HRESULT DirectPlayAddressCreate(
+        [out, retval] DirectPlay8Address **ret
+    );
+    HRESULT Direct3DCreate(
+        [out, retval] Direct3D8 **ret
+    );
+    HRESULT DirectPlayLobbyClientCreate(
+        [out, retval] DirectPlay8LobbyClient **ret
+    );
+    HRESULT DirectPlayLobbiedApplicationCreate(
+        [out, retval] DirectPlay8LobbiedApplication **ret
+    );
+};
+
+[
+    uuid(58356c5d-0bfd-48ed-93c5-f4520b6233de),
+    helpstring("D3DX8"),
+    threading(both),
+    progid("DIRECT.D3DX8.0"),
+    vi_progid("DIRECT.D3DX8.0")
+]
+coclass D3DX8 { interface ID3DX8; };
+
+[
+    uuid(e7ff1300-96a5-11d3-ac85-00c04fc2c602),
+    helpstring("DirectX8"),
+    threading(both),
+    progid("DIRECT.DirectX8.0"),
+    vi_progid("DIRECT.DirectX8.0")
+]
+coclass DirectX8 { interface IDirectX8; };

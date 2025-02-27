@@ -1,6 +1,3 @@
-#ifdef __REACTOS__
-#include "precomp.h"
-#else
 /*
  * Direct3D X 9 main file
  *
@@ -26,22 +23,8 @@
 
 #include "initguid.h"
 #include "d3dx9_private.h"
-#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
-
-BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, void *reserved)
-{
-    switch(reason)
-    {
-    case DLL_WINE_PREATTACH:
-        return FALSE; /* prefer native version */
-    case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls(inst);
-        break;
-    }
-    return TRUE;
-}
 
 BOOL WINAPI D3DXCheckVersion(UINT d3d_sdk_ver, UINT d3dx_sdk_ver)
 {
