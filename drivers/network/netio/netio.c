@@ -190,6 +190,20 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     return STATUS_SUCCESS;
 }
 
+static NTSTATUS WSKAPI
+WskSocket(
+    _In_ PWSK_CLIENT Client,
+    _In_ ADDRESS_FAMILY AddressFamily,
+    _In_ USHORT SocketType,
+    _In_ ULONG Protocol,
+    _In_ ULONG Flags,
+    _In_opt_ PVOID SocketContext,
+    _In_opt_ const VOID * Dispatch,
+    _In_opt_ PEPROCESS OwningProcess,
+    _In_opt_ PETHREAD OwningThread,
+    _In_opt_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _Inout_ PIRP Irp);
+
 static NTSTATUS NTAPI
 NetioComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
 {
@@ -221,21 +235,63 @@ struct ListenContext {
 };
 
 static NTSTATUS NTAPI
+CompletionFireEvent(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
+{
+    PKEVENT Event = (PKEVENT) Context;
+
+    KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
+
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
+
+static NTSTATUS NTAPI
 ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
 {
     struct ListenContext *l = (struct ListenContext *)Context;
     PWSK_SOCKET_INTERNAL s = l->socket;
 
+        /* TODO: write a CreateSocket() for that: */
+    PWSK_SOCKET_INTERNAL AcceptSocket;
+    PIRP NewSocketIrp;
+    PKEVENT CompletionEvent;
+    NTSTATUS Status;
+
 DbgPrint("ListenComplete s is %p\n", s);
 
     if (s->CallbackMask & WSK_EVENT_ACCEPT) {
         DbgPrint("Callback ...\n", s);
+
 	/* TODO:
 		1) Create a socket (via WskSocket function?)
 		2) Associate the RemoteAddress with s->ConnectionFile
 		3) Call the callback (ListenDispatch)
 		4) Requeue StartListening
 	*/
+
+        NewSocketIrp = IoAllocateIrp(1, FALSE);
+        if (NewSocketIrp == NULL) {
+            DbgPrint("Out of memory?\n");
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        KeInitializeEvent(CompletionEvent, NotificationEvent, FALSE);
+        IoSetCompletionRoutine(NewSocketIrp, CompletionFireEvent, CompletionEvent, TRUE, TRUE, TRUE);
+        NewSocketIrp->Tail.Overlay.Thread = PsGetCurrentThread();
+
+        Status = WskSocket(NULL, s->family, s->type, s->proto,
+            WSK_FLAG_CONNECTION_SOCKET, NULL, NULL, NULL, NULL, NULL, NewSocketIrp);
+
+        if (Status == STATUS_PENDING) {
+                KeWaitForSingleObject(&CompletionEvent, Executive, KernelMode, FALSE, NULL);
+                Status = NewSocketIrp->IoStatus.Status;
+        }
+
+        if (NT_SUCCESS(Status))
+                AcceptSocket = (PWSK_SOCKET_INTERNAL) NewSocketIrp->IoStatus.Information;
+
+        IoFreeIrp(NewSocketIrp);
+
+        DbgPrint("AcceptSocket is %p\n", AcceptSocket);
     }
     return STATUS_SUCCESS;
 }
@@ -991,7 +1047,7 @@ WskSocket(
     s->user_context = SocketContext;
     s->LocalAddressHandle = NULL;
     s->LocalAddressFile = NULL;
-    s->Flags = 0;
+    s->Flags = 0; /* TODO: arghhh */
     s->ListenDispatch = Dispatch;
     s->RefCount = 1;            /* SocketPut() is in WskCloseSocket */
     s->ConnectionHandle = NULL;
