@@ -282,6 +282,10 @@
 #define IDS_OBJECTS                6466
 #define IDS_OBJECTS_SELECTED       6477
 
+/* Explorer file search */
+#define IDS_SEARCH_LOCALDRIVES     10241
+#define IDS_SEARCH_BROWSEITEM      10244
+
 /* Desktop icon titles */
 #define IDS_TITLE_MYCOMP                            30386
 #define IDS_TITLE_MYNET                             30387
