@@ -24,6 +24,11 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
+#define D_NONE DROPEFFECT_NONE
+#define D_COPY DROPEFFECT_COPY
+#define D_MOVE DROPEFFECT_MOVE
+#define D_LINK DROPEFFECT_LINK
+
 static void SHELL_StripIllegalFsNameCharacters(_Inout_ LPWSTR Buf)
 {
     for (LPWSTR src = Buf, dst = src;;)
@@ -36,6 +41,17 @@ static void SHELL_StripIllegalFsNameCharacters(_Inout_ LPWSTR Buf)
         else
             ++src, ++dst;
     }
+}
+
+static bool PathIsSameDrive(LPCWSTR Path1, LPCWSTR Path2)
+{
+    int d1 = PathGetDriveNumberW(Path1), d2 = PathGetDriveNumberW(Path2);
+    return d1 == d2 && d2 >= 0;
+}
+
+static bool PathIsDriveRoot(LPCWSTR Path)
+{
+    return PathIsRootW(Path) && PathGetDriveNumberW(Path) >= 0;
 }
 
 static HRESULT
@@ -134,7 +150,8 @@ CFSDropTarget::CFSDropTarget():
     m_fAcceptFmt(FALSE),
     m_sPathTarget(NULL),
     m_hwndSite(NULL),
-    m_grfKeyState(0)
+    m_grfKeyState(0),
+    m_AllowedEffects(0)
 {
 }
 
@@ -147,13 +164,7 @@ HRESULT CFSDropTarget::Initialize(LPWSTR PathTarget)
     if (!m_cfShellIDList)
         return E_FAIL;
 
-    m_sPathTarget = (WCHAR *)SHAlloc((wcslen(PathTarget) + 1) * sizeof(WCHAR));
-    if (!m_sPathTarget)
-        return E_OUTOFMEMORY;
-
-    wcscpy(m_sPathTarget, PathTarget);
-
-    return S_OK;
+    return SHStrDupW(PathTarget, &m_sPathTarget);
 }
 
 CFSDropTarget::~CFSDropTarget()
@@ -202,7 +213,13 @@ BOOL CFSDropTarget::_QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
     *pdwEffect = DROPEFFECT_NONE;
 
     if (m_fAcceptFmt) { /* Does our interpretation of the keystate ... */
-        *pdwEffect = KeyStateToDropEffect (dwKeyState);
+        *pdwEffect = KeyStateToDropEffect(dwKeyState);
+
+        // Transform disallowed move to a copy
+        if ((*pdwEffect & D_MOVE) && (m_AllowedEffects & (D_MOVE | D_COPY)) == D_COPY)
+            *pdwEffect = D_COPY;
+
+        *pdwEffect &= m_AllowedEffects;
 
         if (*pdwEffect == DROPEFFECT_NONE)
             *pdwEffect = dwEffect;
@@ -320,6 +337,9 @@ HRESULT WINAPI CFSDropTarget::DragEnter(IDataObject *pDataObject,
 {
     TRACE("(%p)->(DataObject=%p)\n", this, pDataObject);
 
+    const BOOL bAnyKeyMod = dwKeyState & (MK_SHIFT | MK_CONTROL);
+    m_AllowedEffects = *pdwEffect;
+
     if (*pdwEffect == DROPEFFECT_NONE)
         return S_OK;
 
@@ -337,11 +357,9 @@ HRESULT WINAPI CFSDropTarget::DragEnter(IDataObject *pDataObject,
 
     m_grfKeyState = dwKeyState;
 
-#define D_NONE DROPEFFECT_NONE
-#define D_COPY DROPEFFECT_COPY
-#define D_MOVE DROPEFFECT_MOVE
-#define D_LINK DROPEFFECT_LINK
-    m_dwDefaultEffect = *pdwEffect;
+    SHELL_LimitDropEffectToItemAttributes(pDataObject, pdwEffect);
+    m_AllowedEffects = *pdwEffect;
+    m_dwDefaultEffect = m_AllowedEffects;
     switch (*pdwEffect & (D_COPY | D_MOVE | D_LINK))
     {
         case D_COPY | D_MOVE:
@@ -378,19 +396,24 @@ HRESULT WINAPI CFSDropTarget::DragEnter(IDataObject *pDataObject,
         WCHAR wstrFirstFile[MAX_PATH];
         if (DragQueryFileW((HDROP)medium.hGlobal, 0, wstrFirstFile, _countof(wstrFirstFile)))
         {
-            /* Check if the drive letter is different */
-            if (wstrFirstFile[0] != m_sPathTarget[0])
+            if (!PathIsSameDrive(wstrFirstFile, m_sPathTarget) && m_dwDefaultEffect != D_LINK)
             {
                 m_dwDefaultEffect = DROPEFFECT_COPY;
+            }
+
+            if (!bAnyKeyMod && PathIsDriveRoot(wstrFirstFile) && (m_AllowedEffects & DROPEFFECT_LINK))
+            {
+                m_dwDefaultEffect = DROPEFFECT_LINK; // Don't copy a drive by default
             }
         }
         ReleaseStgMedium(&medium);
     }
 
     if (!m_fAcceptFmt)
-        *pdwEffect = DROPEFFECT_NONE;
+        m_AllowedEffects = DROPEFFECT_NONE;
     else
         *pdwEffect = m_dwDefaultEffect;
+    *pdwEffect &= m_AllowedEffects;
 
     return S_OK;
 }
@@ -471,7 +494,7 @@ HRESULT WINAPI CFSDropTarget::Drop(IDataObject *pDataObject,
             data->pt = pt;
             // Need to dereference as pdweffect gets freed.
             data->pdwEffect = *pdwEffect;
-            SHCreateThread(CFSDropTarget::_DoDropThreadProc, data, NULL, NULL);
+            SHCreateThread(CFSDropTarget::_DoDropThreadProc, data, CTF_COINIT | CTF_PROCESS_REF, NULL);
             return S_OK;
         }
     }
@@ -726,7 +749,6 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
 
 DWORD WINAPI CFSDropTarget::_DoDropThreadProc(LPVOID lpParameter)
 {
-    CoInitialize(NULL);
     _DoDropData *data = static_cast<_DoDropData*>(lpParameter);
     CComPtr<IDataObject> pDataObject;
     HRESULT hr = CoGetInterfaceAndReleaseStream (data->pStream, IID_PPV_ARG(IDataObject, &pDataObject));
@@ -744,7 +766,6 @@ DWORD WINAPI CFSDropTarget::_DoDropThreadProc(LPVOID lpParameter)
     data->This->Release();
     //Release the parameter from the heap.
     HeapFree(GetProcessHeap(), 0, data);
-    CoUninitialize();
     return 0;
 }
 
