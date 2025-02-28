@@ -998,6 +998,8 @@ BEGIN
     IDS_OBJECTS "%d Objects"
     IDS_OBJECTS_SELECTED "%d Objects Selected"
 
+    IDS_SEARCH_BROWSEITEM "Bla gjennom..."
+
     IDS_TITLE_MYCOMP "Min datamaskin"
     IDS_TITLE_MYNET "Mine nettverkssteder"
     IDS_TITLE_BIN_1 "Papirkurv (full)"

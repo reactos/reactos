@@ -1007,6 +1007,8 @@ BEGIN
     IDS_OBJECTS "Объектов: %d"
     IDS_OBJECTS_SELECTED "Выделено объектов: %d"
 
+    IDS_SEARCH_BROWSEITEM "Обзор..."
+
     IDS_TITLE_MYCOMP "Мой компьютер"
     IDS_TITLE_MYNET "Сетевое окружение"
     IDS_TITLE_BIN_1 "Корзина (полная)"
