@@ -254,16 +254,17 @@ ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
         /* TODO: write a CreateSocket() for that: */
     PWSK_SOCKET_INTERNAL AcceptSocket;
     PIRP NewSocketIrp;
-    PKEVENT CompletionEvent;
+    KEVENT CompletionEvent;
     NTSTATUS Status;
 
 DbgPrint("ListenComplete s is %p\n", s);
 
+         /* and callback set in ListenDispatch: */
     if (s->CallbackMask & WSK_EVENT_ACCEPT) {
         DbgPrint("Callback ...\n", s);
 
 	/* TODO:
-		1) Create a socket (via WskSocket function?)
+		1) Done: Create a socket (via WskSocket function?)
 		2) Associate the RemoteAddress with s->ConnectionFile
 		3) Call the callback (ListenDispatch)
 		4) Requeue StartListening
@@ -274,8 +275,8 @@ DbgPrint("ListenComplete s is %p\n", s);
             DbgPrint("Out of memory?\n");
             return STATUS_INSUFFICIENT_RESOURCES;
         }
-        KeInitializeEvent(CompletionEvent, NotificationEvent, FALSE);
-        IoSetCompletionRoutine(NewSocketIrp, CompletionFireEvent, CompletionEvent, TRUE, TRUE, TRUE);
+        KeInitializeEvent(&CompletionEvent, NotificationEvent, FALSE);
+        IoSetCompletionRoutine(NewSocketIrp, CompletionFireEvent, &CompletionEvent, TRUE, TRUE, TRUE);
         NewSocketIrp->Tail.Overlay.Thread = PsGetCurrentThread();
 
         Status = WskSocket(NULL, s->family, s->type, s->proto,
@@ -1047,7 +1048,7 @@ WskSocket(
     s->user_context = SocketContext;
     s->LocalAddressHandle = NULL;
     s->LocalAddressFile = NULL;
-    s->Flags = 0; /* TODO: arghhh */
+    s->Flags = 0; /* TODO: arghhh: we have both Flags and flags as members ... */
     s->ListenDispatch = Dispatch;
     s->RefCount = 1;            /* SocketPut() is in WskCloseSocket */
     s->ConnectionHandle = NULL;
