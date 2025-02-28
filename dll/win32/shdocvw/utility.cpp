@@ -15,7 +15,7 @@ GetMenuItemIdByPos(HMENU hMenu, UINT Pos)
 {
     MENUITEMINFOW mii;
     mii.cbSize = FIELD_OFFSET(MENUITEMINFOW, hbmpItem); /* USER32 version agnostic */
-    mii.fMask = MIIM_ID;
+    mii.fMask = MIIM_ID; /* GetMenuItemID does not handle sub-menus, this does */
     mii.cch = 0;
     return GetMenuItemInfoW(hMenu, Pos, TRUE, &mii) ? mii.wID : -1;
 }
