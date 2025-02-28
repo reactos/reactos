@@ -61,8 +61,7 @@ ULONG CmNtCSDReleaseType;
 UNICODE_STRING CmVersionString;
 UNICODE_STRING CmCSDVersionString;
 
-CHAR NtBuildLab[] = KERNEL_VERSION_BUILD_STR "."
-                    REACTOS_COMPILER_NAME "_" REACTOS_COMPILER_VERSION;
+CHAR NtBuildLab[] = KERNEL_VERSION_BUILD_STR;
 
 /* Init flags and settings */
 ULONG ExpInitializationPhase;
