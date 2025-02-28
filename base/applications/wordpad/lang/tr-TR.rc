@@ -90,7 +90,7 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Wine Wordpad Hakkında...",  ID_ABOUT
+        MENUITEM "&ReactOS Wordpad Hakkında...",  ID_ABOUT
     END
 END
 

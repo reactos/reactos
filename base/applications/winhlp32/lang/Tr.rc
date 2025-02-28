@@ -52,7 +52,7 @@ MAIN_MENU MENU
  }
  POPUP "&Yardım" {
    MENUITEM "&Yardım Hakkında", MNID_HELP_HELPON
-   MENUITEM "&Wine Yardım Hakkında...", MNID_HELP_ABOUT
+   MENUITEM "&ReactOS Yardım Hakkında...", MNID_HELP_ABOUT
  }
 }
 
@@ -60,14 +60,14 @@ CONTEXT_MENU MENU
 BEGIN
 	POPUP ""
 	BEGIN
-		MENUITEM "&Not Ekleme...",     MNID_CTXT_ANNOTATE
-		MENUITEM "&Çoğalt",               MNID_CTXT_COPY
-		MENUITEM "&Yazdır...",            MNID_CTXT_PRINT
+		MENUITEM "&Not Ekle...",     MNID_CTXT_ANNOTATE
+		MENUITEM "&Kopyala",         MNID_CTXT_COPY
+		MENUITEM "&Yazdır...",       MNID_CTXT_PRINT
 		POPUP    "Y&azı Tipi"
 		BEGIN
-			MENUITEM "&Küçük",        MNID_CTXT_FONTS_SMALL
+			MENUITEM "&Küçük",       MNID_CTXT_FONTS_SMALL
 			MENUITEM "&Normal",      MNID_CTXT_FONTS_NORMAL
-			MENUITEM "&Büyük",        MNID_CTXT_FONTS_LARGE
+			MENUITEM "&Büyük",       MNID_CTXT_FONTS_LARGE
 		END
 	END
 END
@@ -78,15 +78,15 @@ STID_WINE_HELP, 	"ReactOS Yardım"
 STID_WHERROR, 		"HATA"
 STID_WARNING,  		"UYARI"
 STID_INFO,  		"Bilgi"
-STID_NOT_IMPLEMENTED, 	"Daha tamamlanmamıştır."
-STID_HLPFILE_ERROR_s, 	"""%s""  yardım dosyası okunurken hata"
+STID_NOT_IMPLEMENTED, 	"Henüz tamamlanmamıştır."
+STID_HLPFILE_ERROR_s, 	"""%s"" yardım dosyası okunurken hata oluştu"
 STID_INDEX, 		"&Dizin"
 STID_CONTENTS,		"&İçindekiler"
 STID_BACK, 		"&Geri"
 STID_ALL_FILES, 	"Tüm Dosyalar (*.*)"
 STID_HELP_FILES_HLP, 	"Yardım Dosyaları (*.hlp)"
-STID_FILE_NOT_FOUND_s	"""%s"" bulunamıyor. Bu dosyayı kendiniz bulmak istiyor musunuz?"
-STID_NO_RICHEDIT	"Zengin metin dosyası bulunamıyor. Çıkılacaktır."
+STID_FILE_NOT_FOUND_s	"""%s"" bulunamadı. Bu dosyayı kendiniz bulmak ister misiniz?"
+STID_NO_RICHEDIT	"Zengin metin denetimi bulunamadı. Program kapatılacak."
 STID_PSH_INDEX,		"Yardım Konuları: "
 }
 
@@ -103,5 +103,5 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Ara"
 {
-    LTEXT  "Daha tamamlanmamıştır.", -1, 10, 10, 180, 150
+    LTEXT  "Bu özellik henüz tamamlanmamıştır.", -1, 10, 10, 180, 150
 }
