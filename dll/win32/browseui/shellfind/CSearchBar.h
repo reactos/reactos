@@ -30,6 +30,7 @@ private:
     BOOL GetAddressEditBoxPath(WCHAR *szPath);
     void SetSearchInProgress(BOOL bInProgress);
     HRESULT TrySubscribeToSearchEvents();
+    void TrySetFocus(UINT Source);
 
     // *** ATL event handlers ***
     LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
