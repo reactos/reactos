@@ -772,11 +772,42 @@ invalid:
 static WCHAR *hex_data_state(struct parser *parser, WCHAR *pos)
 {
     WCHAR *line = pos;
+#ifdef __REACTOS__
+    WCHAR Buffer[10] = { 0 };
+    WCHAR* ret;
+    BOOL unicode_in_ansi = FALSE;
+    BOOL result;
+#endif
 
     if (!*line)
         goto set_value;
 
+#ifdef __REACTOS__
+    if ((!parser->is_unicode) &&
+        (parser->data_type == REG_EXPAND_SZ) &&
+        (parser->parse_type == REG_BINARY))
+    {
+        memcpy(Buffer, pos, 18);
+        Buffer[9] = UNICODE_NULL;
+        ret = wcsstr(Buffer, L"00,"); // Any UNICODE characters?
+        unicode_in_ansi = (ret != NULL);
+    }
+
+    if (unicode_in_ansi)
+    {
+        parser->is_unicode = TRUE;
+        result = convert_hex_csv_to_hex(parser, &line);
+        parser->is_unicode = FALSE;
+    }
+    else 
+    {
+        result = convert_hex_csv_to_hex(parser, &line);
+    }
+
+    if (!result)
+#else
     if (!convert_hex_csv_to_hex(parser, &line))
+#endif
         goto invalid;
 
     if (parser->backslash)
@@ -785,7 +816,20 @@ static WCHAR *hex_data_state(struct parser *parser, WCHAR *pos)
         return line;
     }
 
+#ifdef __REACTOS__
+    if (unicode_in_ansi)
+    {
+        parser->is_unicode = TRUE;
+        prepare_hex_string_data(parser);
+        parser->is_unicode = FALSE;
+    }
+    else 
+    {
+        prepare_hex_string_data(parser);
+    }
+#else
     prepare_hex_string_data(parser);
+#endif
 
 set_value:
     set_state(parser, SET_VALUE);
