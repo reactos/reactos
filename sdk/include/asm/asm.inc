@@ -172,6 +172,9 @@ ENDM
     .skip size, fill
 ENDM
 
+/* OFFset macro */
+#define OFF(x) offset x
+
 #define lXdtPrefix fword ptr
 
 ljmp MACRO segment, offset
@@ -323,6 +326,9 @@ ENDM
 /* MASM compatible REPEAT, additional ENDR */
 #define REPEAT .rept
 #define ENDR .endr
+
+/* OFFset macro */
+#define OFF(x) x
 
 #define lXdtPrefix
 
