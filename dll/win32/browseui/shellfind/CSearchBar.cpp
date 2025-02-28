@@ -846,7 +846,7 @@ HRESULT STDMETHODCALLTYPE CSearchBar::Invoke(DISPID dispIdMember, REFIID riid, L
             WCHAR buf[200];
             item.mask = CBEIF_LPARAM | CBEIF_TEXT | CBEIF_INDENT;
             item.iItem = -1;
-            item.iIndent = -2;
+            item.iIndent = -2; // Remove space reserved for the non-existing item icon
             item.lParam = (LPARAM)ILClone((LPITEMIDLIST)&g_pidlBrowseDir);
             item.pszText = const_cast<PWSTR>(L"...");
             #define IDS_SEARCH_BROWSEITEM 10244 /* shell32 shresdef.h */
