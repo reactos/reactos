@@ -72,6 +72,20 @@ ReadMemoryPng(
     state->currentPos += length;
 }
 
+/* libpng.dll is delay-loaded. If no libpng.dll exists, we have to avoid exception */
+static BOOL
+LibPngExists(VOID)
+{
+    static BOOL bLibPngFound = -1;
+    if (bLibPngFound == -1)
+    {
+        HINSTANCE hLibPng = LoadLibraryExW(L"libpng.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
+        bLibPngFound  = !!hLibPng;
+        FreeLibrary(hLibPng);
+    }
+    return bLibPngFound;
+}
+
 static int get_dib_image_size(int width, int height, int depth);
 
 /* Convert PNG raw data to BMP icon data */
@@ -85,6 +99,12 @@ CURSORICON_ConvertPngToBmpIcon(
         return NULL;
 
     TRACE("pngBits %p fileSize %d\n", pngBits, fileSize);
+
+    if (!LibPngExists())
+    {
+        ERR("No libpng.dll\n");
+        return NULL;
+    }
 
     png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr)
