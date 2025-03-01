@@ -116,11 +116,7 @@ gdt:
 /* GDT table pointer */
 gdtptr:
     .word HEX(37)       /* Limit */
-#ifdef _USE_ML
-    .long offset gdt    /* Base Address */
-#else
-    .long gdt           /* Base Address */
-#endif
+    .long OFF(gdt)      /* Base Address */
 
 
 CheckFor64BitSupport:
