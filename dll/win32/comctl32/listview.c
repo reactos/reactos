@@ -3729,44 +3729,44 @@ static void LISTVIEW_SetGroupSelection(LISTVIEW_INFO *infoPtr, INT nItem)
     if ((infoPtr->uView == LV_VIEW_LIST) || (infoPtr->uView == LV_VIEW_DETAILS))
     {
 #endif
-    if (infoPtr->nSelectionMark == -1)
-    {
-        infoPtr->nSelectionMark = nItem;
-        ranges_additem(selection, nItem);
-    }
-    else
-    {
-        RANGE sel;
-        
-        sel.lower = min(infoPtr->nSelectionMark, nItem);
-        sel.upper = max(infoPtr->nSelectionMark, nItem) + 1;
-        ranges_add(selection, sel);
-    }
+	if (infoPtr->nSelectionMark == -1)
+	{
+	    infoPtr->nSelectionMark = nItem;
+	    ranges_additem(selection, nItem);
+	}
+	else
+	{
+	    RANGE sel;
+	    
+	    sel.lower = min(infoPtr->nSelectionMark, nItem);
+	    sel.upper = max(infoPtr->nSelectionMark, nItem) + 1;
+	    ranges_add(selection, sel);
+	}
 #ifndef __REACTOS__
     }
     else
     {
-    RECT rcItem, rcSel, rcSelMark;
-    POINT ptItem;
-    
-    rcItem.left = LVIR_BOUNDS;
-    if (!LISTVIEW_GetItemRect(infoPtr, nItem, &rcItem)) {
-        ranges_destroy (selection);
-        return;
-    }
-    rcSelMark.left = LVIR_BOUNDS;
-    if (!LISTVIEW_GetItemRect(infoPtr, infoPtr->nSelectionMark, &rcSelMark)) {
-        ranges_destroy (selection);
-        return;
-    }
-    UnionRect(&rcSel, &rcItem, &rcSelMark);
-    iterator_frameditems(&i, infoPtr, &rcSel);
-    while(iterator_next(&i))
-    {
-        LISTVIEW_GetItemPosition(infoPtr, i.nItem, &ptItem);
-        if (PtInRect(&rcSel, ptItem)) ranges_additem(selection, i.nItem);
-    }
-    iterator_destroy(&i);
+	RECT rcItem, rcSel, rcSelMark;
+	POINT ptItem;
+	
+	rcItem.left = LVIR_BOUNDS;
+	if (!LISTVIEW_GetItemRect(infoPtr, nItem, &rcItem)) {
+	     ranges_destroy (selection);
+	     return;
+	}
+	rcSelMark.left = LVIR_BOUNDS;
+	if (!LISTVIEW_GetItemRect(infoPtr, infoPtr->nSelectionMark, &rcSelMark)) {
+	     ranges_destroy (selection);
+	     return;
+	}
+	UnionRect(&rcSel, &rcItem, &rcSelMark);
+	iterator_frameditems(&i, infoPtr, &rcSel);
+	while(iterator_next(&i))
+	{
+	    LISTVIEW_GetItemPosition(infoPtr, i.nItem, &ptItem);
+	    if (PtInRect(&rcSel, ptItem)) ranges_additem(selection, i.nItem);
+	}
+	iterator_destroy(&i);
     }
 #endif
 
