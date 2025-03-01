@@ -16,4 +16,3 @@ sdk/tools/winesync/winesync.cfg
 /.vs
 /sdk/include/reactos/RCa31576
 /base/applications/iexplore/RCa33480
-/dll/win32/ieframe/classinfo.c

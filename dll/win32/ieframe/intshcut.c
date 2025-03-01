@@ -136,7 +136,7 @@ static BOOL StartLinkProcessor( LPCOLESTR szLink )
     if( !buffer )
         return FALSE;
 
-    swprintf( buffer, szFormat, szLink );
+    swprintf( buffer, len / sizeof(WCHAR), szFormat, szLink );
     ret = run_winemenubuilder( buffer );
     heap_free( buffer );
     return ret;
