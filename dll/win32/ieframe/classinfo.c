@@ -37,19 +37,19 @@ static HRESULT WINAPI ProvideClassInfo_QueryInterface(IProvideClassInfo2 *iface,
         REFIID riid, LPVOID *ppobj)
 {
     WebBrowser *This = impl_from_IProvideClassInfo2(iface);
-    return IWebBrowser2_QueryInterface(&This->IWebBrowser2_iface, riid, ppobj);
+    return IUnknown_QueryInterface(This->hlink_frame.outer, riid, ppobj);
 }
 
 static ULONG WINAPI ProvideClassInfo_AddRef(IProvideClassInfo2 *iface)
 {
     WebBrowser *This = impl_from_IProvideClassInfo2(iface);
-    return IWebBrowser2_AddRef(&This->IWebBrowser2_iface);
+    return IUnknown_AddRef(This->hlink_frame.outer);
 }
 
 static ULONG WINAPI ProvideClassInfo_Release(IProvideClassInfo2 *iface)
 {
     WebBrowser *This = impl_from_IProvideClassInfo2(iface);
-    return IWebBrowser2_Release(&This->IWebBrowser2_iface);
+    return IUnknown_Release(This->hlink_frame.outer);
 }
 
 static HRESULT WINAPI ProvideClassInfo_GetClassInfo(IProvideClassInfo2 *iface, ITypeInfo **ppTI)

@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#pragma once
-
 #include <stdarg.h>
 
 #define COBJMACROS
@@ -28,10 +26,6 @@
 #include "winbase.h"
 #include "wingdi.h"
 #include "winuser.h"
-#ifdef __REACTOS__
-#include <winnls.h>
-#include <wincon.h>
-#endif
 
 #include "ole2.h"
 #include "olectl.h"
@@ -176,6 +170,7 @@ struct DocHost {
 };
 
 struct WebBrowser {
+    IUnknown                 IUnknown_inner;
     IWebBrowser2             IWebBrowser2_iface;
     IOleObject               IOleObject_iface;
     IOleInPlaceObject        IOleInPlaceObject_iface;
@@ -204,6 +199,8 @@ struct WebBrowser {
     DWORD sink_aspects;
     DWORD sink_flags;
 
+    IOleAdviseHolder *advise_holder;
+
     /* window context */
 
     HWND frame_hwnd;
@@ -212,6 +209,8 @@ struct WebBrowser {
     RECT clip_rect;
     OLEINPLACEFRAMEINFO frameinfo;
     SIZEL extent;
+
+    BOOL ui_activated;
 
     HWND shell_embedding_hwnd;
 
@@ -284,6 +283,7 @@ HRESULT set_dochost_url(DocHost*,const WCHAR*) DECLSPEC_HIDDEN;
 void handle_navigation_error(DocHost*,HRESULT,BSTR,IHTMLWindow2*) DECLSPEC_HIDDEN;
 HRESULT dochost_object_available(DocHost*,IUnknown*) DECLSPEC_HIDDEN;
 void set_doc_state(DocHost*,READYSTATE) DECLSPEC_HIDDEN;
+void activate_document(DocHost*) DECLSPEC_HIDDEN;
 void deactivate_document(DocHost*) DECLSPEC_HIDDEN;
 void create_doc_view_hwnd(DocHost*) DECLSPEC_HIDDEN;
 void on_commandstate_change(DocHost*,LONG,BOOL) DECLSPEC_HIDDEN;

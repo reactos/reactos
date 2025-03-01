@@ -1,0 +1,32 @@
+MODULE    = ieframe.dll
+IMPORTLIB = ieframe
+IMPORTS   = uuid urlmon shell32 comctl32 shlwapi oleaut32 ole32 user32 gdi32 advapi32
+
+EXTRADLLFLAGS = -mno-cygwin
+
+C_SRCS = \
+	classinfo.c \
+	client.c \
+	dochost.c \
+	events.c \
+	frame.c \
+	ie.c \
+	ieframe_main.c \
+	iehtmlwnd.c \
+	iexplore.c \
+	intshcut.c \
+	navigate.c \
+	oleobject.c \
+	persist.c \
+	shellbrowser.c \
+	shelluihelper.c \
+	urlhist.c \
+	view.c \
+	webbrowser.c
+
+RC_SRCS = ieframe.rc
+
+SVG_SRCS = \
+	ietoolbar.svg
+
+IDL_SRCS = ieframe_v1.idl
