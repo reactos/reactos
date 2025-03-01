@@ -237,7 +237,7 @@ private:
         BOOL bShowClock = IsDlgButtonChecked(IDC_TASKBARPROP_CLOCK);
         BOOL bShowSeconds = IsDlgButtonChecked(IDC_TASKBARPROP_SECONDS);
         BOOL bHideInactive = IsDlgButtonChecked(IDC_TASKBARPROP_HIDEICONS);
-		BOOL bShowDesktopButton = IsDlgButtonChecked(IDC_TASKBARPROP_DESKTOP);
+        BOOL bShowDesktopButton = IsDlgButtonChecked(IDC_TASKBARPROP_DESKTOP);
 
         HWND hwndCustomizeNotifyButton = GetDlgItem(IDC_TASKBARPROP_ICONCUST);
         HWND hwndSeconds = GetDlgItem(IDC_TASKBARPROP_SECONDS);
@@ -247,8 +247,7 @@ private:
         ::EnableWindow(hwndSeconds, bShowClock);
         if (!bShowSeconds)
             CheckDlgButton(IDC_TASKBARPROP_SECONDS, BST_UNCHECKED);
-		
-		UINT uImageId = wImageIdLookupTable[bShowClock][bShowSeconds][bHideInactive][bShowDesktopButton];
+        UINT uImageId = wImageIdLookupTable[bShowClock][bShowSeconds][bHideInactive][bShowDesktopButton];
 
         SetBitmap(hwndTrayBitmap, &m_hbmpTray, uImageId);
     }
