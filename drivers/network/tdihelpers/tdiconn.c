@@ -159,6 +159,7 @@ NTSTATUS TdiBuildNullConnectionInfoInPlace
                   sizeof(TDI_CONNECTION_INFORMATION) +
                   TdiAddressSize);
 
+/* TODO: !! */
 //    ConnInfo->OptionsLength = sizeof(ULONG);
     ConnInfo->RemoteAddressLength = TdiAddressSize;
     ConnInfo->RemoteAddress = TransportAddress =

@@ -91,6 +91,8 @@ typedef struct _WSK_SOCKET_INTERNAL
     HANDLE LocalAddressHandle;
 
     struct sockaddr RemoteAddress;      /* Remeber latest remote connection */
+    PFILE_OBJECT RemoteAddressFile;
+    HANDLE RemoteAddressHandle;
 
     /* Those exist for connection oriented (TCP/IP) sockets only */
     PFILE_OBJECT ConnectionFile;        /* Returned by TdiOpenConnectionEndpointFile() */
@@ -257,6 +259,8 @@ ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
     KEVENT CompletionEvent;
     NTSTATUS Status;
 
+    PTRANSPORT_ADDRESS ta;
+
 DbgPrint("ListenComplete s is %p\n", s);
 
          /* and callback set in ListenDispatch: */
@@ -266,9 +270,17 @@ DbgPrint("ListenComplete s is %p\n", s);
 	/* TODO:
 		1) Done: Create a socket (via WskSocket function?)
 		2) Associate the RemoteAddress with s->ConnectionFile
+                      this fails: addresses must be local, see below.
 		3) Call the callback (ListenDispatch)
 		4) Requeue StartListening
 	*/
+        /* TODO: Create the socket via WskSocket in StartListening()
+                 and pass the NEWLY CREATED socket to TdiListen().
+                 Then do only 3) and 4) from above (the socket is
+                 already connected, pass it to accept callback.
+                 There is no listening socket on TDI level ...
+                 Item 2) is done by the TDI/TCP/IP driver.
+         */.
 
         NewSocketIrp = IoAllocateIrp(1, FALSE);
         if (NewSocketIrp == NULL) {
@@ -293,6 +305,20 @@ DbgPrint("ListenComplete s is %p\n", s);
         IoFreeIrp(NewSocketIrp);
 
         DbgPrint("AcceptSocket is %p\n", AcceptSocket);
+
+        ta = (PTRANSPORT_ADDRESS) l->ReturnConnectionInfo->RemoteAddress;
+        Status = TdiOpenAddressFile(&AcceptSocket->TdiName,
+              ta, AFD_SHARE_REUSE, &AcceptSocket->RemoteAddressHandle, &AcceptSocket->RemoteAddressFile);
+
+        if (!NT_SUCCESS(Status)) {
+            DbgPrint("Cannot open address file status is 0x%08x\n", Status);
+            return Status;
+        }
+        Status = TdiAssociateAddressFile(AcceptSocket->RemoteAddressHandle, AcceptSocket->ConnectionFile);
+        if (!NT_SUCCESS(Status)) {
+            DbgPrint("Cannot associate accept socket with remote address status is 0x%08x\n", Status);
+            return Status;
+        }
     }
     return STATUS_SUCCESS;
 }
