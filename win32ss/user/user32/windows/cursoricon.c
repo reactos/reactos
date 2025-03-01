@@ -1670,12 +1670,15 @@ CURSORICON_LoadFromFileW(
     {
         NtUserDestroyCursor(hCurIcon, TRUE);
         hCurIcon = NULL;
+    }
+
+end:
+    if (!hCurIcon)
+    {
         if (cursorData.hbmMask) DeleteObject(cursorData.hbmMask);
         if (cursorData.hbmColor) DeleteObject(cursorData.hbmColor);
         if (cursorData.hbmAlpha) DeleteObject(cursorData.hbmAlpha);
     }
-
-end:
     HeapFree(GetProcessHeap(), 0, pbBmpIcon);
     UnmapViewOfFile(bits);
     return hCurIcon;
