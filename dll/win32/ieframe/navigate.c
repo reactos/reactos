@@ -115,7 +115,7 @@ static void set_status_text(BindStatusCallback *This, ULONG statuscode, LPCWSTR 
         fmt[0] = 0;
         /* the format string must have one "%s" for the str */
         LoadStringW(ieframe_instance, IDS_STATUSFMT_FIRST + statuscode, fmt, IDS_STATUSFMT_MAXLEN);
-        swprintf(buffer, ARRAY_SIZE(buffer), fmt, str);
+        swprintf(buffer, fmt, str);
     }
 
     V_VT(&arg) = VT_BSTR;

@@ -28,14 +28,14 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
 
-static inline WebBrowser *impl_from_IUnknown(IUnknown *iface)
+static inline WebBrowser *impl_from_IWebBrowser2(IWebBrowser2 *iface)
 {
-    return CONTAINING_RECORD(iface, WebBrowser, IUnknown_inner);
+    return CONTAINING_RECORD(iface, WebBrowser, IWebBrowser2_iface);
 }
 
-static HRESULT WINAPI WebBrowser_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
+static HRESULT WINAPI WebBrowser_QueryInterface(IWebBrowser2 *iface, REFIID riid, LPVOID *ppv)
 {
-    WebBrowser *This = impl_from_IUnknown(iface);
+    WebBrowser *This = impl_from_IWebBrowser2(iface);
 
     if (ppv == NULL)
         return E_POINTER;
@@ -43,7 +43,7 @@ static HRESULT WINAPI WebBrowser_QueryInterface(IUnknown *iface, REFIID riid, vo
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = &This->IUnknown_inner;
+        *ppv = &This->IWebBrowser2_iface;
     }else if(IsEqualGUID(&IID_IDispatch, riid)) {
         TRACE("(%p)->(IID_IDispatch %p)\n", This, ppv);
         *ppv = &This->IWebBrowser2_iface;
@@ -151,17 +151,17 @@ static HRESULT WINAPI WebBrowser_QueryInterface(IUnknown *iface, REFIID riid, vo
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI WebBrowser_AddRef(IUnknown *iface)
+static ULONG WINAPI WebBrowser_AddRef(IWebBrowser2 *iface)
 {
-    WebBrowser *This = impl_from_IUnknown(iface);
+    WebBrowser *This = impl_from_IWebBrowser2(iface);
     LONG ref = InterlockedIncrement(&This->ref);
     TRACE("(%p) ref=%d\n", This, ref);
     return ref;
 }
 
-static ULONG WINAPI WebBrowser_Release(IUnknown *iface)
+static ULONG WINAPI WebBrowser_Release(IWebBrowser2 *iface)
 {
-    WebBrowser *This = impl_from_IUnknown(iface);
+    WebBrowser *This = impl_from_IWebBrowser2(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -182,39 +182,6 @@ static ULONG WINAPI WebBrowser_Release(IUnknown *iface)
     }
 
     return ref;
-}
-
-static const struct IUnknownVtbl internal_unk_vtbl =
-{
-    WebBrowser_QueryInterface,
-    WebBrowser_AddRef,
-    WebBrowser_Release
-};
-
-static inline WebBrowser *impl_from_IWebBrowser2(IWebBrowser2 *iface)
-{
-    return CONTAINING_RECORD(iface, WebBrowser, IWebBrowser2_iface);
-}
-
-static HRESULT WINAPI WebBrowser2_QueryInterface(IWebBrowser2 *iface, REFIID riid, LPVOID *ppv)
-{
-    WebBrowser *This = impl_from_IWebBrowser2(iface);
-
-    return IUnknown_QueryInterface(This->hlink_frame.outer, riid, ppv);
-}
-
-static ULONG WINAPI WebBrowser2_AddRef(IWebBrowser2 *iface)
-{
-    WebBrowser *This = impl_from_IWebBrowser2(iface);
-
-    return IUnknown_AddRef(This->hlink_frame.outer);
-}
-
-static ULONG WINAPI WebBrowser2_Release(IWebBrowser2 *iface)
-{
-    WebBrowser *This = impl_from_IWebBrowser2(iface);
-
-    return IUnknown_Release(This->hlink_frame.outer);
 }
 
 /* IDispatch methods */
@@ -1087,9 +1054,9 @@ static HRESULT WINAPI WebBrowser_put_Resizable(IWebBrowser2 *iface, VARIANT_BOOL
 
 static const IWebBrowser2Vtbl WebBrowser2Vtbl =
 {
-    WebBrowser2_QueryInterface,
-    WebBrowser2_AddRef,
-    WebBrowser2_Release,
+    WebBrowser_QueryInterface,
+    WebBrowser_AddRef,
+    WebBrowser_Release,
     WebBrowser_GetTypeInfoCount,
     WebBrowser_GetTypeInfo,
     WebBrowser_GetIDsOfNames,
@@ -1169,19 +1136,19 @@ static HRESULT WINAPI WBServiceProvider_QueryInterface(IServiceProvider *iface,
             REFIID riid, LPVOID *ppv)
 {
     WebBrowser *This = impl_from_IServiceProvider(iface);
-    return IUnknown_QueryInterface(This->hlink_frame.outer, riid, ppv);
+    return IWebBrowser2_QueryInterface(&This->IWebBrowser2_iface, riid, ppv);
 }
 
 static ULONG WINAPI WBServiceProvider_AddRef(IServiceProvider *iface)
 {
     WebBrowser *This = impl_from_IServiceProvider(iface);
-    return IUnknown_AddRef(This->hlink_frame.outer);
+    return IWebBrowser2_AddRef(&This->IWebBrowser2_iface);
 }
 
 static ULONG WINAPI WBServiceProvider_Release(IServiceProvider *iface)
 {
     WebBrowser *This = impl_from_IServiceProvider(iface);
-    return IUnknown_Release(This->hlink_frame.outer);
+    return IWebBrowser2_Release(&This->IWebBrowser2_iface);
 }
 
 static HRESULT STDMETHODCALLTYPE WBServiceProvider_QueryService(IServiceProvider *iface,
@@ -1221,13 +1188,13 @@ static inline WebBrowser *impl_from_DocHost(DocHost *iface)
 static ULONG WebBrowser_addref(DocHost *iface)
 {
     WebBrowser *This = impl_from_DocHost(iface);
-    return IUnknown_AddRef(This->hlink_frame.outer);
+    return IWebBrowser2_AddRef(&This->IWebBrowser2_iface);
 }
 
 static ULONG WebBrowser_release(DocHost *iface)
 {
     WebBrowser *This = impl_from_DocHost(iface);
-    return IUnknown_Release(This->hlink_frame.outer);
+    return IWebBrowser2_Release(&This->IWebBrowser2_iface);
 }
 
 static void DocHostContainer_get_docobj_rect(DocHost *This, RECT *rc)
@@ -1264,18 +1231,13 @@ static HRESULT create_webbrowser(int version, IUnknown *outer, REFIID riid, void
 
     TRACE("(%p %s %p) version=%d\n", outer, debugstr_guid(riid), ppv, version);
 
-    if (outer && !IsEqualIID(riid, &IID_IUnknown))
-        return CLASS_E_NOAGGREGATION;
-
     ret = heap_alloc_zero(sizeof(WebBrowser));
 
-    ret->IUnknown_inner.lpVtbl = &internal_unk_vtbl;
     ret->IWebBrowser2_iface.lpVtbl = &WebBrowser2Vtbl;
     ret->IServiceProvider_iface.lpVtbl = &ServiceProviderVtbl;
     ret->ref = 1;
     ret->version = version;
 
-    HlinkFrame_Init(&ret->hlink_frame, outer ? outer :  &ret->IUnknown_inner, &ret->doc_host);
     DocHost_Init(&ret->doc_host, &ret->IWebBrowser2_iface, &DocHostContainerVtbl);
 
     ret->visible = VARIANT_TRUE;
@@ -1289,11 +1251,13 @@ static HRESULT create_webbrowser(int version, IUnknown *outer, REFIID riid, void
     WebBrowser_Persist_Init(ret);
     WebBrowser_ClassInfo_Init(ret);
 
+    HlinkFrame_Init(&ret->hlink_frame, (IUnknown*)&ret->IWebBrowser2_iface, &ret->doc_host);
+
     lock_module();
 
-    hres = IUnknown_QueryInterface(&ret->IUnknown_inner, riid, ppv);
+    hres = IWebBrowser2_QueryInterface(&ret->IWebBrowser2_iface, riid, ppv);
 
-    IUnknown_Release(&ret->IUnknown_inner);
+    IWebBrowser2_Release(&ret->IWebBrowser2_iface);
     return hres;
 }
 
