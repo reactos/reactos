@@ -15,3 +15,4 @@ modules/[Aa][Hh][Kk]_[Tt]ests
 sdk/tools/winesync/winesync.cfg
 /.vs
 /sdk/include/reactos/RCa31576
+/sdk/include/reactos/RCa29144
