@@ -144,7 +144,7 @@ static void Test_Flags(void)
     }
 }
 
-START_TEST(imagelist)
+START_TEST(ImageListApi)
 {
     InitCommonControls();
     Test_SystemIL();
