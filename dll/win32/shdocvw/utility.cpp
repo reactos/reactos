@@ -10,9 +10,25 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
-#ifndef SHCIDS_CANONICALONLY
-#define SHCIDS_CANONICALONLY 0x10000000L
-#endif
+static inline INT_PTR
+GetMenuItemIdByPos(HMENU hMenu, UINT Pos)
+{
+    MENUITEMINFOW mii;
+    mii.cbSize = FIELD_OFFSET(MENUITEMINFOW, hbmpItem); /* USER32 version agnostic */
+    mii.fMask = MIIM_ID; /* GetMenuItemID does not handle sub-menus, this does */
+    mii.cch = 0;
+    return GetMenuItemInfoW(hMenu, Pos, TRUE, &mii) ? mii.wID : -1;
+}
+
+static inline BOOL
+IsMenuSeparator(HMENU hMenu, UINT Pos)
+{
+    MENUITEMINFOW mii;
+    mii.cbSize = FIELD_OFFSET(MENUITEMINFOW, hbmpItem); /* USER32 version agnostic */
+    mii.fMask = MIIM_FTYPE;
+    mii.cch = 0;
+    return GetMenuItemInfoW(hMenu, Pos, TRUE, &mii) && (mii.fType & MFT_SEPARATOR);
+}
 
 EXTERN_C HRESULT
 SHELL_GetIDListFromObject(IUnknown *punk, PIDLIST_ABSOLUTE *ppidl)
@@ -69,6 +85,36 @@ SHELL_IsVerb(IContextMenu *pcm, UINT_PTR idCmd, LPCWSTR Verb)
             return !lstrcmpiA(ansi, buf);
     }
     return FALSE;
+}
+
+static int
+SHELL_FindVerbPos(IContextMenu *pcm, UINT idCmdFirst, HMENU hMenu, LPCWSTR Verb)
+{
+    for (UINT i = 0, c = GetMenuItemCount(hMenu); i < c; ++i)
+    {
+        INT_PTR id = GetMenuItemIdByPos(hMenu, i);
+        if (id != -1 && SHELL_IsVerb(pcm, id - idCmdFirst, Verb))
+            return i;
+    }
+    return -1;
+}
+
+EXTERN_C VOID
+SHELL_RemoveVerb(IContextMenu *pcm, UINT idCmdFirst, HMENU hMenu, LPCWSTR Verb)
+{
+    int nPos = SHELL_FindVerbPos(pcm, idCmdFirst, hMenu, Verb);
+    if (nPos < 0)
+        return;
+    int nCount = GetMenuItemCount(hMenu);
+    BOOL bSepBefore = nPos && IsMenuSeparator(hMenu, nPos - 1);
+    BOOL bSepAfter = IsMenuSeparator(hMenu, nPos + 1);
+    if (DeleteMenu(hMenu, nPos, MF_BYPOSITION))
+    {
+        if ((bSepBefore && bSepAfter) || (bSepAfter && nPos == 0))
+            DeleteMenu(hMenu, nPos, MF_BYPOSITION);
+        else if (bSepBefore && nPos + 1 == nCount)
+            DeleteMenu(hMenu, nPos - 1, MF_BYPOSITION);
+    }
 }
 
 EXTERN_C BOOL
