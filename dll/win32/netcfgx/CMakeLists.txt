@@ -8,6 +8,7 @@ list(APPEND SOURCE
     netcfgx.c
     classfactory.c
     installer.c
+    netinstall.c
     netcfg_iface.c
     netcfgbindinginterface_iface.c
     netcfgbindingpath_iface.c

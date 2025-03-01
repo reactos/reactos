@@ -77,6 +77,8 @@ INetCfgClassSetup_fnInstall(
     if (ppComponent)
         *ppComponent = NULL;
 
+    InstallNetworkComponent(pszwComponentId);
+
     return S_OK;
 }
 
