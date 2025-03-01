@@ -1283,7 +1283,11 @@ static LRESULT RichEditWndProc_common( HWND hwnd, UINT msg, WPARAM wparam,
             if (host->dialog_mode && !host->emulate_10 && handle_dialog_enter( host )) break;
             /* fall through */
         default:
+#ifdef __REACTOS__
+            hr = (host->text_srv ? ITextServices_TxSendMessage( host->text_srv, msg, wparam, lparam, &res ) : S_FALSE);
+#else
             hr = ITextServices_TxSendMessage( host->text_srv, msg, wparam, lparam, &res );
+#endif
         }
         break;
 
