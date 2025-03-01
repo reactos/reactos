@@ -427,7 +427,7 @@ static void update_travellog(DocHost *This)
 
     static const WCHAR about_schemeW[] = {'a','b','o','u','t',':'};
 
-    if(This->url && !wcsnicmp(This->url, about_schemeW, ARRAY_SIZE(about_schemeW))) {
+    if(This->url && !_wcsnicmp(This->url, about_schemeW, ARRAY_SIZE(about_schemeW))) {
         TRACE("Skipping about URL\n");
         return;
     }
@@ -596,32 +596,6 @@ HRESULT refresh_document(DocHost *This, const VARIANT *level)
 
     VariantClear(&vout);
     return S_OK;
-}
-
-void activate_document(DocHost *This)
-{
-    IOleObject *oleobj;
-    IHlinkTarget *hlink;
-    HRESULT hres;
-
-    if(!This->document) return;
-
-    hres = IUnknown_QueryInterface(This->document, &IID_IHlinkTarget, (void**)&hlink);
-    if(SUCCEEDED(hres)) {
-        IHlinkTarget_Navigate(hlink, 0, NULL);
-        IHlinkTarget_Release(hlink);
-    }
-
-    hres = IUnknown_QueryInterface(This->document, &IID_IOleObject, (void**)&oleobj);
-    if(SUCCEEDED(hres)) {
-        IOleObject_DoVerb(oleobj, OLEIVERB_SHOW, NULL, NULL, -1, 0, NULL);
-        IOleObject_Release(oleobj);
-    }
-
-    refresh_document(This, NULL);
-
-    if(This->view)
-        IOleDocumentView_UIActivate(This->view, TRUE);
 }
 
 void release_dochost_client(DocHost *This)
