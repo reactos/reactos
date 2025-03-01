@@ -1156,11 +1156,11 @@ DWORD WINAPI IEWinMain(const WCHAR *cmdline, int nShowWindow)
 
         while (cmdline[length] && cmdline[length] != ' ' && cmdline[length] != '\t') length++;
 
-        if (!_wcsnicmp(cmdline, embeddingW, length))
+        if (!wcsnicmp(cmdline, embeddingW, length))
             embedding = TRUE;
-        else if (!_wcsnicmp(cmdline, nohomeW, length))
+        else if (!wcsnicmp(cmdline, nohomeW, length))
             nohome = TRUE;
-        else if (!_wcsnicmp(cmdline, startmanagerW, length))
+        else if (!wcsnicmp(cmdline, startmanagerW, length))
             manager = TRUE;
         else
             break;
