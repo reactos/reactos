@@ -427,7 +427,7 @@ static void update_travellog(DocHost *This)
 
     static const WCHAR about_schemeW[] = {'a','b','o','u','t',':'};
 
-    if(This->url && !wcsnicmp(This->url, about_schemeW, ARRAY_SIZE(about_schemeW))) {
+    if(This->url && !_wcsnicmp(This->url, about_schemeW, ARRAY_SIZE(about_schemeW))) {
         TRACE("Skipping about URL\n");
         return;
     }
