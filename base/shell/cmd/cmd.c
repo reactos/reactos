@@ -2321,8 +2321,8 @@ Initialize(VOID)
             ConOutChar('\n');
 
         ConOutResPrintf(STRING_REACTOS_VERSION,
-                        _T(OS_VERSION),
-                        _T(OS_BUILD));
+                        _T(KERNEL_VERSION_STR),
+                        _T(KERNEL_VERSION_BUILD_STR));
         ConOutResPrintf(STRING_CMD_COPYRIGHT, _T(COPYRIGHT_YEAR));
     }
 

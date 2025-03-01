@@ -396,9 +396,9 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
         /* String for Safe Mode */
         Status = RtlStringCchPrintfW(pwszzVersion,
                                      cchDest,
-                                     L"ReactOS Version %S.%wZ (NT %u.%u Build %u%s)\n",
-                                     OS_VERSION,
-                                     OS_DETAILS,
+                                     L"ReactOS Version %S %wZ (NT %u.%u Build %u%s)\n",
+                                     KERNEL_VERSION_STR,
+                                     &BuildLabString,
                                      SharedUserData->NtMajorVersion,
                                      SharedUserData->NtMinorVersion,
                                      (VerInfo.dwBuildNumber & 0xFFFF),
@@ -436,10 +436,11 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
         /* Multi-string for Normal Mode */
         Status = RtlStringCchPrintfW(pwszzVersion,
                                      cchDest,
-                                     L"MenuOS %S\n"
-                                     L"Build %wZ\n",
-                                     OS_VERSION,
-                                     OS_DETAILS,
+                                     L"ReactOS Version %S\n"
+                                     L"Build %wZ\n"
+                                     L"Reporting NT %u.%u (Build %u%s)\n",
+                                     KERNEL_VERSION_STR,
+                                     &BuildLabString,
                                      SharedUserData->NtMajorVersion,
                                      SharedUserData->NtMinorVersion,
                                      (VerInfo.dwBuildNumber & 0xFFFF),
@@ -468,9 +469,9 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
         /* Fall-back string */
         Status = RtlStringCchPrintfW(pwszzVersion,
                                      cchDest,
-                                     L"ReactOS Version %S.%wZ\n",
-                                     OS_VERSION,
-                                     OS_DETAILS);
+                                     L"ReactOS Version %S %wZ\n",
+                                     KERNEL_VERSION_STR,
+                                     &BuildLabString);
         if (!NT_SUCCESS(Status))
         {
             /* General failure, NULL-terminate the string */
