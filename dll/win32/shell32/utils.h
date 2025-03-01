@@ -93,9 +93,7 @@ SHELL_CreateFallbackExtractIconForNoAssocFile(REFIID riid, LPVOID *ppvOut)
 
 struct ClipboardViewerChain
 {
-    HWND m_hWndNext;
-
-    ClipboardViewerChain() : m_hWndNext(HWND_BOTTOM) {}
+    HWND m_hWndNext = HWND_BOTTOM;
 
     void Unhook(HWND hWnd)
     {

@@ -3069,7 +3069,7 @@ LRESULT CDefView::OnChangeCBChain(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
 LRESULT CDefView::OnDrawClipboard(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     bHandled = TRUE;
-    LRESULT res = m_ClipboardChain.HandleDrawClipboard(wParam, lParam);
+    const LRESULT res = m_ClipboardChain.HandleDrawClipboard(wParam, lParam);
     if (m_HasCutItems)
     {
         m_ClipboardChain.Unhook(m_hWnd);
@@ -3619,7 +3619,7 @@ HRESULT STDMETHODCALLTYPE CDefView::Item(int iItemIndex, PITEMID_CHILD *ppidl)
 HRESULT STDMETHODCALLTYPE CDefView::ItemCount(UINT uFlags, int *pcItems)
 {
     TRACE("(%p)->(%u %p)\n", this, uFlags, pcItems);
-    if (uFlags != SVGIO_ALLVIEW && uFlags != SVGIO_SELECTION )
+    if (uFlags != SVGIO_ALLVIEW && uFlags != SVGIO_SELECTION)
         FIXME("some flags unsupported, %x\n", uFlags & ~(SVGIO_ALLVIEW | SVGIO_SELECTION));
     if ((uFlags & SVGIO_TYPE_MASK) == SVGIO_SELECTION)
         *pcItems = m_ListView.GetSelectedCount();
@@ -4055,24 +4055,24 @@ HRESULT STDMETHODCALLTYPE CDefView::IsBkDropTarget(IDropTarget *drop_target)
 
 HRESULT STDMETHODCALLTYPE CDefView::SetClipboard(BOOL move)
 {
-    if (move)
+    if (!move)
+        return S_OK;
+
+    UINT CutCount = 0;
+    for (int i = -1; (i = m_ListView.GetNextItem(i, LVNI_SELECTED)) != -1;)
     {
-        UINT CutCount = 0;
-        for (int i = -1; (i = m_ListView.GetNextItem(i, LVNI_SELECTED)) != -1;)
+        if (!CutCount++)
         {
-            if (!CutCount++)
-            {
-                // Turn off the LVIS_CUT LVM_SETCALLBACKMASK optimization
-                m_ListView.SendMessageW(LVM_SETCALLBACKMASK, m_ListView.SendMessageW(LVM_GETCALLBACKMASK, 0, 0) & ~LVIS_CUT, 0);
-                RefreshGhostedState();
-            }
-            m_ListView.SetItemState(i, LVIS_CUT, LVIS_CUT);
+            // Turn off the LVIS_CUT LVM_SETCALLBACKMASK optimization
+            m_ListView.SendMessageW(LVM_SETCALLBACKMASK, m_ListView.SendMessageW(LVM_GETCALLBACKMASK, 0, 0) & ~LVIS_CUT, 0);
+            RefreshGhostedState();
         }
-        if (CutCount)
-        {
-            m_ClipboardChain.Hook(m_hWnd);
-            m_HasCutItems = true;
-        }
+        m_ListView.SetItemState(i, LVIS_CUT, LVIS_CUT);
+    }
+    if (CutCount)
+    {
+        m_ClipboardChain.Hook(m_hWnd);
+        m_HasCutItems = true;
     }
     return S_OK;
 }
