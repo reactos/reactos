@@ -2862,6 +2862,8 @@ HICON WINAPI CreateIconFromResourceEx(
             pbIconBits = (PBYTE)pt;
         }
 
+        isAnimated = FALSE;
+
         /* Try to load BMP icon */
         if (!CURSORICON_GetCursorDataFromBMI(&cursorData, (PBITMAPINFO)pbIconBits))
         {
@@ -2885,7 +2887,6 @@ HICON WINAPI CreateIconFromResourceEx(
                 goto end_error;
             }
         }
-        isAnimated = FALSE;
     }
 
     if (uFlags & LR_SHARED)
