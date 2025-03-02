@@ -23,9 +23,20 @@ typedef struct _NETWORKSETUPDATA
     HWND hwndPage;
 } NETWORKSETUPDATA, *PNETWORKSETUPDATA;
 
-
 extern "C"
 {
+
+typedef struct _NETWORKCOMPONENT
+{
+    LPWSTR pszDeviceId;
+    const GUID *pClassGuid;
+} NETWORKCOMPONENT, PNETWORKCOMPONENT;
+
+static NETWORKCOMPONENT NetworkComponents[] = {
+    {(LPWSTR)L"MS_TCPIP", &GUID_DEVCLASS_NETTRANS},
+    {(LPWSTR)L"MS_NDISUIO", &GUID_DEVCLASS_NETTRANS}
+};
+
 
 static
 VOID
@@ -52,7 +63,7 @@ InstallNetworkComponent(
     OBO_TOKEN OboToken;
     HRESULT hr;
 
-    TRACE("InstallNetworkComponent()\n");
+    TRACE("InstallNetworkComponent(%S)\n", pszComponentName);
 
     hr = CoInitialize(NULL);
     if (hr != S_OK)
@@ -169,16 +180,23 @@ InstallThreadProc(
     _In_ LPVOID lpParameter)
 {
     PNETWORKSETUPDATA pNetworkSetupData = (PNETWORKSETUPDATA)lpParameter;
+    UINT i, count;
 
     TRACE("InstallThreadProc()\n");
 
-    SendDlgItemMessage(pNetworkSetupData->hwndPage, IDC_INSTALL_PROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, 1));
+    count = sizeof(NetworkComponents) / sizeof(NETWORKCOMPONENT);
+    TRACE("Network Components: %u\n", count);
+
+    SendDlgItemMessage(pNetworkSetupData->hwndPage, IDC_INSTALL_PROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, count));
     SendDlgItemMessage(pNetworkSetupData->hwndPage, IDC_INSTALL_PROGRESS, PBM_SETPOS, 0, 0);
 
-    InstallNetworkComponent((LPWSTR)L"MS_TCPIP", &GUID_DEVCLASS_NETTRANS);
-    SendDlgItemMessage(pNetworkSetupData->hwndPage, IDC_INSTALL_PROGRESS, PBM_SETPOS, 1, 0);
-
-    Sleep(500);
+    for (i = 0; i < count; i++)
+    {
+        TRACE("Install Network Component: %S\n", NetworkComponents[i].pszDeviceId);
+        InstallNetworkComponent(NetworkComponents[i].pszDeviceId, NetworkComponents[i].pClassGuid);
+        SendDlgItemMessage(pNetworkSetupData->hwndPage, IDC_INSTALL_PROGRESS, PBM_SETPOS, i, 0);
+        Sleep(500);
+    }
 
     TRACE("Done\n");
 
@@ -548,11 +566,14 @@ NetSetupRequestWizardPages(
     DWORD dwPageCount = 4;
     INT nPage = 0;
 
+    TRACE("NetSetupRequestWizardPages(%p %p %p)\n", pPageCount, pPages, pSetupData);
+
     if (pPageCount == NULL)
         return ERROR_INVALID_PARAMETER;
 
     if (pPages == NULL)
     {
+        TRACE("Return %lu pages\n", dwPageCount);
         *pPageCount = dwPageCount;
         return ERROR_SUCCESS;
     }
@@ -560,7 +581,7 @@ NetSetupRequestWizardPages(
     if (*pPageCount < dwPageCount)
         return ERROR_BUFFER_OVERFLOW;
 
-    pSetupData->uFirstNetworkWizardPage = IDD_NETWORKSETTINGSPAGE;
+    pSetupData->uFirstNetworkWizardPage = IDD_NETWORKINITPAGE;
 
     pNetworkSetupData = (PNETWORKSETUPDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NETWORKSETUPDATA));
     if (pNetworkSetupData == NULL)
@@ -604,6 +625,7 @@ NetSetupRequestWizardPages(
     psp.pszTemplate = MAKEINTRESOURCE(IDD_NETWORKDOMAINPAGE);
     pPages[nPage++] = CreatePropertySheetPage(&psp);
 
+    TRACE("Return %lu pages\n", dwPageCount);
     *pPageCount = dwPageCount;
 
     return ERROR_SUCCESS;
