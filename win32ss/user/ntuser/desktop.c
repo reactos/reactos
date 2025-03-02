@@ -396,9 +396,9 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
         /* String for Safe Mode */
         Status = RtlStringCchPrintfW(pwszzVersion,
                                      cchDest,
-                                     L"ReactOS Version %S %wZ (NT %u.%u Build %u%s)\n",
-                                     KERNEL_VERSION_STR,
-                                     &BuildLabString,
+                                     L"MenuOS %S.%wZ (NT %u.%u Build %u%s)\n",
+                                     OS_VERSION,
+                                     OS_DETAILS,
                                      SharedUserData->NtMajorVersion,
                                      SharedUserData->NtMinorVersion,
                                      (VerInfo.dwBuildNumber & 0xFFFF),
@@ -436,11 +436,11 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
         /* Multi-string for Normal Mode */
         Status = RtlStringCchPrintfW(pwszzVersion,
                                      cchDest,
-                                     L"ReactOS Version %S\n"
+                                     L"MenuOS %S\n"
                                      L"Build %wZ\n"
                                      L"Reporting NT %u.%u (Build %u%s)\n",
-                                     KERNEL_VERSION_STR,
-                                     &BuildLabString,
+                                     OS_VERSION,
+                                     OS_DETAILS,
                                      SharedUserData->NtMajorVersion,
                                      SharedUserData->NtMinorVersion,
                                      (VerInfo.dwBuildNumber & 0xFFFF),
