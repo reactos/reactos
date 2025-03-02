@@ -28,6 +28,7 @@
 #include <ui/rosctrls.h>
 #include "CExplorerBand.h"
 #include "CFavBand.h"
+#include "CSDWindows.h"
 #include "utility.h"
 void *operator new(size_t size);
 void operator delete(void *ptr);
