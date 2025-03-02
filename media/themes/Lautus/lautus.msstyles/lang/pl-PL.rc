@@ -2,12 +2,12 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-1000, "Ater"
+1000, "Slate"
 }
 
 STRINGTABLE
 {
-2000, "Lautus Ater"
+2000, "Slate"
 }
 
 STRINGTABLE
@@ -26,12 +26,12 @@ STRINGTABLE
 
 STRINGTABLE
 {
-5000, "Lautus"
+5000, "Slate+"
 5001, "Styl wizualny"
-5002, "Fundacja MenuOS"
+5002, "Fundacja "
 5003, "Pisarz, oparte na motywie Luna Inspirat"
 5004, "Wydane na licencji GNU/GPL 2.0, 2011"
 5005, "https://reactos.org/"
 5006, "1.0"
-5007, "Styl wizualny dla systemu MenuOS"
+5007, "Styl wizualny dla systemu "
 }

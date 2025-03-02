@@ -4,12 +4,12 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-1000, "Ater"
+1000, "Slate"
 }
 
 STRINGTABLE
 {
-2000, "Lautus Ater"
+2000, "Slate"
 }
 
 STRINGTABLE
@@ -28,12 +28,12 @@ STRINGTABLE
 
 STRINGTABLE
 {
-5000, "Lautus"
+5000, "Slate+"
 5001, "Görsel Biçim"
-5002, "MenuOS Vakfı"
+5002, " Vakfı"
 5003, "Pisarz, Luna Inspirat tabanlı"
 5004, "GNU/GPL 2.0 altında yayımlanmaktadır, 2011"
 5005, "https://reactos.org/"
 5006, "1.0"
-5007, "MenuOS İçin Görsel Biçim"
+5007, " İçin Görsel Biçim"
 }

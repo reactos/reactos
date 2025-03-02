@@ -4,12 +4,12 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 {
-1000, "Ater"
+1000, "Slate"
 }
 
 STRINGTABLE
 {
-2000, "Lautus Ater"
+2000, "Slate"
 }
 
 STRINGTABLE
@@ -28,12 +28,12 @@ STRINGTABLE
 
 STRINGTABLE
 {
-5000, "Lautus"
+5000, "Slate+"
 5001, "視覺樣式"
-5002, "MenuOS Project"
+5002, " Project"
 5003, "Pisarz, 基於 Luna Inspirat"
 5004, "於 2011 年以 GNU/GPL 2.0 條款發行"
 5005, "https://reactos.org/"
 5006, "1.0"
-5007, "MenuOS 的視覺樣式"
+5007, " 的視覺樣式"
 }
