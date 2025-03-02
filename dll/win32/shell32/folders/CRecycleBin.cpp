@@ -505,7 +505,7 @@ fail:
     return mem;
 }
 
-typedef struct
+typedef struct _FILEOPDATA
 {
     PCUITEMID_CHILD_ARRAY apidl;
     UINT cidl, index;

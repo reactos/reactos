@@ -211,7 +211,6 @@ DEFINE_GUID(IID_IPinnedList,               0xBBD20037, 0xBC0E, 0x42F1, 0x91, 0x3
 
 #define SID_STravelLogCursor IID_ITravelLogStg
 #define SID_IBandSite IID_IBandSite
-#define SID_IFolderView IID_IFolderView
 #define SID_IShellBrowser IID_IShellBrowser
 
 #endif // __SHLGUID_UNDOC_H
