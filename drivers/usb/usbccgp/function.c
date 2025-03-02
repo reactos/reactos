@@ -655,7 +655,7 @@ USBCCGP_LegacyEnum(
         }
 
         SubIndex = 0;
-        if (InterfaceDescriptor->bInterfaceClass == 0x01)
+        if (InterfaceDescriptor->bInterfaceClass == USB_DEVICE_CLASS_AUDIO)
         {
             // AUDIO CLASS lets group all audio interfaces together
             //
@@ -681,7 +681,7 @@ USBCCGP_LegacyEnum(
                 NextInterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(FDODeviceExtension->ConfigurationDescriptor, FDODeviceExtension->ConfigurationDescriptor, Index + SubIndex + 1, 0, -1, -1, -1);
                 if (NextInterfaceDescriptor)
                 {
-                    if (NextInterfaceDescriptor->bInterfaceClass != 0x01)
+                    if (NextInterfaceDescriptor->bInterfaceClass != USB_DEVICE_CLASS_AUDIO)
                     {
                         break;
                     }
@@ -777,7 +777,7 @@ USBCCGP_EnumWithAudioLegacy(
         DPRINT1("Index %lu Descriptor %p\n", Index, InterfaceDescriptor);
         ASSERT(InterfaceDescriptor);
 
-        if (InterfaceDescriptor->bInterfaceClass != 0x1)
+        if (InterfaceDescriptor->bInterfaceClass != USB_DEVICE_CLASS_AUDIO)
         {
             //
             // collection contains non audio class
