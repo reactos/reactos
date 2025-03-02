@@ -3725,8 +3725,10 @@ static void LISTVIEW_SetGroupSelection(LISTVIEW_INFO *infoPtr, INT nItem)
     item.state = LVIS_SELECTED; 
     item.stateMask = LVIS_SELECTED;
 
+#ifndef __REACTOS__
     if ((infoPtr->uView == LV_VIEW_LIST) || (infoPtr->uView == LV_VIEW_DETAILS))
     {
+#endif
 	if (infoPtr->nSelectionMark == -1)
 	{
 	    infoPtr->nSelectionMark = nItem;
@@ -3740,6 +3742,7 @@ static void LISTVIEW_SetGroupSelection(LISTVIEW_INFO *infoPtr, INT nItem)
 	    sel.upper = max(infoPtr->nSelectionMark, nItem) + 1;
 	    ranges_add(selection, sel);
 	}
+#ifndef __REACTOS__
     }
     else
     {
@@ -3765,6 +3768,7 @@ static void LISTVIEW_SetGroupSelection(LISTVIEW_INFO *infoPtr, INT nItem)
 	}
 	iterator_destroy(&i);
     }
+#endif
 
     /* disable per item notifications on LVS_OWNERDATA style
        FIXME: single LVN_ODSTATECHANGED should be used */
