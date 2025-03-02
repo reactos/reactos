@@ -316,6 +316,11 @@ NetworkSettingsPageDlgProc(
                 case PSN_SETACTIVE:
                     /* Enable the Next button only */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+                    if (pSetupData->UnattendSetup)
+                    {
+                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_NETWORKCOMPONENTPAGE);
+                        return TRUE;
+                    }
                     break;
 
                 case PSN_WIZNEXT:
