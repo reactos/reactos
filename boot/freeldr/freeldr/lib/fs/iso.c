@@ -46,8 +46,6 @@ static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dire
 
     TRACE("IsoSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectoryLength = %d FileName = %s\n", DirectoryBuffer, DirectoryLength, FileName);
 
-    RtlZeroMemory(Name, 32 * sizeof(UCHAR));
-
     Offset = 0;
     Record = (PDIR_RECORD)DirectoryBuffer;
     while (TRUE)
@@ -76,7 +74,7 @@ static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dire
         {
             for (i = 0; i < Record->FileIdLength && Record->FileId[i] != ';'; i++)
                 Name[i] = Record->FileId[i];
-            Name[i] = 0;
+            Name[i] = ANSI_NULL;
             TRACE("Name '%s'\n", Name);
 
             if (strlen(FileName) == strlen(Name) && _stricmp(FileName, Name) == 0)
@@ -90,8 +88,6 @@ static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dire
             }
 
         }
-
-        RtlZeroMemory(Name, 32 * sizeof(UCHAR));
     }
 
     return FALSE;
