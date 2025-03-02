@@ -114,7 +114,6 @@ InstallNetworkComponent(
     ZeroMemory(&OboToken, sizeof(OboToken));
     OboToken.Type = OBO_USER;
 
-    TRACE("pNetCfgClassSetup->Install %p\n", &pNetCfgClassSetup->Install);
     hr = pNetCfgClassSetup->Install(pszComponentName,
                                     &OboToken,
                                     0, //NSF_PRIMARYINSTALL,
