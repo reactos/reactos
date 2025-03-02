@@ -436,7 +436,7 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
         /* Multi-string for Normal Mode */
         Status = RtlStringCchPrintfW(pwszzVersion,
                                      cchDest,
-                                     L"ReactOS Version %S\n"
+                                     L"MenuOS %S\n"
                                      L"Build %wZ\n"
                                      L"Reporting NT %u.%u (Build %u%s)\n",
                                      KERNEL_VERSION_STR,
