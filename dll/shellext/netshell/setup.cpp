@@ -15,10 +15,12 @@
 typedef struct _NETWORKSETUPDATA
 {
     DWORD dwMagic;
-    BOOL bTypicalNetworkSetup;
-
-
     PSETUPDATA pSetupData;
+
+    /* settings page data */
+    BOOL bInitialSetupRun;
+    BOOL bTypicalNetworkSetup;
+    HWND hwndPage;
 } NETWORKSETUPDATA, *PNETWORKSETUPDATA;
 
 
@@ -38,18 +40,19 @@ SetBoldText(
 
 static
 HRESULT
-InstallTypicalNetworkSettings(VOID)
+InstallNetworkComponent(
+    LPWSTR pszComponentName,
+    const GUID *pClassGuid)
 {
     INetCfg *pNetCfg = NULL;
     INetCfgLock *pNetCfgLock = NULL;
-    INetCfgComponent *pTcpipComponent = NULL;
-    INetCfgComponent *pNicComponent = NULL;
-    IEnumNetCfgComponent *pEnumNicComponents = NULL;
-    WCHAR *pszNicName;
+    INetCfgClassSetup *pNetCfgClassSetup = NULL;
+    INetCfgComponent *pNetCfgComponent = NULL;
     BOOL fWriteLocked = FALSE, fInitialized = FALSE;
+    OBO_TOKEN OboToken;
     HRESULT hr;
 
-    TRACE("InstallTypicalNetworkSettings()\n");
+    TRACE("InstallNetworkComponent()\n");
 
     hr = CoInitialize(NULL);
     if (hr != S_OK)
@@ -99,61 +102,47 @@ InstallTypicalNetworkSettings(VOID)
 
     fInitialized = TRUE;
 
-    /* Find the TCP/IP driver */
-    hr = pNetCfg->FindComponent(L"ms_tcpip",
-                                &pTcpipComponent);
+    hr = pNetCfg->QueryNetCfgClass(pClassGuid,
+                                   IID_INetCfgClassSetup,
+                                   (PVOID*)&pNetCfgClassSetup);
+    if (hr != S_OK)
+    {
+        ERR("QueryNetCfgClass failed\n");
+        goto exit;
+    }
+
+    ZeroMemory(&OboToken, sizeof(OboToken));
+    OboToken.Type = OBO_USER;
+
+    TRACE("pNetCfgClassSetup->Install %p\n", &pNetCfgClassSetup->Install);
+    hr = pNetCfgClassSetup->Install(pszComponentName,
+                                    &OboToken,
+                                    0, //NSF_PRIMARYINSTALL,
+                                    0,
+                                    NULL,
+                                    NULL,
+                                    &pNetCfgComponent);
     if (hr == S_OK)
     {
-        FIXME("Found the TCP/IP driver!\n");
+        if (pNetCfgComponent != NULL)
+            pNetCfgComponent->Release();
     }
     else
     {
-        ERR("Initialize failed\n");
+        ERR("Install failed\n");
         goto exit;
     }
 
-    hr = pNetCfg->EnumComponents(&GUID_DEVCLASS_NET,
-                                 &pEnumNicComponents);
+    hr = pNetCfg->Apply();
     if (hr != S_OK)
     {
-        ERR("EnumComponents failed\n");
+        ERR("Apply failed\n");
         goto exit;
     }
 
-    for (;;)
-    {
-        hr = pEnumNicComponents->Next(1,
-                                      &pNicComponent,
-                                      NULL);
-        if (hr != S_OK)
-        {
-            TRACE("EnumNicComponents done!\n");
-            break;
-        }
-
-        hr = pNicComponent->GetDisplayName(&pszNicName);
-        if (hr == S_OK)
-        {
-            FIXME("NIC name: %S\n", pszNicName);
-            CoTaskMemFree(pszNicName);
-        }
-
-        // FIXME Bind Tcpip to the NIC
-
-        pNicComponent->Release();
-        pNicComponent = NULL;
-    }
-
-    TRACE("Done!\n");
 exit:
-    if (pNicComponent != NULL)
-        pNicComponent->Release();
-
-    if (pEnumNicComponents != NULL)
-        pEnumNicComponents->Release();
-
-    if (pTcpipComponent != NULL)
-        pTcpipComponent->Release();
+    if (pNetCfgClassSetup != NULL)
+        pNetCfgClassSetup->Release();
 
     if (fInitialized)
         pNetCfg->Uninitialize();
@@ -169,11 +158,111 @@ exit:
 
     CoUninitialize();
 
-    TRACE("InstallTypicalNetworkSettings() done!\n");
+    TRACE("InstallNetworkComponent() done!\n");
 
     return hr;
 }
 
+static
+DWORD
+WINAPI
+InstallThreadProc(
+    _In_ LPVOID lpParameter)
+{
+    PNETWORKSETUPDATA pNetworkSetupData = (PNETWORKSETUPDATA)lpParameter;
+
+    TRACE("InstallThreadProc()\n");
+
+    SendDlgItemMessage(pNetworkSetupData->hwndPage, IDC_INSTALL_PROGRESS, PBM_SETRANGE, 0, MAKELPARAM(0, 1));
+    SendDlgItemMessage(pNetworkSetupData->hwndPage, IDC_INSTALL_PROGRESS, PBM_SETPOS, 0, 0);
+
+    InstallNetworkComponent((LPWSTR)L"MS_TCPIP", &GUID_DEVCLASS_NETTRANS);
+    SendDlgItemMessage(pNetworkSetupData->hwndPage, IDC_INSTALL_PROGRESS, PBM_SETPOS, 1, 0);
+
+    Sleep(500);
+
+    TRACE("Done\n");
+
+    /* Done */
+    pNetworkSetupData->bInitialSetupRun = TRUE;
+    PostMessage(pNetworkSetupData->hwndPage, WM_USER, 0, 0);
+
+    return 0;
+}
+
+static
+INT_PTR
+CALLBACK
+NetworkInitPageDlgProc(
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+    PNETWORKSETUPDATA pNetworkSetupData;
+    PSETUPDATA pSetupData;
+    LPNMHDR lpnm;
+
+    /* Retrieve pointer to the global setup data */
+    pNetworkSetupData = (PNETWORKSETUPDATA)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
+    if ((pNetworkSetupData != NULL) &&
+        (pNetworkSetupData->dwMagic == NETWORK_SETUP_MAGIC))
+        pSetupData = pNetworkSetupData->pSetupData;
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            /* Save pointer to the global setup data */
+            pNetworkSetupData = (PNETWORKSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pNetworkSetupData);
+            pSetupData = pNetworkSetupData->pSetupData;
+
+            if (pSetupData->UnattendSetup)
+            {
+                //...
+            }
+            break;
+
+        case WM_DESTROY:
+            /* ATTENTION: Free pNetworkSetupData only in one of the page functions!!! */
+            //...
+            break;
+
+        case WM_NOTIFY:
+            lpnm = (LPNMHDR)lParam;
+
+            switch (lpnm->code)
+            {
+                case PSN_SETACTIVE:
+                    /* Disable the Back and Next buttons */
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
+                    TRACE("Starting install thread!\n");
+                    pNetworkSetupData->hwndPage = hwndDlg;
+                    CreateThread(NULL, 0, InstallThreadProc, (LPVOID)pNetworkSetupData, 0, NULL);
+                    TRACE("Install thread done!\n");
+                    break;
+
+                case PSN_WIZNEXT:
+                    break;
+
+                case PSN_WIZBACK:
+                    break;
+            }
+            break;
+
+        case WM_USER:
+            TRACE("WM_USER!\n");
+            /* Enable the Next button and press it */
+            PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+            PropSheet_PressButton(GetParent(hwndDlg), PSBTN_NEXT);
+            break;
+
+        default:
+            break;
+    }
+
+    return FALSE;
+}
 
 static
 INT_PTR
@@ -226,13 +315,8 @@ NetworkSettingsPageDlgProc(
             switch (lpnm->code)
             {
                 case PSN_SETACTIVE:
-                    /* Enable the Back and Next buttons */
-                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
-                    if (pSetupData->UnattendSetup)
-                    {
-                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_NETWORKCOMPONENTPAGE);
-                        return TRUE;
-                    }
+                    /* Enable the Next button only */
+                    PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
                     break;
 
                 case PSN_WIZNEXT:
@@ -242,8 +326,6 @@ NetworkSettingsPageDlgProc(
                     if (IsDlgButtonChecked(hwndDlg, IDC_NETWORK_TYPICAL) == BST_CHECKED)
                     {
                         pNetworkSetupData->bTypicalNetworkSetup = TRUE;
-
-                        InstallTypicalNetworkSettings();
 
                         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_NETWORKDOMAINPAGE);
                         return TRUE;
@@ -459,7 +541,7 @@ NetSetupRequestWizardPages(
 {
     PNETWORKSETUPDATA pNetworkSetupData;
     PROPSHEETPAGE psp = {0};
-    DWORD dwPageCount = 3;
+    DWORD dwPageCount = 4;
     INT nPage = 0;
 
     if (pPageCount == NULL)
@@ -483,11 +565,17 @@ NetSetupRequestWizardPages(
     pNetworkSetupData->dwMagic = NETWORK_SETUP_MAGIC;
     pNetworkSetupData->pSetupData = pSetupData;
 
-
     /* Create the Network Settings page */
     psp.dwSize = sizeof(PROPSHEETPAGE);
     psp.hInstance = netshell_hInstance;
     psp.lParam = (LPARAM)pNetworkSetupData;
+
+    psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_NETWORKINITTITLE);
+    psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_NETWORKINITSUBTITLE);
+    psp.pfnDlgProc = NetworkInitPageDlgProc;
+    psp.pszTemplate = MAKEINTRESOURCE(IDD_NETWORKINITPAGE);
+    pPages[nPage++] = CreatePropertySheetPage(&psp);
 
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
     psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_NETWORKSETTINGSTITLE);

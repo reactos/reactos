@@ -83,6 +83,16 @@ BEGIN
     PUSHBUTTON "&Fechar", IDC_CLOSE, 120, 155, 60, 14
 END
 
+IDD_NETWORKINITPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
+    LTEXT "Please wait while ReactOS installs networking components.", IDC_STATIC, 53, 7, 240, 20
+    CONTROL "", IDC_INSTALL_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 21, 58, 275, 11
+END
+
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Programa de configuração do ReactOS"
@@ -172,6 +182,8 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_NETWORKINITTITLE "Network Install"
+    IDS_NETWORKINITSUBTITLE "Installs reqired networking components."
     IDS_NETWORKSETTINGSTITLE "Definições de rede"
     IDS_NETWORKSETTINGSSUBTITLE "Instala aplicações de rede necessárias para ligar a outras redes, equipamentos, e à internet."
     IDS_NETWORKCOMPONENTTITLE "Componentes de rede"
