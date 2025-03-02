@@ -702,7 +702,7 @@ USBCCGP_LegacyEnum(
             //
             FDODeviceExtension->FunctionDescriptor[Index].FunctionNumber = Index;
             FDODeviceExtension->FunctionDescriptor[Index].NumberOfInterfaces = 1;
-            FDODeviceExtension->FunctionDescriptor[Index].InterfaceDescriptorList = AllocateItem(NonPagedPool, sizeof(PUSB_INTERFACE_DESCRIPTOR) * 1);
+            FDODeviceExtension->FunctionDescriptor[Index].InterfaceDescriptorList = AllocateItem(NonPagedPool, sizeof(PUSB_INTERFACE_DESCRIPTOR));
             if (!FDODeviceExtension->FunctionDescriptor[Index].InterfaceDescriptorList)
             {
                 //
