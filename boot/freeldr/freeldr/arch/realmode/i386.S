@@ -191,7 +191,7 @@ gdt:
 /* GDT table pointer */
 gdtptr:
     .word HEX(27)       /* Limit */
-    .long OFF(gdt)      /* Base Address */
+    .word gdt, 0        /* Base Address */
 
 /* Real-mode IDT pointer */
 rmode_idtptr:
