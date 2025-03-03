@@ -232,7 +232,8 @@ NetioComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
 }
 
 struct ListenContext {
-    PWSK_SOCKET_INTERNAL socket;
+    PWSK_SOCKET_INTERNAL ListenSocket;
+    PWSK_SOCKET_INTERNAL AcceptSocket;
     PTDI_CONNECTION_INFORMATION RequestConnectionInfo, ReturnConnectionInfo;
 };
 
@@ -246,26 +247,65 @@ CompletionFireEvent(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
+static NTSTATUS CreateSocket(
+    _In_ ADDRESS_FAMILY AddressFamily,
+    _In_ USHORT SocketType,
+    _In_ ULONG Protocol,
+    _In_ ULONG Flags,
+    _Out_ PWSK_SOCKET_INTERNAL *TheSocket)
+{
+    PIRP NewSocketIrp;
+    KEVENT CompletionEvent;
+    NTSTATUS Status;
+
+    if (TheSocket == NULL)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    NewSocketIrp = IoAllocateIrp(1, FALSE);
+    if (NewSocketIrp == NULL)
+    {
+        DbgPrint("Out of memory?\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    KeInitializeEvent(&CompletionEvent, NotificationEvent, FALSE);
+    IoSetCompletionRoutine(NewSocketIrp, CompletionFireEvent, &CompletionEvent, TRUE, TRUE, TRUE);
+    NewSocketIrp->Tail.Overlay.Thread = PsGetCurrentThread();
+
+    Status = WskSocket(NULL, AddressFamily, SocketType, Protocol, Flags,
+        NULL, NULL, NULL, NULL, NULL, NewSocketIrp);
+
+    if (Status == STATUS_PENDING) {
+        KeWaitForSingleObject(&CompletionEvent, Executive, KernelMode, FALSE, NULL);
+        Status = NewSocketIrp->IoStatus.Status;
+    }
+
+    if (NT_SUCCESS(Status))
+        *TheSocket = (PWSK_SOCKET_INTERNAL) NewSocketIrp->IoStatus.Information;
+
+    IoFreeIrp(NewSocketIrp);
+    return Status;
+}
 
 static NTSTATUS NTAPI
 ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
 {
     struct ListenContext *l = (struct ListenContext *)Context;
-    PWSK_SOCKET_INTERNAL s = l->socket;
-
-        /* TODO: write a CreateSocket() for that: */
-    PWSK_SOCKET_INTERNAL AcceptSocket;
-    PIRP NewSocketIrp;
-    KEVENT CompletionEvent;
+    PWSK_SOCKET_INTERNAL ListenSocket = l->ListenSocket;
+    PWSK_SOCKET_INTERNAL AcceptSocket = l->AcceptSocket;
+    PWSK_CLIENT_LISTEN_DISPATCH ListenDispatch =
+        (PWSK_CLIENT_LISTEN_DISPATCH) ListenSocket->ListenDispatch;
+    PSOCKADDR RemoteAddress =
+        (PSOCKADDR)(&((PTRANSPORT_ADDRESS) l->ReturnConnectionInfo->RemoteAddress)->Address[0].Address[0]);
+    PVOID AcceptSocketContext;
+    const WSK_CLIENT_CONNECTION_DISPATCH *AcceptSocketDispatch;
     NTSTATUS Status;
 
-    PTRANSPORT_ADDRESS ta;
-
-DbgPrint("ListenComplete s is %p\n", s);
-
-         /* and callback set in ListenDispatch: */
-    if (s->CallbackMask & WSK_EVENT_ACCEPT) {
-        DbgPrint("Callback ...\n", s);
+    if (ListenSocket->CallbackMask & WSK_EVENT_ACCEPT &&
+        ListenDispatch->WskAcceptEvent != NULL)
+    {
+        DbgPrint("Callback ...\n");
 
 	/* TODO:
 		1) Done: Create a socket (via WskSocket function?)
@@ -280,82 +320,64 @@ DbgPrint("ListenComplete s is %p\n", s);
                  already connected, pass it to accept callback.
                  There is no listening socket on TDI level ...
                  Item 2) is done by the TDI/TCP/IP driver.
-         */.
+         */
 
-        NewSocketIrp = IoAllocateIrp(1, FALSE);
-        if (NewSocketIrp == NULL) {
-            DbgPrint("Out of memory?\n");
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-        KeInitializeEvent(&CompletionEvent, NotificationEvent, FALSE);
-        IoSetCompletionRoutine(NewSocketIrp, CompletionFireEvent, &CompletionEvent, TRUE, TRUE, TRUE);
-        NewSocketIrp->Tail.Overlay.Thread = PsGetCurrentThread();
-
-        Status = WskSocket(NULL, s->family, s->type, s->proto,
-            WSK_FLAG_CONNECTION_SOCKET, NULL, NULL, NULL, NULL, NULL, NewSocketIrp);
-
-        if (Status == STATUS_PENDING) {
-                KeWaitForSingleObject(&CompletionEvent, Executive, KernelMode, FALSE, NULL);
-                Status = NewSocketIrp->IoStatus.Status;
-        }
-
-        if (NT_SUCCESS(Status))
-                AcceptSocket = (PWSK_SOCKET_INTERNAL) NewSocketIrp->IoStatus.Information;
-
-        IoFreeIrp(NewSocketIrp);
-
-        DbgPrint("AcceptSocket is %p\n", AcceptSocket);
-
-        ta = (PTRANSPORT_ADDRESS) l->ReturnConnectionInfo->RemoteAddress;
-        Status = TdiOpenAddressFile(&AcceptSocket->TdiName,
-              ta, AFD_SHARE_REUSE, &AcceptSocket->RemoteAddressHandle, &AcceptSocket->RemoteAddressFile);
-
-        if (!NT_SUCCESS(Status)) {
-            DbgPrint("Cannot open address file status is 0x%08x\n", Status);
-            return Status;
-        }
-        Status = TdiAssociateAddressFile(AcceptSocket->RemoteAddressHandle, AcceptSocket->ConnectionFile);
-        if (!NT_SUCCESS(Status)) {
-            DbgPrint("Cannot associate accept socket with remote address status is 0x%08x\n", Status);
-            return Status;
+        Status = ListenDispatch->WskAcceptEvent(ListenSocket->user_context, 0, &ListenSocket->LocalAddress, RemoteAddress, (PWSK_SOCKET)AcceptSocket, &AcceptSocketContext, &AcceptSocketDispatch);
+        if (!NT_SUCCESS(Status))
+        {
+            DbgPrint("ListenDispatch->WskAcceptEvent returned non-successful status 0x%08x\n", Status);
+                  /* ignore ... */
         }
     }
+    SocketPut(AcceptSocket);
+    SocketPut(ListenSocket);
+    ExFreePoolWithTag(l, TAG_NETIO);
+
     return STATUS_SUCCESS;
 }
 
 static NTSTATUS
-StartListening(PWSK_SOCKET_INTERNAL s)
+StartListening(PWSK_SOCKET_INTERNAL ListenSocket)
 {
     PIRP tdiIrp;
     NTSTATUS status;
     struct ListenContext *lc;
+    PWSK_SOCKET_INTERNAL AcceptSocket;
 
 DbgPrint("Function %s ...\n", __func__);
 
-    if (s->LocalAddressHandle == NULL)
+    if (ListenSocket->LocalAddressHandle == NULL)
     {
         DbgPrint("LocalAddressHandle is not set, need to bind your socket before listening\n");
         return STATUS_INVALID_PARAMETER;
+    }
+
+    status = CreateSocket(ListenSocket->family, ListenSocket->type, ListenSocket->proto, WSK_FLAG_CONNECTION_SOCKET, &AcceptSocket);
+    if (status != STATUS_SUCCESS)
+    {
+        DbgPrint("Could not create AcceptSocket, status is 0x%08x\n", status);
+        return status;
     }
 
     status = STATUS_INSUFFICIENT_RESOURCES;
     lc = ExAllocatePoolWithTag(NonPagedPool, sizeof(*lc), TAG_NETIO);
     if (lc == NULL)
     {
-        return STATUS_INSUFFICIENT_RESOURCES;
+        goto err_out_free_accept_socket;
     }
-    lc->socket = s;
+    lc->ListenSocket = ListenSocket;
+    lc->AcceptSocket = AcceptSocket;
 
     tdiIrp = NULL;
 
 // DbgPrint("s is %p s->LocalAddressHandle is %p\n", s, s->LocalAddressHandle);
-    status = TdiAssociateAddressFile(s->LocalAddressHandle, s->ConnectionFile);
+    status = TdiAssociateAddressFile(ListenSocket->LocalAddressHandle, AcceptSocket->ConnectionFile);
 // DbgPrint("s is %p s->ConnectionFile is %p status is %x TdiAssociateAddressFile succeeded\n", s, s->ConnectionFile, status);
     if (!NT_SUCCESS(status))
     {
         goto err_out_free_lc;
     }
-    s->ConnectionFileAssociated = TRUE;
+    AcceptSocket->ConnectionFileAssociated = TRUE;
 
     lc->RequestConnectionInfo = NULL;
     TdiBuildNullConnectionInfo(&lc->RequestConnectionInfo, TDI_ADDRESS_TYPE_IP);
@@ -370,14 +392,16 @@ DbgPrint("Function %s ...\n", __func__);
     {
         goto err_out_free_lc_and_req_conn_info;
     }
-    SocketGet(s);
+    SocketGet(ListenSocket);
+    SocketGet(AcceptSocket);
 
-    status = TdiListen(&tdiIrp, s->ConnectionFile, &lc->RequestConnectionInfo, &lc->ReturnConnectionInfo, ListenComplete, lc);
+    status = TdiListen(&tdiIrp, AcceptSocket->ConnectionFile, &lc->RequestConnectionInfo, &lc->ReturnConnectionInfo, ListenComplete, lc);
 
     if (!NT_SUCCESS(status))
     {
         ExFreePoolWithTag(lc->ReturnConnectionInfo, TAG_NETIO);
-        SocketPut(s);
+        SocketPut(ListenSocket);
+        SocketPut(AcceptSocket);
         goto err_out_free_lc_and_req_conn_info;
     }
     return STATUS_PENDING;
@@ -386,14 +410,17 @@ err_out_free_lc_and_req_conn_info:
     ExFreePoolWithTag(lc->RequestConnectionInfo, TAG_NETIO);
 
 err_out_free_lc_and_disassociate:
-    status = TdiDisassociateAddressFile(s->ConnectionFile);
+    status = TdiDisassociateAddressFile(AcceptSocket->ConnectionFile);
     if (!NT_SUCCESS(status)) {
         NETIO_DbgPrint(MIN_TRACE, ("Warning: TdiDisassociateAddressFile returned status %08x\n", status));
     }
-    s->ConnectionFileAssociated = FALSE;
+    AcceptSocket->ConnectionFileAssociated = FALSE;
 
 err_out_free_lc:
     ExFreePoolWithTag(lc, TAG_NETIO);
+
+err_out_free_accept_socket:
+    SocketPut(AcceptSocket);
 
     return status;
 }
@@ -1091,12 +1118,15 @@ WskSocket(
             s->s.Dispatch = &TcpDispatch;
             RtlInitUnicodeString(&s->TdiName, L"\\Device\\Tcp");
 
-            status = TdiOpenConnectionEndpointFile(&s->TdiName, &s->ConnectionHandle, &s->ConnectionFile);
-            if (status != STATUS_SUCCESS)
+            if (Flags != WSK_FLAG_LISTEN_SOCKET)
             {
-                DbgPrint("Could not open TDI handle, status is %x\n", status);
-                ExFreePoolWithTag(s, TAG_NETIO);
-                goto err_out;
+                status = TdiOpenConnectionEndpointFile(&s->TdiName, &s->ConnectionHandle, &s->ConnectionFile);
+                if (status != STATUS_SUCCESS)
+                {
+                    DbgPrint("Could not open TDI handle, status is %x\n", status);
+                    ExFreePoolWithTag(s, TAG_NETIO);
+                    goto err_out;
+                }
             }
             if (Flags == WSK_FLAG_LISTEN_SOCKET && s->ListenDispatch == NULL)
             {
