@@ -2312,6 +2312,19 @@ CmpSetVersionData(VOID)
                       ValueData.Buffer,
                       ValueData.Length + sizeof(WCHAR));
     }
+    /* Set the 'MajorMinorVer' value */
+    RtlInitUnicodeString(&ValueName, L"MajorMinorVer");
+    RtlInitAnsiString(&TempString, MajorMinor);
+    Status = RtlAnsiStringToUnicodeString(&ValueData, &TempString, FALSE);
+    if (NT_SUCCESS(Status))
+    {
+        NtSetValueKey(CurrentVersionKeyHandle,
+                      &ValueName,
+                      0,
+                      REG_SZ,
+                      CmVersionString.Buffer,
+                      CmVersionString.Length + sizeof(WCHAR));
+    }
 
     /* Set the 'CurrentType' value */
     RtlInitUnicodeString(&ValueName, L"CurrentType");

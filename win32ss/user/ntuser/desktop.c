@@ -307,6 +307,7 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
     RTL_OSVERSIONINFOEXW VerInfo;
     UNICODE_STRING BuildLabString;
     UNICODE_STRING CSDVersionString;
+    UNICODE_STRING MajorMinorString;
     RTL_QUERY_REGISTRY_TABLE VersionConfigurationTable[] =
     {
         {
@@ -314,6 +315,13 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
             RTL_QUERY_REGISTRY_DIRECT,
             L"BuildLab",
             &BuildLabString,
+            REG_NONE, NULL, 0
+        },
+        {
+            NULL,
+            RTL_QUERY_REGISTRY_DIRECT,
+            L"MajorMinorVer",
+            &MajorMinorString,
             REG_NONE, NULL, 0
         },
         {
@@ -349,6 +357,9 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
     RtlInitEmptyUnicodeString(&BuildLabString,
                               BuildLabBuffer,
                               sizeof(BuildLabBuffer));
+    RtlInitEmptyUnicodeString(&MajorMinorString,
+                              BuildLabBuffer,
+                              sizeof(BuildLabBuffer));
     RtlZeroMemory(VerInfo.szCSDVersion, sizeof(VerInfo.szCSDVersion));
     RtlInitEmptyUnicodeString(&CSDVersionString,
                               VerInfo.szCSDVersion,
@@ -362,6 +373,7 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
     {
         /* Indicate nothing is there */
         BuildLabString.Length = 0;
+        MajorMinorString.Length = 0;
         CSDVersionString.Length = 0;
     }
     /* NULL-terminate the strings */
@@ -439,7 +451,7 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
                                      L"MenuOS %S\n"
                                      L"Build %wZ\n"
                                      L"Reporting NT %u.%u (Build %u%s)\n",
-                                     KERNEL_VERSION_STR,
+                                     &MajorMinorString,
                                      &BuildLabString,
                                      SharedUserData->NtMajorVersion,
                                      SharedUserData->NtMinorVersion,
