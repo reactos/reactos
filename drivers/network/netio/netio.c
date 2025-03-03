@@ -105,6 +105,8 @@ typedef struct _WSK_SOCKET_INTERNAL
 
     UINT Flags;                          /* SO_REUSEADDR, ... see ws2def.h */
     UINT RefCount;                       /* See SocketGet/SocketPut TODO: this should be atomic */
+
+    PIRP ListenIrp;	/* must be cancelled on close */
 } WSK_SOCKET_INTERNAL, *PWSK_SOCKET_INTERNAL;
 
 struct NetioContext
@@ -127,26 +129,24 @@ void SocketShutdown(PWSK_SOCKET_INTERNAL s)
 {
     NTSTATUS status;
 
+    if (s->ListenIrp != NULL)
+    {
+        IoCancelIrp(s->ListenIrp);  /* TODO: Neccessary? */
+        s->ListenIrp = NULL;
+    }
     if (s->ConnectionFile != NULL) {
-// DbgPrint("X5a\n");
         if (s->ConnectionFileAssociated) {
-// DbgPrint("X5b\n");
             status = TdiDisassociateAddressFile(s->ConnectionFile);
-// DbgPrint("X5c\n");
             if (!NT_SUCCESS(status)) {
                 NETIO_DbgPrint(MIN_TRACE, ("Warning: TdiDisassociateAddressFile returned status %08x\n", status));
             }
-// DbgPrint("X5d\n");
             s->ConnectionFileAssociated = FALSE;
         }
-// DbgPrint("X6\n");
         ObDereferenceObject(s->ConnectionFile);
         s->ConnectionFile = NULL;
     }
-// DbgPrint("X7\n");
     if (s->ConnectionHandle != NULL)
     {
-// DbgPrint("X8\n");
         ZwClose(s->ConnectionHandle);
         s->ConnectionHandle = NULL;
     }
@@ -156,34 +156,26 @@ void
 SocketPut(PWSK_SOCKET_INTERNAL s)
 {
     s->RefCount--;
-// DbgPrint("SocketPut: refcount is %d socket is %p\n", s->RefCount, s);
     if (s->RefCount == 0)
     {
-SocketShutdown(s);
-// DbgPrint("X7\n");
+        SocketShutdown(s);	/* noop when called twice */
+
         if (s->ConnectionHandle != NULL)
         {
-// DbgPrint("X8\n");
             ZwClose(s->ConnectionHandle);
             s->ConnectionHandle = NULL;
         }
-// DbgPrint("X1\n");
         if (s->LocalAddressFile != NULL) {
-// DbgPrint("X2\n");
             ObDereferenceObject(s->LocalAddressFile);
             s->LocalAddressFile = NULL;
         }
-// DbgPrint("X3\n");
         if (s->LocalAddressHandle != NULL)
         {
-// DbgPrint("X4\n");
             ZwClose(s->LocalAddressHandle);
             s->LocalAddressHandle = NULL;
         }
-// DbgPrint("X9\n");
         ExFreePoolWithTag(s, TAG_NETIO);
     }
-// DbgPrint("Xa\n");
 }
 
 NTSTATUS NTAPI
@@ -306,24 +298,10 @@ ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
     NTSTATUS Status;
 
     if (ListenSocket->CallbackMask & WSK_EVENT_ACCEPT &&
-        ListenDispatch->WskAcceptEvent != NULL)
+        ListenDispatch->WskAcceptEvent != NULL &&
+        ListenSocket->ListenIrp != NULL)
     {
         DbgPrint("Callback ...\n");
-
-	/* TODO:
-		1) Done: Create a socket (via WskSocket function?)
-		2) Rejected: Associate the RemoteAddress with s->ConnectionFile
-                      this fails: addresses must be local, see below.
-		3) Done: Call the callback (ListenDispatch)
-		4) Done: Requeue StartListening
-	*/
-        /* TODO: Done: Create the socket via WskSocket in StartListening()
-                 and pass the NEWLY CREATED socket to TdiListen().
-                 Then do only 3) and 4) from above (the socket is
-                 already connected, pass it to accept callback.
-                 There is no listening socket on TDI level ...
-                 Item 2) is done by the TDI/TCP/IP driver.
-         */
 
         Status = ListenDispatch->WskAcceptEvent(ListenSocket->user_context, 0, &ListenSocket->LocalAddress, RemoteAddress, (PWSK_SOCKET)AcceptSocket, &AcceptSocketContext, &AcceptSocketDispatch);
         if (!NT_SUCCESS(Status))
@@ -357,6 +335,7 @@ DbgPrint("Function %s ...\n", __func__);
         return STATUS_INVALID_PARAMETER;
     }
 
+// DbgPrint("into CreateSocket ...\n");
     status = CreateSocket(ListenSocket->family, ListenSocket->type, ListenSocket->proto, WSK_FLAG_CONNECTION_SOCKET, &AcceptSocket);
     if (status != STATUS_SUCCESS)
     {
@@ -375,9 +354,7 @@ DbgPrint("Function %s ...\n", __func__);
 
     tdiIrp = NULL;
 
-// DbgPrint("s is %p s->LocalAddressHandle is %p\n", s, s->LocalAddressHandle);
     status = TdiAssociateAddressFile(ListenSocket->LocalAddressHandle, AcceptSocket->ConnectionFile);
-// DbgPrint("s is %p s->ConnectionFile is %p status is %x TdiAssociateAddressFile succeeded\n", s, s->ConnectionFile, status);
     if (!NT_SUCCESS(status))
     {
         goto err_out_free_lc;
@@ -409,6 +386,8 @@ DbgPrint("Function %s ...\n", __func__);
         SocketPut(AcceptSocket);
         goto err_out_free_lc_and_req_conn_info;
     }
+    ListenSocket->ListenIrp = tdiIrp;
+
     return STATUS_PENDING;
 
 err_out_free_lc_and_req_conn_info:
@@ -542,15 +521,12 @@ WskCloseSocket(_In_ PWSK_SOCKET Socket, _Inout_ PIRP Irp)
     NTSTATUS status = STATUS_SUCCESS;
     PWSK_SOCKET_INTERNAL s = (PWSK_SOCKET_INTERNAL)Socket;
 
-// DbgPrint("Function %s ...\n", __func__);
     IoSetNextIrpStackLocation(Irp);
         /* There might be a reference from (for example) a pending
 	 * receive. Shutdown the socket here explicitly. We expect
          * all pending I/O operations to be cancelled, then.
 	 */
-// DbgPrint("Into SocketShutdown %p\n", s);
     SocketShutdown(s);
-// DbgPrint("Into SocketPut %p\n", s);
     SocketPut(s);
 
     Irp->IoStatus.Status = status;
@@ -1112,6 +1088,7 @@ WskSocket(
     s->ConnectionHandle = NULL;
     s->ConnectionFile = NULL;
     s->ConnectionFileAssociated = FALSE;
+    s->ListenIrp = NULL;
 
     switch (SocketType)
     {
