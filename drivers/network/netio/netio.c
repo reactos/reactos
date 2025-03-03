@@ -108,6 +108,8 @@ typedef struct _WSK_SOCKET_INTERNAL
 
     PIRP ListenIrp;	           /* must be cancelled on close */
     HANDLE ListenThreadHandle;     /* needed to restart listening */
+    KEVENT StartListenEvent;
+    BOOLEAN ListenThreadShouldRun;
 } WSK_SOCKET_INTERNAL, *PWSK_SOCKET_INTERNAL;
 
 struct NetioContext
@@ -130,6 +132,17 @@ void SocketShutdown(PWSK_SOCKET_INTERNAL s)
 {
     NTSTATUS status;
 
+    if (s->ListenThreadHandle != NULL)
+    {
+        s->ListenThreadShouldRun = FALSE;
+        KeSetEvent(&s->StartListenEvent, IO_NO_INCREMENT, FALSE);
+        status = KeWaitForSingleObject(s->ListenThreadHandle, Executive, KernelMode, FALSE, (PLARGE_INTEGER)NULL);
+        if (!NT_SUCCESS(status))
+        {
+            DbgPrint("KeWaitForSingleObject failed with status 0x%08x!\n", status);
+        }
+        s->ListenThreadHandle = NULL;
+    }
     if (s->ListenIrp != NULL)
     {
         IoCancelIrp(s->ListenIrp);  /* TODO: Neccessary? */
@@ -283,8 +296,8 @@ DbgPrint("out of WskSocket ...\n");
     return Status;
 }
 
-static NTSTATUS
-StartListening(PWSK_SOCKET_INTERNAL ListenSocket);
+static void
+QueueListening(PWSK_SOCKET_INTERNAL ListenSocket);
 
 static NTSTATUS NTAPI
 ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
@@ -313,7 +326,8 @@ ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
                   /* ignore ... */
         }
             /* And wait for the next incoming connection. */
-        StartListening(ListenSocket);
+            /* This is done in a separate thread at IRQL = 0 */
+        QueueListening(ListenSocket);
     }
     SocketPut(AcceptSocket);
     SocketPut(ListenSocket);
@@ -413,6 +427,31 @@ err_out_free_accept_socket:
     return status;
 }
 
+static void QueueListening(PWSK_SOCKET_INTERNAL ListenSocket)
+{
+    KeSetEvent(&ListenSocket->StartListenEvent, IO_NO_INCREMENT, FALSE);
+}
+
+static void WSKAPI RequeueListenThread(void *p)
+{
+    PWSK_SOCKET_INTERNAL ListenSocket = (PWSK_SOCKET_INTERNAL) p;
+    NTSTATUS status;
+
+    while (ListenSocket->ListenThreadShouldRun)
+    {
+        status = KeWaitForSingleObject(&ListenSocket->StartListenEvent, Executive, KernelMode, FALSE, NULL);
+        if (!NT_SUCCESS(status))
+        {
+            DbgPrint("KeWaitForSingleObject failed with status 0x%08x!\n", status);
+        }
+        if (!ListenSocket->ListenThreadShouldRun)
+        {
+            break;
+        }
+        StartListening(ListenSocket);
+    }
+}
+
 static NTSTATUS WSKAPI
 WskControlSocket(
     _In_ PWSK_SOCKET Socket,
@@ -489,7 +528,7 @@ WskControlSocket(
                             if (((s->CallbackMask & WSK_EVENT_ACCEPT) == 0) &&
                                 ((c->EventMask & WSK_EVENT_ACCEPT) == WSK_EVENT_ACCEPT)) {
                                 s->CallbackMask = c->EventMask;
-                                StartListening(s);
+                                QueueListening(s);
                             } else {
                                 s->CallbackMask = c->EventMask;
                             }
@@ -1094,6 +1133,7 @@ WskSocket(
     s->ConnectionFileAssociated = FALSE;
     s->ListenIrp = NULL;
     s->ListenThreadHandle = NULL;
+    s->ListenThreadShouldRun = FALSE;
 
     switch (SocketType)
     {
@@ -1117,6 +1157,20 @@ DbgPrint("out of TdiOpenConnectionEndpointFile ...\n");
                     goto err_out;
                 }
             }
+            else
+            {
+                KeInitializeEvent(&s->StartListenEvent, SynchronizationEvent, FALSE);
+                s->ListenThreadShouldRun = TRUE;
+
+                status = PsCreateSystemThread(&s->ListenThreadHandle, THREAD_ALL_ACCESS, NULL, NULL, NULL, RequeueListenThread, s);
+                if (status != STATUS_SUCCESS)
+                {
+                    DbgPrint("Could not start listen thread, status is %x\n", status);
+                    ExFreePoolWithTag(s, TAG_NETIO);
+                    goto err_out;
+                }
+            }
+
             if (Flags == WSK_FLAG_LISTEN_SOCKET && s->ListenDispatch == NULL)
             {
                 DbgPrint("Warning: no callbacks given for listen socket\n");
