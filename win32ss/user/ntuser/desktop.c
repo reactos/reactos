@@ -437,30 +437,8 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
         Status = RtlStringCchPrintfW(pwszzVersion,
                                      cchDest,
                                      L"MenuOS 6.0\n"
-                                     L"For testing purposes only. Build %wZ\n",
-                                     KERNEL_VERSION_STR,
-                                     &BuildLabString,
-                                     SharedUserData->NtMajorVersion,
-                                     SharedUserData->NtMinorVersion,
-                                     (VerInfo.dwBuildNumber & 0xFFFF),
-                                     VersionBuffer);
-
-        if (AppendNtSystemRoot && NT_SUCCESS(Status))
-        {
-            Status = RtlStringCbPrintfW(VersionBuffer,
-                                        sizeof(VersionBuffer),
-                                        L"%s\n",
-                                        SharedUserData->NtSystemRoot);
-            if (NT_SUCCESS(Status))
-            {
-                Status = RtlStringCchCatW(pwszzVersion,
-                                          cchDest,
-                                          VersionBuffer);
-            }
-
-            /* Override any failures as the NtSystemRoot string is optional */
-            Status = STATUS_SUCCESS;
-        }
+                                     L"For testing purposes only. Build %S\n",
+                                     &BuildLabString);
     }
 
     if (!NT_SUCCESS(Status))
