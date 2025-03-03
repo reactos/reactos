@@ -2716,12 +2716,13 @@ MiEnablePagingOfDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     if (PointerPte) MiSetPagingOfDriver(PointerPte, LastPte);
 }
 
+#ifdef CONFIG_SMP
 FORCEINLINE
 BOOLEAN
 MiVerifyImageIsOkForMpUse(
     _In_ PIMAGE_NT_HEADERS NtHeaders)
 {
-    /* Fail if we have 2+ CPUs, but the image is only safe for UP */
+    /* Fail if we have more than one CPU, but the image is only safe for UP */
     if ((KeNumberProcessors > 1) &&
         (NtHeaders->FileHeader.Characteristics & IMAGE_FILE_UP_SYSTEM_ONLY))
     {
@@ -2731,8 +2732,6 @@ MiVerifyImageIsOkForMpUse(
     return TRUE;
 }
 
-// TODO: Use this function to verify that the loaded boot drivers
-// (in ExpLoadBootSymbols) are compatible with MP.
 BOOLEAN
 NTAPI
 MmVerifyImageIsOkForMpUse(
@@ -2741,13 +2740,14 @@ MmVerifyImageIsOkForMpUse(
     PIMAGE_NT_HEADERS NtHeaders;
     PAGED_CODE();
 
-    /* Get the NT headers. If none, suppose the image
-     * is safe to use, otherwise invoke the helper. */
+    /* Get the NT headers. If none, suppose the image is safe
+     * to use on an MP system, otherwise invoke the helper. */
     NtHeaders = RtlImageNtHeader(BaseAddress);
     if (!NtHeaders)
         return TRUE;
     return MiVerifyImageIsOkForMpUse(NtHeaders);
 }
+#endif // CONFIG_SMP
 
 NTSTATUS
 NTAPI
@@ -2847,7 +2847,7 @@ MmCheckSystemImage(
         }
 
 #ifdef CONFIG_SMP
-        /* Check that it's a valid SMP image if we have more than one CPU */
+        /* Check that the image is safe to use if we have more than one CPU */
         if (!MiVerifyImageIsOkForMpUse(NtHeaders))
         {
             /* Otherwise it's not the right image */
