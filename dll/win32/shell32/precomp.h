@@ -322,7 +322,7 @@ InvokeIExecuteCommandWithDataObject(
     _In_opt_ LPCMINVOKECOMMANDINFOEX pICI,
     _In_opt_ IUnknown *pSite);
 
-typedef enum {
+typedef enum _FILEOPCALLBACKEVENT {
     FOCE_STARTOPERATIONS,
     FOCE_FINISHOPERATIONS,
     FOCE_PREMOVEITEM,

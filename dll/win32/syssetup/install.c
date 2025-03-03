@@ -1514,7 +1514,6 @@ InstallReactOS(VOID)
     TOKEN_PRIVILEGES privs;
     HKEY hKey;
     HANDLE hHotkeyThread;
-    BOOL ret;
 
     InitializeSetupActionLog(FALSE);
     LogItem(NULL, L"Installing ReactOS");
@@ -1582,20 +1581,6 @@ InstallReactOS(VOID)
 
     if (!CommonInstall())
         return 0;
-
-    /* Install the TCP/IP protocol driver */
-    ret = InstallNetworkComponent(L"MS_TCPIP");
-    if (!ret && GetLastError() != ERROR_FILE_NOT_FOUND)
-    {
-        DPRINT("InstallNetworkComponent() failed with error 0x%lx\n", GetLastError());
-    }
-    else
-    {
-        /* Start the TCP/IP protocol driver */
-        SetupStartService(L"Tcpip", FALSE);
-        SetupStartService(L"Dhcp", FALSE);
-        SetupStartService(L"Dnscache", FALSE);
-    }
 
     InstallWizard();
 

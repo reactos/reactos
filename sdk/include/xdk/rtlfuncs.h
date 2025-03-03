@@ -22,6 +22,9 @@ $if (_WDMDDK_ || _WINNT_)
 #define FAST_FAIL_MRDATA_MODIFIED               19
 #define FAST_FAIL_INVALID_FAST_FAIL_CODE        0xFFFFFFFF
 
+$endif(_WDMDDK_ || _WINNT_)
+$if (_WDMDDK_)
+
 DECLSPEC_NORETURN
 FORCEINLINE
 VOID
@@ -30,9 +33,6 @@ RtlFailFast(
 {
   __fastfail(Code);
 }
-
-$endif(_WDMDDK_ || _WINNT_)
-$if (_WDMDDK_)
 
 #if !defined(NO_KERNEL_LIST_ENTRY_CHECKS) && (defined(_M_CEE_PURE) || defined(_M_CEE_SAFE))
 #define NO_KERNEL_LIST_ENTRY_CHECKS
