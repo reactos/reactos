@@ -288,6 +288,9 @@ static NTSTATUS CreateSocket(
     return Status;
 }
 
+static NTSTATUS
+StartListening(PWSK_SOCKET_INTERNAL ListenSocket);
+
 static NTSTATUS NTAPI
 ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
 {
@@ -309,12 +312,12 @@ ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
 
 	/* TODO:
 		1) Done: Create a socket (via WskSocket function?)
-		2) Associate the RemoteAddress with s->ConnectionFile
+		2) Rejected: Associate the RemoteAddress with s->ConnectionFile
                       this fails: addresses must be local, see below.
-		3) Call the callback (ListenDispatch)
-		4) Requeue StartListening
+		3) Done: Call the callback (ListenDispatch)
+		4) Done: Requeue StartListening
 	*/
-        /* TODO: Create the socket via WskSocket in StartListening()
+        /* TODO: Done: Create the socket via WskSocket in StartListening()
                  and pass the NEWLY CREATED socket to TdiListen().
                  Then do only 3) and 4) from above (the socket is
                  already connected, pass it to accept callback.
@@ -328,6 +331,8 @@ ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
             DbgPrint("ListenDispatch->WskAcceptEvent returned non-successful status 0x%08x\n", Status);
                   /* ignore ... */
         }
+            /* And wait for the next incoming connection. */
+        StartListening(ListenSocket);
     }
     SocketPut(AcceptSocket);
     SocketPut(ListenSocket);
