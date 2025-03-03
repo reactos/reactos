@@ -1908,7 +1908,7 @@ HRESULT WINAPI SHCreateStreamWrapper(LPBYTE,DWORD,DWORD,struct IStream**);
 
 #ifndef _SHLWAPI_
 LWSTDAPI IStream_Reset(_In_ struct IStream*);
-#ifndef IStream_Read
+#if !defined(IStream_Read) && defined(__cplusplus)
 LWSTDAPI IStream_Read(_In_ struct IStream*, _Out_ void*, _In_ ULONG);
 LWSTDAPI IStream_Write(_In_ struct IStream*, _In_ const void*, _In_ ULONG);
 #endif
