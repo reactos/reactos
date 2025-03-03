@@ -63,10 +63,9 @@ ULONG CmNtCSDVersion;
 ULONG CmNtCSDReleaseType;
 UNICODE_STRING CmVersionString;
 UNICODE_STRING CmCSDVersionString;
-UNICODE_STRING OSMajorMinorVersionString;
+UNICDOE_STRING OSMajorMinorVersionString;
 
 CHAR NtBuildLab[] = KERNEL_VERSION_BUILD_STR;
-CHAR MajorMinor[] = ['6', '.', '0'];
 
 /* Init flags and settings */
 ULONG ExpInitializationPhase;

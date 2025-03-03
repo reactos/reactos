@@ -2322,7 +2322,7 @@ CmpSetVersionData(VOID)
                       &ValueName,
                       0,
                       REG_SZ,
-                      "6.0",
+                      CmVersionString.Buffer,
                       CmVersionString.Length + sizeof(WCHAR));
     }
 
