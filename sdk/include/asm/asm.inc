@@ -172,7 +172,6 @@ ENDM
     .skip size, fill
 ENDM
 
-#define ml_offset offset
 #define lXdtPrefix fword ptr
 
 ljmp MACRO segment, offset
@@ -325,7 +324,6 @@ ENDM
 #define REPEAT .rept
 #define ENDR .endr
 
-#define ml_offset
 #define lXdtPrefix
 
 .macro ljmp segment, offset
