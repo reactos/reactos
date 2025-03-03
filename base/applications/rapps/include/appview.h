@@ -406,7 +406,7 @@ class CApplicationView : public CUiWindow<CWindowImpl<CApplicationView>>
     int
     GetItemCount();
     VOID
-    AppendTabOrderWindow(int Direction, ATL::CSimpleArray<HWND> &TabOrderList);
+    AppendTabOrderWindow(INT Direction, ATL::CSimpleArray<HWND>& TabOrderList);
 
     struct RESTORELISTSELECTION {
         LVITEMW Item;
