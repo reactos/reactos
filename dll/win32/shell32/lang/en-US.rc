@@ -783,7 +783,7 @@ BEGIN
     IDS_PRINTERS_DESCRIPTION "Shows installed printers and fax printers and helps you add new ones."
 
     /* About shell dialog version string */
-    IDS_ABOUT_VERSION_STRING "Version %S (%S)"
+    IDS_ABOUT_VERSION_STRING "Version %S (Build %S)"
 
     /* context menus */
     IDS_VIEW_LARGE "Lar&ge Icons"
