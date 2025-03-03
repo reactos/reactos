@@ -523,7 +523,7 @@ static HRESULT DumpCommand(PCWSTR Path)
                 else if (pDBH->dwSignature == EXP_SHIM_SIG)
                 {
                     wprintf(L" %hs\n", SigName ? SigName : "SHIM");
-                    wprintf(L"%hs%ls\n", INDENT, pFirstMember);
+                    wprintf(L"%hs%ls\n", INDENT, (PWSTR)pFirstMember);
                 }
                 else if (pDBH->dwSignature == EXP_VISTA_ID_LIST_SIG && pDBH->cbSize >= 8 + 2)
                 {
