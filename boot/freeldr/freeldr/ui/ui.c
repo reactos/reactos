@@ -223,16 +223,16 @@ BOOLEAN UiInitialize(BOOLEAN ShowUi)
 
 VOID UiUnInitialize(PCSTR BootText)
 {
-    UiDrawBackdrop();
+    UiDrawBackdrop(UiGetScreenHeight());
     UiDrawStatusText(BootText);
     UiInfoBox(BootText);
 
     UiVtbl.UnInitialize();
 }
 
-VOID UiDrawBackdrop(VOID)
+VOID UiDrawBackdrop(ULONG DrawHeight)
 {
-    UiVtbl.DrawBackdrop();
+    UiVtbl.DrawBackdrop(DrawHeight);
 }
 
 VOID UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */)
