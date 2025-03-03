@@ -108,6 +108,7 @@ typedef struct _WSK_SOCKET_INTERNAL
 
     PIRP ListenIrp;	           /* must be cancelled on close */
     HANDLE ListenThreadHandle;     /* needed to restart listening */
+    PKTHREAD ListenThread;
     KEVENT StartListenEvent;
     BOOLEAN ListenThreadShouldRun;
 } WSK_SOCKET_INTERNAL, *PWSK_SOCKET_INTERNAL;
@@ -136,11 +137,13 @@ void SocketShutdown(PWSK_SOCKET_INTERNAL s)
     {
         s->ListenThreadShouldRun = FALSE;
         KeSetEvent(&s->StartListenEvent, IO_NO_INCREMENT, FALSE);
-        status = KeWaitForSingleObject(s->ListenThreadHandle, Executive, KernelMode, FALSE, (PLARGE_INTEGER)NULL);
+        status = KeWaitForSingleObject(s->ListenThread, Executive, KernelMode, FALSE, (PLARGE_INTEGER)NULL);
         if (!NT_SUCCESS(status))
         {
             DbgPrint("KeWaitForSingleObject failed with status 0x%08x!\n", status);
         }
+        ObDereferenceObject(s->ListenThread);
+        s->ListenThread = NULL;
         s->ListenThreadHandle = NULL;
     }
     if (s->ListenIrp != NULL)
@@ -150,6 +153,7 @@ void SocketShutdown(PWSK_SOCKET_INTERNAL s)
     }
     if (s->ConnectionFile != NULL) {
         if (s->ConnectionFileAssociated) {
+               /* This fails with error 0xc000023b (still connected) on Windows 2003 */
             status = TdiDisassociateAddressFile(s->ConnectionFile);
             if (!NT_SUCCESS(status)) {
                 NETIO_DbgPrint(MIN_TRACE, ("Warning: TdiDisassociateAddressFile returned status %08x\n", status));
@@ -1166,6 +1170,13 @@ DbgPrint("out of TdiOpenConnectionEndpointFile ...\n");
                 if (status != STATUS_SUCCESS)
                 {
                     DbgPrint("Could not start listen thread, status is %x\n", status);
+                    ExFreePoolWithTag(s, TAG_NETIO);
+                    goto err_out;
+                }
+                status = ObReferenceObjectByHandle(s->ListenThreadHandle, THREAD_ALL_ACCESS, NULL, KernelMode, (void **) &s->ListenThread, NULL);
+                if (status != STATUS_SUCCESS)
+                {
+                    DbgPrint("Could not get a PKTHREAD object, status is %x\n", status);
                     ExFreePoolWithTag(s, TAG_NETIO);
                     goto err_out;
                 }
