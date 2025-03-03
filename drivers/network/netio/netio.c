@@ -106,7 +106,8 @@ typedef struct _WSK_SOCKET_INTERNAL
     UINT Flags;                          /* SO_REUSEADDR, ... see ws2def.h */
     UINT RefCount;                       /* See SocketGet/SocketPut TODO: this should be atomic */
 
-    PIRP ListenIrp;	/* must be cancelled on close */
+    PIRP ListenIrp;	           /* must be cancelled on close */
+    HANDLE ListenThreadHandle;     /* needed to restart listening */
 } WSK_SOCKET_INTERNAL, *PWSK_SOCKET_INTERNAL;
 
 struct NetioContext
@@ -265,8 +266,10 @@ static NTSTATUS CreateSocket(
     IoSetCompletionRoutine(NewSocketIrp, CompletionFireEvent, &CompletionEvent, TRUE, TRUE, TRUE);
     NewSocketIrp->Tail.Overlay.Thread = PsGetCurrentThread();
 
+DbgPrint("into WskSocket ...\n");
     Status = WskSocket(NULL, AddressFamily, SocketType, Protocol, Flags,
         NULL, NULL, NULL, NULL, NULL, NewSocketIrp);
+DbgPrint("out of WskSocket ...\n");
 
     if (Status == STATUS_PENDING) {
         KeWaitForSingleObject(&CompletionEvent, Executive, KernelMode, FALSE, NULL);
@@ -335,8 +338,9 @@ DbgPrint("Function %s ...\n", __func__);
         return STATUS_INVALID_PARAMETER;
     }
 
-// DbgPrint("into CreateSocket ...\n");
+DbgPrint("into CreateSocket ...\n");
     status = CreateSocket(ListenSocket->family, ListenSocket->type, ListenSocket->proto, WSK_FLAG_CONNECTION_SOCKET, &AcceptSocket);
+DbgPrint("out of CreateSocket ...\n");
     if (status != STATUS_SUCCESS)
     {
         DbgPrint("Could not create AcceptSocket, status is 0x%08x\n", status);
@@ -1089,6 +1093,7 @@ WskSocket(
     s->ConnectionFile = NULL;
     s->ConnectionFileAssociated = FALSE;
     s->ListenIrp = NULL;
+    s->ListenThreadHandle = NULL;
 
     switch (SocketType)
     {
@@ -1102,7 +1107,9 @@ WskSocket(
 
             if (Flags != WSK_FLAG_LISTEN_SOCKET)
             {
+DbgPrint("into TdiOpenConnectionEndpointFile ...\n");
                 status = TdiOpenConnectionEndpointFile(&s->TdiName, &s->ConnectionHandle, &s->ConnectionFile);
+DbgPrint("out of TdiOpenConnectionEndpointFile ...\n");
                 if (status != STATUS_SUCCESS)
                 {
                     DbgPrint("Could not open TDI handle, status is %x\n", status);
