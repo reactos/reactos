@@ -2716,28 +2716,37 @@ MiEnablePagingOfDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     if (PointerPte) MiSetPagingOfDriver(PointerPte, LastPte);
 }
 
+FORCEINLINE
+BOOLEAN
+MiVerifyImageIsOkForMpUse(
+    _In_ PIMAGE_NT_HEADERS NtHeaders)
+{
+    /* Fail if we have 2+ CPUs, but the image is only safe for UP */
+    if ((KeNumberProcessors > 1) &&
+        (NtHeaders->FileHeader.Characteristics & IMAGE_FILE_UP_SYSTEM_ONLY))
+    {
+        return FALSE;
+    }
+    /* Otherwise, it's safe to use */
+    return TRUE;
+}
+
+// TODO: Use this function to verify that the loaded boot drivers
+// (in ExpLoadBootSymbols) are compatible with MP.
 BOOLEAN
 NTAPI
-MmVerifyImageIsOkForMpUse(IN PVOID BaseAddress)
+MmVerifyImageIsOkForMpUse(
+    _In_ PVOID BaseAddress)
 {
-    PIMAGE_NT_HEADERS NtHeader;
+    PIMAGE_NT_HEADERS NtHeaders;
     PAGED_CODE();
 
-    /* Get NT Headers */
-    NtHeader = RtlImageNtHeader(BaseAddress);
-    if (NtHeader)
-    {
-        /* Check if this image is only safe for UP while we have 2+ CPUs */
-        if ((KeNumberProcessors > 1) &&
-            (NtHeader->FileHeader.Characteristics & IMAGE_FILE_UP_SYSTEM_ONLY))
-        {
-            /* Fail */
-            return FALSE;
-        }
-    }
-
-    /* Otherwise, it's safe */
-    return TRUE;
+    /* Get the NT headers. If none, suppose the image
+     * is safe to use, otherwise invoke the helper. */
+    NtHeaders = RtlImageNtHeader(BaseAddress);
+    if (!NtHeaders)
+        return TRUE;
+    return MiVerifyImageIsOkForMpUse(NtHeaders);
 }
 
 NTSTATUS
