@@ -67,6 +67,9 @@ typedef struct _KUSER_SHARED_DATA {
     BOOLEAN ProductTypeIsValid;
     ULONG NtMajorVersion;
     ULONG NtMinorVersion;
+    ULONG OSMajorVersion;
+    ULONG OSMinorVersion;
+    ULONG OSServicePackLevel;
     BOOLEAN ProcessorFeatures[PROCESSOR_FEATURE_MAX];
     ULONG Reserved1;
     ULONG Reserved3;
