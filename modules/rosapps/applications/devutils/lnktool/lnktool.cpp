@@ -161,7 +161,7 @@ static INT_PTR SHGetPidlInfo(LPCITEMIDLIST pidl, SHFILEINFOW &shfi, UINT Flags, 
 static void PrintOffsetString(PCSTR Name, LPCVOID Base, UINT Min, UINT Ansi, UINT Unicode, PCSTR Indent = "")
 {
     if (Unicode && Unicode >= Min)
-        wprintf(L"%hs%hs=%ls", Indent, Name, (BYTE*)Base + Unicode);
+        wprintf(L"%hs%hs=%ls", Indent, Name, (PWSTR)((BYTE*)Base + Unicode));
     else
         wprintf(L"%hs%hs=%hs", Indent, Name, Ansi >= Min ? (char*)Base + Ansi : "");
     wprintf(L"\n"); // Separate function call in case the (untrusted) input ends with a DEL character
@@ -350,7 +350,10 @@ static HRESULT ReadAndDumpString(PCSTR Name, UINT Id, const SHELL_LINK_HEADER &s
         return E_OUTOFMEMORY;
     if (FAILED(hr = IStream_Read(pStream, data, cb)))
         return hr;
-    wprintf(L"%hs=%.*s\n", Name, cch, data);
+    if (slh.dwFlags & SLDF_UNICODE)
+        wprintf(L"%hs=%.*ls\n", Name, cch, (PWSTR)data);
+    else
+        wprintf(L"%hs=%.*hs\n", Name, cch, (PCSTR)data);
     SHFree(data);
     return S_OK;
 }
