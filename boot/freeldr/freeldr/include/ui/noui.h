@@ -13,7 +13,7 @@
 BOOLEAN NoUiInitialize(VOID);
 VOID NoUiUnInitialize(VOID);
 
-VOID NoUiDrawBackdrop(VOID);
+VOID NoUiDrawBackdrop(ULONG DrawHeight);
 VOID NoUiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr);
 VOID NoUiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);
 VOID NoUiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr);

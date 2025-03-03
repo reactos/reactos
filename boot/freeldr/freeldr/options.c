@@ -108,7 +108,7 @@ VOID DoOptionsMenu(IN OperatingSystemItem* OperatingSystem)
     }
 
     /* Clear the backdrop */
-    UiDrawBackdrop();
+    UiDrawBackdrop(UiGetScreenHeight());
 
     switch (SelectedMenuItem)
     {
