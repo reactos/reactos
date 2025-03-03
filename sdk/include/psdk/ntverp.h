@@ -28,14 +28,6 @@
 #define VER_PRODUCTVERSION_DW               (0x05020000 | VER_PRODUCTBUILD)
 
 //
-// MenuOS 6.0 "Sea"
-//
-
-#define OS_MAJORVERSION 6
-#define OS_MINORVERSION 0
-#define OS_SPLEVEL 0
-
-//
 // Not a beta
 //
 #define VER_PRODUCTBETA_STR                 ""

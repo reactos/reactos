@@ -44,9 +44,6 @@ typedef struct _INIT_BUFFER
 /* NT Version Info */
 ULONG NtMajorVersion = VER_PRODUCTMAJORVERSION;
 ULONG NtMinorVersion = VER_PRODUCTMINORVERSION;
-ULONG OSMajorVersion = OS_MAJORVERSION;
-ULONG OSMinorVersion = OS_MINORVERSION;
-ULONG OSServicePackLevel = OS_SPLEVEL;
 #if DBG /* Checked Build */
 ULONG NtBuildNumber = VER_PRODUCTBUILD | 0xC0000000;
 #else   /* Free Build */
@@ -63,7 +60,6 @@ ULONG CmNtCSDVersion;
 ULONG CmNtCSDReleaseType;
 UNICODE_STRING CmVersionString;
 UNICODE_STRING CmCSDVersionString;
-UNICDOE_STRING OSMajorMinorVersionString;
 
 CHAR NtBuildLab[] = KERNEL_VERSION_BUILD_STR;
 
@@ -1325,9 +1321,6 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Set the OS Version */
     SharedUserData->NtMajorVersion = NtMajorVersion;
     SharedUserData->NtMinorVersion = NtMinorVersion;
-    SharedUserData->OSMajorVersion = OSMajorVersion;
-    SharedUserData->OSMinorVersion = OSMinorVersion;
-    SharedUserData->OSServicePackLevel = OSServicePackLevel;
 
     /* Set the machine type */
     SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_NATIVE;
