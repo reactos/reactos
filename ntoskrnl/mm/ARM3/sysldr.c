@@ -2751,8 +2751,8 @@ MmVerifyImageIsOkForMpUse(
 
 NTSTATUS
 NTAPI
-MmCheckSystemImage(IN HANDLE ImageHandle,
-                   IN BOOLEAN PurgeSection)
+MmCheckSystemImage(
+    _In_ HANDLE ImageHandle)
 {
     NTSTATUS Status;
     HANDLE SectionHandle;
@@ -2846,12 +2846,14 @@ MmCheckSystemImage(IN HANDLE ImageHandle,
             goto Fail;
         }
 
-        /* Check that it's a valid SMP image if we have more then one CPU */
-        if (!MmVerifyImageIsOkForMpUse(ViewBase))
+#ifdef CONFIG_SMP
+        /* Check that it's a valid SMP image if we have more than one CPU */
+        if (!MiVerifyImageIsOkForMpUse(NtHeaders))
         {
             /* Otherwise it's not the right image */
             Status = STATUS_IMAGE_MP_UP_MISMATCH;
         }
+#endif // CONFIG_SMP
     }
 
     /* Unmap the section, close the handle, and return status */
@@ -3180,7 +3182,7 @@ LoaderScan:
         }
 
         /* Validate it */
-        Status = MmCheckSystemImage(FileHandle, FALSE);
+        Status = MmCheckSystemImage(FileHandle);
         if ((Status == STATUS_IMAGE_CHECKSUM_MISMATCH) ||
             (Status == STATUS_IMAGE_MP_UP_MISMATCH) ||
             (Status == STATUS_INVALID_IMAGE_PROTECT))
