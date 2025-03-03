@@ -2839,8 +2839,7 @@ MmCheckSystemImage(
 
 #ifdef CONFIG_SMP
         /* Check that it's a valid SMP image if we have more than one CPU */
-        if (KeNumberProcessors > 1 &&
-            (NtHeaders->FileHeader.Characteristics & IMAGE_FILE_UP_SYSTEM_ONLY))
+        if (!MiVerifyImageIsOkForMpUse(NtHeaders))
         {
             /* Otherwise it's not the right image */
             Status = STATUS_IMAGE_MP_UP_MISMATCH;
