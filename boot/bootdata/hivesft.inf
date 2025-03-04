@@ -480,7 +480,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers","",0x0
 
 ; Version Information
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","InstallDate",0x00010003,0
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","ProductName",2,"ReactOS"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","ProductName",2,"MenuOS"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","RegDone",0x00000002,""
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","RegisteredOrganization",2,""
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","RegisteredOwner",2,""
