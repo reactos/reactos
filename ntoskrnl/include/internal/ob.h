@@ -205,7 +205,7 @@ ObpLookupEntryDirectory(
     IN POBJECT_DIRECTORY Directory,
     IN PUNICODE_STRING Name,
     IN ULONG Attributes,
-    IN UCHAR SearchShadow,
+    IN BOOLEAN SearchShadow,
     IN POBP_LOOKUP_CONTEXT Context
 );
 
