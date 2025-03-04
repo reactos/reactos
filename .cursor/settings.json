@@ -34,13 +34,13 @@
         "docs": [
             "**/*.md",
             "**/*.txt",
-            "media/doc/**/*"
+            "media/doc"
         ],
         "tests": [
             "modules/rostests"
         ], 
         "build": [
-            "output-*/**/*"
+            "output-*"
         ]
     }
 }
