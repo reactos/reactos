@@ -13,3 +13,5 @@ modules/[Aa][Hh][Kk]_[Tt]ests
 .settings
 .vscode
 sdk/tools/winesync/winesync.cfg
+.cursor/cache/
+.cursor/logs/
