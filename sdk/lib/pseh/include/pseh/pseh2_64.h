@@ -1,6 +1,22 @@
 
 #pragma once
 
+struct _SEH$$_EXCEPTION_RECORD
+{
+    unsigned long ExceptionCode;
+    unsigned long ExceptionFlags;
+    struct _EXCEPTION_RECORD *ExceptionRecord;
+    void* ExceptionAddress;
+    unsigned long NumberParameters;
+    unsigned long long ExceptionInformation[15];
+};
+
+struct _SEH$$_EXCEPTION_POINTERS
+{
+    struct _SEH$$_EXCEPTION_RECORD *ExceptionRecord;
+    struct _CONTEXT *ContextRecord;
+};
+
 /* Declare our global trampoline function for filter and unwinder */
 __asm__(
     ".p2align 4, 0x90\n"
@@ -78,7 +94,7 @@ __seh2$$end_try__:(void)0;                                                      
     if (0)                                                                                      \
     {                                                                                           \
         __label__ __seh2$$leave_scope__;                                                        \
-        LONG __MINGW_ATTRIB_UNUSED __seh2$$exception_code__;                                    \
+        long __MINGW_ATTRIB_UNUSED __seh2$$exception_code__;                                    \
         /* Add our handlers to the list */                                                      \
         if (0)                                                                                  \
         {                                                                                       \
@@ -93,7 +109,7 @@ __seh2$$end_try__:(void)0;                                                      
                 : "%r8"                                                                         \
                 : __seh2$$filter_funclet__);                                                    \
             /* Actually declare our filter funclet */                                           \
-            struct _EXCEPTION_POINTERS* __seh2$$exception_ptr__;                                \
+            struct _SEH$$_EXCEPTION_POINTERS* __seh2$$exception_ptr__;                                \
             __seh2$$filter_funclet__:                                                           \
             /* At this point, the compiler can't count on any register being valid */           \
             __asm__ __volatile__(""                                                             \
@@ -167,20 +183,19 @@ __seh2$$begin_except__: __MINGW_ATTRIB_UNUSED;                                  
     }                                                                               \
 }
 
-#define _SEH2_GetExceptionInformation() __seh2$$exception_ptr__
+#define _SEH2_GetExceptionInformation() ((struct _EXCEPTION_POINTERS*)__seh2$$exception_ptr__)
 #define _SEH2_GetExceptionCode() __seh2$$exception_code__
 #define _SEH2_AbnormalTermination() __seh2$$abnormal_termination__
 #define _SEH2_LEAVE goto __seh2$$leave_scope__
 #define _SEH2_YIELD(__stmt) __stmt
 #define _SEH2_VOLATILE volatile
 
-#ifndef __try // Conflict with GCC's STL
+#undef __try // undef from GCC's stl
 #define __try _SEH2_TRY
 #define __except _SEH2_EXCEPT
 #define __finally _SEH2_FINALLY
 #define __endtry _SEH2_END
 #define __leave goto __seh2$$leave_scope__
-#define _exception_info() __seh2$$exception_ptr__
+#define _exception_info() ((struct _EXCEPTION_POINTERS*)__seh2$$exception_ptr__)
 #define _exception_code() __seh2$$exception_code__
 #define _abnormal_termination() __seh2$$abnormal_termination__
-#endif
