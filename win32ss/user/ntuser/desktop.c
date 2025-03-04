@@ -437,7 +437,7 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
         Status = RtlStringCchPrintfW(pwszzVersion,
                                      cchDest,
                                      L"MenuOS 6.0\n"
-                                     L"For testing purposes only. Build %S\n",
+                                     L"For testing purposes only. Build %wZ\n",
                                      &BuildLabString);
     }
 
