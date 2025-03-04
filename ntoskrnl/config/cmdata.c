@@ -565,6 +565,13 @@ DATA_SEG("INITDATA") CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     },
     {
         L"Session Manager\\I/O System",
+        L"IoCaseInsensitive",
+        &IopCaseInsensitive,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\I/O System",
         L"IoVerifierLevel",
         &DummyData,
         NULL,

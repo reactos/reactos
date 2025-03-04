@@ -279,6 +279,10 @@ IopGetDeviceObjectPointer(IN PUNICODE_STRING ObjectName,
                                OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
+
+    /* Honor the internal I/O System case (in)sensitivity */
+    if (IopCaseInsensitive) ObjectAttributes.Attributes |= OBJ_CASE_INSENSITIVE;
+
     Status = ZwOpenFile(&FileHandle,
                         DesiredAccess,
                         &ObjectAttributes,
@@ -1078,7 +1082,10 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
                                NULL,
                                ReturnedSD);
 
-    /* Honor exclusive flag */
+    /* Honor the internal I/O System case (in)sensitivity */
+    if (IopCaseInsensitive) ObjectAttributes.Attributes |= OBJ_CASE_INSENSITIVE;
+
+    /* Honor the exclusive flag */
     if (Exclusive) ObjectAttributes.Attributes |= OBJ_EXCLUSIVE;
 
     /* Create a permanent object for named devices */
