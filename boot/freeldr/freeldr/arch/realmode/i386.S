@@ -199,6 +199,7 @@ rmode_idtptr:
     .long 0             /* Base Address */
 
 #include "int386.inc"
+#include "helpers_all.inc"
 #if defined(SARCH_PC98)
 #include "helpers_pc98.inc"
 #else

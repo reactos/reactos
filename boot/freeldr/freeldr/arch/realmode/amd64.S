@@ -367,6 +367,7 @@ stack16:
 
 
 #include "int386.inc"
+#include "helpers_all.inc"
 #include "helpers.inc"
 #include "pxe.inc"
 #include "pnp.inc"

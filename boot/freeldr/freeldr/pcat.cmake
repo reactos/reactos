@@ -13,12 +13,12 @@ if(ARCH STREQUAL "i386")
     CreateBootSectorTarget(frldr16
         ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/i386.S
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
-        F800)
+        F600)
 elseif(ARCH STREQUAL "amd64")
     CreateBootSectorTarget(frldr16
         ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/amd64.S
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
-        F800)
+        F600)
 endif()
 
 
