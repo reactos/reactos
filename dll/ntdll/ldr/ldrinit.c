@@ -86,6 +86,7 @@ ULONG LdrpActiveUnloadCount;
 VOID NTAPI RtlpInitializeVectoredExceptionHandling(VOID);
 VOID NTAPI RtlpInitDeferredCriticalSection(VOID);
 VOID NTAPI RtlInitializeHeapManager(VOID);
+NTSTATUS NTAPI RtlpInitializeLocaleTable(VOID);
 
 ULONG RtlpDisableHeapLookaside; // TODO: Move to heap.c
 ULONG RtlpShutdownProcessFlags; // TODO: Use it
@@ -2029,6 +2030,13 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     {
         DPRINT1("Failed to create process heap\n");
         return STATUS_NO_MEMORY;
+    }
+
+    Status = RtlpInitializeLocaleTable();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to initialize locale table\n");
+        return Status;
     }
 
     /* Allocate an Activation Context Stack */

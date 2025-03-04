@@ -691,7 +691,7 @@
 @ stdcall -stub -version=0x600+ RtlConnectToSm(ptr ptr long ptr)
 @ stdcall RtlConsoleMultiByteToUnicodeN(ptr long ptr ptr long ptr)
 @ stdcall RtlConvertExclusiveToShared(ptr)
-@ stub -version=0x600+ RtlConvertLCIDToString
+@ stdcall -version=0x600+ RtlConvertLCIDToString(long long long ptr long)
 @ stdcall -arch=win32 -ret64 RtlConvertLongToLargeInteger(long)
 @ stdcall RtlConvertSharedToExclusive(ptr)
 @ stdcall RtlConvertSidToUnicodeString(ptr ptr long)
@@ -737,7 +737,7 @@
 @ stdcall RtlCreateUserSecurityObject(ptr long ptr ptr long ptr ptr)
 @ stub -version=0x600+ RtlCreateUserStack
 @ stdcall RtlCreateUserThread(long ptr long ptr long long ptr ptr ptr ptr)
-@ stub -version=0x600+ RtlCultureNameToLCID
+@ stdcall -version=0x600+ RtlCultureNameToLCID(ptr ptr)
 @ stdcall RtlCustomCPToUnicodeN(ptr wstr long ptr str long)
 @ stdcall RtlCutoverTimeToSystemTime(ptr ptr ptr long)
 @ stub -version=0x600+ RtlDeCommitDebugInfo
@@ -996,7 +996,7 @@
 @ stdcall RtlIsValidHandle(ptr ptr)
 @ stdcall RtlIsValidIndexHandle(ptr long ptr)
 @ stub -version=0x600+ RtlIsValidLocaleName
-@ stub -version=0x600+ RtlLCIDToCultureName
+@ stdcall -version=0x600+ RtlLCIDToCultureName(long ptr)
 @ stdcall -arch=win32 -ret64 RtlLargeIntegerAdd(double double)
 @ stdcall -arch=win32 -ret64 RtlLargeIntegerArithmeticShift(double long)
 @ stdcall -arch=win32 -ret64 RtlLargeIntegerDivide(double double ptr)
@@ -1005,13 +1005,13 @@
 @ stdcall -arch=win32 -ret64 RtlLargeIntegerShiftRight(double long)
 @ stdcall -arch=win32 -ret64 RtlLargeIntegerSubtract(double double)
 @ stdcall RtlLargeIntegerToChar(ptr long long ptr)
-@ stub -version=0x600+ RtlLcidToLocaleName
+@ stdcall -version=0x600+ RtlLcidToLocaleName(long ptr long long)
 @ stdcall RtlLeaveCriticalSection(ptr)
 @ stdcall RtlLengthRequiredSid(long)
 @ stdcall RtlLengthSecurityDescriptor(ptr)
 @ stdcall RtlLengthSid(ptr)
 @ stdcall RtlLocalTimeToSystemTime(ptr ptr)
-@ stub -version=0x600+ RtlLocaleNameToLcid
+@ stdcall -version=0x600+ RtlLocaleNameToLcid(wstr ptr long)
 @ stdcall RtlLockBootStatusData(ptr)
 @ stub -version=0x600+ RtlLockCurrentThread
 @ stdcall RtlLockHeap(long)
