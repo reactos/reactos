@@ -1225,7 +1225,7 @@
 @ stub -version=0x600+ RtlUnlockMemoryZone
 @ stub -version=0x600+ RtlUnlockModuleSection
 @ stdcall -register RtlUnwind(ptr ptr ptr ptr)
-@ stdcall -arch=x86_64 RtlUnwindEx(long long ptr long ptr)
+@ stdcall -arch=x86_64 RtlUnwindEx(ptr ptr ptr ptr ptr ptr)
 @ stdcall RtlUpcaseUnicodeChar(long)
 @ stdcall RtlUpcaseUnicodeString(ptr ptr long)
 @ stdcall RtlUpcaseUnicodeStringToAnsiString(ptr ptr long)
@@ -1249,7 +1249,7 @@
 @ stdcall RtlValidateProcessHeaps()
 @ stdcall RtlValidateUnicodeString(long ptr)
 @ stdcall RtlVerifyVersionInfo(ptr long double)
-@ stdcall -arch=x86_64 RtlVirtualUnwind(long long long ptr ptr ptr ptr ptr)
+@ stdcall -arch=x86_64 RtlVirtualUnwind(long int64 int64 ptr ptr ptr ptr ptr)
 @ stdcall -version=0x600+ RtlWakeAllConditionVariable(ptr)
 @ stdcall -version=0x600+ RtlWakeConditionVariable(ptr)
 @ stdcall RtlWalkFrameChain(ptr long long)
