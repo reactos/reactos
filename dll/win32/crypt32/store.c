@@ -1358,6 +1358,61 @@ BOOL WINAPI CertEnumSystemStore(DWORD dwFlags, void *pvSystemStoreLocationPara,
     return ret;
 }
 
+#ifdef __REACTOS__
+
+typedef struct _CERT_SYSTEM_STORE_LOCATION
+{
+    DWORD dwFlags;
+    PCWSTR pwszStoreLocation;
+} CERT_SYSTEM_STORE_LOCATION, *PCERT_SYSTEM_STORE_LOCATION;
+
+static const CERT_SYSTEM_STORE_LOCATION gSystemStoreLocations[] = {
+    { CERT_SYSTEM_STORE_CURRENT_USER, L"CurrentUser" },
+    { CERT_SYSTEM_STORE_LOCAL_MACHINE, L"LocalMachine" },
+    { CERT_SYSTEM_STORE_CURRENT_SERVICE, L"CurrentService" },
+    { CERT_SYSTEM_STORE_SERVICES, L"Services" },
+    { CERT_SYSTEM_STORE_USERS, L"Users" },
+    { CERT_SYSTEM_STORE_CURRENT_USER_GROUP_POLICY, L"CurrentUserGroupPolicy" },
+    { CERT_SYSTEM_STORE_LOCAL_MACHINE_GROUP_POLICY, L"LocalMachineGroupPolicy" },
+    { CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE, L"LocalMachineEnterprise" },
+};
+
+BOOL
+WINAPI
+CertEnumSystemStoreLocation(
+    _In_ DWORD dwFlags,
+    _Inout_opt_ void *pvArg,
+    __callback PFN_CERT_ENUM_SYSTEM_STORE_LOCATION pfnEnum)
+{
+    DWORD i;
+
+    /* Check input flags */
+    if (dwFlags != 0)
+    {
+        SetLastError(E_INVALIDARG);
+        return FALSE;
+    }
+
+    /* Return fixed system stores */
+    for (i = 0; i < ARRAYSIZE(gSystemStoreLocations); i++)
+    {
+        if (!pfnEnum(gSystemStoreLocations[i].pwszStoreLocation,
+                     gSystemStoreLocations[i].dwFlags,
+                     NULL,
+                     pvArg))
+        {
+            return FALSE;
+        }
+    }
+
+    /* FIXME: Return registered OID system stores by calling CryptEnumOIDFunction */
+    FIXME("Registered OID system stores is not enumerated\n");
+
+    return TRUE;
+}
+
+#endif /* __REACTOS__ */
+
 BOOL WINAPI CertEnumPhysicalStore(const void *pvSystemStore, DWORD dwFlags,
  void *pvArg, PFN_CERT_ENUM_PHYSICAL_STORE pfnEnum)
 {
