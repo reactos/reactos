@@ -543,6 +543,13 @@ DATA_SEG("INITDATA") CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL
     },
     {
+        L"Session Manager\\Kernel",
+        L"ObCaseInsensitive",
+        &ObpCaseInsensitive,
+        NULL,
+        NULL
+    },
+    {
         L"Session Manager\\I/O System",
         L"CountOperations",
         &DummyData,
