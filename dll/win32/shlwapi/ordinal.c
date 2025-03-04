@@ -4204,8 +4204,21 @@ BOOL WINAPI IsOS(DWORD feature)
         FIXME("(OS_TABLETPC) What should we return here?\n");
         return FALSE;
     case OS_SERVERADMINUI:
+#ifdef __REACTOS__
+        {
+            DWORD value = FALSE, size = sizeof(value);
+            HKEY hKey = SHGetShellKey(SHKEY_Root_HKCU | SHKEY_Key_Explorer, L"Advanced", FALSE);
+            if (hKey)
+            {
+                SHQueryValueExW(hKey, L"ServerAdminUI", NULL, NULL, &value, &size);
+                RegCloseKey(hKey);
+            }
+            ISOS_RETURN(value);
+        }
+#else
         FIXME("(OS_SERVERADMINUI) What should we return here?\n");
         return FALSE;
+#endif
     case OS_MEDIACENTER:
         FIXME("(OS_MEDIACENTER) What should we return here?\n");
         return FALSE;
