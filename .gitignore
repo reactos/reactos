@@ -16,3 +16,4 @@ sdk/tools/winesync/winesync.cfg
 /.vs
 /sdk/include/reactos/RCa31576
 /sdk/include/reactos/RCa29144
+/base/applications/wusa/RCa20112
