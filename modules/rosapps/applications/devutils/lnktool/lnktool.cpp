@@ -150,7 +150,10 @@ static INT_PTR SHGetPidlInfo(LPCITEMIDLIST pidl, SHFILEINFOW &shfi, UINT Flags, 
         if ((pidl = pidlDup = pidlChild = ILClone(pidl)) == NULL)
             return 0;
         while (Depth--)
-            pidlChild = ILGetNext(pidlChild);
+        {
+            if (LPITEMIDLIST pidlNext = ILGetNext(pidlChild))
+                pidlChild = pidlNext;
+        }
         pidlChild->mkid.cb = 0;
     }
     INT_PTR ret = SHGetFileInfoW((PWSTR)pidl, 0, &shfi, sizeof(shfi), Flags | SHGFI_PIDL);
@@ -214,7 +217,7 @@ static void Dump(LPITEMIDLIST pidl, PCSTR Heading = NULL)
         }
         else if (i == 0 && cb == sizeof(GUIDPIDL) && type == PT_DESKTOP_REGITEM) guiditem:
         {
-            if (!SHGetPidlInfo(pidl, shfi, SHGFI_DISPLAYNAME, i + 1))
+            if (!SHGetPidlInfo(pidl, shfi, SHGFI_DISPLAYNAME, 1))
                 StringFromGUID2(*(GUID*)((char*)pidl + cb - 16), buf, 39);
             wprintf(L"[%.2X %ub %s]", pidl->mkid.abID[0], cb, buf);
         }
