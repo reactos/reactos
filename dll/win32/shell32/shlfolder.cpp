@@ -374,7 +374,7 @@ HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST 
     SHELLDETAILS sd;
     WCHAR wszItem1[MAX_PATH], wszItem2[MAX_PATH];
     HRESULT hres;
-    UINT col = LOWORD(lParam & SHCIDS_COLUMNMASK); // Column index without SHCIDS_* flags
+    UINT col = (UINT)(lParam & SHCIDS_COLUMNMASK); // Column index without SHCIDS_* flags
 
     hres = isf->GetDetailsOf(pidl1, col, &sd);
     if (FAILED(hres))
@@ -417,7 +417,7 @@ HRESULT SHELL_CompareAllFields(IShellFolder* psf,
 /***********************************************************************
  *    SHELL32_FolderImplCompareIDsTiebreaker
  *
- * Used to compare other columns if the intial column passed to
+ * Used to compare other columns if the initial column passed to
  * IShellFolder::CompareIDs compared equal.
  * NT5 compares the name column first in this case.
  * Next, all columns are compared if the caller requested ALLFIELDS.

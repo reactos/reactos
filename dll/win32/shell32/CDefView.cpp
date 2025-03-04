@@ -1246,13 +1246,14 @@ void CDefView::ColumnListChanged()
 HRESULT CDefView::CompareIDsWithFallback(LPARAM Rule, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
     const UINT Flags = m_pSF2Parent ? (Rule & SHCIDS_BITMASK) : 0;
+    int Col = (Rule & SHCIDS_COLUMNMASK);
     HRESULT hr = m_pSFParent->CompareIDs(Rule, pidl1, pidl2);
     if (hr != 0)
         return hr;
     if (hr == 0 && m_sortInfo.DefaultFolderColumn > 0)
         hr = m_pSFParent->CompareIDs(m_sortInfo.DefaultFolderColumn | Flags, pidl1, pidl2);
-    if (hr == 0 && (Rule & SHCIDS_COLUMNMASK) != 0)
-        hr = m_pSFParent->CompareIDs(0 | Flags, pidl1, pidl2);
+    if (hr == 0 && Col != 0 && Col != m_sortInfo.DefaultFolderColumn)
+        hr = m_pSFParent->CompareIDs(0 | Flags, pidl1, pidl2); // Try SHFSF_COL_NAME
     if (hr == 0 && !(Rule & SHCIDS_ALLFIELDS) && m_pSF2Parent)
         hr = m_pSFParent->CompareIDs(0 | SHCIDS_ALLFIELDS, pidl1, pidl2);
     return hr;
@@ -1262,9 +1263,9 @@ HRESULT CDefView::GetDefaultFolderSortColumn()
 {
     if (!m_pSF2Parent)
         return E_NOTIMPL;
-    ULONG folderSortCol = ~ULONG(0), dummy;
+    ULONG folderSortCol = ~0UL, dummy;
     HRESULT hr = m_pSF2Parent->GetDefaultColumn(0, &folderSortCol, &dummy);
-    return (folderSortCol == ~ULONG(0) && SUCCEEDED(hr)) ? E_FAIL : hr;
+    return (folderSortCol == ~0UL && SUCCEEDED(hr)) ? E_FAIL : hr;
 }
 
 /*************************************************************************
