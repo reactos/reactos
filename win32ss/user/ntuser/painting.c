@@ -819,8 +819,8 @@ IntInvalidateWindows(PWND Wnd, PREGION Rgn, ULONG Flags)
             Wnd->state &= ~(WNDS_SENDERASEBACKGROUND|WNDS_ERASEBACKGROUND);
          }
       }
-      /* If invalidating during a WM_PAINT message, decrement paint count */
-      if ((Wnd->state & WNDS_PAINTNOTPROCESSED) || (HadPaintMessage && !IntIsWindowDirty(Wnd)))
+
+      if (HadPaintMessage && !IntIsWindowDirty(Wnd))
       {
          MsqDecPaintCountQueue(Wnd->head.pti);
       }
