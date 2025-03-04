@@ -1309,7 +1309,7 @@
 @ stdcall RtlUnicodeToOemN(ptr long ptr wstr long)
 @ stdcall RtlUnlockBootStatusData(ptr)
 @ stdcall RtlUnwind(ptr ptr ptr ptr)
-@ cdecl -arch=x86_64 RtlUnwindEx(double double ptr ptr ptr ptr)
+@ stdcall -arch=x86_64,arm RtlUnwindEx(ptr ptr ptr ptr ptr ptr)
 @ stdcall RtlUpcaseUnicodeChar(long)
 @ stdcall RtlUpcaseUnicodeString(ptr ptr long)
 @ stdcall RtlUpcaseUnicodeStringToAnsiString(ptr ptr long)
@@ -1325,7 +1325,7 @@
 @ stdcall RtlValidSecurityDescriptor(ptr)
 @ stdcall RtlValidSid(ptr)
 @ stdcall RtlVerifyVersionInfo(ptr long long long)
-@ cdecl -arch=x86_64 RtlVirtualUnwind(long double double ptr ptr ptr ptr ptr)
+@ stdcall -arch=x86_64,arm RtlVirtualUnwind(long int64 int64 ptr ptr ptr ptr ptr)
 @ stdcall RtlVolumeDeviceToDosName(ptr ptr) IoVolumeDeviceToDosName
 @ stdcall RtlWalkFrameChain(ptr long long)
 @ stdcall RtlWriteRegistryValue(long wstr wstr long ptr long)

@@ -981,7 +981,7 @@
 @ stdcall -arch=x86_64 RtlRestoreContext(ptr ptr) ntdll.RtlRestoreContext
 @ stdcall RtlUnwind(ptr ptr ptr ptr) ntdll.RtlUnwind
 @ stdcall -arch=x86_64 RtlUnwindEx(ptr ptr ptr ptr ptr ptr) ntdll.RtlUnwindEx
-@ stdcall -arch=x86_64 RtlVirtualUnwind(ptr ptr ptr long) ntdll.RtlVirtualUnwind
+@ stdcall -arch=x86_64 RtlVirtualUnwind(long int64 int64 ptr ptr ptr ptr ptr) ntdll.RtlVirtualUnwind
 @ stdcall RtlZeroMemory(ptr long) ntdll.RtlZeroMemory
 @ stdcall ScrollConsoleScreenBufferA(long ptr ptr ptr ptr)
 @ stdcall ScrollConsoleScreenBufferW(long ptr ptr ptr ptr)
