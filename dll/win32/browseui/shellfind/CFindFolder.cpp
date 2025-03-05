@@ -132,7 +132,7 @@ static LPITEMIDLIST _ILCreate(LPCWSTR lpszPath)
     p += lpLastFSPidl->mkid.cb;
 
     pidl->mkid.cb = p - (LPBYTE)pidl;
-    *((WORD *) p) = 0; // Terminator
+    ((LPITEMIDLIST)p)->mkid.cb = 0; // Terminator
     return pidl;
 }
 
@@ -771,12 +771,15 @@ STDMETHODIMP CFindFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELL
 {
     if (iColumn >= _countof(g_ColumnDefs))
     {
-        UINT FSColumn = iColumn - _countof(g_ColumnDefs) + 1; 
-        LPCITEMIDLIST pidlFS = _ILGetFSPidl(pidl);
-        CComPtr<IShellFolder2> pFolder;
-        if (SUCCEEDED(GetFSFolder2AndChild(pidl, &pFolder)))
-            return pFolder->GetDetailsOf(pidlFS, FSColumn, pDetails);
-        return E_FAIL;
+        UINT FSColumn = iColumn - _countof(g_ColumnDefs) + 1;
+        if (pidl)
+        {
+            CComPtr<IShellFolder2> pFolder;
+            PCUITEMID_CHILD pChild;
+            if (SUCCEEDED(GetFSFolder2AndChild(pidl, &pFolder, &pChild)))
+                return pFolder->GetDetailsOf(pChild, FSColumn, pDetails);
+        }
+        return m_pisfInner->GetDetailsOf(pidl, FSColumn, pDetails); // Column header info
     }
 
     pDetails->cxChar = g_ColumnDefs[iColumn].cxChar;
