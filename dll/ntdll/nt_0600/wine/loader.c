@@ -19,6 +19,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef __REACTOS__
+#include <ntdll_vista.h>
+
+#define NDEBUG
+#include <debug.h>
+
+#include "wine/list.h"
+#else
 #include <assert.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -81,9 +89,16 @@ unixlib_handle_t __wine_unixlib_handle = 0;
 
 /* windows directory */
 const WCHAR windows_dir[] = L"C:\\windows";
+#endif
+
+#ifdef __REACTOS__
+/* system directory with trailing backslash */
+const WCHAR system_dir[] = L"C:\\reactos\\system32\\";
+/* system search path */
+static const WCHAR system_path[] = L"C:\\windows\\system32;C:\\windows\\system;C:\\windows;C:\\reactos;C:\\reactos\\system;C:\\reactos\\system32";
+#else
 /* system directory with trailing backslash */
 const WCHAR system_dir[] = L"C:\\windows\\system32\\";
-
 /* system search path */
 static const WCHAR system_path[] = L"C:\\windows\\system32;C:\\windows\\system;C:\\windows";
 
@@ -92,11 +107,17 @@ static BOOL imports_fixup_done = FALSE;  /* set once the imports have been fixed
 static BOOL process_detaching = FALSE;  /* set on process detach to avoid deadlocks with thread detach */
 static int free_lib_count;   /* recursion depth of LdrUnloadDll calls */
 static LONG path_safe_mode;  /* path mode set by RtlSetSearchPathMode */
+#endif
 static LONG dll_safe_mode = 1;  /* dll search mode */
+
 static UNICODE_STRING dll_directory;  /* extra path for LdrSetDllDirectory */
+#ifndef __REACTOS__
 static UNICODE_STRING system_dll_path; /* path to search for system dependency dlls */
+#endif
 static DWORD default_search_flags;  /* default flags set by LdrSetDefaultDllDirectories */
+#ifndef __REACTOS__
 static WCHAR *default_load_path;    /* default dll search path */
+#endif
 
 struct dll_dir_entry
 {
@@ -127,6 +148,37 @@ struct file_id
 {
     BYTE ObjectId[16];
 };
+
+#ifdef __REACTOS__
+#define GetProcessHeap RtlGetProcessHeap
+typedef enum
+{
+    INVALID_PATH = 0,
+    UNC_PATH,              /* "//foo" */
+    ABSOLUTE_DRIVE_PATH,   /* "c:/foo" */
+    RELATIVE_DRIVE_PATH,   /* "c:foo" */
+    ABSOLUTE_PATH,         /* "/foo" */
+    RELATIVE_PATH,         /* "foo" */
+    DEVICE_PATH,           /* "//./foo" */
+    UNC_DOT_PATH           /* "//." */
+} DOS_PATHNAME_TYPE;
+NTSYSAPI NTSTATUS  WINAPI RtlDosPathNameToNtPathName_U_WithStatus(PCWSTR,PUNICODE_STRING,PWSTR*,CURDIR*);
+RTL_CRITICAL_SECTION dlldir_section;
+
+#define LOAD_WITH_ALTERED_SEARCH_PATH       0x00000008
+#define LOAD_IGNORE_CODE_AUTHZ_LEVEL        0x00000010
+#define LOAD_LIBRARY_AS_IMAGE_RESOURCE      0x00000020
+#define LOAD_LIBRARY_AS_DATAFILE_EXCLUSIVE  0x00000040
+#define LOAD_LIBRARY_REQUIRE_SIGNED_TARGET  0x00000080
+#define LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR    0x00000100
+#define LOAD_LIBRARY_SEARCH_APPLICATION_DIR 0x00000200
+#define LOAD_LIBRARY_SEARCH_USER_DIRS       0x00000400
+#define LOAD_LIBRARY_SEARCH_SYSTEM32        0x00000800
+#define LOAD_LIBRARY_SEARCH_DEFAULT_DIRS    0x00001000
+#define ARRAY_SIZE(a) (sizeof(a)/sizeof((a)[0]))
+#endif
+
+#ifndef __REACTOS__
 
 #define HASH_MAP_SIZE 32
 static LIST_ENTRY hash_table[HASH_MAP_SIZE];
@@ -2464,7 +2516,7 @@ static BOOL is_valid_binary( HANDLE file, const SECTION_IMAGE_INFORMATION *info 
 }
 
 #endif  /* _WIN64 */
-
+#endif
 
 /******************************************************************
  *		get_module_path_end
@@ -2555,7 +2607,6 @@ static NTSTATUS get_dll_load_path( LPCWSTR module, LPCWSTR dll_dir, ULONG safe_m
     return STATUS_SUCCESS;
 }
 
-
 /******************************************************************
  *		get_dll_load_path_search_flags
  */
@@ -2583,7 +2634,11 @@ static NTSTATUS get_dll_load_path_search_flags( LPCWSTR module, DWORD flags, WCH
 
     if (flags & LOAD_LIBRARY_SEARCH_APPLICATION_DIR)
     {
+#ifdef __REACTOS__
+        image = NtCurrentTeb()->ProcessEnvironmentBlock->ProcessParameters->ImagePathName.Buffer;
+#else
         image = NtCurrentTeb()->Peb->ProcessParameters->ImagePathName.Buffer;
+#endif
         image_end = get_module_path_end( image );
         len += (image_end - image) + 1;
     }
@@ -2618,6 +2673,7 @@ static NTSTATUS get_dll_load_path_search_flags( LPCWSTR module, DWORD flags, WCH
     return STATUS_SUCCESS;
 }
 
+#ifndef __REACTOS__
 
 /***********************************************************************
  *	open_dll_file
@@ -4567,6 +4623,7 @@ PVOID WINAPI RtlPcToFileHeader( PVOID pc, PVOID *address )
     return ret;
 }
 
+#endif
 
 /****************************************************************************
  *		LdrGetDllDirectory  (NTDLL.@)
@@ -4641,7 +4698,11 @@ NTSTATUS WINAPI LdrAddDllDirectory( const UNICODE_STRING *dir, void **cookie )
 
     if (!status)
     {
+#ifdef __REACTOS__
+        DPRINT1( "LdrAddDllDirectory: %s\n",  ptr->dir );
+#else
         TRACE( "%s\n", debugstr_w( ptr->dir ));
+#endif
         RtlEnterCriticalSection( &dlldir_section );
         list_add_head( &dll_dir_list, &ptr->entry );
         RtlLeaveCriticalSection( &dlldir_section );
@@ -4659,7 +4720,11 @@ NTSTATUS WINAPI LdrRemoveDllDirectory( void *cookie )
 {
     struct dll_dir_entry *ptr = cookie;
 
+#ifdef __REACTOS__
+    DPRINT1( "LdrRemoveDllDirectory: %s\n",  ptr->dir );
+#else
     TRACE( "%s\n", debugstr_w( ptr->dir ));
+#endif
 
     RtlEnterCriticalSection( &dlldir_section );
     list_remove( &ptr->entry );
@@ -4684,7 +4749,6 @@ NTSTATUS WINAPI LdrSetDefaultDllDirectories( ULONG flags )
     default_search_flags = flags;
     return STATUS_SUCCESS;
 }
-
 
 /******************************************************************
  *		LdrGetDllPath  (NTDLL.@)
@@ -4715,7 +4779,11 @@ NTSTATUS WINAPI LdrGetDllPath( PCWSTR module, ULONG flags, PWSTR *path, PWSTR *u
     {
         const WCHAR *dlldir = dll_directory.Length ? dll_directory.Buffer : NULL;
         if (!(flags & LOAD_WITH_ALTERED_SEARCH_PATH) || !wcschr( module, L'\\' ))
+#ifdef __REACTOS__
+            module = NtCurrentTeb()->ProcessEnvironmentBlock->ProcessParameters->ImagePathName.Buffer;
+#else
             module = NtCurrentTeb()->Peb->ProcessParameters->ImagePathName.Buffer;
+#endif
         status = get_dll_load_path( module, dlldir, dll_safe_mode, path );
     }
 
@@ -4724,7 +4792,7 @@ NTSTATUS WINAPI LdrGetDllPath( PCWSTR module, ULONG flags, PWSTR *path, PWSTR *u
     return status;
 }
 
-
+#ifndef __REACTOS__
 /*************************************************************************
  *		RtlSetSearchPathMode (NTDLL.@)
  */
@@ -4849,4 +4917,13 @@ BOOL WINAPI DllMain( HINSTANCE inst, DWORD reason, LPVOID reserved )
     if (reason == DLL_PROCESS_ATTACH) LdrDisableThreadCalloutsForDll( inst );
     return TRUE;
 }
- 
+#endif
+
+#ifdef __REACTOS__
+VOID
+NTAPI
+LdrpInitializeDllDirectorySection(VOID)
+{
+    RtlInitializeCriticalSection(&dlldir_section);
+}
+#endif

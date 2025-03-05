@@ -261,4 +261,9 @@ NTAPI
 RtlpInitializeThreadPooling(
     VOID);
 
+VOID
+NTAPI
+LdrpInitializeDllDirectorySection(
+    VOID);
+    
 /* EOF */

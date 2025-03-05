@@ -12,7 +12,8 @@ include_directories(
 
 list(APPEND SOURCE
     ldr/ldrinit.c
-    ldr/ldrnotify.c)
+    ldr/ldrnotify.c
+    wine/loader.c)
 
 add_library(ntdll_vista_static ${SOURCE})
 target_link_libraries(ntdll_vista_static)

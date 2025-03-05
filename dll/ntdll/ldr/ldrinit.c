@@ -16,7 +16,6 @@
 #define NDEBUG
 #include <debug.h>
 
-
 /* GLOBALS *******************************************************************/
 
 HANDLE ImageExecOptionsKey;
@@ -2416,7 +2415,9 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Initialize the keyed event for condition variables */
     RtlpInitializeKeyedEvent();
     RtlpInitializeThreadPooling();
-
+    #if (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+    LdrpInitializeDllDirectorySection();
+    #endif
     /* Initialize TLS */
     Status = LdrpInitializeTls();
     if (!NT_SUCCESS(Status))
