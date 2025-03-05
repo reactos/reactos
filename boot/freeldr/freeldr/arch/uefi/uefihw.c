@@ -50,6 +50,21 @@ FindAcpiBios(VOID)
     return rsdp;
 }
 
+PVOID
+FindAcpiTable(VOID)
+{
+    PRSDP_DESCRIPTOR Rsdp = FindAcpiBios();
+    if (!Rsdp)
+        return NULL;
+
+    PVOID OutputPointer = (Rsdp->revision > 1 && Rsdp->xsdt_physical_address) ?
+            (PVOID)((ULONG_PTR)Rsdp->xsdt_physical_address) : 
+            (PVOID)((ULONG_PTR)Rsdp->rsdt_physical_address);
+
+    TRACE("ACPI table at 0x%p\n", OutputPointer);
+    return OutputPointer;
+}
+
 VOID
 DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 {
@@ -93,16 +108,11 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         /* Fill the table */
         AcpiBiosData = (PACPI_BIOS_DATA)&PartialResourceList->PartialDescriptors[1];
 
-        if (Rsdp->revision > 0)
-        {
-            TRACE("ACPI >1.0, using XSDT address\n");
+        TRACE("ACPI %s1.0, using %cSDT address\n", Rsdp->revision > 1 ? ">" : "", Rsdp->revision > 1 ? 'X' : 'R');
+        if (Rsdp->revision > 1 && Rsdp->xsdt_physical_address)
             AcpiBiosData->RSDTAddress.QuadPart = Rsdp->xsdt_physical_address;
-        }
         else
-        {
-            TRACE("ACPI 1.0, using RSDT address\n");
             AcpiBiosData->RSDTAddress.LowPart = Rsdp->rsdt_physical_address;
-        }
 
         AcpiBiosData->Count = FreeldrDescCount;
         memcpy(AcpiBiosData->MemoryMap, EfiMemoryMap,
