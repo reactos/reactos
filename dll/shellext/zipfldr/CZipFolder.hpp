@@ -6,6 +6,17 @@
  *              Copyright 2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
+enum FOLDERCOLUMN
+{
+    COL_NAME = 0,
+    COL_TYPE,
+    COL_COMPRSIZE,
+    COL_PASSWORD,
+    COL_SIZE,
+    COL_RATIO,
+    COL_DATE_MOD,
+};
+
 struct FolderViewColumns
 {
     int iResource;
@@ -84,8 +95,11 @@ public:
     }
     STDMETHODIMP GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay)
     {
-        UNIMPLEMENTED;
-        return E_NOTIMPL;
+        if (pSort)
+            *pSort = COL_NAME;
+        if (pDisplay)
+            *pDisplay = COL_NAME;
+        return S_OK;
     }
     STDMETHODIMP GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
     {
@@ -155,9 +169,9 @@ public:
         bool isDir = zipEntry->ZipType == ZIP_PIDL_DIRECTORY;
         switch (iColumn)
         {
-        case 0: /* Name, ReactOS specific? */
+        case COL_NAME:
             return GetDisplayNameOf(pidl, 0, &psd->str);
-        case 1: /* Type */
+        case COL_TYPE:
         {
             SHFILEINFOW shfi;
             DWORD dwAttributes = isDir ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
@@ -166,22 +180,22 @@ public:
                 return E_FAIL;
             return SHSetStrRet(&psd->str, shfi.szTypeName);
         }
-        case 2: /* Compressed size */
-        case 4: /* Size */
+        case COL_COMPRSIZE:
+        case COL_SIZE:
         {
             if (isDir)
                 return SHSetStrRet(&psd->str, L"");
 
-            ULONG64 Size = iColumn == 2 ? zipEntry->CompressedSize : zipEntry->UncompressedSize;
+            ULONG64 Size = iColumn == COL_COMPRSIZE ? zipEntry->CompressedSize : zipEntry->UncompressedSize;
             if (!StrFormatByteSizeW(Size, Buffer, _countof(Buffer)))
                 return E_FAIL;
             return SHSetStrRet(&psd->str, Buffer);
         }
-        case 3: /* Password */
+        case COL_PASSWORD:
             if (isDir)
                 return SHSetStrRet(&psd->str, L"");
             return SHSetStrRet(&psd->str, _AtlBaseModule.GetResourceInstance(), zipEntry->Password ? IDS_YES : IDS_NO);
-        case 5: /* Ratio */
+        case COL_RATIO:
         {
             if (isDir)
                 return SHSetStrRet(&psd->str, L"");
@@ -192,7 +206,7 @@ public:
             StringCchPrintfW(Buffer, _countof(Buffer), L"%d%%", ratio);
             return SHSetStrRet(&psd->str, Buffer);
         }
-        case 6: /* Date */
+        case COL_DATE_MOD:
         {
             if (isDir)
                 return SHSetStrRet(&psd->str, L"");
@@ -610,8 +624,8 @@ public:
     // *** IPersist methods ***
     STDMETHODIMP GetClassID(CLSID *lpClassId)
     {
-        DbgPrint("%s\n", __FUNCTION__);
-        return E_NOTIMPL;
+        *lpClassId = CLSID_ZipFolderStorageHandler;
+        return S_OK;
     }
 
 
