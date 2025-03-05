@@ -17,52 +17,29 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
 #include "wine/debug.h"
 
 #include "quartz_private.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
-extern HRESULT WINAPI QUARTZ_DllGetClassObject(REFCLSID, REFIID, LPVOID *);
-extern BOOL WINAPI QUARTZ_DllMain(HINSTANCE, DWORD, LPVOID);
-extern HRESULT WINAPI QUARTZ_DllRegisterServer(void);
-extern HRESULT WINAPI QUARTZ_DllUnregisterServer(void);
+extern HRESULT WINAPI QUARTZ_DllGetClassObject(REFCLSID, REFIID, LPVOID *) DECLSPEC_HIDDEN;
+extern HRESULT WINAPI QUARTZ_DllCanUnloadNow(void) DECLSPEC_HIDDEN;
+extern BOOL WINAPI QUARTZ_DllMain(HINSTANCE, DWORD, LPVOID) DECLSPEC_HIDDEN;
 
-bool array_reserve(void **elements, size_t *capacity, size_t count, size_t size)
+static LONG server_locks = 0;
+
+/* For the moment, do nothing here. */
+BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
 {
-    unsigned int new_capacity, max_capacity;
-    void *new_elements;
-
-    if (count <= *capacity)
-        return true;
-
-    max_capacity = ~(size_t)0 / size;
-    if (count > max_capacity)
-        return false;
-
-    new_capacity = max(4, *capacity);
-    while (new_capacity < count && new_capacity <= max_capacity / 2)
-        new_capacity *= 2;
-    if (new_capacity < count)
-        new_capacity = max_capacity;
-
-    if (!(new_elements = realloc(*elements, new_capacity * size)))
-        return false;
-
-    *elements = new_elements;
-    *capacity = new_capacity;
-
-    return true;
+    return QUARTZ_DllMain( hInstDLL, fdwReason, lpv );
 }
 
-BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, void *reserved)
+static HRESULT SeekingPassThru_create(IUnknown *pUnkOuter, LPVOID *ppObj)
 {
-    if (reason == DLL_PROCESS_DETACH && !reserved)
-    {
-        video_window_unregister_class();
-        strmbase_release_typelibs();
-    }
-    return QUARTZ_DllMain(instance, reason, reserved);
+    return PosPassThru_Construct(pUnkOuter,ppObj); /* from strmbase */
 }
 
 /******************************************************************************
@@ -71,7 +48,7 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, void *reserved)
 typedef struct {
     IClassFactory IClassFactory_iface;
     LONG ref;
-    HRESULT (*create_instance)(IUnknown *outer, IUnknown **out);
+    HRESULT (*pfnCreateInstance)(IUnknown *pUnkOuter, LPVOID *ppObj);
 } IClassFactoryImpl;
 
 static inline IClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
@@ -82,33 +59,31 @@ static inline IClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
 struct object_creation_info
 {
     const CLSID *clsid;
-    HRESULT (*create_instance)(IUnknown *outer, IUnknown **out);
+    HRESULT (*pfnCreateInstance)(IUnknown *pUnkOuter, LPVOID *ppObj);
 };
 
 static const struct object_creation_info object_creation[] =
 {
-    { &CLSID_ACMWrapper, acm_wrapper_create },
-    { &CLSID_AllocPresenter, vmr7_presenter_create },
-    { &CLSID_AsyncReader, async_reader_create },
-    { &CLSID_AudioRender, dsound_render_create },
-    { &CLSID_AVIDec, avi_dec_create },
-    { &CLSID_AviSplitter, avi_splitter_create },
-    { &CLSID_CMpegAudioCodec, mpeg_audio_codec_create },
-    { &CLSID_CMpegVideoCodec, mpeg_video_codec_create },
-    { &CLSID_DSoundRender, dsound_render_create },
-    { &CLSID_FilterGraph, filter_graph_create },
-    { &CLSID_FilterGraphNoThread, filter_graph_no_thread_create },
-    { &CLSID_FilterMapper, filter_mapper_create },
-    { &CLSID_FilterMapper2, filter_mapper_create },
-    { &CLSID_MemoryAllocator, mem_allocator_create },
-    { &CLSID_MPEG1Splitter, mpeg1_splitter_create },
-    { &CLSID_SeekingPassThru, seeking_passthrough_create },
-    { &CLSID_SystemClock, system_clock_create },
-    { &CLSID_VideoRenderer, video_renderer_create },
-    { &CLSID_VideoMixingRenderer, vmr7_create },
-    { &CLSID_VideoMixingRenderer9, vmr9_create },
-    { &CLSID_VideoRendererDefault, video_renderer_default_create },
-    { &CLSID_WAVEParser, wave_parser_create },
+    { &CLSID_SeekingPassThru, SeekingPassThru_create },
+    { &CLSID_FilterGraph, FilterGraph_create },
+    { &CLSID_FilterGraphNoThread, FilterGraphNoThread_create },
+    { &CLSID_FilterMapper, FilterMapper_create },
+    { &CLSID_FilterMapper2, FilterMapper2_create },
+    { &CLSID_AsyncReader, AsyncReader_create },
+    { &CLSID_MemoryAllocator, StdMemAllocator_create },
+    { &CLSID_AviSplitter, AVISplitter_create },
+    { &CLSID_MPEG1Splitter, MPEGSplitter_create },
+    { &CLSID_VideoRenderer, VideoRenderer_create },
+    { &CLSID_NullRenderer, NullRenderer_create },
+    { &CLSID_VideoMixingRenderer, VMR7Impl_create },
+    { &CLSID_VideoMixingRenderer9, VMR9Impl_create },
+    { &CLSID_VideoRendererDefault, VideoRendererDefault_create },
+    { &CLSID_DSoundRender, DSoundRender_create },
+    { &CLSID_AudioRender, DSoundRender_create },
+    { &CLSID_AVIDec, AVIDec_create },
+    { &CLSID_SystemClock, QUARTZ_CreateSystemClock },
+    { &CLSID_ACMWrapper, ACMWrapper_create },
+    { &CLSID_WAVEParser, WAVEParser_create }
 };
 
 static HRESULT WINAPI DSCF_QueryInterface(IClassFactory *iface, REFIID riid, void **ppobj)
@@ -157,17 +132,22 @@ static HRESULT WINAPI DSCF_CreateInstance(IClassFactory *iface, IUnknown *pOuter
     if(pOuter && !IsEqualGUID(&IID_IUnknown, riid))
         return E_NOINTERFACE;
 
-    if (SUCCEEDED(hres = This->create_instance(pOuter, &punk)))
-    {
+    hres = This->pfnCreateInstance(pOuter, (LPVOID *) &punk);
+    if (SUCCEEDED(hres)) {
         hres = IUnknown_QueryInterface(punk, riid, ppobj);
         IUnknown_Release(punk);
     }
     return hres;
 }
 
-static HRESULT WINAPI DSCF_LockServer(IClassFactory *iface, BOOL lock)
+static HRESULT WINAPI DSCF_LockServer(IClassFactory *iface, BOOL dolock)
 {
-    FIXME("iface %p, lock %d, stub!\n", iface, lock);
+    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
+    FIXME("(%p)->(%d),stub!\n",This,dolock);
+    if(dolock)
+        InterlockedIncrement(&server_locks);
+    else
+        InterlockedDecrement(&server_locks);
     return S_OK;
 }
 
@@ -205,7 +185,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 
     if (IsEqualGUID( &IID_IClassFactory, riid ) || IsEqualGUID( &IID_IUnknown, riid))
     {
-        for (i = 0; i < ARRAY_SIZE(object_creation); i++)
+        for (i=0; i < sizeof(object_creation)/sizeof(object_creation[0]); i++)
         {
             if (IsEqualGUID(object_creation[i].clsid, rclsid))
             {
@@ -215,7 +195,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
                 factory->IClassFactory_iface.lpVtbl = &DSCF_Vtbl;
                 factory->ref = 1;
 
-                factory->create_instance = object_creation[i].create_instance;
+                factory->pfnCreateInstance = object_creation[i].pfnCreateInstance;
 
                 *ppv = &factory->IClassFactory_iface;
                 return S_OK;
@@ -226,387 +206,15 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 }
 
 /***********************************************************************
- *      DllRegisterServer (QUARTZ.@)
+ *              DllCanUnloadNow (QUARTZ.@)
  */
-HRESULT WINAPI DllRegisterServer(void)
+HRESULT WINAPI DllCanUnloadNow(void)
 {
-    static const REGPINTYPES video_renderer_inputs[] =
-    {
-        {&MEDIATYPE_Video, &GUID_NULL},
-    };
-    static const REGFILTERPINS2 video_renderer_pins[] =
-    {
-        {
-            .nMediaTypes = ARRAY_SIZE(video_renderer_inputs),
-            .lpMediaType = video_renderer_inputs,
-            .dwFlags = REG_PINFLAG_B_RENDERER,
-        },
-    };
-    static const REGFILTER2 video_renderer_default_reg =
-    {
-        .dwVersion = 2,
-        .dwMerit = MERIT_PREFERRED + 1,
-        .cPins2 = ARRAY_SIZE(video_renderer_pins),
-        .rgPins2 = video_renderer_pins,
-    };
-    static const REGFILTER2 video_renderer_reg =
-    {
-        .dwVersion = 2,
-        .dwMerit = MERIT_PREFERRED,
-        .cPins2 = ARRAY_SIZE(video_renderer_pins),
-        .rgPins2 = video_renderer_pins,
-    };
-
-    static const REGPINTYPES vmr9_filter_inputs[] =
-    {
-        {&MEDIATYPE_Video, &GUID_NULL},
-    };
-    static const REGFILTERPINS2 vmr9_filter_pins[] =
-    {
-        {
-            .nMediaTypes = ARRAY_SIZE(vmr9_filter_inputs),
-            .lpMediaType = vmr9_filter_inputs,
-            .dwFlags = REG_PINFLAG_B_RENDERER,
-        },
-    };
-    static const REGFILTER2 vmr9_filter_reg =
-    {
-        .dwVersion = 2,
-        .dwMerit = MERIT_DO_NOT_USE,
-        .cPins2 = ARRAY_SIZE(vmr9_filter_pins),
-        .rgPins2 = vmr9_filter_pins,
-    };
-
-    static const REGPINTYPES avi_decompressor_inputs[] =
-    {
-        {&MEDIATYPE_Video, &GUID_NULL},
-    };
-    static const REGPINTYPES avi_decompressor_outputs[] =
-    {
-        {&MEDIATYPE_Video, &GUID_NULL},
-    };
-    static const REGFILTERPINS2 avi_decompressor_pins[] =
-    {
-        {
-            .nMediaTypes = ARRAY_SIZE(avi_decompressor_inputs),
-            .lpMediaType = avi_decompressor_inputs,
-        },
-        {
-            .nMediaTypes = ARRAY_SIZE(avi_decompressor_outputs),
-            .lpMediaType = avi_decompressor_outputs,
-            .dwFlags = REG_PINFLAG_B_OUTPUT,
-        },
-    };
-    static const REGFILTER2 avi_decompressor_reg =
-    {
-        .dwVersion = 2,
-        .dwMerit = MERIT_NORMAL - 16,
-        .cPins2 = ARRAY_SIZE(avi_decompressor_pins),
-        .rgPins2 = avi_decompressor_pins,
-    };
-
-    static const REGPINTYPES async_reader_outputs[] =
-    {
-        {&MEDIATYPE_Stream, &GUID_NULL},
-    };
-    static const REGFILTERPINS2 async_reader_pins[] =
-    {
-        {
-            .nMediaTypes = ARRAY_SIZE(async_reader_outputs),
-            .lpMediaType = async_reader_outputs,
-            .dwFlags = REG_PINFLAG_B_OUTPUT,
-        },
-    };
-    static const REGFILTER2 async_reader_reg =
-    {
-        .dwVersion = 2,
-        .dwMerit = MERIT_UNLIKELY,
-        .cPins2 = ARRAY_SIZE(async_reader_pins),
-        .rgPins2 = async_reader_pins,
-    };
-
-    static const REGPINTYPES acm_wrapper_inputs[] =
-    {
-        {&MEDIATYPE_Audio, &GUID_NULL},
-    };
-    static const REGPINTYPES acm_wrapper_outputs[] =
-    {
-        {&MEDIATYPE_Audio, &GUID_NULL},
-    };
-    static const REGFILTERPINS2 acm_wrapper_pins[] =
-    {
-        {
-            .nMediaTypes = ARRAY_SIZE(acm_wrapper_inputs),
-            .lpMediaType = acm_wrapper_inputs,
-        },
-        {
-            .nMediaTypes = ARRAY_SIZE(acm_wrapper_outputs),
-            .lpMediaType = acm_wrapper_outputs,
-            .dwFlags = REG_PINFLAG_B_OUTPUT,
-        },
-    };
-    static const REGFILTER2 acm_wrapper_reg =
-    {
-        .dwVersion = 2,
-        .dwMerit = MERIT_NORMAL - 16,
-        .cPins2 = ARRAY_SIZE(acm_wrapper_pins),
-        .rgPins2 = acm_wrapper_pins,
-    };
-
-    static const REGPINTYPES mpeg_splitter_inputs[] =
-    {
-        {&MEDIATYPE_Stream, &MEDIASUBTYPE_MPEG1Audio},
-        {&MEDIATYPE_Stream, &MEDIASUBTYPE_MPEG1Video},
-        {&MEDIATYPE_Stream, &MEDIASUBTYPE_MPEG1System},
-        {&MEDIATYPE_Stream, &MEDIASUBTYPE_MPEG1VideoCD},
-    };
-    static const REGPINTYPES mpeg_splitter_audio_outputs[] =
-    {
-        {&MEDIATYPE_Audio, &MEDIASUBTYPE_MPEG1Packet},
-        {&MEDIATYPE_Audio, &MEDIASUBTYPE_MPEG1AudioPayload},
-    };
-    static const REGPINTYPES mpeg_splitter_video_outputs[] =
-    {
-        {&MEDIATYPE_Video, &MEDIASUBTYPE_MPEG1Packet},
-        {&MEDIATYPE_Video, &MEDIASUBTYPE_MPEG1Payload},
-    };
-    static const REGFILTERPINS2 mpeg_splitter_pins[] =
-    {
-        {
-            .nMediaTypes = ARRAY_SIZE(mpeg_splitter_inputs),
-            .lpMediaType = mpeg_splitter_inputs,
-        },
-        {
-            .dwFlags = REG_PINFLAG_B_ZERO | REG_PINFLAG_B_OUTPUT,
-            .nMediaTypes = ARRAY_SIZE(mpeg_splitter_audio_outputs),
-            .lpMediaType = mpeg_splitter_audio_outputs,
-        },
-        {
-            .dwFlags = REG_PINFLAG_B_ZERO | REG_PINFLAG_B_OUTPUT,
-            .nMediaTypes = ARRAY_SIZE(mpeg_splitter_video_outputs),
-            .lpMediaType = mpeg_splitter_video_outputs,
-        },
-    };
-    static const REGFILTER2 mpeg_splitter_reg =
-    {
-        .dwVersion = 2,
-        .dwMerit = MERIT_NORMAL,
-        .cPins2 = ARRAY_SIZE(mpeg_splitter_pins),
-        .rgPins2 = mpeg_splitter_pins,
-    };
-
-    static const REGPINTYPES avi_splitter_inputs[] =
-    {
-        {&MEDIATYPE_Stream, &MEDIASUBTYPE_Avi},
-    };
-    static const REGPINTYPES avi_splitter_outputs[] =
-    {
-        {&MEDIATYPE_Video, &GUID_NULL},
-    };
-    static const REGFILTERPINS2 avi_splitter_pins[] =
-    {
-        {
-            .nMediaTypes = ARRAY_SIZE(avi_splitter_inputs),
-            .lpMediaType = avi_splitter_inputs,
-        },
-        {
-            .dwFlags = REG_PINFLAG_B_OUTPUT,
-            .nMediaTypes = ARRAY_SIZE(avi_splitter_outputs),
-            .lpMediaType = avi_splitter_outputs,
-        },
-    };
-    static const REGFILTER2 avi_splitter_reg =
-    {
-        .dwVersion = 2,
-        .dwMerit = MERIT_NORMAL,
-        .cPins2 = ARRAY_SIZE(avi_splitter_pins),
-        .rgPins2 = avi_splitter_pins,
-    };
-
-    static const REGPINTYPES wave_parser_inputs[] =
-    {
-        {&MEDIATYPE_Stream, &MEDIASUBTYPE_WAVE},
-        {&MEDIATYPE_Stream, &MEDIASUBTYPE_AU},
-        {&MEDIATYPE_Stream, &MEDIASUBTYPE_AIFF},
-    };
-    static const REGPINTYPES wave_parser_outputs[] =
-    {
-        {&MEDIATYPE_Audio, &GUID_NULL},
-    };
-    static const REGFILTERPINS2 wave_parser_pins[] =
-    {
-        {
-            .nMediaTypes = ARRAY_SIZE(wave_parser_inputs),
-            .lpMediaType = wave_parser_inputs,
-        },
-        {
-            .dwFlags = REG_PINFLAG_B_OUTPUT,
-            .nMediaTypes = ARRAY_SIZE(wave_parser_outputs),
-            .lpMediaType = wave_parser_outputs,
-        },
-    };
-    static const REGFILTER2 wave_parser_reg =
-    {
-        .dwVersion = 2,
-        .dwMerit = MERIT_UNLIKELY,
-        .cPins2 = ARRAY_SIZE(wave_parser_pins),
-        .rgPins2 = wave_parser_pins,
-    };
-
-    static const REGPINTYPES mpeg_audio_codec_inputs[] =
-    {
-        {&MEDIATYPE_Audio, &MEDIASUBTYPE_MPEG1Packet},
-        {&MEDIATYPE_Audio, &MEDIASUBTYPE_MPEG1Payload},
-        {&MEDIATYPE_Audio, &MEDIASUBTYPE_MPEG1AudioPayload},
-    };
-    static const REGPINTYPES mpeg_audio_codec_outputs[] =
-    {
-        {&MEDIATYPE_Audio, &MEDIASUBTYPE_PCM},
-    };
-    static const REGFILTERPINS2 mpeg_audio_codec_pins[] =
-    {
-        {
-            .nMediaTypes = ARRAY_SIZE(mpeg_audio_codec_inputs),
-            .lpMediaType = mpeg_audio_codec_inputs,
-        },
-        {
-            .dwFlags = REG_PINFLAG_B_OUTPUT,
-            .nMediaTypes = ARRAY_SIZE(mpeg_audio_codec_outputs),
-            .lpMediaType = mpeg_audio_codec_outputs,
-        },
-    };
-    static const REGFILTER2 mpeg_audio_codec_reg =
-    {
-        .dwVersion = 2,
-        .dwMerit = 0x03680001,
-        .cPins2 = ARRAY_SIZE(mpeg_audio_codec_pins),
-        .rgPins2 = mpeg_audio_codec_pins,
-    };
-
-    static const REGPINTYPES mpeg_video_codec_inputs[] =
-    {
-        {&MEDIATYPE_Video, &MEDIASUBTYPE_MPEG1Packet},
-        {&MEDIATYPE_Video, &MEDIASUBTYPE_MPEG1Payload},
-    };
-    static const REGPINTYPES mpeg_video_codec_outputs[] =
-    {
-        {&MEDIATYPE_Video, &GUID_NULL},
-    };
-    static const REGFILTERPINS2 mpeg_video_codec_pins[] =
-    {
-        {
-            .nMediaTypes = ARRAY_SIZE(mpeg_video_codec_inputs),
-            .lpMediaType = mpeg_video_codec_inputs,
-        },
-        {
-            .dwFlags = REG_PINFLAG_B_OUTPUT,
-            .nMediaTypes = ARRAY_SIZE(mpeg_video_codec_outputs),
-            .lpMediaType = mpeg_video_codec_outputs,
-        },
-    };
-    static const REGFILTER2 mpeg_video_codec_reg =
-    {
-        .dwVersion = 2,
-        .dwMerit = 0x40000001,
-        .cPins2 = ARRAY_SIZE(mpeg_video_codec_pins),
-        .rgPins2 = mpeg_video_codec_pins,
-    };
-
-    IFilterMapper2 *mapper;
-    HRESULT hr;
-
-    TRACE("\n");
-
-    if (FAILED(hr = QUARTZ_DllRegisterServer()))
-        return hr;
-
-    if (FAILED(hr = CoCreateInstance(&CLSID_FilterMapper2, NULL, CLSCTX_INPROC_SERVER,
-            &IID_IFilterMapper2, (void **)&mapper)))
-        return hr;
-
-    if (FAILED(hr = IFilterMapper2_RegisterFilter(mapper, &CLSID_VideoRenderer, L"Video Renderer", NULL,
-            &CLSID_LegacyAmFilterCategory, NULL, &video_renderer_reg)))
-        goto done;
-    if (FAILED(hr = IFilterMapper2_RegisterFilter(mapper, &CLSID_VideoRendererDefault, L"Video Renderer", NULL,
-            &CLSID_LegacyAmFilterCategory, NULL, &video_renderer_default_reg)))
-        goto done;
-    if (FAILED(hr = IFilterMapper2_RegisterFilter(mapper, &CLSID_VideoMixingRenderer9, L"Video Mixing Renderer 9", NULL,
-            &CLSID_LegacyAmFilterCategory, NULL, &vmr9_filter_reg)))
-        goto done;
-    if (FAILED(hr = IFilterMapper2_RegisterFilter(mapper, &CLSID_AVIDec, L"AVI Decompressor", NULL,
-            &CLSID_LegacyAmFilterCategory, NULL, &avi_decompressor_reg)))
-        goto done;
-    if (FAILED(hr = IFilterMapper2_RegisterFilter(mapper, &CLSID_AsyncReader, L"File Source (Async.)", NULL,
-            &CLSID_LegacyAmFilterCategory, NULL, &async_reader_reg)))
-        goto done;
-    if (FAILED(hr = IFilterMapper2_RegisterFilter(mapper, &CLSID_ACMWrapper, L"ACM Wrapper", NULL,
-            &CLSID_LegacyAmFilterCategory, NULL, &acm_wrapper_reg)))
-        goto done;
-    if (FAILED(hr = IFilterMapper2_RegisterFilter(mapper, &CLSID_AviSplitter, L"AVI Splitter", NULL,
-            NULL, NULL, &avi_splitter_reg)))
-        goto done;
-    if (FAILED(hr = IFilterMapper2_RegisterFilter(mapper, &CLSID_MPEG1Splitter, L"MPEG-I Stream Splitter", NULL,
-            NULL, NULL, &mpeg_splitter_reg)))
-        goto done;
-    if (FAILED(hr = IFilterMapper2_RegisterFilter(mapper, &CLSID_WAVEParser, L"Wave Parser", NULL,
-            NULL, NULL, &wave_parser_reg)))
-        goto done;
-    if (FAILED(hr = IFilterMapper2_RegisterFilter(mapper, &CLSID_CMpegAudioCodec, L"MPEG Audio Decoder", NULL,
-            NULL, NULL, &mpeg_audio_codec_reg)))
-        goto done;
-    if (FAILED(hr = IFilterMapper2_RegisterFilter(mapper, &CLSID_CMpegVideoCodec, L"MPEG Video Decoder", NULL,
-            NULL, NULL, &mpeg_video_codec_reg)))
-        goto done;
-
-done:
-    IFilterMapper2_Release(mapper);
-    return hr;
+    if(server_locks == 0 && QUARTZ_DllCanUnloadNow() == S_OK)
+        return S_OK;
+    return S_FALSE;
 }
 
-/***********************************************************************
- *      DllUnregisterServer (QUARTZ.@)
- */
-HRESULT WINAPI DllUnregisterServer(void)
-{
-    IFilterMapper2 *mapper;
-    HRESULT hr;
-
-    TRACE("\n");
-
-    if (FAILED(hr = CoCreateInstance(&CLSID_FilterMapper2, NULL, CLSCTX_INPROC_SERVER,
-            &IID_IFilterMapper2, (void **)&mapper)))
-        return hr;
-
-    if (FAILED(hr = IFilterMapper2_UnregisterFilter(mapper, &CLSID_LegacyAmFilterCategory, NULL, &CLSID_VideoRenderer)))
-        goto done;
-    if (FAILED(hr = IFilterMapper2_UnregisterFilter(mapper, &CLSID_LegacyAmFilterCategory, NULL, &CLSID_VideoRendererDefault)))
-        goto done;
-    if (FAILED(hr = IFilterMapper2_UnregisterFilter(mapper, &CLSID_LegacyAmFilterCategory, NULL, &CLSID_VideoMixingRenderer9)))
-        goto done;
-    if (FAILED(hr = IFilterMapper2_UnregisterFilter(mapper, &CLSID_LegacyAmFilterCategory, NULL, &CLSID_AVIDec)))
-        goto done;
-    if (FAILED(hr = IFilterMapper2_UnregisterFilter(mapper, &CLSID_LegacyAmFilterCategory, NULL, &CLSID_AsyncReader)))
-        goto done;
-    if (FAILED(hr = IFilterMapper2_UnregisterFilter(mapper, &CLSID_LegacyAmFilterCategory, NULL, &CLSID_ACMWrapper)))
-        goto done;
-    if (FAILED(hr = IFilterMapper2_UnregisterFilter(mapper, NULL, NULL, &CLSID_AviSplitter)))
-        goto done;
-    if (FAILED(hr = IFilterMapper2_UnregisterFilter(mapper, NULL, NULL, &CLSID_MPEG1Splitter)))
-        goto done;
-    if (FAILED(hr = IFilterMapper2_UnregisterFilter(mapper, NULL, NULL, &CLSID_WAVEParser)))
-        goto done;
-    if (FAILED(hr = IFilterMapper2_UnregisterFilter(mapper, NULL, NULL, &CLSID_CMpegAudioCodec)))
-        goto done;
-    if (FAILED(hr = IFilterMapper2_UnregisterFilter(mapper, NULL, NULL, &CLSID_CMpegVideoCodec)))
-        goto done;
-
-done:
-    IFilterMapper2_Release(mapper);
-    if (SUCCEEDED(hr))
-        hr = QUARTZ_DllUnregisterServer();
-
-    return hr;
-}
 
 #define OUR_GUID_ENTRY(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
     { { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } } , #name },
@@ -678,13 +286,13 @@ const char * qzdebugstr_guid( const GUID * id )
     return debugstr_guid(id);
 }
 
-int WINAPI AmpFactorToDB(int ampfactor)
+LONG WINAPI AmpFactorToDB(LONG ampfactor)
 {
     FIXME("(%d) Stub!\n", ampfactor);
     return 0;
 }
 
-int WINAPI DBToAmpFactor(int db)
+LONG WINAPI DBToAmpFactor(LONG db)
 {
     FIXME("(%d) Stub!\n", db);
     /* Avoid divide by zero (probably during range computation) in Windows Media Player 6.4 */
@@ -701,19 +309,12 @@ DWORD WINAPI AMGetErrorTextA(HRESULT hr, LPSTR buffer, DWORD maxlen)
     DWORD res;
     WCHAR errorW[MAX_ERROR_TEXT_LEN];
 
-    TRACE("hr %#lx, buffer %p, maxlen %lu.\n", hr, buffer, maxlen);
-
+    TRACE("(%x,%p,%d)\n", hr, buffer, maxlen);
     if (!buffer)
         return 0;
 
-    res = AMGetErrorTextW(hr, errorW, ARRAY_SIZE(errorW));
-    if (!res)
-        return 0;
-
-    res = WideCharToMultiByte(CP_ACP, 0, errorW, -1, NULL, 0, 0, 0);
-    if (res > maxlen || !res)
-        return 0;
-    return WideCharToMultiByte(CP_ACP, 0, errorW, -1, buffer, maxlen, 0, 0) - 1;
+    res = AMGetErrorTextW(hr, errorW, sizeof(errorW)/sizeof(*errorW));
+    return WideCharToMultiByte(CP_ACP, 0, errorW, res, buffer, maxlen, 0, 0);
 }
 
 /***********************************************************************
@@ -722,14 +323,14 @@ DWORD WINAPI AMGetErrorTextA(HRESULT hr, LPSTR buffer, DWORD maxlen)
 DWORD WINAPI AMGetErrorTextW(HRESULT hr, LPWSTR buffer, DWORD maxlen)
 {
     unsigned int len;
+    static const WCHAR format[] = {'E','r','r','o','r',':',' ','0','x','%','l','x',0};
     WCHAR error[MAX_ERROR_TEXT_LEN];
 
-    TRACE("hr %#lx, buffer %p, maxlen %lu.\n", hr, buffer, maxlen);
+    FIXME("(%x,%p,%d) stub\n", hr, buffer, maxlen);
 
     if (!buffer) return 0;
-    swprintf(error, ARRAY_SIZE(error), L"Error: 0x%lx", hr);
-    if ((len = wcslen(error)) >= maxlen)
-        return 0;
-    wcscpy(buffer, error);
+    wsprintfW(error, format, hr);
+    if ((len = strlenW(error)) >= maxlen) return 0;
+    lstrcpyW(buffer, error);
     return len;
 }

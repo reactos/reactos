@@ -25,7 +25,7 @@
 #include "winbase.h"
 #include "amstream_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(quartz);
+WINE_DEFAULT_DEBUG_CHANNEL(amstream);
 
 typedef struct {
     IAudioData IAudioData_iface;
@@ -64,23 +64,26 @@ static ULONG WINAPI IAudioDataImpl_AddRef(IAudioData* iface)
     AMAudioDataImpl *This = impl_from_IAudioData(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)->(): new ref = %lu\n", iface, This->ref);
+    TRACE("(%p)->(): new ref = %u\n", iface, This->ref);
 
     return ref;
 }
 
 static ULONG WINAPI IAudioDataImpl_Release(IAudioData* iface)
 {
-    AMAudioDataImpl *audiodata = impl_from_IAudioData(iface);
-    ULONG ref = InterlockedDecrement(&audiodata->ref);
+    AMAudioDataImpl *This = impl_from_IAudioData(iface);
+    ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("%p decreasing refcount to %lu.\n", audiodata, ref);
+    TRACE("(%p)->(): new ref = %u\n", iface, This->ref);
 
     if (!ref)
     {
-        if (audiodata->data_owned)
-            free(audiodata->data);
-        free(audiodata);
+        if (This->data_owned)
+        {
+            CoTaskMemFree(This->data);
+        }
+
+        HeapFree(GetProcessHeap(), 0, This);
     }
 
     return ref;
@@ -91,7 +94,7 @@ static HRESULT WINAPI IAudioDataImpl_SetBuffer(IAudioData* iface, DWORD size, BY
 {
     AMAudioDataImpl *This = impl_from_IAudioData(iface);
 
-    TRACE("(%p)->(%lu,%p,%lx)\n", iface, size, data, flags);
+    TRACE("(%p)->(%u,%p,%x)\n", iface, size, data, flags);
 
     if (!size)
     {
@@ -100,7 +103,7 @@ static HRESULT WINAPI IAudioDataImpl_SetBuffer(IAudioData* iface, DWORD size, BY
 
     if (This->data_owned)
     {
-        free(This->data);
+        CoTaskMemFree(This->data);
         This->data_owned = FALSE;
     }
 
@@ -109,7 +112,7 @@ static HRESULT WINAPI IAudioDataImpl_SetBuffer(IAudioData* iface, DWORD size, BY
 
     if (!This->data)
     {
-        This->data = malloc(This->size);
+        This->data = CoTaskMemAlloc(This->size);
         This->data_owned = TRUE;
         if (!This->data)
         {
@@ -151,7 +154,7 @@ static HRESULT WINAPI IAudioDataImpl_SetActual(IAudioData* iface, DWORD data_val
 {
     AMAudioDataImpl *This = impl_from_IAudioData(iface);
 
-    TRACE("(%p)->(%lu)\n", iface, data_valid);
+    TRACE("(%p)->(%u)\n", iface, data_valid);
 
     if (data_valid > This->size)
     {
@@ -225,7 +228,8 @@ HRESULT AMAudioData_create(IUnknown *pUnkOuter, LPVOID *ppObj)
     if (pUnkOuter)
         return CLASS_E_NOAGGREGATION;
 
-    if (!(object = calloc(1, sizeof(*object))))
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(AMAudioDataImpl));
+    if (!object)
         return E_OUTOFMEMORY;
 
     object->IAudioData_iface.lpVtbl = &AudioData_Vtbl;

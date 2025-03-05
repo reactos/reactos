@@ -5,9 +5,8 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(amstream.dll amstream.spec)
 
 list(APPEND SOURCE
+    amstream.c
     audiodata.c
-    audiostream.c
-    ddrawstream.c
     main.c
     mediastream.c
     mediastreamfilter.c
