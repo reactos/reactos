@@ -588,6 +588,18 @@ static HRESULT DumpCommand(PCWSTR Path)
     else
         wprintf(L"%hs: %#x\n", "GetDescription", hr2);
 
+    IExtractIconW *pEI;
+    if (SUCCEEDED(pSL->QueryInterface(IID_PPV_ARG(IExtractIconW, &pEI))))
+    {
+        int index = 123456789;
+        UINT flags = 0;
+        if (SUCCEEDED(hr2 = pEI->GetIconLocation(0, buf, _countof(buf), &index, &flags)))
+            wprintf(L"%hs: %ls,%d %#.4x\n", "EI:GetIconLocation", buf, index, flags);
+        else
+            wprintf(L"%hs: %#x %#.4x\n", "EI:GetIconLocation", hr2, flags);
+        pEI->Release();
+    }
+
     pSL->Release();
     return hr;
 }
