@@ -107,7 +107,7 @@ static LPITEMIDLIST _ILCreate(LPCWSTR lpszPath)
     }
     LPITEMIDLIST lpLastFSPidl = ILFindLastID(lpFSPidl);
 
-    SIZE_T cbPath = ((PathFindFileNameW(lpszPath) - lpszPath) + 1) * sizeof(WCHAR);
+    SIZE_T cbPath = (PathFindFileNameW(lpszPath) - lpszPath + 1) * sizeof(WCHAR);
     SIZE_T cbData = sizeof(WORD) + cbPath + lpLastFSPidl->mkid.cb;
     if (cbData > 0xffff)
         return NULL;
@@ -200,8 +200,8 @@ void CFindFolder::FreePidlArray(HDPA hDpa)
 
 HDPA CFindFolder::CreateAbsolutePidlArray(UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
 {
-    HDPA hDpa;
-    if ((hDpa = DPA_Create(0)) != NULL)
+    HDPA hDpa = = DPA_Create(0);
+    if (hDpa)
     {
         for (UINT i = 0; i < cidl; ++i)
         {
@@ -853,7 +853,7 @@ STDMETHODIMP CFindFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PC
         wColumn -= _countof(g_ColumnDefs) - 1;
         break;
     }
-    // FIXME:
+    // FIXME: DefView does not like the way we sort
     return m_pisfInner->CompareIDs(HIWORD(lParam) | wColumn, _ILGetFSPidl(pidl1), _ILGetFSPidl(pidl2));
 }
 
