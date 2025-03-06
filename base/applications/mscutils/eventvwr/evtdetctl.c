@@ -838,10 +838,10 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 case IDC_NEXT:
                 {
                     BOOL bPrev = (LOWORD(wParam) == IDC_PREVIOUS);
-                    INT iItem, iSel;
+                    INT iItem, iSel, nItems = ListView_GetItemCount(hwndListView);
                     WCHAR szText[200];
 
-                    if (ListView_GetItemCount(hwndListView) <= 0)
+                    if (nItems <= 0)
                     {
                         LoadStringW(hInst, IDS_NOMOREITEMS, szText, _countof(szText));
                         MessageBoxW(hDlg, szText, szTitle, MB_ICONWARNING);
@@ -849,10 +849,10 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     }
 
                     /* Select the previous/next item from our current one */
-                    iItem = ListView_GetNextItem(hwndListView,
-                                                 pData->iEventItem,
-                                                 bPrev ? LVNI_ABOVE : LVNI_BELOW);
-                    if (iItem == -1)
+                    iItem = ListView_GetNextItem(hwndListView, -1, LVNI_ALL | LVNI_SELECTED);
+                    iItem = ListView_GetNextItem(hwndListView, iItem,
+                                                 (bPrev ? LVNI_ABOVE : LVNI_BELOW));
+                    if (iItem < 0 || iItem >= nItems)
                     {
                         LoadStringW(hInst,
                                     (bPrev ? IDS_CONTFROMEND : IDS_CONTFROMBEGINNING),
@@ -861,10 +861,7 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                             break;
 
                         /* Determine from where to restart */
-                        if (bPrev)
-                            iItem = ListView_GetItemCount(hwndListView) - 1;
-                        else
-                            iItem = 0;
+                        iItem = (bPrev ? (nItems - 1) : 0);
                     }
 
                     /*
