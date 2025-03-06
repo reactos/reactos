@@ -3038,7 +3038,7 @@ InitInstance(HINSTANCE hInstance)
     LVCOLUMNW lvc = {0};
     WCHAR szTemp[256];
     INT iColumn;
-    static const
+    static const struct
     {
         WORD width;
         WORD uID;
