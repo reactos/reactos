@@ -169,7 +169,7 @@ BEGIN
     IDS_EVENTSTRINGIDNOTFOUND "Përshkrimi për ngjarjet ID ( %lu ) në burim ( %s ) nuk gjindet. Kompjuter vendas mund të mos ketë informacionin e regjistrit te nevojshem ose mesazhin për dokumentat DLL për të shfaqur nga një kompjuter në distancë.\n\nThe following information is part of the event:\n\n"
     IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
     IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
-    IDS_NOMOREITEMS "No more items."
+    IDS_NOITEMS "No items"
 END
 
 STRINGTABLE

@@ -841,9 +841,9 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     INT iItem, iSel, nItems = ListView_GetItemCount(hwndListView);
                     WCHAR szText[200];
 
-                    if (nItems <= 0)
+                    if (nItems <= 0) /* No items? */
                     {
-                        LoadStringW(hInst, IDS_NOMOREITEMS, szText, _countof(szText));
+                        LoadStringW(hInst, IDS_NOITEMS, szText, _countof(szText));
                         MessageBoxW(hDlg, szText, szTitle, MB_ICONINFORMATION);
                         break;
                     }
