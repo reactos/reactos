@@ -200,7 +200,7 @@ void CFindFolder::FreePidlArray(HDPA hDpa)
 
 HDPA CFindFolder::CreateAbsolutePidlArray(UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
 {
-    HDPA hDpa = = DPA_Create(0);
+    HDPA hDpa = DPA_Create(0);
     if (hDpa)
     {
         for (UINT i = 0; i < cidl; ++i)
@@ -1007,7 +1007,9 @@ STDMETHODIMP CFindFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHI
         aFSPidl = aFSPidlAlloc;
     }
     for (UINT i = 0; i < cidl; i++)
+    {
         aFSPidl[i] = _ILGetFSPidl(apidl[i]);
+    }
 
     if (riid == IID_IContextMenu)
     {
@@ -1138,3 +1140,4 @@ STDMETHODIMP CFindFolder::GetClassID(CLSID *pClassId)
     *pClassId = CLSID_FindFolder;
     return S_OK;
 }
+  
