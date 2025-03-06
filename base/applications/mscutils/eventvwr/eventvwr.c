@@ -3029,6 +3029,12 @@ FreeLogFilterList(VOID)
     return;
 }
 
+typedef struct _COLUMN_ITEM
+{
+    INT width;
+    INT ids;
+} COLUMN_ITEM;
+
 BOOL
 InitInstance(HINSTANCE hInstance)
 {
@@ -3037,6 +3043,18 @@ InitInstance(HINSTANCE hInstance)
     HIMAGELIST hSmall;
     LVCOLUMNW lvc = {0};
     WCHAR szTemp[256];
+    INT iColumn;
+    static const COLUMN_ITEM columnItems[] =
+    {
+        { 90, IDS_COLUMNTYPE },
+        { 70, IDS_COLUMNDATE },
+        { 70, IDS_COLUMNTIME },
+        { 150, IDS_COLUMNSOURCE },
+        { 100, IDS_COLUMNCATEGORY },
+        { 60, IDS_COLUMNEVENT },
+        { 120, IDS_COLUMNUSER },
+        { 100, IDS_COLUMNCOMPUTER },
+    };
 
     /* Create the main window */
     rs = Settings.wpPos.rcNormalPosition;
@@ -3178,41 +3196,15 @@ InitInstance(HINSTANCE hInstance)
     /* Assign the ImageList to the List View */
     ListView_SetImageList(hwndListView, hSmall, LVSIL_SMALL);
 
+    /* Now set up the listview with its columns */
     lvc.mask = LVCF_TEXT | LVCF_WIDTH;
     lvc.pszText = szTemp;
-
-    /* Now set up the listview with its columns */
-    lvc.cx = 90;
-    LoadStringW(hInstance, IDS_COLUMNTYPE, szTemp, _countof(szTemp));
-    ListView_InsertColumn(hwndListView, 0, &lvc);
-
-    lvc.cx = 70;
-    LoadStringW(hInstance, IDS_COLUMNDATE, szTemp, _countof(szTemp));
-    ListView_InsertColumn(hwndListView, 1, &lvc);
-
-    lvc.cx = 70;
-    LoadStringW(hInstance, IDS_COLUMNTIME, szTemp, _countof(szTemp));
-    ListView_InsertColumn(hwndListView, 2, &lvc);
-
-    lvc.cx = 150;
-    LoadStringW(hInstance, IDS_COLUMNSOURCE, szTemp, _countof(szTemp));
-    ListView_InsertColumn(hwndListView, 3, &lvc);
-
-    lvc.cx = 100;
-    LoadStringW(hInstance, IDS_COLUMNCATEGORY, szTemp, _countof(szTemp));
-    ListView_InsertColumn(hwndListView, 4, &lvc);
-
-    lvc.cx = 60;
-    LoadStringW(hInstance, IDS_COLUMNEVENT, szTemp, _countof(szTemp));
-    ListView_InsertColumn(hwndListView, 5, &lvc);
-
-    lvc.cx = 120;
-    LoadStringW(hInstance, IDS_COLUMNUSER, szTemp, _countof(szTemp));
-    ListView_InsertColumn(hwndListView, 6, &lvc);
-
-    lvc.cx = 100;
-    LoadStringW(hInstance, IDS_COLUMNCOMPUTER, szTemp, _countof(szTemp));
-    ListView_InsertColumn(hwndListView, 7, &lvc);
+    for (iColumn = 0; iColumn < _countof(columnItems); ++iColumn)
+    {
+        lvc.cx = columnItems[iColumn].width;
+        LoadStringW(hInstance, columnItems[iColumn].ids, szTemp, _countof(szTemp));
+        ListView_InsertColumn(hwndListView, iColumn, &lvc);
+    }
 
     /* Initialize the save Dialog */
     ZeroMemory(&sfn, sizeof(sfn));
