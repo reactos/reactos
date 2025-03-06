@@ -1998,10 +1998,11 @@ EnumEventsThread(IN LPVOID lpParameter)
     SYSTEMTIME time;
     LVITEMW lviEventItem;
 
+    EnableEventDetailsButtons(hwndEventDetails, FALSE);
+
     /* Save the current event log filter globally */
     EventLogFilter_AddRef(EventLogFilter);
     ActiveFilter = EventLogFilter;
-
 
     /** HACK!! **/
     EventLog = EventLogFilter->EventLogs[0];
