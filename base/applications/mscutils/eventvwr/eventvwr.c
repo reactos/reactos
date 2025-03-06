@@ -3029,12 +3029,6 @@ FreeLogFilterList(VOID)
     return;
 }
 
-typedef struct _COLUMN_ITEM
-{
-    INT width;
-    INT ids;
-} COLUMN_ITEM;
-
 BOOL
 InitInstance(HINSTANCE hInstance)
 {
