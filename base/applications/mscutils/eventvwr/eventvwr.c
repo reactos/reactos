@@ -3038,7 +3038,11 @@ InitInstance(HINSTANCE hInstance)
     LVCOLUMNW lvc = {0};
     WCHAR szTemp[256];
     INT iColumn;
-    static const COLUMN_ITEM columnItems[] =
+    static const
+    {
+        WORD width;
+        WORD uID;
+    } columnItems[] =
     {
         { 90, IDS_COLUMNTYPE },
         { 70, IDS_COLUMNDATE },
