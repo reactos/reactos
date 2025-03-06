@@ -3208,7 +3208,7 @@ InitInstance(HINSTANCE hInstance)
     ZeroMemory(&sfn, sizeof(sfn));
     ZeroMemory(szSaveFilter, sizeof(szSaveFilter));
 
-    LoadStringW(hInst, IDS_SAVE_FILTER, szSaveFilter, _countof(szSaveFilter));
+    LoadStringW(hInst, IDS_SAVE_FILTER, szSaveFilter, ARRAYSIZE(szSaveFilter));
 
     sfn.lStructSize     = sizeof(sfn);
     sfn.hwndOwner       = hwndMainWindow;
