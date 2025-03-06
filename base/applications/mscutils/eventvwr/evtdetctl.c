@@ -839,6 +839,14 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 {
                     BOOL bPrev = (LOWORD(wParam) == IDC_PREVIOUS);
                     INT iItem, iSel;
+                    WCHAR szText[200];
+
+                    if (ListView_GetItemCount(hwndListView) <= 0)
+                    {
+                        LoadStringW(hInst, IDS_NOMOREITEMS, szText, _countof(szText));
+                        MessageBoxW(hDlg, szText, szTitle, MB_ICONWARNING);
+                        break;
+                    }
 
                     /* Select the previous/next item from our current one */
                     iItem = ListView_GetNextItem(hwndListView,
@@ -846,17 +854,11 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                                                  bPrev ? LVNI_ABOVE : LVNI_BELOW);
                     if (iItem == -1)
                     {
-                        // TODO: Localization.
-                        if (MessageBoxW(hDlg,
-                                        bPrev
-                                            ? L"You have reached the beginning of the event log. Do you want to continue from the end?"
-                                            : L"You have reached the end of the event log. Do you want to continue from the beginning?",
-                                        szTitle,
-                                        MB_YESNO | MB_ICONQUESTION)
-                            == IDNO)
-                        {
+                        LoadStringW(hInst,
+                                    (bPrev ? IDS_CONTFROMEND : IDS_CONTFROMBEGINNING),
+                                    szText, _countof(szText));
+                        if (MessageBoxW(hDlg, szText, szTitle, MB_YESNO | MB_ICONQUESTION) == IDNO)
                             break;
-                        }
 
                         /* Determine from where to restart */
                         if (bPrev)
