@@ -844,7 +844,7 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     if (nItems <= 0)
                     {
                         LoadStringW(hInst, IDS_NOMOREITEMS, szText, _countof(szText));
-                        MessageBoxW(hDlg, szText, szTitle, MB_ICONWARNING);
+                        MessageBoxW(hDlg, szText, szTitle, MB_ICONINFORMATION);
                         break;
                     }
 
