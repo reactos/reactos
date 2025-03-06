@@ -3178,77 +3178,47 @@ InitInstance(HINSTANCE hInstance)
     /* Assign the ImageList to the List View */
     ListView_SetImageList(hwndListView, hSmall, LVSIL_SMALL);
 
-    /* Now set up the listview with its columns */
     lvc.mask = LVCF_TEXT | LVCF_WIDTH;
-    lvc.cx = 90;
-    LoadStringW(hInstance,
-                IDS_COLUMNTYPE,
-                szTemp,
-                ARRAYSIZE(szTemp));
     lvc.pszText = szTemp;
+
+    /* Now set up the listview with its columns */
+    lvc.cx = 90;
+    LoadStringW(hInstance, IDS_COLUMNTYPE, szTemp, _countof(szTemp));
     ListView_InsertColumn(hwndListView, 0, &lvc);
 
     lvc.cx = 70;
-    LoadStringW(hInstance,
-                IDS_COLUMNDATE,
-                szTemp,
-                ARRAYSIZE(szTemp));
-    lvc.pszText = szTemp;
+    LoadStringW(hInstance, IDS_COLUMNDATE, szTemp, _countof(szTemp));
     ListView_InsertColumn(hwndListView, 1, &lvc);
 
     lvc.cx = 70;
-    LoadStringW(hInstance,
-                IDS_COLUMNTIME,
-                szTemp,
-                ARRAYSIZE(szTemp));
-    lvc.pszText = szTemp;
+    LoadStringW(hInstance, IDS_COLUMNTIME, szTemp, _countof(szTemp));
     ListView_InsertColumn(hwndListView, 2, &lvc);
 
     lvc.cx = 150;
-    LoadStringW(hInstance,
-                IDS_COLUMNSOURCE,
-                szTemp,
-                ARRAYSIZE(szTemp));
-    lvc.pszText = szTemp;
+    LoadStringW(hInstance, IDS_COLUMNSOURCE, szTemp, _countof(szTemp));
     ListView_InsertColumn(hwndListView, 3, &lvc);
 
     lvc.cx = 100;
-    LoadStringW(hInstance,
-                IDS_COLUMNCATEGORY,
-                szTemp,
-                ARRAYSIZE(szTemp));
-    lvc.pszText = szTemp;
+    LoadStringW(hInstance, IDS_COLUMNCATEGORY, szTemp, _countof(szTemp));
     ListView_InsertColumn(hwndListView, 4, &lvc);
 
     lvc.cx = 60;
-    LoadStringW(hInstance,
-                IDS_COLUMNEVENT,
-                szTemp,
-                ARRAYSIZE(szTemp));
-    lvc.pszText = szTemp;
+    LoadStringW(hInstance, IDS_COLUMNEVENT, szTemp, _countof(szTemp));
     ListView_InsertColumn(hwndListView, 5, &lvc);
 
     lvc.cx = 120;
-    LoadStringW(hInstance,
-                IDS_COLUMNUSER,
-                szTemp,
-                ARRAYSIZE(szTemp));
-    lvc.pszText = szTemp;
+    LoadStringW(hInstance, IDS_COLUMNUSER, szTemp, _countof(szTemp));
     ListView_InsertColumn(hwndListView, 6, &lvc);
 
     lvc.cx = 100;
-    LoadStringW(hInstance,
-                IDS_COLUMNCOMPUTER,
-                szTemp,
-                ARRAYSIZE(szTemp));
-    lvc.pszText = szTemp;
+    LoadStringW(hInstance, IDS_COLUMNCOMPUTER, szTemp, _countof(szTemp));
     ListView_InsertColumn(hwndListView, 7, &lvc);
 
     /* Initialize the save Dialog */
     ZeroMemory(&sfn, sizeof(sfn));
     ZeroMemory(szSaveFilter, sizeof(szSaveFilter));
 
-    LoadStringW(hInst, IDS_SAVE_FILTER, szSaveFilter, ARRAYSIZE(szSaveFilter));
+    LoadStringW(hInst, IDS_SAVE_FILTER, szSaveFilter, _countof(szSaveFilter));
 
     sfn.lStructSize     = sizeof(sfn);
     sfn.hwndOwner       = hwndMainWindow;
