@@ -3200,7 +3200,7 @@ InitInstance(HINSTANCE hInstance)
     for (iColumn = 0; iColumn < ARRAYSIZE(columnItems); ++iColumn)
     {
         lvc.cx = columnItems[iColumn].width;
-        LoadStringW(hInstance, columnItems[iColumn].uID, szTemp, _countof(szTemp));
+        LoadStringW(hInstance, columnItems[iColumn].uID, szTemp, ARRAYSIZE(szTemp));
         ListView_InsertColumn(hwndListView, iColumn, &lvc);
     }
 
