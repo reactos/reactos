@@ -7,8 +7,7 @@
  *              Copyright 2016-2022 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
-#ifndef _EVTDETCTL_H_
-#define _EVTDETCTL_H_
+#pragma once
 
 /* Optional structure passed by pointer
  * as LPARAM to CreateEventDetailsCtrl() */
@@ -26,4 +25,4 @@ CreateEventDetailsCtrl(HINSTANCE hInstance,
                        HWND hParentWnd,
                        LPARAM lParam);
 
-#endif /* _EVTDETCTL_H_ */
+VOID EnableEventDetailsButtons(HWND hWnd, BOOL bEnable);

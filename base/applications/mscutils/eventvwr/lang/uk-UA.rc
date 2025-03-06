@@ -171,7 +171,6 @@ BEGIN
     IDS_EVENTSTRINGIDNOTFOUND "Опис для Ідентифікатора події ( %lu ) за джерелом ( %s ) не знайдено. Локальний комп'ютер може не мати необхідної інформації в реєстрі чи DLL файлів повідомлень для відображення повідомлень, що надходять від віддаленого комп'ютера.\n\nThe following information is part of the event:\n\n"
     IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
     IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
-    IDS_NOITEMS "No items."
 END
 
 STRINGTABLE

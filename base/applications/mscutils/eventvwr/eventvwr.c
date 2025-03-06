@@ -1978,6 +1978,7 @@ EnumEventsThread(IN LPVOID lpParameter)
     BOOL bResult = TRUE; /* Read succeeded */
     HANDLE hProcessHeap = GetProcessHeap();
     PSID pLastSid = NULL;
+    INT nItems;
 
     UINT uStep = 0, uStepAt = 0, uPos = 0;
 
@@ -2263,6 +2264,8 @@ Quit:
     /* All events loaded */
 
 Cleanup:
+    nItems = ListView_GetItemCount(hwndListView);
+    EnableEventDetailsButtons(hwndEventDetails, (nItems > 0));
 
     ShowWindow(hwndStatusProgress, SW_HIDE);
     SendMessageW(hwndListView, LVM_PROGRESS, 0, FALSE);

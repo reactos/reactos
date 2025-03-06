@@ -107,7 +107,6 @@
 #define IDS_RESTOREDEFAULTS             112
 #define IDS_CONTFROMBEGINNING           113
 #define IDS_CONTFROMEND                 114
-#define IDS_NOITEMS                 115
 
 #define IDS_USAGE                       120
 #define IDS_EVENTLOGFILE                121

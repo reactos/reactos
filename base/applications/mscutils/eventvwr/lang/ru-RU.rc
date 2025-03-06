@@ -173,7 +173,6 @@ BEGIN
     IDS_EVENTSTRINGIDNOTFOUND "Не найдено описание для события с кодом ( %lu ) в источнике ( %s ). Возможно, на локальном компьютере нет нужных данных в реестре или файлов DLL сообщений для отображения сообщений удаленного компьютера.\n\nСледующая информация часть события:\n\n"
     IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
     IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
-    IDS_NOITEMS "No items."
 END
 
 STRINGTABLE

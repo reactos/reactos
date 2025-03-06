@@ -842,11 +842,7 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     WCHAR szText[200];
 
                     if (nItems <= 0) /* No items? */
-                    {
-                        LoadStringW(hInst, IDS_NOITEMS, szText, _countof(szText));
-                        MessageBoxW(hDlg, szText, szTitle, MB_ICONINFORMATION);
                         break;
-                    }
 
                     /* Select the previous/next item from our current one */
                     iItem = ListView_GetNextItem(hwndListView, -1, LVNI_ALL | LVNI_SELECTED);
@@ -957,4 +953,12 @@ CreateEventDetailsCtrl(HINSTANCE hInstance,
     return CreateDialogParamW(hInstance,
                               MAKEINTRESOURCEW(IDD_EVENTDETAILS_CTRL),
                               hParentWnd, EventDetailsCtrl, lParam);
+}
+
+VOID
+EnableEventDetailsButtons(HWND hWnd, BOOL bEnable)
+{
+    EnableDlgItem(hWnd, IDC_PREVIOUS, bEnable);
+    EnableDlgItem(hWnd, IDC_NEXT, bEnable);
+    EnableDlgItem(hWnd, IDC_COPY, bEnable);
 }
