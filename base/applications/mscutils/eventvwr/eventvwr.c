@@ -3197,7 +3197,7 @@ InitInstance(HINSTANCE hInstance)
     /* Now set up the listview with its columns */
     lvc.mask = LVCF_TEXT | LVCF_WIDTH;
     lvc.pszText = szTemp;
-    for (iColumn = 0; iColumn < _countof(columnItems); ++iColumn)
+    for (iColumn = 0; iColumn < ARRAYSIZE(columnItems); ++iColumn)
     {
         lvc.cx = columnItems[iColumn].width;
         LoadStringW(hInstance, columnItems[iColumn].uID, szTemp, _countof(szTemp));
