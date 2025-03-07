@@ -792,6 +792,11 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 pData->EventLogFilter = DetailInfo->EventLogFilter;
                 pData->iEventItem     = DetailInfo->iEventItem;
             }
+            else
+            {
+                pData->iEventItem = -1;
+            }
+
             pData->bDisplayWords  = FALSE;
             pData->hMonospaceFont = CreateMonospaceFont();
 
