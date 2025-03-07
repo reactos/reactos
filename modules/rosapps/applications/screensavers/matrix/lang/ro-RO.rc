@@ -6,13 +6,9 @@
  *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
-#include "resource.h"
-
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
-IDD_CONFIG DIALOGEX DISCARDABLE  0, 0, 340, 183
+IDD_CONFIG DIALOGEX 0, 0, 340, 183
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Setări pentru economizorul de ecran Matrix"
 FONT 8, "MS Shell Dlg"
@@ -57,7 +53,7 @@ BEGIN
                     158,75,18
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION         "Economizorul de ecran Matrix"
 END

@@ -115,6 +115,8 @@ BEGIN
     IDS_SELECT_NO_DISK "\nThere is no disk currently selected.\nPlease select a disk and try again.\n\n"
     IDS_SELECT_DISK "\nDisk %lu is now the selected disk.\n\n"
     IDS_SELECT_DISK_INVALID "\nInvalid disk.\n\n"
+    IDS_SELECT_DISK_ENUM_NO_START "\nNo disk enumeration started yet.\n\nNo disk is currently selected.\n\n"
+    IDS_SELECT_DISK_ENUM_FINISHED "\nThe last disk has been enumerated.\n\nNo disk is currently selected.\n\n"
     IDS_SELECT_NO_PARTITION "\nThere is no partition currently selected.\nPlease select a disk and try again.\n\n"
     IDS_SELECT_PARTITION "\nPartition %lu is now the selected partition.\n\n"
     IDS_SELECT_PARTITION_NO_DISK "\nThere is no disk for selecting a partition.\nPlease select a disk and try again.\n\n"

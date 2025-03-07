@@ -13,7 +13,7 @@
  *              (creating a native EFI loader for Windows).
  *
  *              This article was very handy during development:
- *              http://msdn.microsoft.com/msdnmag/issues/02/03/PE2/
+ *              https://web.archive.org/web/20131202091645/http://msdn.microsoft.com/en-us/magazine/cc301808.aspx
  */
 
 #pragma once
@@ -27,17 +27,27 @@ typedef VOID
 extern PELDR_IMPORTDLL_LOAD_CALLBACK PeLdrImportDllLoadCallback;
 
 BOOLEAN
+PeLdrInitializeModuleList(VOID);
+
+BOOLEAN
 PeLdrLoadImage(
     _In_ PCSTR FilePath,
     _In_ TYPE_OF_MEMORY MemoryType,
     _Out_ PVOID* ImageBasePA);
 
 BOOLEAN
+PeLdrLoadImageEx(
+    _In_ PCSTR FilePath,
+    _In_ TYPE_OF_MEMORY MemoryType,
+    _Out_ PVOID* ImageBasePA,
+    _In_ BOOLEAN KernelMapping);
+
+BOOLEAN
 PeLdrAllocateDataTableEntry(
     IN OUT PLIST_ENTRY ModuleListHead,
     IN PCCH BaseDllName,
     IN PCCH FullDllName,
-    IN PVOID BasePA,
+    IN PVOID BaseVA,
     OUT PLDR_DATA_TABLE_ENTRY *NewEntry);
 
 VOID
@@ -53,10 +63,17 @@ PeLdrScanImportDescriptorTable(
 
 BOOLEAN
 PeLdrCheckForLoadedDll(
-    IN OUT PLIST_ENTRY ModuleListHead,
-    IN PCH DllName,
-    OUT PLDR_DATA_TABLE_ENTRY *LoadedEntry);
+    _Inout_ PLIST_ENTRY ModuleListHead,
+    _In_ PCSTR DllName,
+    _Out_ PLDR_DATA_TABLE_ENTRY* LoadedEntry);
 
 PVOID
 PeLdrInitSecurityCookie(
     _In_ PLDR_DATA_TABLE_ENTRY LdrEntry);
+
+BOOLEAN
+PeLdrLoadBootImage(
+    _In_ PCSTR FilePath,
+    _In_ PCSTR BaseDllName,
+    _Out_ PVOID* ImageBase,
+    _Out_ PLDR_DATA_TABLE_ENTRY* DataTableEntry);

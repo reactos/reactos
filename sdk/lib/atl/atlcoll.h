@@ -480,6 +480,9 @@ public:
     POSITION AddHead(INARGTYPE element);
     POSITION AddTail(INARGTYPE element);
 
+    void AddHeadList(_In_ const CAtlList<E, ETraits>* plNew);
+    void AddTailList(_In_ const CAtlList<E, ETraits>* plNew);
+
     E RemoveHead();
     E RemoveTail();
 
@@ -637,6 +640,24 @@ POSITION CAtlList<E, ETraits>::AddTail(INARGTYPE element)
     m_TailNode = Node;
 
     return (POSITION)Node;
+}
+
+template <typename E, class ETraits>
+void CAtlList<E, ETraits>::AddHeadList(_In_ const CAtlList<E, ETraits>* plNew)
+{
+    ATLASSERT(plNew != NULL && plNew != this);
+    POSITION pos = plNew->GetTailPosition();
+    while (pos)
+        AddHead(plNew->GetPrev(pos));
+}
+
+template <typename E, class ETraits>
+void CAtlList<E, ETraits>::AddTailList(_In_ const CAtlList<E, ETraits>* plNew)
+{
+    ATLASSERT(plNew != NULL && plNew != this);
+    POSITION pos = plNew->GetHeadPosition();
+    while (pos)
+        AddTail(plNew->GetNext(pos));
 }
 
 template<typename E, class ETraits>

@@ -4,12 +4,12 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-IDI_ICON  ICON  DISCARDABLE  "res/icon_circles.ico"
+IDI_ICON ICON "res/icon_circles.ico"
 
 #define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION    "Circles ScreenSaver\0"
-#define REACTOS_STR_INTERNAL_NAME       "circles\0"
-#define REACTOS_STR_ORIGINAL_FILENAME   "circles.scr\0"
+#define REACTOS_STR_FILE_DESCRIPTION    "Circles ScreenSaver"
+#define REACTOS_STR_INTERNAL_NAME       "circles"
+#define REACTOS_STR_ORIGINAL_FILENAME   "circles.scr"
 
 #include <reactos/version.rc>
 

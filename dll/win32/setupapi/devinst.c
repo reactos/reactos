@@ -6150,3 +6150,163 @@ SetupDiRestartDevices(
 
     return TRUE;
 }
+
+/***********************************************************************
+ *		SetupDiGetCustomDevicePropertyA (SETUPAPI.@)
+ */
+BOOL
+WINAPI
+SetupDiGetCustomDevicePropertyA(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData,
+    IN PCSTR CustomPropertyName,
+    IN DWORD Flags,
+    OUT PDWORD PropertyRegDataType OPTIONAL,
+    OUT PBYTE PropertyBuffer,
+    IN DWORD PropertyBufferSize,
+    OUT PDWORD RequiredSize OPTIONAL)
+{
+    struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
+    struct DeviceInfo *deviceInfo;
+    DWORD ConfigFlags = 0, PropertySize;
+    CONFIGRET cr;
+
+    TRACE("%s(%p %p %s 0x%lx %p %p %lu %p)\n", __FUNCTION__, DeviceInfoSet, DeviceInfoData,
+        CustomPropertyName, Flags, PropertyRegDataType, PropertyBuffer, PropertyBufferSize, RequiredSize);
+
+    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+    if (set->magic != SETUP_DEVICE_INFO_SET_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+    if (!DeviceInfoData || DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA)
+            || !DeviceInfoData->Reserved)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    if (Flags & ~DICUSTOMDEVPROP_MERGE_MULTISZ)
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return FALSE;
+    }
+
+    deviceInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
+    if (deviceInfo->set != set)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (Flags & DICUSTOMDEVPROP_MERGE_MULTISZ)
+    {
+        ConfigFlags |= CM_CUSTOMDEVPROP_MERGE_MULTISZ;
+    }
+
+    PropertySize = PropertyBufferSize;
+    cr = CM_Get_DevInst_Custom_Property_ExA(deviceInfo->dnDevInst,
+                                            CustomPropertyName,
+                                            PropertyRegDataType,
+                                            PropertyBuffer,
+                                            &PropertySize,
+                                            ConfigFlags,
+                                            set->hMachine);
+    if ((cr == CR_SUCCESS) || (cr == CR_BUFFER_SMALL))
+    {
+        if (RequiredSize)
+            *RequiredSize = PropertySize;
+    }
+
+    if (cr != CR_SUCCESS)
+    {
+        SetLastError(GetErrorCodeFromCrCode(cr));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/***********************************************************************
+ *		SetupDiGetCustomDevicePropertyW (SETUPAPI.@)
+ */
+BOOL
+WINAPI
+SetupDiGetCustomDevicePropertyW(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData,
+    IN PCWSTR CustomPropertyName,
+    IN DWORD Flags,
+    OUT PDWORD PropertyRegDataType OPTIONAL,
+    OUT PBYTE PropertyBuffer,
+    IN DWORD PropertyBufferSize,
+    OUT PDWORD RequiredSize OPTIONAL)
+{
+    struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
+    struct DeviceInfo *deviceInfo;
+    DWORD ConfigFlags = 0, PropertySize;
+    CONFIGRET cr;
+
+    TRACE("%s(%p %p %s 0x%lx %p %p %lu %p)\n", __FUNCTION__, DeviceInfoSet, DeviceInfoData,
+        debugstr_w(CustomPropertyName), Flags, PropertyRegDataType, PropertyBuffer, PropertyBufferSize, RequiredSize);
+
+    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+    if (set->magic != SETUP_DEVICE_INFO_SET_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+    if (!DeviceInfoData || DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA)
+            || !DeviceInfoData->Reserved)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    if (Flags & ~DICUSTOMDEVPROP_MERGE_MULTISZ)
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return FALSE;
+    }
+
+    deviceInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
+    if (deviceInfo->set != set)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (Flags & DICUSTOMDEVPROP_MERGE_MULTISZ)
+    {
+        ConfigFlags |= CM_CUSTOMDEVPROP_MERGE_MULTISZ;
+    }
+
+    PropertySize = PropertyBufferSize;
+    cr = CM_Get_DevInst_Custom_Property_ExW(deviceInfo->dnDevInst,
+                                            CustomPropertyName,
+                                            PropertyRegDataType,
+                                            PropertyBuffer,
+                                            &PropertySize,
+                                            ConfigFlags,
+                                            set->hMachine);
+    if ((cr == CR_SUCCESS) || (cr == CR_BUFFER_SMALL))
+    {
+        if (RequiredSize)
+            *RequiredSize = PropertySize;
+    }
+
+    if (cr != CR_SUCCESS)
+    {
+        SetLastError(GetErrorCodeFromCrCode(cr));
+        return FALSE;
+    }
+
+    return TRUE;
+}

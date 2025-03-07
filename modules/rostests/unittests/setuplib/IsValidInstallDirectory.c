@@ -7,24 +7,8 @@
 
 #include "precomp.h"
 
-//
-// FIXME: Temporary symbols defined to make linking work.
-// They will be defined to something once INF file testing is implemented.
-//
-pSpInfCloseInfFile  SpInfCloseInfFile  = NULL;
-pSpInfFindFirstLine SpInfFindFirstLine = NULL;
-pSpInfFindNextLine  SpInfFindNextLine  = NULL;
-pSpInfGetFieldCount SpInfGetFieldCount = NULL;
-pSpInfGetBinaryField  SpInfGetBinaryField  = NULL;
-pSpInfGetIntField     SpInfGetIntField     = NULL;
-pSpInfGetMultiSzField SpInfGetMultiSzField = NULL;
-pSpInfGetStringField  SpInfGetStringField  = NULL;
-pSpInfGetField    SpInfGetField    = NULL;
-pSpInfOpenInfFile SpInfOpenInfFile = NULL;
-
-BOOLEAN IsUnattendedSetup = FALSE;
-HANDLE ProcessHeap;
-
+// SPFILE_EXPORTS SpFileExports = {NULL};
+// SPINF_EXPORTS SpInfExports = {NULL};
 
 START_TEST(IsValidInstallDirectory)
 {
@@ -92,8 +76,6 @@ START_TEST(IsValidInstallDirectory)
     };
 
 #define BOOL_TO_STR(b) ((b) ? "TRUE" : "FALSE")
-
-    ProcessHeap = GetProcessHeap();
 
     UINT i;
     for (i = 0; i < _countof(tests); ++i)

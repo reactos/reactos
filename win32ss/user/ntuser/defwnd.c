@@ -495,6 +495,58 @@ DefWndGetIcon(PWND pWnd, WPARAM wParam, LPARAM lParam)
     return (LRESULT)hIconRet;
 }
 
+PWND FASTCALL
+DWP_GetEnabledPopup(PWND pWnd)
+{
+    PWND pwndNode1;
+    PTHREADINFO pti = pWnd->head.pti, ptiNode;
+    BOOL bFoundNullNode = FALSE;
+
+    for (pwndNode1 = pWnd->spwndNext; pwndNode1 != pWnd; )
+    {
+        if (!pwndNode1) /* NULL detected? */
+        {
+            if (bFoundNullNode)
+                return NULL;
+            bFoundNullNode = TRUE;
+            /* Retry with parent's first child (once only) */
+            pwndNode1 = pWnd->spwndParent->spwndChild;
+            continue;
+        }
+
+        /*
+         * 1. We want to detect the window that owns the same input target of pWnd.
+         * 2. For non-16-bit apps, we need to check the two threads' input queues to
+         *    see whether they are the same, while for 16-bit apps it's sufficient to
+         *    only check the thread info pointers themselves (ptiNode and pti).
+         * See also:
+         *    https://devblogs.microsoft.com/oldnewthing/20060221-09/?p=32203
+         *    https://github.com/reactos/reactos/pull/7700#discussion_r1939435931
+         */
+        ptiNode = pwndNode1->head.pti;
+        if ((!(pti->TIF_flags & TIF_16BIT) && ptiNode->MessageQueue == pti->MessageQueue) ||
+            ((pti->TIF_flags & TIF_16BIT) && ptiNode == pti))
+        {
+            DWORD style = pwndNode1->style;
+            if ((style & WS_VISIBLE) && !(style & WS_DISABLED)) /* Visible and enabled? */
+            {
+                /* Does pwndNode1 have a pWnd as an ancestor? */
+                PWND pwndNode2;
+                for (pwndNode2 = pwndNode1->spwndOwner; pwndNode2;
+                     pwndNode2 = pwndNode2->spwndOwner)
+                {
+                    if (pwndNode2 == pWnd)
+                        return pwndNode1;
+                }
+            }
+        }
+
+        pwndNode1 = pwndNode1->spwndNext;
+    }
+
+    return NULL;
+}
+
 VOID FASTCALL
 DefWndScreenshot(PWND pWnd)
 {

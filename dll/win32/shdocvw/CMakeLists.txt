@@ -24,7 +24,7 @@ target_include_directories(shdocvw BEFORE PRIVATE
 )
 
 set_module_type(shdocvw win32dll UNICODE)
-target_link_libraries(shdocvw uuid wine)
+target_link_libraries(shdocvw cpprt uuid wine)
 add_delay_importlibs(shdocvw shell32 user32 gdi32 ole32 oleaut32 ieframe)
 add_importlibs(shdocvw shlwapi advapi32 msvcrt comctl32 kernel32 ntdll)
 add_dependencies(shdocvw stdole2)
@@ -37,7 +37,8 @@ add_library(shdocvw_sublib OBJECT
     CNSCBand.cpp
     mrulist.cpp
     objects.cpp
-    utility.cpp)
+    utility.cpp
+    winlist.cpp)
 target_link_libraries(shdocvw_sublib PRIVATE atl_classes)
 target_compile_definitions(shdocvw_sublib PRIVATE $<TARGET_PROPERTY:shdocvw,COMPILE_DEFINITIONS>)
 target_compile_options(shdocvw_sublib PRIVATE $<TARGET_PROPERTY:shdocvw,COMPILE_OPTIONS>)

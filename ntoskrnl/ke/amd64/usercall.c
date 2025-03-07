@@ -16,8 +16,8 @@
  *
  *  \brief
  *      Prepares the current trap frame (which must have come from user mode)
- *      with the ntdll.KiUserApcDispatcher entrypoint, copying a CONTEXT
- *      record with the context from the old trap frame to the threads user
+ *      with the ntdll.KiUserApcDispatcher entrypoint, copying a UAPC_FRAME
+ *      structure with the context from the old trap frame to the threads user
  *      mode stack.
  *
  *  \param ExceptionFrame - Pointer to the Exception Frame
@@ -53,20 +53,22 @@ KiInitializeUserApc(
     _In_ PVOID SystemArgument1,
     _In_ PVOID SystemArgument2)
 {
+    PUAPC_FRAME ApcFrame;
     PCONTEXT Context;
     EXCEPTION_RECORD ExceptionRecord;
 
     /* Sanity check, that the trap frame is from user mode */
     ASSERT((TrapFrame->SegCs & MODE_MASK) != KernelMode);
 
-    /* Align the user tack to 16 bytes and allocate space for a CONTEXT structure */
-    Context = (PCONTEXT)ALIGN_DOWN_POINTER_BY(TrapFrame->Rsp, 16) - 1;
+    /* Allocate a 16 byte aligned UAPC_FRAME structure on the user stack */
+    ApcFrame = (PUAPC_FRAME)ALIGN_DOWN_POINTER_BY(TrapFrame->Rsp - sizeof(*ApcFrame), 16);
+    Context = &ApcFrame->Context;
 
     /* Protect with SEH */
     _SEH2_TRY
     {
-        /* Probe the context */
-        ProbeForWrite(Context, sizeof(CONTEXT), 16);
+        /* Probe the user mode APC frame */
+        ProbeForWrite(ApcFrame, sizeof(*ApcFrame), 16);
 
         /* Convert the current trap frame to a context */
         Context->ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
@@ -77,6 +79,10 @@ KiInitializeUserApc(
         Context->P2Home = (ULONG64)SystemArgument1;
         Context->P3Home = (ULONG64)SystemArgument2;
         Context->P4Home = (ULONG64)NormalRoutine;
+
+        /* Set up the machine frame for unwinding */
+        ApcFrame->MachineFrame.Rip = TrapFrame->Rip;
+        ApcFrame->MachineFrame.Rsp = TrapFrame->Rsp;
     }
     _SEH2_EXCEPT(ExceptionRecord = *_SEH2_GetExceptionInformation()->ExceptionRecord, EXCEPTION_EXECUTE_HANDLER)
     {
@@ -318,9 +324,6 @@ KeUserModeCallback(
 
     /* Restore stack and return */
     *UserStackPointer = OldStack;
-#ifdef _M_AMD64 // could probably  move the update to TrapFrame->Rsp from the C handler to the asm code
-    __writegsqword(FIELD_OFFSET(KIPCR, UserRsp), OldStack);
-#endif
     return CallbackStatus;
 }
 

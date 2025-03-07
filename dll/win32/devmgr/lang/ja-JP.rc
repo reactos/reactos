@@ -285,14 +285,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "ReactOS デバイス マネージャ"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
   IDS_CONFIRM_DISABLE       "このデバイスを無効にすると、機能が止まります。\nこれを本当に無効にしたいですか？"
   IDS_CONFIRM_UNINSTALL     "警告: あなたのシステムからこのデバイスをアンインストールしようとしています。\n続行したいですか？"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "ドライバ ソフトウェアを更新..."
   IDS_MENU_ENABLE           "有効にする"
@@ -303,7 +304,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "プロパティ"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "プロパティ"
   IDS_TOOLTIP_SCAN          "ハードウェアの変更をスキャン"
@@ -314,7 +315,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " 現在の選択に対するプロパティ ダイアログを開きます。"

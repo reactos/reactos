@@ -141,7 +141,7 @@ void FATDirectory::read_directory(int scan_flags)
 			s = (const char*)p->Ent->B;	// no change of the pointer, just to avoid overung warnings in code checkers
 
 			 // read long file name
-			TCHAR lname[] = {s[1], s[3], s[5], s[7], s[9], s[14], s[16], s[18], s[20], s[22], s[24], s[28], s[30]};
+			char lname[] = {s[1], s[3], s[5], s[7], s[9], s[14], s[16], s[18], s[20], s[22], s[24], s[28], s[30]};
 
 			long_name = String(lname, 13) + long_name;
 		}
@@ -397,7 +397,7 @@ bool FATDirectory::read_dir()
 				}
 			}
 
-		buf->dat[0] = 0;	 // Endekennzeichen für Rekurs setzen
+		buf->dat[0] = 0;	 // Endekennzeichen fÃ¼r Rekurs setzen
 	}
 
 	return true;

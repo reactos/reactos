@@ -9,6 +9,8 @@
 #include <kmt_test.h>
 
 static BOOLEAN g_IsPae;
+static ULONG g_OsVersion;
+static BOOLEAN g_IsReactOS;
 
 #ifdef _M_IX86
 
@@ -76,7 +78,7 @@ ValidateMapping(
     BOOLEAN Valid = TRUE;
 #if defined(_M_IX86) || defined(_M_AMD64)
     PUCHAR CurrentAddress;
-    ULONGLONG PteValue;
+    ULONGLONG PteValue, ExpectedValue;
     ULONG i;
 
     for (i = 0; i < ValidPtes; i++)
@@ -110,10 +112,26 @@ ValidateMapping(
                CurrentAddress, PteValue, PoolTag & ~1);
     CurrentAddress = (PUCHAR)BaseAddress - 2 * PAGE_SIZE;
     PteValue = GET_PTE_VALUE(CurrentAddress);
+
+    if (g_IsReactOS || g_OsVersion >= 0x0600)
+    {
+        /* On ReactOS and on Vista+ the size is stored in
+         * the NextEntry field of a MMPTE_LIST structure */
+#ifdef _M_IX86
+        ExpectedValue = (TotalPtes + 2) << 12;
+#elif defined(_M_AMD64)
+        ExpectedValue = ((ULONG64)TotalPtes + 2) << 32;
+#endif
+    }
+    else
+    {
+        /* On Windows 2003 the size is shifted by 1 bit only */
+        ExpectedValue = (TotalPtes + 2) * 2;
+    }
     Valid = Valid &&
-            ok(PteValue == (TotalPtes + 2) * 2,
+            ok(PteValue == ExpectedValue,
                "PTE for %p contains 0x%I64x, expected %x\n",
-               CurrentAddress, PteValue, (TotalPtes + 2) * 2);
+               CurrentAddress, PteValue, ExpectedValue);
 #endif
 
     return Valid;
@@ -281,6 +299,9 @@ START_TEST(MmReservedMapping)
     PVOID Mapping;
 
     g_IsPae = ExIsProcessorFeaturePresent(PF_PAE_ENABLED);
+    g_OsVersion = SharedUserData->NtMajorVersion << 8 | SharedUserData->NtMinorVersion;
+    g_IsReactOS = *(PULONG)(KI_USER_SHARED_DATA + PAGE_SIZE - sizeof(ULONG)) == 0x8eac705;
+    ok(g_IsReactOS == 1, "Not reactos\n");
 
     pMmAllocatePagesForMdlEx = KmtGetSystemRoutineAddress(L"MmAllocatePagesForMdlEx");
 

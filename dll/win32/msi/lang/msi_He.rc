@@ -34,6 +34,14 @@ STRINGTABLE
     13 "כונן רשת עבור התכונה חסר"
     14 "מהתקן מ:"
     15 "בחר איזו תיקיה מכילה את %s"
+#ifdef __REACTOS__
+    34 "ReactOS Installer Package"
+    35 "ReactOS Installer Patch"
+    36 "&Install"
+    37 "Re&pair"
+    38 "&Uninstall"
+    39 "&Apply"
+#endif
     100 "New Folder"
 }
 

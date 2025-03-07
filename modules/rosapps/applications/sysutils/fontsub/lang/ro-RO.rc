@@ -1,4 +1,10 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     ReactOS Font Substitute Editor
+ * LICENSE:     CC0-1.0 (https://spdx.org/licenses/CC0-1.0)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2024 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
@@ -9,10 +15,10 @@ BEGIN
         MENUITEM "I&mportare din…\tCtrl+O", ID_IMPORT
         MENUITEM "E&xportare în…\tCtrl+S", ID_EXPORT
         MENUITEM SEPARATOR
-        MENUITEM "&Reîncarcă din registru\tCtrl+L", ID_RELOAD
-        MENUITEM "&Actualizează registru\tCtrl+U", ID_UPDATE_REGISTRY
+        MENUITEM "&Reîncărcare din registru\tCtrl+L", ID_RELOAD
+        MENUITEM "&Actualizare a registrului\tCtrl+U", ID_UPDATE_REGISTRY
         MENUITEM SEPARATOR
-        MENUITEM "&Deschide în Regedit", ID_OPEN_REGKEY
+        MENUITEM "&Deschidere în Edistorul de registru", ID_OPEN_REGKEY
         MENUITEM SEPARATOR
         MENUITEM "I&eșire\tAlt+F4", ID_EXIT
     END
@@ -20,9 +26,9 @@ BEGIN
     BEGIN
         MENUITEM "Element &nou\tCtrl+N", ID_NEW
         MENUITEM SEPARATOR
-        MENUITEM "E&ditează element\tEnter", ID_EDIT
+        MENUITEM "E&ditare a elementului\tEnter", ID_EDIT
         MENUITEM SEPARATOR
-        MENUITEM "Ște&rge element\tDel", ID_DELETE
+        MENUITEM "Ște&rgere a elementului\tDel", ID_DELETE
     END
     POPUP "&Ajutor"
     BEGIN
@@ -36,60 +42,60 @@ BEGIN
     BEGIN
         MENUITEM "Element &nou\tCtrl+N", ID_NEW
         MENUITEM SEPARATOR
-        MENUITEM "E&ditează element\tEnter", ID_EDIT
+        MENUITEM "E&ditare a elementului\tEnter", ID_EDIT
         MENUITEM SEPARATOR
-        MENUITEM "Ște&rge element\tDel", ID_DELETE
+        MENUITEM "Ște&rgere a elementului\tDel", ID_DELETE
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_TITLE,          "Editor de substituție font"
-    IDS_FONTNAME,       "Nume font"
+    IDS_TITLE,          "Editor de substituție a fonturilor"
+    IDS_FONTNAME,       "Numele fontului"
     IDS_SUBSTITUTE,     "Substitut"
-    IDS_ENTERNAME,      "(introduceți un nume de font…)"
+    IDS_ENTERNAME,      "(Introduceți un nume pentru font…)"
     IDS_IMPORT,         "Importare"
     IDS_EXPORT,         "Exportare"
-    IDS_CANTIMPORT,     "Eșec la importare."
-    IDS_CANTEXPORT,     "Eșec la exportare."
+    IDS_CANTIMPORT,     "Imposibil de importat."
+    IDS_CANTEXPORT,     "Imposibil de exportat."
     IDS_INPFILTER,      "Fișiere de registru (*.reg)|*.reg|Orice fișier (*.*)|*.*|"
     IDS_OUTFILTER,      "Fișiere de registru (*.reg)|*.reg|"
-    IDS_QUERYUPDATE,    "Informația de substituție a fost alterată. Doriți actualizarea registrului?"
+    IDS_QUERYUPDATE,    "Informațiile pentru înlocuitori au fost modificate. Actualizați registrul acum?"
     IDS_ALREADYEXISTS,  "Acest nume există deja."
-    IDS_ENTERNAME2,     "Introduceți un nume de font."
-    IDS_QUERYDELETE,    "Confirmați ștergerea acestui element?"
-    IDS_CANTOPENKEY,    "Eșec la deschiderea cheii de registru."
+    IDS_ENTERNAME2,     "Introduceți un nume pentru font."
+    IDS_QUERYDELETE,    "Chiar doriți să ștergeți acest articol?"
+    IDS_CANTOPENKEY,    "Imposibil de deschis cheia de registru."
     IDS_REBOOTNOW,      "Registrul a fost actualizat. Reporniți sistemul?"
-    IDS_ABOUT,          "FontSub (Editor de substituție font) Versiune 0.5\r\nde Katayama Hirofumi MZ și Echipa ReactOS\r\n\r\nAcost program a fost publicat sub licența CC0 1.0."
+    IDS_ABOUT,          "FontSub (Editor pentru substitutul fontului) Versiunea 0.5\r\nde Katayama Hirofumi MZ și Echipa ReactOS\r\n\r\nAcest software a fost publicat sub licența CC0 1.0."
 END
 
 IDD_ADD DIALOGEX 0, 0, 315, 65
 STYLE DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
-CAPTION "Adăugare element de substituție"
+CAPTION "Adăugare a unui element de substituție"
 FONT 10, "MS Shell Dlg"
 BEGIN
-    CONTROL "N&ume de font:", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 5, 55, 15
+    CONTROL "&Numele fontului:", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 5, 55, 15
     CONTROL "", cmb1, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 70, 6, 120, 120
     CONTROL "", cmb3, "ComboBoxEx32", CBS_DROPDOWNLIST | WS_HSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 195, 6, 115, 120
     CONTROL "Su&bstitut:", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 25, 55, 15
     CONTROL "", cmb2, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 70, 26, 120, 120
     CONTROL "", cmb4, "ComboBoxEx32", CBS_DROPDOWNLIST | WS_HSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 195, 26, 115, 120
-    CONTROL "Con&firmă", IDOK, "BUTTON", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 175, 45, 60, 14
-    CONTROL "A&nulează", IDCANCEL, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 240, 45, 60, 14
+    CONTROL "OK", IDOK, "BUTTON", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 175, 45, 60, 14
+    CONTROL "Revocare", IDCANCEL, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 240, 45, 60, 14
 END
 
 IDD_EDIT DIALOGEX 0, 0, 315, 65
 STYLE DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
-CAPTION "Editare element de substituție"
+CAPTION "Editare a elementului de substituție"
 FONT 10, "MS Shell Dlg"
 BEGIN
-    CONTROL "N&ume de font:", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 5, 55, 15
+    CONTROL "&Numele fontului:", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 5, 55, 15
     CONTROL "", edt1, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_BORDER | WS_TABSTOP, 70, 6, 120, 14
     CONTROL "", cmb3, "ComboBoxEx32", CBS_DROPDOWNLIST | WS_HSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 195, 6, 115, 120
     CONTROL "Su&bstitut:", -1, "STATIC", SS_RIGHT | SS_CENTERIMAGE | WS_CHILD | WS_VISIBLE | WS_GROUP, 5, 25, 55, 15
     CONTROL "", cmb2, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 70, 26, 120, 120
     CONTROL "", cmb4, "ComboBoxEx32", CBS_DROPDOWNLIST | WS_HSCROLL | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 195, 26, 115, 120
-    CONTROL "Con&firmă", IDOK, "BUTTON", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 175, 45, 60, 14
-    CONTROL "A&nulează", IDCANCEL, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 240, 45, 60, 14
-    CONTROL "&Elimină", psh1, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 45, 60, 14
+    CONTROL "OK", IDOK, "BUTTON", BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 175, 45, 60, 14
+    CONTROL "Revocare", IDCANCEL, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 240, 45, 60, 14
+    CONTROL "&Eliminare", psh1, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 45, 60, 14
 END

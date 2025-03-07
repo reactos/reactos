@@ -55,105 +55,105 @@ ReadRegistryEntries(
 	Parameters[0].Flags = RTL_QUERY_REGISTRY_SUBKEY;
 	Parameters[0].Name = L"Parameters";
 
-	Parameters[1].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[1].Name = L"KeyboardDataQueueSize";
 	Parameters[1].EntryContext = &Settings->KeyboardDataQueueSize;
 	Parameters[1].DefaultType = REG_DWORD;
 	Parameters[1].DefaultData = &DefaultKeyboardDataQueueSize;
 	Parameters[1].DefaultLength = sizeof(ULONG);
 
-	Parameters[2].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[2].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[2].Name = L"KeyboardDeviceBaseName";
 	Parameters[2].EntryContext = &Settings->KeyboardDeviceBaseName;
 	Parameters[2].DefaultType = REG_SZ;
 	Parameters[2].DefaultData = (PVOID)DefaultKeyboardDeviceBaseName;
 	Parameters[2].DefaultLength = 0;
 
-	Parameters[3].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[3].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[3].Name = L"MouseDataQueueSize";
 	Parameters[3].EntryContext = &Settings->MouseDataQueueSize;
 	Parameters[3].DefaultType = REG_DWORD;
 	Parameters[3].DefaultData = &DefaultMouseDataQueueSize;
 	Parameters[3].DefaultLength = sizeof(ULONG);
 
-	Parameters[4].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[4].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[4].Name = L"MouseResolution";
 	Parameters[4].EntryContext = &Settings->MouseResolution;
 	Parameters[4].DefaultType = REG_DWORD;
 	Parameters[4].DefaultData = &DefaultMouseResolution;
 	Parameters[4].DefaultLength = sizeof(ULONG);
 
-	Parameters[5].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[5].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[5].Name = L"MouseSynchIn100ns";
 	Parameters[5].EntryContext = &Settings->MouseSynchIn100ns;
 	Parameters[5].DefaultType = REG_DWORD;
 	Parameters[5].DefaultData = &DefaultMouseSynchIn100ns;
 	Parameters[5].DefaultLength = sizeof(ULONG);
 
-	Parameters[6].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[6].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[6].Name = L"NumberOfButtons";
 	Parameters[6].EntryContext = &Settings->NumberOfButtons;
 	Parameters[6].DefaultType = REG_DWORD;
 	Parameters[6].DefaultData = &DefaultNumberOfButtons;
 	Parameters[6].DefaultLength = sizeof(ULONG);
 
-	Parameters[7].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[7].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[7].Name = L"PointerDeviceBaseName";
 	Parameters[7].EntryContext = &Settings->PointerDeviceBaseName;
 	Parameters[7].DefaultType = REG_SZ;
 	Parameters[7].DefaultData = (PVOID)DefaultPointerDeviceBaseName;
 	Parameters[7].DefaultLength = 0;
 
-	Parameters[8].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[8].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[8].Name = L"PollStatusIterations";
 	Parameters[8].EntryContext = &Settings->PollStatusIterations;
 	Parameters[8].DefaultType = REG_DWORD;
 	Parameters[8].DefaultData = &DefaultPollStatusIterations;
 	Parameters[8].DefaultLength = sizeof(ULONG);
 
-	Parameters[9].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[9].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[9].Name = L"OverrideKeyboardType";
 	Parameters[9].EntryContext = &Settings->OverrideKeyboardType;
 	Parameters[9].DefaultType = REG_DWORD;
 	Parameters[9].DefaultData = &DefaultOverrideKeyboardType;
 	Parameters[9].DefaultLength = sizeof(ULONG);
 
-	Parameters[10].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[10].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[10].Name = L"OverrideKeyboardSubtype";
 	Parameters[10].EntryContext = &Settings->OverrideKeyboardSubtype;
 	Parameters[10].DefaultType = REG_DWORD;
 	Parameters[10].DefaultData = &DefaultOverrideKeyboardSubtype;
 	Parameters[10].DefaultLength = sizeof(ULONG);
 
-	Parameters[11].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[11].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[11].Name = L"PollingIterations";
 	Parameters[11].EntryContext = &Settings->PollingIterations;
 	Parameters[11].DefaultType = REG_DWORD;
 	Parameters[11].DefaultData = &DefaultPollingIterations;
 	Parameters[11].DefaultLength = sizeof(ULONG);
 
-	Parameters[12].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[12].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[12].Name = L"PollingIterationsMaximum";
 	Parameters[12].EntryContext = &Settings->PollingIterationsMaximum;
 	Parameters[12].DefaultType = REG_DWORD;
 	Parameters[12].DefaultData = &DefaultPollingIterationsMaximum;
 	Parameters[12].DefaultLength = sizeof(ULONG);
 
-	Parameters[13].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[13].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[13].Name = L"ResendIterations";
 	Parameters[13].EntryContext = &Settings->ResendIterations;
 	Parameters[13].DefaultType = REG_DWORD;
 	Parameters[13].DefaultData = &DefaultResendIterations;
 	Parameters[13].DefaultLength = sizeof(ULONG);
 
-	Parameters[14].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[14].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[14].Name = L"SampleRate";
 	Parameters[14].EntryContext = &Settings->SampleRate;
 	Parameters[14].DefaultType = REG_DWORD;
 	Parameters[14].DefaultData = &DefaultSampleRate;
 	Parameters[14].DefaultLength = sizeof(ULONG);
 
-	Parameters[15].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[15].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[15].Name = L"CrashOnCtrlScroll";
 	Parameters[15].EntryContext = &Settings->CrashOnCtrlScroll;
 	Parameters[15].DefaultType = REG_DWORD;
@@ -161,7 +161,7 @@ ReadRegistryEntries(
 	Parameters[15].DefaultLength = sizeof(ULONG);
 
 	Status = RtlQueryRegistryValues(
-		RTL_REGISTRY_ABSOLUTE,
+		RTL_REGISTRY_ABSOLUTE | RTL_REGISTRY_OPTIONAL,
 		RegistryPath->Buffer,
 		Parameters,
 		NULL,

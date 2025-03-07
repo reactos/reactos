@@ -53,8 +53,7 @@ BEGIN
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 88, 123, 12, 13
     LTEXT "minute", IDC_MINTEXT, 102, 125, 23, 9
-    CONTROL "Solicită pa&rolă la revenire", IDC_SCREENS_USEPASSCHK, "button",//FIXME: accelerator collision &R
-            BS_AUTOCHECKBOX | WS_TABSTOP, 129, 120, 96, 19
+    AUTOCHECKBOX "Solicită pa&rolă la revenire", IDC_SCREENS_USEPASSCHK, 129, 120, 96, 19//FIXME: accelerator collision &R
     GROUPBOX "Mecanisme de gestiune a consumului", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "Pentru a ajusta setările de alimentare ale monitorului dvs., apăsaţi pe Setări de alimentare.", IDC_STATIC, 16, 161, 146, 27
     PUSHBUTTON "Ali&mentare…", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
@@ -89,7 +88,7 @@ BEGIN
     LTEXT "Dacă selectaţi o temă alta decât ReactOS clasic, va suprascrie următoarele setări, cu excepţia unor programe mai vechi.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
     LTEXT "&Element", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
+             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "&Mărime", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP |
@@ -117,24 +116,17 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Efecte vizuale"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Aplică &efect de tranziţie pentru meniuri şi ponturi:",
-            IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
+    AUTOCHECKBOX "Aplică &efect de tranziţie pentru meniuri şi ponturi:", IDC_EFFAPPEARANCE_ANIMATION, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL "&Rotunjeşte marginile de text folosind metoda:", IDC_EFFAPPEARANCE_SMOOTHING,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
+             CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "&Rotunjeşte marginile de text folosind metoda:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    CONTROL "&Pictograme mari", IDC_EFFAPPEARANCE_LARGEICONS, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
-    CONTROL "Afişează &umbre sub meniuri", IDC_EFFAPPEARANCE_SETDROPSHADOW,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
-    CONTROL "Afişează ferestrele şi în timpul &mişcării lor", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "&Amână sublinierea literelor navigării din tastatură până la apăsarea tastei «Alt»",
-            IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
-    CONTROL "F&oloseşte meniuri plate", IDC_EFFAPPEARANCE_FLATMENUS,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
+             CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "&Pictograme mari", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX "Afişează &umbre sub meniuri", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
+    AUTOCHECKBOX "Afişează ferestrele şi în timpul &mişcării lor", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
+    AUTOCHECKBOX "&Amână sublinierea literelor navigării din tastatură până la apăsarea tastei «Alt»", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19
+    AUTOCHECKBOX "F&oloseşte meniuri plate", IDC_EFFAPPEARANCE_FLATMENUS, 10, 140, 267, 19
     PUSHBUTTON "Anulare", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
 END
@@ -167,14 +159,10 @@ CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Pictograme de desktop", IDC_STATIC, 6, 4, 212, 40
-    CONTROL "&Documente", IDC_ICONS_MYDOCS, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 14, 14, 100, 12
-    CONTROL "Locurile din &reţeaua mea", IDC_ICONS_MYNET, "button",//FIXME: accelerator collision &R
-            BS_AUTOCHECKBOX | WS_TABSTOP, 116, 14, 100, 12
-    CONTROL "&Computerul meu", IDC_ICONS_MYCOMP, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 14, 28, 100, 12
-    CONTROL "&Navigatorul de Internet", IDC_ICONS_INTERNET, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 116, 28, 100, 12
+    AUTOCHECKBOX "&Documente", IDC_ICONS_MYDOCS, 14, 14, 100, 12
+    AUTOCHECKBOX "Locurile din &reţeaua mea", IDC_ICONS_MYNET, 116, 14, 100, 12//FIXME: accelerator collision &R
+    AUTOCHECKBOX "&Computerul meu", IDC_ICONS_MYCOMP, 14, 28, 100, 12
+    AUTOCHECKBOX "&Navigatorul de Internet", IDC_ICONS_INTERNET, 116, 28, 100, 12
     CONTROL "", IDC_ICONS_LISTVIEW, "SysListView32",
             LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP | WS_HSCROLL,
             6, 60, 251, 54

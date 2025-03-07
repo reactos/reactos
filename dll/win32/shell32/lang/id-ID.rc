@@ -987,10 +987,6 @@ BEGIN
     IDS_FILE_TYPES "Jenis Berkas"
     IDS_COLUMN_EXTENSION "Ekstensi"
 
-    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
-       used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "Berkas %s"
-
     IDS_BYTES_FORMAT "byte"
     IDS_UNKNOWN_APP "Aplikasi tidak diketahui"
     IDS_EXE_DESCRIPTION "Deskripsi:"
@@ -998,6 +994,8 @@ BEGIN
     IDS_MENU_EMPTY "(Kosong)"
     IDS_OBJECTS "%d Obyek"
     IDS_OBJECTS_SELECTED "%d Obyek terpilih"
+
+    IDS_SEARCH_BROWSEITEM "Jelajah..."
 
     IDS_TITLE_MYCOMP "Komputer Saya"
     IDS_TITLE_MYNET "Tempat Jaringan Saya"

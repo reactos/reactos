@@ -54,7 +54,7 @@ static void MSI_FreeField( MSIFIELD *field )
     case MSIFIELD_INT:
         break;
     case MSIFIELD_WSTR:
-        msi_free( field->u.szwVal);
+        free( field->u.szwVal);
         break;
     case MSIFIELD_STREAM:
         IStream_Release( field->u.stream );
@@ -157,7 +157,7 @@ WCHAR *msi_strdupW( const WCHAR *value, int len )
     WCHAR *ret;
 
     if (!value) return NULL;
-    if (!(ret = msi_alloc( (len + 1) * sizeof(WCHAR) ))) return NULL;
+    if (!(ret = malloc( (len + 1) * sizeof(WCHAR) ))) return NULL;
     memcpy( ret, value, len * sizeof(WCHAR) );
     ret[len] = 0;
     return ret;
@@ -497,7 +497,7 @@ UINT WINAPI MsiRecordGetStringW( MSIHANDLE handle, UINT iField, WCHAR *szValue, 
     return ret;
 }
 
-static UINT msi_get_stream_size( IStream *stm )
+static UINT get_stream_size( IStream *stm )
 {
     STATSTG stat;
     HRESULT r;
@@ -524,7 +524,7 @@ static UINT MSI_RecordDataSize(MSIRECORD *rec, UINT iField)
     case MSIFIELD_NULL:
         break;
     case MSIFIELD_STREAM:
-        return msi_get_stream_size( rec->fields[iField].u.stream );
+        return get_stream_size( rec->fields[iField].u.stream );
     }
     return 0;
 }
@@ -559,14 +559,14 @@ UINT WINAPI MsiRecordSetStringA( MSIHANDLE handle, UINT iField, const char *szVa
     rec = msihandle2msiinfo( handle, MSIHANDLETYPE_RECORD );
     if( !rec )
     {
-        msi_free( valueW );
+        free( valueW );
         return ERROR_INVALID_HANDLE;
     }
     msiobj_lock( &rec->hdr );
     ret = MSI_RecordSetStringW( rec, iField, valueW );
     msiobj_unlock( &rec->hdr );
     msiobj_release( &rec->hdr );
-    msi_free( valueW );
+    free( valueW );
     return ret;
 }
 
@@ -735,7 +735,7 @@ UINT WINAPI MsiRecordSetStreamA( MSIHANDLE hRecord, UINT iField, const char *szF
              return ERROR_OUTOFMEMORY;
     }
     ret = MsiRecordSetStreamW(hRecord, iField, wstr);
-    msi_free(wstr);
+    free(wstr);
 
     return ret;
 }
@@ -865,7 +865,7 @@ UINT MSI_RecordGetIStream( MSIRECORD *rec, UINT iField, IStream **pstm)
     return ERROR_SUCCESS;
 }
 
-static UINT msi_dump_stream_to_file( IStream *stm, LPCWSTR name )
+static UINT dump_stream_to_file( IStream *stm, const WCHAR *name )
 {
     ULARGE_INTEGER size;
     LARGE_INTEGER pos;
@@ -909,7 +909,7 @@ UINT MSI_RecordStreamToFile( MSIRECORD *rec, UINT iField, LPCWSTR name )
     r = MSI_RecordGetIStream( rec, iField, &stm );
     if( r == ERROR_SUCCESS )
     {
-        r = msi_dump_stream_to_file( stm, name );
+        r = dump_stream_to_file( stm, name );
         IStream_Release( stm );
     }
 
@@ -1012,14 +1012,14 @@ WCHAR *msi_dup_record_field( MSIRECORD *rec, INT field )
         return NULL;
 
     sz++;
-    str = msi_alloc( sz * sizeof(WCHAR) );
+    str = malloc( sz * sizeof(WCHAR) );
     if (!str) return NULL;
     str[0] = 0;
     r = MSI_RecordGetStringW( rec, field, str, &sz );
     if (r != ERROR_SUCCESS)
     {
         ERR("failed to get string!\n");
-        msi_free( str );
+        free( str );
         return NULL;
     }
     return str;
@@ -1129,7 +1129,7 @@ struct wire_record *marshal_record(MSIHANDLE handle)
             ret->fields[i].u.iVal = rec->fields[i].u.iVal;
             break;
         case MSIFIELD_WSTR:
-            ret->fields[i].u.szwVal = strdupW(rec->fields[i].u.szwVal);
+            ret->fields[i].u.szwVal = wcsdup(rec->fields[i].u.szwVal);
             break;
         case MSIFIELD_STREAM:
             IStream_AddRef(rec->fields[i].u.stream);

@@ -115,7 +115,7 @@ dll/win32/msg711.acm          # Synced to WineStaging-4.18
 dll/win32/msgsm32.acm         # Synced to WineStaging-4.0
 dll/win32/mshtml              # Synced to WineStaging-1.7.55
 dll/win32/mshtml.tlb          # Synced to WineStaging-1.7.55
-dll/win32/msi                 # Synced to WineStaging-7.3 (+ dialog.c synced to bbce5d014db7f023b133d6d09e6846e027586f7d)
+dll/win32/msi                 # Synced to Wine-9.8
 dll/win32/msimg32             # Synced to WineStaging-3.3
 dll/win32/msimtf              # Synced to WineStaging-4.18
 dll/win32/msisip              # Synced to WineStaging-4.18
@@ -160,7 +160,7 @@ dll/win32/pdh                 # Synced to WineStaging-4.18
 dll/win32/pidgen              # Synced to WineStaging-4.18
 dll/win32/powrprof            # Forked at Wine-1.0rc5
 dll/win32/printui             # Synced to WineStaging-4.18
-dll/win32/propsys             # Synced to WineStaging-4.18
+dll/win32/propsys             # Synced to Wine-10.0
 dll/win32/pstorec             # Synced to WineStaging-3.3
 dll/win32/qmgr                # Synced to WineStaging-4.18
 dll/win32/qmgrprxy            # Synced to WineStaging-2.9
@@ -168,7 +168,7 @@ dll/win32/query               # Synced to WineStaging-4.18
 dll/win32/rasapi32            # Synced to WineStaging-3.3
 dll/win32/regapi              # Synced to WineStaging-5.7
 dll/win32/resutils            # Synced to WineStaging-3.3
-dll/win32/riched20            # Synced to WineStaging-4.18
+dll/win32/riched20            # Synced to Wine-6.10
 dll/win32/riched32            # Synced to WineStaging-3.3
 dll/win32/rpcrt4              # Synced to WineStaging-4.18
 dll/win32/rsabase             # Synced to WineStaging-3.3
@@ -206,8 +206,8 @@ dll/win32/version             # Synced to WineStaging-4.18
 dll/win32/vssapi              # Synced to WineStaging-4.18
 dll/win32/wbemdisp            # Synced to WineStaging-4.18
 dll/win32/wbemprox            # Synced to WineStaging-4.18
-dll/win32/windowscodecs       # Synced to WineStaging-4.18
-dll/win32/windowscodecsext    # Synced to WineStaging-2.9
+dll/win32/windowscodecs       # Synced to Wine-10.0
+dll/win32/windowscodecsext    # Synced to Wine-10.0
 dll/win32/winemp3.acm         # Synced to WineStaging-4.18
 dll/win32/wing32              # Synced to WineStaging-3.3
 dll/win32/winhttp             # Synced to WineStaging-4.18
@@ -258,7 +258,7 @@ base/applications/wordpad           # Synced to WineStaging-1.9.16
 base/applications/write             # Synced to WineStaging-3.3
 base/services/rpcss                 # Synced to WineStaging-3.3
 base/system/expand                  # Synced to WineStaging-3.3
-base/system/msiexec                 # Synced to WineStaging-3.3
+base/system/msiexec                 # Synced to Wine-9.8
 modules/rosapps/applications/winfile # Autosync
 
 In addition the following libs, dlls and source files are mostly based on code ported
@@ -267,9 +267,8 @@ check Wine current sources first as it may already be fixed.
 
 sdk/lib/3rdparty/strmbase           # Synced to WineStaging-3.3
 
-sdk/lib/rtl/actctx.c                # Synced to wine-5.18
-sdk/lib/rtl/timerqueue.c            # Synced to wine-5.18
-sdk/lib/rtl/wait.c                  # Synced to wine-5.18
+sdk/lib/rtl/actctx.c                # Synced to Wine-5.18
+sdk/lib/rtl/threadpool.c            # Synced to Wine-9.7
 
 advapi32 -
   dll/win32/advapi32/wine/cred.c         # Synced to WineStaging-3.3
@@ -305,10 +304,7 @@ lpk -
 
 msvcrt -
   sdk/lib/crt/conio/cputs.c             # Synced to WineStaging-1.9.16
-  sdk/lib/crt/except/cpp.c              # Synced at 20080528
-  sdk/lib/crt/except/cppexcept.c        # Synced at 20071111
   sdk/lib/crt/process/_cwait.c          # Synced to WineStaging-1.7.37
-  sdk/lib/crt/signal/xcptinfo.c         # Synced to WineStaging-1.7.37
   sdk/lib/crt/string/scanf.c/h          # Synced to Wine-1.7.17
   sdk/lib/crt/string/strtoi64.c         # Synced to WineStaging-1.9.9
   sdk/lib/crt/string/strtok.c           # Synced to WineStaging-1.9.16
@@ -319,9 +315,18 @@ msvcrt -
   sdk/lib/crt/string/wctype.c           # Synced to WineStaging-1.9.16
   sdk/lib/crt/string/wtoi64.c           # Synced to Wine-1.9.16
   sdk/lib/crt/mbstring/ischira.c        # Synced to Wine-1.9.16
-  sdk/lib/crt/wine/heap.c               # Synced at 20080529
-  sdk/lib/crt/wine/undname.c            # Synced to WineStaging-1.9.16
   sdk/lib/crt/process/thread.c          # Synced to WineStaging-1.7.55
+  sdk/lib/crt/wine/cpp.c                # Synced to Wine-7.0
+  sdk/lib/crt/wine/cppexcept.h          # Synced to Wine-7.0
+  sdk/lib/crt/wine/except.c             # Synced to Wine-7.0
+  sdk/lib/crt/wine/except_arm.c         # Synced to Wine-7.0
+  sdk/lib/crt/wine/except_arm64.c       # Synced to Wine-7.0
+  sdk/lib/crt/wine/except_i386.c        # Synced to Wine-7.0
+  sdk/lib/crt/wine/except_x86_64.c      # Synced to Wine-7.0
+  sdk/lib/crt/wine/heap.c               # Synced to Wine-7.0
+  sdk/lib/crt/wine/msvcrt.h             # Synced to Wine-7.0
+  sdk/lib/crt/wine/mtdll.h              # Synced to Wine-7.0
+  sdk/lib/crt/wine/undname.c            # Synced to Wine-7.0
 
 regedit
   base/applications/regedit/regedit.c   # Synced to Wine-7.17

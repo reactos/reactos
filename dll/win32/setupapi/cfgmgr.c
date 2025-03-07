@@ -7843,10 +7843,77 @@ CM_Set_Class_Registry_PropertyA(
     _In_ ULONG ulFlags,
     _In_opt_ HMACHINE hMachine)
 {
-    FIXME("CM_Set_Class_Registry_PropertyA(%p %lx %p %lu %lx %p)\n",
+    LPWSTR lpBuffer;
+    ULONG ulType;
+    CONFIGRET ret;
+
+    TRACE("CM_Set_Class_Registry_PropertyA(%p %lx %p %lu %lx %p)\n",
           ClassGuid, ulProperty, Buffer, ulLength, ulFlags, hMachine);
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    if (ClassGuid == NULL)
+        return CR_INVALID_POINTER;
+
+    if ((Buffer == NULL) && (ulLength != 0))
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (Buffer == NULL)
+    {
+        ret = CM_Set_Class_Registry_PropertyW(ClassGuid,
+                                              ulProperty,
+                                              Buffer,
+                                              ulLength,
+                                              ulFlags,
+                                              hMachine);
+    }
+    else
+    {
+        /* Get property type */
+        ulType = GetRegistryPropertyType(ulProperty);
+
+        /* Allocate buffer if needed */
+        if ((ulType == REG_SZ) || (ulType == REG_MULTI_SZ))
+        {
+            lpBuffer = MyMalloc(ulLength * sizeof(WCHAR));
+            if (lpBuffer == NULL)
+            {
+                ret = CR_OUT_OF_MEMORY;
+            }
+            else
+            {
+                if (!MultiByteToWideChar(CP_ACP, 0, Buffer,
+                                         ulLength, lpBuffer, ulLength))
+                {
+                    MyFree(lpBuffer);
+                    ret = CR_FAILURE;
+                }
+                else
+                {
+                    ret = CM_Set_Class_Registry_PropertyW(ClassGuid,
+                                                          ulProperty,
+                                                          lpBuffer,
+                                                          ulLength * sizeof(WCHAR),
+                                                          ulFlags,
+                                                          hMachine);
+                    MyFree(lpBuffer);
+                }
+            }
+        }
+        else
+        {
+            ret = CM_Set_Class_Registry_PropertyW(ClassGuid,
+                                                  ulProperty,
+                                                  Buffer,
+                                                  ulLength,
+                                                  ulFlags,
+                                                  hMachine);
+        }
+
+    }
+
+    return ret;
 }
 
 
@@ -7863,10 +7930,90 @@ CM_Set_Class_Registry_PropertyW(
     _In_ ULONG ulFlags,
     _In_opt_ HMACHINE hMachine)
 {
-    FIXME("CM_Set_Class_Registry_PropertyW(%p %lx %p %lu %lx %p)\n",
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    WCHAR szGuidString[PNP_MAX_GUID_STRING_LEN + 1];
+    ULONG ulType = 0;
+    PSECURITY_DESCRIPTOR pSecurityDescriptor = NULL;
+    ULONG SecurityDescriptorSize = 0;
+    CONFIGRET ret;
+
+    TRACE("CM_Set_Class_Registry_PropertyW(%p %lx %p %lu %lx %p)\n",
           ClassGuid, ulProperty, Buffer, ulLength, ulFlags, hMachine);
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    if (ClassGuid == NULL)
+        return CR_INVALID_POINTER;
+
+    if ((Buffer == NULL) && (ulLength != 0))
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (pSetupStringFromGuid(ClassGuid,
+                             szGuidString,
+                             PNP_MAX_GUID_STRING_LEN) != 0)
+        return CR_INVALID_DATA;
+
+    if ((ulProperty < CM_CRP_MIN) || (ulProperty > CM_CRP_MAX))
+        return CR_INVALID_PROPERTY;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    ulType = GetRegistryPropertyType(ulProperty);
+    if ((ulType == REG_DWORD) && (ulLength != sizeof(DWORD)))
+        return CR_INVALID_DATA;
+
+    if (ulProperty == CM_CRP_SECURITY_SDS)
+    {
+        if (ulLength != 0)
+        {
+            if (!ConvertStringSecurityDescriptorToSecurityDescriptorW((LPCWSTR)Buffer,
+                                                                      SDDL_REVISION_1,
+                                                                      &pSecurityDescriptor,
+                                                                      &SecurityDescriptorSize))
+            {
+                ERR("ConvertStringSecurityDescriptorToSecurityDescriptorW() failed (Error %lu)\n", GetLastError());
+                return CR_INVALID_DATA;
+            }
+
+            Buffer = (PCVOID)pSecurityDescriptor;
+            ulLength = SecurityDescriptorSize;
+        }
+
+        ulProperty = CM_CRP_SECURITY;
+        ulType = REG_BINARY;
+    }
+
+    RpcTryExcept
+    {
+        ret = PNP_SetClassRegProp(BindingHandle,
+                                  szGuidString,
+                                  ulProperty,
+                                  ulType,
+                                  (LPBYTE)Buffer,
+                                  ulLength,
+                                  ulFlags);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (pSecurityDescriptor)
+        LocalFree(pSecurityDescriptor);
+
+    return ret;
 }
 
 

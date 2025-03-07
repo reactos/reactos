@@ -22,7 +22,6 @@ IDR_ZIPFLDR REGISTRY "res/zipfldr.rgs"
 /* UTF-8 */
 #pragma code_page(65001)
 
-
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
 #endif

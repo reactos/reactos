@@ -52,9 +52,7 @@ CAPTION "Einstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Allgemein", -1, 4, 2, 240, 61
-    AUTOCHECKBOX "Fensterposition &speichern", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "Beim Start Liste der verfügbaren Programme &aktualisieren", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "Hinzufügen und Entfernen von Programmen mit&loggen", IDC_LOG_ENABLED, 15, 46, 219, 12
+    CONTROL "", IDC_GENERALLIST, "SysListView32", WS_TABSTOP | LVCHECKSTYLES, 15, 12, 219, 46, WS_EX_STATICEDGE
     GROUPBOX "Download", -1, 4, 65, 240, 51
     LTEXT "Ordner für Downloads:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
@@ -215,6 +213,10 @@ BEGIN
     IDS_APP_DISPLAY_LIST "Liste"
     IDS_APP_DISPLAY_TILE "Kacheln"
     IDS_NO_SEARCH_RESULTS "No search results"
+    IDS_CFG_SAVE_WINDOW_POS "Fensterposition speichern"
+    IDS_CFG_UPDATE_AVLIST "Beim Start Liste der verfügbaren Programme aktualisieren"
+    IDS_CFG_LOG_ENABLED "Hinzufügen und Entfernen von Programmen mitloggen"
+    IDS_CFG_SMALL_ICONS "Kleine symbole"
 END
 
 STRINGTABLE
@@ -268,4 +270,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "Installation complete, run %s now?"
 END

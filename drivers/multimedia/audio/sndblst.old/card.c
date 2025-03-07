@@ -1,7 +1,7 @@
 /*
     Sound card operations
 
-    http://www.cae.wisc.edu/~brodskye/sb16doc/sb16doc.html
+    https://web.archive.org/web/20120415213248/http://homepages.cae.wisc.edu/~brodskye/sb16doc/sb16doc.html
 */
 
 #include <ntddk.h>

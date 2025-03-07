@@ -2571,8 +2571,8 @@ RtlDosSearchPath_Ustr(IN ULONG Flags,
     NTSTATUS Status;
     RTL_PATH_TYPE PathType;
     PWCHAR p, End, CandidateEnd, SegmentEnd;
-    SIZE_T SegmentSize, ByteCount, PathSize, MaxPathSize = 0;
-    USHORT NamePlusExtLength, WorstCaseLength, ExtensionLength = 0;
+    SIZE_T WorstCaseLength, NamePlusExtLength, SegmentSize, ByteCount, PathSize, MaxPathSize = 0;
+    USHORT ExtensionLength = 0;
     PUNICODE_STRING FullIsolatedPath;
     DPRINT("DOS Path Search: %lx %wZ %wZ %wZ %wZ %wZ\n",
             Flags, PathString, FileNameString, ExtensionString, CallerBuffer, DynamicString);
@@ -2669,7 +2669,8 @@ RtlDosSearchPath_Ustr(IN ULONG Flags,
                 while (End > FileNameString->Buffer)
                 {
                     /* If we find a path separator, there's no extension */
-                    if (IS_PATH_SEPARATOR(*--End)) break;
+                    --End;
+                    if (IS_PATH_SEPARATOR(*End)) break;
 
                     /* Otherwise, did we find an extension dot? */
                     if (*End == L'.')
@@ -2689,17 +2690,20 @@ RtlDosSearchPath_Ustr(IN ULONG Flags,
             /* Start parsing the path name, looking for path separators */
             End = &PathString->Buffer[PathString->Length / sizeof(WCHAR)];
             p = End;
-            while ((p > PathString->Buffer) && (*--p == L';'))
+            while (p > PathString->Buffer)
             {
-                /* This is the size of the path -- handle a trailing slash */
-                PathSize = End - p - 1;
-                if ((PathSize) && !(IS_PATH_SEPARATOR(*(End - 1)))) PathSize++;
+                if (*--p == L';')
+                {
+                    /* This is the size of the path -- handle a trailing slash */
+                    PathSize = End - p - 1;
+                    if ((PathSize) && !(IS_PATH_SEPARATOR(*(End - 1)))) PathSize++;
 
-                /* Check if we found a bigger path than before */
-                if (PathSize > MaxPathSize) MaxPathSize = PathSize;
+                    /* Check if we found a bigger path than before */
+                    if (PathSize > MaxPathSize) MaxPathSize = PathSize;
 
-                /* Keep going with the path after this path separator */
-                End = p;
+                    /* Keep going with the path after this path separator */
+                    End = p;
+                }
             }
 
             /* This is the trailing path, run the same code as above */
@@ -2749,7 +2753,7 @@ RtlDosSearchPath_Ustr(IN ULONG Flags,
 
             /* Now check if our initial static buffer is too small */
             if (StaticCandidateString.MaximumLength <
-                (SegmentSize + ExtensionLength + FileNameString->Length))
+                (SegmentSize + ExtensionLength + FileNameString->Length + sizeof(UNICODE_NULL)))
             {
                 /* At this point we should've been using our static buffer */
                 ASSERT(StaticCandidateString.Buffer == StaticCandidateBuffer);
@@ -2784,8 +2788,7 @@ RtlDosSearchPath_Ustr(IN ULONG Flags,
                 }
 
                 /* Now allocate the dynamic string */
-                StaticCandidateString.MaximumLength = FileNameString->Length +
-                                                      WorstCaseLength;
+                StaticCandidateString.MaximumLength = WorstCaseLength;
                 StaticCandidateString.Buffer = RtlpAllocateStringMemory(WorstCaseLength,
                                                                         TAG_USTR);
                 if (!StaticCandidateString.Buffer)
@@ -2832,6 +2835,7 @@ RtlDosSearchPath_Ustr(IN ULONG Flags,
             StaticCandidateString.Length = (USHORT)(CandidateEnd -
                                             StaticCandidateString.Buffer) *
                                            sizeof(WCHAR);
+            ASSERT(StaticCandidateString.Length < StaticCandidateString.MaximumLength);
 
             /* Check if this file exists */
             DPRINT("BUFFER: %S\n", StaticCandidateString.Buffer);
@@ -2901,7 +2905,8 @@ RtlDosSearchPath_Ustr(IN ULONG Flags,
                 while (End > p)
                 {
                     /* If there's a path separator, there's no extension */
-                    if (IS_PATH_SEPARATOR(*--End)) break;
+                    --End;
+                    if (IS_PATH_SEPARATOR(*End)) break;
 
                     /* Othwerwise, did we find an extension dot? */
                     if (*End == L'.')

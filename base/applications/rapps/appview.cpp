@@ -15,6 +15,7 @@ using namespace Gdiplus;
 
 HICON g_hDefaultPackageIcon = NULL;
 static int g_DefaultPackageIconILIdx = I_IMAGENONE;
+UINT g_IconSize = 0;
 
 // **** Menu helpers ****
 
@@ -955,19 +956,22 @@ CAppInfoDisplay::Create(HWND hwndParent)
 }
 
 VOID
-CAppInfoDisplay::ShowAppInfo(CAppInfo *Info)
+CAppInfoDisplay::ShowAppInfo(CAppInfo &Info, bool OnlyUpdateText)
 {
-    CStringW ScrnshotLocation;
-    if (Info->RetrieveScreenshot(ScrnshotLocation))
+    if (!OnlyUpdateText)
     {
-        ScrnshotPrev->DisplayImage(ScrnshotLocation);
-    }
-    else
-    {
-        ScrnshotPrev->DisplayEmpty();
+        CStringW ScrnshotLocation;
+        if (Info.RetrieveScreenshot(ScrnshotLocation))
+        {
+            ScrnshotPrev->DisplayImage(ScrnshotLocation);
+        }
+        else
+        {
+            ScrnshotPrev->DisplayEmpty();
+        }
     }
     ResizeChildren();
-    Info->ShowAppInfo(RichEdit);
+    Info.ShowAppInfo(RichEdit);
 }
 
 void
@@ -1060,9 +1064,11 @@ AsyncLoadIconProc(LPVOID Param)
         if (task->TaskId == g_AsyncIconTaskId)
         {
             HICON hIcon;
+            HICON *phBigIcon = SettingsInfo.bSmallIcons ? NULL : &hIcon;
+            HICON *phSmallIcon = phBigIcon ? NULL : &hIcon;
             if (!task->Parse)
-                hIcon = (HICON)LoadImageW(NULL, task->Location, IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
-            else if (!ExtractIconExW(task->Location, PathParseIconLocationW(task->Location), &hIcon, NULL, 1))
+                hIcon = (HICON)LoadImageW(NULL, task->Location, IMAGE_ICON, g_IconSize, g_IconSize, LR_LOADFROMFILE);
+            else if (!ExtractIconExW(task->Location, PathParseIconLocationW(task->Location), phBigIcon, phSmallIcon, 1))
                 hIcon = NULL;
 
             if (hIcon)
@@ -1389,13 +1395,14 @@ CAppsListView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
     if (!g_hDefaultPackageIcon)
     {
         ImageList_Destroy(m_hImageListView);
-        UINT IconSize = GetSystemMetrics(SM_CXICON);
+        g_IconSize = GetSystemMetrics(SettingsInfo.bSmallIcons ? SM_CXSMICON : SM_CXICON);
+        g_IconSize = max(g_IconSize, 8);
         UINT ilc = GetSystemColorDepth() | ILC_MASK;
-        m_hImageListView = ImageList_Create(IconSize, IconSize, ilc, 0, 1);
+        m_hImageListView = ImageList_Create(g_IconSize, g_IconSize, ilc, 0, 1);
         SetImageList(m_hImageListView, LVSIL_SMALL);
         SetImageList(m_hImageListView, LVSIL_NORMAL);
         g_hDefaultPackageIcon = (HICON)LoadImageW(hInst, MAKEINTRESOURCEW(IDI_MAIN),
-                                                  IMAGE_ICON, IconSize, IconSize, LR_SHARED);
+                                                  IMAGE_ICON, g_IconSize, g_IconSize, LR_SHARED);
     }
     ImageList_RemoveAll(m_hImageListView);
 
@@ -1806,6 +1813,22 @@ CApplicationView::SetRedraw(BOOL bRedraw)
 }
 
 void
+CApplicationView::RefreshAvailableItem(PCWSTR PackageName)
+{
+    if (ApplicationViewType != AppViewTypeAvailableApps || !PackageName)
+        return;
+    CAppInfo *pApp;
+    for (UINT i = 0; (pApp = (CAppInfo*)m_ListView->GetItemData(i)) != NULL; ++i)
+    {
+        if (pApp->szIdentifier.CompareNoCase(PackageName) == 0)
+        {
+            RefreshDetailsPane(*pApp, true);
+            break;
+        }
+    }
+}
+
+void
 CApplicationView::SetFocusOnSearchBar()
 {
     m_SearchBar->SetFocus();
@@ -2134,6 +2157,12 @@ CApplicationView::RestoreListSelection(const RESTORELISTSELECTION &Restore)
     }
 }
 
+VOID
+CApplicationView::RefreshDetailsPane(CAppInfo &Info, bool OnlyUpdateText)
+{
+    m_AppsInfo->ShowAppInfo(Info, OnlyUpdateText);
+}
+
 // this function is called when a item of listview get focus.
 // CallbackParam is the param passed to listview when adding the item (the one getting focus now).
 VOID
@@ -2142,7 +2171,7 @@ CApplicationView::ItemGetFocus(LPVOID CallbackParam)
     if (CallbackParam)
     {
         CAppInfo *Info = static_cast<CAppInfo *>(CallbackParam);
-        m_AppsInfo->ShowAppInfo(Info);
+        RefreshDetailsPane(*Info);
 
         if (ApplicationViewType == AppViewTypeInstalledApps)
         {

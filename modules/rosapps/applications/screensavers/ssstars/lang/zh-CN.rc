@@ -43,7 +43,7 @@ END
 
 // String Tables
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION         "星空"
     IDS_ROTATION_NONE       "无"

@@ -7,7 +7,7 @@
 
 LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "Boş ekran"
     IDS_TEXT        "Hiçbir seçeneğin ayarlanması gerekmez."

@@ -1,7 +1,8 @@
 
 add_definitions(
     -D__WINESRC__
-    -D_WINE)
+    -D_WINE
+    -D__ROS_LONG64__)
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(comdlg32.dll comdlg32.spec ADD_IMPORTLIB)
@@ -26,7 +27,7 @@ add_library(comdlg32 MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/comdlg32.def)
 
 set_module_type(comdlg32 win32dll)
-target_link_libraries(comdlg32 uuid wine)
+target_link_libraries(comdlg32 uuid wine oldnames)
 add_delay_importlibs(comdlg32 ole32)
 add_importlibs(comdlg32 shell32 shlwapi comctl32 winspool user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_pch(comdlg32 precomp.h SOURCE)

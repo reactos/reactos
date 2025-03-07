@@ -24,18 +24,21 @@ private:
     // *** BaseBarSite information ***
     CComPtr<IUnknown> m_pSite;
     CComPtr<IAddressEditBox> m_AddressEditBox;
+    INT_PTR m_RealItemIndex;
     BOOL m_bVisible;
 
     HRESULT GetSearchResultsFolder(IShellBrowser **ppShellBrowser, HWND *pHwnd, IShellFolder **ppShellFolder);
-    BOOL GetAddressEditBoxPath(WCHAR *szPath);
+    LOCATIONITEM* GetAddressEditBoxLocations(WCHAR *szPath);
     void SetSearchInProgress(BOOL bInProgress);
     HRESULT TrySubscribeToSearchEvents();
+    void TrySetFocus(UINT Source);
 
     // *** ATL event handlers ***
     LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSearchButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnStopButtonClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnLocationEditChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
 public:
@@ -104,5 +107,6 @@ public:
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         COMMAND_HANDLER(IDC_SEARCH_BUTTON, BN_CLICKED, OnSearchButtonClicked)
         COMMAND_HANDLER(IDC_SEARCH_STOP_BUTTON, BN_CLICKED, OnStopButtonClicked)
+        COMMAND_HANDLER(IDC_SEARCH_COMBOBOX, CBN_EDITCHANGE, OnLocationEditChange)
     END_MSG_MAP()
 };

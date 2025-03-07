@@ -12,7 +12,6 @@
 #define InvalidPointer ((PVOID)0x5555555555555555ULL)
 // #define InvalidPointer ((PVOID)0x0123456789ABCDEFULL)
 
-#ifdef __USE_PSEH2__
 #include <pseh/pseh2.h>
 
 #define StartSeh()                                  \
@@ -32,24 +31,6 @@
        "Exception 0x%08lx, expected 0x%08lx\n",     \
        ExceptionStatus, (ExpectedStatus));          \
 }
-#else
-#define StartSeh()                                  \
-{                                                   \
-    NTSTATUS ExceptionStatus = STATUS_SUCCESS;      \
-    __try                                           \
-    {
-
-#define EndSeh(ExpectedStatus)                      \
-    }                                               \
-    __except(EXCEPTION_EXECUTE_HANDLER)             \
-    {                                               \
-        ExceptionStatus = GetExceptionCode();       \
-    }                                               \
-    ok(ExceptionStatus == (ExpectedStatus),         \
-       "Exception 0x%08lx, expected 0x%08lx\n",     \
-       ExceptionStatus, (ExpectedStatus));          \
-}
-#endif
 
 #define ok_hr(status, expected)                 ok_hex(status, expected)
 #define ok_hr_(file, line, status, expected)    ok_hex_(file, line, status, expected)

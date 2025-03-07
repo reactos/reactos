@@ -41,7 +41,7 @@ END
 
 // String Tables
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION         "Gwiezdne pole"
     IDS_ROTATION_NONE       "brak"

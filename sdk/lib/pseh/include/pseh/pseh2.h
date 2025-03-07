@@ -23,9 +23,10 @@
 #ifndef KJK_PSEH2_H_
 #define KJK_PSEH2_H_
 
-#if defined(_USE_NATIVE_SEH) || (defined(_MSC_VER) && !(defined(__clang__) && defined(_M_AMD64)))
+#define __USE_PSEH2__
 
-#include <excpt.h>
+#if defined(_USE_NATIVE_SEH) || defined(_MSC_VER)
+
 #define _SEH2_TRY __try
 #define _SEH2_FINALLY __finally
 #define _SEH2_EXCEPT(...) __except(__VA_ARGS__)
@@ -36,6 +37,8 @@
 #define _SEH2_YIELD(STMT_) STMT_
 #define _SEH2_LEAVE __leave
 #define _SEH2_VOLATILE
+
+#define __endtry
 
 #elif defined(__GNUC__) && !defined(__clang__) && defined(_M_AMD64)
 
@@ -85,6 +88,14 @@ _Pragma("GCC diagnostic pop")
 #define _SEH2_LEAVE goto __seh2_scope_end__;
 #define _SEH2_VOLATILE volatile
 
+#define __try _SEH2_TRY
+#define __except _SEH2_EXCEPT
+#define __finally _SEH2_FINALLY
+#define __endtry _SEH2_END
+#define __leave _SEH2_LEAVE
+#define _exception_code() 0
+#define _exception_info() ((void*)0)
+
 #elif defined(_USE_PSEH3)
 
 #include "pseh3.h"
@@ -100,6 +111,14 @@ _Pragma("GCC diagnostic pop")
 #define _SEH2_LEAVE _SEH3_LEAVE
 #define _SEH2_YIELD(x) x
 #define _SEH2_VOLATILE volatile
+
+#ifndef __try // Conflict with GCC's STL
+#define __try _SEH3_TRY
+#define __except _SEH3_EXCEPT
+#define __finally _SEH3_FINALLY
+#define __endtry _SEH3_END
+#define __leave _SEH3_LEAVE
+#endif
 
 #elif defined(__GNUC__)
 

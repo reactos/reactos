@@ -992,10 +992,6 @@ BEGIN
     IDS_FILE_TYPES "फ़ाइल प्रकारों"
     IDS_COLUMN_EXTENSION "एक्सटेंशन"
 
-    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
-       used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s फ़ाइल"
-
     IDS_BYTES_FORMAT "बाइट्स"
     IDS_UNKNOWN_APP "अनजान ऐप्लिकेशन"
     IDS_EXE_DESCRIPTION "विवरण:"
@@ -1003,6 +999,8 @@ BEGIN
     IDS_MENU_EMPTY "(खाली)"
     IDS_OBJECTS "%d वस्तुओं"
     IDS_OBJECTS_SELECTED "%d वस्तुओं का चयन किया"
+
+    IDS_SEARCH_BROWSEITEM "ब्राउज़ करें..."
 
     IDS_TITLE_MYCOMP "मेरा कंप्यूटर"
     IDS_TITLE_MYNET "मेरे नेटवर्क स्थान"

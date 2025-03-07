@@ -11,7 +11,7 @@ include_directories(
     ${REACTOS_BINARY_DIR}/sdk/include)
 
 # libschily and libsiconv are licensed under CDDL whereas mkisofs is licensed under GPL.
-# As such, we cannot mix the library sources with mkisofs sources and have to build them seperately.
+# As such, we cannot mix the library sources with mkisofs sources and have to build them separately.
 # Later on, they may still be linked together though.
 #
 # Reference: http://opensource.stackexchange.com/questions/2094
@@ -107,7 +107,8 @@ else()
     # Silence compilers checking for invalid formatting sequences.
     target_compile_options(libschily PRIVATE "-Wno-format")
 
-    if(CMAKE_C_COMPILER_ID STREQUAL "Clang" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL "15")
+    # MATCHES must be used here because on macOS, CMake uses the compiler ID "AppleClang".
+    if(CMAKE_C_COMPILER_ID MATCHES "Clang$" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL "15")
         # mkisofs uses K&R-style function definitions to support very old compilers.
         # This causes warnings with modern compilers.
         target_compile_options(libmdigest PRIVATE "-Wno-deprecated-non-prototype")

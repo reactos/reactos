@@ -19,21 +19,10 @@
 
 #pragma once
 
-/* Just some stuff */
+// FreeLoader version defines
+// If you add features then you increment the minor version
+// If you add major functionality then you increment the major version and zero the minor version
 #define VERSION         "FreeLoader v3.2"
 #define COPYRIGHT       "Copyright (C) 1996-" COPYRIGHT_YEAR " ReactOS Project"
 #define AUTHOR_EMAIL    "<www.reactos.org>"
 #define BY_AUTHOR       "by ReactOS Project"
-
-// FreeLoader version defines
-//
-// NOTE:
-// If you fix bugs then you increment the patch version
-// If you add features then you increment the minor version and zero the patch version
-// If you add major functionality then you increment the major version and zero the minor & patch versions
-//
-#define FREELOADER_MAJOR_VERSION    3
-#define FREELOADER_MINOR_VERSION    2
-#define FREELOADER_PATCH_VERSION    0
-
-extern const PCSTR FrLdrVersionString;

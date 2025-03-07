@@ -510,12 +510,123 @@ PowerGetActiveScheme(HKEY UserRootPowerKey, GUID **polguid)
    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+DWORD WINAPI PowerSetActiveScheme(HKEY UserRootPowerKey, GUID *polguid)
+{
+   FIXME("(%p,%s) stub!\n", UserRootPowerKey, wine_dbgstr_guid(polguid));
+   return ERROR_SUCCESS;
+}
+
 DWORD WINAPI
 PowerReadDCValue(HKEY RootPowerKey, const GUID *Scheme, const GUID *SubGroup, const GUID *PowerSettings, PULONG Type, PUCHAR Buffer, DWORD *BufferSize)
 {
    FIXME("(%p,%s,%s,%s,%p,%p,%p) stub!\n", RootPowerKey, debugstr_guid(Scheme), debugstr_guid(SubGroup), debugstr_guid(PowerSettings), Type, Buffer, BufferSize);
    return ERROR_CALL_NOT_IMPLEMENTED;
 }
+
+DWORD WINAPI PowerReadFriendlyName(HKEY RootPowerKey, const GUID *Scheme,
+	const GUID *SubGroup, const GUID *PowerSettings, UCHAR *Buffer,
+	DWORD *BufferSize)
+{
+   FIXME("(%p,%s,%s,%s,%p,%p) stub!\n", RootPowerKey, debugstr_guid(Scheme), debugstr_guid(SubGroup), debugstr_guid(PowerSettings), Buffer, BufferSize);
+   return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+POWER_PLATFORM_ROLE WINAPI PowerDeterminePlatformRole(void)
+{
+   FIXME("stub\n");
+   return PlatformRoleDesktop;
+}
+
+POWER_PLATFORM_ROLE WINAPI PowerDeterminePlatformRoleEx(ULONG version)
+{
+    FIXME("%lu stub.\n", version);
+    return PlatformRoleDesktop;
+}
+
+DWORD WINAPI PowerEnumerate(HKEY key, const GUID *scheme, const GUID *subgroup, POWER_DATA_ACCESSOR flags,
+                        ULONG index, UCHAR *buffer, DWORD *buffer_size)
+{
+   FIXME("(%p,%s,%s,%d,%ld,%p,%p) stub!\n", key, debugstr_guid(scheme), debugstr_guid(subgroup),
+                flags, index, buffer, buffer_size);
+   return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+DWORD WINAPI PowerRegisterSuspendResumeNotification(DWORD flags, HANDLE recipient, PHPOWERNOTIFY handle)
+{
+    FIXME("(0x%08lx,%p,%p) stub!\n", flags, recipient, handle);
+    *handle = (HPOWERNOTIFY)0xdeadbeef;
+    return ERROR_SUCCESS;
+}
+
+DWORD WINAPI PowerUnregisterSuspendResumeNotification(HPOWERNOTIFY handle)
+{
+    FIXME("(%p) stub!\n", handle);
+    return ERROR_SUCCESS;
+}
+
+DWORD WINAPI PowerSettingRegisterNotification(const GUID *setting, DWORD flags, HANDLE recipient, PHPOWERNOTIFY handle)
+{
+    FIXME("(%s,0x%08lx,%p,%p) stub!\n", debugstr_guid(setting), flags, recipient, handle);
+    *handle = (PHPOWERNOTIFY)0xdeadbeef;
+    return ERROR_SUCCESS;
+}
+
+DWORD WINAPI PowerSettingUnregisterNotification(HPOWERNOTIFY handle)
+{
+    FIXME("(%p) stub!\n", handle);
+    return ERROR_SUCCESS;
+}
+
+DWORD WINAPI PowerWriteACValueIndex(HKEY key, const GUID *scheme, const GUID *subgroup, const GUID *setting, DWORD index)
+{
+   FIXME("(%p,%s,%s,%s,0x%08lx) stub!\n", key, debugstr_guid(scheme), debugstr_guid(subgroup), debugstr_guid(setting), index);
+   return ERROR_SUCCESS;
+}
+
+#ifdef __REACTOS__
+DWORD WINAPI PowerWriteDCValueIndex(
+   HKEY       key,
+   const GUID *scheme,
+   const GUID *subgroup,
+   const GUID *setting,
+   DWORD      index
+)
+{
+   FIXME("(%p,%s,%s,%s,0x%08lx) stub!\n", key, debugstr_guid(scheme), debugstr_guid(subgroup), debugstr_guid(setting), index);
+   return ERROR_SUCCESS;
+}
+
+DWORD WINAPI PowerReadACValueIndex(
+   HKEY       key,
+   const GUID *scheme,
+   const GUID *subgroup,
+   const GUID *setting,
+   LPDWORD    AcValueIndex
+)
+{
+    FIXME("(%p,%s,%s,%s,0x%08lx) stub!\n", key, debugstr_guid(scheme), debugstr_guid(subgroup), debugstr_guid(setting));
+    return ERROR_SUCCESS;
+}
+
+DWORD WINAPI PowerReadDCValueIndex(
+    HKEY       key,
+    const GUID *scheme,
+    const GUID *subgroup,
+    const GUID *setting,
+    LPDWORD    DcValuetIndex
+)
+{
+    FIXME("(%p,%s,%s,%s,0x%08lx) stub!\n", key, debugstr_guid(scheme), debugstr_guid(subgroup), debugstr_guid(setting));
+    return ERROR_SUCCESS;
+}
+
+DWORD WINAPI
+PowerReadACValue(HKEY RootPowerKey, const GUID *Scheme, const GUID *SubGroup, const GUID *PowerSettings, PULONG Type, PUCHAR Buffer, DWORD *BufferSize)
+{
+   FIXME("(%p,%s,%s,%s,%p,%p,%p) stub!\n", RootPowerKey, debugstr_guid(Scheme), debugstr_guid(SubGroup), debugstr_guid(PowerSettings), Type, Buffer, BufferSize);
+   return ERROR_CALL_NOT_IMPLEMENTED;
+}
+#endif
 
 BOOLEAN WINAPI
 ReadGlobalPwrPolicy(PGLOBAL_POWER_POLICY pGlobalPowerPolicy)

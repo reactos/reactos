@@ -44,8 +44,12 @@ BOOL SIC_Initialize(void);
 void SIC_Destroy(void) DECLSPEC_HIDDEN;
 BOOL PidlToSicIndex (IShellFolder * sh, LPCITEMIDLIST pidl, BOOL bBigIcon, UINT uFlags, int * pIndex) DECLSPEC_HIDDEN;
 INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags ) DECLSPEC_HIDDEN;
+extern INT ShellLargeIconSize;
+extern INT ShellSmallIconSize;
+extern INT ShellIconBPP;
 
 /* Classes Root */
+HRESULT HCR_GetProgIdKeyOfExtension(PCWSTR szExtension, PHKEY phKey, BOOL AllowFallback);
 BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, LONG len, BOOL bPrependDot) DECLSPEC_HIDDEN;
 BOOL HCR_GetDefaultVerbW( HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len ) DECLSPEC_HIDDEN;
 BOOL HCR_GetExecuteCommandW( HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len ) DECLSPEC_HIDDEN;
@@ -66,6 +70,12 @@ BOOL HCR_GetIconA(LPCSTR szClass, LPSTR szDest, LPCSTR sName, DWORD len, int* pi
 BOOL HCR_GetClassNameA(REFIID riid, LPSTR szDest, DWORD len) DECLSPEC_HIDDEN;
 
 BOOL HCR_GetFolderAttributes(LPCITEMIDLIST pidlFolder, LPDWORD dwAttributes) DECLSPEC_HIDDEN;
+
+/* File associations */
+#define SHELL32_AssocGetFolderDescription SHELL32_AssocGetFSDirectoryDescription
+HRESULT SHELL32_AssocGetFSDirectoryDescription(PWSTR Buf, UINT cchBuf);
+HRESULT SHELL32_AssocGetFileDescription(PCWSTR Name, PWSTR Buf, UINT cchBuf);
+
 
 DWORD WINAPI ParseFieldA(LPCSTR src, DWORD nField, LPSTR dst, DWORD len) DECLSPEC_HIDDEN;
 DWORD WINAPI ParseFieldW(LPCWSTR src, DWORD nField, LPWSTR dst, DWORD len) DECLSPEC_HIDDEN;
@@ -132,7 +142,7 @@ void FreeChangeNotifications(void) DECLSPEC_HIDDEN;
 BOOL SHELL_DeleteDirectoryW(HWND hwnd, LPCWSTR pwszDir, BOOL bShowUI);
 BOOL SHELL_ConfirmYesNoW(HWND hWnd, int nKindOfDialog, LPCWSTR szDir);
 
-void WINAPI _InsertMenuItemW (HMENU hmenu, UINT indexMenu, BOOL fByPosition,
+BOOL WINAPI _InsertMenuItemW (HMENU hmenu, UINT indexMenu, BOOL fByPosition,
 			UINT wID, UINT fType, LPCWSTR dwTypeData, UINT fState);
 
 static __inline BOOL SHELL_OsIsUnicode(void)
@@ -191,12 +201,9 @@ HRESULT SHELL_RegisterShellFolders(void) DECLSPEC_HIDDEN;
 /* Detect Shell Links */
 BOOL SHELL_IsShortcut(LPCITEMIDLIST) DECLSPEC_HIDDEN;
 
-INT_PTR CALLBACK SH_FileGeneralDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-INT_PTR CALLBACK SH_FileVersionDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 HPROPSHEETPAGE SH_CreatePropertySheetPage(WORD wDialogId, DLGPROC pfnDlgProc, LPARAM lParam, LPCWSTR pwszTitle);
-BOOL SH_ShowDriveProperties(WCHAR *drive, IDataObject *pDataObj);
-BOOL SH_ShowRecycleBinProperties(WCHAR sDrive);
-BOOL SH_ShowPropertiesDialog(LPCWSTR pwszPath, IDataObject *pDataObj);
+HPROPSHEETPAGE SH_CreatePropertySheetPageEx(WORD wDialogId, DLGPROC pfnDlgProc, LPARAM lParam,
+                                            LPCWSTR pwszTitle, LPFNPSPCALLBACK Callback);
 LPWSTR SH_FormatFileSizeWithBytes(PULARGE_INTEGER lpQwSize, LPWSTR pszBuf, UINT cchBuf);
 
 HRESULT WINAPI DoRegisterServer(void);

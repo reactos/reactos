@@ -695,7 +695,7 @@ HRESULT WINAPI CDesktopFolder::GetAttributesOf(
                 *rgfInOut &= dwMyComputerAttributes;
             else if (_ILIsNetHood(apidl[i]))
                 *rgfInOut &= dwMyNetPlacesAttributes;
-            else if (_ILIsFolder(apidl[i]) || _ILIsValue(apidl[i]) || _ILIsSpecialFolder(apidl[i]))
+            else if (_ILIsFolderOrFile(apidl[i]) || _ILIsSpecialFolder(apidl[i]))
             {
                 CComPtr<IShellFolder2> psf;
                 HRESULT hr = _GetSFFromPidl(apidl[i], &psf);
@@ -1069,6 +1069,13 @@ HRESULT WINAPI CDesktopFolderViewCB::MessageSFVCB(UINT uMsg, WPARAM wParam, LPAR
         case SFVM_VIEWRELEASE:
             m_pShellView = NULL;
             return S_OK;
+        case SFVM_GETCOMMANDDIR:
+        {
+            WCHAR buf[MAX_PATH];
+            if (SHGetSpecialFolderPathW(NULL, buf, CSIDL_DESKTOPDIRECTORY, TRUE))
+                return StringCchCopyW((PWSTR)lParam, wParam, buf);
+            break;
+        }
     }
     return E_NOTIMPL;
 }

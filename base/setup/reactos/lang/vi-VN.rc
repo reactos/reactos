@@ -8,8 +8,18 @@ CAPTION "Cài đặt ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Chào mừng đến với Trình hướng dẫn thiết lập ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "Bạn chưa thể cài đặt ReactOS trực tiếp tư đĩa CD này được! Xin hãy khởi động lại máy tính của bạn từ đĩa CD trên để cài đặt ReactOS.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Ấn Hoàn tất để thoát trình Thiết lập.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "This wizard will install or upgrade ReactOS on your computer, \
+and prepare the second part of the setup.", IDC_STATIC, 115, 40, 195, 27
+////
+    GROUPBOX " IMPORTANT INFORMATION ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
+    LTEXT "ReactOS is in Alpha stage: it is not feature- complete and is \
+under heavy development. It is recommended to use it only for \
+evaluation and testing and not as your daily-usage OS.\n\
+It may corrupt your data or damage your hardware.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
+    LTEXT "Backup your data or test on a secondary computer \
+if you attempt to run ReactOS on real hardware.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+////
+    LTEXT "Click Next to continue with Setup.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
@@ -17,11 +27,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Cài đặt ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Cài đặt ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "Cài đặt một bản sao mới của ReactOS. Tùy chọn này sẽ không giữ lại các thư mục,tập tin và chương trình của bạn. Bạn có thể thực hiện những thay đổi cho các ổ đĩa và những  phần phân chia trong ổ đĩa.", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
-    AUTORADIOBUTTON "Cập nhật hay sửa chữa ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Cập nhật hay sửa chữa một bản sao đã cài đặt của ReactOS. Tùy chọn này sẽ giữ lại các tập tin, cài đặt và chương trình của bạn. Tùy chọn này chỉ dùng được nếu ReactOS đã được cài đặt trên máy tinh này.", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
-    LTEXT "Ấn Tiếp để tiếp tục.", IDC_STATIC, 7, 128, 297, 8
+    AUTORADIOBUTTON "&Cài đặt ReactOS", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
+    LTEXT "Cài đặt một bản sao mới của ReactOS. Tùy chọn này sẽ không giữ lại các thư mục,tập tin và chương trình của bạn. Bạn có thể thực hiện những thay đổi cho các ổ đĩa và những  phần phân chia trong ổ đĩa.", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "Cập &nhật hay sửa chữa ReactOS", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "Cập nhật hay sửa chữa một bản sao đã cài đặt của ReactOS. Tùy chọn này sẽ giữ lại các tập tin, cài đặt và chương trình của bạn. Tùy chọn này chỉ dùng được nếu ReactOS đã được cài đặt trên máy tinh này.", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
@@ -160,22 +169,25 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TYPETITLE "Chào mừng tới trình Thiết lập ReactOS"
-    IDS_TYPESUBTITLE "Chọn kiểu thiết lập."
+    IDS_CAPTION "Cài đặt ReactOS"
+    IDS_TYPETITLE "Installation Type"
+    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
+    IDS_UPDATETITLE "Update or Repair ReactOS"
+    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
     IDS_DEVICETITLE "Thiết lập các thiết bị cơ bản"
     IDS_DEVICESUBTITLE "Chọn những cài đặt cho màn hình và bàn phím."
     IDS_DRIVETITLE "Thiết lập phần ổ cứng để cài đặt và thư mục hệ thống"
     IDS_DRIVESUBTITLE "Chuẩn bị phần ổ cứng, thư mục hệ thống và bootloader."
-    IDS_PROCESSTITLE "Thiết lập phần ổ cứng, sao chép tập tin và thiết lập hệ thống"
-    IDS_PROCESSSUBTITLE "Tạo và định dạng phần ổ đĩa, sao chép thư  mục, cài đặt và thiết lập bootloader"
-    IDS_RESTARTTITLE "Giai đoạn đầu của việc thiết lập đã hoàn tất"
-    IDS_RESTARTSUBTITLE "Giai đoạn đầu của việc thiết lập đã được hoàn thành, khởi động lại máy tính để tiếp tuc với giai đoạn hai"
     IDS_SUMMARYTITLE "Tóm lược quá trình cài đặt"
-    IDS_SUMMARYSUBTITLE "Liệt kê các thuộc tính đã lựa chọn nhằm kiểm lại trước khi áp dụng vào thiết bị được chọn"
+    IDS_SUMMARYSUBTITLE "Liệt kê các thuộc tính đã lựa chọn nhằm kiểm lại trước khi áp dụng vào thiết bị được chọn."
+    IDS_PROCESSTITLE "Thiết lập phần ổ cứng, sao chép tập tin và thiết lập hệ thống"
+    IDS_PROCESSSUBTITLE "Tạo và định dạng phần ổ đĩa, sao chép thư  mục, cài đặt và thiết lập bootloader."
+    IDS_RESTARTTITLE "Giai đoạn đầu của việc thiết lập đã hoàn tất"
+    IDS_RESTARTSUBTITLE "Giai đoạn đầu của việc thiết lập đã được hoàn thành, khởi động lại máy tính để tiếp tuc với giai đoạn hai."
     IDS_ABORTSETUP "ReactOS vẵn chưa được hoàn tất cài đặt trên máy tính của bạn. Nếu bây giờ bạn hủy trình Thiết lập, lần tới ban sẽ cần phải chạy lại trình Thiết lập để cài đặt ReactOS. Bạn thực sự muốn bỏ?"
     IDS_ABORTSETUP2 "Hủy bỏ trình Thiết lập?"
-    IDS_NO_TXTSETUP_SIF "Không thể tìm được tập tin 'txtsetup.sif'.\nTrình Thiết lập không thể tiếp tục"
-    IDS_CAPTION "Cài đặt ReactOS"
+    IDS_NO_TXTSETUP_SIF "Không thể tìm được tập tin 'txtsetup.sif'.\nTrình Thiết lập không thể tiếp tục."
+    IDS_INSTALLBTN "&Install"
     IDS_VOLUME_NOFORMAT "Not formatted"
 END
 
@@ -218,12 +230,16 @@ BEGIN
     IDS_RENAMING "Renaming %s to %s"
     IDS_DELETING "Deleting %s"
 
+    IDS_CONFIG_SYSTEM_PARTITION "Configuring the system partition..."
     IDS_PREPARE_PARTITIONS "Preparing partitions..."
     IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
     IDS_COPYING_FILES "Copying the files..."
 
     IDS_CREATE_REGISTRY "Creating the registry..."
     IDS_UPDATE_REGISTRY "Updating the registry..."
+
+    // IDS_INSTALL_FINALIZE "Finalizing the installation..."
+    IDS_INSTALL_BOOTLOADER "Installing the bootloader..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.
@@ -280,4 +296,11 @@ the Setup program cannot install ReactOS.\
 \nClick on CANCEL to quit Setup."
 
     IDS_ERROR_CHECKING_PARTITION "ChkDsk detected some disk errors.\n(Status 0x%08lx)."
+
+    IDS_ERROR_WRITE_BOOT "Setup failed to install the %s bootcode on the system partition."
+    IDS_ERROR_INSTALL_BOOTCODE "Setup failed to install the %s bootcode on the boot disk."
+    IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "Setup failed to install the bootcode on the removable media."
+    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "Setup does not currently support installing the bootloader on the computer you are using.\
+\nClick on OK to continue anyway."
+    IDS_ERROR_BOOTLDR_FAILED "Setup could not install the bootloader (Status 0x%08lx)."
 END

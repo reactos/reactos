@@ -32,12 +32,11 @@
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 // Icons
-IDI_STARFIELD           ICON    DISCARDABLE     "res/icon_stars.ico"
+IDI_STARFIELD   ICON    "res/icon_stars.ico"
 
 // Bitmap
-
-IDB_COSMOS              BITMAP  DISCARDABLE     "res/cosmicfractal.bmp"
-IDB_STAR                BITMAP  DISCARDABLE     "res/star.bmp"
+IDB_COSMOS      BITMAP  "res/cosmicfractal.bmp"
+IDB_STAR        BITMAP  "res/star.bmp"
 
 #include <reactos/manifest_exe.rc>
 

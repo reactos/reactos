@@ -21,7 +21,6 @@
 
 #include "inetcpl.h"
 
-
 #include <reactos/manifest_hosted.rc>
 
 /* UTF-8 */

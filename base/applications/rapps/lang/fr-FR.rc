@@ -52,9 +52,7 @@ CAPTION "Configuration"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Général", -1, 4, 2, 240, 61
-    AUTOCHECKBOX "&Enregistrer la position de la fenêtre", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "&Mettre à jour la liste des programmes accessibles au démarrage", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "&Journal de l'installation et de la suppression des programmes", IDC_LOG_ENABLED, 15, 46, 219, 12
+    CONTROL "", IDC_GENERALLIST, "SysListView32", WS_TABSTOP | LVCHECKSTYLES, 15, 12, 219, 46, WS_EX_STATICEDGE
     GROUPBOX "Téléchargement", -1, 4, 65, 240, 51
     LTEXT "Dossier des téléchargements :", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
@@ -215,6 +213,10 @@ BEGIN
     IDS_APP_DISPLAY_LIST "Liste"
     IDS_APP_DISPLAY_TILE "Tuile"
     IDS_NO_SEARCH_RESULTS "Aucun résultat"
+    IDS_CFG_SAVE_WINDOW_POS "Enregistrer la position de la fenêtre"
+    IDS_CFG_UPDATE_AVLIST "Mettre à jour la liste des programmes accessibles au démarrage"
+    IDS_CFG_LOG_ENABLED "Journal de l'installation et de la suppression des programmes"
+    IDS_CFG_SMALL_ICONS "Petites icônes"
 END
 
 STRINGTABLE
@@ -268,4 +270,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_INSTGEN_CONFIRMUNINST "Êtes-vous sûr de vouloir désinstaller %s ?"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "Installation complete, run %s now?"
 END

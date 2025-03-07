@@ -38,7 +38,7 @@ NTAPI
 KeStartAllProcessors(VOID)
 {
     PVOID KernelStack, DPCStack;
-    SIZE_T ProcessorCount = 0;
+    ULONG ProcessorCount = 0;
     PAPINFO APInfo;
 
     while (TRUE)
@@ -127,7 +127,7 @@ KeStartAllProcessors(VOID)
         KeLoaderBlock->Thread = (ULONG_PTR)&APInfo->Pcr.Prcb->IdleThread;
 
         // Start the CPU
-        DPRINT("Attempting to Start a CPU with number: %u\n", ProcessorCount);
+        DPRINT("Attempting to Start a CPU with number: %lu\n", ProcessorCount);
         if (!HalStartNextProcessor(KeLoaderBlock, ProcessorState))
         {
             break;
@@ -152,5 +152,5 @@ KeStartAllProcessors(VOID)
     if (DPCStack)
         MmDeleteKernelStack(DPCStack, FALSE);
 
-    DPRINT1("KeStartAllProcessors: Successful AP startup count is %u\n", ProcessorCount);
+    DPRINT1("KeStartAllProcessors: Successful AP startup count is %lu\n", ProcessorCount);
 }

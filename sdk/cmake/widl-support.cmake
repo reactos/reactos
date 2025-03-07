@@ -1,11 +1,11 @@
 
 #idl files support
 if(ARCH STREQUAL "i386")
-    set(IDL_FLAGS -m32 --win32)
+    set(IDL_FLAGS -m32 --win32 -b i386-x-y)
 elseif(ARCH STREQUAL "amd64")
-    set(IDL_FLAGS -m64 --win64)
+    set(IDL_FLAGS -m64 --win64 -b amd64-x-y)
 else()
-    set(IDL_FLAGS "")
+    set(IDL_FLAGS -b ${ARCH}-x-y)
 endif()
 
 function(add_typelib)

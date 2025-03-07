@@ -987,10 +987,6 @@ BEGIN
     IDS_FILE_TYPES "ファイルの種類"
     IDS_COLUMN_EXTENSION "拡張子"
 
-    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
-       used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s ファイル"
-
     IDS_BYTES_FORMAT "バイト"
     IDS_UNKNOWN_APP "未知のアプリ"
     IDS_EXE_DESCRIPTION "説明:"
@@ -998,6 +994,8 @@ BEGIN
     IDS_MENU_EMPTY "(空)"
     IDS_OBJECTS "%d 個のオブジェクト"
     IDS_OBJECTS_SELECTED "%d 個のオブジェクトが選択済み"
+
+    IDS_SEARCH_BROWSEITEM "参照..."
 
     IDS_TITLE_MYCOMP "マイ コンピュータ"
     IDS_TITLE_MYNET "マイ ネットワーク"

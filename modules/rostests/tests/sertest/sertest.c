@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
         rxBuffer[i] = 0xFF;
     }
     printf("\n");
-    printf("Writting transmit buffer to the serial port\n");
+    printf("Writing transmit buffer to the serial port\n");
     bResult = WriteFile(hPort, txBuffer, BUFSIZE, &dwNumWritten, NULL);
     if (!bResult) {
         printf("ERROR: failed to write to the serial port: %lx\n", (DWORD)bResult);

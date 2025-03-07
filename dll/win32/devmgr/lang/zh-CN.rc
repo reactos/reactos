@@ -294,14 +294,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "ReactOS 设备管理器"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
   IDS_CONFIRM_DISABLE       "禁用此设备会使其停止运行。\n你真的想要禁用它吗？"
   IDS_CONFIRM_UNINSTALL     "警告: 您将要从系统中卸载此设备。\n你想要继续吗？"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "更新驱动程序软件..."
   IDS_MENU_ENABLE           "启用"
@@ -312,7 +313,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "属性"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "属性"
   IDS_TOOLTIP_SCAN          "扫描检测硬件改动"
@@ -323,7 +324,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " 当前所选内容的公开的属性对话框。"

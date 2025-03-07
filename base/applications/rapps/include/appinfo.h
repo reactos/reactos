@@ -41,6 +41,7 @@ enum AppsCategories
     ENUM_CAT_THEMES,
     ENUM_CAT_OTHER,
     ENUM_CAT_SELECTED,
+    ENUM_LASTCATEGORY = ENUM_CAT_SELECTED - 1,
     ENUM_ALL_INSTALLED = 30,
     ENUM_INSTALLED_APPLICATIONS,
     ENUM_UPDATES,
@@ -54,6 +55,12 @@ enum AppsCategories
 inline BOOL
 IsAvailableEnum(INT x)
 {
+    C_ASSERT(ENUM_CAT_AUDIO == 1 && ENUM_CAT_THEMES == 15 && ENUM_CAT_OTHER == 16);
+    C_ASSERT(ENUM_LASTCATEGORY >= ENUM_CAT_OTHER);
+    C_ASSERT(ENUM_LASTCATEGORY < ENUM_CAT_SELECTED);
+    C_ASSERT(ENUM_LASTCATEGORY < ENUM_INSTALLED_MIN);
+    C_ASSERT(ENUM_CAT_SELECTED < ENUM_INSTALLED_MIN);
+
     return (x >= ENUM_AVAILABLE_MIN && x <= ENUM_AVAILABLE_MAX);
 }
 
@@ -68,7 +75,9 @@ enum UninstallCommandFlags
     UCF_NONE   = 0x00,
     UCF_MODIFY = 0x01,
     UCF_SILENT = 0x02,
+    UCF_SAMEPROCESS = 0x04,
 };
+DEFINE_ENUM_FLAG_OPERATORS(UninstallCommandFlags);
 
 enum InstallerType
 {
@@ -82,6 +91,7 @@ enum InstallerType
 #define DB_REGNAME L"RegName"
 #define DB_INSTALLER L"Installer"
 #define DB_SCOPE L"Scope" // User or Machine
+#define DB_SAVEAS L"SaveAs"
 
 #define DB_GENINSTSECTION L"Generate"
 #define GENERATE_ARPSUBKEY L"RApps" // Our uninstall data is stored here

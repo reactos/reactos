@@ -22,7 +22,7 @@ elseif(ARCH STREQUAL "amd64")
 endif()
 
 
-spec2def(freeldr_pe.exe freeldr.spec)
+spec2def(freeldr.sys freeldr.spec ADD_IMPORTLIB)
 
 list(APPEND PCATLDR_ARC_SOURCE
     ${FREELDR_ARC_SOURCE}
@@ -110,6 +110,9 @@ if(ARCH STREQUAL "i386")
     endif()
 
 elseif(ARCH STREQUAL "amd64")
+    list(APPEND PCATLDR_BASE_ASM_SOURCE
+        arch/i386/multiboot.S)
+
     list(APPEND PCATLDR_COMMON_ASM_SOURCE
         arch/amd64/entry.S
         arch/amd64/int386.S
@@ -152,7 +155,7 @@ add_library(freeldr_common
     ${PCATLDR_ARC_SOURCE}
     ${FREELDR_BOOTLIB_SOURCE}
     ${PCATLDR_BOOTMGR_SOURCE}
-    ${FREELDR_NTLDR_SOURCE})
+)
 
 if(MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # We need to reduce the binary size
@@ -167,7 +170,7 @@ set(PCH_SOURCE
     ${PCATLDR_ARC_SOURCE}
     ${FREELDR_BOOTLIB_SOURCE}
     ${PCATLDR_BOOTMGR_SOURCE}
-    ${FREELDR_NTLDR_SOURCE})
+)
 
 add_pch(freeldr_common include/freeldr.h PCH_SOURCE)
 add_dependencies(freeldr_common bugcodes asm xdk)
@@ -218,7 +221,7 @@ if(ARCH STREQUAL "i386")
     target_link_libraries(freeldr_pe mini_hal)
 endif()
 
-target_link_libraries(freeldr_pe freeldr_common cportlib blcmlib blrtl libcntpr)
+target_link_libraries(freeldr_pe freeldr_common cportlib libcntpr blrtl)
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)
@@ -250,18 +253,4 @@ else()
     add_custom_target(freeldr ALL DEPENDS freeldr_pe)
 endif()
 
-# Rename freeldr on livecd to setupldr.sys because isoboot.bin looks for setupldr.sys
-add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB FOR bootcd regtest)
-add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FOR livecd hybridcd NAME_ON_CD setupldr.sys)
-
-if(NOT ARCH STREQUAL "arm")
-    concatenate_files(
-        ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys
-        ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
-        ${CMAKE_CURRENT_BINARY_DIR}/$<TARGET_FILE_NAME:freeldr_pe>)
-    add_custom_target(setupldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys)
-else()
-    add_custom_target(setupldr ALL DEPENDS freeldr_pe)
-endif()
-
-add_cd_file(TARGET setupldr FILE ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys DESTINATION loader NO_CAB FOR bootcd regtest)
+add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FOR bootcd livecd hybridcd regtest)

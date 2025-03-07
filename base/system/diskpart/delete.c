@@ -75,7 +75,7 @@ DeletePartition(
         }
         else if (_wcsicmp(argv[i], L"override") == 0)
         {
-            /* noerr */
+            /* override */
             DPRINT("OVERRIDE\n");
             bOverride = TRUE;
         }

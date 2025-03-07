@@ -314,5 +314,74 @@ EXTERN_C const IID IID_INetCfg;
 #define NETCFG_S_CAUSED_SETUP_CHANGE                 0x8004A024
 #define NETCFG_S_COMMIT_NOW                          0x8004A025
 
+EXTERN_C const IID IID_INetCfgClass;
+
+#undef  INTERFACE
+#define INTERFACE   INetCfgClass
+DECLARE_INTERFACE_(INetCfgClass, IUnknown)
+{
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    STDMETHOD_(HRESULT,FindComponent) (THIS_ INetCfgComponent **ppnccItem) PURE;
+    STDMETHOD_(HRESULT,EnumComponents) (THIS_ IEnumNetCfgComponent **ppenumComponent) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define INetCfgClass_QueryInterface(p,a,b)  (p)->lpVtbl->QueryInterface(p,a,b)
+#define INetCfgClass_AddRef(p)              (p)->lpVtbl->AddRef(p)
+#define INetCfgClass_Release(p)             (p)->lpVtbl->Release(p)
+#define INetCfgClass_FindComponent(p,a)     (p)->lpVtbl->FindComponent(p,a)
+#define INetCfgClass_EnumComponents(p,a)    (p)->lpVtbl->EnumComponents(p,a)
+#endif
+
+typedef 
+enum tagOBO_TOKEN_TYPE
+{
+    OBO_USER = 1,
+    OBO_COMPONENT = 2,
+    OBO_SOFTWARE = 3
+} OBO_TOKEN_TYPE;
+
+typedef struct tagOBO_TOKEN
+{
+    OBO_TOKEN_TYPE Type;
+    INetCfgComponent *pncc;
+    LPCWSTR pszwManufacturer;
+    LPCWSTR pszwProduct;
+    LPCWSTR pszwDisplayName;
+    BOOL fRegistered;
+} OBO_TOKEN;
+
+#define NSF_PRIMARYINSTALL 1
+#define NSF_POSTSYSINSTALL 2
+
+EXTERN_C const IID IID_INetCfgClassSetup;
+
+#undef  INTERFACE
+#define INTERFACE   INetCfgClassSetup
+DECLARE_INTERFACE_(INetCfgClassSetup, IUnknown)
+{
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    STDMETHOD_(HRESULT,SelectAndInstall)(THIS_ HWND hwndParent, OBO_TOKEN *pOboToken, INetCfgComponent **ppnccItem) PURE;
+    STDMETHOD_(HRESULT,Install)(THIS_ LPCWSTR pszwInfId, OBO_TOKEN *pOboToken, DWORD dwSetupFlags, DWORD dwUpgradeFromBuildNo,
+                                LPCWSTR pszwAnswerFile, LPCWSTR pszwAnswerSections, INetCfgComponent **ppnccItem) PURE;
+    STDMETHOD_(HRESULT,DeInstall)(THIS_ INetCfgComponent *pComponent, OBO_TOKEN *pOboToken, LPWSTR *pmszwRefs) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define INetCfgClassSetup_QueryInterface(p,a,b)      (p)->lpVtbl->QueryInterface(p,a,b)
+#define INetCfgClassSetup_AddRef(p)                  (p)->lpVtbl->AddRef(p)
+#define INetCfgClassSetup_Release(p)                 (p)->lpVtbl->Release(p)
+#define INetCfgClassSetup_SelectAndInstall(p,a,b,c)  (p)->lpVtbl->SelectAndInstall(p,a,b,c)
+#define INetCfgClassSetup_Install(p,a,b,c,d,e,f,g)   (p)->lpVtbl->Install(p,a,b,c,d,e,f,g)
+#define INetCfgClassSetup_DeInstall(p,a,b,c)         (p)->lpVtbl->DeInstall(p,a,b,c)
+#endif
 
 #endif

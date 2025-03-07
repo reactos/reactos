@@ -3,9 +3,9 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-IDB_BITMAP1      BITMAP  DISCARDABLE  "matrix.bmp"
-IDC_BLANKCURSOR  CURSOR  DISCARDABLE  "cursor1.cur"
-IDI_ICON1        ICON    DISCARDABLE  "icon1.ico"
+IDB_BITMAP1      BITMAP  "matrix.bmp"
+IDC_BLANKCURSOR  CURSOR  "cursor1.cur"
+IDI_ICON1        ICON    "icon1.ico"
 
 #include <reactos/manifest_exe.rc>
 

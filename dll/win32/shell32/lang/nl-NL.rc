@@ -216,7 +216,7 @@ BEGIN
     LTEXT "Choose the advanced properties you want for this shortcut.", -1, 5, 30, 210, 10
     CHECKBOX "Run with different credentials", IDC_SHORTEX_RUN_DIFFERENT, 25, 50, 150, 10
     LTEXT "This option can allow you to run the this shortcut as another user, or continue as yourself while protecting your computer and data from unauthorized program activity.", -1, 50, 60, 175, 40
-    CHECKBOX "Run in seperate memory space", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
+    CHECKBOX "Run in separate memory space", IDC_SHORTEX_RUN_SEPARATE, 25, 100, 150, 10, WS_DISABLED
     PUSHBUTTON "OK", IDOK, 63, 124, 50, 15, WS_VISIBLE
     PUSHBUTTON "Abort", IDCANCEL, 120, 124, 50, 15, WS_VISIBLE
 END
@@ -965,7 +965,7 @@ BEGIN
     IDS_SCR_FILE "Screen Saver"
     IDS_SYS_FILE "System File"
     IDS_VXD_FILE "Virtual Device Driver"
-    IDS_ANY_FILE "%s-file"
+    IDS_ANY_FILE "%s File"
 
     IDS_OPEN_VERB "Open"
     IDS_EXPLORE_VERB "Explore"
@@ -990,10 +990,6 @@ BEGIN
     IDS_FILE_TYPES "File Types"
     IDS_COLUMN_EXTENSION "Extensions"
 
-    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
-       used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s File"
-
     IDS_BYTES_FORMAT "bytes"
     IDS_UNKNOWN_APP "Unknown application"
     IDS_EXE_DESCRIPTION "Description:"
@@ -1001,6 +997,8 @@ BEGIN
     IDS_MENU_EMPTY "(Empty)"
     IDS_OBJECTS "%d Objects"
     IDS_OBJECTS_SELECTED "%d Objects Selected"
+
+    IDS_SEARCH_BROWSEITEM "Bladeren..."
 
     IDS_TITLE_MYCOMP "My Computer"
     IDS_TITLE_MYNET "My Network Places"

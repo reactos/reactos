@@ -112,8 +112,9 @@ XboxDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY Geometry)
 
     Geometry->Cylinders = DeviceUnit->Cylinders;
     Geometry->Heads = DeviceUnit->Heads;
-    Geometry->Sectors = DeviceUnit->Sectors;
+    Geometry->SectorsPerTrack = DeviceUnit->Sectors;
     Geometry->BytesPerSector = DeviceUnit->SectorSize;
+    Geometry->Sectors = DeviceUnit->TotalSectors;
 
     return TRUE;
 }

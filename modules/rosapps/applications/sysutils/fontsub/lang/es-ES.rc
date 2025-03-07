@@ -10,9 +10,6 @@
  * Translation: Julen Urizar Compains
  */
 
-/* UTF-8 */
-#pragma code_page(65001)
-
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 1 MENU

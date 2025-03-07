@@ -6,9 +6,6 @@
  * REFERENCES:  Chinese (Traditional) resource file
  */
 
-/* UTF-8 */
-#pragma code_page(65001)
-
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
 
 1 MENU

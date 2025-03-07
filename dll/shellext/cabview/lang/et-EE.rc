@@ -1,0 +1,21 @@
+/*
+ * PROJECT:     ReactOS CabView Shell Extension
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Estonian resource file
+ * TRANSLATOR:  Copyright 2018 Joann Mõndresku <joann.mondresku@gmail.com>
+ */
+
+LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_COL_NAME    "Nimi"
+    IDS_COL_TYPE    "Tüüp"
+    IDS_COL_SIZE    "Suurus"
+    IDS_COL_MDATE   "Kuupäeval muudetud"
+    IDS_COL_PATH    "Path"
+    IDS_COL_ATT     "Attributes"
+
+    IDS_EXTRACT     "Extract..."
+    IDS_EXTRACTALL  "Extract &All..."
+END

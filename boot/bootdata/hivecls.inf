@@ -432,14 +432,27 @@ HKCR,"xslfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.e
 
 ; MSI files
 HKCR,".msi","",0x00000000,"Msi.Package"
-HKCR,"Msi.Package","",0x00000000,%MSIPACK%
-;;HKCR,"Msi.Package","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msi.dll,-34"
+HKCR,"Msi.Package","",0x00000000,"ReactOS Installer Package"
+HKCR,"Msi.Package","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msi.dll,-34"
 HKCR,"Msi.Package\DefaultIcon","",0x00000000,"msiexec.exe"
+HKCR,"Msi.Package\shell\Open","",0x00000000,"&Install"
+HKCR,"Msi.Package\shell\Open","MUIVerb",0x00020000,"@%SystemRoot%\system32\msi.dll,-36"
 HKCR,"Msi.Package\shell\Open\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /i ""%1"""
-HKCR,"Msi.Package\shell\Repair","",0x00000000,%REPAIR%
+HKCR,"Msi.Package\shell\Repair","",0x00000000,"Re&pair"
+HKCR,"Msi.Package\shell\Repair","MUIVerb",0x00020000,"@%SystemRoot%\system32\msi.dll,-37"
 HKCR,"Msi.Package\shell\Repair\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /f ""%1"""
-HKCR,"Msi.Package\shell\Uninstall","",0x00000000,%UNINSTALL%
+HKCR,"Msi.Package\shell\Uninstall","",0x00000000,"&Uninstall"
+HKCR,"Msi.Package\shell\Uninstall","MUIVerb",0x00020000,"@%SystemRoot%\system32\msi.dll,-38"
 HKCR,"Msi.Package\shell\Uninstall\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /x ""%1"""
+
+; MSP files
+HKCR,".msp","",0x00000000,"Msi.Patch"
+HKCR,"Msi.Patch","",0x00000000,"ReactOS Installer Patch"
+HKCR,"Msi.Patch","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msi.dll,-35"
+HKCR,"Msi.Patch\DefaultIcon","",0x00000000,"msiexec.exe"
+HKCR,"Msi.Patch\shell\Open","",0x00000000,"&Apply Patch"
+HKCR,"Msi.Patch\shell\Open","MUIVerb",0x00020000,"@%SystemRoot%\system32\msi.dll,-39"
+HKCR,"Msi.Patch\shell\Open\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /p ""%1"""
 
 ; NT DOS32 Configuration File
 HKCR,".nt","",0x00000000,"ntfile"
@@ -784,9 +797,6 @@ CHMFILE="Compiled HTML Help File"
 XMLFILE="XML Document"
 XSLFILE="XSL Stylesheet"
 
-;; In msi.dll
-MSIPACK="ReactOS Installer Package"
-
 ;; In themeui.dll
 MSSTYLESFILE="Visual Style File"
 THEMEFILE="Theme File"
@@ -806,11 +816,9 @@ WSFFILE="Windows Script File"
 ;; For .reg files, right-click menu
 MERGE="Merge"
 
-;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+;; For screensaver (*.scr) files, right-click menu
 CONFIGURE="Configure"
 INSTALL="Install"
-UNINSTALL="Uninstall"
-REPAIR="Repair"
 TEST="Test"
 
 ;------------------------------------------------------------------------
@@ -825,9 +833,6 @@ CPLFILE_OPENWITH="Mit der Systemsteuerung öffnen"
 ;; In msxml3r.dll
 ;XMLFILE="XML Document"
 ;XSLFILE="XSL Stylesheet"
-
-;; In msi.dll
-;MSIPACK="ReactOS Installer Package"
 
 ;; In themeui.dll
 ;MSSTYLESFILE="Visual Style File"
@@ -847,11 +852,9 @@ CPLFILE_OPENWITH="Mit der Systemsteuerung öffnen"
 ;; For .reg files, right-click menu
 ;MERGE="Merge"
 
-;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+;; For screensaver (*.scr) files, right-click menu
 ;CONFIGURE="Configure"
 ;INSTALL="Install"
-;UNINSTALL="Uninstall"
-;REPAIR="Repair"
 ;TEST="Test"
 
 ;------------------------------------------------------------------------
@@ -866,9 +869,6 @@ CHMFILE="Archivo de ayuda HTML compilado"
 ;; In msxml3r.dll
 XMLFILE="Documento XML"
 XSLFILE="Hoja de estilos XSL"
-
-;; In msi.dll
-MSIPACK="Paquete de instalación de ReactOS"
 
 ;; In themeui.dll
 MSSTYLESFILE="Archivo de estilo visual"
@@ -888,11 +888,9 @@ WMZFILE="Metarchivo mejorado comprimido"
 ;; For .reg files, right-click menu
 MERGE="Combinar"
 
-;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+;; For screensaver (*.scr) files, right-click menu
 CONFIGURE="Configurar"
 INSTALL="Instalar"
-UNINSTALL="Desinstalar"
-REPAIR="Reparar"
 TEST="Probar"
 
 ;------------------------------------------------------------------------
@@ -907,9 +905,6 @@ CHMFILE="Fichier d'aide HTML compilé"
 ;; In msxml3r.dll
 XMLFILE="Document XML"
 XSLFILE="Feuille de style XSL"
-
-;; In msi.dll
-MSIPACK="Package ReactOS Installer"
 
 ;; In themeui.dll
 MSSTYLESFILE="Fichier de styles visuels"
@@ -929,11 +924,9 @@ SCFFILE="Commande de l'explorateur ReactOS"
 ;; For .reg files, right-click menu
 MERGE="Fusionner"
 
-;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+;; For screensaver (*.scr) files, right-click menu
 CONFIGURE="Configurer"
 INSTALL="Installer"
-UNINSTALL="Désinstaller"
-REPAIR="Réparer"
 TEST="Tester"
 
 ;------------------------------------------------------------------------
@@ -948,9 +941,6 @@ CHMFILE="File della guida HTML compilato"
 ;; In msxml3r.dll
 XMLFILE="Documento XML"
 XSLFILE="Foglio di stile XSL"
-
-;; In msi.dll
-MSIPACK="Pacchetto di installazione di ReactOS"
 
 ;; In themeui.dll
 MSSTYLESFILE="File di stili visivi"
@@ -970,11 +960,9 @@ AVIFILE="Filmato video"
 ;; For .reg files, right-click menu
 MERGE="Unione"
 
-;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+;; For screensaver (*.scr) files, right-click menu
 CONFIGURE="Configura"
 INSTALL="Installa"
-UNINSTALL="Rimuovi"
-REPAIR="Ripara"
 TEST="Prova"
 
 ;------------------------------------------------------------------------
@@ -989,9 +977,6 @@ CHMFILE="Skompilowany plik Pomocy w formacie HTML"
 ;; In msxml3r.dll
 XMLFILE="Dokument XML"
 XSLFILE="Arkusz stylów XSL"
-
-;; In msi.dll
-MSIPACK="Pakiet Instalatora ReactOS"
 
 ;; In themeui.dll
 MSSTYLESFILE="Plik stylu wizualnego"
@@ -1011,11 +996,9 @@ WMZFILE="Skompresowany metaplik"
 ;; For .reg files, right-click menu
 MERGE="Scal"
 
-;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+;; For screensaver (*.scr) files, right-click menu
 CONFIGURE="Konfiguruj"
 INSTALL="Zainstaluj"
-UNINSTALL="Odinstaluj"
-REPAIR="Napraw"
 TEST="Testuj"
 
 ;------------------------------------------------------------------------
@@ -1031,9 +1014,6 @@ CHMFILE="Ficheiro de ajuda HTML compilado"
 ;; In msxml3r.dll
 XMLFILE="Documento XML"
 XSLFILE="Folha de estilos XSL"
-
-;; In msi.dll
-MSIPACK="Pacote de instalação do ReactOS"
 
 ;; In themeui.dll
 MSSTYLESFILE="Ficheiro de estilo visual"
@@ -1053,11 +1033,9 @@ WMZFILE="Metarquivo aprimorado compactado"
 ;; For .reg files, right-click menu
 MERGE="Combinar"
 
-;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+;; For screensaver (*.scr) files, right-click menu
 CONFIGURE="Configurar"
 INSTALL="Instalar"
-UNINSTALL="Desinstalar"
-REPAIR="Reparar"
 TEST="Testar"
 
 ;------------------------------------------------------------------------
@@ -1073,9 +1051,6 @@ CHMFILE="Manual compilat din HTML"
 ;; In msxml3r.dll
 XMLFILE="Document XML"
 XSLFILE="Foaie de stil XSL"
-
-;; In msi.dll
-MSIPACK="Pachet de instalare ReactOS"
 
 ;; In themeui.dll
 MSSTYLESFILE="Fișier de stil vizual"
@@ -1095,11 +1070,9 @@ WMZFILE="Metafișier îmbunătățit comprimat"
 ;; For .reg files, right-click menu
 MERGE="Unește"
 
-;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+;; For screensaver (*.scr) files, right-click menu
 CONFIGURE="Configurează"
 INSTALL="Instalează"
-UNINSTALL="Dezinstalează"
-REPAIR="Repară"
 TEST="Testează"
 
 ;------------------------------------------------------------------------
@@ -1114,9 +1087,6 @@ CHMFILE="Скомпилированный HTML-файл справки"
 ;; In msxml3r.dll
 XMLFILE="Документ XML"
 XSLFILE="XSL таблица стилей"
-
-;; In msi.dll
-MSIPACK="Пакет установщика ReactOS"
 
 ;; In themeui.dll
 MSSTYLESFILE="Файл стиля оформления"
@@ -1136,11 +1106,9 @@ WMZFILE="Сжатый расширенный метафайл"
 ;; For .reg files, right-click menu
 MERGE="Слияние"
 
-;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+;; For screensaver (*.scr) files, right-click menu
 CONFIGURE="Настроить"
 INSTALL="Установить"
-UNINSTALL="Удалить"
-REPAIR="Исправить"
 TEST="Тест"
 
 ;------------------------------------------------------------------------
@@ -1155,9 +1123,6 @@ CHMFILE="已編譯的 HTML 說明檔案"
 ;; In msxml3r.dll
 XMLFILE="XML 文件"
 XSLFILE="XSL 樣式表"
-
-;; In msi.dll
-MSIPACK="ReactOS 安裝套件"
 
 ;; In themeui.dll
 MSSTYLESFILE="視覺樣式檔案"
@@ -1177,11 +1142,9 @@ SCFFILE="ReactOS Explorer 命令"
 ;; For .reg files, right-click menu
 MERGE="合併"
 
-;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+;; For screensaver (*.scr) files, right-click menu
 CONFIGURE="設定"
 INSTALL="安裝"
-UNINSTALL="解除安裝"
-REPAIR="修復"
 TEST="測試"
 
 ;------------------------------------------------------------------------
@@ -1196,9 +1159,6 @@ CPLFILE_OPENWITH="Denetim Masası'yla Aç"
 ;; In msxml3r.dll
 ;XMLFILE="XML Dosyası"
 ;XSLFILE="XSL Stil Şablonu"
-
-;; In msi.dll
-;MSIPACK="ReactOS Yükleyicisi Paketi"
 
 ;; In themeui.dll
 ;MSSTYLESFILE="Görsel Stil Dosyası"
@@ -1218,11 +1178,9 @@ CPLFILE_OPENWITH="Denetim Masası'yla Aç"
 ;; For .reg files, right-click menu
 ;MERGE="Birleştir"
 
-;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+;; For screensaver (*.scr) files, right-click menu
 ;CONFIGURE="Yapılandır"
 ;INSTALL="Yükle"
-;UNINSTALL="Kaldır"
-;REPAIR="Onar"
 ;TEST="Dene"
 
 ;------------------------------------------------------------------------
@@ -1237,9 +1195,6 @@ CHMFILE="已編譯 HTML 說明檔案"
 ;; In msxml3r.dll
 XMLFILE="XML 文件"
 XSLFILE="XSL 樣式表"
-
-;; In msi.dll
-MSIPACK="ReactOS 安裝套件"
 
 ;; In themeui.dll
 MSSTYLESFILE="視覺樣式檔案"
@@ -1259,11 +1214,9 @@ SCFFILE="ReactOS Explorer 命令"
 ;; For .reg files, right-click menu
 MERGE="合併"
 
-;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+;; For screensaver (*.scr) files, right-click menu
 CONFIGURE="設定"
 INSTALL="安裝"
-UNINSTALL="解除安裝"
-REPAIR="修復"
 TEST="測試"
 
 ;------------------------------------------------------------------------
@@ -1279,9 +1232,6 @@ CHMFILE="コンパイル済み HTML ヘルプ ファイル"
 ;; In msxml3r.dll
 XMLFILE="XML 文書"
 XSLFILE="XSL スタイルシート"
-
-;; In msi.dll
-MSIPACK="ReactOS インストーラ パッケージ"
 
 ;; In themeui.dll
 MSSTYLESFILE="視覚スタイル ファイル"
@@ -1301,11 +1251,9 @@ WMZFILE="圧縮済み拡張メタファイル"
 ;; For .reg files, right-click menu
 MERGE="結合"
 
-;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+;; For screensaver (*.scr) files, right-click menu
 CONFIGURE="設定"
 INSTALL="インストール"
-UNINSTALL="アンインストール"
-REPAIR="修復"
 TEST="テスト"
 
 ;------------------------------------------------------------------------
@@ -1320,9 +1268,6 @@ CHMFILE="已编译的 HTML 帮助文件"
 ;; In msxml3r.dll
 XMLFILE="XML 文档"
 XSLFILE="XSL 样式表"
-
-;; In msi.dll
-MSIPACK="ReactOS Installer 软件包"
 
 ;; In themeui.dll
 MSSTYLESFILE="可视化风格文件"
@@ -1342,11 +1287,9 @@ SCFFILE="ReactOS Explorer Command"
 ;; For .reg files, right-click menu
 MERGE="合并"
 
-;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+;; For screensaver (*.scr) files, right-click menu
 CONFIGURE="配置"
 INSTALL="安装"
-UNINSTALL="卸载"
-REPAIR="修复"
 TEST="测试"
 
 ; EOF

@@ -180,12 +180,20 @@ typedef struct _WKSTA_USER_INFO_1101
 {
     [string] wchar_t *wkui1101_oth_domains;
 } WKSTA_USER_INFO_1101, *PWKSTA_USER_INFO_1101, *LPWKSTA_USER_INFO_1101;
-
+/*
 typedef [switch_type(unsigned long)] union _WKSTA_USER_INFO
 {
     [case(0)] LPWKSTA_USER_INFO_0 UserInfo0;
     [case(1)] LPWKSTA_USER_INFO_1 UserInfo1;
     [case(1101)] LPWKSTA_USER_INFO_1101 UserInfo1101;
+    [default] ;
+} WKSTA_USER_INFO, *PWKSTA_USER_INFO, *LPWKSTA_USER_INFO;
+*/
+typedef [switch_type(unsigned long)] union _WKSTA_USER_INFO
+{
+    [case(0)] WKSTA_USER_INFO_0 UserInfo0;
+    [case(1)] WKSTA_USER_INFO_1 UserInfo1;
+    [case(1101)] WKSTA_USER_INFO_1101 UserInfo1101;
     [default] ;
 } WKSTA_USER_INFO, *PWKSTA_USER_INFO, *LPWKSTA_USER_INFO;
 
@@ -303,7 +311,7 @@ typedef struct _WKSTA_USER_INFO_1_CONTAINER
     unsigned long EntriesRead;
     [size_is(EntriesRead)] LPWKSTA_USER_INFO_1 Buffer;
 } WKSTA_USER_INFO_1_CONTAINER, *PWKSTA_USER_INFO_1_CONTAINER, *LPWKSTA_USER_INFO_1_CONTAINER;
-
+/*
 typedef struct _WKSTA_USER_ENUM_STRUCT
 {
     unsigned long Level;
@@ -311,6 +319,17 @@ typedef struct _WKSTA_USER_ENUM_STRUCT
     {
         [case(0)] LPWKSTA_USER_INFO_0_CONTAINER Level0;
         [case(1)] LPWKSTA_USER_INFO_1_CONTAINER Level1;
+        [default] ;
+    } WkstaUserInfo;
+} WKSTA_USER_ENUM_STRUCT, *PWKSTA_USER_ENUM_STRUCT, *LPWKSTA_USER_ENUM_STRUCT;
+*/
+typedef struct _WKSTA_USER_ENUM_STRUCT
+{
+    unsigned long Level;
+    [switch_is(Level)] union _WKSTA_USER_ENUM_UNION
+    {
+        [case(0)] WKSTA_USER_INFO_0_CONTAINER Level0;
+        [case(1)] WKSTA_USER_INFO_1_CONTAINER Level1;
         [default] ;
     } WkstaUserInfo;
 } WKSTA_USER_ENUM_STRUCT, *PWKSTA_USER_ENUM_STRUCT, *LPWKSTA_USER_ENUM_STRUCT;
@@ -407,7 +426,8 @@ interface wkssvc
     NetrWkstaUserGetInfo(
         [in, string, unique] WKSSVC_IDENTIFY_HANDLE Unused,
         [in] unsigned long Level,
-        [out, switch_is(Level)] LPWKSTA_USER_INFO UserInfo);
+        [out, switch_is(Level)] LPWKSTA_USER_INFO *UserInfo);
+//        [out, switch_is(Level)] LPWKSTA_USER_INFO UserInfo);
 
     /* Function 4 */
     unsigned long

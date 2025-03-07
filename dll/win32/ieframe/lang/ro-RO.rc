@@ -3,7 +3,7 @@
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -17,30 +17,30 @@ IDR_BROWSE_MAIN_MENU MENU
             MENUITEM "&Fereastră",              ID_BROWSE_NEW_WINDOW
         }
         MENUITEM "&Deschidere…",                ID_BROWSE_OPEN
-        MENUITEM "S&alvează",                   ID_BROWSE_SAVE
-        MENUITEM "Salvea&ză ca…",               ID_BROWSE_SAVE_AS
+        MENUITEM "&Salvează",                   ID_BROWSE_SAVE
+        MENUITEM "S&alvare ca…",                ID_BROWSE_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "Formatare imprima&bil…",      ID_BROWSE_PRINT_FORMAT
-        MENUITEM "I&mprimare…",                 ID_BROWSE_PRINT
-        MENUITEM "Pre&vizionează pagină",       ID_BROWSE_PRINT_PREVIEW
+        MENUITEM "Formatare i&mprimare…",       ID_BROWSE_PRINT_FORMAT
+        MENUITEM "Im&primare…",                 ID_BROWSE_PRINT
+        MENUITEM "&Previzionare a paginii",     ID_BROWSE_PRINT_PREVIEW
         MENUITEM SEPARATOR
         MENUITEM "Pr&oprietăți…",               ID_BROWSE_PROPERTIES
         MENUITEM "I&eșire",                     ID_BROWSE_QUIT
     }
     POPUP "&Afișare"
     {
-        POPUP "&Bare"
+        POPUP "&Bare de instrumente"
         {
             MENUITEM "Bară stan&dard",          ID_BROWSE_BAR_STD
-            MENUITEM "Bară de &adrasă",         ID_BROWSE_BAR_ADDR
+            MENUITEM "Bară de &adresă",         ID_BROWSE_BAR_ADDR
         }
     }
     POPUP "Fa&vorite"
     {
-        MENUITEM "&Adaugă la Favorite…",        ID_BROWSE_ADDFAV
+        MENUITEM "&Adăugare la Favorite…",      ID_BROWSE_ADDFAV
         MENUITEM SEPARATOR
     }
-    POPUP "Aj&utor"
+    POPUP "A&jutor"
     {
         MENUITEM "&Despre Internet Explorer",   ID_BROWSE_ABOUT
     }
@@ -48,13 +48,13 @@ IDR_BROWSE_MAIN_MENU MENU
 
 STRINGTABLE
 {
-    IDS_INTERNET "Navigatorul de Internet"
-    IDS_INTERNET_DESCRIPTION "Deschide navigatorul de rețea și afișează informații din Internet."
+    IDS_INTERNET "Browserul de Internet"
+    IDS_INTERNET_DESCRIPTION "Deschide un browser Web și afișează informații de pe Internet."
 
     IDS_TB_BACK             "Înapoi"
     IDS_TB_FORWARD          "Înainte"
-    IDS_TB_STOP             "Oprește"
-    IDS_TB_REFRESH          "Împrospătează"
+    IDS_TB_STOP             "Oprire"
+    IDS_TB_REFRESH          "Împrospătare"
     IDS_TB_HOME             "Acasă"
     IDS_TB_PRINT            "Imprimare…"
 }
@@ -66,24 +66,24 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    IDS_FINDINGRESOURCE     "În căutarea resursei %s"
-    IDS_BEGINDOWNLOADDATA   "În început de descărcare din %s"
-    IDS_ENDDOWNLOADDATA     "În curs de descărcare din %s"
-    IDS_SENDINGREQUEST      "În așteptarea răspunsului de la %s"
+    IDS_FINDINGRESOURCE     "Se caută %s"
+    IDS_BEGINDOWNLOADDATA   "Începe descărcarea %s"
+    IDS_ENDDOWNLOADDATA     "Se descarcă %s"
+    IDS_SENDINGREQUEST      "Se interoghează %s"
 }
 
 
 IDD_BROWSE_OPEN DIALOG 10, 10, 200, 70
 STYLE DS_MODALFRAME | WS_CAPTION
-CAPTION "Deschide URL"
+CAPTION "Deschidere URL"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "Specificați adresa URL pe care doriți s-o deschideți în Internet Explorer",-1, 35,5,160,25
+    LTEXT "Specificați adresa URL pe care doriți să o deschideți în Internet Explorer",-1, 35,5,160,25
     LTEXT "Deschide:", -1, 5, 32, 30, 15
 #ifdef __REACTOS__
     ICON IDC_PAGEICO, IDC_PAGEICO, 2, 5, 21, 20, SS_ICON
 #endif
     EDITTEXT IDC_BROWSE_OPEN_URL, 35, 30, 160, 13
-    DEFPUSHBUTTON "Con&firmă", IDOK, 90, 50, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 145, 50, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 90, 50, 50, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 145, 50, 50, 14
 }

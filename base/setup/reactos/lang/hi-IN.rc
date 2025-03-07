@@ -15,8 +15,18 @@ CAPTION "रिऐक्ट ओएस सेटअप"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "रिऐक्ट ओएस सेटअप विज़ार्ड में आपका स्वागत है।", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "आप अभी तक इस सीडी से सीधे रिऐक्ट ओएस इंस्टॉल नहीं कर सकते हैं! कृपया अपने कंप्यूटर को रिऐक्ट ओएस इंस्टॉल करने के लिए इस सीडी से रीस्टॉर्ट करें।", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "सेटअप से बाहर निकलने के लिए समाप्त क्लिक करें।", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "This wizard will install or upgrade ReactOS on your computer, \
+and prepare the second part of the setup.", IDC_STATIC, 115, 40, 195, 27
+////
+    GROUPBOX " IMPORTANT INFORMATION ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
+    LTEXT "ReactOS is in Alpha stage: it is not feature- complete and is \
+under heavy development. It is recommended to use it only for \
+evaluation and testing and not as your daily-usage OS.\n\
+It may corrupt your data or damage your hardware.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
+    LTEXT "Backup your data or test on a secondary computer \
+if you attempt to run ReactOS on real hardware.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+////
+    LTEXT "सेटअप के साथ जारी रखने के लिए आगे क्लिक करें।", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
@@ -24,11 +34,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "रिऐक्ट ओएस सेटअप"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "रिऐक्ट ओएस इंस्टॉल करें", IDC_INSTALL, 7, 7, 277, 10
-    LTEXT "रिऐक्ट ओएस की एक नई कापी इन्स्टॉल करें। यह विकल्प आपकी फाइलें, सेटिंग्स और प्रोग्राम नहीं रखता है। आप डिस्क और विभाजन में परिवर्तन कर सकते हैं।", IDC_INSTALLTEXT, 18, 18, 269, 25
-    AUTORADIOBUTTON "रिऐक्ट ओएस की अद्यतन या मरम्मत करे। ", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "रिऐक्ट ओएस की एक स्थापित कापी अद्यतन या मरम्मत करे। यह विकल्प आपकी फाइलें, सेटिंग्स और प्रोग्राम रखता है। यह विकल्प केवल तभी उपलब्ध होता है जब इस कंप्यूटर पर रिऐक्ट ओएस पहले से इंस्टॉल हो।", IDC_UPDATETEXT, 18, 61, 269, 30
-    LTEXT "जारी रखने के लिए आगे दबाएँ।", IDC_STATIC, 7, 128, 297, 8
+    AUTORADIOBUTTON "रिऐक्ट ओएस इंस्टॉल करें(&I)", IDC_INSTALL, 7, 20, 277, 10
+    LTEXT "रिऐक्ट ओएस की एक नई कापी इन्स्टॉल करें। यह विकल्प आपकी फाइलें, सेटिंग्स और प्रोग्राम नहीं रखता है। आप डिस्क और विभाजन में परिवर्तन कर सकते हैं।", IDC_INSTALLTEXT, 19, 36, 279, 27
+    AUTORADIOBUTTON "रिऐक्ट ओएस की अद्यतन या मरम्मत करे।(&U)", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "रिऐक्ट ओएस की एक स्थापित कापी अद्यतन या मरम्मत करे। यह विकल्प आपकी फाइलें, सेटिंग्स और प्रोग्राम रखता है। यह विकल्प केवल तभी उपलब्ध होता है जब इस कंप्यूटर पर रिऐक्ट ओएस पहले से इंस्टॉल हो।", IDC_UPDATETEXT, 19, 96, 279, 27
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
@@ -138,22 +147,25 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TYPETITLE "रिऐक्ट ओएस सेटअप में आपका स्वागत है"
-    IDS_TYPESUBTITLE "सेटअप प्रकार चुनें।"
+    IDS_CAPTION "रिऐक्ट ओएस सेटअप"
+    IDS_TYPETITLE "Installation Type"
+    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
+    IDS_UPDATETITLE "Update or Repair ReactOS"
+    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
     IDS_DEVICETITLE "बुनियादी डिवाइसों को सेटअप करें"
     IDS_DEVICESUBTITLE "डिस्प्ले और कीबोर्ड की सेटिंग्स सेट करें।"
     IDS_DRIVETITLE "इन्स्टलेशन विभाजन और सिस्टम फ़ोल्डर सेटअप करें"
     IDS_DRIVESUBTITLE "इन्स्टलेशन विभाजन, सिस्टम फ़ोल्डर और बूट लोडर तैयार करें।"
+    IDS_SUMMARYTITLE "इन्स्टलेशन सारांश"
+    IDS_SUMMARYSUBTITLE "इन्स्टलेशन डिवाइस पर लागू करने से पहले जांच करने के लिए इन्स्टलेशन गुणों की सूची"
     IDS_PROCESSTITLE "सेटअप विभाजन, कॉपी फ़ाइलें और सेटअप सिस्टम"
     IDS_PROCESSSUBTITLE "विभाजन बनाएं और फ़ॉर्मेट करें, फ़ाइलें कॉपी करें, बूट लोडर को इंस्टॉल करें और सेटअप करें"
     IDS_RESTARTTITLE "सेटअप का पहला चरण समाप्त हो गया"
     IDS_RESTARTSUBTITLE "सेटअप का पहला चरण पूरा हो गया है, दूसरे चरण के साथ जारी रखने के लिए रीस्टॉर्ट करें"
-    IDS_SUMMARYTITLE "इन्स्टलेशन सारांश"
-    IDS_SUMMARYSUBTITLE "इन्स्टलेशन डिवाइस पर लागू करने से पहले जांच करने के लिए इन्स्टलेशन गुणों की सूची"
     IDS_ABORTSETUP "रिऐक्ट ओएस आपके कंप्यूटर पर पूरी तरह से इंस्टॉल नहीं है। अगर आप अभी सेटअप को छोड़ देते हैं, तो आपको रिऐक्ट ओएस इंस्टॉल करने के लिए सेटअप को फिर से चलाने की आवश्यकता होगी। आपको वास्तव में छोड़ना है?"
     IDS_ABORTSETUP2 "इन्स्टलेशन रद्द करें?"
-    IDS_NO_TXTSETUP_SIF "'txtsetup.sif' खोजने में असमर्थ\nसेटअप जारी रखने में असमर्थ है "
-    IDS_CAPTION "रिऐक्ट ओएस सेटअप"
+    IDS_NO_TXTSETUP_SIF "'txtsetup.sif' खोजने में असमर्थ\nसेटअप जारी रखने में असमर्थ है"
+    IDS_INSTALLBTN "&Install"
     IDS_VOLUME_NOFORMAT "Not formatted"
 END
 
@@ -188,12 +200,16 @@ BEGIN
     IDS_RENAMING "Renaming %s to %s"
     IDS_DELETING "Deleting %s"
 
+    IDS_CONFIG_SYSTEM_PARTITION "Configuring the system partition..."
     IDS_PREPARE_PARTITIONS "Preparing partitions..."
     IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
     IDS_COPYING_FILES "Copying the files..."
 
     IDS_CREATE_REGISTRY "Creating the registry..."
     IDS_UPDATE_REGISTRY "Updating the registry..."
+
+    // IDS_INSTALL_FINALIZE "Finalizing the installation..."
+    IDS_INSTALL_BOOTLOADER "Installing the bootloader..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.
@@ -250,4 +266,11 @@ the Setup program cannot install ReactOS.\
 \nClick on CANCEL to quit Setup."
 
     IDS_ERROR_CHECKING_PARTITION "ChkDsk detected some disk errors.\n(Status 0x%08lx)."
+
+    IDS_ERROR_WRITE_BOOT "Setup failed to install the %s bootcode on the system partition."
+    IDS_ERROR_INSTALL_BOOTCODE "Setup failed to install the %s bootcode on the boot disk."
+    IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "Setup failed to install the bootcode on the removable media."
+    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "Setup does not currently support installing the bootloader on the computer you are using.\
+\nClick on OK to continue anyway."
+    IDS_ERROR_BOOTLDR_FAILED "Setup could not install the bootloader (Status 0x%08lx)."
 END

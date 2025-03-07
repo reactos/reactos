@@ -76,6 +76,19 @@ HRESULT CTrayShowDesktopButton::DoCreate(HWND hwndParent)
     m_szIcon.cx = GetSystemMetrics(SM_CXSMICON);
     m_szIcon.cy = GetSystemMetrics(SM_CYSMICON);
 
+    // Create tooltip
+    m_tooltip.Create(m_hWnd, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP);
+
+    TOOLINFOW ti = { 0 };
+    ti.cbSize = TTTOOLINFOW_V1_SIZE;
+    ti.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
+    ti.hwnd = m_hWnd;
+    ti.uId = reinterpret_cast<UINT_PTR>(m_hWnd);
+    ti.hinst = hExplorerInstance;
+    ti.lpszText = MAKEINTRESOURCEW(IDS_TRAYDESKBTN_TOOLTIP);
+
+    m_tooltip.AddTool(&ti);
+
     // Prep visual style
     EnsureWindowTheme(TRUE);
 

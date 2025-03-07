@@ -10,17 +10,10 @@
 
 #include "precomp.h"
 #include "filesup.h"
+#include <pseh/pseh2.h>
 
 #define NDEBUG
 #include <debug.h>
-
-
-// ACHTUNG! HAXX FIXME!!
-#define _SEH2_TRY
-#define _SEH2_LEAVE     goto __SEH2_FINALLY__label;
-#define _SEH2_FINALLY   __SEH2_FINALLY__label:
-#define _SEH2_END
-
 
 /* FUNCTIONS ****************************************************************/
 

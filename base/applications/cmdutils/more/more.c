@@ -176,19 +176,20 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     static WCHAR StrLineAt[80]  = L"";
     static WCHAR StrOptions[80] = L"";
     static WCHAR StrLines[80]   = L"";
+    static BOOL AreStrLoaded = FALSE;
 
     WCHAR szPercent[80] = L"";
     WCHAR szLineAt[80]  = L"";
 
     /* Load the prompt strings */
-    if (!*StrPercent)
+    if (!AreStrLoaded)
+    {
         K32LoadStringW(NULL, IDS_CONTINUE_PERCENT, StrPercent, ARRAYSIZE(StrPercent));
-    if (!*StrLineAt)
         K32LoadStringW(NULL, IDS_CONTINUE_LINE_AT, StrLineAt, ARRAYSIZE(StrLineAt));
-    if (!*StrOptions)
         K32LoadStringW(NULL, IDS_CONTINUE_OPTIONS, StrOptions, ARRAYSIZE(StrOptions));
-    if (!*StrLines)
         K32LoadStringW(NULL, IDS_CONTINUE_LINES, StrLines, ARRAYSIZE(StrLines));
+        AreStrLoaded = TRUE;
+    }
 
     /*
      * Check whether the pager is prompting, but we have actually finished
@@ -486,7 +487,7 @@ Restart:
  * See base/applications/cmdutils/clip/clip.c!IsDataUnicode()
  * and base/applications/notepad/text.c!ReadText() for more details.
  * Also some good code example can be found at:
- * https://github.com/AutoIt/text-encoding-detect
+ * https://github.com/AutoItConsulting/text-encoding-detect
  */
 typedef enum
 {

@@ -1605,7 +1605,13 @@ FsRtlAcquireFileExclusiveCommon(IN PFILE_OBJECT FileObject,
             FilterCallbacks->PostAcquireForSectionSynchronization(&CbData, Status, CompletionContext);
         }
 
-        return Status;
+        /* Return here when the status is based on the synchonization type and write access to the file */
+        if (Status == STATUS_FSFILTER_OP_COMPLETED_SUCCESSFULLY ||
+            Status == STATUS_FILE_LOCKED_WITH_ONLY_READERS ||
+            Status == STATUS_FILE_LOCKED_WITH_WRITERS)
+        {
+            return Status;
+        }
     }
 
     FastDispatch = DeviceObject->DriverObject->FastIoDispatch;

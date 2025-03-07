@@ -287,7 +287,7 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "ReactOS Aygıt Yöneticisi"
   IDS_APP_AUTHORS           "Telif Hakkı: 2015 Ged Murphy"
@@ -295,7 +295,7 @@ BEGIN
   IDS_CONFIRM_UNINSTALL     "Uyarı: Bu aygıtı sisteminizden kaldırmak üzeresiniz.\nDevam etmek istiyor musunuz?"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Sürücü Yazılımını Güncelleştir..."
   IDS_MENU_ENABLE           "Etkinleştir"
@@ -306,7 +306,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Özellikler"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Özellikler"
   IDS_TOOLTIP_SCAN          "Donanım Değişiklikleri İçin Tara"
@@ -317,7 +317,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Şimdiki seçilen için özellik penceresini açar."

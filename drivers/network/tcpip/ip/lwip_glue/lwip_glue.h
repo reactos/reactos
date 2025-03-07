@@ -36,7 +36,7 @@ struct lwip_callback_msg
         } FreeSocket;
         struct {
             PCONNECTION_ENDPOINT Connection;
-            struct ip_addr *IpAddress;
+            ip_addr_t *IpAddress;
             u16_t Port;
         } Bind;
         struct {
@@ -50,7 +50,7 @@ struct lwip_callback_msg
         } Send;
         struct {
             PCONNECTION_ENDPOINT Connection;
-            struct ip_addr *IpAddress;
+            ip_addr_t *IpAddress;
             u16_t Port;
         } Connect;
         struct {
@@ -103,15 +103,15 @@ extern void TCPRecvEventHandler(void *arg);
 /* TCP functions */
 PTCP_PCB    LibTCPSocket(void *arg);
 VOID        LibTCPFreeSocket(PTCP_PCB pcb);
-err_t       LibTCPBind(PCONNECTION_ENDPOINT Connection, struct ip_addr *const ipaddr, const u16_t port);
+err_t       LibTCPBind(PCONNECTION_ENDPOINT Connection, ip4_addr_t *const ipaddr, const u16_t port);
 PTCP_PCB    LibTCPListen(PCONNECTION_ENDPOINT Connection, const u8_t backlog);
-err_t       LibTCPSend(PCONNECTION_ENDPOINT Connection, void *const dataptr, const u16_t len, u32_t *sent, const int safe);
-err_t       LibTCPConnect(PCONNECTION_ENDPOINT Connection, struct ip_addr *const ipaddr, const u16_t port);
+err_t       LibTCPSend(PCONNECTION_ENDPOINT Connection, void *const dataptr, const u16_t len, ULONG *sent, const int safe);
+err_t       LibTCPConnect(PCONNECTION_ENDPOINT Connection, ip4_addr_t *const ipaddr, const u16_t port);
 err_t       LibTCPShutdown(PCONNECTION_ENDPOINT Connection, const int shut_rx, const int shut_tx);
 err_t       LibTCPClose(PCONNECTION_ENDPOINT Connection, const int safe, const int callback);
 
-err_t       LibTCPGetPeerName(PTCP_PCB pcb, struct ip_addr *const ipaddr, u16_t *const port);
-err_t       LibTCPGetHostName(PTCP_PCB pcb, struct ip_addr *const ipaddr, u16_t *const port);
+err_t       LibTCPGetPeerName(PTCP_PCB pcb, ip4_addr_t *const ipaddr, u16_t *const port);
+err_t       LibTCPGetHostName(PTCP_PCB pcb, ip4_addr_t *const ipaddr, u16_t *const port);
 void        LibTCPAccept(PTCP_PCB pcb, struct tcp_pcb *listen_pcb, void *arg);
 void        LibTCPSetNoDelay(PTCP_PCB pcb, BOOLEAN Set);
 void        LibTCPGetSocketStatus(PTCP_PCB pcb, PULONG State);

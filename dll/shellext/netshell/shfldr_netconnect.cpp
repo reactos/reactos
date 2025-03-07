@@ -641,6 +641,14 @@ HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     {
         CmdId = IDS_NET_PROPERTIES;
     }
+    else if ((UINT_PTR)lpcmi->lpVerb == FCIDM_SHVIEW_RENAME) // DefView accelerator
+    {
+        CmdId = IDS_NET_RENAME;
+    }
+    else if ((UINT_PTR)lpcmi->lpVerb == FCIDM_SHVIEW_PROPERTIES) // DefView accelerator
+    {
+        CmdId = IDS_NET_PROPERTIES;
+    }
     else if (!IS_INTRESOURCE(lpcmi->lpVerb) || LOWORD(lpcmi->lpVerb) > 7)
     {
         FIXME("Got invalid command\n");
@@ -653,7 +661,7 @@ HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
         {
             HRESULT hr;
             CComPtr<IShellView> psv;
-            hr = IUnknown_QueryService(m_pUnknown, SID_IFolderView, IID_PPV_ARG(IShellView, &psv));
+            hr = IUnknown_QueryService(m_pUnknown, SID_SFolderView, IID_PPV_ARG(IShellView, &psv));
             if (SUCCEEDED(hr))
             {
                 SVSIF selFlags = SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE | SVSI_FOCUSED | SVSI_SELECT;
@@ -797,7 +805,7 @@ HRESULT WINAPI CNetworkConnections::GetClassID(CLSID *lpClassId)
     if (!lpClassId)
         return E_POINTER;
 
-    *lpClassId = CLSID_ConnectionFolder;
+    *lpClassId = CLSID_NetworkConnections;
 
     return S_OK;
 }

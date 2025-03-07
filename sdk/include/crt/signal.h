@@ -6,7 +6,7 @@
 #ifndef _INC_SIGNAL
 #define _INC_SIGNAL
 
-#include <crtdefs.h>
+#include <corecrt.h>
 
 #ifdef __cplusplus
 extern "C" {

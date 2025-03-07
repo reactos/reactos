@@ -67,6 +67,7 @@ int gbImportLib = 0;
 int gbNotPrivateNoWarn = 0;
 int gbTracing = 0;
 int giArch = ARCH_X86;
+int gbDbgExports = 0;
 char *pszArchString = "i386";
 char *pszArchString2;
 char *pszSourceFileName = NULL;
@@ -781,8 +782,8 @@ OutputLine_def(FILE *fileDest, EXPORT *pexp)
     else
         OutputLine_def_GCC(fileDest, pexp);
 
-    /* On GCC builds we force ordinals */
-    if ((pexp->uFlags & FL_ORDINAL) || (!gbMSComp && !gbImportLib))
+    /* If it is not an import lib, we force ordinals */
+    if ((pexp->uFlags & FL_ORDINAL) || !gbImportLib)
     {
         fprintf(fileDest, " @%d", pexp->nOrdinal);
     }
@@ -1072,9 +1073,24 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
                 /* Look if we are included */
                 do
                 {
+                    int negated = 0, match = 0;
+
                     pc++;
+
+                    /* Check for negated case */
+                    if (*pc == '!')
+                    {
+                        negated = 1;
+                        pc++;
+                    }
+
                     if (CompareToken(pc, pszArchString) ||
                         CompareToken(pc, pszArchString2))
+                    {
+                        match = 1;
+                    }
+
+                    if (match != negated)
                     {
                         included = 1;
                     }
@@ -1146,6 +1162,13 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
                     while (*pc > ',') pc++;
 
                 } while (*pc == ',');
+            }
+            else if (CompareToken(pc, "-dbg"))
+            {
+                if (!gbDbgExports)
+                {
+                    included = 0;
+                }
             }
             else if (CompareToken(pc, "-private"))
             {
@@ -1421,6 +1444,7 @@ ApplyOrdinals(EXPORT* pexports, unsigned cExports)
 {
     unsigned short i, j;
     char* used;
+    unsigned short firstOrdinal = 0xFFFF, firstIndex = 0;
 
     /* Allocate a table to mark used ordinals */
     used = malloc(65536);
@@ -1442,11 +1466,28 @@ ApplyOrdinals(EXPORT* pexports, unsigned cExports)
                 return -1;
             }
             used[pexports[i].nOrdinal] = 1;
+            if (pexports[i].nOrdinal < firstOrdinal)
+            {
+                firstOrdinal = pexports[i].nOrdinal;
+                firstIndex = i;
+            }
         }
     }
 
+    /* Check if we found an ordinal and it's larger than it's index */
+    if ((firstOrdinal != 0xFFFF) && (firstOrdinal > firstIndex))
+    {
+        /* We did. Calculate an appropriate starting ordinal. */
+        firstOrdinal -= firstIndex;
+    }
+    else
+    {
+        /* We didn't, so start with 1 */
+        firstOrdinal = 1;
+    }
+
     /* Pass 2: apply available ordinals */
-    for (i = 0, j = 1; i < cExports; i++)
+    for (i = 0, j = firstOrdinal; i < cExports; i++)
     {
         if ((pexports[i].uFlags & FL_ORDINAL) == 0 && pexports[i].bVersionIncluded)
         {
@@ -1472,6 +1513,7 @@ void usage(void)
            "  -s=<file>               generate a stub file\n"
            "  -i=<file>               generate an import alias file\n"
            "  --ms                    MSVC compatibility\n"
+           "  --dbg                   Enable debug exports\n"
            "  -n=<name>               name of the dll\n"
            "  --version=<version>     Sets the version to create exports for\n"
            "  --implib                generate a def file for an import library\n"
@@ -1537,6 +1579,10 @@ int main(int argc, char *argv[])
         else if (strcasecmp(argv[i], "--ms") == 0)
         {
             gbMSComp = 1;
+        }
+        else if (strcasecmp(argv[i], "--dbg") == 0)
+        {
+            gbDbgExports = 1;
         }
         else if (strcasecmp(argv[i], "--no-private-warnings") == 0)
         {
@@ -1640,13 +1686,10 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    if (!gbMSComp)
+    if (ApplyOrdinals(pexports, cExports) < 0)
     {
-        if (ApplyOrdinals(pexports, cExports) < 0)
-        {
-            fprintf(stderr, "error: could not apply ordinals!\n");
-            return -1;
-        }
+        fprintf(stderr, "error: could not apply ordinals!\n");
+        return -1;
     }
 
     if (pszDefFileName)

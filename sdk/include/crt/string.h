@@ -6,7 +6,9 @@
 #ifndef _INC_STRING
 #define _INC_STRING
 
-#include <crtdefs.h>
+#include <corecrt.h>
+
+#define __CORRECT_ISO_CPP_STRING_H_PROTO // For stl
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,6 +31,7 @@ extern "C" {
     _In_ int _Val,
     _In_ size_t _MaxCount);
 
+_CRT_DISABLE_GCC_WARNINGS
   _Must_inspect_result_
   _CRTIMP
   _CONST_RETURN
@@ -38,6 +41,19 @@ extern "C" {
     _In_reads_bytes_opt_(_MaxCount) const void *_Buf,
     _In_ int _Val,
     _In_ size_t _MaxCount);
+_CRT_RESTORE_GCC_WARNINGS
+
+#if defined __cplusplus
+    extern "C++" _Must_inspect_result_
+    inline void* __CRTDECL memchr(
+        _In_reads_bytes_opt_(_MaxCount) void *_Buf,
+        _In_ int _Val,
+        _In_ size_t _MaxCount)
+    {
+        const void *_Bufc = _Buf;
+        return const_cast<void*>(memchr(_Bufc, _Val, _MaxCount));
+    }
+#endif
 
   _Must_inspect_result_
   _CRTIMP
@@ -174,6 +190,7 @@ extern "C" {
   _strdup(
     _In_opt_z_ const char *_Src);
 
+_CRT_DISABLE_GCC_WARNINGS
   _Check_return_
   _CRTIMP
   _CONST_RETURN
@@ -182,6 +199,16 @@ extern "C" {
   strchr(
     _In_z_ const char *_Str,
     _In_ int _Val);
+_CRT_RESTORE_GCC_WARNINGS
+
+#ifdef __cplusplus
+    extern "C++"
+    _Check_return_
+    inline char* __CRTDECL strchr(_In_z_ char *_String, _In_ int _Ch)
+    {
+        return const_cast<char*>(strchr(static_cast<const char*>(_String), _Ch));
+    }
+#endif // __cplusplus
 
   _Check_return_
   _CRTIMP
@@ -365,6 +392,7 @@ extern "C" {
     int _Val,
     size_t _MaxCount);
 
+_CRT_DISABLE_GCC_WARNINGS
   _Check_return_
   _CRTIMP
   _CONST_RETURN
@@ -373,7 +401,18 @@ extern "C" {
   strpbrk(
     _In_z_ const char *_Str,
     _In_z_ const char *_Control);
+_CRT_RESTORE_GCC_WARNINGS
 
+#ifdef __cplusplus
+    extern "C++"
+    _Check_return_
+    inline char* __CRTDECL strpbrk(_In_z_ char *_String, _In_z_ const char *_Control)
+    {
+        return const_cast<char*>(strpbrk(static_cast<const char*>(_String), _Control));
+    }
+#endif // __cplusplus
+
+_CRT_DISABLE_GCC_WARNINGS
   _Check_return_
   _CRTIMP
   _CONST_RETURN
@@ -382,6 +421,16 @@ extern "C" {
   strrchr(
     _In_z_ const char *_Str,
     _In_ int _Ch);
+_CRT_RESTORE_GCC_WARNINGS
+
+#ifdef __cplusplus
+    extern "C++"
+    _Check_return_
+    inline char* __CRTDECL strrchr(_In_z_ char *_String, _In_ int _Ch)
+    {
+        return const_cast<char*>(strrchr(static_cast<const char*>(_String), _Ch));
+    }
+#endif // __cplusplus
 
   _CRTIMP
   char*
@@ -397,6 +446,7 @@ extern "C" {
     _In_z_ const char *_Str,
     _In_z_ const char *_Control);
 
+_CRT_DISABLE_GCC_WARNINGS
   _Check_return_
   _CRTIMP
   _CONST_RETURN
@@ -405,6 +455,16 @@ extern "C" {
   strstr(
     _In_z_ const char *_Str,
     _In_z_ const char *_SubStr);
+_CRT_RESTORE_GCC_WARNINGS
+
+#ifdef __cplusplus
+    extern "C++"
+    _Check_return_ _Ret_maybenull_
+    inline char* __CRTDECL strstr(_In_z_ char *_String, _In_z_ const char *_SubString)
+    {
+        return const_cast<char*>(strstr(static_cast<const char*>(_String), _SubString));
+    }
+#endif // __cplusplus
 
   _Check_return_
   _CRTIMP
@@ -575,9 +635,6 @@ extern "C" {
     _In_z_ const char *_Str,
     _In_ size_t _MaxCount);
 
-//  __CRT_INLINE int __cdecl strncasecmp (const char *__sz1, const char *__sz2, size_t __sizeMaxCompare) { return _strnicmp (__sz1, __sz2, __sizeMaxCompare); }
-//  __CRT_INLINE int __cdecl strcasecmp (const char *__sz1, const char *__sz2) { return _stricmp (__sz1, __sz2); }
-
   _CRTIMP
   _CRT_NONSTDC_DEPRECATE(_strnset)
   char*
@@ -638,6 +695,16 @@ extern "C" {
   wcschr(
     _In_z_ const wchar_t *_Str,
     wchar_t _Ch);
+
+#ifdef __cplusplus
+    extern "C++"
+    _Check_return_
+    _When_(return != NULL, _Ret_range_(_String, _String + _String_length_(_String) - 1))
+    inline wchar_t* __CRTDECL wcschr(_In_z_ wchar_t *_String, wchar_t _C)
+    {
+        return const_cast<wchar_t*>(wcschr(static_cast<const wchar_t*>(_String), _C));
+    }
+#endif // __cplusplus
 
   _Check_return_
   _CRTIMP
@@ -717,6 +784,15 @@ extern "C" {
     _In_z_ const wchar_t *_Str,
     _In_z_ const wchar_t *_Control);
 
+#ifdef __cplusplus
+    extern "C++"
+    _Check_return_
+    inline wchar_t* __cdecl wcspbrk(_In_z_ wchar_t *_Str, _In_z_ const wchar_t *_Control)
+    {
+        return const_cast<wchar_t*>(wcspbrk(static_cast<const wchar_t*>(_Str), _Control));
+    }
+#endif // __cplusplus
+
   _Check_return_
   _CRTIMP
   _CONST_RETURN
@@ -726,6 +802,15 @@ extern "C" {
     _In_z_ const wchar_t *_Str,
     _In_ wchar_t _Ch);
 
+#ifdef __cplusplus
+    extern "C++"
+    _Check_return_
+    inline wchar_t* __CRTDECL wcsrchr(_In_z_ wchar_t *_String, _In_ wchar_t _C)
+    {
+        return const_cast<wchar_t*>(wcsrchr(static_cast<const wchar_t*>(_String), _C));
+    }
+#endif // __cplusplus
+
   _Check_return_
   _CRTIMP
   size_t
@@ -734,6 +819,7 @@ extern "C" {
     _In_z_ const wchar_t *_Str,
     _In_z_ const wchar_t *_Control);
 
+_CRT_DISABLE_GCC_WARNINGS
   _When_(return != 0,
          _Ret_range_(_Str, _Str + _String_length_(_Str) - 1))
   _CRTIMP
@@ -743,6 +829,17 @@ extern "C" {
   wcsstr(
     _In_z_ const wchar_t *_Str,
     _In_z_ const wchar_t *_SubStr);
+_CRT_RESTORE_GCC_WARNINGS
+
+#ifdef __cplusplus
+    extern "C++"
+    _Check_return_ _Ret_maybenull_
+    _When_(return != NULL, _Ret_range_(_String, _String + _String_length_(_String) - 1))
+    inline wchar_t* __CRTDECL wcsstr(_In_z_ wchar_t *_String, _In_z_ const wchar_t *_SubStr)
+    {
+        return const_cast<wchar_t*>(wcsstr(static_cast<const wchar_t*>(_String), _SubStr));
+    }
+#endif // __cplusplus
 
   _Check_return_
   _CRTIMP
@@ -1137,12 +1234,6 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-
-// HACK
-#define strcasecmp _stricmp
-#define strncasecmp _strnicmp
-#define stricmp _stricmp
-#define wcsicmp _wcsicmp
 
 #include <sec_api/string_s.h>
 #endif

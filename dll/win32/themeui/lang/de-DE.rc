@@ -1,10 +1,18 @@
+/*
+ * PROJECT:     Theme UI Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     German resource file
+ * TRANSLATORS: Copyright 2011 Matthias Kupfer <mkupfer@reactos.org>
+ *              Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
+ */
+
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
     IDS_BRICK "Backstein"
     IDS_EGGPLANT "Aubergine"
-    IDS_GOLIVE "Olivgrün" //Spruce
+    IDS_GOLIVE "Olivgrün"
     IDS_HCONTRAST_1 "Hoher Kontrast 1"
     IDS_HCONTRAST_2 "Hoher Kontrast 2"
     IDS_HCONTRAST_BLACK "Hoher Kontrast Schwarz"
@@ -15,11 +23,11 @@ BEGIN
     IDS_PLUM "Pflaume"
     IDS_PUMPKIN "Kürbis"
     IDS_RAIN "Regentag"
-    IDS_RWB "Red, White, and Blue"
+    IDS_RWB "Rot, Weiß und Blau"
     IDS_CLASSIC "ReactOS Klassisch"
     IDS_STANDARD "ReactOS Standard"
     IDS_ROSE "Rose"
-    IDS_SAND "Sand" //Desert
+    IDS_SAND "Sand"
     IDS_SLATE "Schiefer"
     IDS_SKY "Himmel"
     IDS_STORM "Sturm"
@@ -29,7 +37,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SIZE_NORMAL "Normal"
-    IDS_SIZE_LARGE "Large"
-    IDS_SIZE_XLARGE "Extra Large"
+    IDS_SIZE_NORMAL "Standardgröße"
+    IDS_SIZE_LARGE "Groß"
+    IDS_SIZE_XLARGE "Extragroß"
 END

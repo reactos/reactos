@@ -31,6 +31,14 @@ STRINGTABLE
     13 "Eksik özellik için ağ sürücüsü"
     14 "Şuradan özellik:"
     15 "%s içeren dizini seçiniz."
+#ifdef __REACTOS__
+    34 "ReactOS Yükleyicisi Paketi"
+    35 "ReactOS Installer Patch"
+    36 "Yükle" //FIXME: add accel
+    37 "Onar" //FIXME: add accel
+    38 "Kaldır" //FIXME: add accel
+    39 "&Apply"
+#endif
     100 "New Folder"
 }
 

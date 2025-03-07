@@ -6,7 +6,7 @@
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  * REFERENCES:      https://wiki.osdev.org/RTC
  *                  https://forum.osdev.org/viewtopic.php?f=13&t=20825&start=0
- *                  http://www.bioscentral.com/misc/cmosmap.htm
+ *                  https://web.archive.org/web/20240119203005/http://www.bioscentral.com/misc/cmosmap.htm
  */
 
 /* INCLUDES *******************************************************************/
@@ -156,7 +156,10 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     if (!HalBeginSystemInterrupt(CLOCK_LEVEL, APIC_CLOCK_VECTOR, &Irql))
     {
         /* Spurious, just end the interrupt */
+#ifdef _M_IX86
         KiEoiHelper(TrapFrame);
+#endif
+        return;
     }
 
     /* Read register C, so that the next interrupt can happen */
@@ -188,6 +191,9 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 
     /* Update the system time -- on x86 the kernel will exit this trap  */
     KeUpdateSystemTime(TrapFrame, LastIncrement, Irql);
+
+    /* End the interrupt */
+    KiEndInterrupt(Irql, TrapFrame);
 }
 
 VOID
@@ -207,7 +213,10 @@ HalpClockIpiHandler(IN PKTRAP_FRAME TrapFrame)
     if (!HalBeginSystemInterrupt(CLOCK_LEVEL, CLOCK_IPI_VECTOR, &Irql))
     {
         /* Spurious, just end the interrupt */
+#ifdef _M_IX86
         KiEoiHelper(TrapFrame);
+#endif
+        return;
     }
 
     /* Call the kernel to update runtimes */

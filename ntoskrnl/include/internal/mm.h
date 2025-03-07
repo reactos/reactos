@@ -131,6 +131,13 @@ typedef ULONG_PTR SWAPENTRY;
 #define MM_ROUND_DOWN(x,s)                  \
     ((PVOID)(((ULONG_PTR)(x)) & ~((ULONG_PTR)(s)-1)))
 
+/* PAGE_ROUND_UP and PAGE_ROUND_DOWN equivalent, with support for 64-bit-only data types */
+#define PAGE_ROUND_UP_64(x) \
+    (((x) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))
+
+#define PAGE_ROUND_DOWN_64(x) \
+    ((x) & ~(PAGE_SIZE - 1))
+
 #define PAGE_FLAGS_VALID_FOR_SECTION \
     (PAGE_READONLY | \
      PAGE_READWRITE | \
@@ -1502,16 +1509,16 @@ MmMapViewInSystemSpaceEx(
 
 BOOLEAN
 NTAPI
-MmArePagesResident(
-    _In_ PEPROCESS Process,
-    _In_ PVOID BaseAddress,
+MmIsDataSectionResident(
+    _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    _In_ LONGLONG Offset,
     _In_ ULONG Length);
 
 NTSTATUS
 NTAPI
-MmMakePagesDirty(
-    _In_ PEPROCESS Process,
-    _In_ PVOID Address,
+MmMakeSegmentDirty(
+    _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    _In_ LONGLONG Offset,
     _In_ ULONG Length);
 
 NTSTATUS
@@ -1645,9 +1652,7 @@ MmUnloadSystemImage(
 NTSTATUS
 NTAPI
 MmCheckSystemImage(
-    IN HANDLE ImageHandle,
-    IN BOOLEAN PurgeSection
-);
+    _In_ HANDLE ImageHandle);
 
 NTSTATUS
 NTAPI

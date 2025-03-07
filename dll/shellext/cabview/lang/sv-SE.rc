@@ -1,0 +1,21 @@
+/*
+ * PROJECT:     ReactOS CabView Shell Extension
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Swedish resource file
+ * TRANSLATOR:  Copyright 2018 Andreas Bjerkeholt <andreas.bjerkeholt@reactos.org>
+ */
+
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_COL_NAME    "Namn"
+    IDS_COL_TYPE    "Typ"
+    IDS_COL_SIZE    "Storlek"
+    IDS_COL_MDATE   "Ändrad den"
+    IDS_COL_PATH    "Path"
+    IDS_COL_ATT     "Attributes"
+
+    IDS_EXTRACT     "Extrahera..."
+    IDS_EXTRACTALL  "Extrahera &alla..."
+END

@@ -33,6 +33,14 @@ STRINGTABLE
     13 "빠진 부분(feature)을 위한 네트워크 드라이브"
     14 "부분(feature)에서:"
     15 " %s를 포함하는 폴더 선택"
+#ifdef __REACTOS__
+    34 "ReactOS Installer Package"
+    35 "ReactOS Installer Patch"
+    36 "&Install"
+    37 "Re&pair"
+    38 "&Uninstall"
+    39 "&Apply"
+#endif
     100 "New Folder"
 }
 

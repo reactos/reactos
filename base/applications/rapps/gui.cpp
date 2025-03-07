@@ -81,6 +81,8 @@ CSideTreeView::~CSideTreeView()
 // **** CSideTreeView ****
 
 // **** CMainWindow ****
+HWND CMainWindow::m_hLastFocus = NULL;
+bool CMainWindow::m_PendingInstalledViewRefresh = false;
 
 CMainWindow::CMainWindow(CAppDB *db, BOOL bAppwiz) : m_ClientPanel(NULL), m_Db(db), m_bAppwizMode(bAppwiz), SelectedEnumType(ENUM_ALL_INSTALLED)
 {
@@ -304,6 +306,7 @@ CMainWindow::CheckAvailable()
 {
     if (m_Db->GetAvailableCount() == 0)
     {
+        CUpdateDatabaseMutex lock;
         m_Db->RemoveCached();
         m_Db->UpdateAvailable();
     }
@@ -342,8 +345,30 @@ CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
                 SendMessage(WM_CLOSE, 0, 0);
             break;
 
+        case WM_NOTIFY_INSTALLERFINISHED:
+            m_PendingInstalledViewRefresh = true; // Something just installed, our uninstall list is probably outdated
+            m_ApplicationView->RefreshAvailableItem((PCWSTR)lParam);
+            break;
+
         case DM_REPOSITION:
             EmulateDialogReposition(hwnd); // We are not a real dialog, we need help from a real one
+            break;
+
+        case WM_ACTIVATE:
+            if (LOWORD(wParam) == WA_INACTIVE)
+                m_hLastFocus = ::GetFocus();
+            break;
+
+        case WM_SETFOCUS:
+            if (m_hLastFocus)
+                ::SetFocus(m_hLastFocus);
+            break;
+
+        case WM_NEXTDLGCTL:
+            if (!LOWORD(lParam))
+                HandleTabOrder(wParam ? -1 : 1);
+            else if (wParam)
+                ::SetFocus((HWND)wParam);
             break;
 
         case WM_COMMAND:
@@ -591,9 +616,12 @@ CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
                 break;
 
             case ID_RESETDB:
+            {
+                CUpdateDatabaseMutex lock;
                 m_Db->RemoveCached();
                 UpdateApplicationsList(SelectedEnumType, bReload);
                 break;
+            }
 
             case ID_HELP:
                 MessageBoxW(L"Help not implemented yet", NULL, MB_OK);
@@ -673,6 +701,12 @@ CMainWindow::UpdateApplicationsList(AppsCategories EnumType, BOOL bReload, BOOL 
 
     if (bCheckAvailable)
         CheckAvailable();
+
+    if (m_PendingInstalledViewRefresh && IsInstalledEnum(EnumType) && !IsInstalledEnum(SelectedEnumType))
+    {
+        m_PendingInstalledViewRefresh = FALSE;
+        bReload = TRUE; // Reload because we are switching from Available to Installed after something installed
+    }
 
     BOOL TryRestoreSelection = SelectedEnumType == EnumType;
     if (SelectedEnumType != EnumType)
@@ -808,16 +842,7 @@ CMainWindow::ItemCheckStateChanged(BOOL bChecked, LPVOID CallbackParam)
 BOOL
 CMainWindow::InstallApplication(CAppInfo *Info)
 {
-    if (Info)
-    {
-        if (DownloadApplication(Info))
-        {
-            UpdateApplicationsList(SelectedEnumType);
-            return TRUE;
-        }
-    }
-
-    return FALSE;
+    return Info && DownloadApplication(Info);
 }
 
 BOOL

@@ -2,10 +2,10 @@
 #include <windows.h>
 #include "resource.h"
 
-#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Console Task Manager\0"
-#define REACTOS_STR_INTERNAL_NAME	"ctm\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"ctm.exe\0"
-#define REACTOS_STR_ORIGINAL_COPYRIGHT	"2003, Aleksey Bragin\0"
+#define REACTOS_STR_FILE_DESCRIPTION    "ReactOS Console Task Manager"
+#define REACTOS_STR_INTERNAL_NAME       "ctm"
+#define REACTOS_STR_ORIGINAL_FILENAME   "ctm.exe"
+#define REACTOS_STR_ORIGINAL_COPYRIGHT  "2003, Aleksey Bragin"
 #include <reactos/version.rc>
 
 /* UTF-8 */

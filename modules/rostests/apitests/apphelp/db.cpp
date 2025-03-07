@@ -574,7 +574,7 @@ static void test_stringtable()
                 size = pSdbGetTagDataSize(pdb, tagstr);
                 ok(size == 4, "Expected datasize to be 4, was %u for %u/%u\n", size, j, n);
                 data = pSdbGetStringTagPtr(pdb, tagstr);
-                ok(data && !wcsicmp(data, all[j]), "Expected data to be %s was %s for %u/%u\n", wine_dbgstr_w(all[j]), wine_dbgstr_w(data), j, n);
+                ok(data && !_wcsicmp(data, all[j]), "Expected data to be %s was %s for %u/%u\n", wine_dbgstr_w(all[j]), wine_dbgstr_w(data), j, n);
             }
             tagstr = pSdbFindNextTag(pdb, TAGID_ROOT, tagstr);
         }
@@ -600,7 +600,7 @@ static void test_stringtable()
                     expected_size = (lstrlenW(all[j])+1) * 2;
                     ok(size == expected_size, "Expected datasize to be %u, was %u for %u/%u\n", expected_size, size, j, n);
                     data = pSdbGetStringTagPtr(pdb, tagstr);
-                    ok(data && !wcsicmp(data, all[j]), "Expected data to be %s was %s for %u/%u\n", wine_dbgstr_w(all[j]), wine_dbgstr_w(data), j, n);
+                    ok(data && !_wcsicmp(data, all[j]), "Expected data to be %s was %s for %u/%u\n", wine_dbgstr_w(all[j]), wine_dbgstr_w(data), j, n);
                 }
                 tagstr = pSdbFindNextTag(pdb, TAGID_ROOT, tagstr);
             }
@@ -1489,8 +1489,8 @@ static void test_match_ex(const WCHAR* workdir, HSDB hsdb)
         Vendor = pSdbGetStringTagPtr(pdb, tagid);
         if (!Vendor)
             continue;
-        Succeed = !wcsicmp(Vendor, L"Succeed");
-        if (!Succeed && wcsicmp(Vendor, L"Fail"))
+        Succeed = !_wcsicmp(Vendor, L"Succeed");
+        if (!Succeed && _wcsicmp(Vendor, L"Fail"))
             continue;
         tagid = pSdbFindFirstTag(pdb, exetag, TAG_APP_NAME);
         AppName = pSdbGetStringTagPtr(pdb, tagid);

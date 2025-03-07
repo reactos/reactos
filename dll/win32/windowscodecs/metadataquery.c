@@ -17,13 +17,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
 #include <stdarg.h>
+#include <wchar.h>
 
 #define COBJMACROS
-#define NONAMELESSUNION
-
 #include "windef.h"
 #include "winbase.h"
 #include "objbase.h"
@@ -75,7 +72,7 @@ static ULONG WINAPI mqr_AddRef(IWICMetadataQueryReader *iface)
 {
     QueryReader *This = impl_from_IWICMetadataQueryReader(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
-    TRACE("(%p) refcount=%u\n", This, ref);
+    TRACE("(%p) refcount=%lu\n", This, ref);
     return ref;
 }
 
@@ -83,12 +80,12 @@ static ULONG WINAPI mqr_Release(IWICMetadataQueryReader *iface)
 {
     QueryReader *This = impl_from_IWICMetadataQueryReader(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
-    TRACE("(%p) refcount=%u\n", This, ref);
+    TRACE("(%p) refcount=%lu\n", This, ref);
     if (!ref)
     {
         IWICMetadataBlockReader_Release(This->block);
-        HeapFree(GetProcessHeap(), 0, This->root);
-        HeapFree(GetProcessHeap(), 0, This);
+        free(This->root);
+        free(This);
     }
     return ref;
 }
@@ -104,7 +101,6 @@ static HRESULT WINAPI mqr_GetContainerFormat(IWICMetadataQueryReader *iface, GUI
 
 static HRESULT WINAPI mqr_GetLocation(IWICMetadataQueryReader *iface, UINT len, WCHAR *location, UINT *ret_len)
 {
-    static const WCHAR rootW[] = { '/',0 };
     QueryReader *This = impl_from_IWICMetadataQueryReader(iface);
     const WCHAR *root;
     UINT actual_len;
@@ -113,7 +109,7 @@ static HRESULT WINAPI mqr_GetLocation(IWICMetadataQueryReader *iface, UINT len, 
 
     if (!ret_len) return E_INVALIDARG;
 
-    root = This->root ? This->root : rootW;
+    root = This->root ? This->root : L"/";
     actual_len = lstrlenW(root) + 1;
 
     if (location)
@@ -201,7 +197,7 @@ static HRESULT get_token(struct string_t *elem, PROPVARIANT *id, PROPVARIANT *sc
 
         if (start[1] < '0' || start[1] > '9') return DISP_E_TYPEMISMATCH;
 
-        *idx = strtolW(start + 1, &idx_end, 10);
+        *idx = wcstol(start + 1, &idx_end, 10);
         if (idx_end > elem->str + elem->len) return WINCODEC_ERR_INVALIDQUERYREQUEST;
         if (*idx_end != ']') return WINCODEC_ERR_INVALIDQUERYREQUEST;
         if (*idx < 0) return WINCODEC_ERR_INVALIDQUERYREQUEST;
@@ -212,7 +208,7 @@ static HRESULT get_token(struct string_t *elem, PROPVARIANT *id, PROPVARIANT *sc
         hr = get_token(&next_elem, id, schema, idx);
         if (hr != S_OK)
         {
-            TRACE("get_token error %#x\n", hr);
+            TRACE("get_token error %#lx\n", hr);
             return hr;
         }
         elem->len = (end - start) + next_elem.len;
@@ -225,7 +221,7 @@ static HRESULT get_token(struct string_t *elem, PROPVARIANT *id, PROPVARIANT *sc
         VARTYPE vt;
         PROPVARIANT next_token;
 
-        end = memchrW(start + 1, '=', elem->len - 1);
+        end = wmemchr(start + 1, '=', elem->len - 1);
         if (!end) return WINCODEC_ERR_INVALIDQUERYREQUEST;
         if (end > elem->str + elem->len) return WINCODEC_ERR_INVALIDQUERYREQUEST;
 
@@ -236,10 +232,10 @@ static HRESULT get_token(struct string_t *elem, PROPVARIANT *id, PROPVARIANT *sc
         if (vt == VT_ILLEGAL) return WINCODEC_ERR_WRONGSTATE;
 
         next_token.vt = VT_BSTR;
-        next_token.u.bstrVal = SysAllocStringLen(NULL, elem->len - (end - start) + 1);
-        if (!next_token.u.bstrVal) return E_OUTOFMEMORY;
+        next_token.bstrVal = SysAllocStringLen(NULL, elem->len - (end - start) + 1);
+        if (!next_token.bstrVal) return E_OUTOFMEMORY;
 
-        bstr = next_token.u.bstrVal;
+        bstr = next_token.bstrVal;
 
         end++;
         while (*end && *end != '}' && end - start < elem->len)
@@ -253,19 +249,19 @@ static HRESULT get_token(struct string_t *elem, PROPVARIANT *id, PROPVARIANT *sc
             return WINCODEC_ERR_INVALIDQUERYREQUEST;
         }
         *bstr = 0;
-        TRACE("schema/id %s\n", wine_dbgstr_w(next_token.u.bstrVal));
+        TRACE("schema/id %s\n", wine_dbgstr_w(next_token.bstrVal));
 
         if (vt == VT_CLSID)
         {
             id->vt = VT_CLSID;
-            id->u.puuid = CoTaskMemAlloc(sizeof(GUID));
-            if (!id->u.puuid)
+            id->puuid = CoTaskMemAlloc(sizeof(GUID));
+            if (!id->puuid)
             {
                 PropVariantClear(&next_token);
                 return E_OUTOFMEMORY;
             }
 
-            hr = UuidFromStringW(next_token.u.bstrVal, id->u.puuid);
+            hr = UuidFromStringW(next_token.bstrVal, id->puuid);
         }
         else
             hr = PropVariantChangeType(id, &next_token, 0, vt);
@@ -288,7 +284,7 @@ static HRESULT get_token(struct string_t *elem, PROPVARIANT *id, PROPVARIANT *sc
             hr = get_token(&next_elem, &next_id, &next_schema, &next_idx);
             if (hr != S_OK)
             {
-                TRACE("get_token error %#x\n", hr);
+                TRACE("get_token error %#lx\n", hr);
                 return hr;
             }
             elem->len = (end - start + 1) + next_elem.len;
@@ -312,10 +308,10 @@ static HRESULT get_token(struct string_t *elem, PROPVARIANT *id, PROPVARIANT *sc
         return S_OK;
     }
 
-    end = memchrW(start, '/', elem->len);
+    end = wmemchr(start, '/', elem->len);
     if (!end) end = start + elem->len;
 
-    p = memchrW(start, ':', end - start);
+    p = wmemchr(start, ':', end - start);
     if (p)
     {
         next_elem.str = p + 1;
@@ -327,10 +323,10 @@ static HRESULT get_token(struct string_t *elem, PROPVARIANT *id, PROPVARIANT *sc
         elem->len = end - start;
 
     id->vt = VT_BSTR;
-    id->u.bstrVal = SysAllocStringLen(NULL, elem->len + 1);
-    if (!id->u.bstrVal) return E_OUTOFMEMORY;
+    id->bstrVal = SysAllocStringLen(NULL, elem->len + 1);
+    if (!id->bstrVal) return E_OUTOFMEMORY;
 
-    bstr = id->u.bstrVal;
+    bstr = id->bstrVal;
     p = elem->str;
     while (p - elem->str < elem->len)
     {
@@ -348,7 +344,7 @@ static HRESULT get_token(struct string_t *elem, PROPVARIANT *id, PROPVARIANT *sc
         hr = get_token(&next_elem, &next_id, &next_schema, &next_idx);
         if (hr != S_OK)
         {
-            TRACE("get_token error %#x\n", hr);
+            TRACE("get_token error %#lx\n", hr);
             PropVariantClear(id);
             PropVariantClear(schema);
             return hr;
@@ -430,16 +426,16 @@ static HRESULT get_next_reader(IWICMetadataReader *reader, UINT index,
     if (index)
     {
         schema.vt = VT_UI2;
-        schema.u.uiVal = index;
+        schema.uiVal = index;
     }
 
     id.vt = VT_CLSID;
-    id.u.puuid = guid;
+    id.puuid = guid;
     hr = IWICMetadataReader_GetValue(reader, &schema, &id, &value);
     if (hr != S_OK) return hr;
 
     if (value.vt == VT_UNKNOWN)
-        hr = IUnknown_QueryInterface(value.u.punkVal, &IID_IWICMetadataReader, (void **)new_reader);
+        hr = IUnknown_QueryInterface(value.punkVal, &IID_IWICMetadataReader, (void **)new_reader);
     else
         hr = WINCODEC_ERR_UNEXPECTEDMETADATATYPE;
 
@@ -463,7 +459,7 @@ static HRESULT WINAPI mqr_GetMetadataByName(IWICMetadataQueryReader *iface, LPCW
 
     len = lstrlenW(query) + 1;
     if (This->root) len += lstrlenW(This->root);
-    full_query = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    full_query = malloc(len * sizeof(WCHAR));
     full_query[0] = 0;
     if (This->root)
         lstrcpyW(full_query, This->root);
@@ -493,7 +489,7 @@ static HRESULT WINAPI mqr_GetMetadataByName(IWICMetadataQueryReader *iface, LPCW
         hr = get_token(&elem, &tk_id, &tk_schema, &index);
         if (hr != S_OK)
         {
-            WARN("get_token error %#x\n", hr);
+            WARN("get_token error %#lx\n", hr);
             break;
         }
         TRACE("parsed %d characters: %s, index %d\n", elem.len, wine_dbgstr_wn(elem.str, elem.len), index);
@@ -501,7 +497,7 @@ static HRESULT WINAPI mqr_GetMetadataByName(IWICMetadataQueryReader *iface, LPCW
 
         if (!elem.len) break;
 
-        if (tk_id.vt == VT_CLSID || (tk_id.vt == VT_BSTR && WICMapShortNameToGuid(tk_id.u.bstrVal, &guid) == S_OK))
+        if (tk_id.vt == VT_CLSID || (tk_id.vt == VT_BSTR && WICMapShortNameToGuid(tk_id.bstrVal, &guid) == S_OK))
         {
             WCHAR *root;
 
@@ -511,7 +507,7 @@ static HRESULT WINAPI mqr_GetMetadataByName(IWICMetadataQueryReader *iface, LPCW
                 PropVariantClear(&tk_schema);
             }
 
-            if (tk_id.vt == VT_CLSID) guid = *tk_id.u.puuid;
+            if (tk_id.vt == VT_CLSID) guid = *tk_id.puuid;
 
             if (reader)
             {
@@ -536,7 +532,7 @@ static HRESULT WINAPI mqr_GetMetadataByName(IWICMetadataQueryReader *iface, LPCW
 
             PropVariantClear(&new_value);
             new_value.vt = VT_UNKNOWN;
-            hr = MetadataQueryReader_CreateInstance(This->block, root, (IWICMetadataQueryReader **)&new_value.u.punkVal);
+            hr = MetadataQueryReader_CreateInstance(This->block, root, (IWICMetadataQueryReader **)&new_value.punkVal);
             SysFreeString(root);
             if (hr != S_OK) break;
         }
@@ -556,9 +552,9 @@ static HRESULT WINAPI mqr_GetMetadataByName(IWICMetadataQueryReader *iface, LPCW
                 if (hr != S_OK) break;
 
                 schema.vt = VT_LPWSTR;
-                schema.u.pwszVal = (LPWSTR)map_shortname_to_schema(&guid, tk_schema.u.bstrVal);
-                if (!schema.u.pwszVal)
-                    schema.u.pwszVal = tk_schema.u.bstrVal;
+                schema.pwszVal = (LPWSTR)map_shortname_to_schema(&guid, tk_schema.bstrVal);
+                if (!schema.pwszVal)
+                    schema.pwszVal = tk_schema.bstrVal;
             }
             else
                 schema = tk_schema;
@@ -566,7 +562,7 @@ static HRESULT WINAPI mqr_GetMetadataByName(IWICMetadataQueryReader *iface, LPCW
             if (tk_id.vt == VT_BSTR)
             {
                 id.vt = VT_LPWSTR;
-                id.u.pwszVal = tk_id.u.bstrVal;
+                id.pwszVal = tk_id.bstrVal;
             }
             else
                 id = tk_id;
@@ -593,17 +589,129 @@ static HRESULT WINAPI mqr_GetMetadataByName(IWICMetadataQueryReader *iface, LPCW
     else
         PropVariantClear(&new_value);
 
-    HeapFree(GetProcessHeap(), 0, full_query);
+    free(full_query);
 
     return hr;
 }
 
-static HRESULT WINAPI mqr_GetEnumerator(IWICMetadataQueryReader *iface,
-        IEnumString **ppIEnumString)
+struct string_enumerator
 {
-    QueryReader *This = impl_from_IWICMetadataQueryReader(iface);
-    FIXME("(%p,%p)\n", This, ppIEnumString);
+    IEnumString IEnumString_iface;
+    LONG ref;
+};
+
+static struct string_enumerator *impl_from_IEnumString(IEnumString *iface)
+{
+    return CONTAINING_RECORD(iface, struct string_enumerator, IEnumString_iface);
+}
+
+static HRESULT WINAPI string_enumerator_QueryInterface(IEnumString *iface, REFIID riid, void **ppv)
+{
+    struct string_enumerator *this = impl_from_IEnumString(iface);
+
+    TRACE("iface %p, riid %s, ppv %p.\n", iface, debugstr_guid(riid), ppv);
+
+    if (IsEqualGUID(riid, &IID_IEnumString) || IsEqualGUID(riid, &IID_IUnknown))
+        *ppv = &this->IEnumString_iface;
+    else
+    {
+        WARN("Unknown riid %s.\n", debugstr_guid(riid));
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef(&this->IEnumString_iface);
+    return S_OK;
+}
+
+static ULONG WINAPI string_enumerator_AddRef(IEnumString *iface)
+{
+    struct string_enumerator *this = impl_from_IEnumString(iface);
+    ULONG ref = InterlockedIncrement(&this->ref);
+
+    TRACE("iface %p, ref %lu.\n", iface, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI string_enumerator_Release(IEnumString *iface)
+{
+    struct string_enumerator *this = impl_from_IEnumString(iface);
+    ULONG ref = InterlockedDecrement(&this->ref);
+
+    TRACE("iface %p, ref %lu.\n", iface, ref);
+
+    if (!ref)
+        free(this);
+
+    return ref;
+}
+
+static HRESULT WINAPI string_enumerator_Next(IEnumString *iface, ULONG count, LPOLESTR *strings, ULONG *ret)
+{
+    FIXME("iface %p, count %lu, strings %p, ret %p stub.\n", iface, count, strings, ret);
+
+    if (!strings || !ret)
+        return E_INVALIDARG;
+
+    *ret = 0;
+    return count ? S_FALSE : S_OK;
+}
+
+static HRESULT WINAPI string_enumerator_Reset(IEnumString *iface)
+{
+    TRACE("iface %p.\n", iface);
+
+    return S_OK;
+}
+
+static HRESULT WINAPI string_enumerator_Skip(IEnumString *iface, ULONG count)
+{
+    FIXME("iface %p, count %lu stub.\n", iface, count);
+
+    return count ? S_FALSE : S_OK;
+}
+
+static HRESULT WINAPI string_enumerator_Clone(IEnumString *iface, IEnumString **out)
+{
+    FIXME("iface %p, out %p stub.\n", iface, out);
+
+    *out = NULL;
     return E_NOTIMPL;
+}
+
+static const IEnumStringVtbl string_enumerator_vtbl =
+{
+    string_enumerator_QueryInterface,
+    string_enumerator_AddRef,
+    string_enumerator_Release,
+    string_enumerator_Next,
+    string_enumerator_Skip,
+    string_enumerator_Reset,
+    string_enumerator_Clone
+};
+
+static HRESULT string_enumerator_create(IEnumString **enum_string)
+{
+    struct string_enumerator *object;
+
+    if (!(object = calloc(1, sizeof(*object))))
+        return E_OUTOFMEMORY;
+
+    object->IEnumString_iface.lpVtbl = &string_enumerator_vtbl;
+    object->ref = 1;
+
+    *enum_string = &object->IEnumString_iface;
+
+    return S_OK;
+}
+
+static HRESULT WINAPI mqr_GetEnumerator(IWICMetadataQueryReader *iface,
+        IEnumString **enum_string)
+{
+    TRACE("iface %p, enum_string %p.\n", iface, enum_string);
+
+    return string_enumerator_create(enum_string);
 }
 
 static IWICMetadataQueryReaderVtbl mqr_vtbl = {
@@ -620,7 +728,7 @@ HRESULT MetadataQueryReader_CreateInstance(IWICMetadataBlockReader *mbr, const W
 {
     QueryReader *obj;
 
-    obj = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*obj));
+    obj = calloc(1, sizeof(*obj));
     if (!obj)
         return E_OUTOFMEMORY;
 
@@ -630,57 +738,152 @@ HRESULT MetadataQueryReader_CreateInstance(IWICMetadataBlockReader *mbr, const W
     IWICMetadataBlockReader_AddRef(mbr);
     obj->block = mbr;
 
-    obj->root = root ? heap_strdupW(root) : NULL;
+    obj->root = wcsdup(root);
 
     *out = &obj->IWICMetadataQueryReader_iface;
 
     return S_OK;
 }
 
-static const WCHAR bmpW[] = { 'b','m','p',0 };
-static const WCHAR pngW[] = { 'p','n','g',0 };
-static const WCHAR icoW[] = { 'i','c','o',0 };
-static const WCHAR jpgW[] = { 'j','p','g',0 };
-static const WCHAR tiffW[] = { 't','i','f','f',0 };
-static const WCHAR gifW[] = { 'g','i','f',0 };
-static const WCHAR wmphotoW[] = { 'w','m','p','h','o','t','o',0 };
-static const WCHAR unknownW[] = { 'u','n','k','n','o','w','n',0 };
-static const WCHAR ifdW[] = { 'i','f','d',0 };
-static const WCHAR subW[] = { 's','u','b',0 };
-static const WCHAR exifW[] = { 'e','x','i','f',0 };
-static const WCHAR gpsW[] = { 'g','p','s',0 };
-static const WCHAR interopW[] = { 'i','n','t','e','r','o','p',0 };
-static const WCHAR app0W[] = { 'a','p','p','0',0 };
-static const WCHAR app1W[] = { 'a','p','p','1',0 };
-static const WCHAR app13W[] = { 'a','p','p','1','3',0 };
-static const WCHAR iptcW[] = { 'i','p','t','c',0 };
-static const WCHAR irbW[] = { 'i','r','b',0 };
-static const WCHAR _8bimiptcW[] = { '8','b','i','m','i','p','t','c',0 };
-static const WCHAR _8bimResInfoW[] = { '8','b','i','m','R','e','s','I','n','f','o',0 };
-static const WCHAR _8bimiptcdigestW[] = { '8','b','i','m','i','p','t','c','d','i','g','e','s','t',0 };
-static const WCHAR xmpW[] = { 'x','m','p',0 };
-static const WCHAR thumbW[] = { 't','h','u','m','b',0 };
-static const WCHAR tEXtW[] = { 't','E','X','t',0 };
-static const WCHAR xmpstructW[] = { 'x','m','p','s','t','r','u','c','t',0 };
-static const WCHAR xmpbagW[] = { 'x','m','p','b','a','g',0 };
-static const WCHAR xmpseqW[] = { 'x','m','p','s','e','q',0 };
-static const WCHAR xmpaltW[] = { 'x','m','p','a','l','t',0 };
-static const WCHAR logscrdescW[] = { 'l','o','g','s','c','r','d','e','s','c',0 };
-static const WCHAR imgdescW[] = { 'i','m','g','d','e','s','c',0 };
-static const WCHAR grctlextW[] = { 'g','r','c','t','l','e','x','t',0 };
-static const WCHAR appextW[] = { 'a','p','p','e','x','t',0 };
-static const WCHAR chrominanceW[] = { 'c','h','r','o','m','i','n','a','n','c','e',0 };
-static const WCHAR luminanceW[] = { 'l','u','m','i','n','a','n','c','e',0 };
-static const WCHAR comW[] = { 'c','o','m',0 };
-static const WCHAR commentextW[] = { 'c','o','m','m','e','n','t','e','x','t',0 };
-static const WCHAR gAMAW[] = { 'g','A','M','A',0 };
-static const WCHAR bKGDW[] = { 'b','K','G','D',0 };
-static const WCHAR iTXtW[] = { 'i','T','X','t',0 };
-static const WCHAR cHRMW[] = { 'c','H','R','M',0 };
-static const WCHAR hISTW[] = { 'h','I','S','T',0 };
-static const WCHAR iCCPW[] = { 'i','C','C','P',0 };
-static const WCHAR sRGBW[] = { 's','R','G','B',0 };
-static const WCHAR tIMEW[] = { 't','I','M','E',0 };
+typedef struct
+{
+    IWICMetadataQueryWriter IWICMetadataQueryWriter_iface;
+    LONG ref;
+    IWICMetadataBlockWriter *block;
+    WCHAR *root;
+}
+QueryWriter;
+
+static inline QueryWriter *impl_from_IWICMetadataQueryWriter(IWICMetadataQueryWriter *iface)
+{
+    return CONTAINING_RECORD(iface, QueryWriter, IWICMetadataQueryWriter_iface);
+}
+
+static HRESULT WINAPI mqw_QueryInterface(IWICMetadataQueryWriter *iface, REFIID riid,
+        void **object)
+{
+    QueryWriter *writer = impl_from_IWICMetadataQueryWriter(iface);
+
+    TRACE("writer %p, riid %s, object %p.\n", writer, debugstr_guid(riid), object);
+
+    if (IsEqualGUID(riid, &IID_IUnknown)
+            || IsEqualGUID(riid, &IID_IWICMetadataQueryWriter)
+            || IsEqualGUID(riid, &IID_IWICMetadataQueryReader))
+        *object = &writer->IWICMetadataQueryWriter_iface;
+    else
+        *object = NULL;
+
+    if (*object)
+    {
+        IUnknown_AddRef((IUnknown *)*object);
+        return S_OK;
+    }
+
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI mqw_AddRef(IWICMetadataQueryWriter *iface)
+{
+    QueryWriter *writer = impl_from_IWICMetadataQueryWriter(iface);
+    ULONG ref = InterlockedIncrement(&writer->ref);
+
+    TRACE("writer %p, refcount=%lu\n", writer, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI mqw_Release(IWICMetadataQueryWriter *iface)
+{
+    QueryWriter *writer = impl_from_IWICMetadataQueryWriter(iface);
+    ULONG ref = InterlockedDecrement(&writer->ref);
+
+    TRACE("writer %p, refcount=%lu.\n", writer, ref);
+
+    if (!ref)
+    {
+        IWICMetadataBlockWriter_Release(writer->block);
+        free(writer->root);
+        free(writer);
+    }
+    return ref;
+}
+
+static HRESULT WINAPI mqw_GetContainerFormat(IWICMetadataQueryWriter *iface, GUID *container_format)
+{
+    FIXME("iface %p, container_format %p stub.\n", iface, container_format);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI mqw_GetEnumerator(IWICMetadataQueryWriter *iface, IEnumString **enum_string)
+{
+    TRACE("iface %p, enum_string %p.\n", iface, enum_string);
+
+    return string_enumerator_create(enum_string);
+}
+
+static HRESULT WINAPI mqw_GetLocation(IWICMetadataQueryWriter *iface, UINT max_length, WCHAR *namespace, UINT *actual_length)
+{
+    FIXME("iface %p, max_length %u, namespace %s, actual_length %p stub.\n",
+            iface, max_length, debugstr_w(namespace), actual_length);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI mqw_GetMetadataByName(IWICMetadataQueryWriter *iface, LPCWSTR name, PROPVARIANT *value)
+{
+    FIXME("name %s, value %p stub.\n", debugstr_w(name), value);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI mqw_SetMetadataByName(IWICMetadataQueryWriter *iface, LPCWSTR name, const PROPVARIANT *value)
+{
+    FIXME("iface %p, name %s, value %p stub.\n", iface, debugstr_w(name), value);
+
+    return S_OK;
+}
+
+static HRESULT WINAPI mqw_RemoveMetadataByName(IWICMetadataQueryWriter *iface, LPCWSTR name)
+{
+    FIXME("iface %p, name %s stub.\n", iface, debugstr_w(name));
+
+    return E_NOTIMPL;
+}
+
+static const IWICMetadataQueryWriterVtbl mqw_vtbl =
+{
+    mqw_QueryInterface,
+    mqw_AddRef,
+    mqw_Release,
+    mqw_GetContainerFormat,
+    mqw_GetLocation,
+    mqw_GetMetadataByName,
+    mqw_GetEnumerator,
+    mqw_SetMetadataByName,
+    mqw_RemoveMetadataByName,
+};
+
+HRESULT MetadataQueryWriter_CreateInstance(IWICMetadataBlockWriter *mbw, const WCHAR *root, IWICMetadataQueryWriter **out)
+{
+    QueryWriter *obj;
+
+    obj = calloc(1, sizeof(*obj));
+    if (!obj)
+        return E_OUTOFMEMORY;
+
+    obj->IWICMetadataQueryWriter_iface.lpVtbl = &mqw_vtbl;
+    obj->ref = 1;
+
+    IWICMetadataBlockWriter_AddRef(mbw);
+    obj->block = mbw;
+
+    obj->root = wcsdup(root);
+
+    *out = &obj->IWICMetadataQueryWriter_iface;
+
+    return S_OK;
+}
 
 static const struct
 {
@@ -688,50 +891,50 @@ static const struct
     const WCHAR *name;
 } guid2name[] =
 {
-    { &GUID_ContainerFormatBmp, bmpW },
-    { &GUID_ContainerFormatPng, pngW },
-    { &GUID_ContainerFormatIco, icoW },
-    { &GUID_ContainerFormatJpeg, jpgW },
-    { &GUID_ContainerFormatTiff, tiffW },
-    { &GUID_ContainerFormatGif, gifW },
-    { &GUID_ContainerFormatWmp, wmphotoW },
-    { &GUID_MetadataFormatUnknown, unknownW },
-    { &GUID_MetadataFormatIfd, ifdW },
-    { &GUID_MetadataFormatSubIfd, subW },
-    { &GUID_MetadataFormatExif, exifW },
-    { &GUID_MetadataFormatGps, gpsW },
-    { &GUID_MetadataFormatInterop, interopW },
-    { &GUID_MetadataFormatApp0, app0W },
-    { &GUID_MetadataFormatApp1, app1W },
-    { &GUID_MetadataFormatApp13, app13W },
-    { &GUID_MetadataFormatIPTC, iptcW },
-    { &GUID_MetadataFormatIRB, irbW },
-    { &GUID_MetadataFormat8BIMIPTC, _8bimiptcW },
-    { &GUID_MetadataFormat8BIMResolutionInfo, _8bimResInfoW },
-    { &GUID_MetadataFormat8BIMIPTCDigest, _8bimiptcdigestW },
-    { &GUID_MetadataFormatXMP, xmpW },
-    { &GUID_MetadataFormatThumbnail, thumbW },
-    { &GUID_MetadataFormatChunktEXt, tEXtW },
-    { &GUID_MetadataFormatXMPStruct, xmpstructW },
-    { &GUID_MetadataFormatXMPBag, xmpbagW },
-    { &GUID_MetadataFormatXMPSeq, xmpseqW },
-    { &GUID_MetadataFormatXMPAlt, xmpaltW },
-    { &GUID_MetadataFormatLSD, logscrdescW },
-    { &GUID_MetadataFormatIMD, imgdescW },
-    { &GUID_MetadataFormatGCE, grctlextW },
-    { &GUID_MetadataFormatAPE, appextW },
-    { &GUID_MetadataFormatJpegChrominance, chrominanceW },
-    { &GUID_MetadataFormatJpegLuminance, luminanceW },
-    { &GUID_MetadataFormatJpegComment, comW },
-    { &GUID_MetadataFormatGifComment, commentextW },
-    { &GUID_MetadataFormatChunkgAMA, gAMAW },
-    { &GUID_MetadataFormatChunkbKGD, bKGDW },
-    { &GUID_MetadataFormatChunkiTXt, iTXtW },
-    { &GUID_MetadataFormatChunkcHRM, cHRMW },
-    { &GUID_MetadataFormatChunkhIST, hISTW },
-    { &GUID_MetadataFormatChunkiCCP, iCCPW },
-    { &GUID_MetadataFormatChunksRGB, sRGBW },
-    { &GUID_MetadataFormatChunktIME, tIMEW }
+    { &GUID_ContainerFormatBmp, L"bmp" },
+    { &GUID_ContainerFormatPng, L"png" },
+    { &GUID_ContainerFormatIco, L"ico" },
+    { &GUID_ContainerFormatJpeg, L"jpg" },
+    { &GUID_ContainerFormatTiff, L"tiff" },
+    { &GUID_ContainerFormatGif, L"gif" },
+    { &GUID_ContainerFormatWmp, L"wmphoto" },
+    { &GUID_MetadataFormatUnknown, L"unknown" },
+    { &GUID_MetadataFormatIfd, L"ifd" },
+    { &GUID_MetadataFormatSubIfd, L"sub" },
+    { &GUID_MetadataFormatExif, L"exif" },
+    { &GUID_MetadataFormatGps, L"gps" },
+    { &GUID_MetadataFormatInterop, L"interop" },
+    { &GUID_MetadataFormatApp0, L"app0" },
+    { &GUID_MetadataFormatApp1, L"app1" },
+    { &GUID_MetadataFormatApp13, L"app13" },
+    { &GUID_MetadataFormatIPTC, L"iptc" },
+    { &GUID_MetadataFormatIRB, L"irb" },
+    { &GUID_MetadataFormat8BIMIPTC, L"8bimiptc" },
+    { &GUID_MetadataFormat8BIMResolutionInfo, L"8bimResInfo" },
+    { &GUID_MetadataFormat8BIMIPTCDigest, L"8bimiptcdigest" },
+    { &GUID_MetadataFormatXMP, L"xmp" },
+    { &GUID_MetadataFormatThumbnail, L"thumb" },
+    { &GUID_MetadataFormatChunktEXt, L"tEXt" },
+    { &GUID_MetadataFormatXMPStruct, L"xmpstruct" },
+    { &GUID_MetadataFormatXMPBag, L"xmpbag" },
+    { &GUID_MetadataFormatXMPSeq, L"xmpseq" },
+    { &GUID_MetadataFormatXMPAlt, L"xmpalt" },
+    { &GUID_MetadataFormatLSD, L"logscrdesc" },
+    { &GUID_MetadataFormatIMD, L"imgdesc" },
+    { &GUID_MetadataFormatGCE, L"grctlext" },
+    { &GUID_MetadataFormatAPE, L"appext" },
+    { &GUID_MetadataFormatJpegChrominance, L"chrominance" },
+    { &GUID_MetadataFormatJpegLuminance, L"luminance" },
+    { &GUID_MetadataFormatJpegComment, L"com" },
+    { &GUID_MetadataFormatGifComment, L"commentext" },
+    { &GUID_MetadataFormatChunkgAMA, L"gAMA" },
+    { &GUID_MetadataFormatChunkbKGD, L"bKGD" },
+    { &GUID_MetadataFormatChunkiTXt, L"iTXt" },
+    { &GUID_MetadataFormatChunkcHRM, L"cHRM" },
+    { &GUID_MetadataFormatChunkhIST, L"hIST" },
+    { &GUID_MetadataFormatChunkiCCP, L"iCCP" },
+    { &GUID_MetadataFormatChunksRGB, L"sRGB" },
+    { &GUID_MetadataFormatChunktIME, L"tIME" }
 };
 
 HRESULT WINAPI WICMapGuidToShortName(REFGUID guid, UINT len, WCHAR *name, UINT *ret_len)
@@ -785,91 +988,38 @@ HRESULT WINAPI WICMapShortNameToGuid(PCWSTR name, GUID *guid)
     return WINCODEC_ERR_PROPERTYNOTFOUND;
 }
 
-static const WCHAR rdf[] = { 'r','d','f',0 };
-static const WCHAR rdf_scheme[] = { 'h','t','t','p',':','/','/','w','w','w','.','w','3','.','o','r','g','/','1','9','9','9','/','0','2','/','2','2','-','r','d','f','-','s','y','n','t','a','x','-','n','s','#',0 };
-static const WCHAR dc[] = { 'd','c',0 };
-static const WCHAR dc_scheme[] = { 'h','t','t','p',':','/','/','p','u','r','l','.','o','r','g','/','d','c','/','e','l','e','m','e','n','t','s','/','1','.','1','/',0 };
-static const WCHAR xmp[] = { 'x','m','p',0 };
-static const WCHAR xmp_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/',0 };
-static const WCHAR xmpidq[] = { 'x','m','p','i','d','q',0 };
-static const WCHAR xmpidq_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','m','p','/','I','d','e','n','t','i','f','i','e','r','/','q','u','a','l','/','1','.','0','/',0 };
-static const WCHAR xmpRights[] = { 'x','m','p','R','i','g','h','t','s',0 };
-static const WCHAR xmpRights_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/','r','i','g','h','t','s','/',0 };
-static const WCHAR xmpMM[] = { 'x','m','p','M','M',0 };
-static const WCHAR xmpMM_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/','m','m','/',0 };
-static const WCHAR xmpBJ[] = { 'x','m','p','B','J',0 };
-static const WCHAR xmpBJ_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/','b','j','/',0 };
-static const WCHAR xmpTPg[] = { 'x','m','p','T','P','g',0 };
-static const WCHAR xmpTPg_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/','t','/','p','g','/',0 };
-static const WCHAR pdf[] = { 'p','d','f',0 };
-static const WCHAR pdf_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','p','d','f','/','1','.','3','/',0 };
-static const WCHAR photoshop[] = { 'p','h','o','t','o','s','h','o','p',0 };
-static const WCHAR photoshop_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','p','h','o','t','o','s','h','o','p','/','1','.','0','/',0 };
-static const WCHAR tiff[] = { 't','i','f','f',0 };
-static const WCHAR tiff_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','t','i','f','f','/','1','.','0','/',0 };
-static const WCHAR exif[] = { 'e','x','i','f',0 };
-static const WCHAR exif_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','e','x','i','f','/','1','.','0','/',0 };
-static const WCHAR stDim[] = { 's','t','D','i','m',0 };
-static const WCHAR stDim_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/','s','T','y','p','e','/','D','i','m','e','n','s','i','o','n','s','#',0 };
-static const WCHAR xapGImg[] = { 'x','a','p','G','I','m','g',0 };
-static const WCHAR xapGImg_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/','g','/','i','m','g','/',0 };
-static const WCHAR stEvt[] = { 's','t','E','v','t',0 };
-static const WCHAR stEvt_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/','s','T','y','p','e','/','R','e','s','o','u','r','c','e','E','v','e','n','t','#',0 };
-static const WCHAR stRef[] = { 's','t','R','e','f',0 };
-static const WCHAR stRef_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/','s','T','y','p','e','/','R','e','s','o','u','r','c','e','R','e','f','#',0 };
-static const WCHAR stVer[] = { 's','t','V','e','r',0 };
-static const WCHAR stVer_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/','s','T','y','p','e','/','V','e','r','s','i','o','n','#',0 };
-static const WCHAR stJob[] = { 's','t','J','o','b',0 };
-static const WCHAR stJob_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','a','p','/','1','.','0','/','s','T','y','p','e','/','J','o','b','#',0 };
-static const WCHAR aux[] = { 'a','u','x',0 };
-static const WCHAR aux_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','e','x','i','f','/','1','.','0','/','a','u','x','/',0 };
-static const WCHAR crs[] = { 'c','r','s',0 };
-static const WCHAR crs_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','c','a','m','e','r','a','-','r','a','w','-','s','e','t','t','i','n','g','s','/','1','.','0','/',0 };
-static const WCHAR xmpDM[] = { 'x','m','p','D','M',0 };
-static const WCHAR xmpDM_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','a','d','o','b','e','.','c','o','m','/','x','m','p','/','1','.','0','/','D','y','n','a','m','i','c','M','e','d','i','a','/',0 };
-static const WCHAR Iptc4xmpCore[] = { 'I','p','t','c','4','x','m','p','C','o','r','e',0 };
-static const WCHAR Iptc4xmpCore_scheme[] = { 'h','t','t','p',':','/','/','i','p','t','c','.','o','r','g','/','s','t','d','/','I','p','t','c','4','x','m','p','C','o','r','e','/','1','.','0','/','x','m','l','n','s','/',0 };
-static const WCHAR MicrosoftPhoto[] = { 'M','i','c','r','o','s','o','f','t','P','h','o','t','o',0 };
-static const WCHAR MicrosoftPhoto_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','m','i','c','r','o','s','o','f','t','.','c','o','m','/','p','h','o','t','o','/','1','.','0','/',0 };
-static const WCHAR MP[] = { 'M','P',0 };
-static const WCHAR MP_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','m','i','c','r','o','s','o','f','t','.','c','o','m','/','p','h','o','t','o','/','1','.','2','/',0 };
-static const WCHAR MPRI[] = { 'M','P','R','I',0 };
-static const WCHAR MPRI_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','m','i','c','r','o','s','o','f','t','.','c','o','m','/','p','h','o','t','o','/','1','.','2','/','t','/','R','e','g','i','o','n','I','n','f','o','#',0 };
-static const WCHAR MPReg[] = { 'M','P','R','e','g',0 };
-static const WCHAR MPReg_scheme[] = { 'h','t','t','p',':','/','/','n','s','.','m','i','c','r','o','s','o','f','t','.','c','o','m','/','p','h','o','t','o','/','1','.','2','/','t','/','R','e','g','i','o','n','#',0 };
-
 static const struct
 {
     const WCHAR *name;
     const WCHAR *schema;
 } name2schema[] =
 {
-    { rdf, rdf_scheme },
-    { dc, dc_scheme },
-    { xmp, xmp_scheme },
-    { xmpidq, xmpidq_scheme },
-    { xmpRights, xmpRights_scheme },
-    { xmpMM, xmpMM_scheme },
-    { xmpBJ, xmpBJ_scheme },
-    { xmpTPg, xmpTPg_scheme },
-    { pdf, pdf_scheme },
-    { photoshop, photoshop_scheme },
-    { tiff, tiff_scheme },
-    { exif, exif_scheme },
-    { stDim, stDim_scheme },
-    { xapGImg, xapGImg_scheme },
-    { stEvt, stEvt_scheme },
-    { stRef, stRef_scheme },
-    { stVer, stVer_scheme },
-    { stJob, stJob_scheme },
-    { aux, aux_scheme },
-    { crs, crs_scheme },
-    { xmpDM, xmpDM_scheme },
-    { Iptc4xmpCore, Iptc4xmpCore_scheme },
-    { MicrosoftPhoto, MicrosoftPhoto_scheme },
-    { MP, MP_scheme },
-    { MPRI, MPRI_scheme },
-    { MPReg, MPReg_scheme }
+    { L"rdf", L"http://www.w3.org/1999/02/22-rdf-syntax-ns#" },
+    { L"dc", L"http://purl.org/dc/elements/1.1/" },
+    { L"xmp", L"http://ns.adobe.com/xap/1.0/" },
+    { L"xmpidq", L"http://ns.adobe.com/xmp/Identifier/qual/1.0/" },
+    { L"xmpRights", L"http://ns.adobe.com/xap/1.0/rights/" },
+    { L"xmpMM", L"http://ns.adobe.com/xap/1.0/mm/" },
+    { L"xmpBJ", L"http://ns.adobe.com/xap/1.0/bj/" },
+    { L"xmpTPg", L"http://ns.adobe.com/xap/1.0/t/pg/" },
+    { L"pdf", L"http://ns.adobe.com/pdf/1.3/" },
+    { L"photoshop", L"http://ns.adobe.com/photoshop/1.0/" },
+    { L"tiff", L"http://ns.adobe.com/tiff/1.0/" },
+    { L"exif", L"http://ns.adobe.com/exif/1.0/" },
+    { L"stDim", L"http://ns.adobe.com/xap/1.0/sType/Dimensions#" },
+    { L"xapGImg", L"http://ns.adobe.com/xap/1.0/g/img/" },
+    { L"stEvt", L"http://ns.adobe.com/xap/1.0/sType/ResourceEvent#" },
+    { L"stRef", L"http://ns.adobe.com/xap/1.0/sType/ResourceRef#" },
+    { L"stVer", L"http://ns.adobe.com/xap/1.0/sType/Version#" },
+    { L"stJob", L"http://ns.adobe.com/xap/1.0/sType/Job#" },
+    { L"aux", L"http://ns.adobe.com/exif/1.0/aux/" },
+    { L"crs", L"http://ns.adobe.com/camera-raw-settings/1.0/" },
+    { L"xmpDM", L"http://ns.adobe.com/xmp/1.0/DynamicMedia/" },
+    { L"Iptc4xmpCore", L"http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/" },
+    { L"MicrosoftPhoto", L"http://ns.microsoft.com/photo/1.0/" },
+    { L"MP", L"http://ns.microsoft.com/photo/1.2/" },
+    { L"MPRI", L"http://ns.microsoft.com/photo/1.2/t/RegionInfo#" },
+    { L"MPReg", L"http://ns.microsoft.com/photo/1.2/t/Region#" }
 };
 
 static const WCHAR *map_shortname_to_schema(const GUID *format, const WCHAR *name)
@@ -885,7 +1035,7 @@ static const WCHAR *map_shortname_to_schema(const GUID *format, const WCHAR *nam
 
     for (i = 0; i < ARRAY_SIZE(name2schema); i++)
     {
-        if (!lstrcmpW(name2schema[i].name, name))
+        if (!wcscmp(name2schema[i].name, name))
             return name2schema[i].schema;
     }
 
@@ -910,7 +1060,7 @@ HRESULT WINAPI WICMapSchemaToName(REFGUID format, LPWSTR schema, UINT len, WCHAR
 
     for (i = 0; i < ARRAY_SIZE(name2schema); i++)
     {
-        if (!lstrcmpW(name2schema[i].schema, schema))
+        if (!wcscmp(name2schema[i].schema, schema))
         {
             if (name)
             {

@@ -140,6 +140,10 @@ if(NOT CMAKE_CROSSCOMPILING)
             add_definitions(/D_X86_ /D__i386__ /DWIN32 /D_WINDOWS)
         elseif(ARCH STREQUAL "amd64")
             add_definitions(-D_AMD64_ -D__x86_64__ /DWIN32 -D_WINDOWS)
+        elseif(ARCH STREQUAL "arm")
+            add_definitions(-D__arm__)
+        elseif(ARCH STREQUAL "arm64")
+            add_definitions(-D__aarch64__)
         endif()
         if(MSVC_VERSION GREATER 1699)
             add_definitions(/D_ALLOW_KEYWORD_MACROS)
@@ -233,6 +237,8 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
                     -D_WIN32_WINDOWS=0x502
                     -D_SETUPAPI_VER=0x502
                     -DMINGW_HAS_SECURE_API=1
+                    -DD3D_UMD_INTERFACE_VERSION=0x000C # Vista
+                    -DDXGKDDI_INTERFACE_VERSION=0x1052 # Vista
                     -DDLL_EXPORT_VERSION=${DLL_EXPORT_VERSION})
 
     # Arch Options
@@ -250,7 +256,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     elseif(ARCH STREQUAL "amd64")
         # clang-cl defines this one for itself
         if (NOT (MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang"))
-            add_compile_definitions(_M_AMD64)
+            add_compile_definitions(_M_AMD64 _M_X64)
         endif()
         add_definitions(-D_AMD64_ -D__x86_64__ -D_WIN64)
     elseif(ARCH STREQUAL "arm")
@@ -310,6 +316,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
         sdk/include
         sdk/include/psdk
         sdk/include/dxsdk
+        sdk/include/winrt
         ${REACTOS_BINARY_DIR}/sdk/include
         ${REACTOS_BINARY_DIR}/sdk/include/psdk
         ${REACTOS_BINARY_DIR}/sdk/include/dxsdk
@@ -317,10 +324,12 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
         ${REACTOS_BINARY_DIR}/sdk/include/reactos
         ${REACTOS_BINARY_DIR}/sdk/include/reactos/mc
         sdk/include/crt
+        sdk/include/vcruntime
         sdk/include/ddk
         sdk/include/ndk
         sdk/include/reactos
-        sdk/include/reactos/libs)
+        sdk/include/reactos/libs
+        sdk/lib/pseh/include)
 
     if(ARCH STREQUAL "arm")
         include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/arm)
@@ -337,7 +346,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     add_subdirectory(sdk/include/asm)
 
     if(ARCH MATCHES "64$")
-        include(sdk/cmake/baseaddress64.cmake)  
+        include(sdk/cmake/baseaddress64.cmake)
     elseif(NO_ROSSYM)
         include(sdk/cmake/baseaddress_dwarf.cmake)
     elseif(MSVC)

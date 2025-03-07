@@ -3,6 +3,7 @@
 #define STANDALONE
 #include <apitest.h>
 
+extern void func_DllLoadNotification(void);
 extern void func_LdrEnumResources(void);
 extern void func_LdrLoadDll(void);
 extern void func_load_notifications(void);
@@ -37,6 +38,7 @@ extern void func_NtQueryInformationProcess(void);
 extern void func_NtQueryInformationThread(void);
 extern void func_NtQueryInformationToken(void);
 extern void func_NtQueryKey(void);
+extern void func_NtQueryObject(void);
 extern void func_NtQueryOpenSubKeys(void);
 extern void func_NtQuerySystemEnvironmentValue(void);
 extern void func_NtQuerySystemInformation(void);
@@ -106,6 +108,7 @@ extern void func_UserModeException(void);
 
 const struct test winetest_testlist[] =
 {
+    { "DllLoadNotification",            func_DllLoadNotification },
     { "LdrEnumResources",               func_LdrEnumResources },
     { "LdrLoadDll",                     func_LdrLoadDll },
     { "load_notifications",             func_load_notifications },
@@ -140,6 +143,7 @@ const struct test winetest_testlist[] =
     { "NtQueryInformationThread",       func_NtQueryInformationThread },
     { "NtQueryInformationToken",        func_NtQueryInformationToken },
     { "NtQueryKey",                     func_NtQueryKey },
+    { "NtQueryObject",                  func_NtQueryObject },
     { "NtQueryOpenSubKeys",             func_NtQueryOpenSubKeys },
     { "NtQuerySystemEnvironmentValue",  func_NtQuerySystemEnvironmentValue },
     { "NtQuerySystemInformation",       func_NtQuerySystemInformation },

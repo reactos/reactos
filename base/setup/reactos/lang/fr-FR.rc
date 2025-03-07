@@ -8,8 +8,18 @@ CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bienvenue dans l'assistant d'installation de ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "Vous ne pouvez pas encore installer ReactOS directement depuis ce CD ! Veuillez redémarrer votre ordinateur depuis ce CD pour pouvoir installer ReactOS.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Cliquez sur Terminer pour quitter l'installation.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Cet assistant installe ou met à niveau ReactOS sur votre ordinateur, \
+et prépare la seconde étape d'installation.", IDC_STATIC, 115, 40, 195, 27
+////
+    GROUPBOX " INFORMATION IMPORTANTE ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
+    LTEXT "ReactOS est en version Alpha : il n'est pas complet et est \
+en cours de développement. Il est conseillé de ne l'utiliser \
+que pour évaluation et test, pas pour un usage quotidien.\n\
+Il peut corrompre vos données ou endommager votre matériel.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
+    LTEXT "Sauvegardez vos données ou testez sur un ordinateur secondaire \
+si vous souhaitez utiliser ReactOS sur du matériel.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+////
+    LTEXT "Cliquez sur Suivant pour continuer l'installation.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
@@ -17,11 +27,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Installer ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "Installer une nouvelle copie de ReactOS. Cette option ne conservera pas vos données, paramètres et programmes. Vous pouvez effectuer des modifications sur les disques et les partitions.", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
-    AUTORADIOBUTTON "Mettre à jour ou réparer ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Mettre à jour ou réparer une copie existante de ReactOS. Cette option conserve vos données, paramètres et programmes. Cette option est seulement disponible si ReactOS est déjà installé sur cet ordinateur.", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
-    LTEXT "Appuyer sur Suivant pour configurer les périphériques.", IDC_STATIC, 7, 1280, 297, 8
+    AUTORADIOBUTTON "&Installer ReactOS", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
+    LTEXT "Installe une nouvelle copie de ReactOS. Cette option ne conservera pas vos données, paramètres et programmes. Vous pouvez effectuer des modifications sur les disques et les partitions.", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "&Mettre à niveau ou réparer ReactOS", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "Met à niveau ou répare une copie existante de ReactOS. Cette option conserve vos données, paramètres et programmes. Cette option est seulement disponible si ReactOS est déjà installé sur cet ordinateur.", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
@@ -160,22 +169,25 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TYPETITLE "Bienvenue dans l'installation de ReactOS"
-    IDS_TYPESUBTITLE "Choisissez un type d'installation."
-    IDS_DEVICETITLE "Configurer les périphériques de base."
+    IDS_CAPTION "Installation de ReactOS"
+    IDS_TYPETITLE "Type d'installation"
+    IDS_TYPESUBTITLE "Vous pouvez configurer une nouvelle installation de ReactOS, ou bien mettre à niveau ou réparer une installation existante."
+    IDS_UPDATETITLE "Update or Repair ReactOS"
+    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
+    IDS_DEVICETITLE "Configurer les périphériques de base"
     IDS_DEVICESUBTITLE "Configurer l'affichage et le clavier."
-    IDS_DRIVETITLE "Configurer la partition d'installation et le dossier système."
+    IDS_DRIVETITLE "Configurer la partition d'installation et le dossier système"
     IDS_DRIVESUBTITLE "Préparer la partition d'installation, le dossier système et le chargeur de démarrage."
-    IDS_PROCESSTITLE "Configurer la partition, copier les fichiers et configurer le système."
+    IDS_SUMMARYTITLE "Résumé de l'installation"
+    IDS_SUMMARYSUBTITLE "Lister les propriétés d'installation à vérifier avant application sur le périphérique d'installation."
+    IDS_PROCESSTITLE "Configurer la partition, copier les fichiers et configurer le système"
     IDS_PROCESSSUBTITLE "Créer et formatter la partition, copier les fichiers, installer et configurer le chargeur de démarrage."
     IDS_RESTARTTITLE "Première étape de configuration terminée"
     IDS_RESTARTSUBTITLE "La première étape de l'installation est terminée. Veuillez redémarrer pour continuer avec la seconde étape."
-    IDS_SUMMARYTITLE "Résumé de l'installation"
-    IDS_SUMMARYSUBTITLE "Lister les propriétés d'installation à vérifier avant application sur le périphérique d'installation."
     IDS_ABORTSETUP "ReactOS n'est pas complètement installé sur votre ordinateur. Si vous quittez l'installation maintenant, vous devrez lancer l'installation de nouveau pour installer ReactOS. Voulez-vous quitter ?"
     IDS_ABORTSETUP2 "Abandonner l'installation ?"
     IDS_NO_TXTSETUP_SIF "Impossible de trouver 'txtsetup.sif'.\nL'installation ne peut continuer."
-    IDS_CAPTION "Installation de ReactOS"
+    IDS_INSTALLBTN "&Installer"
     IDS_VOLUME_NOFORMAT "Non formaté"
 END
 
@@ -218,12 +230,16 @@ BEGIN
     IDS_RENAMING "Renomme %s en %s"
     IDS_DELETING "Supprime %s"
 
+    IDS_CONFIG_SYSTEM_PARTITION "Configuration de la partition système..."
     IDS_PREPARE_PARTITIONS "Prépare les partitions..."
     IDS_PREPARE_FILES "Prépare la liste de fichiers à copier, veuillez patienter..."
     IDS_COPYING_FILES "Copie les fichiers..."
 
     IDS_CREATE_REGISTRY "Crée la base de registres..."
     IDS_UPDATE_REGISTRY "Mise à jour de la base de registres..."
+
+    // IDS_INSTALL_FINALIZE "Finalisation de l'installation..."
+    IDS_INSTALL_BOOTLOADER "Installation du chargeur de démarrage..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.
@@ -280,4 +296,11 @@ the Setup program cannot install ReactOS.\
 \nClick on CANCEL to quit Setup."
 
     IDS_ERROR_CHECKING_PARTITION "ChkDsk detected some disk errors.\n(Status 0x%08lx)."
+
+    IDS_ERROR_WRITE_BOOT "Échec de l'installation du code de démarrage %s sur la partition système."
+    IDS_ERROR_INSTALL_BOOTCODE "Échec de l'installation du code de démarrage %s sur le disque système."
+    IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "Échec de l'installation du code de démarrage sur le média amovible."
+    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "Le programme d'installation ne supporte pas actuellement l'installation du chargeur de démarrage sur l'ordinateur que vous utilisez.\
+\nCliquez sur OK pour continuer quand même."
+    IDS_ERROR_BOOTLDR_FAILED "Le programme d'installation n'a pas pu installer le chargeur de démarrage (Status 0x%08lx)."
 END

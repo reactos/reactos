@@ -81,6 +81,10 @@ if(MSVC)
     target_compile_options(msxml3 PRIVATE /wd4090)
 endif()
 
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(msxml3 PRIVATE -Wno-incompatible-function-pointer-types)
+endif()
+
 add_importlibs(msxml3 urlmon ws2_32 shlwapi oleaut32 ole32 user32 msvcrt kernel32 ntdll)
 add_dependencies(msxml3 xmlparser_idlheader stdole2) # msxml3_v1.tlb needs stdole2.tlb
 add_pch(msxml3 precomp.h "${PCH_SKIP_SOURCE}")

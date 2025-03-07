@@ -451,7 +451,7 @@ PCSTR
 WSAAPI
 inet_ntop(
   _In_ INT Family,
-  _In_ PVOID pAddr,
+  _In_ const VOID *pAddr,
   _Out_writes_(StringBufSize) PSTR pStringBuf,
   _In_ size_t StringBufSize);
 
@@ -459,7 +459,7 @@ PCWSTR
 WSAAPI
 InetNtopW(
   _In_ INT Family,
-  _In_ PVOID pAddr,
+  _In_ const VOID *pAddr,
   _Out_writes_(StringBufSize) PWSTR pStringBuf,
   _In_ size_t StringBufSize);
 

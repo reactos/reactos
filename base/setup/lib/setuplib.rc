@@ -1,0 +1,16 @@
+/*
+ * PROJECT:     ReactOS Setup Library
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Resources
+ * COPYRIGHT:   Copyright 2003-2024 ReactOS Team
+ */
+
+#include <windef.h>
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION    "ReactOS Setup Library DLL"
+#define REACTOS_STR_INTERNAL_NAME       "setuplib"
+#define REACTOS_STR_ORIGINAL_FILENAME   "setuplib.dll"
+#include <reactos/version.rc>

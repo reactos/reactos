@@ -27,7 +27,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Împ&rospătare\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Actualizare baza de date\tCtrl+F5", ID_RESETDB
+        MENUITEM "&Actualizare a bazei de date\tCtrl+F5", ID_RESETDB
     END
     POPUP "Aj&utor"
     BEGIN
@@ -51,9 +51,7 @@ CAPTION "Setări"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "General", -1, 4, 2, 240, 61
-    AUTOCHECKBOX "&Salvare a poziției ferestrei", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "&Actualizare la pornire a listei programelor disponibile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "Menținere a j&urnalului de instalare/dezinstalare a programelor", IDC_LOG_ENABLED, 15, 46, 219, 12
+    CONTROL "", IDC_GENERALLIST, "SysListView32", WS_TABSTOP | LVCHECKSTYLES, 15, 12, 219, 46, WS_EX_STATICEDGE
     GROUPBOX "Descărcări", -1, 4, 65, 240, 51
     LTEXT "Folderul pentru descărcări:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
@@ -178,9 +176,9 @@ BEGIN
     IDS_WELCOME_TEXT "Alegeți o categorie din stânga, apoi alegeți o aplicație pentru a o instala sau dezinstala.\nArdesa web ReactOS: "
     IDS_WELCOME_URL "https://reactos.org"
 
-    IDS_APPWIZ_TITLE "Add/Remove Programs"
-    IDS_APPWIZ_TEXT1 "Choose ""Applications"" or ""Updates"" to view the list of applications or updates installed on your system."
-    IDS_APPWIZ_TEXT2 "To remove a program or to modify its installed components, select it from the list and click on ""Uninstall"" or ""Modify""."
+    IDS_APPWIZ_TITLE "Adăugare/Eliminare de programe"
+    IDS_APPWIZ_TEXT1 "Alegeți ""Aplicații"" sau ""Actualizări"" pentru a vedea lista aplicațiilor sau a actualizărilor instalate pe sistem."
+    IDS_APPWIZ_TEXT2 "Pentru a elimina un program sau pentru a-i modifica componentele instalate, selectați-l din listă și faceți clic pe ""Dezinstalare"" sau pe ""Modificare""."
 END
 
 STRINGTABLE
@@ -214,6 +212,10 @@ BEGIN
     IDS_APP_DISPLAY_LIST "Listă"
     IDS_APP_DISPLAY_TILE "Dale"
     IDS_NO_SEARCH_RESULTS "Niciun rezultat al căutării"
+    IDS_CFG_SAVE_WINDOW_POS "Salvare a poziției ferestrei"
+    IDS_CFG_UPDATE_AVLIST "Actualizare la pornire a listei programelor disponibile"
+    IDS_CFG_LOG_ENABLED "Menținere a jurnalului de instalare/dezinstalare a programelor"
+    IDS_CFG_SMALL_ICONS "Pictograme mici"
 END
 
 STRINGTABLE
@@ -247,9 +249,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DL_DIALOG_DB_DISP "Aplicații baza de date"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Actualizare bază de date…"
-    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Actualizare bază de date… (Sursă neoficială)"
+    IDS_DL_DIALOG_DB_DISP "Aplicații pentru baza de date"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Actualizare a bazei de date…"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Actualizare a bazei de date… (Sursă neoficială)"
 END
 
 STRINGTABLE
@@ -261,10 +263,11 @@ BEGIN
     IDS_CMD_INVALID_OPTION "Eroare: opțiunea de linie de comandă specificată este necunoscută sau nevalidă.\n"
     IDS_CMD_FIND_RESULT_FOR "Rezultatele căutării pentru %1:\n"
     IDS_CMD_PACKAGE_NOT_FOUND "Nu se poate găsi pachetul %1.\n"
-    IDS_CMD_PACKAGE_INFO "Informații despre pachet %1:\n"
+    IDS_CMD_PACKAGE_INFO "Informații despre pachetul %1:\n"
 END
 
 STRINGTABLE
 BEGIN
     IDS_INSTGEN_CONFIRMUNINST "Sigur doriți să dezinstalați %s?"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "Installation complete, run %s now?"
 END

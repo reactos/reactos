@@ -50,8 +50,8 @@
 #define msvcrt_set_errno _dosmaperr
 
 /* MT */
-#define LOCK_HEAP   _mlock( _HEAP_LOCK )
-#define UNLOCK_HEAP _munlock( _HEAP_LOCK )
+#define LOCK_HEAP   _lock( _HEAP_LOCK )
+#define UNLOCK_HEAP _unlock( _HEAP_LOCK )
 
 /* _aligned */
 #define SAVED_PTR(x) ((void *)((DWORD_PTR)((char *)x - sizeof(void *)) & \
@@ -64,7 +64,7 @@
 
 static HANDLE heap, sb_heap;
 
-typedef int (CDECL *MSVCRT_new_handler_func)(MSVCRT_size_t size);
+typedef int (CDECL *MSVCRT_new_handler_func)(size_t size);
 
 static MSVCRT_new_handler_func MSVCRT_new_handler;
 static int MSVCRT_new_mode;
@@ -72,9 +72,9 @@ static int MSVCRT_new_mode;
 /* FIXME - According to documentation it should be 8*1024, at runtime it returns 16 */ 
 static unsigned int MSVCRT_amblksiz = 16;
 /* FIXME - According to documentation it should be 480 bytes, at runtime default is 0 */
-static MSVCRT_size_t MSVCRT_sbh_threshold = 0;
+static size_t MSVCRT_sbh_threshold = 0;
 
-static void* msvcrt_heap_alloc(DWORD flags, MSVCRT_size_t size)
+static void* msvcrt_heap_alloc(DWORD flags, size_t size)
 {
     if(size < MSVCRT_sbh_threshold)
     {
@@ -92,13 +92,13 @@ static void* msvcrt_heap_alloc(DWORD flags, MSVCRT_size_t size)
     return HeapAlloc(heap, flags, size);
 }
 
-static void* msvcrt_heap_realloc(DWORD flags, void *ptr, MSVCRT_size_t size)
+static void* msvcrt_heap_realloc(DWORD flags, void *ptr, size_t size)
 {
     if(sb_heap && ptr && !HeapValidate(heap, 0, ptr))
     {
         /* TODO: move data to normal heap if it exceeds sbh_threshold limit */
         void *memblock, *temp, **saved;
-        MSVCRT_size_t old_padding, new_padding, old_size;
+        size_t old_padding, new_padding, old_size;
 
         saved = SAVED_PTR(ptr);
         old_padding = (char*)ptr - (char*)*saved;
@@ -135,7 +135,7 @@ static BOOL msvcrt_heap_free(void *ptr)
     return HeapFree(heap, 0, ptr);
 }
 
-static MSVCRT_size_t msvcrt_heap_size(void *ptr)
+static size_t msvcrt_heap_size(void *ptr)
 {
     if(sb_heap && ptr && !HeapValidate(heap, 0, ptr))
     {
@@ -147,35 +147,37 @@ static MSVCRT_size_t msvcrt_heap_size(void *ptr)
 }
 
 /*********************************************************************
+ *		_callnewh (MSVCRT.@)
+ */
+int CDECL _callnewh(size_t size)
+{
+  int ret = 0;
+  MSVCRT_new_handler_func handler = MSVCRT_new_handler;
+  if(handler)
+    ret = (*handler)(size) ? 1 : 0;
+  return ret;
+}
+
+/*********************************************************************
  *		??2@YAPAXI@Z (MSVCRT.@)
  */
-void* CDECL DECLSPEC_HOTPATCH MSVCRT_operator_new(MSVCRT_size_t size)
+void* CDECL DECLSPEC_HOTPATCH operator_new(size_t size)
 {
   void *retval;
-  int freed;
-  MSVCRT_new_handler_func handler;
 
   do
   {
     retval = msvcrt_heap_alloc(0, size);
     if(retval)
     {
-      TRACE("(%ld) returning %p\n", size, retval);
+      TRACE("(%Iu) returning %p\n", size, retval);
       return retval;
     }
+  } while(_callnewh(size));
 
-    LOCK_HEAP;
-    handler = MSVCRT_new_handler;
-    if(handler)
-      freed = (*handler)(size);
-    else
-      freed = 0;
-    UNLOCK_HEAP;
-  } while(freed);
-
-  TRACE("(%ld) out of memory\n", size);
+  TRACE("(%Iu) out of memory\n", size);
 #if _MSVCR_VER >= 80
-  throw_exception(EXCEPTION_BAD_ALLOC, 0, "bad allocation");
+  throw_bad_alloc();
 #endif
   return NULL;
 }
@@ -184,16 +186,16 @@ void* CDECL DECLSPEC_HOTPATCH MSVCRT_operator_new(MSVCRT_size_t size)
 /*********************************************************************
  *		??2@YAPAXIHPBDH@Z (MSVCRT.@)
  */
-void* CDECL MSVCRT_operator_new_dbg(MSVCRT_size_t size, int type, const char *file, int line)
+void* CDECL operator_new_dbg(size_t size, int type, const char *file, int line)
 {
-    return MSVCRT_operator_new( size );
+    return operator_new( size );
 }
 
 
 /*********************************************************************
  *		??3@YAXPAX@Z (MSVCRT.@)
  */
-void CDECL DECLSPEC_HOTPATCH MSVCRT_operator_delete(void *mem)
+void CDECL DECLSPEC_HOTPATCH operator_delete(void *mem)
 {
   TRACE("(%p)\n", mem);
   msvcrt_heap_free(mem);
@@ -203,7 +205,7 @@ void CDECL DECLSPEC_HOTPATCH MSVCRT_operator_delete(void *mem)
 /*********************************************************************
  *		?_query_new_handler@@YAP6AHI@ZXZ (MSVCRT.@)
  */
-MSVCRT_new_handler_func CDECL MSVCRT__query_new_handler(void)
+MSVCRT_new_handler_func CDECL _query_new_handler(void)
 {
   return MSVCRT_new_handler;
 }
@@ -212,7 +214,7 @@ MSVCRT_new_handler_func CDECL MSVCRT__query_new_handler(void)
 /*********************************************************************
  *		?_query_new_mode@@YAHXZ (MSVCRT.@)
  */
-int CDECL MSVCRT__query_new_mode(void)
+int CDECL _query_new_mode(void)
 {
   return MSVCRT_new_mode;
 }
@@ -220,7 +222,7 @@ int CDECL MSVCRT__query_new_mode(void)
 /*********************************************************************
  *		?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z (MSVCRT.@)
  */
-MSVCRT_new_handler_func CDECL MSVCRT__set_new_handler(MSVCRT_new_handler_func func)
+MSVCRT_new_handler_func CDECL _set_new_handler(MSVCRT_new_handler_func func)
 {
   MSVCRT_new_handler_func old_handler;
   LOCK_HEAP;
@@ -233,42 +235,26 @@ MSVCRT_new_handler_func CDECL MSVCRT__set_new_handler(MSVCRT_new_handler_func fu
 /*********************************************************************
  *		?set_new_handler@@YAP6AXXZP6AXXZ@Z (MSVCRT.@)
  */
-MSVCRT_new_handler_func CDECL MSVCRT_set_new_handler(void *func)
+MSVCRT_new_handler_func CDECL set_new_handler(void *func)
 {
   TRACE("(%p)\n",func);
-  MSVCRT__set_new_handler(NULL);
+  _set_new_handler(NULL);
   return NULL;
 }
 
 /*********************************************************************
  *		?_set_new_mode@@YAHH@Z (MSVCRT.@)
  */
-int CDECL MSVCRT__set_new_mode(int mode)
+int CDECL _set_new_mode(int mode)
 {
-  int old_mode;
-  LOCK_HEAP;
-  old_mode = MSVCRT_new_mode;
-  MSVCRT_new_mode = mode;
-  UNLOCK_HEAP;
-  return old_mode;
-}
-
-/*********************************************************************
- *		_callnewh (MSVCRT.@)
- */
-int CDECL _callnewh(MSVCRT_size_t size)
-{
-  int ret = 0;
-  MSVCRT_new_handler_func handler = MSVCRT_new_handler;
-  if(handler)
-    ret = (*handler)(size) ? 1 : 0;
-  return ret;
+  if(!MSVCRT_CHECK_PMT(mode == 0 || mode == 1)) return -1;
+  return InterlockedExchange((long*)&MSVCRT_new_mode, mode);
 }
 
 /*********************************************************************
  *		_expand (MSVCRT.@)
  */
-void* CDECL _expand(void* mem, MSVCRT_size_t size)
+void* CDECL _expand(void* mem, size_t size)
 {
   return msvcrt_heap_realloc(HEAP_REALLOC_IN_PLACE_ONLY, mem, size);
 }
@@ -282,9 +268,9 @@ int CDECL _heapchk(void)
           (sb_heap && !HeapValidate(sb_heap, 0, NULL)))
   {
     msvcrt_set_errno(GetLastError());
-    return MSVCRT__HEAPBADNODE;
+    return _HEAPBADNODE;
   }
-  return MSVCRT__HEAPOK;
+  return _HEAPOK;
 }
 
 /*********************************************************************
@@ -305,7 +291,7 @@ int CDECL _heapmin(void)
 /*********************************************************************
  *		_heapwalk (MSVCRT.@)
  */
-int CDECL _heapwalk(struct MSVCRT__heapinfo* next)
+int CDECL _heapwalk(_HEAPINFO *next)
 {
   PROCESS_HEAP_ENTRY phe;
 
@@ -315,14 +301,14 @@ int CDECL _heapwalk(struct MSVCRT__heapinfo* next)
   LOCK_HEAP;
   phe.lpData = next->_pentry;
   phe.cbData = (DWORD)next->_size;
-  phe.wFlags = next->_useflag == MSVCRT__USEDENTRY ? PROCESS_HEAP_ENTRY_BUSY : 0;
+  phe.wFlags = next->_useflag == _USEDENTRY ? PROCESS_HEAP_ENTRY_BUSY : 0;
 
   if (phe.lpData && phe.wFlags & PROCESS_HEAP_ENTRY_BUSY &&
       !HeapValidate( heap, 0, phe.lpData ))
   {
     UNLOCK_HEAP;
     msvcrt_set_errno(GetLastError());
-    return MSVCRT__HEAPBADNODE;
+    return _HEAPBADNODE;
   }
 
   do
@@ -331,19 +317,19 @@ int CDECL _heapwalk(struct MSVCRT__heapinfo* next)
     {
       UNLOCK_HEAP;
       if (GetLastError() == ERROR_NO_MORE_ITEMS)
-         return MSVCRT__HEAPEND;
+         return _HEAPEND;
       msvcrt_set_errno(GetLastError());
       if (!phe.lpData)
-        return MSVCRT__HEAPBADBEGIN;
-      return MSVCRT__HEAPBADNODE;
+        return _HEAPBADBEGIN;
+      return _HEAPBADNODE;
     }
   } while (phe.wFlags & (PROCESS_HEAP_REGION|PROCESS_HEAP_UNCOMMITTED_RANGE));
 
   UNLOCK_HEAP;
   next->_pentry = phe.lpData;
   next->_size = phe.cbData;
-  next->_useflag = phe.wFlags & PROCESS_HEAP_ENTRY_BUSY ? MSVCRT__USEDENTRY : MSVCRT__FREEENTRY;
-  return MSVCRT__HEAPOK;
+  next->_useflag = phe.wFlags & PROCESS_HEAP_ENTRY_BUSY ? _USEDENTRY : _FREEENTRY;
+  return _HEAPOK;
 }
 
 /*********************************************************************
@@ -352,44 +338,44 @@ int CDECL _heapwalk(struct MSVCRT__heapinfo* next)
 int CDECL _heapset(unsigned int value)
 {
   int retval;
-  struct MSVCRT__heapinfo heap;
+  _HEAPINFO heap;
 
   memset( &heap, 0, sizeof(heap) );
   LOCK_HEAP;
-  while ((retval = _heapwalk(&heap)) == MSVCRT__HEAPOK)
+  while ((retval = _heapwalk(&heap)) == _HEAPOK)
   {
-    if (heap._useflag == MSVCRT__FREEENTRY)
+    if (heap._useflag == _FREEENTRY)
       memset(heap._pentry, value, heap._size);
   }
   UNLOCK_HEAP;
-  return retval == MSVCRT__HEAPEND? MSVCRT__HEAPOK : retval;
+  return retval == _HEAPEND ? _HEAPOK : retval;
 }
 
 /*********************************************************************
  *		_heapadd (MSVCRT.@)
  */
-int CDECL _heapadd(void* mem, MSVCRT_size_t size)
+int CDECL _heapadd(void* mem, size_t size)
 {
-  TRACE("(%p,%ld) unsupported in Win32\n", mem,size);
-  *MSVCRT__errno() = MSVCRT_ENOSYS;
+  TRACE("(%p,%Iu) unsupported in Win32\n", mem,size);
+  *_errno() = ENOSYS;
   return -1;
 }
 
 /*********************************************************************
  *		_get_heap_handle (MSVCRT.@)
  */
-MSVCRT_intptr_t CDECL _get_heap_handle(void)
+intptr_t CDECL _get_heap_handle(void)
 {
-    return (MSVCRT_intptr_t)heap;
+    return (intptr_t)heap;
 }
 
 /*********************************************************************
  *		_msize (MSVCRT.@)
  */
-MSVCRT_size_t CDECL _msize(void* mem)
+size_t CDECL _msize(void* mem)
 {
-  MSVCRT_size_t size = msvcrt_heap_size(mem);
-  if (size == ~(MSVCRT_size_t)0)
+  size_t size = msvcrt_heap_size(mem);
+  if (size == ~(size_t)0)
   {
     WARN(":Probably called with non wine-allocated memory, ret = -1\n");
     /* At least the Win32 crtdll/msvcrt also return -1 in this case */
@@ -401,7 +387,7 @@ MSVCRT_size_t CDECL _msize(void* mem)
 /*********************************************************************
  * _aligned_msize (MSVCR80.@)
  */
-size_t CDECL _aligned_msize(void *p, MSVCRT_size_t alignment, MSVCRT_size_t offset)
+size_t CDECL _aligned_msize(void *p, size_t alignment, size_t offset)
 {
     void **alloc_ptr;
 
@@ -418,13 +404,13 @@ size_t CDECL _aligned_msize(void *p, MSVCRT_size_t alignment, MSVCRT_size_t offs
 /*********************************************************************
  *		calloc (MSVCRT.@)
  */
-void* CDECL DECLSPEC_HOTPATCH MSVCRT_calloc(MSVCRT_size_t count, MSVCRT_size_t size)
+void* CDECL DECLSPEC_HOTPATCH calloc(size_t count, size_t size)
 {
-  MSVCRT_size_t bytes = count*size;
+  size_t bytes = count*size;
 
   if (size && bytes / size != count)
   {
-    *MSVCRT__errno() = MSVCRT_ENOMEM;
+    *_errno() = ENOMEM;
     return NULL;
   }
 
@@ -435,16 +421,16 @@ void* CDECL DECLSPEC_HOTPATCH MSVCRT_calloc(MSVCRT_size_t count, MSVCRT_size_t s
 /*********************************************************************
  *		_calloc_base (UCRTBASE.@)
  */
-void* CDECL _calloc_base(MSVCRT_size_t count, MSVCRT_size_t size)
+void* CDECL _calloc_base(size_t count, size_t size)
 {
-  return MSVCRT_calloc(count, size);
+  return calloc(count, size);
 }
 #endif
 
 /*********************************************************************
  *		free (MSVCRT.@)
  */
-void CDECL DECLSPEC_HOTPATCH MSVCRT_free(void* ptr)
+void CDECL DECLSPEC_HOTPATCH free(void* ptr)
 {
   msvcrt_heap_free(ptr);
 }
@@ -462,32 +448,40 @@ void CDECL _free_base(void* ptr)
 /*********************************************************************
  *                  malloc (MSVCRT.@)
  */
-void* CDECL MSVCRT_malloc(MSVCRT_size_t size)
+void* CDECL malloc(size_t size)
 {
-  void *ret = msvcrt_heap_alloc(0, size);
-  if (!ret)
-      *MSVCRT__errno() = MSVCRT_ENOMEM;
-  return ret;
+    void *ret;
+
+    do
+    {
+        ret = msvcrt_heap_alloc(0, size);
+        if (ret || !MSVCRT_new_mode)
+            break;
+    } while(_callnewh(size));
+
+    if (!ret)
+        *_errno() = ENOMEM;
+    return ret;
 }
 
 #if _MSVCR_VER>=140
 /*********************************************************************
  *                  _malloc_base (UCRTBASE.@)
  */
-void* CDECL _malloc_base(MSVCRT_size_t size)
+void* CDECL _malloc_base(size_t size)
 {
-  return MSVCRT_malloc(size);
+  return malloc(size);
 }
 #endif
 
 /*********************************************************************
  *		realloc (MSVCRT.@)
  */
-void* CDECL DECLSPEC_HOTPATCH MSVCRT_realloc(void* ptr, MSVCRT_size_t size)
+void* CDECL DECLSPEC_HOTPATCH realloc(void* ptr, size_t size)
 {
-  if (!ptr) return MSVCRT_malloc(size);
+  if (!ptr) return malloc(size);
   if (size) return msvcrt_heap_realloc(0, ptr, size);
-  MSVCRT_free(ptr);
+  free(ptr);
   return NULL;
 }
 
@@ -495,9 +489,9 @@ void* CDECL DECLSPEC_HOTPATCH MSVCRT_realloc(void* ptr, MSVCRT_size_t size)
 /*********************************************************************
  *		_realloc_base (UCRTBASE.@)
  */
-void* CDECL _realloc_base(void* ptr, MSVCRT_size_t size)
+void* CDECL _realloc_base(void* ptr, size_t size)
 {
-  return MSVCRT_realloc(ptr, size);
+  return realloc(ptr, size);
 }
 #endif
 
@@ -505,20 +499,20 @@ void* CDECL _realloc_base(void* ptr, MSVCRT_size_t size)
 /*********************************************************************
  * _recalloc (MSVCR80.@)
  */
-void* CDECL _recalloc(void *mem, MSVCRT_size_t num, MSVCRT_size_t size)
+void* CDECL _recalloc(void *mem, size_t num, size_t size)
 {
-    MSVCRT_size_t old_size;
+    size_t old_size;
     void *ret;
 
     if(!mem)
-        return MSVCRT_calloc(num, size);
+        return calloc(num, size);
 
     size = num*size;
     old_size = _msize(mem);
 
-    ret = MSVCRT_realloc(mem, size);
+    ret = realloc(mem, size);
     if(!ret) {
-        *MSVCRT__errno() = MSVCRT_ENOMEM;
+        *_errno() = ENOMEM;
         return NULL;
     }
 
@@ -539,7 +533,7 @@ unsigned int* CDECL __p__amblksiz(void)
 /*********************************************************************
  *		_get_sbh_threshold (MSVCRT.@)
  */
-MSVCRT_size_t CDECL _get_sbh_threshold(void)
+size_t CDECL _get_sbh_threshold(void)
 {
   return MSVCRT_sbh_threshold;
 }
@@ -547,7 +541,7 @@ MSVCRT_size_t CDECL _get_sbh_threshold(void)
 /*********************************************************************
  *		_set_sbh_threshold (MSVCRT.@)
  */
-int CDECL _set_sbh_threshold(MSVCRT_size_t threshold)
+int CDECL _set_sbh_threshold(size_t threshold)
 {
 #ifdef _WIN64
   return 0;
@@ -577,29 +571,29 @@ void CDECL _aligned_free(void *memblock)
     if (memblock)
     {
         void **saved = SAVED_PTR(memblock);
-        MSVCRT_free(*saved);
+        free(*saved);
     }
 }
 
 /*********************************************************************
  *		_aligned_offset_malloc (MSVCRT.@)
  */
-void * CDECL _aligned_offset_malloc(MSVCRT_size_t size, MSVCRT_size_t alignment, MSVCRT_size_t offset)
+void * CDECL _aligned_offset_malloc(size_t size, size_t alignment, size_t offset)
 {
     void *memblock, *temp, **saved;
-    TRACE("(%lu, %lu, %lu)\n", size, alignment, offset);
+    TRACE("(%Iu, %Iu, %Iu)\n", size, alignment, offset);
 
     /* alignment must be a power of 2 */
     if ((alignment & (alignment - 1)) != 0)
     {
-        *MSVCRT__errno() = MSVCRT_EINVAL;
+        *_errno() = EINVAL;
         return NULL;
     }
 
     /* offset must be less than size */
     if (offset && offset >= size)
     {
-        *MSVCRT__errno() = MSVCRT_EINVAL;
+        *_errno() = EINVAL;
         return NULL;
     }
 
@@ -608,7 +602,7 @@ void * CDECL _aligned_offset_malloc(MSVCRT_size_t size, MSVCRT_size_t alignment,
         alignment = sizeof(void *);
 
     /* allocate enough space for void pointer and alignment */
-    temp = MSVCRT_malloc(size + alignment + sizeof(void *));
+    temp = malloc(size + alignment + sizeof(void *));
 
     if (!temp)
         return NULL;
@@ -627,21 +621,21 @@ void * CDECL _aligned_offset_malloc(MSVCRT_size_t size, MSVCRT_size_t alignment,
 /*********************************************************************
  *		_aligned_malloc (MSVCRT.@)
  */
-void * CDECL _aligned_malloc(MSVCRT_size_t size, MSVCRT_size_t alignment)
+void * CDECL _aligned_malloc(size_t size, size_t alignment)
 {
-    TRACE("(%lu, %lu)\n", size, alignment);
+    TRACE("(%Iu, %Iu)\n", size, alignment);
     return _aligned_offset_malloc(size, alignment, 0);
 }
 
 /*********************************************************************
  *		_aligned_offset_realloc (MSVCRT.@)
  */
-void * CDECL _aligned_offset_realloc(void *memblock, MSVCRT_size_t size,
-                                     MSVCRT_size_t alignment, MSVCRT_size_t offset)
+void * CDECL _aligned_offset_realloc(void *memblock, size_t size,
+                                     size_t alignment, size_t offset)
 {
     void * temp, **saved;
-    MSVCRT_size_t old_padding, new_padding, old_size;
-    TRACE("(%p, %lu, %lu, %lu)\n", memblock, size, alignment, offset);
+    size_t old_padding, new_padding, old_size;
+    TRACE("(%p, %Iu, %Iu, %Iu)\n", memblock, size, alignment, offset);
 
     if (!memblock)
         return _aligned_offset_malloc(size, alignment, offset);
@@ -649,14 +643,14 @@ void * CDECL _aligned_offset_realloc(void *memblock, MSVCRT_size_t size,
     /* alignment must be a power of 2 */
     if ((alignment & (alignment - 1)) != 0)
     {
-        *MSVCRT__errno() = MSVCRT_EINVAL;
+        *_errno() = EINVAL;
         return NULL;
     }
 
     /* offset must be less than size */
     if (offset >= size)
     {
-        *MSVCRT__errno() = MSVCRT_EINVAL;
+        *_errno() = EINVAL;
         return NULL;
     }
 
@@ -674,7 +668,7 @@ void * CDECL _aligned_offset_realloc(void *memblock, MSVCRT_size_t size,
     saved = SAVED_PTR(memblock);
     if (memblock != ALIGN_PTR(*saved, alignment, offset))
     {
-        *MSVCRT__errno() = MSVCRT_EINVAL;
+        *_errno() = EINVAL;
         return NULL;
     }
 
@@ -696,7 +690,7 @@ void * CDECL _aligned_offset_realloc(void *memblock, MSVCRT_size_t size,
     }
     old_size -= old_padding;
 
-    temp = MSVCRT_realloc(*saved, size + alignment + sizeof(void *));
+    temp = realloc(*saved, size + alignment + sizeof(void *));
 
     if (!temp)
         return NULL;
@@ -728,7 +722,7 @@ void * CDECL _aligned_offset_realloc(void *memblock, MSVCRT_size_t size,
           temp                       saved memblock
 
    However, in the new block, actual data is still written as follows
-   (because it was copied by MSVCRT_realloc):
+   (because it was copied by realloc):
    +-------+---------------------+--------------------------------+-------+
    |  ...  | "old_padding" bytes |   ... "old_size" bytes ...     |  ...  |
    +-------+---------------------+--------------------------------+-------+
@@ -751,25 +745,25 @@ void * CDECL _aligned_offset_realloc(void *memblock, MSVCRT_size_t size,
 /*********************************************************************
  *		_aligned_realloc (MSVCRT.@)
  */
-void * CDECL _aligned_realloc(void *memblock, MSVCRT_size_t size, MSVCRT_size_t alignment)
+void * CDECL _aligned_realloc(void *memblock, size_t size, size_t alignment)
 {
-    TRACE("(%p, %lu, %lu)\n", memblock, size, alignment);
+    TRACE("(%p, %Iu, %Iu)\n", memblock, size, alignment);
     return _aligned_offset_realloc(memblock, size, alignment, 0);
 }
 
 /*********************************************************************
  *		memmove_s (MSVCRT.@)
  */
-int CDECL MSVCRT_memmove_s(void *dest, MSVCRT_size_t numberOfElements, const void *src, MSVCRT_size_t count)
+int CDECL memmove_s(void *dest, size_t numberOfElements, const void *src, size_t count)
 {
-    TRACE("(%p %lu %p %lu)\n", dest, numberOfElements, src, count);
+    TRACE("(%p %Iu %p %Iu)\n", dest, numberOfElements, src, count);
 
     if(!count)
         return 0;
 
-    if (!MSVCRT_CHECK_PMT(dest != NULL)) return MSVCRT_EINVAL;
-    if (!MSVCRT_CHECK_PMT(src != NULL)) return MSVCRT_EINVAL;
-    if (!MSVCRT_CHECK_PMT_ERR( count <= numberOfElements, MSVCRT_ERANGE )) return MSVCRT_ERANGE;
+    if (!MSVCRT_CHECK_PMT(dest != NULL)) return EINVAL;
+    if (!MSVCRT_CHECK_PMT(src != NULL)) return EINVAL;
+    if (!MSVCRT_CHECK_PMT_ERR( count <= numberOfElements, ERANGE )) return ERANGE;
 
     memmove(dest, src, count);
     return 0;
@@ -779,10 +773,10 @@ int CDECL MSVCRT_memmove_s(void *dest, MSVCRT_size_t numberOfElements, const voi
 /*********************************************************************
  *              wmemmove_s (MSVCR100.@)
  */
-int CDECL wmemmove_s(MSVCRT_wchar_t *dest, MSVCRT_size_t numberOfElements,
-        const MSVCRT_wchar_t *src, MSVCRT_size_t count)
+int CDECL wmemmove_s(wchar_t *dest, size_t numberOfElements,
+        const wchar_t *src, size_t count)
 {
-    TRACE("(%p %lu %p %lu)\n", dest, numberOfElements, src, count);
+    TRACE("(%p %Iu %p %Iu)\n", dest, numberOfElements, src, count);
 
     if (!count)
         return 0;
@@ -791,11 +785,11 @@ int CDECL wmemmove_s(MSVCRT_wchar_t *dest, MSVCRT_size_t numberOfElements,
      * http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1225.pdf
      * in that it does not zero the output buffer on constraint violation.
      */
-    if (!MSVCRT_CHECK_PMT(dest != NULL)) return MSVCRT_EINVAL;
-    if (!MSVCRT_CHECK_PMT(src != NULL)) return MSVCRT_EINVAL;
-    if (!MSVCRT_CHECK_PMT_ERR(count <= numberOfElements, MSVCRT_ERANGE)) return MSVCRT_ERANGE;
+    if (!MSVCRT_CHECK_PMT(dest != NULL)) return EINVAL;
+    if (!MSVCRT_CHECK_PMT(src != NULL)) return EINVAL;
+    if (!MSVCRT_CHECK_PMT_ERR(count <= numberOfElements, ERANGE)) return ERANGE;
 
-    memmove(dest, src, sizeof(MSVCRT_wchar_t)*count);
+    memmove(dest, src, sizeof(wchar_t)*count);
     return 0;
 }
 #endif
@@ -803,23 +797,23 @@ int CDECL wmemmove_s(MSVCRT_wchar_t *dest, MSVCRT_size_t numberOfElements,
 /*********************************************************************
  *		memcpy_s (MSVCRT.@)
  */
-int CDECL MSVCRT_memcpy_s(void *dest, MSVCRT_size_t numberOfElements, const void *src, MSVCRT_size_t count)
+int CDECL memcpy_s(void *dest, size_t numberOfElements, const void *src, size_t count)
 {
-    TRACE("(%p %lu %p %lu)\n", dest, numberOfElements, src, count);
+    TRACE("(%p %Iu %p %Iu)\n", dest, numberOfElements, src, count);
 
     if(!count)
         return 0;
 
-    if (!MSVCRT_CHECK_PMT(dest != NULL)) return MSVCRT_EINVAL;
+    if (!MSVCRT_CHECK_PMT(dest != NULL)) return EINVAL;
     if (!MSVCRT_CHECK_PMT(src != NULL))
     {
         memset(dest, 0, numberOfElements);
-        return MSVCRT_EINVAL;
+        return EINVAL;
     }
-    if (!MSVCRT_CHECK_PMT_ERR( count <= numberOfElements, MSVCRT_ERANGE ))
+    if (!MSVCRT_CHECK_PMT_ERR( count <= numberOfElements, ERANGE ))
     {
         memset(dest, 0, numberOfElements);
-        return MSVCRT_ERANGE;
+        return ERANGE;
     }
 
     memmove(dest, src, count);
@@ -830,26 +824,26 @@ int CDECL MSVCRT_memcpy_s(void *dest, MSVCRT_size_t numberOfElements, const void
 /*********************************************************************
  *              wmemcpy_s (MSVCR100.@)
  */
-int CDECL wmemcpy_s(MSVCRT_wchar_t *dest, MSVCRT_size_t numberOfElements,
-        const MSVCRT_wchar_t *src, MSVCRT_size_t count)
+int CDECL wmemcpy_s(wchar_t *dest, size_t numberOfElements,
+        const wchar_t *src, size_t count)
 {
-    TRACE("(%p %lu %p %lu)\n", dest, numberOfElements, src, count);
+    TRACE("(%p %Iu %p %Iu)\n", dest, numberOfElements, src, count);
 
     if (!count)
         return 0;
 
-    if (!MSVCRT_CHECK_PMT(dest != NULL)) return MSVCRT_EINVAL;
+    if (!MSVCRT_CHECK_PMT(dest != NULL)) return EINVAL;
 
     if (!MSVCRT_CHECK_PMT(src != NULL)) {
-        memset(dest, 0, numberOfElements*sizeof(MSVCRT_wchar_t));
-        return MSVCRT_EINVAL;
+        memset(dest, 0, numberOfElements*sizeof(wchar_t));
+        return EINVAL;
     }
-    if (!MSVCRT_CHECK_PMT_ERR(count <= numberOfElements, MSVCRT_ERANGE)) {
-        memset(dest, 0, numberOfElements*sizeof(MSVCRT_wchar_t));
-        return MSVCRT_ERANGE;
+    if (!MSVCRT_CHECK_PMT_ERR(count <= numberOfElements, ERANGE)) {
+        memset(dest, 0, numberOfElements*sizeof(wchar_t));
+        return ERANGE;
     }
 
-    memmove(dest, src, sizeof(MSVCRT_wchar_t)*count);
+    memmove(dest, src, sizeof(wchar_t)*count);
     return 0;
 }
 #endif
@@ -857,12 +851,12 @@ int CDECL wmemcpy_s(MSVCRT_wchar_t *dest, MSVCRT_size_t numberOfElements,
 /*********************************************************************
  *		strncpy_s (MSVCRT.@)
  */
-int CDECL MSVCRT_strncpy_s(char *dest, MSVCRT_size_t numberOfElements,
-        const char *src, MSVCRT_size_t count)
+int CDECL strncpy_s(char *dest, size_t numberOfElements,
+        const char *src, size_t count)
 {
-    MSVCRT_size_t i, end;
+    size_t i, end;
 
-    TRACE("(%s %lu %s %lu)\n", dest, numberOfElements, src, count);
+    TRACE("(%p %Iu %s %Iu)\n", dest, numberOfElements, debugstr_a(src), count);
 
     if(!count) {
         if(dest && numberOfElements)
@@ -870,11 +864,11 @@ int CDECL MSVCRT_strncpy_s(char *dest, MSVCRT_size_t numberOfElements,
         return 0;
     }
 
-    if (!MSVCRT_CHECK_PMT(dest != NULL)) return MSVCRT_EINVAL;
-    if (!MSVCRT_CHECK_PMT(src != NULL)) return MSVCRT_EINVAL;
-    if (!MSVCRT_CHECK_PMT(numberOfElements != 0)) return MSVCRT_EINVAL;
+    if (!MSVCRT_CHECK_PMT(dest != NULL)) return EINVAL;
+    if (!MSVCRT_CHECK_PMT(src != NULL)) return EINVAL;
+    if (!MSVCRT_CHECK_PMT(numberOfElements != 0)) return EINVAL;
 
-    if(count!=MSVCRT__TRUNCATE && count<numberOfElements)
+    if(count!=_TRUNCATE && count<numberOfElements)
         end = count;
     else
         end = numberOfElements-1;
@@ -882,14 +876,14 @@ int CDECL MSVCRT_strncpy_s(char *dest, MSVCRT_size_t numberOfElements,
     for(i=0; i<end && src[i]; i++)
         dest[i] = src[i];
 
-    if(!src[i] || end==count || count==MSVCRT__TRUNCATE) {
+    if(!src[i] || end==count || count==_TRUNCATE) {
         dest[i] = '\0';
         return 0;
     }
 
-    MSVCRT_INVALID_PMT("dest[numberOfElements] is too small", MSVCRT_EINVAL);
+    MSVCRT_INVALID_PMT("dest[numberOfElements] is too small", EINVAL);
     dest[0] = '\0';
-    return MSVCRT_EINVAL;
+    return EINVAL;
 }
 
 BOOL msvcrt_init_heap(void)

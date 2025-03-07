@@ -16,7 +16,7 @@ typedef struct _MBR_PARTITION_TYPE
 } MBR_PARTITION_TYPE, *PMBR_PARTITION_TYPE;
 
 #define NUM_MBR_PARTITION_TYPES 153
-extern const MBR_PARTITION_TYPE MbrPartitionTypes[NUM_MBR_PARTITION_TYPES];
+extern SPLIBAPI const MBR_PARTITION_TYPE MbrPartitionTypes[NUM_MBR_PARTITION_TYPES];
 
 /* GPT PARTITION TYPES ******************************************************/
 
@@ -27,6 +27,6 @@ typedef struct _GPT_PARTITION_TYPE
 } GPT_PARTITION_TYPE, *PGPT_PARTITION_TYPE;
 
 #define NUM_GPT_PARTITION_TYPES 177
-extern const GPT_PARTITION_TYPE GptPartitionTypes[NUM_GPT_PARTITION_TYPES];
+extern SPLIBAPI const GPT_PARTITION_TYPE GptPartitionTypes[NUM_GPT_PARTITION_TYPES];
 
 /* EOF */

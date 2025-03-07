@@ -103,7 +103,7 @@ extern BOOLEAN ExCmosClockIsSane;
 extern USHORT KeProcessorArchitecture;
 extern USHORT KeProcessorLevel;
 extern USHORT KeProcessorRevision;
-extern ULONG KeFeatureBits;
+extern ULONG64 KeFeatureBits;
 extern KNODE KiNode0;
 extern PKNODE KeNodeBlock[1];
 extern UCHAR KeNumberNodes;
@@ -1061,14 +1061,14 @@ KiSystemFatalException(
 
 PVOID
 NTAPI
-KiPcToFileHeader(IN PVOID Eip,
+KiPcToFileHeader(IN PVOID Pc,
                  OUT PLDR_DATA_TABLE_ENTRY *LdrEntry,
                  IN BOOLEAN DriversOnly,
                  OUT PBOOLEAN InKernel);
 
 PVOID
 NTAPI
-KiRosPcToUserFileHeader(IN PVOID Eip,
+KiRosPcToUserFileHeader(IN PVOID Pc,
                         OUT PLDR_DATA_TABLE_ENTRY *LdrEntry);
 
 PCHAR

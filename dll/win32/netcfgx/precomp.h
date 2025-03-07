@@ -14,6 +14,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
+#include <winsvc.h>
 #include <windowsx.h>
 #include <objbase.h>
 #include <netcfgx.h>
@@ -72,6 +73,12 @@ HRESULT WINAPI IEnumNetCfgBindingInterface_Constructor(IUnknown *pUnkOuter, REFI
 /* netcfgbindingpath_iface.c */
 HRESULT WINAPI INetCfgBindingPath_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppv);
 HRESULT WINAPI IEnumNetCfgBindingPath_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppv, DWORD dwFlags);
+
+/* netcfgclass_iface.c */
+HRESULT WINAPI INetCfgClass_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *ppv, const GUID *pguidClass, INetCfg *pNetCfg);
+
+/* netinstall.c */
+BOOL InstallNetworkComponent(_In_ PCWSTR pszComponentId);
 
 /* tcpipconf_notify.c */
 HRESULT WINAPI TcpipConfigNotify_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);

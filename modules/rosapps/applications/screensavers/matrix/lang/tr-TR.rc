@@ -5,11 +5,9 @@
  * TRANSLATOR:  Copyright 2022 Süleyman Poyraz <zaryob.dev@gmail.com>
  */
 
-#include "resource.h"
-
 LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
 
-IDD_CONFIG DIALOGEX DISCARDABLE  0, 0, 340, 183
+IDD_CONFIG DIALOGEX  0, 0, 340, 183
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Matrix Ekran Koruyucusu Yapılandırması"
 FONT 8, "MS Shell Dlg"
@@ -54,7 +52,7 @@ BEGIN
                     158,75,18
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION         "Matrix Ekran Koruyucu"
 END

@@ -61,7 +61,7 @@ typedef enum _KD_CONTINUE_TYPE
 
 /* GLOBALS *******************************************************************/
 
-extern PCHAR KdbInitFileBuffer;
+extern volatile PCHAR KdbInitFileBuffer;
 
 extern PEPROCESS KdbCurrentProcess;
 extern PETHREAD KdbCurrentThread;

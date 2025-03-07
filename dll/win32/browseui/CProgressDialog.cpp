@@ -44,6 +44,7 @@
 
 CProgressDialog::CProgressDialog()
 {
+    this->hwnd = NULL;
     this->lines[0]  = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, BUFFER_SIZE);
     this->lines[1]  = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, BUFFER_SIZE);
     this->lines[2]  = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, BUFFER_SIZE);

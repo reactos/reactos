@@ -2041,10 +2041,52 @@ HANDLE WINAPI CopyImage(
     switch(uType)
     {
         case IMAGE_BITMAP:
+            if (!hImage)
+            {
+                SetLastError(ERROR_INVALID_HANDLE);
+                break;
+            }
             return BITMAP_CopyImage(hImage, cxDesired, cyDesired, fuFlags);
         case IMAGE_CURSOR:
         case IMAGE_ICON:
-            return CURSORICON_CopyImage(hImage, uType == IMAGE_ICON, cxDesired, cyDesired, fuFlags);
+        {
+            HANDLE handle;
+            if (!hImage)
+            {
+                SetLastError(ERROR_INVALID_CURSOR_HANDLE);
+                break;
+            }
+            handle = CURSORICON_CopyImage(hImage, uType == IMAGE_ICON, cxDesired, cyDesired, fuFlags);
+            if (!handle && (fuFlags & LR_COPYFROMRESOURCE))
+            {
+                /* Test if the hImage is the same size as what we want by getting
+                 * its BITMAP and comparing its dimensions to the desired size. */
+                BITMAP bm;
+
+                ICONINFO iconinfo = { 0 };
+                if (!GetIconInfo(hImage, &iconinfo))
+                {
+                    ERR("GetIconInfo Failed. hImage %p\n", hImage);
+                    return NULL;
+                }
+                if (!GetObject(iconinfo.hbmColor, sizeof(bm), &bm))
+                {
+                    ERR("GetObject Failed. iconinfo %p\n", iconinfo);
+                    return NULL;
+                }
+
+                DeleteObject(iconinfo.hbmMask);
+                DeleteObject(iconinfo.hbmColor);
+
+                /* If the images are the same size remove LF_COPYFROMRESOURCE and try again */
+                if (cxDesired == bm.bmWidth && cyDesired == bm.bmHeight)
+                {
+                    handle = CURSORICON_CopyImage(hImage, uType == IMAGE_ICON, cxDesired,
+                                                  cyDesired, (fuFlags & ~LR_COPYFROMRESOURCE));
+                }
+            }
+            return handle;
+        }
         default:
             SetLastError(ERROR_INVALID_PARAMETER);
             break;

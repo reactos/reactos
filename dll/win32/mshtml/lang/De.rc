@@ -20,8 +20,6 @@
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-#pragma code_page(65001)
-
 STRINGTABLE
 {
     IDS_STATUS_DONE            "Fertig"

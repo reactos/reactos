@@ -115,28 +115,28 @@ relocated:
     call pollchar_and_empty
 
     // If we're booting in hybrid mode and our boot drive is the first HDD (drive 80h),
-    // we have no other option than booting into SETUPLDR.
+    // we have no other option than booting into FREELDR.
     cmp word ptr ds:[GetlinsecPtr], offset getlinsec_ebios
     jne .read_mbr
     cmp byte ptr ds:[DriveNumber], HEX(80)
-    je .boot_setupldr
+    je .boot_freeldr
 
 .read_mbr:
     // Read the first sector (MBR) from the first hard disk (drive 80h) to 7C00h.
     // If we then decide to boot from HDD, we already have it at the right place.
-    // In case of an error (indicated by the Carry Flag), just boot SETUPLDR from our ReactOS medium.
+    // In case of an error (indicated by the Carry Flag), just boot FREELDR from our ReactOS medium.
     mov ax, HEX(0201)
     mov dx, HEX(0080)
     mov cx, HEX(0001)
     mov bx, HEX(7C00)
     call int13
-    jc .boot_setupldr
+    jc .boot_freeldr
 
     // Verify the signature of the read MBR.
-    // If it's invalid, there is probably no OS installed and we just boot SETUPLDR from our ReactOS medium.
+    // If it's invalid, there is probably no OS installed and we just boot FREELDR from our ReactOS medium.
     mov ax, word ptr ds:[HEX(7C00)+510]
     cmp ax, HEX(AA55)
-    jne .boot_setupldr
+    jne .boot_freeldr
 
 #ifdef WAIT_FOR_KEY
     // We could either boot from the ReactOS medium or from hard disk. Let the user decide!
@@ -155,9 +155,9 @@ relocated:
     add eax, 19
 
 .poll_again:
-    // Check for a keypress, boot SETUPLDR from our ReactOS medium if a key was pressed.
+    // Check for a keypress, boot FREELDR from our ReactOS medium if a key was pressed.
     call pollchar_and_empty
-    jnz .boot_setupldr
+    jnz .boot_freeldr
 
     // Check if another second has passed (in BIOS Timer ticks).
     mov ebx, ds:[BIOS_timer]
@@ -185,7 +185,7 @@ relocated:
 
     ljmp16 0, HEX(7C00)
 
-.boot_setupldr:
+.boot_freeldr:
 #ifdef WAIT_FOR_KEY
     call crlf_early
     call crlf_early
@@ -266,26 +266,26 @@ found_drive:
     xchg eax, dword ptr ds:[si+file_sector]
     mov dword ptr ds:[CurrentDir+dir_lba], eax
 
-    // Look for the "SETUPLDR.SYS" file.
-    mov di, offset setupldr_sys
+    // Look for the "FREELDR.SYS" file.
+    mov di, offset freeldr_sys
     call searchdir
-    jnz .setupldr_found
+    jnz .freeldr_found
 
-    // The SETUPLDR file was not found, so bail out with an error message.
-    mov si, offset no_setupldr_msg
+    // The FREELDR file was not found, so bail out with an error message.
+    mov si, offset no_freeldr_msg
     call writemsg
     jmp kaboom
 
-.setupldr_found:
+.freeldr_found:
     // Calculate the rounded up number of 2K sectors that need to be read.
     mov ecx, eax
     shr ecx, SECTOR_SHIFT
     test eax, HEX(7FF)
-    jz .load_setupldr
+    jz .load_freeldr
     inc ecx
 
-.load_setupldr:
-    // Load the entire SETUPLDR.SYS (parameter CX = FFFFh) to its designated base address FREELDR_BASE.
+.load_freeldr:
+    // Load the entire FREELDR.SYS (parameter CX = FFFFh) to its designated base address FREELDR_BASE.
     // Using a high segment address with offset 0 instead of segment 0 with offset FREELDR_BASE apparently increases compatibility with some BIOSes.
     mov bx, FREELDR_BASE / 16
     mov es, bx
@@ -293,15 +293,15 @@ found_drive:
     mov cx, HEX(FFFF)
     call getfssec
 
-    // Pass two parameters to SETUPLDR:
+    // Pass two parameters to FREELDR:
     //    DL = BIOS Drive Number
     //    DH = Boot Partition (0 for HDD booting in hybrid mode, FFh for CD booting)
     movzx dx, byte ptr ds:[DriveNumber]
     cmp word ptr ds:[GetlinsecPtr], offset getlinsec_ebios
-    je .jump_to_setupldr
+    je .jump_to_freeldr
     mov dh, HEX(FF)
 
-.jump_to_setupldr:
+.jump_to_freeldr:
     // Transfer execution to the bootloader.
     ljmp16 0, FREELDR_BASE
 
@@ -1086,10 +1086,10 @@ loader_dir:
     .ascii "/LOADER", NUL
 no_dir_msg:
     .ascii "LOADER dir not found.", CR, LF, NUL
-setupldr_sys:
-    .ascii "SETUPLDR.SYS", NUL
-no_setupldr_msg:
-    .ascii "SETUPLDR.SYS not found.", CR, LF, NUL
+freeldr_sys:
+    .ascii "FREELDR.SYS", NUL
+no_freeldr_msg:
+    .ascii "FREELDR.SYS not found.", CR, LF, NUL
 
 .align 4
 BufSafe:

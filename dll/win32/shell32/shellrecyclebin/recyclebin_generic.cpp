@@ -23,6 +23,10 @@ public:
     STDMETHODIMP DeleteFile(LPCWSTR szFileName) override;
     STDMETHODIMP EmptyRecycleBin() override;
     STDMETHODIMP EnumObjects(IRecycleBinEnumList **ppEnumList) override;
+    STDMETHODIMP GetDirectory(LPWSTR szPath) override
+    {
+        return E_UNEXPECTED;
+    }
 
 protected:
     LONG m_ref;
@@ -182,4 +186,12 @@ HRESULT RecycleBinGeneric_Constructor(OUT IUnknown **ppUnknown)
 
     *ppUnknown = static_cast<IRecycleBin *>(pThis);
     return S_OK;
+}
+
+EXTERN_C
+BOOL RecycleBinGeneric_IsEqualFileIdentity(const RECYCLEBINFILEIDENTITY *p1, const RECYCLEBINFILEIDENTITY *p2)
+{
+    return p1->DeletionTime.dwLowDateTime == p2->DeletionTime.dwLowDateTime &&
+           p1->DeletionTime.dwHighDateTime == p2->DeletionTime.dwHighDateTime &&
+           _wcsicmp(p1->RecycledFullPath, p2->RecycledFullPath) == 0;
 }

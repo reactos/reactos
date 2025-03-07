@@ -1,0 +1,23 @@
+/*
+ * PROJECT:     ReactOS msctfime.ime
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATOR:  Copyright 2024 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_OK               "OK"
+    IDS_CANCEL           "Revocare"
+    IDS_ABORT            "Î&ntrerupere"
+    IDS_RETRY            "&Reîncercare"
+    IDS_IGNORE           "&Ignorare"
+    IDS_YES              "&Da"
+    IDS_NO               "&Nu"
+
+    IDS_ENTER            "Intrare"
+    IDS_FINALIZE_STRING  "Finalizare a șirului"
+    IDS_CONVERSION       "Conversie"
+END

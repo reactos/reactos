@@ -115,6 +115,8 @@ BEGIN
     IDS_SELECT_NO_DISK "\nNie wybrano dysku.\nWybierz dysk i spróbuj ponownie.\n\n"
     IDS_SELECT_DISK "\nObecnie wybranym dyskiem jest dysk %lu.\n\n"
     IDS_SELECT_DISK_INVALID "\nNieprawidłowy dysk.\n\n"
+    IDS_SELECT_DISK_ENUM_NO_START "\nNo disk enumeration started yet.\n\nNo disk is currently selected.\n\n"
+    IDS_SELECT_DISK_ENUM_FINISHED "\nThe last disk has been enumerated.\n\nNo disk is currently selected.\n\n"
     IDS_SELECT_NO_PARTITION "\nNie wybrano partycji.\nWybierz partycję i spróbuj ponownie.\n\n"
     IDS_SELECT_PARTITION "\nObecnie wybraną partycją jest partycja %lu.\n\n"
     IDS_SELECT_PARTITION_NO_DISK "\nNie wybrano dysku do ustawienia partycji\nWybierz dysk i spróbuj ponownie.\n\n"

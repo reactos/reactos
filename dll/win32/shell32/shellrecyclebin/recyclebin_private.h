@@ -13,11 +13,20 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(recyclebin);
 
+#ifdef __cplusplus
+static inline HRESULT HResultFromWin32(DWORD hr)
+{
+     // HRESULT_FROM_WIN32 will evaluate its parameter twice, this function will not.
+    return HRESULT_FROM_WIN32(hr);
+}
+#endif
+
 /* Defines */
 
 #define RECYCLE_BIN_DIRECTORY_WITH_ACL    L"RECYCLER"
 #define RECYCLE_BIN_DIRECTORY_WITHOUT_ACL L"RECYCLED"
 #define RECYCLE_BIN_FILE_NAME             L"INFO2"
+#define RECYCLE_BIN_FILE_NAME_V1          L"INFO"
 
 #define ROUND_UP(N, S) ((( (N) + (S)  - 1) / (S) ) * (S) )
 
@@ -42,6 +51,9 @@ typedef struct _INFO2_HEADER
 
 EXTERN_C
 HRESULT RecycleBinGeneric_Constructor(OUT IUnknown **ppUnknown);
+
+EXTERN_C
+BOOL RecycleBinGeneric_IsEqualFileIdentity(const RECYCLEBINFILEIDENTITY *p1, const RECYCLEBINFILEIDENTITY *p2);
 
 /* recyclebin_generic_enumerator.c */
 

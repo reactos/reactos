@@ -179,6 +179,7 @@ static FILE_SYSTEM RegisteredFileSystems[] =
 
 /** QueryAvailableFileSystemFormat() **/
 BOOLEAN
+NTAPI
 GetRegisteredFileSystems(
     IN ULONG Index,
     OUT PCWSTR* FileSystemName)
@@ -241,6 +242,7 @@ GetFileSystemByName(
 
 /** ChkdskEx() **/
 NTSTATUS
+NTAPI
 ChkdskFileSystem_UStr(
     _In_ PUNICODE_STRING DriveRoot,
     _In_ PCWSTR FileSystemName,
@@ -284,6 +286,7 @@ ChkdskFileSystem_UStr(
 }
 
 NTSTATUS
+NTAPI
 ChkdskFileSystem(
     _In_ PCWSTR DriveRoot,
     _In_ PCWSTR FileSystemName,
@@ -308,6 +311,7 @@ ChkdskFileSystem(
 
 /** FormatEx() **/
 NTSTATUS
+NTAPI
 FormatFileSystem_UStr(
     _In_ PUNICODE_STRING DriveRoot,
     _In_ PCWSTR FileSystemName,
@@ -373,6 +377,7 @@ FormatFileSystem_UStr(
 }
 
 NTSTATUS
+NTAPI
 FormatFileSystem(
     _In_ PCWSTR DriveRoot,
     _In_ PCWSTR FileSystemName,
@@ -754,6 +759,7 @@ Quit:
 //
 
 NTSTATUS
+NTAPI
 ChkdskVolume(
     _In_ PVOLINFO Volume,
     _In_ BOOLEAN FixErrors,
@@ -778,6 +784,7 @@ ChkdskVolume(
 }
 
 NTSTATUS
+NTAPI
 ChkdskPartition(
     _In_ PPARTENTRY PartEntry,
     _In_ BOOLEAN FixErrors,
@@ -801,6 +808,7 @@ ChkdskPartition(
 }
 
 NTSTATUS
+NTAPI
 FormatVolume(
     _In_ PVOLINFO Volume,
     _In_ PCWSTR FileSystemName,
@@ -839,6 +847,7 @@ FormatVolume(
 }
 
 NTSTATUS
+NTAPI
 FormatPartition(
     _In_ PPARTENTRY PartEntry,
     _In_ PCWSTR FileSystemName,
@@ -1084,6 +1093,7 @@ GetNextUnformattedVolume(
 }
 
 BOOLEAN
+NTAPI
 FsVolCommitOpsQueue(
     _In_ PPARTLIST PartitionList,
     _In_ PVOLENTRY SystemVolume,

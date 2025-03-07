@@ -7,7 +7,7 @@
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
 
 IDS_USAGE, "SYSTEMINFO [/S system [/U nazwa użytkownika [/P [hasło]]]] [/FO format] [/NH]\n\n\

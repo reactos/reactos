@@ -390,7 +390,7 @@ CheckValueArgument:
         DWORD dwBytesWritten;
         if (!WriteFile(hFile,pDataBuffer,dwValueSize,&dwBytesWritten,NULL))
         {
-          rConsole.Write(_T("Error writting file.\n"));
+          rConsole.Write(_T("Error writing file.\n"));
           VERIFY(CloseHandle(hFile));
           goto SkipValueCommand;
         }

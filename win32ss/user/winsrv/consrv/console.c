@@ -397,7 +397,7 @@ LoadShellLinkConsoleInfo(IN OUT PCONSOLE_STATE_INFO ConsoleInfo,
 
     /* 2- Check for the link extension. The name ".lnk" is considered invalid. */
     Length = wcslen(LinkName);
-    if ( (Length <= 4) || (wcsicmp(LinkName + (Length - 4), L".lnk") != 0) )
+    if ( (Length <= 4) || (_wcsicmp(LinkName + (Length - 4), L".lnk") != 0) )
         return FALSE;
 
     /* 3- It may be a link. Try to retrieve some properties */
@@ -2019,7 +2019,7 @@ CON_API(SrvGetConsoleLangId,
 {
     /*
      * Quoting MS Terminal, see function GetConsoleLangId() at
-     * https://github.com/microsoft/terminal/blob/main/src/host/srvinit.cpp#L655
+     * https://github.com/microsoft/terminal/blob/1e00843598d980c5009d17ff943cb78b78d4af9e/src/host/srvinit.cpp#L694
      * "Only attempt to return the Lang ID if the Windows ACP on console
      * launch was an East Asian Code Page."
      *

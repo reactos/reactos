@@ -54,6 +54,9 @@ IDI_APPICON ICON "res/msconfig.ico"
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"
 #endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/ja-JP.rc"
+#endif
 #ifdef LANGUAGE_KO_KR
     #include "lang/ko-KR.rc"
 #endif

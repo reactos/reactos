@@ -37,7 +37,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "A propos du débogueur de FreeLoader"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "FreeLoader Debugger v1.0\nCopyright (C) 2003\nby Brian Palmer (brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
+    CONTROL "FreeLoader Debugger\nCopyright (C) 2003\nby Brian Palmer (brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
     DEFPUSHBUTTON "OK", IDOK, 183, 189, 44, 14, WS_GROUP
     ICON IDI_FDEBUG, IDC_STATIC, 19, 30, 20, 20
     EDITTEXT IDC_LICENSE_EDIT, 53, 63, 174, 107, ES_MULTILINE | ES_READONLY | WS_VSCROLL

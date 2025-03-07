@@ -38,7 +38,6 @@
 /* GLOBALS ******************************************************************/
 
 HANDLE ProcessHeap;
-BOOLEAN IsUnattendedSetup = FALSE;
 SETUPDATA SetupData;
 
 /* The partition where to perform the installation */
@@ -80,29 +79,50 @@ CenterWindow(HWND hWnd)
                  SWP_NOSIZE);
 }
 
+/**
+ * @brief
+ * Create a bold font derived from the provided font.
+ **/
 static HFONT
-CreateTitleFont(VOID)
+CreateBoldFont(
+    _In_opt_ HFONT hOrigFont,
+    _In_opt_ INT PointSize)
 {
-    NONCLIENTMETRICS ncm;
-    LOGFONT LogFont;
-    HDC hdc;
-    INT FontSize;
-    HFONT hFont;
+    LOGFONTW lf = {0};
 
-    ncm.cbSize = sizeof(NONCLIENTMETRICS);
-    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+    if (hOrigFont)
+    {
+        GetObjectW(hOrigFont, sizeof(lf), &lf);
+    }
+    else
+    {
+        NONCLIENTMETRICSW ncm;
+        ncm.cbSize = sizeof(ncm);
+        SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+        lf = ncm.lfMessageFont;
+    }
 
-    LogFont = ncm.lfMessageFont;
-    LogFont.lfWeight = FW_BOLD;
-    _tcscpy(LogFont.lfFaceName, _T("MS Shell Dlg"));
+    /* Make the font bold, keeping the other attributes */
+    lf.lfWeight = FW_BOLD;
 
-    hdc = GetDC(NULL);
-    FontSize = 12;
-    LogFont.lfHeight = 0 - GetDeviceCaps (hdc, LOGPIXELSY) * FontSize / 72;
-    hFont = CreateFontIndirect(&LogFont);
-    ReleaseDC(NULL, hdc);
+    /* Determine the font height (logical units) if necessary */
+    if (PointSize)
+    {
+        HDC hdc = GetDC(NULL);
+        lf.lfHeight = -MulDiv(PointSize, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+        // lf.lfWidth = 0;
+        ReleaseDC(NULL, hdc);
+    }
 
-    return hFont;
+    return CreateFontIndirect(&lf);
+}
+
+static inline HFONT
+CreateTitleFont(
+    _In_opt_ HFONT hOrigFont)
+{
+    /* Title font is 12pt bold */
+    return CreateBoldFont(hOrigFont, 12);
 }
 
 INT
@@ -308,11 +328,13 @@ StartDlgProc(
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
             /* Set title font */
-            SendDlgItemMessage(hwndDlg,
-                               IDC_STARTTITLE,
-                               WM_SETFONT,
-                               (WPARAM)pSetupData->hTitleFont,
-                               (LPARAM)TRUE);
+            SetDlgItemFont(hwndDlg, IDC_STARTTITLE, pSetupData->hTitleFont, TRUE);
+
+            // TEMPTEMP: Set the ReactOS-Alpha information in bold.
+            // TODO: Remove once we reach 0.5/Beta :)
+            SetDlgItemFont(hwndDlg, IDC_WARNTEXT1, pSetupData->hBoldFont, TRUE);
+            SetDlgItemFont(hwndDlg, IDC_WARNTEXT2, pSetupData->hBoldFont, TRUE);
+            SetDlgItemFont(hwndDlg, IDC_WARNTEXT3, pSetupData->hBoldFont, TRUE);
 
             /* Center the wizard window */
             CenterWindow(GetParent(hwndDlg));
@@ -326,8 +348,21 @@ StartDlgProc(
             switch (lpnm->code)
             {
                 case PSN_SETACTIVE:
+                {
+                    /* Only "Next" and "Cancel" for the first page and hide "Back" */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+                    // PropSheet_ShowWizButtons(GetParent(hwndDlg), 0, PSWIZB_BACK);
+                    ShowDlgItem(GetParent(hwndDlg), ID_WIZBACK, SW_HIDE);
                     break;
+                }
+
+                case PSN_KILLACTIVE:
+                {
+                    /* Show "Back" button */
+                    // PropSheet_ShowWizButtons(GetParent(hwndDlg), PSWIZB_BACK, PSWIZB_BACK);
+                    ShowDlgItem(GetParent(hwndDlg), ID_WIZBACK, SW_SHOW);
+                    break;
+                }
 
                 default:
                     break;
@@ -363,11 +398,15 @@ TypeDlgProc(
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
-            /* Check the 'install' radio button */
+            /* Set the options in bold */
+            SetDlgItemFont(hwndDlg, IDC_INSTALL, pSetupData->hBoldFont, TRUE);
+            SetDlgItemFont(hwndDlg, IDC_UPDATE, pSetupData->hBoldFont, TRUE);
+
+            /* Check the "Install" radio button */
             CheckDlgButton(hwndDlg, IDC_INSTALL, BST_CHECKED);
 
             /*
-             * Enable the 'update' radio button and text only if we have
+             * Enable the "Update" radio button and text only if we have
              * available NT installations, otherwise disable them.
              */
             if (pSetupData->NtOsInstallsList &&
@@ -1117,7 +1156,9 @@ SummaryDlgProc(
                     // PropSheet_SetNextText(GetParent(hwndDlg), ...);
                     GetDlgItemTextW(GetParent(hwndDlg), ID_WIZNEXT,
                                     szOrgWizNextBtnText, ARRAYSIZE(szOrgWizNextBtnText));
-                    SetDlgItemTextW(GetParent(hwndDlg), ID_WIZNEXT, L"Install"); // FIXME: Localize!
+                    SetWindowResTextW(GetDlgItem(GetParent(hwndDlg), ID_WIZNEXT),
+                                      pSetupData->hInstance,
+                                      IDS_INSTALLBTN);
 
                     /*
                      * Keep the "Next" button disabled. It will be enabled only
@@ -1254,7 +1295,6 @@ FsVolCallback(
     _In_ ULONG_PTR Param2)
 {
     PFSVOL_CONTEXT FsVolContext = (PFSVOL_CONTEXT)Context;
-    WCHAR Buffer[MAX_PATH];
 
     switch (FormatStatus)
     {
@@ -1480,20 +1520,21 @@ FsVolCallback(
         /* Set status text */
         if (FmtInfo->Volume->Info.DriveLetter)
         {
-            StringCchPrintfW(Buffer, ARRAYSIZE(Buffer),
-                             L"Formatting volume %c: (%s) in %s...", // IDS_FORMATTING_PROGRESS1
-                             FmtInfo->Volume->Info.DriveLetter,
-                             FmtInfo->Volume->Info.DeviceName,
-                             VolCreate->FileSystemName);
+            SetWindowResPrintfW(GetDlgItem(UiContext.hwndDlg, IDC_ITEM),
+                                SetupData.hInstance,
+                                IDS_FORMATTING_PROGRESS1, // L"Formatting volume %c: (%s) in %s..."
+                                FmtInfo->Volume->Info.DriveLetter,
+                                FmtInfo->Volume->Info.DeviceName,
+                                VolCreate->FileSystemName);
         }
         else
         {
-            StringCchPrintfW(Buffer, ARRAYSIZE(Buffer),
-                             L"Formatting volume %s in %s...", // IDS_FORMATTING_PROGRESS2
-                             FmtInfo->Volume->Info.DeviceName,
-                             VolCreate->FileSystemName);
+            SetWindowResPrintfW(GetDlgItem(UiContext.hwndDlg, IDC_ITEM),
+                                SetupData.hInstance,
+                                IDS_FORMATTING_PROGRESS2, // L"Formatting volume %s in %s..."
+                                FmtInfo->Volume->Info.DeviceName,
+                                VolCreate->FileSystemName);
         }
-        SetDlgItemTextW(UiContext.hwndDlg, IDC_ITEM, Buffer);
 
         // StartFormat(FmtInfo, FileSystemList->Selected);
         FmtInfo->FileSystemName = VolCreate->FileSystemName;
@@ -1545,18 +1586,19 @@ FsVolCallback(
         /* Set status text */
         if (ChkInfo->Volume->Info.DriveLetter)
         {
-            StringCchPrintfW(Buffer, ARRAYSIZE(Buffer),
-                             L"Checking volume %c: (%s)...", // IDS_CHECKING_PROGRESS1
-                             ChkInfo->Volume->Info.DriveLetter,
-                             ChkInfo->Volume->Info.DeviceName);
+            SetWindowResPrintfW(GetDlgItem(UiContext.hwndDlg, IDC_ITEM),
+                                SetupData.hInstance,
+                                IDS_CHECKING_PROGRESS1, // L"Checking volume %c: (%s)..."
+                                ChkInfo->Volume->Info.DriveLetter,
+                                ChkInfo->Volume->Info.DeviceName);
         }
         else
         {
-            StringCchPrintfW(Buffer, ARRAYSIZE(Buffer),
-                             L"Checking volume %s...", // IDS_CHECKING_PROGRESS2
-                             ChkInfo->Volume->Info.DeviceName);
+            SetWindowResPrintfW(GetDlgItem(UiContext.hwndDlg, IDC_ITEM),
+                                SetupData.hInstance,
+                                IDS_CHECKING_PROGRESS2, // L"Checking volume %s..."
+                                ChkInfo->Volume->Info.DeviceName);
         }
-        SetDlgItemTextW(UiContext.hwndDlg, IDC_ITEM, Buffer);
 
         // StartCheck(ChkInfo);
         // TODO: Think about which values could be defaulted...
@@ -1599,7 +1641,6 @@ FileCopyCallback(PVOID Context,
     PCOPYCONTEXT CopyContext = (PCOPYCONTEXT)Context;
     PFILEPATHS_W FilePathInfo;
     PCWSTR SrcFileName, DstFileName;
-    WCHAR Status[1024];
 
     WaitForSingleObject(CopyContext->pSetupData->hHaltInstallEvent, INFINITE);
     if (CopyContext->pSetupData->bStopInstall)
@@ -1638,12 +1679,15 @@ FileCopyCallback(PVOID Context,
                 if (DstFileName) ++DstFileName;
                 else DstFileName = FilePathInfo->Target;
 
-                // STRING_DELETING
-                StringCchPrintfW(Status, ARRAYSIZE(Status), L"Deleting %s", DstFileName);
-                SetWindowTextW(UiContext.hWndItem, Status);
+                SetWindowResPrintfW(UiContext.hWndItem,
+                                    SetupData.hInstance,
+                                    IDS_DELETING, // STRING_DELETING
+                                    DstFileName);
             }
             else if (Notification == SPFILENOTIFY_STARTRENAME)
             {
+                UINT uMsgID;
+
                 /* Display move/rename message */
                 ASSERT(Param2 == FILEOP_RENAME);
 
@@ -1655,13 +1699,14 @@ FileCopyCallback(PVOID Context,
                 if (DstFileName) ++DstFileName;
                 else DstFileName = FilePathInfo->Target;
 
-                // STRING_MOVING or STRING_RENAMING
-                if (!wcsicmp(SrcFileName, DstFileName))
-                    StringCchPrintfW(Status, ARRAYSIZE(Status), L"Moving %s to %s", SrcFileName, DstFileName);
+                if (!_wcsicmp(SrcFileName, DstFileName))
+                    uMsgID = IDS_MOVING; // STRING_MOVING
                 else
-                    StringCchPrintfW(Status, ARRAYSIZE(Status), L"Renaming %s to %s", SrcFileName, DstFileName);
-
-                SetWindowTextW(UiContext.hWndItem, Status);
+                    uMsgID = IDS_RENAMING; // STRING_RENAMING
+                SetWindowResPrintfW(UiContext.hWndItem,
+                                    SetupData.hInstance,
+                                    uMsgID,
+                                    SrcFileName, DstFileName);
             }
             else if (Notification == SPFILENOTIFY_STARTCOPY)
             {
@@ -1672,9 +1717,10 @@ FileCopyCallback(PVOID Context,
                 if (DstFileName) ++DstFileName;
                 else DstFileName = FilePathInfo->Target;
 
-                // STRING_COPYING
-                StringCchPrintfW(Status, ARRAYSIZE(Status), L"Copying %s", DstFileName);
-                SetWindowTextW(UiContext.hWndItem, Status);
+                SetWindowResPrintfW(UiContext.hWndItem,
+                                    SetupData.hInstance,
+                                    IDS_COPYING, // STRING_COPYING
+                                    DstFileName);
             }
             break;
         }
@@ -1769,7 +1815,7 @@ PrepareAndDoCopyThread(
     NTSTATUS Status;
     FSVOL_CONTEXT FsVolContext;
     COPYCONTEXT CopyContext;
-    // WCHAR PathBuffer[MAX_PATH];
+    WCHAR PathBuffer[RTL_NUMBER_OF_FIELD(PARTENTRY, DeviceName) + 1];
 
     /* Retrieve pointer to the global setup data */
     pSetupData = (PSETUPDATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
@@ -1799,7 +1845,9 @@ PrepareAndDoCopyThread(
     FsVolContext.pSetupData = pSetupData;
 
     /* Set status text */
-    SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Setting the system partition...");
+    SetWindowResTextW(GetDlgItem(hwndDlg, IDC_ACTIVITY),
+                      pSetupData->hInstance,
+                      IDS_CONFIG_SYSTEM_PARTITION);
     SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
 
     /* Find or set the active system partition before starting formatting */
@@ -1831,7 +1879,9 @@ PrepareAndDoCopyThread(
 
 
     /* Set status text */
-    SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Preparing partitions...");
+    SetWindowResTextW(GetDlgItem(hwndDlg, IDC_ACTIVITY),
+                      pSetupData->hInstance,
+                      IDS_PREPARE_PARTITIONS);
     SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
 
     /* Apply all pending operations on partitions: formatting and checking */
@@ -1886,7 +1936,9 @@ PrepareAndDoCopyThread(
      */
 
     /* Set status text */
-    SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Preparing the list of files to be copied, please wait...");
+    SetWindowResTextW(GetDlgItem(hwndDlg, IDC_ACTIVITY),
+                      pSetupData->hInstance,
+                      IDS_PREPARE_FILES);
     SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
 
     /* Set progress marquee style and start it up */
@@ -1923,7 +1975,9 @@ PrepareAndDoCopyThread(
      */
 
     /* Set status text */
-    SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Copying the files...");
+    SetWindowResTextW(GetDlgItem(hwndDlg, IDC_ACTIVITY),
+                      pSetupData->hInstance,
+                      IDS_COPYING_FILES);
     SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
 
     /* Create context for the copy process */
@@ -1949,7 +2003,9 @@ PrepareAndDoCopyThread(
     }
 
     // /* Set status text */
-    // SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Finalizing the installation...");
+    // SetWindowResTextW(GetDlgItem(hwndDlg, IDC_ACTIVITY),
+    //                   pSetupData->hInstance,
+    //                   IDS_INSTALL_FINALIZE);
     // SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
 
     /* Create the $winnt$.inf file */
@@ -1986,6 +2042,141 @@ PrepareAndDoCopyThread(
     DBG_UNREFERENCED_PARAMETER(ErrorNumber);
     SendMessageW(UiContext.hWndProgress, PBM_SETPOS, 100, 0);
 
+    /*
+     * And finally, install the bootloader
+     */
+
+    /* Set status text */
+    SetWindowResTextW(GetDlgItem(hwndDlg, IDC_ACTIVITY),
+                      pSetupData->hInstance,
+                      IDS_INSTALL_BOOTLOADER);
+    SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
+
+    RtlFreeUnicodeString(&pSetupData->USetupData.SystemRootPath);
+    StringCchPrintfW(PathBuffer, _countof(PathBuffer),
+                     L"%s\\", SystemPartition->DeviceName);
+    RtlCreateUnicodeString(&pSetupData->USetupData.SystemRootPath, PathBuffer);
+    DPRINT1("SystemRootPath: %wZ\n", &pSetupData->USetupData.SystemRootPath);
+
+    switch (pSetupData->USetupData.BootLoaderLocation)
+    {
+        /* Install on removable disk */
+        case 1:
+        {
+            // TODO: So far SETUP only supports the 1st floppy.
+            // Use a simple UI like comdlg32's DlgDirList* to show
+            // a list of drives that the user could select.
+            static const UNICODE_STRING FloppyDrive = RTL_CONSTANT_STRING(L"\\Device\\Floppy0\\");
+            static const WCHAR DriveLetter = L'A';
+
+            INT nRet;
+        RetryCancel:
+            nRet = DisplayMessage(GetParent(hwndDlg),
+                                  MB_ICONINFORMATION | MB_OKCANCEL,
+                                  L"Bootloader installation",
+                                  L"Please insert a blank floppy disk in drive %c: .\n"
+                                  L"All data in the floppy disk will be erased!\n"
+                                  L"\nClick on OK to continue."
+                                  L"\nClick on CANCEL to skip bootloader installation.",
+                                  DriveLetter);
+            if (nRet != IDOK)
+                break; /* Skip installation */
+
+        Retry:
+            Status = InstallBootcodeToRemovable(pSetupData->USetupData.ArchType,
+                                                &FloppyDrive,
+                                                &pSetupData->USetupData.SourceRootPath,
+                                                &pSetupData->USetupData.DestinationArcPath);
+            if (Status == STATUS_SUCCESS)
+                break; /* Successful installation */
+
+            if (Status == STATUS_DEVICE_NOT_READY)
+            {
+                // ERROR_NO_FLOPPY
+                nRet = DisplayMessage(GetParent(hwndDlg),
+                                      MB_ICONWARNING | MB_RETRYCANCEL,
+                                      NULL, // Default to "Error"
+                                      L"No disk detected in drive %c: .",
+                                      DriveLetter);
+                if (nRet == IDRETRY)
+                    goto Retry;
+            }
+            else if ((Status == ERROR_WRITE_BOOT) ||
+                     (Status == ERROR_INSTALL_BOOTCODE))
+            {
+                /* Error when writing the boot code */
+                DisplayError(GetParent(hwndDlg),
+                             0, // Default to "Error"
+                             IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE);
+            }
+            else if (!NT_SUCCESS(Status))
+            {
+                /* Any other NTSTATUS failure code */
+                DPRINT1("InstallBootcodeToRemovable() failed: Status 0x%lx\n", Status);
+                DisplayError(GetParent(hwndDlg),
+                             0, // Default to "Error"
+                             IDS_ERROR_BOOTLDR_FAILED,
+                             Status);
+            }
+            goto RetryCancel;
+        }
+
+        /* Install on hard-disk */
+        case 2: // System partition / MBR and VBR (on BIOS-based PC)
+        case 3: // VBR only (on BIOS-based PC)
+        {
+            /* Copy FreeLoader to the disk and save the boot entries */
+            Status = InstallBootManagerAndBootEntries(
+                        pSetupData->USetupData.ArchType,
+                        &pSetupData->USetupData.SystemRootPath,
+                        &pSetupData->USetupData.SourceRootPath,
+                        &pSetupData->USetupData.DestinationArcPath,
+                        (pSetupData->USetupData.BootLoaderLocation == 2)
+                           ? 1 /* Install MBR and VBR */
+                           : 0 /* Install VBR only */);
+            if (Status == STATUS_SUCCESS)
+                break; /* Successful installation */
+
+            if (Status == ERROR_WRITE_BOOT)
+            {
+                /* Error when writing the VBR */
+                DisplayError(GetParent(hwndDlg),
+                             0, // Default to "Error"
+                             IDS_ERROR_WRITE_BOOT,
+                             SystemVolume->Info.FileSystem);
+            }
+            else if (Status == ERROR_INSTALL_BOOTCODE)
+            {
+                /* Error when writing the MBR */
+                DisplayError(GetParent(hwndDlg),
+                             0, // Default to "Error"
+                             IDS_ERROR_INSTALL_BOOTCODE,
+                             L"MBR");
+            }
+            else if (Status == STATUS_NOT_SUPPORTED)
+            {
+                DisplayError(GetParent(hwndDlg),
+                             0, // Default to "Error"
+                             IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED);
+            }
+            else if (!NT_SUCCESS(Status))
+            {
+                /* Any other NTSTATUS failure code */
+                DPRINT1("InstallBootManagerAndBootEntries() failed: Status 0x%lx\n", Status);
+                DisplayError(GetParent(hwndDlg),
+                             0, // Default to "Error"
+                             IDS_ERROR_BOOTLDR_FAILED,
+                             Status);
+            }
+            break;
+        }
+
+        /* Skip installation */
+        case 0:
+        default:
+            break;
+    }
+
 
     /* We are done! Switch to the Terminate page */
     PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_RESTARTPAGE);
@@ -2016,7 +2207,6 @@ ProcessDlgProc(
             /* Reset status text */
             SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"");
             SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
-
             break;
         }
 
@@ -2132,11 +2322,7 @@ RestartDlgProc(
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
             /* Set title font */
-            SendDlgItemMessage(hwndDlg,
-                               IDC_FINISHTITLE,
-                               WM_SETFONT,
-                               (WPARAM)pSetupData->hTitleFont,
-                               (LPARAM)TRUE);
+            SetDlgItemFont(hwndDlg, IDC_FINISHTITLE, pSetupData->hTitleFont, TRUE);
             break;
 
         case WM_TIMER:
@@ -2260,7 +2446,7 @@ BOOL LoadSetupData(
          ListEntry = GetNextListEntry(ListEntry))
     {
         PCWSTR LocaleId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
-        if (!wcsicmp(pSetupData->DefaultLanguage, LocaleId))
+        if (!_wcsicmp(pSetupData->DefaultLanguage, LocaleId))
         {
             DPRINT("found %S in LanguageList\n", LocaleId);
             SetCurrentListEntry(LanguageList, ListEntry);
@@ -2273,7 +2459,7 @@ BOOL LoadSetupData(
          ListEntry = GetNextListEntry(ListEntry))
     {
         PCWSTR pszLayoutId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
-        if (!wcsicmp(pSetupData->DefaultKBLayout, pszLayoutId))
+        if (!_wcsicmp(pSetupData->DefaultKBLayout, pszLayoutId))
         {
             DPRINT("Found %S in LayoutList\n", pszLayoutId);
             SetCurrentListEntry(LayoutList, ListEntry);
@@ -2612,7 +2798,6 @@ HotkeyThread(LPVOID Parameter)
     DPRINT("HotkeyThread start\n");
 
     hotkey = GlobalAddAtomW(L"Setup Shift+F10 Hotkey");
-
     if (!RegisterHotKey(NULL, hotkey, MOD_SHIFT, VK_F10))
         DPRINT1("RegisterHotKey failed with %lu\n", GetLastError());
 
@@ -2620,11 +2805,12 @@ HotkeyThread(LPVOID Parameter)
     {
         if (msg.hwnd == NULL && msg.message == WM_HOTKEY && msg.wParam == hotkey)
         {
+            WCHAR CmdLine[] = L"cmd.exe"; // CreateProcess can modify this buffer.
             STARTUPINFOW si = { sizeof(si) };
             PROCESS_INFORMATION pi;
 
-            if (CreateProcessW(L"cmd.exe",
-                               NULL,
+            if (CreateProcessW(NULL,
+                               CmdLine,
                                NULL,
                                NULL,
                                FALSE,
@@ -2675,11 +2861,9 @@ _tWinMain(HINSTANCE hInst,
     /* Initialize the NT to Win32 path prefix mapping list */
     InitNtToWin32PathMappingList(&SetupData.MappingList);
 
-    /* Initialize Setup, phase 0 */
-    InitializeSetup(&SetupData.USetupData, 0);
-
-    /* Initialize Setup, phase 1 */
-    Error = InitializeSetup(&SetupData.USetupData, 1);
+    /* Initialize Setup */
+    Error = InitializeSetup(&SetupData.USetupData, NULL,
+                            &SpFileExports, &SpInfExports);
     if (Error != ERROR_SUCCESS)
     {
         //
@@ -2716,8 +2900,9 @@ _tWinMain(HINSTANCE hInst,
     // RegisterTreeListClass(hInst);
     TreeListRegister(hInst);
 
-    /* Create title font */
-    SetupData.hTitleFont = CreateTitleFont();
+    /* Create the title and bold fonts */
+    SetupData.hTitleFont = CreateTitleFont(NULL);
+    SetupData.hBoldFont  = CreateBoldFont(NULL, 0);
 
     if (!SetupData.bUnattend)
     {
@@ -2745,8 +2930,8 @@ _tWinMain(HINSTANCE hInst,
         /* Create the upgrade/repair selection page */
         psp.dwSize = sizeof(PROPSHEETPAGE);
         psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-        psp.pszHeaderTitle = MAKEINTRESOURCEW(IDS_TYPETITLE);
-        psp.pszHeaderSubTitle = MAKEINTRESOURCEW(IDS_TYPESUBTITLE);
+        psp.pszHeaderTitle = MAKEINTRESOURCEW(IDS_UPDATETITLE);
+        psp.pszHeaderSubTitle = MAKEINTRESOURCEW(IDS_UPDATESUBTITLE);
         psp.hInstance = hInst;
         psp.lParam = (LPARAM)&SetupData;
         psp.pfnDlgProc = UpgradeRepairDlgProc;
@@ -2828,8 +3013,10 @@ _tWinMain(HINSTANCE hInst,
     CloseHandle(SetupData.hHaltInstallEvent);
     SetupData.hHaltInstallEvent = NULL;
 
+    if (SetupData.hBoldFont)
+        DeleteFont(SetupData.hBoldFont);
     if (SetupData.hTitleFont)
-        DeleteObject(SetupData.hTitleFont);
+        DeleteFont(SetupData.hTitleFont);
 
     /* Unregister the TreeList control */
     // UnregisterTreeListClass(hInst);

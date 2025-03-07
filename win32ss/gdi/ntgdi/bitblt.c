@@ -7,8 +7,6 @@
  */
 
 #include <win32k.h>
-#define NDEBUG
-#include <debug.h>
 DBG_DEFAULT_CHANNEL(GdiBlt);
 
 BOOL APIENTRY
@@ -491,11 +489,11 @@ NtGdiMaskBlt(
         XlateObj = &exlo.xlo;
     }
 
-    DPRINT("DestRect: (%d,%d)-(%d,%d) and SourcePoint is (%d,%d)\n",
-        DestRect.left, DestRect.top, DestRect.right, DestRect.bottom,
-        SourcePoint.x, SourcePoint.y);
+    TRACE("DestRect: (%d,%d)-(%d,%d) and SourcePoint is (%d,%d)\n",
+          DestRect.left, DestRect.top, DestRect.right, DestRect.bottom,
+          SourcePoint.x, SourcePoint.y);
 
-    DPRINT("nWidth is '%d' and nHeight is '%d'.\n", nWidth, nHeight);
+    TRACE("nWidth is '%d' and nHeight is '%d'.\n", nWidth, nHeight);
 
     /* Fix BitBlt so that it will not flip left to right */
     if ((DestRect.left > DestRect.right) && (nWidth < 0))
@@ -767,9 +765,9 @@ GreStretchBltMask(
         MaskPoint.y += DCMask->ptlDCOrig.y;
     }
 
-    DPRINT("Calling IntEngStrethBlt SourceRect: (%d,%d)-(%d,%d) and DestRect: (%d,%d)-(%d,%d).\n",
-           SourceRect.left, SourceRect.top, SourceRect.right, SourceRect.bottom,
-           DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
+    TRACE("Calling IntEngStrethBlt SourceRect: (%d,%d)-(%d,%d) and DestRect: (%d,%d)-(%d,%d).\n",
+          SourceRect.left, SourceRect.top, SourceRect.right, SourceRect.bottom,
+          DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
 
     /* Perform the bitblt operation */
     Status = IntEngStretchBlt(&BitmapDest->SurfObj,

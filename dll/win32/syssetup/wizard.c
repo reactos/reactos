@@ -27,40 +27,13 @@
 #define NDEBUG
 #include <debug.h>
 
-#define PM_REGISTRATION_NOTIFY (WM_APP + 1)
-/* Private Message used to communicate progress from the background
-   registration thread to the main thread.
-   wParam = 0 Registration in progress
-          = 1 Registration completed
-   lParam = Pointer to a REGISTRATIONNOTIFY structure */
-
-#define PM_ITEM_START (WM_APP + 2)
-#define PM_ITEM_END   (WM_APP + 3)
-#define PM_STEP_START (WM_APP + 4)
-#define PM_STEP_END   (WM_APP + 5)
-#define PM_ITEMS_DONE (WM_APP + 6)
-
-typedef struct _REGISTRATIONNOTIFY
-{
-    ULONG Progress;
-    UINT ActivityID;
-    LPCWSTR CurrentItem;
-    LPCWSTR ErrorMessage;
-    UINT MessageID;
-    DWORD LastError;
-} REGISTRATIONNOTIFY, *PREGISTRATIONNOTIFY;
-
-typedef struct _ITEMSDATA
-{
-    HWND hwndDlg;
-} ITEMSDATA, *PITEMSDATA;
-
 typedef struct _REGISTRATIONDATA
 {
     HWND hwndDlg;
     ULONG DllCount;
     ULONG Registered;
     PVOID DefaultContext;
+    PREGISTRATIONNOTIFY pNotify;
 } REGISTRATIONDATA, *PREGISTRATIONDATA;
 
 typedef struct _TIMEZONE_ENTRY
@@ -2019,7 +1992,6 @@ RegistrationNotificationProc(PVOID Context,
                              UINT_PTR Param2)
 {
     PREGISTRATIONDATA RegistrationData;
-    REGISTRATIONNOTIFY RegistrationNotify;
     PSP_REGISTER_CONTROL_STATUSW StatusInfo;
     UINT MessageID;
 
@@ -2029,23 +2001,24 @@ RegistrationNotificationProc(PVOID Context,
         Notification == SPFILENOTIFY_ENDREGISTRATION)
     {
         StatusInfo = (PSP_REGISTER_CONTROL_STATUSW) Param1;
-        RegistrationNotify.CurrentItem = wcsrchr(StatusInfo->FileName, L'\\');
-        if (RegistrationNotify.CurrentItem == NULL)
+        RegistrationData->pNotify->CurrentItem = wcsrchr(StatusInfo->FileName, L'\\');
+        if (RegistrationData->pNotify->CurrentItem == NULL)
         {
-            RegistrationNotify.CurrentItem = StatusInfo->FileName;
+            RegistrationData->pNotify->CurrentItem = StatusInfo->FileName;
         }
         else
         {
-            RegistrationNotify.CurrentItem++;
+            RegistrationData->pNotify->CurrentItem++;
         }
 
         if (Notification == SPFILENOTIFY_STARTREGISTRATION)
         {
             DPRINT("Received SPFILENOTIFY_STARTREGISTRATION notification for %S\n",
                    StatusInfo->FileName);
-            RegistrationNotify.ErrorMessage = NULL;
-            RegistrationNotify.Progress = RegistrationData->Registered;
-            SendMessage(RegistrationData->hwndDlg, PM_STEP_START, 0, (LPARAM)&RegistrationNotify);
+            RegistrationData->pNotify->Progress = RegistrationData->Registered;
+
+            DPRINT("RegisterDll: Start step %ld\n", RegistrationData->pNotify->Progress);
+            SendMessage(RegistrationData->hwndDlg, PM_STEP_START, 0, (LPARAM)RegistrationData->pNotify);
         }
         else
         {
@@ -2077,13 +2050,13 @@ RegistrationNotificationProc(PVOID Context,
                         break;
                 }
 
-                RegistrationNotify.MessageID = MessageID;
-                RegistrationNotify.LastError = StatusInfo->Win32Error;
+                RegistrationData->pNotify->MessageID = MessageID;
+                RegistrationData->pNotify->LastError = StatusInfo->Win32Error;
             }
             else
             {
-                RegistrationNotify.MessageID = 0;
-                RegistrationNotify.LastError = ERROR_SUCCESS;
+                RegistrationData->pNotify->MessageID = 0;
+                RegistrationData->pNotify->LastError = ERROR_SUCCESS;
             }
 
             if (RegistrationData->Registered < RegistrationData->DllCount)
@@ -2091,8 +2064,9 @@ RegistrationNotificationProc(PVOID Context,
                 RegistrationData->Registered++;
             }
 
-            RegistrationNotify.Progress = RegistrationData->Registered;
-            SendMessage(RegistrationData->hwndDlg, PM_STEP_END, 0, (LPARAM)&RegistrationNotify);
+            RegistrationData->pNotify->Progress = RegistrationData->Registered;
+            DPRINT("RegisterDll: End step %ld\n", RegistrationData->pNotify->Progress);
+            SendMessage(RegistrationData->hwndDlg, PM_STEP_END, 0, (LPARAM)RegistrationData->pNotify);
         }
 
         return FILEOP_DOIT;
@@ -2109,13 +2083,14 @@ RegistrationNotificationProc(PVOID Context,
 static
 DWORD
 RegisterDlls(
-    PITEMSDATA pItemsData)
+    _In_ PITEMSDATA pItemsData,
+    _In_ PREGISTRATIONNOTIFY pNotify)
 {
     REGISTRATIONDATA RegistrationData;
     WCHAR SectionName[512];
     INFCONTEXT Context;
     LONG DllCount = 0;
-    DWORD LastError = NO_ERROR;
+    DWORD Error = NO_ERROR;
 
     ZeroMemory(&RegistrationData, sizeof(REGISTRATIONDATA));
     RegistrationData.hwndDlg = pItemsData->hwndDlg;
@@ -2125,7 +2100,7 @@ RegisterDlls(
                              L"RegisterDlls", &Context))
     {
         DPRINT1("No RegistrationPhase2 section found\n");
-        return FALSE;
+        return GetLastError();
     }
 
     if (!SetupGetStringFieldW(&Context, 1, SectionName,
@@ -2133,21 +2108,19 @@ RegisterDlls(
                               NULL))
     {
         DPRINT1("Unable to retrieve section name\n");
-        return FALSE;
+        return GetLastError();
     }
 
     DllCount = SetupGetLineCountW(hSysSetupInf, SectionName);
-    DPRINT1("SectionName %S DllCount %ld\n", SectionName, DllCount);
+    DPRINT("SectionName %S DllCount %ld\n", SectionName, DllCount);
     if (DllCount < 0)
     {
-        SetLastError(STATUS_NOT_FOUND);
-        return FALSE;
+        return STATUS_NOT_FOUND;
     }
 
     RegistrationData.DllCount = (ULONG)DllCount;
     RegistrationData.DefaultContext = SetupInitDefaultQueueCallback(RegistrationData.hwndDlg);
-
-    SendMessage(pItemsData->hwndDlg, PM_ITEM_START, 0, (LPARAM)RegistrationData.DllCount);
+    RegistrationData.pNotify = pNotify;
 
     _SEH2_TRY
     {
@@ -2163,21 +2136,66 @@ RegisterDlls(
                                          NULL,
                                          NULL))
         {
-            LastError = GetLastError();
+            Error = GetLastError();
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         DPRINT("Catching exception\n");
-        LastError = RtlNtStatusToDosError(_SEH2_GetExceptionCode());
+        Error = RtlNtStatusToDosError(_SEH2_GetExceptionCode());
     }
     _SEH2_END;
 
     SetupTermDefaultQueueCallback(RegistrationData.DefaultContext);
 
-    SendMessage(pItemsData->hwndDlg, PM_ITEM_END, 0, LastError);
+    return Error;
+}
 
-    return 0;
+static
+VOID
+RegisterComponents(
+    PITEMSDATA pItemsData)
+{
+    WCHAR SectionName[512];
+    INFCONTEXT Context;
+    LONG Steps = 0;
+    DWORD Error = NO_ERROR;
+    REGISTRATIONNOTIFY Notify;
+
+    ZeroMemory(&Notify, sizeof(Notify));
+
+    /* Count the 'RegisterDlls' steps */
+    if (!SetupFindFirstLineW(hSysSetupInf, L"RegistrationPhase2",
+                             L"RegisterDlls", &Context))
+    {
+        DPRINT1("No RegistrationPhase2 section found\n");
+        return;
+    }
+
+    if (!SetupGetStringFieldW(&Context, 1, SectionName,
+                              ARRAYSIZE(SectionName),
+                              NULL))
+    {
+        DPRINT1("Unable to retrieve section name\n");
+        return;
+    }
+
+    Steps += SetupGetLineCountW(hSysSetupInf, SectionName);
+
+    /* Count the 'TypeLibratries' steps */
+    Steps += SetupGetLineCountW(hSysSetupInf, L"TypeLibraries");
+
+    /* Start the item */
+    DPRINT("Register Components: %ld Steps\n", Steps);
+    SendMessage(pItemsData->hwndDlg, PM_ITEM_START, 0, (LPARAM)Steps);
+
+    Error = RegisterDlls(pItemsData, &Notify);
+    if (Error == ERROR_SUCCESS)
+        RegisterTypeLibraries(pItemsData, &Notify, hSysSetupInf, L"TypeLibraries");
+
+    /* End the item */
+    DPRINT("Register Components: done\n");
+    SendMessage(pItemsData->hwndDlg, PM_ITEM_END, 0, Error);
 }
 
 
@@ -2193,9 +2211,11 @@ ItemCompletionThread(
     pItemsData = (PITEMSDATA)Parameter;
     hwndDlg = pItemsData->hwndDlg;
 
-    RegisterDlls(pItemsData);
+    /* Step 0 - Registering components */
+    RegisterComponents(pItemsData);
 
-    RegisterTypeLibraries(hSysSetupInf, L"TypeLibraries");
+    /* Step 1 - Installing start menu items */
+    InstallStartMenuItems(pItemsData);
 
     /* FIXME: Add completion steps here! */
 
@@ -2345,7 +2365,6 @@ ProcessPageDlgProc(HWND hwndDlg,
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)SetupData);
-            ShowWindow(GetDlgItem(hwndDlg, IDC_TASKTEXT2), SW_HIDE);
             ShowWindow(GetDlgItem(hwndDlg, IDC_TASKTEXT3), SW_HIDE);
             ShowWindow(GetDlgItem(hwndDlg, IDC_TASKTEXT4), SW_HIDE);
             break;
@@ -2354,12 +2373,15 @@ ProcessPageDlgProc(HWND hwndDlg,
             switch (((LPNMHDR)lParam)->code)
             {
                 case PSN_SETACTIVE:
+                    LogItem(L"BEGIN", L"ProcessPage");
+
                     /* Disable the Back and Next buttons */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
                     RunItemCompletionThread(hwndDlg);
                     break;
 
                 case PSN_WIZNEXT:
+                    LogItem(L"END", L"ProcessPage");
                     break;
 
                 case PSN_WIZBACK:

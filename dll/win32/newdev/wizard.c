@@ -545,9 +545,9 @@ WelcomeDlgProc(
                     if (SendDlgItemMessage(hwndDlg, IDC_RADIO_AUTO, BM_GETCHECK, (WPARAM)0, (LPARAM)0) == BST_CHECKED)
                     {
                         if (PrepareFoldersToScan(DevInstData, TRUE, FALSE, NULL))
-                            PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_SEARCHDRV);
+                            SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_SEARCHDRV);
                         else
-                            PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_INSTALLFAILED);
+                            SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_INSTALLFAILED);
                     }
                     return TRUE;
 
@@ -759,11 +759,11 @@ CHSourceDlgProc(
                             IsDlgButtonChecked(hwndDlg, IDC_CHECK_PATH),
                             GetDlgItem(hwndDlg, IDC_COMBO_PATH)))
                         {
-                            PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_SEARCHDRV);
+                            SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_SEARCHDRV);
                         }
                         else
                         {
-                            PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_INSTALLFAILED);
+                            SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_INSTALLFAILED);
                         }
                     }
                     else
@@ -1059,7 +1059,7 @@ NoDriverDlgProc(
                     hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
                     ShowWindow(hwndControl, SW_SHOW);
                     EnableWindow(hwndControl, TRUE);
-                    PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_CHSOURCE);
+                    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, IDD_CHSOURCE);
                     return TRUE;
 
                 case PSN_WIZFINISH:

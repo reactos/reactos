@@ -2108,10 +2108,11 @@ IopQueryNameInternal(IN PVOID ObjectBody,
                 _SEH2_LEAVE;
             }
 
-            /* In such case, zero output */
+            /* In such case, zero the output and reset the status */
             LocalReturnLength = FIELD_OFFSET(FILE_NAME_INFORMATION, FileName);
             LocalFileInfo->FileNameLength = 0;
             LocalFileInfo->FileName[0] = OBJ_NAME_PATH_SEPARATOR;
+            Status = STATUS_SUCCESS;
         }
         else
         {

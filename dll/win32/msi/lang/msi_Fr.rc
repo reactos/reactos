@@ -32,6 +32,14 @@ STRINGTABLE
     13 "lecteur réseau pour la fonctionnalité manquante"
     14 "fonctionnalité depuis :"
     15 "sélectionnez le dossier contenant %s"
+#ifdef __REACTOS__
+    34 "Package ReactOS Installer"
+    35 "ReactOS Installer Patch"
+    36 "Installer" //FIXME: add accel
+    37 "Réparer" //FIXME: add accel
+    38 "Désinstaller" //FIXME: add accel
+    39 "&Apply"
+#endif
     100 "New Folder"
 }
 

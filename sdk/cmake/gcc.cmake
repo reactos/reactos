@@ -50,10 +50,64 @@ add_compile_options(-mlong-double-64)
 add_compile_options("$<$<NOT:$<COMPILE_LANGUAGE:CXX>>:-nostdinc>")
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    add_compile_options("-Wno-unknown-pragmas")
     add_compile_options(-fno-aggressive-loop-optimizations)
     if (DBG)
         add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wold-style-declaration>")
     endif()
+
+    # Disable all math intrinsics. The reason is that these are implicitly declared
+    # extern by GCC, which causes inline functions to generate global symbols.
+    # And since GCC is retarded, these symbols are not marked as weak, so they
+    # conflict with each other in multiple compilation units.
+    add_compile_options(-fno-builtin-acosf)
+    add_compile_options(-fno-builtin-acosl)
+    add_compile_options(-fno-builtin-asinf)
+    add_compile_options(-fno-builtin-asinl)
+    add_compile_options(-fno-builtin-atan2f)
+    add_compile_options(-fno-builtin-atan2l)
+    add_compile_options(-fno-builtin-atanf)
+    add_compile_options(-fno-builtin-atanl)
+    add_compile_options(-fno-builtin-ceilf)
+    add_compile_options(-fno-builtin-ceill)
+    add_compile_options(-fno-builtin-coshf)
+    add_compile_options(-fno-builtin-coshl)
+    add_compile_options(-fno-builtin-cosf)
+    add_compile_options(-fno-builtin-cosl)
+    add_compile_options(-fno-builtin-expf)
+    add_compile_options(-fno-builtin-expl)
+    add_compile_options(-fno-builtin-fabsf)
+    add_compile_options(-fno-builtin-fabsl)
+    add_compile_options(-fno-builtin-floorf)
+    add_compile_options(-fno-builtin-floorl)
+    add_compile_options(-fno-builtin-fmodf)
+    add_compile_options(-fno-builtin-fmodl)
+    add_compile_options(-fno-builtin-frexpf)
+    add_compile_options(-fno-builtin-frexpl)
+    add_compile_options(-fno-builtin-hypotf)
+    add_compile_options(-fno-builtin-hypotl)
+    add_compile_options(-fno-builtin-ldexpf)
+    add_compile_options(-fno-builtin-ldexpl)
+    add_compile_options(-fno-builtin-logf)
+    add_compile_options(-fno-builtin-logl)
+    add_compile_options(-fno-builtin-log10f)
+    add_compile_options(-fno-builtin-log10l)
+    add_compile_options(-fno-builtin-modff)
+    add_compile_options(-fno-builtin-modfl)
+    add_compile_options(-fno-builtin-powf)
+    add_compile_options(-fno-builtin-powl)
+    add_compile_options(-fno-builtin-sinhf)
+    add_compile_options(-fno-builtin-sinhl)
+    add_compile_options(-fno-builtin-sinf)
+    add_compile_options(-fno-builtin-sinl)
+    add_compile_options(-fno-builtin-sqrtf)
+    add_compile_options(-fno-builtin-sqrtl)
+    add_compile_options(-fno-builtin-tanhf)
+    add_compile_options(-fno-builtin-tanhl)
+    add_compile_options(-fno-builtin-tanf)
+    add_compile_options(-fno-builtin-tanl)
+    add_compile_options(-fno-builtin-feraiseexcept)
+    add_compile_options(-fno-builtin-feupdateenv)
 
     if(CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 11)
         add_compile_options(-fno-builtin-ceil)
@@ -114,22 +168,22 @@ add_compile_options(-march=${OARCH} -mtune=${TUNE})
 # Warnings, errors
 if((NOT CMAKE_BUILD_TYPE STREQUAL "Release") AND (NOT CMAKE_C_COMPILER_ID STREQUAL Clang))
     add_compile_options(-Werror)
-else()
-    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-        add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Werror=unknown-warning-option>)
-    endif()
 endif()
 
 add_compile_options(-Wall -Wpointer-arith)
-add_compile_options(-Wno-char-subscripts -Wno-multichar -Wno-unused-value)
-add_compile_options(-Wno-unused-const-variable)
-add_compile_options(-Wno-unused-local-typedefs)
-add_compile_options(-Wno-deprecated)
-add_compile_options(-Wno-unused-result) # FIXME To be removed when CORE-17637 is resolved
 
-if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    add_compile_options(-Wno-maybe-uninitialized)
-endif()
+# Disable some overzealous warnings
+add_compile_options(
+    -Wno-unknown-warning-option
+    -Wno-char-subscripts
+    -Wno-multichar
+    -Wno-unused-value
+    -Wno-unused-const-variable
+    -Wno-unused-local-typedefs
+    -Wno-deprecated
+    -Wno-unused-result # FIXME To be removed when CORE-17637 is resolved
+    -Wno-maybe-uninitialized
+)
 
 if(ARCH STREQUAL "amd64")
     add_compile_options(-Wno-format)
@@ -140,7 +194,9 @@ endif()
 # Optimizations
 # FIXME: Revisit this to see if we even need these levels
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_options(-O2 -DNDEBUG)
+    add_compile_options(-O2 -DNDEBUG=)
+    add_compile_options(-Wno-unused-variable)
+    add_compile_options(-Wno-unused-but-set-variable)
 else()
     if(OPTIMIZE STREQUAL "1")
         add_compile_options(-Os)
@@ -194,6 +250,9 @@ endif()
 
 # Fix build with GLIBCXX + our c++ headers
 add_definitions(-D_GLIBCXX_HAVE_BROKEN_VSWPRINTF)
+
+# Fix build with UCRT headers
+add_definitions(-D_CRT_SUPPRESS_RESTRICT)
 
 # Alternative arch name
 if(ARCH STREQUAL "amd64")
@@ -370,11 +429,16 @@ function(fixup_load_config _target)
         DEPENDS native-pefixup)
 endfunction()
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR
+   CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    set(__spec2def_dbg_arg "--dbg")
+endif()
+
 function(generate_import_lib _libname _dllname _spec_file __version_arg)
     # Generate the def for the import lib
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def
-        COMMAND native-spec2def ${__version_arg} -n=${_dllname} -a=${ARCH2} ${ARGN} --implib -d=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def ${__version_arg} ${__spec2def_dbg_arg} -n=${_dllname} -a=${ARCH2} ${ARGN} --implib -d=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     # With this, we let DLLTOOL create an import library
@@ -447,7 +511,7 @@ function(spec2def _dllname _spec_file)
     # Generate exports def and C stubs file for the DLL
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${__spec2def_dbg_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     # Do not use precompiled headers for the stub file
@@ -572,8 +636,8 @@ add_library(libgcc STATIC IMPORTED)
 execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libgcc.a OUTPUT_VARIABLE LIBGCC_LOCATION)
 string(STRIP ${LIBGCC_LOCATION} LIBGCC_LOCATION)
 set_target_properties(libgcc PROPERTIES IMPORTED_LOCATION ${LIBGCC_LOCATION})
-# libgcc needs kernel32 imports, winpthread, a CRT and msvcrtex
-target_link_libraries(libgcc INTERFACE libwinpthread libkernel32 libmsvcrt msvcrtex)
+# libgcc needs kernel32 and winpthread (an appropriate CRT must be linked manually)
+target_link_libraries(libgcc INTERFACE libwinpthread libkernel32)
 
 add_library(libsupc++ STATIC IMPORTED GLOBAL)
 execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libsupc++.a OUTPUT_VARIABLE LIBSUPCXX_LOCATION)
@@ -594,11 +658,10 @@ execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libstdc++.a OUTPUT_VA
 string(STRIP ${LIBSTDCCXX_LOCATION} LIBSTDCCXX_LOCATION)
 set_target_properties(libstdc++ PROPERTIES IMPORTED_LOCATION ${LIBSTDCCXX_LOCATION})
 # libstdc++ requires libsupc++ and mingwex provided by GCC
-target_link_libraries(libstdc++ INTERFACE libsupc++ libmingwex)
+target_link_libraries(libstdc++ INTERFACE libsupc++ libmingwex oldnames)
 # this is for our SAL annotations
 target_compile_definitions(libstdc++ INTERFACE "$<$<COMPILE_LANGUAGE:CXX>:PAL_STDCPP_COMPAT>")
 
 # Create our alias libraries
 add_library(cppstl ALIAS libstdc++)
-add_library(cpprt ALIAS libsupc++)
 

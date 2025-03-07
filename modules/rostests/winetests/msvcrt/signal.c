@@ -67,10 +67,10 @@ static void test___pxcptinfoptrs(void)
 
     signal(SIGABRT, sighandler);
     res = raise(SIGABRT);
-    ok(res == 0, "failed to raise SIGBREAK\n");
+    skip_2k3_fail ok(res == 0, "failed to raise SIGBREAK\n");
     ok(*ret == (void*)0xdeadbeef, "*ret = %p\n", *ret);
 
-    ok(test_value == 2, "test_value = %d\n", test_value);
+    skip_2k3_fail ok(test_value == 2, "test_value = %d\n", test_value);
 }
 
 START_TEST(signal)

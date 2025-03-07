@@ -1,0 +1,21 @@
+/*
+ * PROJECT:     ReactOS CabView Shell Extension
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     German (Germany) resource file
+ * TRANSLATOR:  Copyright 2018 Robert Naumann <gonzomdx@gmail.com>
+ */
+
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_COL_NAME    "Name"
+    IDS_COL_TYPE    "Dateityp"
+    IDS_COL_SIZE    "Größe"
+    IDS_COL_MDATE   "Änderungsdatum"
+    IDS_COL_PATH    "Path"
+    IDS_COL_ATT     "Attributes"
+
+    IDS_EXTRACT     "Extract..."
+    IDS_EXTRACTALL  "Extract &All..."
+END

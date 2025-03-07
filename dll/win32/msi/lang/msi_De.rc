@@ -32,6 +32,14 @@ STRINGTABLE
     13 "Das Netzwerklaufwerk für das Feature fehlt."
     14 "Feature von:"
     15 "Wählen Sie das Verzeichnis aus, dass %s enthält."
+#ifdef __REACTOS__
+    34 "ReactOS Installer Package"
+    35 "ReactOS Installer Patch"
+    36 "&Install"
+    37 "Re&pair"
+    38 "&Uninstall"
+    39 "&Apply"
+#endif
     100 "New Folder"
 }
 

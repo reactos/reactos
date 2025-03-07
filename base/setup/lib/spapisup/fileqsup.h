@@ -51,7 +51,7 @@
 #define FILEOP_NEWPATH                  4
 
 
-/* TYPES ********************************************************************/
+/* TYPES *********************************************************************/
 
 typedef PVOID HSPFILEQ;
 
@@ -72,20 +72,16 @@ typedef UINT (CALLBACK* PSP_FILE_CALLBACK_W)(
 #endif
 
 
-/* FUNCTIONS ****************************************************************/
+/* FUNCTIONS *****************************************************************/
 
 // #define SetupOpenFileQueue
 typedef HSPFILEQ
 (WINAPI* pSpFileQueueOpen)(VOID);
 
-extern pSpFileQueueOpen SpFileQueueOpen;
-
 // #define SetupCloseFileQueue
 typedef BOOL
 (WINAPI* pSpFileQueueClose)(
     IN HSPFILEQ QueueHandle);
-
-extern pSpFileQueueClose SpFileQueueClose;
 
 // #define SetupQueueCopyW
 typedef BOOL
@@ -101,16 +97,12 @@ typedef BOOL
     IN PCWSTR TargetFileName OPTIONAL,
     IN ULONG CopyStyle);
 
-extern pSpFileQueueCopy SpFileQueueCopy;
-
 // #define SetupQueueDeleteW
 typedef BOOL
 (WINAPI* pSpFileQueueDelete)(
     IN HSPFILEQ QueueHandle,
     IN PCWSTR PathPart1,
     IN PCWSTR PathPart2 OPTIONAL);
-
-extern pSpFileQueueDelete SpFileQueueDelete;
 
 // #define SetupQueueRenameW
 typedef BOOL
@@ -121,8 +113,6 @@ typedef BOOL
     IN PCWSTR TargetPath OPTIONAL,
     IN PCWSTR TargetFileName);
 
-extern pSpFileQueueRename SpFileQueueRename;
-
 // #define SetupCommitFileQueueW
 typedef BOOL
 (WINAPI* pSpFileQueueCommit)(
@@ -131,6 +121,23 @@ typedef BOOL
     IN PSP_FILE_CALLBACK_W MsgHandler,
     IN PVOID Context OPTIONAL);
 
-extern pSpFileQueueCommit SpFileQueueCommit;
+typedef struct _SPFILE_EXPORTS
+{
+    pSpFileQueueOpen   SpFileQueueOpen;
+    pSpFileQueueClose  SpFileQueueClose;
+    pSpFileQueueCopy   SpFileQueueCopy;
+    pSpFileQueueDelete SpFileQueueDelete;
+    pSpFileQueueRename SpFileQueueRename;
+    pSpFileQueueCommit SpFileQueueCommit;
+} SPFILE_EXPORTS, *PSPFILE_EXPORTS;
+
+extern /*SPLIBAPI*/ SPFILE_EXPORTS SpFileExports;
+
+#define SpFileQueueOpen     (SpFileExports.SpFileQueueOpen)
+#define SpFileQueueClose    (SpFileExports.SpFileQueueClose)
+#define SpFileQueueCopy     (SpFileExports.SpFileQueueCopy)
+#define SpFileQueueDelete   (SpFileExports.SpFileQueueDelete)
+#define SpFileQueueRename   (SpFileExports.SpFileQueueRename)
+#define SpFileQueueCommit   (SpFileExports.SpFileQueueCommit)
 
 /* EOF */

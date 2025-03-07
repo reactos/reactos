@@ -16,8 +16,18 @@ CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "歡迎使用 ReactOS 安裝程式精靈", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "您目前不能直接從這個 CD 安裝 ReactOS！\n請重新開機並從 CD 啟動您的電腦以安裝 ReactOS。", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "按［完成］退出安裝程式。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "This wizard will install or upgrade ReactOS on your computer, \
+and prepare the second part of the setup.", IDC_STATIC, 115, 40, 195, 27
+////
+    GROUPBOX " IMPORTANT INFORMATION ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
+    LTEXT "ReactOS is in Alpha stage: it is not feature- complete and is \
+under heavy development. It is recommended to use it only for \
+evaluation and testing and not as your daily-usage OS.\n\
+It may corrupt your data or damage your hardware.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
+    LTEXT "Backup your data or test on a secondary computer \
+if you attempt to run ReactOS on real hardware.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+////
+    LTEXT "按［下一步］繼續安裝程式。", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
@@ -25,11 +35,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
-    AUTORADIOBUTTON "安裝 ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "安裝 ReactOS 的新副本。這個選項不會儲存您的檔案、設定和程式。您可以對磁碟和磁碟區進行更改。", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
-    AUTORADIOBUTTON "修復或更新已安裝的 ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "更新或修復已安裝的 ReactOS 副本。這個選項會儲存您的檔案、設定及程式。只有在 ReactOS 已經安裝在此電腦時才可使用這個選項。", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
-    LTEXT "按［下一步］繼續安裝。", IDC_STATIC, 7, 128, 297, 8
+    AUTORADIOBUTTON "安裝 ReactOS(&I)", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
+    LTEXT "安裝 ReactOS 的新副本。這個選項不會儲存您的檔案、設定和程式。您可以對磁碟和磁碟區進行更改。", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "修復或更新 ReactOS(&U)", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "更新或修復已安裝的 ReactOS 副本。這個選項會儲存您的檔案、設定及程式。只有在 ReactOS 已經安裝在此電腦時才可使用這個選項。", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
@@ -168,22 +177,25 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TYPETITLE "ReactOS 安裝程式"
-    IDS_TYPESUBTITLE "選擇安裝類型。"
-    IDS_DEVICETITLE "設定基本裝置。"
+    IDS_CAPTION "ReactOS 安裝程式"
+    IDS_TYPETITLE "Installation Type"
+    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
+    IDS_UPDATETITLE "Update or Repair ReactOS"
+    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
+    IDS_DEVICETITLE "設定基本裝置"
     IDS_DEVICESUBTITLE "指定顯示和鍵盤設定。"
     IDS_DRIVETITLE "設定安裝磁碟區和系統資料夾"
     IDS_DRIVESUBTITLE "設定安裝磁碟區，系統資料夾和載入程式。"
-    IDS_PROCESSTITLE "設定磁碟區，複製檔案並安裝系統"
-    IDS_PROCESSSUBTITLE "建立並格式化磁碟區，複製檔案，安裝並設定載入程式"
-    IDS_RESTARTTITLE "第一階段安裝完成"
-    IDS_RESTARTSUBTITLE "第一階段安裝已經完成，重新啟動進行第二階段安裝"
     IDS_SUMMARYTITLE "安裝概要"
-    IDS_SUMMARYSUBTITLE "安裝前列出安裝屬性以供檢查"
+    IDS_SUMMARYSUBTITLE "安裝前列出安裝屬性以供檢查。"
+    IDS_PROCESSTITLE "設定磁碟區，複製檔案並安裝系統"
+    IDS_PROCESSSUBTITLE "建立並格式化磁碟區，複製檔案，安裝並設定載入程式。"
+    IDS_RESTARTTITLE "第一階段安裝完成"
+    IDS_RESTARTSUBTITLE "第一階段安裝已經完成，重新啟動進行第二階段安裝。"
     IDS_ABORTSETUP "ReactOS 尚未完全安裝到您的電腦上。如果您現在結束安裝程式，您需要重新執行安裝程式來安裝 ReactOS。您確定要結束嗎？"
     IDS_ABORTSETUP2 "終止安裝？"
     IDS_NO_TXTSETUP_SIF "找不到「txtsetup.sif」。\n安裝程式無法繼續。"
-    IDS_CAPTION "ReactOS 安裝程式"
+    IDS_INSTALLBTN "&Install"
     IDS_VOLUME_NOFORMAT "Not formatted"
 END
 
@@ -226,12 +238,16 @@ BEGIN
     IDS_RENAMING "Renaming %s to %s"
     IDS_DELETING "Deleting %s"
 
+    IDS_CONFIG_SYSTEM_PARTITION "Configuring the system partition..."
     IDS_PREPARE_PARTITIONS "Preparing partitions..."
     IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
     IDS_COPYING_FILES "Copying the files..."
 
     IDS_CREATE_REGISTRY "Creating the registry..."
     IDS_UPDATE_REGISTRY "Updating the registry..."
+
+    // IDS_INSTALL_FINALIZE "Finalizing the installation..."
+    IDS_INSTALL_BOOTLOADER "Installing the bootloader..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.
@@ -288,4 +304,11 @@ the Setup program cannot install ReactOS.\
 \nClick on CANCEL to quit Setup."
 
     IDS_ERROR_CHECKING_PARTITION "ChkDsk detected some disk errors.\n(Status 0x%08lx)."
+
+    IDS_ERROR_WRITE_BOOT "Setup failed to install the %s bootcode on the system partition."
+    IDS_ERROR_INSTALL_BOOTCODE "Setup failed to install the %s bootcode on the boot disk."
+    IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "Setup failed to install the bootcode on the removable media."
+    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "Setup does not currently support installing the bootloader on the computer you are using.\
+\nClick on OK to continue anyway."
+    IDS_ERROR_BOOTLDR_FAILED "Setup could not install the bootloader (Status 0x%08lx)."
 END

@@ -91,13 +91,7 @@ CFolderItemVerbs::~CFolderItemVerbs()
 
 HRESULT CFolderItemVerbs::Init(LPITEMIDLIST idlist)
 {
-    CComPtr<IShellFolder> folder;
-    LPCITEMIDLIST child;
-    HRESULT hr = SHBindToParent(idlist, IID_PPV_ARG(IShellFolder, &folder), &child);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    hr = folder->GetUIObjectOf(NULL, 1, &child, IID_IContextMenu, NULL, (PVOID*)&m_contextmenu);
+    HRESULT hr = SHELL_GetUIObjectOfAbsoluteItem(NULL, idlist, IID_PPV_ARG(IContextMenu, &m_contextmenu));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

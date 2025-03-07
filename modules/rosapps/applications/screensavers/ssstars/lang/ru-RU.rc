@@ -41,7 +41,7 @@ END
 
 // String Tables
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION         "Звёздное поле"
     IDS_ROTATION_NONE       "Отсутствует"

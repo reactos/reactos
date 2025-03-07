@@ -1,3 +1,14 @@
+/*
+ * PROJECT:     ReactOS Compatibility Layer Shell Extension
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     German resource file
+ * TRANSLATORS: Copyright 2005 Klemens Friedl <frik85@gmail.com>
+ *              Copyright 2013 Daniel Reimer <reimer.daniel@freenet.de>
+ *              Copyright 2014 Zehnvor <sixlivezehn@googlemail.com>
+ *              Copyright 2017 Robert Naumann <gonzomdx@gmail.com>
+ *              Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
+ */
+
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDD_ACPPAGESHEET DIALOGEX 0, 0, 224, 226
@@ -30,8 +41,8 @@ BEGIN
     PUSHBUTTON      "<",IDC_REMOVE,144,60,18,14,WS_DISABLED
     PUSHBUTTON      "&OK",IDOK,174,114,60,14
     PUSHBUTTON      "&Abbrechen",IDCANCEL,240,114,60,14
-    LTEXT           "Available modes",-1,6,6,52,8
-    LTEXT           "Selected modes",-1,168,6,51,8
+    LTEXT           "Verfügbare Modi",-1,6,6,53,8
+    LTEXT           "Ausgewählte Modi",-1,168,6,58,8
 END
 
 STRINGTABLE

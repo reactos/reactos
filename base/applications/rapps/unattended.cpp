@@ -191,7 +191,7 @@ HandleUninstallCommand(CAppDB &db, UINT argcLeft, LPWSTR *argvLeft)
 
     if (pInfo)
     {
-        retval = pInfo->UninstallApplication(silent ? UCF_SILENT : UCF_NONE);
+        retval = pInfo->UninstallApplication((silent ? UCF_SILENT : UCF_NONE) | UCF_SAMEPROCESS);
     }
     delete pDelete;
     return retval;
@@ -338,6 +338,7 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     BOOL bAppwizMode = (argc > 1 && MatchCmdOption(argv[1], CMD_KEY_APPWIZ));
     if (!bAppwizMode)
     {
+        CUpdateDatabaseMutex lock;
         if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
             db.RemoveCached();
 
@@ -350,7 +351,7 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     {
         // Check whether the RAPPS MainWindow is already launched in another process
         CStringW szWindowText(MAKEINTRESOURCEW(bAppwizMode ? IDS_APPWIZ_TITLE : IDS_APPTITLE));
-        LPCWSTR pszMutex = bAppwizMode ? L"RAPPWIZ" : szWindowClass;
+        LPCWSTR pszMutex = bAppwizMode ? L"RAPPWIZ" : MAINWINDOWMUTEX;
 
         HANDLE hMutex = CreateMutexW(NULL, FALSE, pszMutex);
         if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
@@ -367,7 +368,7 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
             if (hWindow)
             {
                 /* Activate the window in the other instance */
-                ShowWindow(hWindow, SW_SHOW);
+                ShowWindow(hWindow, SW_SHOWNA);
                 SwitchToThisWindow(hWindow, TRUE);
                 if (bAppwizMode)
                     PostMessage(hWindow, WM_COMMAND, ID_ACTIVATE_APPWIZ, 0);

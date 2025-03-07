@@ -19,17 +19,16 @@
 #include <ntstrsafe.h>
 #include <compat_undoc.h>
 
-#define NDEBUG
-#include <debug.h>
-
 #include <wine/unicode.h>
 #include "wine/exception.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(actctx);
 
 #define GetProcessHeap() RtlGetProcessHeap()
 #define GetCurrentProcess() NtCurrentProcess()
-#define FIXME DPRINT1
-#define WARN DPRINT1
-#define TRACE DPRINT
+#define DPRINT1 FIXME
+#define DPRINT TRACE
 #define FILE_END_OF_FILE_INFORMATION FILE_STANDARD_INFORMATION
 #define FileEndOfFileInformation FileStandardInformation
 #define RELATIVE_PATH RtlPathTypeRelative
@@ -37,6 +36,8 @@
 #define ARRAY_SIZE(a) (sizeof(a)/sizeof((a)[0]))
 #define wcsnicmp _wcsnicmp
 #define swprintf _snwprintf
+#define wcsicmp _wcsicmp
+extern LPCSTR debugstr_us( const UNICODE_STRING *str ) DECLSPEC_HIDDEN;
 
 #undef RT_MANIFEST
 #undef CREATEPROCESS_MANIFEST_RESOURCE_ID
@@ -59,10 +60,7 @@ BOOLEAN RtlpNotAllowingMultipleActivation;
 #define STRSECTION_MAGIC   0x64487353 /* dHsS */
 #define GUIDSECTION_MAGIC  0x64487347 /* dHsG */
 
-#define ACTCTX_MAGIC_MARKER (PVOID)'gMcA'
-
 #define ACTCTX_FAKE_HANDLE ((HANDLE) 0xf00baa)
-#define ACTCTX_FAKE_COOKIE ((ULONG_PTR) 0xf00bad)
 
 /* we don't want to include winuser.h */
 #define RT_MANIFEST                        ((ULONG_PTR)24)
@@ -568,8 +566,9 @@ typedef struct _ASSEMBLY_STORAGE_MAP
 
 typedef struct _ACTIVATION_CONTEXT
 {
+    ULONG               magic;
+    LONG                ref_count;
 #ifdef __REACTOS__
-    LONG RefCount;
     ULONG Flags;
     LIST_ENTRY Links;
     PACTIVATION_CONTEXT_DATA ActivationContextData;
@@ -581,9 +580,6 @@ typedef struct _ACTIVATION_CONTEXT
     PASSEMBLY_STORAGE_MAP_ENTRY InlineStorageMapEntries;
     ULONG StackTraceIndex;
     PVOID StackTraces[4][4];
-#else
-    ULONG               magic;
-    int                 ref_count;
 #endif // __REACTOS__
     struct file_info    config;
     struct file_info    appdir;
@@ -599,7 +595,7 @@ typedef struct _ACTIVATION_CONTEXT
     struct guidsection_header *comserver_section;
     struct guidsection_header *ifaceps_section;
     struct guidsection_header *clrsurrogate_section;
-} ACTIVATION_CONTEXT, *PIACTIVATION_CONTEXT;
+} ACTIVATION_CONTEXT;
 
 struct actctx_loader
 {
@@ -626,63 +622,6 @@ static const WCHAR current_archW[] = {'n','o','n','e',0};
 static const WCHAR asmv1W[] = {'u','r','n',':','s','c','h','e','m','a','s','-','m','i','c','r','o','s','o','f','t','-','c','o','m',':','a','s','m','.','v','1',0};
 static const WCHAR asmv2W[] = {'u','r','n',':','s','c','h','e','m','a','s','-','m','i','c','r','o','s','o','f','t','-','c','o','m',':','a','s','m','.','v','2',0};
 static const WCHAR asmv3W[] = {'u','r','n',':','s','c','h','e','m','a','s','-','m','i','c','r','o','s','o','f','t','-','c','o','m',':','a','s','m','.','v','3',0};
-
-#ifdef __REACTOS__
-typedef struct _ACTIVATION_CONTEXT_WRAPPED
-{
-    PVOID MagicMarker;
-    ACTIVATION_CONTEXT ActivationContext;
-} ACTIVATION_CONTEXT_WRAPPED, *PACTIVATION_CONTEXT_WRAPPED;
-
-VOID
-NTAPI
-RtlpSxsBreakOnInvalidMarker(IN PACTIVATION_CONTEXT ActCtx,
-                            IN ULONG FailureCode)
-{
-    EXCEPTION_RECORD ExceptionRecord;
-
-    /* Fatal SxS exception header */
-    ExceptionRecord.ExceptionRecord = NULL;
-    ExceptionRecord.ExceptionCode = STATUS_SXS_CORRUPTION;
-    ExceptionRecord.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
-
-    /* With SxS-specific information plus the context itself */
-    ExceptionRecord.ExceptionInformation[0] = 1;
-    ExceptionRecord.ExceptionInformation[1] = FailureCode;
-    ExceptionRecord.ExceptionInformation[2] = (ULONG_PTR)ActCtx;
-    ExceptionRecord.NumberParameters = 3;
-
-    /* Raise it */
-    RtlRaiseException(&ExceptionRecord);
-}
-
-FORCEINLINE
-VOID
-RtlpValidateActCtx(IN PACTIVATION_CONTEXT ActCtx)
-{
-    PACTIVATION_CONTEXT_WRAPPED pActual;
-
-    /* Get the caller-opaque header */
-    pActual = CONTAINING_RECORD(ActCtx,
-                                ACTIVATION_CONTEXT_WRAPPED,
-                                ActivationContext);
-
-    /* Check if the header matches as expected */
-    if (pActual->MagicMarker != ACTCTX_MAGIC_MARKER)
-    {
-        /* Nope, print out a warning, assert, and then throw an exception */
-        DbgPrint("%s : Invalid activation context marker %p found in activation context %p\n"
-                 "     This means someone stepped on the allocation, or someone is using a\n"
-                 "     deallocated activation context\n",
-                 __FUNCTION__,
-                 pActual->MagicMarker,
-                 ActCtx);
-        ASSERT(pActual->MagicMarker == ACTCTX_MAGIC_MARKER);
-        RtlpSxsBreakOnInvalidMarker(ActCtx, 1);
-    }
-}
-#endif // __REACTOS__
-
 static const WCHAR assemblyW[] = {'a','s','s','e','m','b','l','y',0};
 static const WCHAR assemblyIdentityW[] = {'a','s','s','e','m','b','l','y','I','d','e','n','t','i','t','y',0};
 static const WCHAR bindingRedirectW[] = {'b','i','n','d','i','n','g','R','e','d','i','r','e','c','t',0};
@@ -827,9 +766,9 @@ static const WCHAR dotManifestW[] = {'.','m','a','n','i','f','e','s','t',0};
 static const WCHAR version_formatW[] = {'%','u','.','%','u','.','%','u','.','%','u',0};
 static const WCHAR wildcardW[] = {'*',0};
 
-static ACTIVATION_CONTEXT_WRAPPED system_actctx = { ACTCTX_MAGIC_MARKER, { 1 } };
-static ACTIVATION_CONTEXT *process_actctx = &system_actctx.ActivationContext;
-static ACTIVATION_CONTEXT *implicit_actctx = &system_actctx.ActivationContext;
+static ACTIVATION_CONTEXT system_actctx = { ACTCTX_MAGIC, 1 };
+static ACTIVATION_CONTEXT *process_actctx = &system_actctx;
+static ACTIVATION_CONTEXT *implicit_actctx = &system_actctx;
 
 static WCHAR *strdupW(const WCHAR* str)
 {
@@ -896,17 +835,27 @@ static inline BOOL isxmlspace( WCHAR ch )
     return (ch == ' ' || ch == '\r' || ch == '\n' || ch == '\t');
 }
 
-#ifndef __REACTOS__
 static inline const char* debugstr_xmlstr(const xmlstr_t* str)
 {
     return debugstr_wn(str->ptr, str->len);
+}
+
+static inline const char *debugstr_xml_elem( const struct xml_elem *elem )
+{
+    return wine_dbg_sprintf( "%s ns %s", debugstr_wn( elem->name.ptr, elem->name.len ),
+                             debugstr_wn( elem->ns.ptr, elem->ns.len ));
+}
+
+static inline const char *debugstr_xml_attr( const struct xml_attr *attr )
+{
+    return wine_dbg_sprintf( "%s=%s", debugstr_wn( attr->name.ptr, attr->name.len ),
+                             debugstr_wn( attr->value.ptr, attr->value.len ));
 }
 
 static inline const char* debugstr_version(const struct assembly_version *ver)
 {
     return wine_dbg_sprintf("%u.%u.%u.%u", ver->major, ver->minor, ver->build, ver->revision);
 }
-#endif // !__REACTOS__
 
 static NTSTATUS get_module_filename( HMODULE module, UNICODE_STRING *str, unsigned int extra_len )
 {
@@ -1129,8 +1078,8 @@ static BOOL add_dependent_assembly_id(struct actctx_loader* acl,
     for (i = 0; i < acl->actctx->num_assemblies; i++)
         if (is_matching_identity( ai, &acl->actctx->assemblies[i].id ))
         {
-            TRACE( "reusing existing assembly for %S arch %S version %u.%u.%u.%u\n",
-                   ai->name, ai->arch, ai->version.major, ai->version.minor,
+            TRACE( "reusing existing assembly for %s arch %s version %u.%u.%u.%u\n",
+                   debugstr_w(ai->name), debugstr_w(ai->arch), ai->version.major, ai->version.minor,
                    ai->version.build, ai->version.revision );
             return TRUE;
         }
@@ -1138,8 +1087,8 @@ static BOOL add_dependent_assembly_id(struct actctx_loader* acl,
     for (i = 0; i < acl->num_dependencies; i++)
         if (is_matching_identity( ai, &acl->dependencies[i] ))
         {
-            TRACE( "reusing existing dependency for %S arch %S version %u.%u.%u.%u\n",
-                   ai->name, ai->arch, ai->version.major, ai->version.minor,
+            TRACE( "reusing existing dependency for %s arch %s version %u.%u.%u.%u\n",
+                   debugstr_w(ai->name), debugstr_w(ai->arch), ai->version.major, ai->version.minor,
                    ai->version.build, ai->version.revision );
             return TRUE;
         }
@@ -1258,16 +1207,11 @@ static WCHAR *build_assembly_id( const struct assembly_identity *ai )
 static ACTIVATION_CONTEXT *check_actctx( HANDLE h )
 {
     ACTIVATION_CONTEXT *ret = NULL, *actctx = h;
-    PACTIVATION_CONTEXT_WRAPPED pActual;
 
     if (!h || h == INVALID_HANDLE_VALUE) return NULL;
     __TRY
     {
-        if (actctx)
-        {
-            pActual = CONTAINING_RECORD(actctx, ACTIVATION_CONTEXT_WRAPPED, ActivationContext);
-            if (pActual->MagicMarker == ACTCTX_MAGIC_MARKER) ret = &pActual->ActivationContext;
-        }
+        if (actctx->magic == ACTCTX_MAGIC) ret = actctx;
     }
     __EXCEPT_PAGE_FAULT
     {
@@ -1279,14 +1223,12 @@ static ACTIVATION_CONTEXT *check_actctx( HANDLE h )
 
 static inline void actctx_addref( ACTIVATION_CONTEXT *actctx )
 {
-    InterlockedExchangeAdd( &actctx->RefCount, 1 );
+    InterlockedIncrement( &actctx->ref_count );
 }
 
 static void actctx_release( ACTIVATION_CONTEXT *actctx )
 {
-    PACTIVATION_CONTEXT_WRAPPED pActual;
-
-    if (InterlockedExchangeAdd(&actctx->RefCount, -1) == 1)
+    if (!InterlockedDecrement( &actctx->ref_count ))
     {
         unsigned int i, j;
 
@@ -1317,10 +1259,8 @@ static void actctx_release( ACTIVATION_CONTEXT *actctx )
         RtlFreeHeap( GetProcessHeap(), 0, actctx->ifaceps_section );
         RtlFreeHeap( GetProcessHeap(), 0, actctx->clrsurrogate_section );
         RtlFreeHeap( GetProcessHeap(), 0, actctx->progid_section );
-
-        pActual = CONTAINING_RECORD(actctx, ACTIVATION_CONTEXT_WRAPPED, ActivationContext);
-        pActual->MagicMarker = 0;
-        RtlFreeHeap(GetProcessHeap(), 0, pActual);
+        actctx->magic = 0;
+        RtlFreeHeap( GetProcessHeap(), 0, actctx );
     }
 }
 
@@ -1345,7 +1285,7 @@ static void push_xmlns( xmlbuf_t *xmlbuf, const struct xml_attr *attr )
 
     if (xmlbuf->ns_pos == MAX_NAMESPACES - 1)
     {
-        // FIXME( "too many namespaces in manifest\n" );
+        FIXME( "too many namespaces in manifest\n" );
         set_error( xmlbuf );
         return;
     }
@@ -1369,7 +1309,7 @@ static xmlstr_t find_xmlns( xmlbuf_t *xmlbuf, const xmlstr_t *name )
             !wcsncmp( xmlbuf->namespaces[i].name.ptr, name->ptr, name->len ))
             return xmlbuf->namespaces[i].value;
     }
-
+    if (xmlbuf->ns_pos) WARN( "namespace %s not found\n", debugstr_xmlstr( name ));
     return empty_xmlstr;
 }
 
@@ -1506,8 +1446,8 @@ static BOOL next_xml_elem( xmlbuf_t *xmlbuf, struct xml_elem *elem, const struct
         elem->ns = find_xmlns( xmlbuf, &elem->ns );
         if (!xml_name_cmp( elem, parent ))
         {
-            /*ERR( "wrong closing element %s for %s\n",
-                 debugstr_xmlstr(&elem->name), debugstr_xmlstr(&parent->name ));*/
+            ERR( "wrong closing element %s for %s\n",
+                 debugstr_xmlstr(&elem->name), debugstr_xmlstr(&parent->name ));
             return set_error( xmlbuf );
         }
         while (xmlbuf->ptr < xmlbuf->end && isxmlspace(*xmlbuf->ptr)) xmlbuf->ptr++;
@@ -1591,6 +1531,7 @@ static BOOL parse_version(const xmlstr_t *str, struct assembly_version *version)
     return TRUE;
 
 error:
+    FIXME( "Wrong version definition in manifest file (%s)\n", debugstr_xmlstr(str) );
     return FALSE;
 }
 
@@ -1600,8 +1541,7 @@ static void parse_expect_no_attr(xmlbuf_t* xmlbuf, BOOL* end)
 
     while (next_xml_attr(xmlbuf, &attr, end))
     {
-        // TODO: report error
-        // if (!is_xmlns_attr( &attr )) WARN("unexpected attr %s\n", debugstr_xml_attr(&attr));
+        if (!is_xmlns_attr( &attr )) WARN("unexpected attr %s\n", debugstr_xml_attr(&attr));
     }
 }
 
@@ -1611,7 +1551,7 @@ static void parse_expect_end_elem( xmlbuf_t *xmlbuf, const struct xml_elem *pare
 
     if (next_xml_elem(xmlbuf, &elem, parent))
     {
-        // FIXME( "unexpected element %s\n", debugstr_xml_elem(&elem) );
+        FIXME( "unexpected element %s\n", debugstr_xml_elem(&elem) );
         set_error( xmlbuf );
     }
 }
@@ -1661,7 +1601,14 @@ static void parse_assembly_identity_elem(xmlbuf_t *xmlbuf, ACTIVATION_CONTEXT *a
         {
             if (!(ai->language = xmlstrdupW(&attr.value))) set_error( xmlbuf );
         }
+        else if (!is_xmlns_attr( &attr ))
+        {
+            WARN("unknown attr %s\n", debugstr_xml_attr(&attr));
+        }
     }
+
+    TRACE( "name=%s version=%s arch=%s\n",
+           debugstr_w(ai->name), debugstr_version(&ai->version), debugstr_w(ai->arch) );
 
     if (!end) parse_expect_end_elem(xmlbuf, parent);
 }
@@ -1709,7 +1656,7 @@ static OLEMISC get_olemisc_value(const WCHAR *str, int len)
             min = n+1;
     }
 
-    WARN("unknown flag %S\n", str);
+    WARN("unknown flag %s\n", debugstr_wn(str, len));
     return 0;
 }
 
@@ -1829,6 +1776,10 @@ static void parse_com_class_elem( xmlbuf_t *xmlbuf, struct dll_redirect *dll, st
         {
             /* not stored */
         }
+        else if (!is_xmlns_attr( &attr ))
+        {
+            WARN("unknown attr %s\n", debugstr_xml_attr(&attr));
+        }
     }
 
     acl->actctx->sections |= SERVERREDIRECT_SECTION;
@@ -1845,6 +1796,7 @@ static void parse_com_class_elem( xmlbuf_t *xmlbuf, struct dll_redirect *dll, st
         }
         else
         {
+            WARN("unknown elem %s\n", debugstr_xml_elem(&elem));
             parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -1864,7 +1816,7 @@ static BOOL parse_nummethods(const xmlstr_t *str, struct entity *entity)
             num = num * 10 + *curr - '0';
         else
         {
-            // ERR("wrong numeric value %wZ\n", &strU);
+            ERR("wrong numeric value %s\n", debugstr_xmlstr(str));
             return FALSE;
         }
     }
@@ -1948,6 +1900,7 @@ static void parse_cominterface_proxy_stub_elem( xmlbuf_t *xmlbuf, struct dll_red
         }
         else if (!is_xmlns_attr( &attr ))
         {
+            WARN("unknown attr %s\n", debugstr_xml_attr(&attr));
         }
     }
 
@@ -1983,7 +1936,7 @@ static BOOL parse_typelib_flags(const xmlstr_t *value, struct entity *entity)
             *flags |= LIBFLAG_FHASDISKIMAGE;
         else
         {
-            // WARN("unknown flags value %wZ\n", &valueU);
+            WARN("unknown flags value %s\n", debugstr_xmlstr(value));
             return FALSE;
         }
 
@@ -2021,6 +1974,7 @@ static BOOL parse_typelib_version(const xmlstr_t *str, struct entity *entity)
     return TRUE;
 
 error:
+    FIXME("wrong typelib version value (%s)\n", debugstr_xmlstr(str));
     return FALSE;
 }
 
@@ -2054,6 +2008,10 @@ static void parse_typelib_elem( xmlbuf_t *xmlbuf, struct dll_redirect *dll,
         else if (xml_attr_cmp(&attr, flagsW))
         {
             if (!parse_typelib_flags(&attr.value, entity)) set_error( xmlbuf );
+        }
+        else if (!is_xmlns_attr( &attr ))
+        {
+            WARN("unknown attr %s\n", debugstr_xml_attr(&attr));
         }
     }
 
@@ -2100,6 +2058,10 @@ static void parse_window_class_elem( xmlbuf_t *xmlbuf, struct dll_redirect *dll,
             else if (!xmlstr_cmpi(&attr.value, yesW))
                 set_error( xmlbuf );
         }
+        else if (!is_xmlns_attr( &attr ))
+        {
+            WARN("unknown attr %s\n", debugstr_xml_attr(&attr));
+        }
     }
 
     if (end) return;
@@ -2111,6 +2073,7 @@ static void parse_window_class_elem( xmlbuf_t *xmlbuf, struct dll_redirect *dll,
 
     while (next_xml_elem(xmlbuf, &elem, parent))
     {
+        WARN("unknown elem %s\n", debugstr_xml_elem(&elem));
         parse_unknown_elem(xmlbuf, &elem);
     }
 }
@@ -2124,11 +2087,15 @@ static void parse_binding_redirect_elem( xmlbuf_t *xmlbuf, const struct xml_elem
     {
         if (xml_attr_cmp(&attr, oldVersionW))
         {
-            // FIXME("Not stored yet %s\n", debugstr_xml_attr(&attr));
+            FIXME("Not stored yet %s\n", debugstr_xml_attr(&attr));
         }
         else if (xml_attr_cmp(&attr, newVersionW))
         {
-            // FIXME("Not stored yet %s\n", debugstr_xml_attr(&attr));
+            FIXME("Not stored yet %s\n", debugstr_xml_attr(&attr));
+        }
+        else if (!is_xmlns_attr( &attr ))
+        {
+            WARN("unknown attr %s\n", debugstr_xml_attr(&attr));
         }
     }
 
@@ -2142,13 +2109,19 @@ static void parse_description_elem( xmlbuf_t *xmlbuf, const struct xml_elem *par
     xmlstr_t content;
     BOOL end = FALSE;
 
-    while (next_xml_attr(xmlbuf, &attr, &end));
+    while (next_xml_attr(xmlbuf, &attr, &end))
+    {
+        if (!is_xmlns_attr( &attr )) WARN("unknown attr %s\n", debugstr_xml_attr(&attr));
+    }
 
     if (end) return;
     if (!parse_text_content(xmlbuf, &content)) return;
 
+    TRACE("Got description %s\n", debugstr_xmlstr(&content));
+
     while (next_xml_elem(xmlbuf, &elem, parent))
     {
+        WARN("unknown elem %s\n", debugstr_xml_elem(&elem));
         parse_unknown_elem(xmlbuf, &elem);
     }
 }
@@ -2195,6 +2168,10 @@ static void parse_com_interface_external_proxy_stub_elem(xmlbuf_t *xmlbuf,
         else if (xml_attr_cmp(&attr, tlbidW))
         {
             if (!(entity->u.ifaceps.tlib = xmlstrdupW(&attr.value))) set_error( xmlbuf );
+        }
+        else if (!is_xmlns_attr( &attr ))
+        {
+            WARN("unknown attr %s\n", debugstr_xml_attr(&attr));
         }
     }
 
@@ -2243,6 +2220,10 @@ static void parse_clr_class_elem( xmlbuf_t* xmlbuf, struct assembly* assembly,
         {
             if (!(entity->u.comclass.version = xmlstrdupW(&attr.value))) set_error( xmlbuf );
         }
+        else if (!is_xmlns_attr( &attr ))
+        {
+            WARN("unknown attr %s\n", debugstr_xml_attr(&attr));
+        }
     }
 
     acl->actctx->sections |= SERVERREDIRECT_SECTION;
@@ -2258,6 +2239,7 @@ static void parse_clr_class_elem( xmlbuf_t* xmlbuf, struct assembly* assembly,
         }
         else
         {
+            WARN("unknown elem %s\n", debugstr_xml_elem(&elem));
             parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -2293,6 +2275,10 @@ static void parse_clr_surrogate_elem( xmlbuf_t *xmlbuf, struct assembly *assembl
         {
             if (!(entity->u.clrsurrogate.version = xmlstrdupW(&attr.value))) set_error( xmlbuf );
         }
+        else if (!is_xmlns_attr( &attr ))
+        {
+            WARN("unknown attr %s\n", debugstr_xml_attr(&attr));
+        }
     }
 
     acl->actctx->sections |= CLRSURROGATES_SECTION;
@@ -2317,6 +2303,8 @@ static void parse_dependent_assembly_elem( xmlbuf_t *xmlbuf, struct actctx_loade
 
         if (xml_attr_cmp(&attr, allowDelayedBindingW))
             ai.delayed = xmlstr_cmp(&attr.value, trueW);
+        else if (!is_xmlns_attr( &attr ))
+            WARN("unknown attr %s\n", debugstr_xml_attr(&attr));
     }
 
     if (end) return;
@@ -2332,6 +2320,8 @@ static void parse_dependent_assembly_elem( xmlbuf_t *xmlbuf, struct actctx_loade
                 RtlFreeHeap( GetProcessHeap(), 0, ai.arch );
                 ai.arch = strdupW( current_archW );
             }
+            TRACE( "adding name=%s version=%s arch=%s\n",
+                   debugstr_w(ai.name), debugstr_version(&ai.version), debugstr_w(ai.arch) );
             if (!add_dependent_assembly_id(acl, &ai)) set_error( xmlbuf );
         }
         else if (xml_elem_cmp(&elem, bindingRedirectW, asmv1W))
@@ -2340,6 +2330,7 @@ static void parse_dependent_assembly_elem( xmlbuf_t *xmlbuf, struct actctx_loade
         }
         else
         {
+            WARN("unknown elem %s\n", debugstr_xml_elem(&elem));
             parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -2358,6 +2349,11 @@ static void parse_dependency_elem( xmlbuf_t *xmlbuf, struct actctx_loader *acl,
         if (xml_attr_cmp(&attr, optionalW))
         {
             optional = xmlstr_cmpi( &attr.value, yesW );
+            TRACE("optional=%s\n", debugstr_xmlstr(&attr.value));
+        }
+        else if (!is_xmlns_attr( &attr ))
+        {
+            WARN("unknown attr %s\n", debugstr_xml_attr(&attr));
         }
     }
 
@@ -2369,6 +2365,7 @@ static void parse_dependency_elem( xmlbuf_t *xmlbuf, struct actctx_loader *acl,
         }
         else
         {
+            WARN("unknown element %s\n", debugstr_xml_elem(&elem));
             parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -2409,6 +2406,7 @@ static void parse_file_elem( xmlbuf_t* xmlbuf, struct assembly* assembly,
         if (xml_attr_cmp(&attr, g_nameW))
         {
             if (!(dll->name = xmlstrdupW(&attr.value))) set_error( xmlbuf );
+            TRACE("name=%s\n", debugstr_xmlstr(&attr.value));
         }
         else if (xml_attr_cmp(&attr, hashW))
         {
@@ -2417,9 +2415,12 @@ static void parse_file_elem( xmlbuf_t* xmlbuf, struct assembly* assembly,
         else if (xml_attr_cmp(&attr, hashalgW))
         {
             static const WCHAR sha1W[] = {'S','H','A','1',0};
-            if (!xmlstr_cmpi(&attr.value, sha1W)) {
-                //FIXME("hashalg should be SHA1, got %s\n", debugstr_xmlstr(&attr.value));
-            }
+            if (!xmlstr_cmpi(&attr.value, sha1W))
+                FIXME("hashalg should be SHA1, got %s\n", debugstr_xmlstr(&attr.value));
+        }
+        else if (!is_xmlns_attr( &attr ))
+        {
+            WARN("unknown attr %s\n", debugstr_xml_attr(&attr));
         }
     }
 
@@ -2441,6 +2442,7 @@ static void parse_file_elem( xmlbuf_t* xmlbuf, struct assembly* assembly,
         }
         else if (xml_elem_cmp(&elem, hashW, asmv2W))
         {
+            WARN("asmv2:hash (undocumented) not supported\n");
             parse_unknown_elem(xmlbuf, &elem);
         }
         else if (xml_elem_cmp(&elem, typelibW, asmv1W))
@@ -2453,6 +2455,7 @@ static void parse_file_elem( xmlbuf_t* xmlbuf, struct assembly* assembly,
         }
         else
         {
+            WARN("unknown elem %s\n", debugstr_xml_elem(&elem));
             parse_unknown_elem( xmlbuf, &elem );
         }
     }
@@ -2484,6 +2487,14 @@ static void parse_supportedos_elem( xmlbuf_t *xmlbuf, struct assembly *assembly,
                 compat->Type = ACTCTX_COMPATIBILITY_ELEMENT_TYPE_OS;
                 compat->Id = compat_id;
             }
+            else
+            {
+                WARN("Invalid guid %s\n", debugstr_xmlstr(&attr.value));
+            }
+        }
+        else if (!is_xmlns_attr( &attr ))
+        {
+            WARN("unknown attr %s\n", debugstr_xml_attr(&attr));
         }
     }
 
@@ -2503,6 +2514,7 @@ static void parse_compatibility_application_elem(xmlbuf_t *xmlbuf, struct assemb
         }
         else
         {
+            WARN("unknown elem %s\n", debugstr_xml_elem(&elem));
             parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -2521,6 +2533,7 @@ static void parse_compatibility_elem(xmlbuf_t *xmlbuf, struct assembly *assembly
         }
         else
         {
+            WARN("unknown elem %s\n", debugstr_xml_elem(&elem));
             parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -2537,11 +2550,13 @@ static void parse_settings_elem( xmlbuf_t *xmlbuf, struct assembly *assembly, st
 
     while (next_xml_attr( xmlbuf, &attr, &end ))
     {
+        if (!is_xmlns_attr( &attr )) WARN( "unknown attr %s\n", debugstr_xml_attr(&attr) );
     }
 
     if (end) return;
 
     if (!parse_text_content( xmlbuf, &content )) return;
+    TRACE( "got %s %s\n", debugstr_xmlstr(&parent->name), debugstr_xmlstr(&content) );
 
     entity = add_entity( &assembly->entities, ACTIVATION_CONTEXT_SECTION_APPLICATION_SETTINGS );
     if (!entity)
@@ -2555,6 +2570,7 @@ static void parse_settings_elem( xmlbuf_t *xmlbuf, struct assembly *assembly, st
 
     while (next_xml_elem(xmlbuf, &elem, parent))
     {
+        WARN( "unknown elem %s\n", debugstr_xml_elem(&elem) );
         parse_unknown_elem( xmlbuf, &elem );
     }
 }
@@ -2582,6 +2598,7 @@ static void parse_windows_settings_elem( xmlbuf_t *xmlbuf, struct assembly *asse
         }
         else
         {
+            WARN( "unknown elem %s\n", debugstr_xml_elem(&elem) );
             parse_unknown_elem( xmlbuf, &elem );
         }
     }
@@ -2600,6 +2617,7 @@ static void parse_application_elem( xmlbuf_t *xmlbuf, struct assembly *assembly,
         }
         else
         {
+            WARN( "unknown elem %s\n", debugstr_xml_elem(&elem) );
             parse_unknown_elem( xmlbuf, &elem );
         }
     }
@@ -2633,6 +2651,8 @@ static void parse_requested_execution_level_elem( xmlbuf_t *xmlbuf, struct assem
                 assembly->run_level = ACTCTX_RUN_LEVEL_HIGHEST_AVAILABLE;
             else if (xmlstr_cmpi(&attr.value, requireAdministratorW))
                 assembly->run_level = ACTCTX_RUN_LEVEL_REQUIRE_ADMIN;
+            else
+                FIXME("unknown execution level: %s\n", debugstr_xmlstr(&attr.value));
         }
         else if (xml_attr_cmp(&attr, uiAccessW))
         {
@@ -2640,13 +2660,18 @@ static void parse_requested_execution_level_elem( xmlbuf_t *xmlbuf, struct assem
                 assembly->ui_access = FALSE;
             else if (xmlstr_cmpi(&attr.value, trueW))
                 assembly->ui_access = TRUE;
+            else
+                FIXME("unknown uiAccess value: %s\n", debugstr_xmlstr(&attr.value));
         }
+        else if (!is_xmlns_attr( &attr ))
+            WARN("unknown attr %s\n", debugstr_xml_attr(&attr));
     }
 
     if (end) return;
 
     while (next_xml_elem(xmlbuf, &elem, parent))
     {
+        WARN("unknown element %s\n", debugstr_xml_elem(&elem));
         parse_unknown_elem(xmlbuf, &elem);
     }
 }
@@ -2664,6 +2689,7 @@ static void parse_requested_privileges_elem( xmlbuf_t *xmlbuf, struct assembly *
         }
         else
         {
+            WARN("unknown elem %s\n", debugstr_xml_elem(&elem));
             parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -2682,6 +2708,7 @@ static void parse_security_elem( xmlbuf_t *xmlbuf, struct assembly *assembly,
         }
         else
         {
+            WARN("unknown elem %s\n", debugstr_xml_elem(&elem));
             parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -2700,6 +2727,7 @@ static void parse_trust_info_elem( xmlbuf_t *xmlbuf, struct assembly *assembly,
         }
         else
         {
+            WARN("unknown elem %s\n", debugstr_xml_elem(&elem));
             parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -2713,6 +2741,8 @@ static void parse_assembly_elem( xmlbuf_t *xmlbuf, struct assembly* assembly,
     struct xml_attr attr;
     BOOL end = FALSE, version = FALSE;
 
+    TRACE("(%p)\n", xmlbuf);
+
     while (next_xml_attr(xmlbuf, &attr, &end))
     {
         if (xml_attr_cmp(&attr, manifestVersionW))
@@ -2720,9 +2750,14 @@ static void parse_assembly_elem( xmlbuf_t *xmlbuf, struct assembly* assembly,
             static const WCHAR v10W[] = {'1','.','0',0};
             if (!xmlstr_cmp(&attr.value, v10W))
             {
+                FIXME("wrong version %s\n", debugstr_xmlstr(&attr.value));
                 break;
             }
             version = TRUE;
+        }
+        else if (!is_xmlns_attr( &attr ))
+        {
+            WARN("unknown attr %s\n", debugstr_xml_attr(&attr));
         }
     }
 
@@ -2781,6 +2816,11 @@ static void parse_assembly_elem( xmlbuf_t *xmlbuf, struct assembly* assembly,
                 if (assembly->type == ASSEMBLY_MANIFEST &&
                     memcmp(&assembly->id.version, &expected_ai->version, sizeof(assembly->id.version)))
                 {
+                    FIXME("wrong version for assembly manifest: %u.%u.%u.%u / %u.%u.%u.%u\n",
+                          expected_ai->version.major, expected_ai->version.minor,
+                          expected_ai->version.build, expected_ai->version.revision,
+                          assembly->id.version.major, assembly->id.version.minor,
+                          assembly->id.version.build, assembly->id.version.revision);
                     set_error( xmlbuf );
                 }
                 else if (assembly->type == ASSEMBLY_SHARED_MANIFEST &&
@@ -2790,6 +2830,7 @@ static void parse_assembly_elem( xmlbuf_t *xmlbuf, struct assembly* assembly,
                           (assembly->id.version.build == expected_ai->version.build &&
                            assembly->id.version.revision < expected_ai->version.revision)))
                 {
+                    FIXME("wrong version for shared assembly manifest\n");
                     set_error( xmlbuf );
                 }
             }
@@ -2804,6 +2845,7 @@ static void parse_assembly_elem( xmlbuf_t *xmlbuf, struct assembly* assembly,
         }
         else
         {
+            WARN("unknown element %s\n", debugstr_xml_elem(&elem));
             parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -2832,22 +2874,26 @@ static NTSTATUS parse_manifest_buffer( struct actctx_loader* acl, struct assembl
 
     if (!xml_elem_cmp(&elem, assemblyW, asmv1W))
     {
+        FIXME("root element is %s, not <assembly>\n", debugstr_xml_elem(&elem));
         return STATUS_SXS_CANT_GEN_ACTCTX;
     }
 
     parse_assembly_elem(xmlbuf, assembly, acl, &elem, ai);
     if (xmlbuf->error)
     {
+        FIXME("failed to parse manifest %s\n", debugstr_w(assembly->manifest.info) );
         return STATUS_SXS_CANT_GEN_ACTCTX;
     }
 
     if (next_xml_elem(xmlbuf, &elem, &parent))
     {
+        FIXME("unexpected element %s\n", debugstr_xml_elem(&elem));
         return STATUS_SXS_CANT_GEN_ACTCTX;
     }
 
     if (xmlbuf->ptr != xmlbuf->end)
     {
+        FIXME("parse error\n");
         return STATUS_SXS_CANT_GEN_ACTCTX;
     }
     return STATUS_SUCCESS;
@@ -2862,7 +2908,7 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
     struct assembly *assembly;
     int unicode_tests;
 
-    TRACE( "parsing manifest loaded from %S base dir %S\n", filename, directory );
+    TRACE( "parsing manifest loaded from %s base dir %s\n", debugstr_w(filename), debugstr_w(directory) );
 
     if (!(assembly = add_assembly(acl->actctx, shared ? ASSEMBLY_SHARED_MANIFEST : ASSEMBLY_MANIFEST)))
         return STATUS_SXS_CANT_GEN_ACTCTX;
@@ -3088,7 +3134,7 @@ static NTSTATUS get_manifest_in_pe_file( struct actctx_loader* acl, struct assem
         resptr = resnameBuf;
     }
 
-    TRACE( "looking for res %S in %S\n", resptr, filename ? filename : L"<NULL>");
+    DPRINT( "looking for res %S in %S\n", resptr, filename ? filename : L"<NULL>");
 
     attr.Length                   = sizeof(attr);
     attr.RootDirectory            = 0;
@@ -3137,7 +3183,7 @@ static NTSTATUS get_manifest_in_manifest_file( struct actctx_loader* acl, struct
     SIZE_T              count;
     void               *base;
 
-    TRACE( "loading manifest file %S\n", filename );
+    TRACE( "loading manifest file %s\n", debugstr_w(filename) );
 
     attr.Length                   = sizeof(attr);
     attr.RootDirectory            = 0;
@@ -3180,7 +3226,7 @@ static NTSTATUS get_manifest_in_associated_manifest( struct actctx_loader* acl, 
 
     if (!((ULONG_PTR)resname >> 16)) resid = (ULONG_PTR)resname & 0xffff;
 
-    TRACE( "looking for manifest associated with %S id %lu\n", filename, resid );
+    TRACE( "looking for manifest associated with %s id %lu\n", debugstr_w(filename), resid );
 
     if (module) /* use the module filename */
     {
@@ -3294,7 +3340,7 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
             }
         }
     }
-    else WARN("no matching file for %S\n", lookup);
+    else WARN("no matching file for %s\n", debugstr_w(lookup));
     RtlFreeHeap( GetProcessHeap(), 0, lookup );
     return ret;
 }
@@ -3384,8 +3430,8 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
     HANDLE file;
     DWORD len;
 
-    TRACE( "looking for name=%S version=%u.%u.%u.%u arch=%S\n",
-            ai->name, ai->version.major, ai->version.minor, ai->version.build, ai->version.revision, ai->arch );
+    TRACE( "looking for name=%s version=%s arch=%s\n",
+           debugstr_w(ai->name), debugstr_version(&ai->version), debugstr_w(ai->arch) );
 
     if ((status = lookup_winsxs(acl, ai)) != STATUS_NO_SUCH_FILE) return status;
 
@@ -3473,10 +3519,9 @@ static NTSTATUS parse_depend_manifests(struct actctx_loader* acl)
         {
             if (!acl->dependencies[i].optional && !acl->dependencies[i].delayed)
             {
-                const struct assembly_version *ver = &acl->dependencies[i].version;
-                DPRINT1( "Could not find dependent assembly %S (%u.%u.%u.%u)\n",
-                    acl->dependencies[i].name,
-                    ver->major, ver->minor, ver->build, ver->revision );
+                FIXME( "Could not find dependent assembly %s (%s)\n",
+                    debugstr_w(acl->dependencies[i].name),
+                    debugstr_version(&acl->dependencies[i].version) );
                 status = STATUS_SXS_CANT_GEN_ACTCTX;
                 break;
             }
@@ -3636,7 +3681,7 @@ static struct string_index *find_string_index(const struct strsection_header *se
                 break;
             }
             else
-                WARN("hash collision 0x%08x, %wZ, %wZ\n", hash, name, &str);
+                WARN("hash collision 0x%08x, %s, %s\n", hash, debugstr_us(name), debugstr_w(g_nameW));
         }
         iter++;
     }
@@ -3900,7 +3945,7 @@ static NTSTATUS find_window_class(ACTIVATION_CONTEXT* actctx, const UNICODE_STRI
                 break;
             }
             else
-                WARN("hash collision 0x%08x, %wZ, %wZ\n", hash, name, &str);
+                WARN("hash collision 0x%08x, %s, %s\n", hash, debugstr_us(name), debugstr_w(g_nameW));
         }
         iter++;
     }
@@ -5146,12 +5191,10 @@ static const WCHAR *find_app_settings( ACTIVATION_CONTEXT *actctx, const WCHAR *
 }
 
 /* initialize the activation context for the current process */
-void actctx_init(PVOID* pOldShimData)
+void actctx_init(void)
 {
     ACTCTXW ctx;
     HANDLE handle;
-    WCHAR buffer[1024];
-    NTSTATUS Status;
 
     ctx.cbSize   = sizeof(ctx);
     ctx.lpSource = NULL;
@@ -5162,28 +5205,6 @@ void actctx_init(PVOID* pOldShimData)
     if (NT_SUCCESS(RtlCreateActivationContext(0, (PVOID)&ctx, 0, NULL, NULL, &handle)))
     {
         process_actctx = check_actctx(handle);
-    }
-
-    /* ReactOS specific:
-       Now that we have found the process_actctx we can initialize the process compat subsystem */
-    LdrpInitializeProcessCompat(process_actctx, pOldShimData);
-
-
-    ctx.dwFlags  = 0;
-    ctx.hModule  = NULL;
-    ctx.lpResourceName = NULL;
-    ctx.lpSource = buffer;
-    RtlStringCchCopyW(buffer, RTL_NUMBER_OF(buffer), SharedUserData->NtSystemRoot);
-    RtlStringCchCatW(buffer, RTL_NUMBER_OF(buffer), L"\\winsxs\\manifests\\systemcompatible.manifest");
-
-    Status = RtlCreateActivationContext(0, (PVOID)&ctx, 0, NULL, NULL, &handle);
-    if (NT_SUCCESS(Status))
-    {
-        implicit_actctx = check_actctx(handle);
-    }
-    else
-    {
-        DPRINT1("Failed to create the implicit act ctx. Status: 0x%x!!!\n", Status);
     }
 
 #ifdef __REACTOS__
@@ -5210,7 +5231,6 @@ RtlCreateActivationContext(IN ULONG Flags,
 {
     const ACTCTXW *pActCtx = (PVOID)ActivationContextData;
     const WCHAR *directory = NULL;
-    PACTIVATION_CONTEXT_WRAPPED ActualActCtx;
     ACTIVATION_CONTEXT *actctx;
     UNICODE_STRING nameW;
     ULONG lang = 0;
@@ -5225,13 +5245,11 @@ RtlCreateActivationContext(IN ULONG Flags,
         return STATUS_INVALID_PARAMETER;
 
 
-    if (!(ActualActCtx = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ActualActCtx))))
+    if (!(actctx = RtlAllocateHeap( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*actctx) )))
         return STATUS_NO_MEMORY;
 
-    ActualActCtx->MagicMarker = ACTCTX_MAGIC_MARKER;
-
-    actctx = &ActualActCtx->ActivationContext;
-    actctx->RefCount = 1;
+    actctx->magic = ACTCTX_MAGIC;
+    actctx->ref_count = 1;
     actctx->config.type = ACTIVATION_CONTEXT_PATH_TYPE_NONE;
     actctx->config.info = NULL;
     actctx->appdir.type = ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE;
@@ -5348,55 +5366,6 @@ error:
     return status;
 }
 
-#if 0
-#define ACT_CTX_VALID(p)    ((((ULONG_PTR)p - 1) | 7) != -1)
-
-VOID
-NTAPI
-RtlAddRefActivationContext(IN PACTIVATION_CONTEXT Handle)
-{
-    PIACTIVATION_CONTEXT ActCtx = (PIACTIVATION_CONTEXT)Handle;
-    LONG OldRefCount, NewRefCount;
-
-    if ((ActCtx) && (ACT_CTX_VALID(ActCtx)) && (ActCtx->RefCount != LONG_MAX))
-    {
-        RtlpValidateActCtx(ActCtx);
-
-        while (TRUE)
-        {
-            OldRefCount = ActCtx->RefCount;
-            ASSERT(OldRefCount > 0);
-
-            if (OldRefCount == LONG_MAX) break;
-
-            NewRefCount = OldRefCount + 1;
-            if (InterlockedCompareExchange(&ActCtx->RefCount,
-                                           NewRefCount,
-                                           OldRefCount) == OldRefCount)
-            {
-                break;
-            }
-        }
-
-        NewRefCount = LONG_MAX;
-        ASSERT(NewRefCount > 0);
-    }
-}
-
-VOID
-NTAPI
-RtlReleaseActivationContext( HANDLE handle )
-{
-    PIACTIVATION_CONTEXT ActCtx = (PIACTIVATION_CONTEXT) Handle;
-
-    if ((ActCtx) && (ACT_CTX_VALID(ActCtx)) && (ActCtx->RefCount != LONG_MAX))
-    {
-        RtlpValidateActCtx(ActCtx);
-
-        actctx_release(ActCtx);
-    }
-}
-#else
 
 /***********************************************************************
  *		RtlAddRefActivationContext (NTDLL.@)
@@ -5418,8 +5387,6 @@ void WINAPI RtlReleaseActivationContext( HANDLE handle )
 
     if ((actctx = check_actctx( handle ))) actctx_release( actctx );
 }
-
-#endif
 
 /******************************************************************
  *              RtlZombifyActivationContext (NTDLL.@)
@@ -5910,7 +5877,10 @@ NTSTATUS WINAPI RtlFindActivationContextSectionString( ULONG flags, const GUID *
     PACTCTX_SECTION_KEYED_DATA data = ptr;
     NTSTATUS status = STATUS_SXS_KEY_NOT_FOUND;
 
-    DPRINT("RtlFindActivationContextSectionString(%x %p %x %wZ %p)\n", flags, guid, section_kind, section_name, ptr);
+    TRACE("%08x %s %u %s %p\n", flags, debugstr_guid(guid), section_kind,
+          debugstr_us(section_name), data);
+
+#ifdef __REACTOS__
     status = RtlpFindActivationContextSection_CheckParameters(flags, guid, section_kind, section_name, data);
     if (!NT_SUCCESS(status))
     {
@@ -5927,6 +5897,24 @@ NTSTATUS WINAPI RtlFindActivationContextSectionString( ULONG flags, const GUID *
         DPRINT("RtlFindActivationContextSectionString() failed with status %x\n", status);
         return status;
     }
+#else
+    if (guid)
+    {
+        FIXME("expected guid == NULL\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+    if (flags & ~FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX)
+    {
+        FIXME("unknown flags %08x\n", flags);
+        return STATUS_INVALID_PARAMETER;
+    }
+    if ((data && data->cbSize < offsetof(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex)) ||
+        !section_name || !section_name->Buffer)
+    {
+        WARN("invalid parameter\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+#endif // __REACTOS__
 
     ASSERT(NtCurrentTeb());
     ASSERT(NtCurrentTeb()->ActivationContextStackPointer);
@@ -5960,6 +5948,8 @@ NTSTATUS WINAPI RtlFindActivationContextSectionGuid( ULONG flags, const GUID *ex
 {
     ACTCTX_SECTION_KEYED_DATA *data = ptr;
     NTSTATUS status = STATUS_SXS_KEY_NOT_FOUND;
+
+    TRACE("%08x %s %u %s %p\n", flags, debugstr_guid(extguid), section_kind, debugstr_guid(guid), data);
 
     if (extguid)
     {
@@ -6191,4 +6181,44 @@ RtlDeactivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CON
     Frame->Frame.Flags |= RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_DEACTIVATED;
     return NewFrame->Previous;
 }
+
+NTSTATUS
+NTAPI
+RtlpInitializeActCtx(PVOID* pOldShimData)
+{
+    ACTCTXW ctx;
+    HANDLE handle;
+    WCHAR buffer[1024];
+    NTSTATUS Status;
+
+    /* Initialize trace flags to WARN and ERR */
+    __wine_dbch_actctx.flags = 0x03;
+
+    actctx_init();
+
+    /* ReactOS specific:
+       Now that we have found the process_actctx we can initialize the process compat subsystem */
+    LdrpInitializeProcessCompat(process_actctx, pOldShimData);
+
+    ctx.cbSize   = sizeof(ctx);
+    ctx.dwFlags  = 0;
+    ctx.hModule  = NULL;
+    ctx.lpResourceName = NULL;
+    ctx.lpSource = buffer;
+    RtlStringCchCopyW(buffer, RTL_NUMBER_OF(buffer), SharedUserData->NtSystemRoot);
+    RtlStringCchCatW(buffer, RTL_NUMBER_OF(buffer), L"\\winsxs\\manifests\\systemcompatible.manifest");
+
+    Status = RtlCreateActivationContext(0, (PVOID)&ctx, 0, NULL, NULL, &handle);
+    if (NT_SUCCESS(Status))
+    {
+        implicit_actctx = check_actctx(handle);
+    }
+    else
+    {
+        DPRINT1("Failed to create the implicit act ctx. Status: 0x%x!!!\n", Status);
+    }
+
+    return Status;
+}
+
 #endif // __REACTOS__

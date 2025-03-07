@@ -92,7 +92,7 @@ static ULONG WINAPI PropertyStore_AddRef(IPropertyStoreCache *iface)
     PropertyStore *This = impl_from_IPropertyStoreCache(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) refcount=%u\n", iface, ref);
+    TRACE("(%p) refcount=%lu\n", iface, ref);
 
     return ref;
 }
@@ -113,7 +113,7 @@ static ULONG WINAPI PropertyStore_Release(IPropertyStoreCache *iface)
     PropertyStore *This = impl_from_IPropertyStoreCache(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) refcount=%u\n", iface, ref);
+    TRACE("(%p) refcount=%lu\n", iface, ref);
 
     if (ref == 0)
     {
@@ -159,7 +159,7 @@ static HRESULT WINAPI PropertyStore_GetAt(IPropertyStoreCache *iface,
     propstore_value *value;
     HRESULT hr;
 
-    TRACE("%p,%d,%p\n", iface, iProp, pkey);
+    TRACE("%p,%ld,%p\n", iface, iProp, pkey);
 
     if (!pkey)
         return E_POINTER;
@@ -464,7 +464,11 @@ HRESULT PropertyStore_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv
 
     This->IPropertyStoreCache_iface.lpVtbl = &PropertyStore_Vtbl;
     This->ref = 1;
+#ifdef __REACTOS__
     InitializeCriticalSection(&This->lock);
+#else
+    InitializeCriticalSectionEx(&This->lock, 0, RTL_CRITICAL_SECTION_FLAG_FORCE_DEBUG_INFO);
+#endif
     This->lock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": PropertyStore.lock");
     list_init(&This->formats);
 
@@ -472,4 +476,20 @@ HRESULT PropertyStore_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv
     IPropertyStoreCache_Release(&This->IPropertyStoreCache_iface);
 
     return ret;
+}
+
+HRESULT WINAPI PSCreatePropertyStoreFromObject(IUnknown *obj, DWORD access, REFIID riid, void **ret)
+{
+    HRESULT hr;
+
+    TRACE("(%p, %ld, %s, %p)\n", obj, access, debugstr_guid(riid), ret);
+
+    if (!obj || !ret)
+        return E_POINTER;
+
+    if (IsEqualIID(riid, &IID_IPropertyStore) && SUCCEEDED(hr = IUnknown_QueryInterface(obj, riid, ret)))
+        return hr;
+
+    FIXME("Unimplemented for %s.\n", debugstr_guid(riid));
+    return E_NOTIMPL;
 }

@@ -10,6 +10,14 @@ STRINGTABLE
     13 "機能があるネットワーク ドライブがありません"
     14 "機能の場所:"
     15 "%s のあるフォルダを選択してください"
+#ifdef __REACTOS__
+    34 "ReactOS インストーラ パッケージ"
+    35 "ReactOS Installer Patch"
+    36 "インストール" //FIXME: add accel
+    37 "修復" //FIXME: add accel
+    38 "アンインストール" //FIXME: add accel
+    39 "&Apply"
+#endif
     100 "New Folder"
 }
 

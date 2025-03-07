@@ -1,3 +1,14 @@
+/*
+ * PROJECT:     ReactOS Language Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     German resource file
+ * TRANSLATORS: Copyright 2007-2014 Daniel Reimer <reimer.daniel@freenet.de>
+ *              Copyright 2008 Colin Finck <colin@reactos.org>
+ *              Copyright 2008-2011 Matthias Kupfer <mkupfer@reactos.org>
+ *              Copyright 2010 Sven Knurr (tux.) <forenkrams@tuxproject.de>
+ *              Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
+ */
+
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDD_PROPPAGESETTINGS DIALOGEX 0, 0, 254, 228
@@ -5,10 +16,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Einstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Default input &language", -1, 5, 5, 246, 55
-    LTEXT "Select one of the installed input languages to use when your computer starts.", -1, 15, 15, 230, 23
+    GROUPBOX "&Standard-Eingabesprache", -1, 5, 5, 246, 55
+    LTEXT "Wählen Sie eine der installierten Eingabesprachen aus, die beim Start Ihres Computers verwendet werden soll.", -1, 15, 15, 230, 23
     COMBOBOX IDC_DEFAULT_LANGUAGE, 15, 40, 230, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX "&Installed services", -1, 5, 65, 246, 125
+    GROUPBOX "&Installierte Dienste", -1, 5, 65, 246, 125
     LTEXT "Wählen Sie die Dienste aus, die Sie für die Eingabesprachen in der Liste verwenden wollen. Verwenden Sie ""Hinzufügen"" und ""Entfernen"", um die Liste zu bearbeiten.", -1, 15, 78, 230, 25
     CONTROL "", IDC_KEYLAYOUT_LIST, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP | WS_BORDER | WS_VSCROLL | WS_TABSTOP, 15, 105, 155, 80
     PUSHBUTTON "&Hinzufügen...", IDC_ADD_BUTTON, 175, 105, 70, 14
@@ -110,7 +121,7 @@ BEGIN
     IDS_CTRL_SHIFT "Strg+Umschalt"
     IDS_LEFT_ALT_SHIFT "Alt links+Umschalt"
     IDS_SWITCH_BET_INLANG "Zwischen Eingabesprachen umschalten"
-    IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
+    IDS_REBOOT_NOW "Damit die Einstellungen wirksam werden, müssen Sie das System neu starten. Jetzt neu starten?"
 END
 
 STRINGTABLE

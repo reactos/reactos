@@ -17,11 +17,11 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include <reactos/manifest_dll.rc>
 
-/* UTF-8 */
-#pragma code_page(65001)
-
 IDI_NETWORK ICON "res/network.ico"
 IDI_INTERNET ICON "res/internet.ico"
+
+/* UTF-8 */
+#pragma code_page(65001)
 
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"

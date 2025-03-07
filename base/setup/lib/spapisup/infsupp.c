@@ -21,20 +21,7 @@
  * These externs should be defined by the user of this library.
  * They are kept there for reference and ease of usage.
  */
-#if 0
-
-pSpInfCloseInfFile  SpInfCloseInfFile  = NULL;
-pSpInfFindFirstLine SpInfFindFirstLine = NULL;
-pSpInfFindNextLine  SpInfFindNextLine  = NULL;
-pSpInfGetFieldCount SpInfGetFieldCount = NULL;
-pSpInfGetBinaryField  SpInfGetBinaryField  = NULL;
-pSpInfGetIntField     SpInfGetIntField     = NULL;
-pSpInfGetMultiSzField SpInfGetMultiSzField = NULL;
-pSpInfGetStringField  SpInfGetStringField  = NULL;
-pSpInfGetField    SpInfGetField    = NULL;
-pSpInfOpenInfFile SpInfOpenInfFile = NULL;
-
-#endif
+SPINF_EXPORTS SpInfExports = {NULL};
 
 /* HELPER FUNCTIONS **********************************************************/
 

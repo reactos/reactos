@@ -31,18 +31,21 @@ Path: dll/3rdparty/libjpeg
 Used Version: 9d
 License: custom, BSD-like
 URL: http://www.ijg.org/
+Modifications: added .spec file
 
 Title: libpng
 Path: dll/3rdparty/libpng
 Used Version: 1.6.39
 License: PNG Reference Library version 2
 URL: http://libpng.sourceforge.net/
+Modifications: added .spec file
 
 Title: libtiff
 Path: dll/3rdparty/libtiff
 Used Version: 4.1.0
 License: libtiff (https://spdx.org/licenses/libtiff.html)
 URL: http://www.simplesystems.org/libtiff/
+Modifications: added .spec file
 
 Title: Libxslt
 Path: dll/3rdparty/libxslt
@@ -211,7 +214,7 @@ URL: https://www.catch22.net/tuts/cards/cardlib/
 
 Title: lwIP - A Lightweight TCP/IP stack
 Path: drivers/network/tcpip/lwip
-Used Version: 1.4.1
+Used Version: 2.2.0
 License: Modified BSD License (drivers/network/tcpip/lwip/COPYING)
 URL: https://savannah.nongnu.org/projects/lwip/
 
@@ -295,3 +298,11 @@ Path: modules/rosapps/lib/vfdlib
 Used Version: 2.1.2008.206
 License: GPL-2.0 (https://spdx.org/licenses/GPL-2.0.html)
 URL: https://vfd.sourceforge.net/
+
+Title: libdxg - WDDM Headers
+Path: sdk/include/psdk/d3dukmdt.h
+Path: sdk/include/psdk/d3dkmdt.h
+Path: sdk/include/ddk/d3dkmthk.h
+Used Version: git commit 045831e
+License: MIT (https://spdx.org/licenses/MIT.html)
+URL: https://github.com/microsoft/libdxg

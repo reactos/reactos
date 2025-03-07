@@ -5,7 +5,7 @@ Matrrix2 screensaver for ReactOS
 Freeware
 Copyright J Brown 2003
 
-Updates at http://www.catch22.net
+Updates at https://www.catch22.net/
 
 ******************************************/
 

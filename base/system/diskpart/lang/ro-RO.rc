@@ -123,6 +123,8 @@ BEGIN
     IDS_SELECT_NO_DISK "\nMomentan nu există niciun disc selectat.\nSelectați un disc apoi reîncercați.\n\n"
     IDS_SELECT_DISK "\nDisul %lu este selectat acum.\n\n"
     IDS_SELECT_DISK_INVALID "\nDisc nevalid.\n\n"
+    IDS_SELECT_DISK_ENUM_NO_START "\nNo disk enumeration started yet.\n\nNo disk is currently selected.\n\n"
+    IDS_SELECT_DISK_ENUM_FINISHED "\nThe last disk has been enumerated.\n\nNo disk is currently selected.\n\n"
     IDS_SELECT_NO_PARTITION "\nMomentan nu există nicio partiție selectată.\nSelectați un disc apoi reîncercați.\n\n"
     IDS_SELECT_PARTITION "\nPartiția %lu este selectată acum.\n\n"
     IDS_SELECT_PARTITION_NO_DISK "\nNu există niciun disc pentru partiția selectată.\nSelectați un disc apoi reîncercați.\n\n"

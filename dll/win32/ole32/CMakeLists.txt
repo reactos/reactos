@@ -88,7 +88,7 @@ if(MSVC)
 endif()
 
 set_module_type(ole32 win32dll)
-target_link_libraries(ole32 wine uuid ${PSEH_LIB})
+target_link_libraries(ole32 wine uuid ${PSEH_LIB} oldnames)
 add_delay_importlibs(ole32 oleaut32)
 add_importlibs(ole32 advapi32 user32 gdi32 rpcrt4 msvcrt kernel32 kernel32_vista ntdll)
 add_dependencies(ole32 ole32idl)

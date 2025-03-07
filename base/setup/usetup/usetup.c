@@ -40,7 +40,6 @@
 /* GLOBALS & LOCALS *********************************************************/
 
 HANDLE ProcessHeap;
-BOOLEAN IsUnattendedSetup = FALSE;
 
 static USETUP_DATA USetupData;
 
@@ -104,22 +103,22 @@ DoWatchDestFileName(LPCWSTR FileName)
 {
     if (FileName[0] == 'm' || FileName[0] == 'M')
     {
-        if (wcsicmp(FileName, L"mingliu.ttc") == 0)
+        if (_wcsicmp(FileName, L"mingliu.ttc") == 0)
         {
             DPRINT("mingliu.ttc found\n");
             s_SubstSettings.bFoundFontMINGLIU = TRUE;
         }
-        else if (wcsicmp(FileName, L"msgothic.ttc") == 0)
+        else if (_wcsicmp(FileName, L"msgothic.ttc") == 0)
         {
             DPRINT("msgothic.ttc found\n");
             s_SubstSettings.bFoundFontMSGOTHIC = TRUE;
         }
-        else if (wcsicmp(FileName, L"msmincho.ttc") == 0)
+        else if (_wcsicmp(FileName, L"msmincho.ttc") == 0)
         {
             DPRINT("msmincho.ttc found\n");
             s_SubstSettings.bFoundFontMSMINCHO = TRUE;
         }
-        else if (wcsicmp(FileName, L"mssong.ttf") == 0)
+        else if (_wcsicmp(FileName, L"mssong.ttf") == 0)
         {
             DPRINT("mssong.ttf found\n");
             s_SubstSettings.bFoundFontMSSONG = TRUE;
@@ -127,17 +126,17 @@ DoWatchDestFileName(LPCWSTR FileName)
     }
     else
     {
-        if (wcsicmp(FileName, L"simsun.ttc") == 0)
+        if (_wcsicmp(FileName, L"simsun.ttc") == 0)
         {
             DPRINT("simsun.ttc found\n");
             s_SubstSettings.bFoundFontSIMSUN = TRUE;
         }
-        else if (wcsicmp(FileName, L"gulim.ttc") == 0)
+        else if (_wcsicmp(FileName, L"gulim.ttc") == 0)
         {
             DPRINT("gulim.ttc found\n");
             s_SubstSettings.bFoundFontGULIM = TRUE;
         }
-        else if (wcsicmp(FileName, L"batang.ttc") == 0)
+        else if (_wcsicmp(FileName, L"batang.ttc") == 0)
         {
             DPRINT("batang.ttc found\n");
             s_SubstSettings.bFoundFontBATANG = TRUE;
@@ -534,6 +533,28 @@ GetNTOSInstallationName(
 }
 
 
+// PSETUP_ERROR_ROUTINE
+static VOID
+__cdecl
+USetupErrorRoutine(
+    IN PUSETUP_DATA pSetupData,
+    ...)
+{
+    INPUT_RECORD Ir;
+    va_list arg_ptr;
+
+    va_start(arg_ptr, pSetupData);
+
+    if (pSetupData->LastErrorNumber >= ERROR_SUCCESS &&
+        pSetupData->LastErrorNumber <  ERROR_LAST_ERROR_CODE)
+    {
+        // Note: the "POPUP_WAIT_ENTER" actually depends on the LastErrorNumber...
+        MUIDisplayErrorV(pSetupData->LastErrorNumber, &Ir, POPUP_WAIT_ENTER, arg_ptr);
+    }
+
+    va_end(arg_ptr);
+}
+
 /*
  * Start page
  *
@@ -566,8 +587,9 @@ SetupStartPage(PINPUT_RECORD Ir)
 
     MUIDisplayPage(SETUP_INIT_PAGE);
 
-    /* Initialize Setup, phase 1 */
-    Error = InitializeSetup(&USetupData, 1);
+    /* Initialize Setup */
+    Error = InitializeSetup(&USetupData, USetupErrorRoutine,
+                            &SpFileExports, &SpInfExports);
     if (Error != ERROR_SUCCESS)
     {
         MUIDisplayError(Error, Ir, POPUP_WAIT_ENTER);
@@ -607,7 +629,7 @@ SetupStartPage(PINPUT_RECORD Ir)
              ListEntry = GetNextListEntry(ListEntry))
         {
             LocaleId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
-            if (!wcsicmp(USetupData.LocaleID, LocaleId))
+            if (!_wcsicmp(USetupData.LocaleID, LocaleId))
             {
                 DPRINT("found %S in LanguageList\n", LocaleId);
                 SetCurrentListEntry(USetupData.LanguageList, ListEntry);
@@ -620,7 +642,7 @@ SetupStartPage(PINPUT_RECORD Ir)
              ListEntry = GetNextListEntry(ListEntry))
         {
             LocaleId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
-            if (!wcsicmp(USetupData.LocaleID, LocaleId))
+            if (!_wcsicmp(USetupData.LocaleID, LocaleId))
             {
                 DPRINT("found %S in LayoutList\n", LocaleId);
                 SetCurrentListEntry(USetupData.LayoutList, ListEntry);
@@ -727,8 +749,7 @@ LanguagePage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-            else
-                RedrawGenericList(&ListUi);
+            RedrawGenericList(&ListUi);
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)  /* ENTER */
         {
@@ -818,7 +839,6 @@ WelcomePage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-
             break;
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
@@ -995,8 +1015,7 @@ UpgradeRepairPage(PINPUT_RECORD Ir)
             {
                 if (ConfirmQuit(Ir))
                     return QUIT_PAGE;
-                else
-                    RedrawGenericList(&ListUi);
+                RedrawGenericList(&ListUi);
                 break;
             }
 #if 1
@@ -1105,7 +1124,6 @@ InstallIntroPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-
             break;
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
@@ -1142,7 +1160,6 @@ ScsiControllerPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-
             break;
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
@@ -1174,7 +1191,6 @@ OemDriverPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-
             break;
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
@@ -1311,7 +1327,6 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-
             break;
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
@@ -1375,8 +1390,7 @@ HandleGenericList(PGENERIC_LIST_UI ListUi,
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-            else
-                RedrawGenericList(ListUi);
+            RedrawGenericList(ListUi);
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)  /* ESC */
         {
@@ -1501,23 +1515,20 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
 
 
 static BOOLEAN
-IsPartitionLargeEnough(
-    _In_ PPARTENTRY PartEntry)
+IsMediumLargeEnough(
+    _In_ ULONGLONG SizeInBytes)
 {
     /* Retrieve the maximum size in MB (rounded up) */
-    ULONGLONG PartSize = RoundingDivide(GetPartEntrySizeInBytes(PartEntry), MB);
+    ULONGLONG SizeInMB = RoundingDivide(SizeInBytes, MB);
 
-    if (PartSize < USetupData.RequiredPartitionDiskSpace)
+    /* Check the medium size */
+    if (SizeInMB < USetupData.RequiredPartitionDiskSpace)
     {
-        /* Partition is too small so ask for another one */
-        DPRINT1("Partition is too small (size: %I64u MB), required disk space is %lu MB\n",
-                PartSize, USetupData.RequiredPartitionDiskSpace);
+        DPRINT1("Partition/Volume is too small (size: %I64u MB), required space is %lu MB\n",
+                SizeInMB, USetupData.RequiredPartitionDiskSpace);
         return FALSE;
     }
-    else
-    {
-        return TRUE;
-    }
+    return TRUE;
 }
 
 
@@ -1543,6 +1554,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 {
     PARTLIST_UI ListUi;
     ULONG Error;
+    ULONGLONG MaxTargetSize;
 
     if (PartitionList == NULL)
     {
@@ -1563,7 +1575,9 @@ SelectPartitionPage(PINPUT_RECORD Ir)
     {
         ASSERT(CurrentInstallation);
 
-        /* Determine the selected installation disk & partition */
+        /* Determine the selected installation disk & partition.
+         * It must exist and be valid, since this is the partition
+         * where the existing installation already resides. */
         InstallPartition = SelectPartition(PartitionList,
                                            CurrentInstallation->DiskNumber,
                                            CurrentInstallation->PartitionNumber);
@@ -1572,6 +1586,8 @@ SelectPartitionPage(PINPUT_RECORD Ir)
             DPRINT1("RepairUpdateFlag == TRUE, SelectPartition() returned FALSE, assert!\n");
             ASSERT(FALSE);
         }
+        ASSERT(InstallPartition->IsPartitioned);
+        ASSERT(InstallPartition->Volume);
 
         return START_PARTITION_OPERATIONS_PAGE;
     }
@@ -1585,59 +1601,46 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                         yScreen - 3);
     DrawPartitionList(&ListUi);
 
-    if (IsUnattendedSetup)
+    if (IsUnattendedSetup) do
     {
+        /* If DestinationDiskNumber or DestinationPartitionNumber are invalid
+         * (see below), don't select the partition and show the list instead */
+        if (USetupData.DestinationDiskNumber == -1 ||
+            USetupData.DestinationPartitionNumber == -1)
+        {
+            break;
+        }
+
         /* Determine the selected installation disk & partition */
-        InstallPartition = SelectPartition(PartitionList,
+        CurrentPartition = SelectPartition(PartitionList,
                                            USetupData.DestinationDiskNumber,
                                            USetupData.DestinationPartitionNumber);
-        if (!InstallPartition)
+
+        /* Now reset DestinationDiskNumber and DestinationPartitionNumber
+         * to *invalid* values, so that if the corresponding partition is
+         * determined to be invalid by the code below or in CreateInstallPartition,
+         * we don't reselect it when SelectPartitionPage() is called again */
+        USetupData.DestinationDiskNumber = -1;
+        USetupData.DestinationPartitionNumber = -1;
+
+        // FIXME: Here and in the AutoPartition case below, the CurrentPartition
+        // may actually be unsuitable (MBR-extended, non-simple volume...).
+        // More checks need to be made here!
+        //
+        // NOTE: We don't check for CurrentPartition->Volume in case
+        // the partition doesn't contain a recognized volume/none exists.
+        // We also don't check whether IsPartitioned is TRUE, because if
+        // the partition is still empty space, we'll try to partition it.
+        if (CurrentPartition && !IsContainerPartition(CurrentPartition->PartitionType))
+            goto CreateInstallPartition;
+
+        if (USetupData.AutoPartition)
         {
             CurrentPartition = ListUi.CurrentPartition;
-
-            if (USetupData.AutoPartition)
-            {
-                ASSERT(CurrentPartition != NULL);
-                ASSERT(!IsContainerPartition(CurrentPartition->PartitionType));
-
-                /* Automatically create the partition on the whole empty space;
-                 * it will be formatted later with default parameters */
-                CreatePartition(PartitionList,
-                                CurrentPartition,
-                                0ULL,
-                                0);
-                if (CurrentPartition->Volume)
-                    CurrentPartition->Volume->New |= VOLUME_NEW_AUTOCREATE;
-
-// FIXME?? Aren't we going to enter an infinite loop, if this test fails??
-                if (!IsPartitionLargeEnough(CurrentPartition))
-                {
-                    MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
-                                    USetupData.RequiredPartitionDiskSpace);
-                    return SELECT_PARTITION_PAGE; /* let the user select another partition */
-                }
-
-                InstallPartition = CurrentPartition;
-                return START_PARTITION_OPERATIONS_PAGE;
-            }
+            // TODO: Do more checks, and loop until we find a valid partition.
+            goto CreateInstallPartition;
         }
-        else
-        {
-            ASSERT(!IsContainerPartition(InstallPartition->PartitionType));
-
-            DrawPartitionList(&ListUi); // FIXME: Doesn't make much sense...
-
-// FIXME?? Aren't we going to enter an infinite loop, if this test fails??
-            if (!IsPartitionLargeEnough(InstallPartition))
-            {
-                MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
-                                USetupData.RequiredPartitionDiskSpace);
-                return SELECT_PARTITION_PAGE; /* let the user select another partition */
-            }
-
-            return START_PARTITION_OPERATIONS_PAGE;
-        }
-    }
+    } while (0);
 
     while (TRUE)
     {
@@ -1646,7 +1649,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         CurrentPartition = ListUi.CurrentPartition;
 
         /* Update status text */
-        if (CurrentPartition == NULL)
+        if (!CurrentPartition)
         {
             // FIXME: If we get a NULL current partition, this means that
             // the current disk is of unrecognized type. So we should display
@@ -1687,8 +1690,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 PartitionList = NULL;
                 return QUIT_PAGE;
             }
-
-            break;
+            return SELECT_PARTITION_PAGE;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
@@ -1702,10 +1704,11 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN)  /* ENTER */
         {
-            ASSERT(CurrentPartition != NULL);
+            ASSERT(CurrentPartition);
 
+            /* Don't select an extended partition for OS installation */
             if (IsContainerPartition(CurrentPartition->PartitionType))
-                continue; // return SELECT_PARTITION_PAGE;
+                continue;
 
             /*
              * Check whether the user wants to install ReactOS on a disk that
@@ -1724,40 +1727,13 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 // return SELECT_PARTITION_PAGE;
             }
 
-            if (!CurrentPartition->IsPartitioned)
-            {
-                Error = PartitionCreationChecks(CurrentPartition);
-                if (Error != NOT_AN_ERROR)
-                {
-                    MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
-                    return SELECT_PARTITION_PAGE;
-                }
-
-                /* Automatically create the partition on the whole empty space;
-                 * it will be formatted later with default parameters */
-                CreatePartition(PartitionList,
-                                CurrentPartition,
-                                0ULL,
-                                0);
-                if (CurrentPartition->Volume)
-                    CurrentPartition->Volume->New |= VOLUME_NEW_AUTOCREATE;
-            }
-
-            if (!IsPartitionLargeEnough(CurrentPartition))
-            {
-                MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
-                                USetupData.RequiredPartitionDiskSpace);
-                return SELECT_PARTITION_PAGE; /* let the user select another partition */
-            }
-
-            InstallPartition = CurrentPartition;
-            return START_PARTITION_OPERATIONS_PAGE;
+            goto CreateInstallPartition;
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'C')  /* C */
         {
-            ASSERT(CurrentPartition != NULL);
+            ASSERT(CurrentPartition);
 
-            Error = PartitionCreationChecks(CurrentPartition);
+            Error = PartitionCreateChecks(CurrentPartition, 0ULL, 0);
             if (Error != NOT_AN_ERROR)
             {
                 MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
@@ -1769,24 +1745,25 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'E')  /* E */
         {
-            ASSERT(CurrentPartition != NULL);
+            ASSERT(CurrentPartition);
 
-            if (CurrentPartition->LogicalPartition == FALSE)
+            /* Don't create an extended partition within a logical partition */
+            if (CurrentPartition->LogicalPartition)
+                continue;
+
+            Error = PartitionCreateChecks(CurrentPartition, 0ULL, PARTITION_EXTENDED);
+            if (Error != NOT_AN_ERROR)
             {
-                Error = ExtendedPartitionCreationChecks(CurrentPartition);
-                if (Error != NOT_AN_ERROR)
-                {
-                    MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
-                    return SELECT_PARTITION_PAGE;
-                }
-
-                PartCreateType = PartTypeExtended;
-                return CREATE_PARTITION_PAGE;
+                MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
+                return SELECT_PARTITION_PAGE;
             }
+
+            PartCreateType = PartTypeExtended;
+            return CREATE_PARTITION_PAGE;
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'D')  /* D */
         {
-            ASSERT(CurrentPartition != NULL);
+            ASSERT(CurrentPartition);
 
             /* Ignore deletion in case this is not a partitioned entry */
             if (!CurrentPartition->IsPartitioned)
@@ -1827,7 +1804,42 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
     }
 
-    return SELECT_PARTITION_PAGE;
+CreateInstallPartition:
+    ASSERT(CurrentPartition);
+    ASSERT(!IsContainerPartition(CurrentPartition->PartitionType));
+
+    /* Create the partition if the selected region is empty */
+    if (!CurrentPartition->IsPartitioned)
+    {
+        Error = PartitionCreateChecks(CurrentPartition, 0ULL, 0);
+        if (Error != NOT_AN_ERROR)
+        {
+            MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
+            return SELECT_PARTITION_PAGE;
+        }
+
+        /* Automatically create the partition on the whole empty space;
+         * it will be formatted later with default parameters */
+        CreatePartition(PartitionList,
+                        CurrentPartition,
+                        0ULL,
+                        0);
+        ASSERT(CurrentPartition->IsPartitioned);
+        if (CurrentPartition->Volume)
+            CurrentPartition->Volume->New |= VOLUME_NEW_AUTOCREATE;
+    }
+
+    /* Verify the target medium size */
+    MaxTargetSize = GetPartEntrySizeInBytes(CurrentPartition);
+    if (!IsMediumLargeEnough(MaxTargetSize))
+    {
+        MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
+                        USetupData.RequiredPartitionDiskSpace);
+        return SELECT_PARTITION_PAGE; /* Let the user select another partition */
+    }
+
+    InstallPartition = CurrentPartition;
+    return START_PARTITION_OPERATIONS_PAGE;
 }
 
 
@@ -1905,12 +1917,10 @@ ShowPartitionSizeInputBox(SHORT Left,
                 *Quit = TRUE;
 
             InputBuffer[0] = UNICODE_NULL;
-            CONSOLE_SetCursorType(TRUE, FALSE);
             break;
         }
         else if (Ir.Event.KeyEvent.wVirtualKeyCode == VK_RETURN)    /* ENTER */
         {
-            CONSOLE_SetCursorType(TRUE, FALSE);
             break;
         }
         else if (Ir.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)    /* ESC */
@@ -1919,7 +1929,6 @@ ShowPartitionSizeInputBox(SHORT Left,
                 *Cancel = TRUE;
 
             InputBuffer[0] = UNICODE_NULL;
-            CONSOLE_SetCursorType(TRUE, FALSE);
             break;
         }
         else if ((Ir.Event.KeyEvent.uChar.AsciiChar == 0x00) &&
@@ -2015,6 +2024,8 @@ ShowPartitionSizeInputBox(SHORT Left,
             }
         }
     }
+
+    CONSOLE_SetCursorType(TRUE, FALSE);
 }
 
 
@@ -2152,7 +2163,6 @@ ConfirmDeleteSystemPartitionPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-
             break;
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN) /* ENTER */
@@ -2213,7 +2223,6 @@ DeletePartitionPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-
             break;
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)  /* ESC */
@@ -2470,7 +2479,6 @@ Restart:
                 FsVolContext->NextPageOnAbort = QUIT_PAGE;
                 return FSVOL_ABORT;
             }
-
             break;
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)  /* ESC */
@@ -2550,7 +2558,6 @@ Restart:
                 FsVolContext->NextPageOnAbort = QUIT_PAGE;
                 return FSVOL_ABORT;
             }
-
             goto Restart;
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN || IsUnattendedSetup) /* ENTER */
@@ -2724,10 +2731,7 @@ FsVolCallback(
                         FsVolContext->NextPageOnAbort = QUIT_PAGE;
                         return FSVOL_ABORT;
                     }
-                    else
-                    {
-                        return FSVOL_RETRY;
-                    }
+                    return FSVOL_RETRY;
                 }
                 else if (Ir->Event.KeyEvent.uChar.AsciiChar == VK_RETURN) /* ENTER */
                 {
@@ -2777,10 +2781,7 @@ FsVolCallback(
                         FsVolContext->NextPageOnAbort = QUIT_PAGE;
                         return FSVOL_ABORT;
                     }
-                    else
-                    {
-                        return FSVOL_SKIP;
-                    }
+                    return FSVOL_SKIP;
                 }
                 else if (Ir->Event.KeyEvent.uChar.AsciiChar == VK_RETURN) /* ENTER */
                 {
@@ -2898,28 +2899,14 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
      * of an invalid path, or we are in regular setup), display the UI and allow
      * the user to specify a new installation path.
      */
-    if ((RepairUpdateFlag || IsUnattendedSetup) && IsValidInstallDirectory(InstallDir))
+    if (RepairUpdateFlag || IsUnattendedSetup)
     {
-        Status = InitDestinationPaths(&USetupData, InstallDir, InstallVolume);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("InitDestinationPaths() failed: Status 0x%lx\n", Status);
-            MUIDisplayError(ERROR_NO_BUILD_PATH, Ir, POPUP_WAIT_ENTER);
-            return QUIT_PAGE;
-        }
+        /* Check for the validity of the installation directory and pop up
+         * an error if it is not the case. Then the user can fix it. */
+        if (IsValidInstallDirectory(InstallDir))
+            goto InitInstallDir;
 
-        /*
-         * Check whether the user attempts to install ReactOS within the
-         * installation source directory, or in a subdirectory thereof.
-         * If so, fail with an error.
-         */
-        if (RtlPrefixUnicodeString(&USetupData.SourcePath, &USetupData.DestinationPath, TRUE))
-        {
-            MUIDisplayError(ERROR_SOURCE_DIR, Ir, POPUP_WAIT_ENTER);
-            return INSTALL_DIRECTORY_PAGE;
-        }
-
-        return PREPARE_COPY_PAGE;
+        MUIDisplayError(ERROR_DIRECTORY_NAME, Ir, POPUP_WAIT_ENTER);
     }
 
     Length = wcslen(InstallDir);
@@ -2941,9 +2928,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-
-            CONSOLE_SetCursorType(TRUE, TRUE);
-            break;
+            return INSTALL_DIRECTORY_PAGE;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DELETE))  /* DEL */
@@ -3002,36 +2987,13 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
         {
             CONSOLE_SetCursorType(TRUE, FALSE);
 
-            /*
-             * Check for the validity of the installation directory and pop up
-             * an error if it is not the case. Then the user can fix its input.
-             */
-            if (!IsValidInstallDirectory(InstallDir))
-            {
-                MUIDisplayError(ERROR_DIRECTORY_NAME, Ir, POPUP_WAIT_ENTER);
-                return INSTALL_DIRECTORY_PAGE;
-            }
+            /* Check for the validity of the installation directory and pop up
+             * an error if it is not the case. Then the user can fix it. */
+            if (IsValidInstallDirectory(InstallDir))
+                goto InitInstallDir;
 
-            Status = InitDestinationPaths(&USetupData, InstallDir, InstallVolume);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("InitDestinationPaths() failed: Status 0x%lx\n", Status);
-                MUIDisplayError(ERROR_NO_BUILD_PATH, Ir, POPUP_WAIT_ENTER);
-                return QUIT_PAGE;
-            }
-
-            /*
-             * Check whether the user attempts to install ReactOS within the
-             * installation source directory, or in a subdirectory thereof.
-             * If so, fail with an error.
-             */
-            if (RtlPrefixUnicodeString(&USetupData.SourcePath, &USetupData.DestinationPath, TRUE))
-            {
-                MUIDisplayError(ERROR_SOURCE_DIR, Ir, POPUP_WAIT_ENTER);
-                return INSTALL_DIRECTORY_PAGE;
-            }
-
-            return PREPARE_COPY_PAGE;
+            MUIDisplayError(ERROR_DIRECTORY_NAME, Ir, POPUP_WAIT_ENTER);
+            return INSTALL_DIRECTORY_PAGE;
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x08) /* BACKSPACE */
         {
@@ -3073,31 +3035,29 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
         }
     }
 
-    return INSTALL_DIRECTORY_PAGE;
-}
-
-
-// PSETUP_ERROR_ROUTINE
-static VOID
-__cdecl
-USetupErrorRoutine(
-    IN PUSETUP_DATA pSetupData,
-    ...)
-{
-    INPUT_RECORD Ir;
-    va_list arg_ptr;
-
-    va_start(arg_ptr, pSetupData);
-
-    if (pSetupData->LastErrorNumber >= ERROR_SUCCESS &&
-        pSetupData->LastErrorNumber <  ERROR_LAST_ERROR_CODE)
+InitInstallDir:
+    Status = InitDestinationPaths(&USetupData, InstallDir, InstallVolume);
+    if (!NT_SUCCESS(Status))
     {
-        // Note: the "POPUP_WAIT_ENTER" actually depends on the LastErrorNumber...
-        MUIDisplayErrorV(pSetupData->LastErrorNumber, &Ir, POPUP_WAIT_ENTER, arg_ptr);
+        DPRINT1("InitDestinationPaths() failed: Status 0x%lx\n", Status);
+        MUIDisplayError(ERROR_NO_BUILD_PATH, Ir, POPUP_WAIT_ENTER);
+        return QUIT_PAGE;
     }
 
-    va_end(arg_ptr);
+    /*
+     * Check whether the user attempts to install ReactOS within the
+     * installation source directory, or in a subdirectory thereof.
+     * If so, fail with an error.
+     */
+    if (RtlPrefixUnicodeString(&USetupData.SourcePath, &USetupData.DestinationPath, TRUE))
+    {
+        MUIDisplayError(ERROR_SOURCE_DIR, Ir, POPUP_WAIT_ENTER);
+        return INSTALL_DIRECTORY_PAGE;
+    }
+
+    return PREPARE_COPY_PAGE;
 }
+
 
 /*
  * Displays the PrepareCopyPage.
@@ -3219,7 +3179,7 @@ FileCopyCallback(PVOID Context,
                 if (DstFileName) ++DstFileName;
                 else DstFileName = FilePathInfo->Target;
 
-                if (!wcsicmp(SrcFileName, DstFileName))
+                if (!_wcsicmp(SrcFileName, DstFileName))
                     Param2 = STRING_MOVING;
                 else
                     Param2 = STRING_RENAMING;
@@ -3559,7 +3519,6 @@ BootLoaderSelectPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-
             break;
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)    /* ENTER */
@@ -3618,30 +3577,45 @@ Retry:
         CONSOLE_ConInKey(Ir);
 
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
+            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))   /* F3 */
         {
             if (ConfirmQuit(Ir))
                 return FALSE;
-
             break;
         }
-        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)    /* ENTER */
+        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
         {
-            Status = InstallFatBootcodeToFloppy(&USetupData.SourceRootPath,
+            // FIXME: So far USETUP only supports the 1st floppy.
+            static const UNICODE_STRING FloppyDrive = RTL_CONSTANT_STRING(L"\\Device\\Floppy0\\");
+            Status = InstallBootcodeToRemovable(USetupData.ArchType,
+                                                &FloppyDrive,
+                                                &USetupData.SourceRootPath,
                                                 &USetupData.DestinationArcPath);
-            if (!NT_SUCCESS(Status))
+            if (Status == STATUS_SUCCESS)
+                return TRUE; /* Successful installation */
+
+            if (Status == STATUS_DEVICE_NOT_READY)
             {
-                if (Status == STATUS_DEVICE_NOT_READY)
-                    MUIDisplayError(ERROR_NO_FLOPPY, Ir, POPUP_WAIT_ENTER);
-
-                /* TODO: Print error message */
-                goto Retry;
+                MUIDisplayError(ERROR_NO_FLOPPY, Ir, POPUP_WAIT_ENTER);
             }
+            else if (!NT_SUCCESS(Status))
+            {
+                /* Any other NTSTATUS failure code */
+                CHAR Buffer[MAX_PATH];
 
-            return TRUE;
+                DPRINT1("InstallBootcodeToRemovable() failed: Status 0x%lx\n", Status);
+                RtlStringCbPrintfA(Buffer, sizeof(Buffer),
+                                   "Setup could not install the bootloader.\n"
+                                   "(Status 0x%08lx).\n"
+                                   "Press ENTER to continue anyway.",
+                                   Status);
+                PopupError(Buffer,
+                           MUIGetString(STRING_CONTINUE),
+                           Ir, POPUP_WAIT_ENTER);
+            }
+            goto Retry;
         }
     }
-
     goto Retry;
 }
 
@@ -3652,54 +3626,54 @@ static BOOLEAN
 BootLoaderHardDiskPage(PINPUT_RECORD Ir)
 {
     NTSTATUS Status;
-    WCHAR DestinationDevicePathBuffer[MAX_PATH];
 
-    if (USetupData.BootLoaderLocation == 2)
+    /* Copy FreeLoader to the disk and save the boot entries */
+    Status = InstallBootManagerAndBootEntries(
+                USetupData.ArchType,
+                &USetupData.SystemRootPath,
+                &USetupData.SourceRootPath,
+                &USetupData.DestinationArcPath,
+                (USetupData.BootLoaderLocation == 2)
+                   ? 1 /* Install MBR and VBR */
+                   : 0 /* Install VBR only */);
+    if (Status == STATUS_SUCCESS)
+        return TRUE; /* Successful installation */
+
+    if (Status == ERROR_WRITE_BOOT)
     {
-        /* Step 1: Write the VBR */
-        Status = InstallVBRToPartition(&USetupData.SystemRootPath,
-                                       &USetupData.SourceRootPath,
-                                       &USetupData.DestinationArcPath,
-                                       SystemVolume->Info.FileSystem);
-        if (!NT_SUCCESS(Status))
-        {
-            MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER,
-                            SystemVolume->Info.FileSystem);
-            return FALSE;
-        }
-
-        /* Step 2: Write the MBR if the disk containing the system partition is not a super-floppy */
-        if (!IsSuperFloppy(SystemPartition->DiskEntry))
-        {
-            RtlStringCchPrintfW(DestinationDevicePathBuffer, ARRAYSIZE(DestinationDevicePathBuffer),
-                                L"\\Device\\Harddisk%d\\Partition0",
-                                SystemPartition->DiskEntry->DiskNumber);
-            Status = InstallMbrBootCodeToDisk(&USetupData.SystemRootPath,
-                                              &USetupData.SourceRootPath,
-                                              DestinationDevicePathBuffer);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("InstallMbrBootCodeToDisk() failed: Status 0x%lx\n", Status);
-                MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER, L"MBR");
-                return FALSE;
-            }
-        }
+        /* Error when writing the VBR */
+        MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER,
+                        SystemVolume->Info.FileSystem);
     }
-    else
+    else if (Status == ERROR_INSTALL_BOOTCODE)
     {
-        Status = InstallVBRToPartition(&USetupData.SystemRootPath,
-                                       &USetupData.SourceRootPath,
-                                       &USetupData.DestinationArcPath,
-                                       SystemVolume->Info.FileSystem);
-        if (!NT_SUCCESS(Status))
-        {
-            MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER,
-                            SystemVolume->Info.FileSystem);
-            return FALSE;
-        }
+        /* Error when writing the MBR */
+        MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER, L"MBR");
     }
+    else if (Status == STATUS_NOT_SUPPORTED)
+    {
+        PopupError("Setup does not currently support installing\n"
+                   "the bootloader on the computer you are using.\n"
+                   "Press ENTER to continue anyway.",
+                   MUIGetString(STRING_CONTINUE),
+                   Ir, POPUP_WAIT_ENTER);
+    }
+    else if (!NT_SUCCESS(Status))
+    {
+        /* Any other NTSTATUS failure code */
+        CHAR Buffer[MAX_PATH];
 
-    return TRUE;
+        DPRINT1("InstallBootManagerAndBootEntries() failed: Status 0x%lx\n", Status);
+        RtlStringCbPrintfA(Buffer, sizeof(Buffer),
+                           "Setup could not install the bootloader.\n"
+                           "(Status 0x%08lx).\n"
+                           "Press ENTER to continue anyway.",
+                           Status);
+        PopupError(Buffer,
+                   MUIGetString(STRING_CONTINUE),
+                   Ir, POPUP_WAIT_ENTER);
+    }
+    return FALSE;
 }
 
 /*
@@ -3717,16 +3691,11 @@ BootLoaderHardDiskPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 BootLoaderInstallPage(PINPUT_RECORD Ir)
 {
-    WCHAR PathBuffer[MAX_PATH];
-
-    // /* We must have a supported system partition by now */
-    // ASSERT(SystemPartition && SystemPartition->IsPartitioned && SystemPartition->PartitionNumber != 0);
+    WCHAR PathBuffer[RTL_NUMBER_OF_FIELD(PARTENTRY, DeviceName) + 1];
 
     RtlFreeUnicodeString(&USetupData.SystemRootPath);
-    RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
-            L"\\Device\\Harddisk%lu\\Partition%lu\\",
-            SystemPartition->DiskEntry->DiskNumber,
-            SystemPartition->PartitionNumber);
+    RtlStringCchPrintfW(PathBuffer, _countof(PathBuffer),
+                        L"%s\\", SystemPartition->DeviceName);
     RtlCreateUnicodeString(&USetupData.SystemRootPath, PathBuffer);
     DPRINT1("SystemRootPath: %wZ\n", &USetupData.SystemRootPath);
 
@@ -3735,19 +3704,17 @@ BootLoaderInstallPage(PINPUT_RECORD Ir)
 
     switch (USetupData.BootLoaderLocation)
     {
-        /* Skip installation */
-        case 0:
-            return SUCCESS_PAGE;
-
         /* Install on removable disk */
         case 1:
             return BootLoaderRemovableDiskPage(Ir) ? SUCCESS_PAGE : QUIT_PAGE;
 
-        /* Install on hard-disk (both MBR and VBR, or VBR only) */
-        case 2:
-        case 3:
+        /* Install on hard-disk */
+        case 2: // System partition / MBR and VBR (on BIOS-based PC)
+        case 3: // VBR only (on BIOS-based PC)
             return BootLoaderHardDiskPage(Ir) ? SUCCESS_PAGE : QUIT_PAGE;
 
+        /* Skip installation */
+        case 0:
         default:
             return SUCCESS_PAGE;
     }
@@ -4066,10 +4033,6 @@ RunUSetup(VOID)
         /* We failed to initialize the video, just quit the installer */
         return STATUS_APP_INIT_FAILURE;
     }
-
-    /* Initialize Setup, phase 0 */
-    InitializeSetup(&USetupData, 0);
-    USetupData.ErrorRoutine = USetupErrorRoutine;
 
     /* Hide the cursor and clear the screen and keyboard buffer */
     CONSOLE_SetCursorType(TRUE, FALSE);

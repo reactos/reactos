@@ -194,7 +194,7 @@ CNewMenu::CacheItems()
         if (pNewItem)
         {
             dwSize += wcslen(wszName) + 1;
-            if (!m_pLinkItem && wcsicmp(pNewItem->pwszExt, L".lnk") == 0)
+            if (!m_pLinkItem && _wcsicmp(pNewItem->pwszExt, L".lnk") == 0)
             {
                 /* The unique link handler */
                 m_pLinkItem = pNewItem;
@@ -277,7 +277,7 @@ CNewMenu::LoadCachedItems()
         pNewItem = LoadItem(wszName);
         if (pNewItem)
         {
-            if (!m_pLinkItem && wcsicmp(pNewItem->pwszExt, L".lnk") == 0)
+            if (!m_pLinkItem && _wcsicmp(pNewItem->pwszExt, L".lnk") == 0)
             {
                 /* The unique link handler */
                 m_pLinkItem = pNewItem;
@@ -430,7 +430,7 @@ HRESULT CNewMenu::SelectNewItem(LONG wEventId, UINT uFlags, LPWSTR pszName, BOOL
         return S_OK;
 
     /* Get a pointer to the shell view */
-    hr = IUnknown_QueryService(m_pSite, SID_IFolderView, IID_PPV_ARG(IShellView, &lpSV));
+    hr = IUnknown_QueryService(m_pSite, SID_SFolderView, IID_PPV_ARG(IShellView, &lpSV));
     if (FAILED_UNEXPECTEDLY(hr))
         return S_OK;
 

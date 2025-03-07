@@ -2434,6 +2434,7 @@ static void test_flash_ax(void)
         skip("Skipping test_ui_activate(). ROSTESTS-114.\n");
         skip("Skipping test_container(notif_doc). ROSTESTS-114.\n");
         skip("Skipping test_object_elem(notif_doc). ROSTESTS-114.\n");
+        return;
     }
 
     IOleClientSite_AddRef(client_site);

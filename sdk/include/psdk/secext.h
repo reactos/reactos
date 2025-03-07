@@ -1,8 +1,13 @@
 #ifndef _SECEXT_H
 #define _SECEXT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef RC_INVOKED
 #if (_WIN32_WINNT >= 0x0500)
+
 typedef enum
 {
   NameUnknown = 0,
@@ -34,7 +39,11 @@ BOOLEAN WINAPI TranslateNameW(LPCWSTR,EXTENDED_NAME_FORMAT,EXTENDED_NAME_FORMAT,
 #define TranslateName TranslateNameA
 #endif
 
-
 #endif /* ! RC_INVOKED */
 #endif /* _WIN32_WINNT >= 0x0500 */
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
 #endif /* ! _SECEXT_H */

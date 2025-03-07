@@ -50,9 +50,7 @@ CAPTION "Nastavení"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Obecné", -1, 4, 2, 240, 61
-    AUTOCHECKBOX "&Uložit pozici okna", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "&Aktualizovat seznam dostupných programů při startu programu", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "Ukládat &záznam instalací a odstranění programů", IDC_LOG_ENABLED, 15, 46, 219, 12
+    CONTROL "", IDC_GENERALLIST, "SysListView32", WS_TABSTOP | LVCHECKSTYLES, 15, 12, 219, 46, WS_EX_STATICEDGE
     GROUPBOX "Stahování", -1, 4, 65, 240, 51
     LTEXT "Složka se staženými soubory:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
@@ -213,6 +211,10 @@ BEGIN
     IDS_APP_DISPLAY_LIST "Seznam"
     IDS_APP_DISPLAY_TILE "Dlaždice"
     IDS_NO_SEARCH_RESULTS "Žádné výsledky"
+    IDS_CFG_SAVE_WINDOW_POS "Uložit pozici okna"
+    IDS_CFG_UPDATE_AVLIST "Aktualizovat seznam dostupných programů při startu programu"
+    IDS_CFG_LOG_ENABLED "Ukládat záznam instalací a odstranění programů"
+    IDS_CFG_SMALL_ICONS "Malé ikony"
 END
 
 STRINGTABLE
@@ -266,4 +268,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_INSTGEN_CONFIRMUNINST "Opravdu chcete odinstalovat %s?"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "Installation complete, run %s now?"
 END

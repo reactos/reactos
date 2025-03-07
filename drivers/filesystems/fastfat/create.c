@@ -2356,7 +2356,7 @@ Return Value:
         if ((CreateDisposition != FILE_OPEN) &&
             (CreateDisposition != FILE_OPEN_IF)) {
 
-            try_return( Iosb.Status = STATUS_ACCESS_DENIED );
+            try_return( Status = STATUS_ACCESS_DENIED );
         }
 
         //
@@ -2389,7 +2389,7 @@ Return Value:
             if (!FlagOn(ShareAccess, FILE_SHARE_READ) &&
                 !FatIsHandleCountZero( IrpContext, Vcb )) {
 
-                try_return( Iosb.Status = STATUS_SHARING_VIOLATION );
+                try_return( Status = STATUS_SHARING_VIOLATION );
             }
 
             //
@@ -2412,14 +2412,14 @@ Return Value:
 
                 if (Vcb->OpenFileCount != 0) {
 
-                    try_return( Iosb.Status = STATUS_SHARING_VIOLATION );
+                    try_return( Status = STATUS_SHARING_VIOLATION );
                 }
 
             } else {
 
                 if (Vcb->ReadOnlyCount != Vcb->OpenFileCount) {
 
-                    try_return( Iosb.Status = STATUS_SHARING_VIOLATION );
+                    try_return( Status = STATUS_SHARING_VIOLATION );
                 }
             }
 
@@ -2487,13 +2487,13 @@ Return Value:
 
         if (Vcb->DirectAccessOpenCount > 0) {
 
-            if (!NT_SUCCESS(Iosb.Status = IoCheckShareAccess( *DesiredAccess,
+            if (!NT_SUCCESS(Status = IoCheckShareAccess( *DesiredAccess,
                                                               ShareAccess,
                                                               FileObject,
                                                               &Vcb->ShareAccess,
                                                               TRUE ))) {
 
-                try_return( Iosb.Status );
+                try_return( NOTHING );
             }
 
         } else {
@@ -2546,7 +2546,7 @@ Return Value:
         //  And set our status to success
         //
 
-        Iosb.Status = STATUS_SUCCESS;
+        Status = STATUS_SUCCESS;
         Iosb.Information = FILE_OPENED;
 
     try_exit: NOTHING;
@@ -2558,7 +2558,7 @@ Return Value:
         //  If this is an abnormal termination then undo our work
         //
 
-        if (_SEH2_AbnormalTermination() || !NT_SUCCESS(Iosb.Status)) {
+        if (_SEH2_AbnormalTermination() || !NT_SUCCESS(Status)) {
 
             if (UnwindCounts) {
                 Vcb->DirectAccessOpenCount -= 1;
@@ -2570,9 +2570,10 @@ Return Value:
             if (UnwindVolumeLock) { Vcb->VcbState &= ~VCB_STATE_FLAG_LOCKED; }
         }
 
-        DebugTrace(-1, Dbg, "FatOpenVolume -> Iosb.Status = %08lx\n", Iosb.Status);
+        DebugTrace(-1, Dbg, "FatOpenVolume -> Iosb.Status = %08lx\n", Status);
     } _SEH2_END;
 
+    Iosb.Status = Status;
     return Iosb;
 }
 

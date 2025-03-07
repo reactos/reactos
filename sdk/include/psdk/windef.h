@@ -14,8 +14,8 @@
 #pragma warning(disable:4255)
 #endif
 
-#if defined(__LP64__) || (!defined(_M_AMD64) && defined(__WINESRC__))
-#if !defined(__ROS_LONG64__)
+#if (defined(_LP64) || defined(__LP64__)) && !defined(_M_AMD64)
+#ifndef __ROS_LONG64__
 #define __ROS_LONG64__
 #endif
 #endif
@@ -166,9 +166,9 @@ typedef BOOL *LPBOOL;
 typedef unsigned char BYTE;
 typedef unsigned short WORD;
 #ifndef __ROS_LONG64__
-    typedef unsigned long DWORD;
+typedef unsigned long DWORD;
 #else
-    typedef unsigned int DWORD;
+typedef unsigned int DWORD;
 #endif
 typedef float FLOAT;
 typedef FLOAT *PFLOAT;

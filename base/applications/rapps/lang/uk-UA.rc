@@ -52,9 +52,7 @@ CAPTION "Налаштування"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Загальні", -1, 4, 2, 240, 61
-    AUTOCHECKBOX "&Зберігати положення вікна", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "&Оновлювати список наявних програм при запуску", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "&Вести звіт встановлення/видалення програм", IDC_LOG_ENABLED, 15, 46, 219, 12
+    CONTROL "", IDC_GENERALLIST, "SysListView32", WS_TABSTOP | LVCHECKSTYLES, 15, 12, 219, 46, WS_EX_STATICEDGE
     GROUPBOX "Завантаження", -1, 4, 65, 240, 51
     LTEXT "Тека для завантажень:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
@@ -215,6 +213,10 @@ BEGIN
     IDS_APP_DISPLAY_LIST "List"
     IDS_APP_DISPLAY_TILE "Tile"
     IDS_NO_SEARCH_RESULTS "No search results"
+    IDS_CFG_SAVE_WINDOW_POS "Зберігати положення вікна"
+    IDS_CFG_UPDATE_AVLIST "Оновлювати список наявних програм при запуску"
+    IDS_CFG_LOG_ENABLED "Вести звіт встановлення/видалення програм"
+    IDS_CFG_SMALL_ICONS "Дрібні значки"
 END
 
 STRINGTABLE
@@ -268,4 +270,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "Installation complete, run %s now?"
 END

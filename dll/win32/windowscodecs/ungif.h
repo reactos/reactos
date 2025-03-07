@@ -114,6 +114,7 @@ typedef struct {
 typedef struct GifFileType {
     GifWord SWidth, SHeight,        /* Screen dimensions. */
       SColorResolution,         /* How many colors can we generate? */
+      SColorTableSize,          /* Calculated color table size, even if not present */
       SBackGroundColor,         /* I hope you understand this one... */
       SAspectRatio;             /* Pixel aspect ratio, in 1/64 units, starting at 1:4. */
     ColorMapObject *SColorMap;  /* NULL if not exists. */
@@ -144,9 +145,9 @@ typedef int (*InputFunc) (GifFileType *, GifByteType *, int);
 #define APPLICATION_EXT_FUNC_CODE 0xff    /* application block */
 
 /* public interface to ungif.c */
-int DGifSlurp(GifFileType * GifFile) DECLSPEC_HIDDEN;
-GifFileType *DGifOpen(void *userPtr, InputFunc readFunc) DECLSPEC_HIDDEN;
-int DGifCloseFile(GifFileType * GifFile) DECLSPEC_HIDDEN;
+int DGifSlurp(GifFileType * GifFile);
+GifFileType *DGifOpen(void *userPtr, InputFunc readFunc);
+int DGifCloseFile(GifFileType * GifFile);
 
 #define D_GIF_ERR_OPEN_FAILED    101    /* And DGif possible errors. */
 #define D_GIF_ERR_READ_FAILED    102

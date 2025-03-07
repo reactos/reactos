@@ -5,9 +5,6 @@
  * TRANSLATOR:  Copyright 2022 Süleyman Poyraz <zaryob.dev@gmail.com>
  */
 
-/* UTF-8 */
-#pragma code_page(65001)
-
 LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
 
 1 MENU

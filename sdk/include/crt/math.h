@@ -4,7 +4,7 @@
 #ifndef _INC_MATH
 #define _INC_MATH
 
-#include "crtdefs.h"
+#include <corecrt.h>
 
 #pragma pack(push,_CRT_PACKING)
 
@@ -57,7 +57,21 @@ typedef double double_t;
 #define HUGE_VALD ((double)INFINITY)
 #define HUGE_VALF ((float)INFINITY)
 #define HUGE_VALL ((long double)INFINITY)
-#define NAN       ((float)(INFINITY * 0.0F))
+#ifndef _UCRT_NEGATIVE_NAN
+// This operation creates a negative NAN adding a - to make it positive
+#ifdef _MSC_VER
+#define NAN        (-(float)(INFINITY * 0.0F))
+#else
+#define NAN        (__builtin_nanf(""))
+#endif
+#else
+// Keep this for backwards compatibility
+#ifdef _MSC_VER
+#define NAN        ((float)(INFINITY * 0.0F))
+#else
+#define NAN        (-__builtin_nanf(""))
+#endif
+#endif
 
 #define _DENORM  (-2)
 #define _FINITE  (-1)
@@ -99,7 +113,7 @@ _Check_return_ _CRT_JIT_INTRINSIC double __cdecl sqrt(_In_ double x);
 _Check_return_ double __cdecl tan(_In_ double x);
 _Check_return_ double __cdecl tanh(_In_ double x);
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 /* Prevent the compiler from generating calls to _CIatan2 */
 #pragma function(atan2)
 #ifdef _M_AMD64
@@ -148,7 +162,7 @@ _Check_return_ _CRTIMP int __cdecl _set_SSE2_enable(_In_ int flag);
 _Check_return_ _CRTIMP float __cdecl _nextafterf(_In_ float x, _In_ float y);
 _Check_return_ _CRTIMP int __cdecl _isnanf(_In_ float x);
 _Check_return_ _CRTIMP int __cdecl _fpclassf(_In_ float x);
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 /* Prevent the compiler from generating calls to __vdecl_floor2 */
 #pragma function(floor)
 #endif
@@ -202,7 +216,7 @@ _Check_return_ float __cdecl sqrtf(_In_ float x);
 _Check_return_ float __cdecl tanf(_In_ float x);
 _Check_return_ float __cdecl tanhf(_In_ float x);
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
 /* Make sure intrinsics don't get in our way */
 #if defined(_M_AMD64) || defined(_M_ARM) || defined(_M_ARM64)
 #pragma function(acosf,asinf,atanf,atan2f,ceilf,cosf,coshf,expf,floorf,fmodf,logf,log10f,powf,sinf,sinhf,sqrtf,tanf,tanhf)
@@ -269,7 +283,7 @@ _Check_return_ __CRT_INLINE long double ldexpl(_In_ long double x, _In_ int y) {
 _Check_return_ __CRT_INLINE long double modfl(_In_ long double x, _Out_ long double *y) { return (long double)modf((double)x, (double *)y); }
 
 /* Support for some functions, not exported in MSVCRT */
-#if (_MSC_VER >= 1929)
+#if (_MSC_VER >= 1929) && !defined(__clang__)
 _Check_return_ long lrint(_In_ double x);
 _Check_return_ long lrintf(_In_ float x);
 _Check_return_ long lrintl(_In_ long double x);

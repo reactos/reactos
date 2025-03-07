@@ -32,6 +32,14 @@ STRINGTABLE
     13 "network drive for feature missing"
     14 "feature from:"
     15 "choose which folder contains %s"
+#ifdef __REACTOS__
+    34 "ReactOS Installer Package"
+    35 "ReactOS Installer Patch"
+    36 "&Install"
+    37 "Re&pair"
+    38 "&Uninstall"
+    39 "&Apply"
+#endif
     100 "New Folder"
 }
 

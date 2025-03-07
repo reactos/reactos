@@ -294,14 +294,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "Administrador de dispositivos de ReactOS"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
   IDS_CONFIRM_DISABLE       "Deshabilitar este dispositivo hará que deje de funcionar.\n¿Seguro que quiere deshabilitarlo?"
   IDS_CONFIRM_UNINSTALL     "Advertencia: Está a punto de desinstalar este dispositivo de su equipo.\n¿Seguro que quiere continuar?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Actualizar controladores..."
   IDS_MENU_ENABLE           "Habilitar"
@@ -312,7 +313,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Propiedades"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Propiedades"
   IDS_TOOLTIP_SCAN          "Buscar cambios de hardware"
@@ -323,7 +324,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Abre el diálogo de propiedades para le selección actual."

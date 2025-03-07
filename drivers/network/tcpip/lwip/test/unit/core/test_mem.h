@@ -1,5 +1,5 @@
-#ifndef __TEST_MEM_H__
-#define __TEST_MEM_H__
+#ifndef LWIP_HDR_TEST_MEM_H
+#define LWIP_HDR_TEST_MEM_H
 
 #include "../lwip_check.h"
 

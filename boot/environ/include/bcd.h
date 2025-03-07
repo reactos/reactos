@@ -11,7 +11,7 @@
 
 /* ENUMERATIONS **************************************************************/
 
-/* See https://msdn.microsoft.com/en-us/library/windows/desktop/aa964229(v=vs.85).aspx */
+/* See https://learn.microsoft.com/en-us/previous-versions/windows/desktop/bcd/bcdelementtype */
 
 #define BCD_CLASS_LIBRARY       0x01
 #define BCD_CLASS_APPLICATION   0x02

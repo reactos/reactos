@@ -10,38 +10,38 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 229, 98
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Despre programul de configurare al sistemului"
+CAPTION "Despre programul de configurare a sistemului"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON            IDI_APPICON, IDC_STATIC, 14, 14, 20, 20
-    LTEXT           "Program de configurare al sistemului\nVersiune 1.0", IDC_STATIC, 42, 14, 182, 17, SS_NOPREFIX
+    LTEXT           "Program de configurare a sistemului\nVersiune 1.0", IDC_STATIC, 42, 14, 182, 17, SS_NOPREFIX
 //  "Copyright (C) ReactOS Team 2005-"COPYRIGHT_YEAR"\n"
     LTEXT           "Drept de autor (C) Echipa ReactOS 2005-2023\n\
 Christoph von Wittich (Christoph@ApiViewer.de)\n\
 Gregor Schneider (Gregor.Schneider@reactos.org)\n\
 Hermès BÉLUSCA - MAÏTO (hermes.belusca@sfr.fr)",
                     IDC_STATIC, 41, 34, 183, 34
-    DEFPUSHBUTTON   "Î&nchide", IDOK, 174, 79, 50, 14, WS_GROUP
+    DEFPUSHBUTTON   "OK", IDOK, 174, 79, 50, 14, WS_GROUP
 END
 
 IDD_GENERAL_PAGE DIALOGEX 0, 0, 366, 175
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CAPTION
-CAPTION "Generale"
+CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "&Pornire normală", IDC_RB_NORMAL_STARTUP, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 18, 332, 10
     CONTROL         "Pornire de &diagnostic", IDC_RB_DIAGNOSTIC_STARTUP, "Button", BS_AUTORADIOBUTTON, 15, 46, 332, 10
     CONTROL         "Pornire selecti&vă", IDC_RB_SELECTIVE_STARTUP, "Button", BS_AUTORADIOBUTTON, 15, 73, 332, 10
-    CONTROL         "Procesează fișierul S&YSTEM.INI", IDC_CBX_SYSTEM_INI, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 86, 316, 10
-    CONTROL         "Procesează fișierul &WIN.INI", IDC_CBX_WIN_INI, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 98, 316, 10
-    CONTROL         "În&carcă serviciile de sistem", IDC_CBX_LOAD_SYSTEM_SERVICES, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 110, 316, 10
-    CONTROL         "Încarcă &elementele autolansate", IDC_CBX_LOAD_STARTUP_ITEMS, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 122, 316, 10
-    CONTROL         "&Utilizează configurația originală de inițializare", IDC_CBX_USE_ORIGINAL_BOOTCFG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 35, 134, 316, 10
-    PUSHBUTTON      "Lansează &Restaurare sistem", IDC_BTN_SYSTEM_RESTORE_START, 146, 156, 124, 14
+    CONTROL         "Procesare a fișierului S&YSTEM.INI", IDC_CBX_SYSTEM_INI, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 86, 316, 10
+    CONTROL         "Procesare a fișierului &WIN.INI", IDC_CBX_WIN_INI, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 98, 316, 10
+    CONTROL         "În&cărcare a serviciilor de sistem", IDC_CBX_LOAD_SYSTEM_SERVICES, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 110, 316, 10
+    CONTROL         "Încărcare a &elementelor de pornire", IDC_CBX_LOAD_STARTUP_ITEMS, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 122, 316, 10
+    CONTROL         "&Utilizare a configurației originale de pornire", IDC_CBX_USE_ORIGINAL_BOOTCFG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 35, 134, 316, 10
+    PUSHBUTTON      "Lansare &Restaurare sistem", IDC_BTN_SYSTEM_RESTORE_START, 146, 156, 124, 14
     PUSHBUTTON      "E&xtindere fișier…", IDC_BTN_FILE_EXTRACTION, 275, 156, 85, 14
-    GROUPBOX        "Moduri de pornire sistem", IDC_STATIC, 5, 5, 356, 145
-    LTEXT           "Încarcă toate serviciile și driverele", IDC_STATIC, 25, 30, 322, 10
-    LTEXT           "Încarcă doar driverele de bază", IDC_STATIC, 25, 58, 322, 10
+    GROUPBOX        "Selecție de pornire", IDC_STATIC, 5, 5, 356, 145
+    LTEXT           "Încărcare a tuturor serviciilor și driverelor", IDC_STATIC, 25, 30, 322, 10
+    LTEXT           "Încărcare doar driverelor de bază", IDC_STATIC, 25, 58, 322, 10
 END
 
 IDD_SYSTEM_PAGE DIALOGEX 0, 0, 366, 175
@@ -50,16 +50,16 @@ CAPTION "Sistem"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_SYSTEM_TREE, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | WS_BORDER | WS_HSCROLL | WS_TABSTOP, 5, 5, 285, 146
-    PUSHBUTTON      "Mută s&us", IDC_BTN_SYSTEM_UP, 295, 5, 66, 14
-    PUSHBUTTON      "Mută j&os", IDC_BTN_SYSTEM_DOWN, 295, 24, 66, 14
-    PUSHBUTTON      "A&ctivează", IDC_BTN_SYSTEM_ENABLE, 295, 52, 66, 14
-    PUSHBUTTON      "D&ezactivează", IDC_BTN_SYSTEM_DISABLE, 295, 71, 66, 14
-    PUSHBUTTON      "&Găsește", IDC_BTN_SYSTEM_FIND, 295, 99, 66, 14
+    PUSHBUTTON      "Mutare &sus", IDC_BTN_SYSTEM_UP, 295, 5, 66, 14
+    PUSHBUTTON      "Mutare &jos", IDC_BTN_SYSTEM_DOWN, 295, 24, 66, 14
+    PUSHBUTTON      "&Activare", IDC_BTN_SYSTEM_ENABLE, 295, 52, 66, 14
+    PUSHBUTTON      "&Dezactivare", IDC_BTN_SYSTEM_DISABLE, 295, 71, 66, 14
+    PUSHBUTTON      "&Găsire", IDC_BTN_SYSTEM_FIND, 295, 99, 66, 14
     PUSHBUTTON      "Nou", IDC_BTN_SYSTEM_NEW, 295, 118, 66, 14
-    PUSHBUTTON      "E&ditează", IDC_BTN_SYSTEM_EDIT, 295, 137, 66, 14
-    PUSHBUTTON      "Acti&vează toate", IDC_BTN_SYSTEM_ENABLE_ALL, 153, 156, 66, 14
-    PUSHBUTTON      "De&zactivează toate", IDC_BTN_SYSTEM_DISABLE_ALL, 224, 156, 66, 14
-    PUSHBUTTON      "Eli&mină", IDC_BTN_SYSTEM_DELETE, 295, 156, 66, 14
+    PUSHBUTTON      "&Editare", IDC_BTN_SYSTEM_EDIT, 295, 137, 66, 14
+    PUSHBUTTON      "Acti&vare totală", IDC_BTN_SYSTEM_ENABLE_ALL, 153, 156, 66, 14
+    PUSHBUTTON      "De&zactivare totală", IDC_BTN_SYSTEM_DISABLE_ALL, 224, 156, 66, 14
+    PUSHBUTTON      "Eli&minare", IDC_BTN_SYSTEM_DELETE, 295, 156, 66, 14
 END
 
 IDD_FREELDR_PAGE DIALOGEX 0, 0, 366, 175
@@ -68,29 +68,29 @@ CAPTION "FREELDR.INI"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX         IDC_LIST_BOX, 5, 5, 356, 61, LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
-    PUSHBUTTON      "&Verifică toate căile de inițializare", IDC_BTN_CHECK_BOOT_PATH, 5, 68, 72, 14
-    PUSHBUTTON      "Impli&cite", IDC_BTN_SET_DEFAULT_BOOT, 82, 68, 66, 14
-    PUSHBUTTON      "Mută s&us", IDC_BTN_MOVE_UP_BOOT_OPTION, 153, 68, 66, 14
-    PUSHBUTTON      "Mută j&os", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 224, 68, 66, 14
-    GROUPBOX        "Parametri de inițializare", IDC_STATIC, 5, 84, 285, 86
+    PUSHBUTTON      "&Verificare a tuturor căilor de pornire", IDC_BTN_CHECK_BOOT_PATH, 5, 68, 72, 14
+    PUSHBUTTON      "Impli&cit", IDC_BTN_SET_DEFAULT_BOOT, 82, 68, 66, 14
+    PUSHBUTTON      "Mutare &sus", IDC_BTN_MOVE_UP_BOOT_OPTION, 153, 68, 66, 14
+    PUSHBUTTON      "Mutare &jos", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 224, 68, 66, 14
+    GROUPBOX        "Opțiuni de pornire", IDC_STATIC, 5, 84, 285, 86
     GROUPBOX        "", IDC_STATIC, 10, 97, 143, 68
-    CHECKBOX        "Inițializare securi&zată (/SAFEBOOT)", IDC_CBX_SAFE_BOOT, 15, 97, 121, 10
+    CHECKBOX        "&Pornire sigură (/SAFEBOOT)", IDC_CBX_SAFE_BOOT, 15, 97, 121, 10
     CONTROL         "&Minimală (MINIMAL)", IDC_RADIO1, "Button", BS_AUTORADIOBUTTON, 15, 110, 133, 10
-    CONTROL         "Mediu alternativ\n(MINIMAL (ALTERNATE&SHELL))", IDC_RADIO4,
+    CONTROL         "Alt mediu\n(MINIMAL (ALTERNATE&SHELL))", IDC_RADIO4,
                     "Button", BS_AUTORADIOBUTTON | BS_MULTILINE, 15, 121, 133, 17
-    CONTROL         "&Repară ActiveDirectory (DSREPAIR)", IDC_RADIO3, "Button", BS_AUTORADIOBUTTON, 15, 139, 133, 10
+    CONTROL         "&Reparare ActiveDirectory (DSREPAIR)", IDC_RADIO3, "Button", BS_AUTORADIOBUTTON, 15, 139, 133, 10
     CONTROL         "Rețea (NET&WORK)", IDC_RADIO2, "Button", BS_AUTORADIOBUTTON, 15, 150, 133, 10
     CHECKBOX        "Fără interfață grafică\n(/NO&GUIBOOT)", IDC_CBX_NO_GUI_BOOT, 158, 91, 127, 17, BS_MULTILINE
-    CHECKBOX        "&Jurnal de inițializare (/BOOTLOG)", IDC_CBX_BOOT_LOG, 158, 110, 127, 12
+    CHECKBOX        "&Jurnal de pornire (/BOOTLOG)", IDC_CBX_BOOT_LOG, 158, 110, 127, 12
     CHECKBOX        "Video de &bază (/BASEVIDEO)", IDC_CBX_BASE_VIDEO, 158, 124, 127, 12
-    CHECKBOX        "&Detalii de inițializare (/SOS)", IDC_CBX_SOS, 158, 138, 127, 12
+    CHECKBOX        "I&nformații de pornire a SO (/SOS)", IDC_CBX_SOS, 158, 138, 127, 12
     PUSHBUTTON      "Opțiuni &avansate…", IDC_BTN_ADVANCED_OPTIONS, 207, 151, 78, 14
     LTEXT           "&Limită de timp:", IDC_STATIC, 296, 91, 32, 10
     EDITTEXT        IDC_TXT_BOOT_TIMEOUT, 295, 102, 33, 12, ES_RIGHT | ES_NUMBER
     LTEXT           "secunde", IDC_STATIC, 330, 104, 31, 10
-    CONTROL         "Fă toate s&etările de inițializare permanente", 292,
+    CONTROL         "Facere a tuturor s&etărilor de pornire permanente", 292,
                     "Button", BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP, 295, 121, 66, 49
-    PUSHBUTTON      "Șt&erge", IDC_BTN_DELETE, 295, 68, 66, 14
+    PUSHBUTTON      "Ș&tergere", IDC_BTN_DELETE, 295, 68, 66, 14
 END
 
 IDD_SERVICES_PAGE DIALOGEX 0, 0, 366, 175
@@ -99,11 +99,11 @@ CAPTION "Servicii"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List1", IDC_SERVICES_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 5, 5, 356, 129
-    PUSHBUTTON      "A&ctivează toate", IDC_BTN_SERVICES_ACTIVATE, 224, 156, 66, 14
-    PUSHBUTTON      "D&ezactivează toate", IDC_BTN_SERVICES_DEACTIVATE, 295, 156, 66, 14
-    CONTROL         "Asc&unde toate serviciile %s", IDC_CBX_SERVICES_MASK_PROPRIETARY_SVCS,
+    PUSHBUTTON      "&Activare totală", IDC_BTN_SERVICES_ACTIVATE, 224, 156, 66, 14
+    PUSHBUTTON      "&Dezactivare totală", IDC_BTN_SERVICES_DEACTIVATE, 295, 156, 66, 14
+    CONTROL         "A&scundere a tuturor serviciilor %s", IDC_CBX_SERVICES_MASK_PROPRIETARY_SVCS,
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 5, 158, 203, 12
-    LTEXT           "Rețineți că unele servicii %s securizate nu pot fi dezactivate.", IDC_STATIC_SERVICES_WARNING, 5, 138, 220, 17
+    LTEXT           "Rețineți că este posibil ca unele servicii %s securizate să nu fie dezactivate.", IDC_STATIC_SERVICES_WARNING, 5, 138, 220, 17
 END
 
 IDD_STARTUP_PAGE DIALOGEX 0, 0, 362, 175
@@ -112,8 +112,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "List3", IDC_STARTUP_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 2, 1, 360, 148
-    PUSHBUTTON "A&ctivează toate", IDC_BTN_STARTUP_ACTIVATE, 203, 155, 76, 14
-    PUSHBUTTON "D&ezactivează toate", IDC_BTN_STARTUP_DEACTIVATE, 285, 155, 76, 14
+    PUSHBUTTON "&Activare totală", IDC_BTN_STARTUP_ACTIVATE, 203, 155, 76, 14
+    PUSHBUTTON &Dezactivare totală", IDC_BTN_STARTUP_DEACTIVATE, 285, 155, 76, 14
 END
 
 IDD_TOOLS_PAGE DIALOGEX 0, 0, 366, 175
@@ -123,28 +123,28 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List1", IDC_TOOLS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 5, 356, 118
     EDITTEXT        IDC_TOOLS_CMDLINE, 5, 139, 356, 14, ES_READONLY
-    PUSHBUTTON      "&Lansează", IDC_BTN_RUN, 311, 156, 50, 14
+    PUSHBUTTON      "&Lansare", IDC_BTN_RUN, 311, 156, 50, 14
     CONTROL         "&Opțiuni avansate", IDC_CBX_TOOLS_ADVOPT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 5, 158, 134, 12
     LTEXT           "&Comandă selectată:", IDC_STATIC, 5, 127, 128, 10
 END
 
 IDD_FILE_EXTRACT_DIALOG DIALOGEX 0, 0, 353, 117
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Extragere fișiere de la o instalație sursă"
+CAPTION "Extragere a fișierelor dintr-o sursă de instalare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Specificați fișierele pe care doriți să le extrageți, locația sursei cu fișierele de instalare, și locația destinației.", IDC_STATIC, 7, 7, 339, 17
-    LTEXT           "Fișierele pentru e&xtragere:", IDC_STATIC, 7, 34, 93, 10
+    LTEXT           "&Fișiere de restaurat:", IDC_STATIC, 7, 34, 93, 10
     EDITTEXT        IDC_TXT_FILE_TO_RESTORE, 103, 32, 158, 12, ES_AUTOHSCROLL
-    PUSHBUTTON      "Spe&cificare…", IDC_BTN_BROWSE_ALL_FILES, 264, 30, 82, 14
-    LTEXT           "E&xtrage din:", IDC_STATIC, 7, 55, 93, 10
+    PUSHBUTTON      "&Specificare fișiere…", IDC_BTN_BROWSE_ALL_FILES, 264, 30, 82, 14
+    LTEXT           "&Extrage din:", IDC_STATIC, 7, 55, 93, 10
     COMBOBOX        IDC_DRP_CAB_FILE, 103, 53, 158, 56, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Specific&are…", IDC_BTN_BROWSE_CAB_FILES, 264, 51, 82, 14
-    LTEXT           "E&xtrage în:", IDC_STATIC, 7, 76, 93, 10
+    PUSHBUTTON      "S&pecificare din…", IDC_BTN_BROWSE_CAB_FILES, 264, 51, 82, 14
+    LTEXT           "S&alvare fișiere în:", IDC_STATIC, 7, 76, 93, 10
     COMBOBOX        IDC_DRP_DEST_DIR, 103, 74, 158, 42, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Specifica&re…", IDC_BTN_BROWSE_DIRS, 264, 72, 82, 14
-    DEFPUSHBUTTON   "&Extrage", IDOK, 179, 96, 82, 14
-    PUSHBUTTON      "A&nulează", IDCANCEL, 264, 96, 82, 14
+    PUSHBUTTON      "Specifica&re în…", IDC_BTN_BROWSE_DIRS, 264, 72, 82, 14
+    DEFPUSHBUTTON   "&Extragere", IDOK, 179, 96, 82, 14
+    PUSHBUTTON      "Revocare", IDCANCEL, 264, 96, 82, 14
 END
 
 IDD_FIND_DIALOG DIALOGEX 30, 73, 236, 75
@@ -152,17 +152,17 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Găsire"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Găsește:", IDC_STATIC, 4, 8, 42, 10, NOT WS_GROUP
+    LTEXT           "&Găsire:", IDC_STATIC, 4, 8, 42, 10, NOT WS_GROUP
     EDITTEXT        IDC_TXT_FIND_TEXT, 47, 7, 128, 12, ES_AUTOHSCROLL | WS_GROUP
-    CONTROL         "&Doar pentru întreg cuvântul", IDC_CBX_FIND_WHOLE_WORD_ONLY,
+    CONTROL         "&Potrivire doar a cuvântului întreg", IDC_CBX_FIND_WHOLE_WORD_ONLY,
                     "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 4, 26, 100, 12
-    CONTROL         "Distinge &MAJ/min", IDC_CBX_FIND_MATCH_CASE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 42, 100, 12
+    CONTROL         "&Potrivire majuscule", IDC_CBX_FIND_MATCH_CASE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 42, 100, 12
     GROUPBOX        "Direcție", IDC_STATIC, 107, 26, 68, 28
-    CONTROL         "S&us", IDC_RB_FIND_UP, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 111, 38, 28, 12
-    CONTROL         "J&os", IDC_RB_FIND_DOWN, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 143, 38, 28, 12
-    DEFPUSHBUTTON   "Găsește &următorul", IDOK, 182, 5, 50, 14, WS_GROUP
-    PUSHBUTTON      "A&nulează", IDCANCEL, 182, 23, 50, 14, WS_GROUP
-    CONTROL         "&Caută de la început (Direcție: Sus) sau sfârșit (Direcție: Jos)", IDC_CBX_FIND_FROM_BEGINNING,
+    CONTROL         "&Sus", IDC_RB_FIND_UP, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 111, 38, 28, 12
+    CONTROL         "&Jos", IDC_RB_FIND_DOWN, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 143, 38, 28, 12
+    DEFPUSHBUTTON   "Găsire &următorul", IDOK, 182, 5, 50, 14, WS_GROUP
+    PUSHBUTTON      "Revocare", IDCANCEL, 182, 23, 50, 14, WS_GROUP
+    CONTROL         "&Căutare de la început (Direcție: Jos) sau de la sfârșit (Direcție: Sus)", IDC_CBX_FIND_FROM_BEGINNING,
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 58, 231, 12
 END
 
@@ -187,25 +187,25 @@ BEGIN
     CHECKBOX "/&CHANNEL", IDC_CBX_CHANNEL, 20, 130, 50, 10
     EDITTEXT IDC_TXT_CHANNEL, 80, 130, 60, 12, ES_LEFT
     CONTROL "", IDC_SCR_CHANNEL, "msctls_updown32", 0x50000000, 140, 130, 11, 11
-    PUSHBUTTON "Con&firmă", IDOK, 20, 160, 50, 12
-    PUSHBUTTON "A&nulează", IDCANCEL, 100, 160, 50, 12
+    PUSHBUTTON "OK", IDOK, 20, 160, 50, 12
+    PUSHBUTTON "Revocare", IDCANCEL, 100, 160, 50, 12
 END
 
 IDD_REQUIRED_SERVICES_DISABLING_DIALOG DIALOGEX 0, 0, 237, 62
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Programul configurator de sistem" // "Program de configurare sistem"
+CAPTION "Programul de configurare a sistemului" // "Program de configurare sistem"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "Î&nchide", IDOK, 180, 41, 50, 14
-    LTEXT           "Serviciile esențiale nu pot fi dezactivate. Făcând astfel poate împiedica execuția %s.", IDC_STATIC_REQSVCSDIS_INFO, 7, 7, 223, 28
-    CONTROL         "N&u doresc recurența acestui mesaj", IDC_CBX_REQSVCSDIS_NO_MSG_ANYMORE,
+    DEFPUSHBUTTON   "OK", IDOK, 180, 41, 50, 14
+    LTEXT           "Serviciile esențiale nu pot fi dezactivate. Acest lucru ar putea împiedica rularea %s pe computer.", IDC_STATIC_REQSVCSDIS_INFO, 7, 7, 223, 28
+    CONTROL         "&Nu se mai afişează acest mesaj", IDC_CBX_REQSVCSDIS_NO_MSG_ANYMORE,
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 42, 154, 13
 END
 
 STRINGTABLE
 BEGIN
-    IDS_MSCONFIG            "Programul configurator de sistem"
-    IDS_MSCONFIG_2          "Configurator de sistem"
+    IDS_MSCONFIG            "Programul de configurare a sistemului"
+    IDS_MSCONFIG_2          "Configurarea sistemului"
     IDS_ABOUT               "&Despre…\tShift+F1"
 END
 
@@ -218,13 +218,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TAB_STARTUP "Autolansate"
+    IDS_TAB_STARTUP "Pornire"
 END
 
 STRINGTABLE
 BEGIN
     IDS_SERVICES_COLUMN_SERVICE "Servicii"
-    IDS_SERVICES_COLUMN_REQ "De bază"
+    IDS_SERVICES_COLUMN_REQ "Necesare"
     IDS_SERVICES_COLUMN_VENDOR "Furnizor"
     IDS_SERVICES_COLUMN_STATUS "Stare"
     IDS_SERVICES_COLUMN_DATEDISABLED "Dată dezactivată"
@@ -232,7 +232,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TOOLS_COLUMN_NAME "Nume instrument"
+    IDS_TOOLS_COLUMN_NAME "Numele instrumentului"
     IDS_TOOLS_COLUMN_DESCR "Descriere"
     IDS_TOOLS_COLUMN_STANDARD "Standard"
     IDS_STARTUP_COLUMN_ELEMENT "Element"
@@ -242,6 +242,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SERVICES_STATUS_RUNNING "Pornit"
+    IDS_SERVICES_STATUS_RUNNING "Rulează"
     IDS_SERVICES_STATUS_STOPPED "Oprit"
 END

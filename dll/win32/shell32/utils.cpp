@@ -6,8 +6,128 @@
  */
 
 #include "precomp.h"
+#include <lmcons.h>
+#include <lmapibuf.h>
+#include <lmaccess.h>
+#include <lmserver.h>
+#include <secext.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
+
+static PCSTR StrEndNA(_In_ PCSTR psz, _In_ INT_PTR cch)
+{
+    PCSTR pch, pchEnd = &psz[cch];
+    for (pch = psz; *pch && pch < pchEnd; pch = CharNextA(pch))
+        ;
+    if (pchEnd < pch) // A double-byte character detected at last?
+        pch -= 2; // The width of a double-byte character is 2
+    return pch;
+}
+
+static PCWSTR StrEndNW(_In_ PCWSTR psz, _In_ INT_PTR cch)
+{
+    PCWSTR pch, pchEnd = &psz[cch];
+    for (pch = psz; *pch && pch < pchEnd; ++pch)
+        ;
+    return pch;
+}
+
+/*************************************************************************
+ *  StrRStrA [SHELL32.389]
+ */
+EXTERN_C
+PSTR WINAPI
+StrRStrA(
+    _In_ PCSTR pszSrc,
+    _In_opt_ PCSTR pszLast,
+    _In_ PCSTR pszSearch)
+{
+    INT cchSearch = lstrlenA(pszSearch);
+
+    PCSTR pchEnd = pszLast ? pszLast : &pszSrc[lstrlenA(pszSrc)];
+    if (pchEnd == pszSrc)
+        return NULL;
+
+    INT_PTR cchEnd = pchEnd - pszSrc;
+    for (;;)
+    {
+        --pchEnd;
+        --cchEnd;
+        if (!pchEnd)
+            break;
+        if (!StrCmpNA(pchEnd, pszSearch, cchSearch) && pchEnd == StrEndNA(pszSrc, cchEnd))
+            break;
+        if (pchEnd == pszSrc)
+            return NULL;
+    }
+
+    return const_cast<PSTR>(pchEnd);
+}
+
+/*************************************************************************
+ *  StrRStrW [SHELL32.392]
+ */
+EXTERN_C
+PWSTR WINAPI
+StrRStrW(
+    _In_ PCWSTR pszSrc,
+    _In_opt_ PCWSTR pszLast,
+    _In_ PCWSTR pszSearch)
+{
+    INT cchSearch = lstrlenW(pszSearch);
+
+    PCWSTR pchEnd = pszLast ? pszLast : &pszSrc[lstrlenW(pszSrc)];
+    if (pchEnd == pszSrc)
+        return NULL;
+
+    INT_PTR cchEnd = pchEnd - pszSrc;
+    for (;;)
+    {
+        --pchEnd;
+        --cchEnd;
+        if (!pchEnd)
+            break;
+        if (!StrCmpNW(pchEnd, pszSearch, cchSearch) && pchEnd == StrEndNW(pszSrc, cchEnd))
+            break;
+        if (pchEnd == pszSrc)
+            return NULL;
+    }
+
+    return const_cast<PWSTR>(pchEnd);
+}
+
+HWND
+CStubWindow32::FindStubWindow(UINT Type, LPCWSTR Path)
+{
+    for (HWND hWnd, hWndAfter = NULL;;)
+    {
+        hWnd = hWndAfter = FindWindowExW(NULL, hWndAfter, CSTUBWINDOW32_CLASSNAME, Path);
+        if (!hWnd || !Path)
+            return NULL;
+        if (GetPropW(hWnd, GetTypePropName()) == ULongToHandle(Type))
+            return hWnd;
+    }
+}
+
+HRESULT
+CStubWindow32::CreateStub(UINT Type, LPCWSTR Path, const POINT *pPt)
+{
+    if (HWND hWnd = FindStubWindow(Type, Path))
+    {
+        ::SwitchToThisWindow(::GetLastActivePopup(hWnd), TRUE);
+        return HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
+    }
+    RECT rcPosition = { pPt ? pPt->x : CW_USEDEFAULT, pPt ? pPt->y : CW_USEDEFAULT, 0, 0 };
+    DWORD Style = WS_DISABLED | WS_CLIPSIBLINGS | WS_CAPTION;
+    DWORD ExStyle = WS_EX_WINDOWEDGE | WS_EX_APPWINDOW;
+    if (!Create(NULL, rcPosition, Path, Style, ExStyle))
+    {
+        ERR("StubWindow32 creation failed\n");
+        return E_FAIL;
+    }
+    ::SetPropW(*this, GetTypePropName(), ULongToHandle(Type));
+    return S_OK;
+}
 
 HRESULT
 SHILClone(
@@ -82,6 +202,36 @@ HRESULT SHILAppend(_Inout_ LPITEMIDLIST pidl, _Inout_ LPITEMIDLIST *ppidl)
     HRESULT hr = SHILCombine(*ppidl, pidl, ppidl);
     ILFree(pidlOld);
     ILFree(pidl);
+    return hr;
+}
+
+/*************************************************************************
+ *  SHShouldShowWizards [SHELL32.237]
+ *
+ * Used by printer and network features.
+ * @see https://undoc.airesoft.co.uk/shell32.dll/SHShouldShowWizards.php
+ */
+EXTERN_C
+HRESULT WINAPI
+SHShouldShowWizards(_In_ IUnknown *pUnknown)
+{
+    HRESULT hr;
+    IShellBrowser *pBrowser;
+
+    hr = IUnknown_QueryService(pUnknown, SID_STopWindow, IID_PPV_ARG(IShellBrowser, &pBrowser));
+    if (FAILED(hr))
+        return hr;
+
+    SHELLSTATE state;
+    SHGetSetSettings(&state, SSF_WEBVIEW, FALSE);
+    if (state.fWebView &&
+        !SHRegGetBoolUSValueW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                              L"ShowWizardsTEST", FALSE, FALSE))
+    {
+        hr = S_FALSE;
+    }
+
+    pBrowser->Release();
     return hr;
 }
 
@@ -226,6 +376,32 @@ HRESULT SHBindToObject(
     return SHBindToObjectEx(psf, pidl, NULL, riid, ppvObj);
 }
 
+EXTERN_C HRESULT
+SHELL_GetUIObjectOfAbsoluteItem(
+    _In_opt_ HWND hWnd,
+    _In_ PCIDLIST_ABSOLUTE pidl,
+    _In_ REFIID riid, _Out_ void **ppvObj)
+{
+    if (!ppvObj)
+        return E_INVALIDARG;
+    *ppvObj = NULL;
+    IShellFolder *psf;
+    PCUITEMID_CHILD pidlChild;
+    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psf), &pidlChild);
+    if (SUCCEEDED(hr))
+    {
+        hr = psf->GetUIObjectOf(hWnd, 1, &pidlChild, riid, NULL, ppvObj);
+        psf->Release();
+        if (SUCCEEDED(hr))
+        {
+            if (*ppvObj)
+                return hr;
+            hr = E_FAIL;
+        }
+    }
+    return hr;
+}
+
 HRESULT
 Shell_DisplayNameOf(
     _In_ IShellFolder *psf,
@@ -275,6 +451,18 @@ SHGetAttributes(_In_ IShellFolder *psf, _In_ LPCITEMIDLIST pidl, _In_ DWORD dwAt
     if (release)
         release->Release();
     return dwAttributes;
+}
+
+HRESULT SHELL_GetIDListTarget(_In_ LPCITEMIDLIST pidl, _Out_ PIDLIST_ABSOLUTE *ppidl)
+{
+    IShellLink *pSL;
+    HRESULT hr = SHBindToObject(NULL, pidl, IID_PPV_ARG(IShellLink, &pSL));
+    if (SUCCEEDED(hr))
+    {
+        hr = pSL->GetIDList(ppidl); // Note: Returns S_FALSE if no target pidl
+        pSL->Release();
+    }
+    return hr;
 }
 
 HRESULT SHCoInitializeAnyApartment(VOID)
@@ -691,6 +879,180 @@ SHCreatePropertyBag(_In_ REFIID riid, _Out_ void **ppvObj)
     return SHCreatePropertyBagOnMemory(STGM_READWRITE, riid, ppvObj);
 }
 
+// The helper function for SHGetUnreadMailCountW
+static DWORD
+SHELL_ReadSingleUnreadMailCount(
+    _In_ HKEY hKey,
+    _Out_opt_ PDWORD pdwCount,
+    _Out_opt_ PFILETIME pFileTime,
+    _Out_writes_opt_(cchShellExecuteCommand) LPWSTR pszShellExecuteCommand,
+    _In_ INT cchShellExecuteCommand)
+{
+    DWORD dwType, dwCount, cbSize = sizeof(dwCount);
+    DWORD error = SHQueryValueExW(hKey, L"MessageCount", 0, &dwType, &dwCount, &cbSize);
+    if (error)
+        return error;
+    if (pdwCount && dwType == REG_DWORD)
+        *pdwCount = dwCount;
+
+    FILETIME FileTime;
+    cbSize = sizeof(FileTime);
+    error = SHQueryValueExW(hKey, L"TimeStamp", 0, &dwType, &FileTime, &cbSize);
+    if (error)
+        return error;
+    if (pFileTime && dwType == REG_BINARY)
+        *pFileTime = FileTime;
+
+    WCHAR szName[2 * MAX_PATH];
+    cbSize = sizeof(szName);
+    error = SHQueryValueExW(hKey, L"Application", 0, &dwType, szName, &cbSize);
+    if (error)
+        return error;
+
+    if (pszShellExecuteCommand && dwType == REG_SZ &&
+        FAILED(StringCchCopyW(pszShellExecuteCommand, cchShellExecuteCommand, szName)))
+    {
+        return ERROR_INSUFFICIENT_BUFFER;
+    }
+
+    return ERROR_SUCCESS;
+}
+
+/*************************************************************************
+ *  SHGetUnreadMailCountW [SHELL32.320]
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shgetunreadmailcountw
+ */
+EXTERN_C
+HRESULT WINAPI
+SHGetUnreadMailCountW(
+    _In_opt_ HKEY hKeyUser,
+    _In_opt_ PCWSTR pszMailAddress,
+    _Out_opt_ PDWORD pdwCount,
+    _Inout_opt_ PFILETIME pFileTime,
+    _Out_writes_opt_(cchShellExecuteCommand) PWSTR pszShellExecuteCommand,
+    _In_ INT cchShellExecuteCommand)
+{
+    LSTATUS error;
+    HKEY hKey;
+
+    if (!hKeyUser)
+        hKeyUser = HKEY_CURRENT_USER;
+
+    if (pszMailAddress)
+    {
+        CStringW strKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail";
+        strKey += L'\\';
+        strKey += pszMailAddress;
+
+        error = RegOpenKeyExW(hKeyUser, strKey, 0, KEY_QUERY_VALUE, &hKey);
+        if (error)
+            return HRESULT_FROM_WIN32(error);
+
+        error = SHELL_ReadSingleUnreadMailCount(hKey, pdwCount, pFileTime,
+                                                pszShellExecuteCommand, cchShellExecuteCommand);
+    }
+    else
+    {
+        if (pszShellExecuteCommand || cchShellExecuteCommand)
+            return E_INVALIDARG;
+
+        *pdwCount = 0;
+
+        error = RegOpenKeyExW(hKeyUser, L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail",
+                              0, KEY_ENUMERATE_SUB_KEYS, &hKey);
+        if (error)
+            return HRESULT_FROM_WIN32(error);
+
+        for (DWORD dwIndex = 0; !error; ++dwIndex)
+        {
+            WCHAR Name[2 * MAX_PATH];
+            DWORD cchName = _countof(Name);
+            FILETIME LastWritten;
+            error = RegEnumKeyExW(hKey, dwIndex, Name, &cchName, NULL, NULL, NULL, &LastWritten);
+            if (error)
+                break;
+
+            HKEY hSubKey;
+            error = RegOpenKeyExW(hKey, Name, 0, KEY_QUERY_VALUE, &hSubKey);
+            if (error)
+                break;
+
+            FILETIME FileTime;
+            DWORD dwCount;
+            error = SHELL_ReadSingleUnreadMailCount(hSubKey, &dwCount, &FileTime, NULL, 0);
+            if (!error && (!pFileTime || CompareFileTime(&FileTime, pFileTime) >= 0))
+                *pdwCount += dwCount;
+
+            RegCloseKey(hSubKey);
+        }
+
+        if (error == ERROR_NO_MORE_ITEMS)
+            error = ERROR_SUCCESS;
+    }
+
+    RegCloseKey(hKey);
+
+    return error ? HRESULT_FROM_WIN32(error) : S_OK;
+}
+
+/*************************************************************************
+ *  SHSetUnreadMailCountW [SHELL32.336]
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shsetunreadmailcountw
+ */
+EXTERN_C
+HRESULT WINAPI
+SHSetUnreadMailCountW(
+    _In_ PCWSTR pszMailAddress,
+    _In_ DWORD dwCount,
+    _In_ PCWSTR pszShellExecuteCommand)
+{
+    CString strKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail\\";
+    strKey += pszMailAddress;
+
+    HKEY hKey;
+    DWORD dwDisposition;
+    LSTATUS error = RegCreateKeyExW(HKEY_CURRENT_USER, strKey, 0, NULL, 0, KEY_SET_VALUE, NULL,
+                                    &hKey, &dwDisposition);
+    if (error)
+        return HRESULT_FROM_WIN32(error);
+
+    error = RegSetValueExW(hKey, L"MessageCount", 0, REG_DWORD, (PBYTE)&dwCount, sizeof(dwCount));
+    if (error)
+    {
+        RegCloseKey(hKey);
+        return HRESULT_FROM_WIN32(error);
+    }
+
+    FILETIME FileTime;
+    GetSystemTimeAsFileTime(&FileTime);
+
+    error = RegSetValueExW(hKey, L"TimeStamp", 0, REG_BINARY, (PBYTE)&FileTime, sizeof(FileTime));
+    if (error)
+    {
+        RegCloseKey(hKey);
+        return HRESULT_FROM_WIN32(error);
+    }
+
+    WCHAR szBuff[2 * MAX_PATH];
+    if (!PathUnExpandEnvStringsW(pszShellExecuteCommand, szBuff, _countof(szBuff)))
+    {
+        HRESULT hr = StringCchCopyW(szBuff, _countof(szBuff), pszShellExecuteCommand);
+        if (FAILED_UNEXPECTEDLY(hr))
+        {
+            RegCloseKey(hKey);
+            return hr;
+        }
+    }
+
+    DWORD cbValue = (lstrlenW(szBuff) + 1) * sizeof(WCHAR);
+    error = RegSetValueExW(hKey, L"Application", 0, REG_SZ, (PBYTE)szBuff, cbValue);
+
+    RegCloseKey(hKey);
+    return (error ? HRESULT_FROM_WIN32(error) : S_OK);
+}
+
 /*************************************************************************
  *                SheRemoveQuotesA (SHELL32.@)
  */
@@ -737,6 +1099,39 @@ SheRemoveQuotesW(LPWSTR psz)
     }
 
     return psz;
+}
+
+/*************************************************************************
+ *  SHEnumerateUnreadMailAccountsW [SHELL32.287]
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shenumerateunreadmailaccountsw
+ */
+EXTERN_C
+HRESULT WINAPI
+SHEnumerateUnreadMailAccountsW(
+    _In_opt_ HKEY hKeyUser,
+    _In_ DWORD dwIndex,
+    _Out_writes_(cchMailAddress) PWSTR pszMailAddress,
+    _In_ INT cchMailAddress)
+{
+    if (!hKeyUser)
+        hKeyUser = HKEY_CURRENT_USER;
+
+    HKEY hKey;
+    LSTATUS error = RegOpenKeyExW(hKeyUser,
+                                  L"Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail",
+                                  0, KEY_ENUMERATE_SUB_KEYS, &hKey);
+    if (error)
+        return HRESULT_FROM_WIN32(error);
+
+    FILETIME FileTime;
+    error = RegEnumKeyExW(hKey, dwIndex, pszMailAddress, (PDWORD)&cchMailAddress, NULL, NULL,
+                          NULL, &FileTime);
+    if (error)
+        *pszMailAddress = UNICODE_NULL;
+
+    RegCloseKey(hKey);
+    return error ? HRESULT_FROM_WIN32(error) : S_OK;
 }
 
 /*************************************************************************
@@ -1046,44 +1441,6 @@ CopyStreamUI(
 }
 
 /*************************************************************************
- *  SHOpenPropSheetA [SHELL32.707]
- *
- * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj/nf-shlobj-shopenpropsheeta
- */
-EXTERN_C
-BOOL WINAPI
-SHOpenPropSheetA(
-    _In_opt_ LPCSTR pszCaption,
-    _In_opt_ HKEY *ahKeys,
-    _In_ UINT cKeys,
-    _In_ const CLSID *pclsidDefault,
-    _In_ IDataObject *pDataObject,
-    _In_opt_ IShellBrowser *pShellBrowser,
-    _In_opt_ LPCSTR pszStartPage)
-{
-    CStringW strStartPageW, strCaptionW;
-    LPCWSTR pszCaptionW = NULL, pszStartPageW = NULL;
-
-    TRACE("(%s, %p, %u, %p, %p, %p, %s)", debugstr_a(pszCaption), ahKeys, cKeys, pclsidDefault,
-          pDataObject, pShellBrowser, debugstr_a(pszStartPage));
-
-    if (pszCaption)
-    {
-        strStartPageW = pszCaption;
-        pszCaptionW = strCaptionW;
-    }
-
-    if (pszStartPage)
-    {
-        strStartPageW = pszStartPage;
-        pszStartPageW = strStartPageW;
-    }
-
-    return SHOpenPropSheetW(pszCaptionW, ahKeys, cKeys, pclsidDefault,
-                            pDataObject, pShellBrowser, pszStartPageW);
-}
-
-/*************************************************************************
  *  Activate_RunDLL [SHELL32.105]
  *
  * Unlocks the foreground window and allows the shell window to become the
@@ -1383,4 +1740,303 @@ GetDfmCmd(_In_ IContextMenu *pCM, _In_ LPCSTR verba)
         verba = buf;
     }
     return MapVerbToDfmCmd(verba); // Returns DFM_CMD_* or 0
+}
+
+HRESULT
+SHELL_MapContextMenuVerbToCmdId(LPCMINVOKECOMMANDINFO pICI, const CMVERBMAP *pMap)
+{
+    LPCSTR pVerbA = pICI->lpVerb;
+    CHAR buf[MAX_PATH];
+    LPCMINVOKECOMMANDINFOEX pICIX = (LPCMINVOKECOMMANDINFOEX)pICI;
+    if (IsUnicode(*pICIX) && !IS_INTRESOURCE(pICIX->lpVerbW))
+    {
+        if (SHUnicodeToAnsi(pICIX->lpVerbW, buf, _countof(buf)))
+            pVerbA = buf;
+    }
+
+    if (IS_INTRESOURCE(pVerbA))
+        return LOWORD(pVerbA);
+    for (SIZE_T i = 0; pMap[i].Verb; ++i)
+    {
+        assert(SUCCEEDED((int)(pMap[i].CmdId))); // The id must be >= 0 and ideally in the 0..0x7fff range
+        if (!lstrcmpiA(pMap[i].Verb, pVerbA) && pVerbA[0])
+            return pMap[i].CmdId;
+    }
+    return E_FAIL;
+}
+
+static const CMVERBMAP*
+FindVerbMapEntry(UINT_PTR CmdId, const CMVERBMAP *pMap)
+{
+    for (SIZE_T i = 0; pMap[i].Verb; ++i)
+    {
+        if (pMap[i].CmdId == CmdId)
+            return &pMap[i];
+    }
+    return NULL;
+}
+
+HRESULT
+SHELL_GetCommandStringImpl(SIZE_T CmdId, UINT uFlags, LPSTR Buf, UINT cchBuf, const CMVERBMAP *pMap)
+{
+    const CMVERBMAP* pEntry;
+    switch (uFlags | GCS_UNICODE)
+    {
+        case GCS_VALIDATEW:
+        case GCS_VERBW:
+            pEntry = FindVerbMapEntry(CmdId, pMap);
+            if ((uFlags | GCS_UNICODE) == GCS_VERBW)
+            {
+                if (!pEntry)
+                    return E_INVALIDARG;
+                else if (uFlags & GCS_UNICODE)
+                    return SHAnsiToUnicode(pEntry->Verb, (LPWSTR)Buf, cchBuf) ? S_OK : E_FAIL;
+                else
+                    return StringCchCopyA(Buf, cchBuf, pEntry->Verb);
+            }
+            return pEntry ? S_OK : S_FALSE; // GCS_VALIDATE
+    }
+    return E_NOTIMPL;
+}
+
+HRESULT
+SHELL_CreateShell32DefaultExtractIcon(int IconIndex, REFIID riid, LPVOID *ppvOut)
+{
+    CComPtr<IDefaultExtractIconInit> initIcon;
+    HRESULT hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit, &initIcon));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    initIcon->SetNormalIcon(swShell32Name, IconIndex);
+    return initIcon->QueryInterface(riid, ppvOut);
+}
+
+/*************************************************************************
+ *  SHIsBadInterfacePtr [SHELL32.84]
+ *
+ * Retired in 6.0 from Windows Vista and higher.
+ */
+EXTERN_C
+BOOL WINAPI
+SHIsBadInterfacePtr(
+    _In_ LPCVOID pv,
+    _In_ UINT_PTR ucb)
+{
+    struct CUnknownVtbl
+    {
+        HRESULT (STDMETHODCALLTYPE *QueryInterface)(REFIID riid, LPVOID *ppvObj);
+        ULONG (STDMETHODCALLTYPE *AddRef)();
+        ULONG (STDMETHODCALLTYPE *Release)();
+    };
+    struct CUnknown { CUnknownVtbl *lpVtbl; };
+    const CUnknown *punk = reinterpret_cast<const CUnknown *>(pv);
+    return !punk || IsBadReadPtr(punk, sizeof(punk->lpVtbl)) ||
+           IsBadReadPtr(punk->lpVtbl, ucb) ||
+           IsBadCodePtr((FARPROC)punk->lpVtbl->Release);
+}
+
+/*************************************************************************
+ *  SHGetUserDisplayName [SHELL32.241]
+ *
+ * @see https://undoc.airesoft.co.uk/shell32.dll/SHGetUserDisplayName.php
+ */
+EXTERN_C
+HRESULT WINAPI
+SHGetUserDisplayName(
+    _Out_writes_to_(*puSize, *puSize) PWSTR pName,
+    _Inout_ PULONG puSize)
+{
+    if (!pName || !puSize)
+        return E_INVALIDARG;
+
+    if (GetUserNameExW(NameDisplay, pName, puSize))
+        return S_OK;
+
+    LONG error = GetLastError(); // for ERROR_NONE_MAPPED
+    HRESULT hr = HRESULT_FROM_WIN32(error);
+
+    WCHAR UserName[MAX_PATH];
+    DWORD cchUserName = _countof(UserName);
+    if (!GetUserNameW(UserName, &cchUserName))
+        return HRESULT_FROM_WIN32(GetLastError());
+
+    // Was the user name not available in the specified format (NameDisplay)?
+    if (error == ERROR_NONE_MAPPED)
+    {
+        // Try to get the user name by using Network API
+        PUSER_INFO_2 UserInfo;
+        DWORD NetError = NetUserGetInfo(NULL, UserName, 2, (PBYTE*)&UserInfo);
+        if (NetError)
+        {
+            hr = HRESULT_FROM_WIN32(NetError);
+        }
+        else
+        {
+            if (UserInfo->usri2_full_name)
+            {
+                hr = StringCchCopyW(pName, *puSize, UserInfo->usri2_full_name);
+                if (SUCCEEDED(hr))
+                {
+                    // Include the NUL-terminator
+                    *puSize = lstrlenW(UserInfo->usri2_full_name) + 1;
+                }
+            }
+
+            NetApiBufferFree(UserInfo);
+        }
+    }
+
+    if (FAILED(hr))
+    {
+        hr = StringCchCopyW(pName, *puSize, UserName);
+        if (SUCCEEDED(hr))
+            *puSize = cchUserName;
+    }
+
+    return hr;
+}
+
+// Skip leading backslashes
+static PCWSTR
+SHELL_SkipServerSlashes(
+    _In_ PCWSTR pszPath)
+{
+    PCWSTR pch;
+    for (pch = pszPath; *pch == L'\\'; ++pch)
+        ;
+    return pch;
+}
+
+// The registry key for server computer descriptions cache
+#define COMPUTER_DESCRIPTIONS_KEY \
+    L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ComputerDescriptions"
+
+// Get server computer description from cache
+static HRESULT
+SHELL_GetCachedComputerDescription(
+    _Out_writes_z_(cchDescMax) PWSTR pszDesc,
+    _In_ DWORD cchDescMax,
+    _In_ PCWSTR pszServerName)
+{
+    cchDescMax *= sizeof(WCHAR);
+    DWORD error = SHGetValueW(HKEY_CURRENT_USER, COMPUTER_DESCRIPTIONS_KEY,
+                              SHELL_SkipServerSlashes(pszServerName), NULL, pszDesc, &cchDescMax);
+    return HRESULT_FROM_WIN32(error);
+}
+
+// Do cache a server computer description
+static VOID
+SHELL_CacheComputerDescription(
+    _In_ PCWSTR pszServerName,
+    _In_ PCWSTR pszDesc)
+{
+    if (!pszDesc)
+        return;
+
+    SIZE_T cbDesc = (wcslen(pszDesc) + 1) * sizeof(WCHAR);
+    SHSetValueW(HKEY_CURRENT_USER, COMPUTER_DESCRIPTIONS_KEY,
+                SHELL_SkipServerSlashes(pszServerName), REG_SZ, pszDesc, (DWORD)cbDesc);
+}
+
+// Get real server computer description
+static HRESULT
+SHELL_GetComputerDescription(
+    _Out_writes_z_(cchDescMax) PWSTR pszDesc,
+    _In_ SIZE_T cchDescMax,
+    _In_ PWSTR pszServerName)
+{
+    PSERVER_INFO_101 bufptr;
+    NET_API_STATUS error = NetServerGetInfo(pszServerName, 101, (PBYTE*)&bufptr);
+    HRESULT hr = (error > 0) ? HRESULT_FROM_WIN32(error) : error;
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    PCWSTR comment = bufptr->sv101_comment;
+    if (comment && comment[0])
+        StringCchCopyW(pszDesc, cchDescMax, comment);
+    else
+        hr = E_FAIL;
+
+    NetApiBufferFree(bufptr);
+    return hr;
+}
+
+// Build computer display name
+static HRESULT
+SHELL_BuildDisplayMachineName(
+    _Out_writes_z_(cchNameMax) PWSTR pszName,
+    _In_ DWORD cchNameMax,
+    _In_ PCWSTR pszServerName,
+    _In_ PCWSTR pszDescription)
+{
+    if (!pszDescription || !*pszDescription)
+        return E_FAIL;
+
+    PCWSTR pszFormat = (SHRestricted(REST_ALLOWCOMMENTTOGGLE) ? L"%2 (%1)" : L"%1 (%2)");
+    PCWSTR args[] = { pszDescription , SHELL_SkipServerSlashes(pszServerName) };
+    return (FormatMessageW(FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_FROM_STRING,
+                           pszFormat, 0, 0, pszName, cchNameMax, (va_list *)args) ? S_OK : E_FAIL);
+}
+
+/*************************************************************************
+ *  SHGetComputerDisplayNameW [SHELL32.752]
+ */
+EXTERN_C
+HRESULT WINAPI
+SHGetComputerDisplayNameW(
+    _In_opt_ PWSTR pszServerName,
+    _In_ DWORD dwFlags,
+    _Out_writes_z_(cchNameMax) PWSTR pszName,
+    _In_ DWORD cchNameMax)
+{
+    WCHAR szDesc[256], szCompName[MAX_COMPUTERNAME_LENGTH + 1];
+
+    // If no server name is specified, retrieve the local computer name
+    if (!pszServerName)
+    {
+        // Use computer name as server name
+        DWORD cchCompName = _countof(szCompName);
+        if (!GetComputerNameW(szCompName, &cchCompName))
+            return E_FAIL;
+        pszServerName = szCompName;
+
+        // Don't use the cache for the local machine
+        dwFlags |= SHGCDN_NOCACHE;
+    }
+
+    // Get computer description from cache if necessary
+    HRESULT hr = E_FAIL;
+    if (!(dwFlags & SHGCDN_NOCACHE))
+        hr = SHELL_GetCachedComputerDescription(szDesc, _countof(szDesc), pszServerName);
+
+    // Actually retrieve the computer description if it is not in the cache
+    if (FAILED(hr))
+    {
+        hr = SHELL_GetComputerDescription(szDesc, _countof(szDesc), pszServerName);
+        if (FAILED(hr))
+            szDesc[0] = UNICODE_NULL;
+
+        // Cache the description if necessary
+        if (!(dwFlags & SHGCDN_NOCACHE))
+            SHELL_CacheComputerDescription(pszServerName, szDesc);
+    }
+
+    // If getting the computer description failed, store the server name only
+    if (FAILED(hr) || !szDesc[0])
+    {
+        if (dwFlags & SHGCDN_NOSERVERNAME)
+            return hr; // Bail out if no server name is requested
+
+        StringCchCopyW(pszName, cchNameMax, SHELL_SkipServerSlashes(pszServerName));
+        return S_OK;
+    }
+
+    // If no server name is requested, store the description only
+    if (dwFlags & SHGCDN_NOSERVERNAME)
+    {
+        StringCchCopyW(pszName, cchNameMax, szDesc);
+        return S_OK;
+    }
+
+    // Build a string like "Description (SERVERNAME)"
+    return SHELL_BuildDisplayMachineName(pszName, cchNameMax, pszServerName, szDesc);
 }

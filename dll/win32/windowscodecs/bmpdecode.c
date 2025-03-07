@@ -16,8 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-
 #include <assert.h>
 #include <stdarg.h>
 
@@ -226,9 +224,9 @@ static HRESULT WINAPI BmpFrameDecode_CopyPalette(IWICBitmapFrameDecode *iface,
             int i;
 
             count = 1 << bch->bcBitCount;
-            wiccolors = HeapAlloc(GetProcessHeap(), 0, sizeof(WICColor) * count);
+            wiccolors = malloc(sizeof(WICColor) * count);
             tablesize = sizeof(RGBTRIPLE) * count;
-            bgrcolors = HeapAlloc(GetProcessHeap(), 0, tablesize);
+            bgrcolors = malloc(tablesize);
             if (!wiccolors || !bgrcolors)
             {
                 hr = E_OUTOFMEMORY;
@@ -274,7 +272,7 @@ static HRESULT WINAPI BmpFrameDecode_CopyPalette(IWICBitmapFrameDecode *iface,
                 count = min(This->bih.bV5ClrUsed, 1 << This->bih.bV5BitCount);
 
             tablesize = sizeof(WICColor) * count;
-            wiccolors = HeapAlloc(GetProcessHeap(), 0, tablesize);
+            wiccolors = malloc(tablesize);
             if (!wiccolors)
             {
                 hr = E_OUTOFMEMORY;
@@ -310,8 +308,8 @@ end:
     if (SUCCEEDED(hr))
         hr = IWICPalette_InitializeCustom(pIPalette, wiccolors, count);
 
-    HeapFree(GetProcessHeap(), 0, wiccolors);
-    HeapFree(GetProcessHeap(), 0, bgrcolors);
+    free(wiccolors);
+    free(bgrcolors);
     return hr;
 }
 
@@ -388,7 +386,7 @@ static HRESULT BmpFrameDecode_ReadUncompressed(BmpDecoder* This)
     bytesperrow = (((width * This->bitsperpixel)+31)/32)*4;
     datasize = bytesperrow * height;
 
-    This->imagedata = HeapAlloc(GetProcessHeap(), 0, datasize);
+    This->imagedata = malloc(datasize);
     if (!This->imagedata) return E_OUTOFMEMORY;
 
     offbits.QuadPart = This->image_offset;
@@ -411,9 +409,42 @@ static HRESULT BmpFrameDecode_ReadUncompressed(BmpDecoder* This)
     return S_OK;
 
 fail:
-    HeapFree(GetProcessHeap(), 0, This->imagedata);
+    free(This->imagedata);
     This->imagedata = NULL;
     if (SUCCEEDED(hr)) hr = E_FAIL;
+    return hr;
+}
+
+static HRESULT BmpFrameDecode_ReadABGRasBGR(BmpDecoder* This)
+{
+    UINT x, y, width, height;
+    BYTE *pixel;
+    HRESULT hr;
+
+    hr = IWICBitmapFrameDecode_GetSize(&This->IWICBitmapFrameDecode_iface, &width, &height);
+
+    if (SUCCEEDED(hr))
+    {
+        hr = BmpFrameDecode_ReadUncompressed(This);
+    }
+
+    if (SUCCEEDED(hr))
+    {
+        for (y = 0; y < height; y++)
+        {
+            pixel = This->imagedatastart + This->stride * (INT)y;
+
+            for (x = 0; x < width; x++)
+            {
+                pixel[0] = pixel[1];
+                pixel[1] = pixel[2];
+                pixel[2] = pixel[3];
+                pixel[3] = 0;
+                pixel += 4;
+            }
+        }
+    }
+
     return hr;
 }
 
@@ -482,7 +513,7 @@ static HRESULT BmpFrameDecode_ReadRLE8(BmpDecoder* This)
     else
         palettesize = 4 * 256;
 
-    This->imagedata = HeapAlloc(GetProcessHeap(), 0, datasize);
+    This->imagedata = malloc(datasize);
     if (!This->imagedata)
     {
         hr = E_OUTOFMEMORY;
@@ -578,7 +609,7 @@ end:
     return S_OK;
 
 fail:
-    HeapFree(GetProcessHeap(), 0, This->imagedata);
+    free(This->imagedata);
     This->imagedata = NULL;
     if (SUCCEEDED(hr)) hr = E_FAIL;
     return hr;
@@ -606,7 +637,7 @@ static HRESULT BmpFrameDecode_ReadRLE4(BmpDecoder* This)
     else
         palettesize = 4 * 16;
 
-    This->imagedata = HeapAlloc(GetProcessHeap(), 0, datasize);
+    This->imagedata = malloc(datasize);
     if (!This->imagedata)
     {
         hr = E_OUTOFMEMORY;
@@ -718,7 +749,7 @@ end:
     return S_OK;
 
 fail:
-    HeapFree(GetProcessHeap(), 0, This->imagedata);
+    free(This->imagedata);
     This->imagedata = NULL;
     if (SUCCEEDED(hr)) hr = E_FAIL;
     return hr;
@@ -744,7 +775,7 @@ static const struct bitfields_format bitfields_formats[] = {
     {16,0xf800,0x7e0,0x1f,0,&GUID_WICPixelFormat16bppBGR565,BmpFrameDecode_ReadUncompressed},
     {32,0xff0000,0xff00,0xff,0,&GUID_WICPixelFormat32bppBGR,BmpFrameDecode_ReadUncompressed},
     {32,0xff0000,0xff00,0xff,0xff000000,&GUID_WICPixelFormat32bppBGRA,BmpFrameDecode_ReadUncompressed},
-    {32,0xff000000,0xff0000,0xff00,0xff,&GUID_WICPixelFormat32bppRGBA,BmpFrameDecode_ReadUncompressed},
+    {32,0xff000000,0xff0000,0xff00,0xff,&GUID_WICPixelFormat32bppBGR,BmpFrameDecode_ReadABGRasBGR},
     {32,0xff,0xff00,0xff0000,0,&GUID_WICPixelFormat32bppBGR,BmpFrameDecode_ReadRGB8},
     {0}
 };
@@ -861,7 +892,7 @@ static HRESULT BmpDecoder_ReadHeaders(BmpDecoder* This, IStream *stream)
     }
     else /* struct is compatible with BITMAPINFOHEADER */
     {
-        TRACE("bitmap header=%i compression=%i depth=%i\n", This->bih.bV5Size, This->bih.bV5Compression, This->bih.bV5BitCount);
+        TRACE("bitmap header=%li compression=%li depth=%i\n", This->bih.bV5Size, This->bih.bV5Compression, This->bih.bV5BitCount);
         switch(This->bih.bV5Compression)
         {
         case BI_RGB:
@@ -935,7 +966,7 @@ static HRESULT BmpDecoder_ReadHeaders(BmpDecoder* This, IStream *stream)
             {
                 This->read_data_func = BmpFrameDecode_ReadUncompressed;
                 This->pixelformat = &GUID_WICPixelFormatUndefined;
-                FIXME("unsupported bitfields type depth=%i red=%x green=%x blue=%x alpha=%x\n",
+                FIXME("unsupported bitfields type depth=%i red=%lx green=%lx blue=%lx alpha=%lx\n",
                     This->bih.bV5BitCount, This->bih.bV5RedMask, This->bih.bV5GreenMask, This->bih.bV5BlueMask, This->bih.bV5AlphaMask);
             }
             break;
@@ -944,7 +975,7 @@ static HRESULT BmpDecoder_ReadHeaders(BmpDecoder* This, IStream *stream)
             This->bitsperpixel = 0;
             This->read_data_func = BmpFrameDecode_ReadUnsupported;
             This->pixelformat = &GUID_WICPixelFormatUndefined;
-            FIXME("unsupported bitmap type header=%i compression=%i depth=%i\n", This->bih.bV5Size, This->bih.bV5Compression, This->bih.bV5BitCount);
+            FIXME("unsupported bitmap type header=%li compression=%li depth=%i\n", This->bih.bV5Size, This->bih.bV5Compression, This->bih.bV5BitCount);
             break;
         }
     }
@@ -999,7 +1030,7 @@ static ULONG WINAPI BmpDecoder_AddRef(IWICBitmapDecoder *iface)
     BmpDecoder *This = impl_from_IWICBitmapDecoder(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) refcount=%u\n", iface, ref);
+    TRACE("(%p) refcount=%lu\n", iface, ref);
 
     return ref;
 }
@@ -1009,15 +1040,15 @@ static ULONG WINAPI BmpDecoder_Release(IWICBitmapDecoder *iface)
     BmpDecoder *This = impl_from_IWICBitmapDecoder(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) refcount=%u\n", iface, ref);
+    TRACE("(%p) refcount=%lu\n", iface, ref);
 
     if (ref == 0)
     {
         if (This->stream) IStream_Release(This->stream);
-        HeapFree(GetProcessHeap(), 0, This->imagedata);
+        free(This->imagedata);
         This->lock.DebugInfo->Spare[0] = 0;
         DeleteCriticalSection(&This->lock);
-        HeapFree(GetProcessHeap(), 0, This);
+        free(This);
     }
 
     return ref;
@@ -1155,7 +1186,7 @@ static HRESULT BmpDecoder_Create(int packed, int icoframe, BmpDecoder **ppDecode
 {
     BmpDecoder *This;
 
-    This = HeapAlloc(GetProcessHeap(), 0, sizeof(BmpDecoder));
+    This = malloc(sizeof(BmpDecoder));
     if (!This) return E_OUTOFMEMORY;
 
     This->IWICBitmapDecoder_iface.lpVtbl = &BmpDecoder_Vtbl;
@@ -1164,7 +1195,11 @@ static HRESULT BmpDecoder_Create(int packed, int icoframe, BmpDecoder **ppDecode
     This->initialized = FALSE;
     This->stream = NULL;
     This->imagedata = NULL;
+#ifdef __REACTOS__
     InitializeCriticalSection(&This->lock);
+#else
+    InitializeCriticalSectionEx(&This->lock, 0, RTL_CRITICAL_SECTION_FLAG_FORCE_DEBUG_INFO);
+#endif
     This->lock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": BmpDecoder.lock");
     This->packed = packed;
     This->icoframe = icoframe;
@@ -1220,7 +1255,8 @@ void BmpDecoder_FindIconMask(BmpDecoder *This, ULONG *mask_offset, int *topdown)
     if (This->read_data_func == BmpFrameDecode_ReadUncompressed)
     {
         /* RGB or BITFIELDS data */
-        ULONG width, height, bytesperrow, datasize;
+        UINT width, height;
+        ULONG bytesperrow, datasize;
         IWICBitmapFrameDecode_GetSize(&This->IWICBitmapFrameDecode_iface, &width, &height);
         bytesperrow = (((width * This->bitsperpixel)+31)/32)*4;
         datasize = bytesperrow * height;

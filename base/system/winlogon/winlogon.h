@@ -41,6 +41,7 @@
 #include <winwlx.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/exfuncs.h>
+#include <ndk/kefuncs.h>
 #include <strsafe.h>
 
 /* PSEH for SEH Support */
@@ -134,7 +135,7 @@ typedef struct _GINAINSTANCE
 
 /*
  * The picture Microsoft is trying to paint here
- * (http://msdn.microsoft.com/en-us/library/windows/desktop/aa380547%28v=vs.85%29.aspx)
+ * (https://learn.microsoft.com/en-us/windows/win32/secauthn/winlogon-states)
  * about the Winlogon states is a little too simple.
  *
  * The real picture should look more like this:
@@ -233,6 +234,7 @@ typedef struct _WLSESSION
     HANDLE hProfileInfo;
     LOGON_STATE LogonState;
     DWORD DialogTimeout; /* Timeout for dialog boxes, in seconds */
+    LARGE_INTEGER LastLogon;
 
     /* Screen-saver informations */
 #ifndef USE_GETLASTINPUTINFO
@@ -284,6 +286,23 @@ extern PWLSESSION WLSession;
    ((Status) == WLX_SAS_ACTION_SHUTDOWN_SLEEP2) || \
    ((Status) == WLX_SAS_ACTION_SHUTDOWN_HIBERNATE) \
   )
+
+FORCEINLINE
+VOID
+SetLogonTimestamp(
+    _Inout_ PWLSESSION Session)
+{
+    NtQuerySystemTime(&Session->LastLogon);
+}
+
+FORCEINLINE
+BOOL
+IsFirstLogon(
+    _In_ PWLSESSION Session)
+{
+    /* The WLSESSION::LastLogon is initialized to 0 so this is OK */
+    return (Session->LastLogon.QuadPart == 0);
+}
 
 /* environment.c */
 BOOL

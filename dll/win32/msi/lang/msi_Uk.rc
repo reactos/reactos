@@ -33,6 +33,14 @@ STRINGTABLE
     13 "мережевий диск для даної можливості не вказаний"
     14 "можливість з:"
     15 "виберіть папку, що містить %s"
+#ifdef __REACTOS__
+    34 "ReactOS Installer Package"
+    35 "ReactOS Installer Patch"
+    36 "&Install"
+    37 "Re&pair"
+    38 "&Uninstall"
+    39 "&Apply"
+#endif
     100 "New Folder"
 }
 

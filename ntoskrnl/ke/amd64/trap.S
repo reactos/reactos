@@ -23,8 +23,9 @@ EXTERN KiDpcInterruptHandler:PROC
 EXTERN PsConvertToGuiThread:PROC
 EXTERN MmCreateKernelStack:PROC
 EXTERN MmDeleteKernelStack:PROC
-
 EXTERN KdSetOwedBreakpoints:PROC
+EXTERN KeAcquireSpinLockAtDpcLevel:PROC
+EXTERN KeReleaseSpinLockFromDpcLevel:PROC
 
 
 /* Helper Macros *************************************************************/
@@ -744,11 +745,13 @@ FUNC KiInterruptDispatch
     movzx rax, byte ptr [rbx + KINTERRUPT_SynchronizeIrql]
     mov cr8, rax
 
+    /* Enable interrupts */
+    sti
+
 #ifdef CONFIG_SMP
     /* Acquire interrupt lock */
-    mov r8, [rbx + KINTERRUPT_ActualLock]
-
-    //KxAcquireSpinLock(Interrupt->ActualLock);
+    mov rcx, [rbx + KINTERRUPT_ActualLock]
+    call KeAcquireSpinLockAtDpcLevel
 #endif
 
     /* Call the ISR */
@@ -758,10 +761,12 @@ FUNC KiInterruptDispatch
 
 #ifdef CONFIG_SMP
     /* Release interrupt lock */
-    //KxReleaseSpinLock(Interrupt->ActualLock);
+    mov rcx, [rbx + KINTERRUPT_ActualLock]
+    call KeReleaseSpinLockFromDpcLevel
 #endif
 
-    /* Go back to old irql */
+    /* Disable interrupts and go back to old irql */
+    cli
     movzx rax, byte ptr [rbp + KTRAP_FRAME_PreviousIrql]
     mov cr8, rax
 

@@ -330,7 +330,7 @@ FsRtlCopyWrite2(
                 return FALSE;
             }
 
-            /* And that we're not writting beyond allocation size */
+            /* And that we're not writing beyond allocation size */
             if (Fcb->AllocationSize.QuadPart < LastOffset.QuadPart)
             {
                 ExReleaseResourceLite(Fcb->Resource);
@@ -561,7 +561,7 @@ FsRtlCopyWrite2(
                 return FALSE;
             }
 
-            /* And that we're not writting beyond allocation size
+            /* And that we're not writing beyond allocation size
              * and that we're not going above 4GB
              */
             if ((Fcb->AllocationSize.LowPart < LastOffset.LowPart) ||

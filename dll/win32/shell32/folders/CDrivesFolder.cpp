@@ -186,117 +186,22 @@ static BOOL DoEjectDrive(const WCHAR *physical, UINT nDriveType, INT *pnStringID
     return bResult;
 }
 
-// A callback function for finding the stub windows.
-static BOOL CALLBACK
-EnumStubProc(HWND hwnd, LPARAM lParam)
+static DWORD CALLBACK DoFormatDriveThread(LPVOID args)
 {
-    CSimpleArray<HWND> *pStubs = reinterpret_cast<CSimpleArray<HWND> *>(lParam);
-
-    WCHAR szClass[64];
-    GetClassNameW(hwnd, szClass, _countof(szClass));
-
-    if (lstrcmpiW(szClass, L"StubWindow32") == 0)
-    {
-        pStubs->Add(hwnd);
-    }
-
-    return TRUE;
-}
-
-// Another callback function to find the owned window of the stub window.
-static BOOL CALLBACK
-EnumStubProc2(HWND hwnd, LPARAM lParam)
-{
-    HWND *phwnd = reinterpret_cast<HWND *>(lParam);
-
-    if (phwnd[0] == GetWindow(hwnd, GW_OWNER))
-    {
-        phwnd[1] = hwnd;
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-// Parameters for format_drive_thread function below.
-struct THREAD_PARAMS
-{
-    UINT nDriveNumber;
-};
-
-static unsigned __stdcall format_drive_thread(void *args)
-{
-    THREAD_PARAMS *params = (THREAD_PARAMS *)args;
-    UINT nDriveNumber = params->nDriveNumber;
-    LONG_PTR nProp = nDriveNumber | 0x7F00;
-
-    // Search the stub windows that already exist.
-    CSimpleArray<HWND> old_stubs;
-    EnumWindows(EnumStubProc, (LPARAM)&old_stubs);
-
-    for (INT n = 0; n < old_stubs.GetSize(); ++n)
-    {
-        HWND hwndStub = old_stubs[n];
-
-        // The target stub window has the prop.
-        if (GetPropW(hwndStub, L"DriveNumber") == (HANDLE)nProp)
-        {
-            // Found.
-            HWND ahwnd[2];
-            ahwnd[0] = hwndStub;
-            ahwnd[1] = NULL;
-            EnumWindows(EnumStubProc2, (LPARAM)ahwnd);
-
-            // Activate.
-            BringWindowToTop(ahwnd[1]);
-
-            delete params;
-            return 0;
-        }
-    }
-
-    // Create a stub window.
-    DWORD style = WS_DISABLED | WS_CLIPSIBLINGS | WS_CAPTION;
-    DWORD exstyle = WS_EX_WINDOWEDGE | WS_EX_APPWINDOW;
+    UINT nDrive = PtrToUlong(args);
+    WCHAR szPath[] = { LOWORD(L'A' + nDrive), L'\0' }; // Arbitrary, just needs to include nDrive
     CStubWindow32 stub;
-    if (!stub.Create(NULL, NULL, NULL, style, exstyle))
-    {
-        ERR("StubWindow32 creation failed\n");
-        delete params;
-        return 0;
-    }
-
-    // Add prop to the target stub window.
-    SetPropW(stub, L"DriveNumber", (HANDLE)nProp);
-
-    // Do format.
-    SHFormatDrive(stub, nDriveNumber, SHFMT_ID_DEFAULT, 0);
-
-    // Clean up.
-    RemovePropW(stub, L"DriveNumber");
-    stub.DestroyWindow();
-    delete params;
-
-    return 0;
+    HRESULT hr = stub.CreateStub(CStubWindow32::TYPE_FORMATDRIVE, szPath, NULL);
+    if (FAILED(hr))
+        return hr;
+    SHFormatDrive(stub, nDrive, SHFMT_ID_DEFAULT, 0);
+    return stub.DestroyWindow();
 }
 
-static HRESULT DoFormatDrive(HWND hwnd, UINT nDriveNumber)
+static HRESULT DoFormatDriveAsync(HWND hwnd, UINT nDrive)
 {
-    THREAD_PARAMS *params = new THREAD_PARAMS;
-    params->nDriveNumber = nDriveNumber;
-
-    // Create thread to avoid locked.
-    unsigned tid;
-    HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, format_drive_thread, params, 0, &tid);
-    if (hThread == NULL)
-    {
-        delete params;
-        return E_FAIL;
-    }
-
-    CloseHandle(hThread);
-
-    return S_OK;
+    BOOL succ = SHCreateThread(DoFormatDriveThread, UlongToPtr(nDrive), CTF_PROCESS_REF, NULL);
+    return succ ? S_OK : E_FAIL;
 }
 
 HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
@@ -388,20 +293,15 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
 
         if (wParam == DFM_CMD_PROPERTIES)
         {
-            // pdtobj should be valid at this point!
             ATLASSERT(pdtobj);
-            hr = SH_ShowDriveProperties(wszBuf, pdtobj) ? S_OK : E_UNEXPECTED;
-            if (FAILED(hr))
-            {
-                dwError = ERROR_CAN_NOT_COMPLETE;
-                nStringID = IDS_CANTSHOWPROPERTIES;
-            }
+            hr = SHELL32_ShowFilesystemItemPropertiesDialogAsync(pdtobj);
+            // Not setting nStringID because SHOpenPropSheet already displayed an error box
         }
         else
         {
             if (wParam == CMDID_FORMAT)
             {
-                hr = DoFormatDrive(hwnd, szDrive[0] - 'A');
+                hr = DoFormatDriveAsync(hwnd, szDrive[0] - 'A');
             }
             else if (wParam == CMDID_EJECT)
             {
@@ -657,7 +557,7 @@ static const DWORD dwControlPanelAttributes =
     SFGAO_HASSUBFOLDER | SFGAO_FOLDER | SFGAO_CANLINK;
 static const DWORD dwDriveAttributes =
     SFGAO_HASSUBFOLDER | SFGAO_FILESYSTEM | SFGAO_FOLDER | SFGAO_FILESYSANCESTOR |
-    SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANRENAME | SFGAO_CANLINK;
+    SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANRENAME | SFGAO_CANLINK | SFGAO_CANCOPY;
 
 CDrivesFolder::CDrivesFolder()
 {
@@ -711,10 +611,9 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
                                              pdwAttributes);
     }
 
-    if (lpszDisplayName[0] &&
-        ((L'A' <= lpszDisplayName[0] && lpszDisplayName[0] <= L'Z') ||
+    if (((L'A' <= lpszDisplayName[0] && lpszDisplayName[0] <= L'Z') ||
          (L'a' <= lpszDisplayName[0] && lpszDisplayName[0] <= L'z')) &&
-        lpszDisplayName[1] == L':' && lpszDisplayName[2] == L'\\')
+        lpszDisplayName[1] == L':' && (lpszDisplayName[2] == L'\\' || !lpszDisplayName[2]))
     {
         // "C:\..."
         WCHAR szRoot[8];
@@ -730,7 +629,7 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
         if (!pidlTemp)
             return E_OUTOFMEMORY;
 
-        if (lpszDisplayName[3])
+        if (lpszDisplayName[2] && lpszDisplayName[3])
         {
             CComPtr<IShellFolder> pChildFolder;
             hr = BindToObject(pidlTemp, pbc, IID_PPV_ARG(IShellFolder, &pChildFolder));
@@ -847,7 +746,7 @@ HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1
     {
         case IDS_SHV_COLUMN_NAME:
         {
-            result = stricmp(pszDrive1, pszDrive2);
+            result = _stricmp(pszDrive1, pszDrive2);
             hres = MAKE_COMPARE_HRESULT(result);
             break;
         }
@@ -915,20 +814,7 @@ HRESULT WINAPI CDrivesFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVO
     }
     else if (IsEqualIID(riid, IID_IContextMenu))
     {
-        HKEY hKeys[16];
-        UINT cKeys = 0;
-        AddClassKeyToArray(L"Directory\\Background", hKeys, &cKeys);
-
-        DEFCONTEXTMENU dcm;
-        dcm.hwnd = hwndOwner;
-        dcm.pcmcb = this;
-        dcm.pidlFolder = pidlRoot;
-        dcm.psf = this;
-        dcm.cidl = 0;
-        dcm.apidl = NULL;
-        dcm.cKeys = cKeys;
-        dcm.aKeys = hKeys;
-        dcm.punkAssociationInfo = NULL;
+        DEFCONTEXTMENU dcm = { hwndOwner, this, pidlRoot, this };
         hr = SHCreateDefaultContextMenu(&dcm, riid, ppvOut);
     }
     else if (IsEqualIID(riid, IID_IShellView))
@@ -1364,7 +1250,7 @@ HRESULT WINAPI CDrivesFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataO
             // "System" properties
             return SHELL_ExecuteControlPanelCPL(hwndOwner, L"sysdm.cpl") ? S_OK : E_FAIL;
         }
-        else if (uMsg == DFM_MERGECONTEXTMENU)
+        else if (uMsg == DFM_MERGECONTEXTMENU) // TODO: DFM_MERGECONTEXTMENU_BOTTOM
         {
             QCMINFO *pqcminfo = (QCMINFO *)lParam;
             HMENU hpopup = CreatePopupMenu();

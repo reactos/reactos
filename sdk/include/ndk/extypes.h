@@ -761,7 +761,11 @@ typedef struct _SYSTEM_PROCESSOR_INFORMATION
 #else
     USHORT MaximumProcessors;
 #endif
+#if (NTDDI_VERSION >= NTDDI_WIN10) || ((NTDDI_VERSION >= NTDDI_WINBLUE) && defined(_WIN64))
+    ULONG64 ProcessorFeatureBits;
+#else
     ULONG ProcessorFeatureBits;
+#endif
 } SYSTEM_PROCESSOR_INFORMATION, *PSYSTEM_PROCESSOR_INFORMATION;
 
 // Class 2

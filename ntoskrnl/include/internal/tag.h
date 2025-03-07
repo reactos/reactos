@@ -59,7 +59,6 @@
 #define TAG_IO_TIMER            'MTOI'
 #define TAG_DRIVER              'RVRD'
 #define TAG_DRIVER_EXTENSION    'EVRD'
-#define TAG_SYSB                'BSYS'
 #define TAG_LOCK                'kclF'
 #define TAG_FILE_NAME           'MANF'
 #define TAG_FILE_SYSTEM         'SYSF'
@@ -84,8 +83,8 @@
 #define TAG_REINIT              'iRoI'
 #define TAG_IOWI                'IWOI'
 #define TAG_IRP                 ' prI'
-#define TAG_SYS_BUF             'BSYS'
-#define TAG_KINTERRUPT          'RSIK'
+#define TAG_IOBUF               'UBOI'
+#define TAG_IO_INTERRUPT        'nioI'
 #define TAG_MDL                 ' LDM'
 #define TAG_IO_DEVNODE          'donD'
 #define TAG_PNP_NOTIFY          'NPnP'
@@ -93,9 +92,9 @@
 #define TAG_IO_RESOURCE         'CRSR'
 #define TAG_IO_TIMER            'MTOI'
 #define TAG_VPB                 ' BPV'
-#define TAG_SYSB                'BSYS'
 #define TAG_RTLREGISTRY         'vrqR'
 #define TAG_PNP_DEVACTION       'aDpP'
+#define TAG_DEV2DOS             ' d2D'
 
 /* Loader Related Tags */
 #define TAG_MODULE_OBJECT       'omlk' /* klmo - kernel ldr module object */

@@ -895,7 +895,7 @@ PDEVOBJ_lChangeDisplaySettings(
     }
     else if (RequestedMode)
     {
-        pGraphicsDevice = gpPrimaryGraphicsDevice;
+        pGraphicsDevice = EngpFindGraphicsDevice(NULL, 0);
         if (!pGraphicsDevice)
         {
             ERR("Wrong device'\n");

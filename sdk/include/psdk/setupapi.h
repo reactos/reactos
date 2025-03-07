@@ -117,6 +117,7 @@ extern "C" {
 #define DICS_START	4
 #define DICS_FLAG_CONFIGGENERAL	4
 #define DICS_STOP	5
+#define DICUSTOMDEVPROP_MERGE_MULTISZ 0x00000001
 #define DIF_SELECTDEVICE                    1
 #define DIF_INSTALLDEVICE                   2
 #define DIF_ASSIGNRESOURCES                 3

@@ -32,9 +32,6 @@ typedef struct
     BOOL bFormattingNow;
 } FORMAT_DRIVE_CONTEXT, *PFORMAT_DRIVE_CONTEXT;
 
-EXTERN_C HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface, IDataObject *pDataObj);
-HPROPSHEETPAGE SH_CreatePropertySheetPage(LPCSTR resname, DLGPROC dlgproc, LPARAM lParam, LPWSTR szTitle);
-
 /*
  * TODO: In Windows the Shell doesn't know by itself if a drive is
  * a system one or not but rather a packet message is being sent by
@@ -58,7 +55,7 @@ IsSystemDrive(PFORMAT_DRIVE_CONTEXT pContext)
     if (!GetEnvironmentVariableW(L"SystemDrive", wszSystemDrv, _countof(wszSystemDrv)))
         return FALSE;
 
-    if (!wcsicmp(wszDriveLetter, wszSystemDrv))
+    if (!_wcsicmp(wszDriveLetter, wszSystemDrv))
         return TRUE;
 
     return FALSE;
@@ -69,8 +66,8 @@ GetDefaultClusterSize(LPWSTR szFs, PDWORD pClusterSize, PULARGE_INTEGER TotalNum
 {
     DWORD ClusterSize;
 
-    if (!wcsicmp(szFs, L"FAT16") ||
-        !wcsicmp(szFs, L"FAT")) // REACTOS HACK
+    if (!_wcsicmp(szFs, L"FAT16") ||
+        !_wcsicmp(szFs, L"FAT")) // REACTOS HACK
     {
         if (TotalNumberOfBytes->QuadPart <= (16 * 1024 * 1024))
             ClusterSize = 2048;
@@ -93,7 +90,7 @@ GetDefaultClusterSize(LPWSTR szFs, PDWORD pClusterSize, PULARGE_INTEGER TotalNum
         else
             return FALSE;
     }
-    else if (!wcsicmp(szFs, L"FAT32"))
+    else if (!_wcsicmp(szFs, L"FAT32"))
     {
         if (TotalNumberOfBytes->QuadPart <= (64 * 1024 * 1024))
             ClusterSize = 512;
@@ -110,7 +107,7 @@ GetDefaultClusterSize(LPWSTR szFs, PDWORD pClusterSize, PULARGE_INTEGER TotalNum
         else
             return FALSE;
     }
-    else if (!wcsicmp(szFs, L"FATX"))
+    else if (!_wcsicmp(szFs, L"FATX"))
     {
         if (TotalNumberOfBytes->QuadPart <= (16 * 1024 * 1024))
             ClusterSize = 2048;
@@ -131,7 +128,7 @@ GetDefaultClusterSize(LPWSTR szFs, PDWORD pClusterSize, PULARGE_INTEGER TotalNum
         else
             return FALSE;
     }
-    else if (!wcsicmp(szFs, L"NTFS"))
+    else if (!_wcsicmp(szFs, L"NTFS"))
     {
         if (TotalNumberOfBytes->QuadPart <= (512 * 1024 * 1024))
             ClusterSize = 512;
@@ -142,12 +139,12 @@ GetDefaultClusterSize(LPWSTR szFs, PDWORD pClusterSize, PULARGE_INTEGER TotalNum
         else
             ClusterSize = 2048;
     }
-    else if (!wcsicmp(szFs, L"EXT2"))
+    else if (!_wcsicmp(szFs, L"EXT2"))
     {
         // auto block size calculation
         ClusterSize = 0;
     }
-    else if (!wcsicmp(szFs, L"BtrFS"))
+    else if (!_wcsicmp(szFs, L"BtrFS"))
     {
         // auto block size calculation
         ClusterSize = 0;
@@ -157,125 +154,6 @@ GetDefaultClusterSize(LPWSTR szFs, PDWORD pClusterSize, PULARGE_INTEGER TotalNum
 
     *pClusterSize = ClusterSize;
     return TRUE;
-}
-
-typedef struct _DRIVE_PROP_PAGE
-{
-    LPCSTR resname;
-    DLGPROC dlgproc;
-    UINT DriveType;
-} DRIVE_PROP_PAGE;
-
-struct DRIVE_PROP_DATA
-{
-    PWSTR pwszDrive;
-    IStream *pStream;
-};
-
-static DWORD WINAPI
-ShowDrivePropThreadProc(LPVOID pParam)
-{
-    CHeapPtr<DRIVE_PROP_DATA, CComAllocator> pPropData((DRIVE_PROP_DATA *)pParam);
-    CHeapPtr<WCHAR, CComAllocator> pwszDrive(pPropData->pwszDrive);
-
-    // Unmarshall IDataObject from IStream
-    CComPtr<IDataObject> pDataObj;
-    CoGetInterfaceAndReleaseStream(pPropData->pStream, IID_PPV_ARG(IDataObject, &pDataObj));
-
-    HPSXA hpsx = NULL;
-    HPROPSHEETPAGE hpsp[MAX_PROPERTY_SHEET_PAGE];
-    CComObject<CDrvDefExt> *pDrvDefExt = NULL;
-
-    CDataObjectHIDA cida(pDataObj);
-    if (FAILED_UNEXPECTEDLY(cida.hr()))
-        return FAILED(cida.hr());
-
-    RECT rcPosition = {CW_USEDEFAULT, CW_USEDEFAULT, 0, 0};
-    POINT pt;
-    if (SUCCEEDED(DataObject_GetOffset(pDataObj, &pt)))
-    {
-        rcPosition.left = pt.x;
-        rcPosition.top = pt.y;
-    }
-
-    DWORD style = WS_DISABLED | WS_CLIPSIBLINGS | WS_CAPTION;
-    DWORD exstyle = WS_EX_WINDOWEDGE | WS_EX_APPWINDOW;
-    CStubWindow32 stub;
-    if (!stub.Create(NULL, rcPosition, NULL, style, exstyle))
-    {
-        ERR("StubWindow32 creation failed\n");
-        return FALSE;
-    }
-
-    PROPSHEETHEADERW psh = {sizeof(PROPSHEETHEADERW)};
-    psh.dwFlags = PSH_PROPTITLE;
-    psh.pszCaption = pwszDrive;
-    psh.hwndParent = stub;
-    psh.nStartPage = 0;
-    psh.phpage = hpsp;
-
-    HRESULT hr = CComObject<CDrvDefExt>::CreateInstance(&pDrvDefExt);
-    if (SUCCEEDED(hr))
-    {
-        pDrvDefExt->AddRef(); // CreateInstance returns object with 0 ref count
-        hr = pDrvDefExt->Initialize(HIDA_GetPIDLFolder(cida), pDataObj, NULL);
-        if (SUCCEEDED(hr))
-        {
-            hr = pDrvDefExt->AddPages(AddPropSheetPageCallback, (LPARAM)&psh);
-            if (FAILED(hr))
-                ERR("AddPages failed\n");
-        }
-        else
-        {
-            ERR("Initialize failed\n");
-        }
-    }
-
-    hpsx = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, L"Drive", MAX_PROPERTY_SHEET_PAGE, pDataObj);
-    if (hpsx)
-        SHAddFromPropSheetExtArray(hpsx, (LPFNADDPROPSHEETPAGE)AddPropSheetPageCallback, (LPARAM)&psh);
-
-    INT_PTR ret = PropertySheetW(&psh);
-
-    if (hpsx)
-        SHDestroyPropSheetExtArray(hpsx);
-    if (pDrvDefExt)
-        pDrvDefExt->Release();
-
-    stub.DestroyWindow();
-
-    return ret != -1;
-}
-
-BOOL
-SH_ShowDriveProperties(WCHAR *pwszDrive, IDataObject *pDataObj)
-{
-    HRESULT hr = SHStrDupW(pwszDrive, &pwszDrive);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return FALSE;
-
-    // Prepare data for thread
-    DRIVE_PROP_DATA *pData = (DRIVE_PROP_DATA *)SHAlloc(sizeof(*pData));
-    if (!pData)
-    {
-        SHFree(pwszDrive);
-        return FALSE;
-    }
-    pData->pwszDrive = pwszDrive;
-
-    // Marshall IDataObject to IStream
-    hr = CoMarshalInterThreadInterfaceInStream(IID_IDataObject, pDataObj, &pData->pStream);
-    if (SUCCEEDED(hr))
-    {
-        // Run a property sheet in another thread
-        if (SHCreateThread(ShowDrivePropThreadProc, pData, CTF_COINIT, NULL))
-            return TRUE; // Success
-
-        pData->pStream->Release();
-    }
-    SHFree(pData);
-    SHFree(pwszDrive);
-    return FALSE; // Failed
 }
 
 static VOID
@@ -304,24 +182,24 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     if (!GetDiskFreeSpaceExW(szDrive, &FreeBytesAvailableUser, &TotalNumberOfBytes, NULL))
         return;
 
-    if (!wcsicmp(wszBuf, L"FAT16") ||
-        !wcsicmp(wszBuf, L"FAT")) // REACTOS HACK
+    if (!_wcsicmp(wszBuf, L"FAT16") ||
+        !_wcsicmp(wszBuf, L"FAT")) // REACTOS HACK
     {
         pwszFsSizeLimit = L"4GB";
     }
-    else if (!wcsicmp(wszBuf, L"FAT32"))
+    else if (!_wcsicmp(wszBuf, L"FAT32"))
     {
         pwszFsSizeLimit = L"32GB";
     }
-    else if (!wcsicmp(wszBuf, L"FATX"))
+    else if (!_wcsicmp(wszBuf, L"FATX"))
     {
         pwszFsSizeLimit = L"1GB/32GB";
     }
-    else if (!wcsicmp(wszBuf, L"NTFS"))
+    else if (!_wcsicmp(wszBuf, L"NTFS"))
     {
         pwszFsSizeLimit = L"256TB";
     }
-    else if (!wcsicmp(wszBuf, L"EXT2"))
+    else if (!_wcsicmp(wszBuf, L"EXT2"))
     {
         pwszFsSizeLimit = L"32TB";
     }
@@ -330,13 +208,13 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
         pwszFsSizeLimit = L"16EB";
     }
 
-    if (!wcsicmp(wszBuf, L"FAT16") ||
-        !wcsicmp(wszBuf, L"FAT") || // REACTOS HACK
-        !wcsicmp(wszBuf, L"FAT32") ||
-        !wcsicmp(wszBuf, L"FATX") ||
-        !wcsicmp(wszBuf, L"NTFS") ||
-        !wcsicmp(wszBuf, L"EXT2") ||
-        !wcsicmp(wszBuf, L"BtrFS"))
+    if (!_wcsicmp(wszBuf, L"FAT16") ||
+        !_wcsicmp(wszBuf, L"FAT") || // REACTOS HACK
+        !_wcsicmp(wszBuf, L"FAT32") ||
+        !_wcsicmp(wszBuf, L"FATX") ||
+        !_wcsicmp(wszBuf, L"NTFS") ||
+        !_wcsicmp(wszBuf, L"EXT2") ||
+        !_wcsicmp(wszBuf, L"BtrFS"))
     {
         if (!GetDefaultClusterSize(wszBuf, &ClusterSize, &TotalNumberOfBytes))
         {
@@ -355,7 +233,7 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
             SendMessageW(hDlgCtrl, CB_SETCURSEL, 0, 0);
         }
 
-        if (!wcsicmp(wszBuf, L"NTFS"))
+        if (!_wcsicmp(wszBuf, L"NTFS"))
         {
             ClusterSize = 512;
             for (lIndex = 0; lIndex < 4; lIndex++)
@@ -372,9 +250,9 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
         }
 
         SendMessageW(GetDlgItem(hwndDlg, 28675), BM_SETCHECK, BST_UNCHECKED, 0);
-        if (!wcsicmp(wszBuf, L"EXT2") ||
-            !wcsicmp(wszBuf, L"BtrFS") ||
-            !wcsicmp(wszBuf, L"NTFS"))
+        if (!_wcsicmp(wszBuf, L"EXT2") ||
+            !_wcsicmp(wszBuf, L"BtrFS") ||
+            !_wcsicmp(wszBuf, L"NTFS"))
         {
             /* Enable the "Enable Compression" button */
             EnableWindow(GetDlgItem(hwndDlg, 28675), TRUE);
@@ -454,7 +332,7 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
 
     while(QueryAvailableFileSystemFormat(dwIndex, szText, &uMajor, &uMinor, &Latest))
     {
-        if (!wcsicmp(szText, szFs))
+        if (!_wcsicmp(szText, szFs))
             dwDefault = dwIndex;
 
         SendMessageW(hwndFileSystems, CB_ADDSTRING, 0, (LPARAM)szText);

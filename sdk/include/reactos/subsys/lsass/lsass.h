@@ -27,6 +27,12 @@ typedef enum _LSA_API_NUMBER
     LSASS_REQUEST_MAXIMUM
 } LSA_API_NUMBER, *PLSA_API_NUMBER;
 
+typedef enum _LSA_TRUSTED_CALLER
+{
+    NO,
+    YES,
+    CHECK
+} LSA_TRUSTED_CALLER;
 
 typedef struct _LSA_CONNECTION_INFO
 {
@@ -35,7 +41,7 @@ typedef struct _LSA_CONNECTION_INFO
     ULONG Length;
     CHAR LogonProcessNameBuffer[LSASS_MAX_LOGON_PROCESS_NAME_LENGTH + 1];
     BOOL CreateContext;
-    BOOL TrustedCaller;
+    LSA_TRUSTED_CALLER TrustedCaller;
 } LSA_CONNECTION_INFO, *PLSA_CONNECTION_INFO;
 
 

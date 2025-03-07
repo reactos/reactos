@@ -221,21 +221,21 @@ ReadRegistryEntries(
 
 	RtlZeroMemory(Parameters, sizeof(Parameters));
 
-	Parameters[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[0].Name = L"ConnectMultiplePorts";
 	Parameters[0].EntryContext = &DriverExtension->ConnectMultiplePorts;
 	Parameters[0].DefaultType = REG_DWORD;
 	Parameters[0].DefaultData = &DefaultConnectMultiplePorts;
 	Parameters[0].DefaultLength = sizeof(ULONG);
 
-	Parameters[1].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[1].Name = L"MouseDataQueueSize";
 	Parameters[1].EntryContext = &DriverExtension->DataQueueSize;
 	Parameters[1].DefaultType = REG_DWORD;
 	Parameters[1].DefaultData = &DefaultDataQueueSize;
 	Parameters[1].DefaultLength = sizeof(ULONG);
 
-	Parameters[2].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[2].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[2].Name = L"PointerDeviceBaseName";
 	Parameters[2].EntryContext = &DriverExtension->DeviceBaseName;
 	Parameters[2].DefaultType = REG_SZ;
@@ -243,7 +243,7 @@ ReadRegistryEntries(
 	Parameters[2].DefaultLength = 0;
 
 	Status = RtlQueryRegistryValues(
-		RTL_REGISTRY_ABSOLUTE,
+		RTL_REGISTRY_ABSOLUTE | RTL_REGISTRY_OPTIONAL,
 		ParametersRegistryKey.Buffer,
 		Parameters,
 		NULL,

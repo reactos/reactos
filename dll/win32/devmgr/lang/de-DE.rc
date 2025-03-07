@@ -286,14 +286,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "ReactOS Geräte-Manager"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
   IDS_CONFIRM_DISABLE       "Dieses Gerät zu deaktivieren wird dessen Funktion einstellen.\nWollen Sie es wirklich deaktivieren?"
   IDS_CONFIRM_UNINSTALL     "Warnung: Sie sind dabei, dieses Gerät deinstallieren\nMöchten Sie den Vorgang fortsetzen?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Treibersoftware aktualisieren ..."
   IDS_MENU_ENABLE           "Aktivieren"
@@ -304,7 +305,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Eigenschaften"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Eigenschaften"
   IDS_TOOLTIP_SCAN          "Nach geänderter Hardware suchen"
@@ -315,7 +316,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Öffnet Eigenschaftsdialog für die aktuelle Auswahl."

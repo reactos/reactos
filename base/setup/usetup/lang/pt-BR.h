@@ -1522,14 +1522,7 @@ static MUI_ENTRY ptBRBootLoaderRemovableDiskPageEntries[] =
     {
         6,
         8,
-        "O instalador n\306o p\223de instalar o ger\210nciador de inicializa\207\306o no disco",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "r\241gido do computador.",
+        "O instalador ir\240 configurar o ger\210nciador de inicializa\207\306o.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

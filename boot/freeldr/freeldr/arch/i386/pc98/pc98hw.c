@@ -349,7 +349,7 @@ Pc98GetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
     {
         DiskGeometry->BytesPerSector = Geometry.BytesPerSector;
         DiskGeometry->NumberOfCylinders = Geometry.Cylinders;
-        DiskGeometry->SectorsPerTrack = Geometry.Sectors;
+        DiskGeometry->SectorsPerTrack = Geometry.SectorsPerTrack;
         DiskGeometry->NumberOfHeads = Geometry.Heads;
     }
     else
@@ -423,7 +423,7 @@ DetectBiosDisks(
         {
             Int13Drives[i].DriveSelect = DriveNumber;
             Int13Drives[i].MaxCylinders = Geometry.Cylinders - 1;
-            Int13Drives[i].SectorsPerTrack = (USHORT)Geometry.Sectors;
+            Int13Drives[i].SectorsPerTrack = (USHORT)Geometry.SectorsPerTrack;
             Int13Drives[i].MaxHeads = (USHORT)Geometry.Heads - 1;
             Int13Drives[i].NumberDrives = DiskCount;
 
@@ -431,7 +431,7 @@ DetectBiosDisks(
                   DriveNumber,
                   Geometry.Cylinders - 1,
                   Geometry.Heads - 1,
-                  Geometry.Sectors,
+                  Geometry.SectorsPerTrack,
                   Geometry.BytesPerSector);
         }
     }
@@ -1085,7 +1085,7 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
     NodeCount &= 0xFF; // needed since some fscked up BIOSes return
     // wrong info (e.g. Mac Virtual PC)
-    // e.g. look: http://my.execpc.com/~geezer/osd/pnp/pnp16.c
+    // e.g. look: https://web.archive.org/web/20080329010332/http://my.execpc.com/~geezer/osd/pnp/pnp16.c
     if (x != 0 || NodeSize == 0 || NodeCount == 0)
     {
         ERR("PnP-BIOS failed to enumerate device nodes\n");

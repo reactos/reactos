@@ -225,7 +225,7 @@ FontSizeList_GetSelectedFontSize(
             /*
              * The user just selected an existing size, read the ComboBox selection.
              *
-             * See: https://support.microsoft.com/en-us/help/66365/how-to-process-a-cbn-selchange-notification-message
+             * See: https://support.microsoft.com/en-us/help/66365/how-to-process-a-cbn-selchange-notification-message (DEAD_LINK)
              * for more details.
              */
             INT Length;

@@ -46,6 +46,14 @@ STRINGTABLE
     13 "lipsește unitatea de rețea pentru această caracteristică"
     14 "caracteristică de la:"
     15 "selectați fișierul care conține %s"
+#ifdef __REACTOS__
+    34 "Pachet de instalare ReactOS"
+    35 "ReactOS Installer Patch"
+    36 "Instalează" //FIXME: add accel
+    37 "Repară" //FIXME: add accel
+    38 "Dezinstalează" //FIXME: add accel
+    39 "&Apply"
+#endif
     100 "Folder nou"
 }
 

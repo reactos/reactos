@@ -155,6 +155,20 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #endif
 
 //
+// Some internal SYSTEM_PTE_MISUSE bugcheck subcodes
+// These names were created by Oleg Dubinskiy and Doug Lyons for ReactOS. For reference, see
+// https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/bug-check-0xda--system-pte-misuse
+//
+#define PTE_MAPPING_NONE                0x100
+#define PTE_MAPPING_NOT_OWNED           0x101
+#define PTE_MAPPING_EMPTY               0x102
+#define PTE_MAPPING_RESERVED            0x103
+#define PTE_MAPPING_ADDRESS_NOT_OWNED   0x104
+#define PTE_MAPPING_ADDRESS_INVALID     0x105
+#define PTE_UNMAPPING_ADDRESS_NOT_OWNED 0x108
+#define PTE_MAPPING_ADDRESS_EMPTY       0x109
+
+//
 // Mask for image section page protection
 //
 #define IMAGE_SCN_PROTECTION_MASK (IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_EXECUTE)
@@ -994,7 +1008,6 @@ MI_WRITE_INVALID_PTE(IN PMMPTE PointerPte,
 {
     /* Write the invalid PTE */
     ASSERT(InvalidPte.u.Hard.Valid == 0);
-    ASSERT(InvalidPte.u.Long != 0);
     *PointerPte = InvalidPte;
 }
 

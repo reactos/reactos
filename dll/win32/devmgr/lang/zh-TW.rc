@@ -293,14 +293,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "ReactOS 裝置管理員"
   IDS_APP_AUTHORS           "2015 Ged Murphy 版權所有"
   IDS_CONFIRM_DISABLE       "停用這個裝置會使其停止運作。\n你真的想要停用它嗎？"
   IDS_CONFIRM_UNINSTALL     "警告：您將要從系統中解除安裝這個裝置。\n你想要繼續嗎？"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "更新驅動程式軟體..."
   IDS_MENU_ENABLE           "啟用"
@@ -311,7 +312,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "內容"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "內容"
   IDS_TOOLTIP_SCAN          "掃描硬體變更"
@@ -322,7 +323,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " 開啟目前選擇的內容對話方塊。"

@@ -49,9 +49,7 @@ CAPTION "Pengaturan"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Umum", -1, 4, 2, 240, 61
-    AUTOCHECKBOX "&Simpan posisi jendela", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "&Perbarui daftar program yang bisa diakses saat mulai", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "&Log pemasangan dan pembongkaran program", IDC_LOG_ENABLED, 15, 46, 219, 12
+    CONTROL "", IDC_GENERALLIST, "SysListView32", WS_TABSTOP | LVCHECKSTYLES, 15, 12, 219, 46, WS_EX_STATICEDGE
     GROUPBOX "Mengunduh", -1, 4, 65, 240, 51
     LTEXT "Folder unduhan:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
@@ -212,6 +210,10 @@ BEGIN
     IDS_APP_DISPLAY_LIST "List"
     IDS_APP_DISPLAY_TILE "Tile"
     IDS_NO_SEARCH_RESULTS "No search results"
+    IDS_CFG_SAVE_WINDOW_POS "Simpan posisi jendela"
+    IDS_CFG_UPDATE_AVLIST "Perbarui daftar program yang bisa diakses saat mulai"
+    IDS_CFG_LOG_ENABLED "Log pemasangan dan pembongkaran program"
+    IDS_CFG_SMALL_ICONS "Ikon Kecil"
 END
 
 STRINGTABLE
@@ -265,4 +267,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "Installation complete, run %s now?"
 END

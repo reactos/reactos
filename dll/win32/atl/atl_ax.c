@@ -1036,7 +1036,7 @@ static enum content get_content_type(LPCOLESTR name, CLSID *control_id)
  *           AtlAxCreateControlLicEx         [atl100.@]
  *
  * REMARKS
- *   See http://www.codeproject.com/com/cwebpage.asp for some background
+ *   See https://www.codeproject.com/KB/com/cwebpage.aspx for some background
  *
  */
 HRESULT WINAPI AtlAxCreateControlLicEx(LPCOLESTR lpszName, HWND hWnd,

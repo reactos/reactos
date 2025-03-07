@@ -999,10 +999,6 @@ BEGIN
     IDS_FILE_TYPES "Tipos de archivo"
     IDS_COLUMN_EXTENSION "Extensiones"
 
-    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
-       used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "Archivo %s"
-
     IDS_BYTES_FORMAT "bytes"
     IDS_UNKNOWN_APP "Aplicación desconocida"
     IDS_EXE_DESCRIPTION "Descripción:"
@@ -1010,6 +1006,8 @@ BEGIN
     IDS_MENU_EMPTY "(Vacío)"
     IDS_OBJECTS "%d elementos"
     IDS_OBJECTS_SELECTED "%d elementos seleccionados"
+
+    IDS_SEARCH_BROWSEITEM "Examinar..."
 
     IDS_TITLE_MYCOMP "Mi equipo"
     IDS_TITLE_MYNET "Mis sitios de red"

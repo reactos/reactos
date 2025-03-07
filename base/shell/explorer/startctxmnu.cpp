@@ -145,12 +145,12 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE
-        QueryContextMenu(HMENU hPopup,
-                         UINT indexMenu,
-                         UINT idCmdFirst,
-                         UINT idCmdLast,
-                         UINT uFlags)
+    STDMETHODIMP
+    QueryContextMenu(HMENU hPopup,
+                     UINT indexMenu,
+                     UINT idCmdFirst,
+                     UINT idCmdLast,
+                     UINT uFlags) override
     {
         LPITEMIDLIST pidlStart;
         CComPtr<IShellFolder> psfDesktop;
@@ -189,42 +189,53 @@ public:
         return hRet;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE
-        InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
+    STDMETHODIMP
+    InvokeCommand(LPCMINVOKECOMMANDINFO lpici) override
     {
         UINT uiCmdId = PtrToUlong(lpici->lpVerb);
-        if (!IsShellCmdId((UINT_PTR)lpici->lpVerb))
+        if (!IsShellCmdId(uiCmdId))
         {
-            CMINVOKECOMMANDINFO cmici = { 0 };
-            CHAR szDir[MAX_PATH];
+            CMINVOKECOMMANDINFOEX cmici = { sizeof(cmici) };
 
             /* Setup and invoke the shell command */
-            cmici.cbSize = sizeof(cmici);
             cmici.hwnd = m_Owner;
-            if (IS_INTRESOURCE(lpici->lpVerb))
-                cmici.lpVerb = MAKEINTRESOURCEA(uiCmdId - INNERIDOFFSET);
-            else
-                cmici.lpVerb = lpici->lpVerb;
             cmici.nShow = SW_NORMAL;
-
-            /* FIXME: Support Unicode!!! */
-            if (SHGetPathFromIDListA(m_FolderPidl, szDir))
+            cmici.fMask = CMIC_MASK_UNICODE;
+            WCHAR szVerbW[MAX_PATH];
+            if (IS_INTRESOURCE(lpici->lpVerb))
             {
-                cmici.lpDirectory = szDir;
+                cmici.lpVerb = MAKEINTRESOURCEA(uiCmdId - INNERIDOFFSET);
+                cmici.lpVerbW = MAKEINTRESOURCEW(uiCmdId - INNERIDOFFSET);
+            }
+            else
+            {
+                cmici.lpVerb = lpici->lpVerb;
+                SHAnsiToUnicode(lpici->lpVerb, szVerbW, _countof(szVerbW));
+                cmici.lpVerbW = szVerbW;
             }
 
-            return m_Inner->InvokeCommand(&cmici);
+            CHAR szDirA[MAX_PATH];
+            WCHAR szDirW[MAX_PATH];
+            if (SHGetPathFromIDListW(m_FolderPidl, szDirW))
+            {
+                SHUnicodeToAnsi(szDirW, szDirA, _countof(szDirA));
+                cmici.lpDirectory = szDirA;
+                cmici.lpDirectoryW = szDirW;
+            }
+
+            return m_Inner->InvokeCommand((LPCMINVOKECOMMANDINFO)&cmici);
         }
         m_TrayWnd->ExecContextMenuCmd(uiCmdId);
         return S_OK;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE
-        GetCommandString(UINT_PTR idCmd,
-                         UINT uType,
-                         UINT *pwReserved,
-                         LPSTR pszName,
-                         UINT cchMax)
+    STDMETHODIMP
+    GetCommandString(
+        UINT_PTR idCmd,
+        UINT uType,
+        UINT *pwReserved,
+        LPSTR pszName,
+        UINT cchMax) override
     {
         if (!IsShellCmdId(idCmd) && m_Inner)
             return m_Inner->GetCommandString(idCmd, uType, pwReserved, pszName, cchMax);

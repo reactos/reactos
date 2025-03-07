@@ -56,7 +56,7 @@ ReadRegistryEntries(
 
 	RtlZeroMemory(Parameters, sizeof(Parameters));
 
-	Parameters[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
 	Parameters[0].Name = L"NumberOfButtons";
 	Parameters[0].EntryContext = &DriverExtension->NumberOfButtons;
 	Parameters[0].DefaultType = REG_DWORD;
@@ -64,7 +64,7 @@ ReadRegistryEntries(
 	Parameters[0].DefaultLength = sizeof(ULONG);
 
 	Status = RtlQueryRegistryValues(
-		RTL_REGISTRY_ABSOLUTE,
+		RTL_REGISTRY_ABSOLUTE | RTL_REGISTRY_OPTIONAL,
 		ParametersRegistryKey.Buffer,
 		Parameters,
 		NULL,

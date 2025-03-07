@@ -117,6 +117,8 @@ BEGIN
     IDS_SELECT_NO_DISK "\nДиск для обработки не указан.\nВыберите диск и повторите.\n\n"
     IDS_SELECT_DISK "\nДиск %lu выбран текущим.\n\n"
     IDS_SELECT_DISK_INVALID "\nОшибка диска.\n\n"
+    IDS_SELECT_DISK_ENUM_NO_START "\nNo disk enumeration started yet.\n\nNo disk is currently selected.\n\n"
+    IDS_SELECT_DISK_ENUM_FINISHED "\nThe last disk has been enumerated.\n\nNo disk is currently selected.\n\n"
     IDS_SELECT_NO_PARTITION "\nДиск с разметкой не выбран.\nВыберите диск и повторите.\n\n"
     IDS_SELECT_PARTITION "\nВыбрана разметка диска %lu текущей разметкой.\n\n"
     IDS_SELECT_PARTITION_NO_DISK "\nДиск для установки разметки не указан.\nВыберите диск и повторите.\n\n"

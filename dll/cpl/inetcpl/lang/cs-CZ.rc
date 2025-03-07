@@ -3,9 +3,6 @@
  * UPDATED:    2014-04-21
  */
 
- /* UTF-8 */
- #pragma code_page(65001)
-
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE

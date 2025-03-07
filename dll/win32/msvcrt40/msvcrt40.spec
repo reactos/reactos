@@ -1,14 +1,14 @@
 @ stub ??0Iostream_init@@QAE@AAVios@@H@Z
 @ stub ??0Iostream_init@@QAE@XZ
-@ cdecl -i386 ??0__non_rtti_object@@QAE@ABV0@@Z(ptr) MSVCRT___non_rtti_object_copy_ctor
-@ cdecl -i386 ??0__non_rtti_object@@QAE@PBD@Z(ptr) MSVCRT___non_rtti_object_ctor
-@ cdecl -i386 ??0bad_cast@@QAE@ABQBD@Z(ptr) MSVCRT_bad_cast_ctor
-@ cdecl -i386 ??0bad_cast@@QAE@ABV0@@Z(ptr) MSVCRT_bad_cast_copy_ctor
-@ cdecl -i386 ??0bad_typeid@@QAE@ABV0@@Z(ptr) MSVCRT_bad_typeid_copy_ctor
-@ cdecl -i386 ??0bad_typeid@@QAE@PBD@Z(ptr) MSVCRT_bad_typeid_ctor
-@ cdecl -i386 ??0exception@@QAE@ABQBD@Z(ptr) MSVCRT_exception_ctor
-@ cdecl -i386 ??0exception@@QAE@ABV0@@Z(ptr) MSVCRT_exception_copy_ctor
-@ cdecl -i386 ??0exception@@QAE@XZ() MSVCRT_exception_default_ctor
+@ cdecl -i386 ??0__non_rtti_object@@QAE@ABV0@@Z(ptr) __non_rtti_object_copy_ctor
+@ cdecl -i386 ??0__non_rtti_object@@QAE@PBD@Z(ptr) __non_rtti_object_ctor
+@ cdecl -i386 ??0bad_cast@@QAE@ABQBD@Z(ptr) bad_cast_ctor
+@ cdecl -i386 ??0bad_cast@@QAE@ABV0@@Z(ptr) bad_cast_copy_ctor
+@ cdecl -i386 ??0bad_typeid@@QAE@ABV0@@Z(ptr) bad_typeid_copy_ctor
+@ cdecl -i386 ??0bad_typeid@@QAE@PBD@Z(ptr) bad_typeid_ctor
+@ cdecl -i386 ??0exception@@QAE@ABQBD@Z(ptr) exception_ctor
+@ cdecl -i386 ??0exception@@QAE@ABV0@@Z(ptr) exception_copy_ctor
+@ cdecl -i386 ??0exception@@QAE@XZ() exception_default_ctor
 @ stub ??0filebuf@@QAE@ABV0@@Z
 @ stub ??0filebuf@@QAE@H@Z
 @ stub ??0filebuf@@QAE@HPADH@Z
@@ -70,10 +70,10 @@
 @ stub ??0strstreambuf@@QAE@PADH0@Z
 @ stub ??0strstreambuf@@QAE@XZ
 @ stub ??1Iostream_init@@QAE@XZ
-@ cdecl -i386 ??1__non_rtti_object@@UAE@XZ() MSVCRT___non_rtti_object_dtor
-@ cdecl -i386 ??1bad_cast@@UAE@XZ() MSVCRT_bad_cast_dtor
-@ cdecl -i386 ??1bad_typeid@@UAE@XZ() MSVCRT_bad_typeid_dtor
-@ cdecl -i386 ??1exception@@UAE@XZ() MSVCRT_exception_dtor
+@ cdecl -i386 ??1__non_rtti_object@@UAE@XZ() __non_rtti_object_dtor
+@ cdecl -i386 ??1bad_cast@@UAE@XZ() bad_cast_dtor
+@ cdecl -i386 ??1bad_typeid@@UAE@XZ() bad_typeid_dtor
+@ cdecl -i386 ??1exception@@UAE@XZ() exception_dtor
 @ stub ??1filebuf@@UAE@XZ
 @ stub ??1fstream@@UAE@XZ
 @ stub ??1ifstream@@UAE@XZ
@@ -92,16 +92,16 @@
 @ stub ??1streambuf@@UAE@XZ
 @ stub ??1strstream@@UAE@XZ
 @ stub ??1strstreambuf@@UAE@XZ
-@ cdecl -i386 ??1type_info@@UAE@XZ() MSVCRT_type_info_dtor
-@ cdecl -arch=win32 ??2@YAPAXI@Z(long) MSVCRT_operator_new
-@ cdecl -arch=win64 ??2@YAPEAX_K@Z(double) MSVCRT_operator_new
-@ cdecl -arch=win32 ??3@YAXPAX@Z(ptr) MSVCRT_operator_delete
-@ cdecl -arch=win64 ??3@YAXPEAX@Z(ptr) MSVCRT_operator_delete
+@ cdecl -i386 ??1type_info@@UAE@XZ() type_info_dtor
+@ cdecl -arch=win32 ??2@YAPAXI@Z(long) operator_new
+@ cdecl -arch=win64 ??2@YAPEAX_K@Z(double) operator_new
+@ cdecl -arch=win32 ??3@YAXPAX@Z(ptr) operator_delete
+@ cdecl -arch=win64 ??3@YAXPEAX@Z(ptr) operator_delete
 @ stub ??4Iostream_init@@QAEAAV0@ABV0@@Z
-@ cdecl -i386 ??4__non_rtti_object@@QAEAAV0@ABV0@@Z(ptr) MSVCRT___non_rtti_object_opequals
-@ cdecl -i386 ??4bad_cast@@QAEAAV0@ABV0@@Z(ptr) MSVCRT_bad_cast_opequals
-@ cdecl -i386 ??4bad_typeid@@QAEAAV0@ABV0@@Z(ptr) MSVCRT_bad_typeid_opequals
-@ cdecl -i386 ??4exception@@QAEAAV0@ABV0@@Z(ptr) MSVCRT_exception_opequals
+@ cdecl -i386 ??4__non_rtti_object@@QAEAAV0@ABV0@@Z(ptr) __non_rtti_object_opequals
+@ cdecl -i386 ??4bad_cast@@QAEAAV0@ABV0@@Z(ptr) bad_cast_opequals
+@ cdecl -i386 ??4bad_typeid@@QAEAAV0@ABV0@@Z(ptr) bad_typeid_opequals
+@ cdecl -i386 ??4exception@@QAEAAV0@ABV0@@Z(ptr) exception_opequals
 @ stub ??4filebuf@@QAEAAV0@ABV0@@Z
 @ stub ??4fstream@@QAEAAV0@AAV0@@Z
 @ stub ??4ifstream@@QAEAAV0@ABV0@@Z
@@ -165,13 +165,13 @@
 @ stub ??6ostream@@QAEAAV0@PBE@Z
 @ stub ??6ostream@@QAEAAV0@PBX@Z
 @ stub ??7ios@@QBEHXZ
-@ cdecl -i386 ??8type_info@@QBEHABV0@@Z(ptr) MSVCRT_type_info_opequals_equals
-@ cdecl -i386 ??9type_info@@QBEHABV0@@Z(ptr) MSVCRT_type_info_opnot_equals
+@ cdecl -i386 ??8type_info@@QBEHABV0@@Z(ptr) type_info_opequals_equals
+@ cdecl -i386 ??9type_info@@QBEHABV0@@Z(ptr) type_info_opnot_equals
 @ stub ??Bios@@QBEPAXXZ
-@ extern -i386 ??_7__non_rtti_object@@6B@ MSVCRT___non_rtti_object_vtable
-@ extern -i386 ??_7bad_cast@@6B@ MSVCRT_bad_cast_vtable
-@ extern -i386 ??_7bad_typeid@@6B@ MSVCRT_bad_typeid_vtable
-@ extern -i386 ??_7exception@@6B@ MSVCRT_exception_vtable
+@ extern -i386 ??_7__non_rtti_object@@6B@ __non_rtti_object_vtable
+@ extern -i386 ??_7bad_cast@@6B@ bad_cast_vtable
+@ extern -i386 ??_7bad_typeid@@6B@ bad_typeid_vtable
+@ extern -i386 ??_7exception@@6B@ exception_vtable
 @ stub ??_7filebuf@@6B@
 @ stub ??_7fstream@@6B@
 @ stub ??_7ifstream@@6B@
@@ -219,10 +219,10 @@
 @ stub ??_Dstdiostream@@QAEXXZ
 @ stub ??_Dstrstream@@QAEXXZ
 @ stub ??_EIostream_init@@QAEPAXI@Z
-@ cdecl -i386 ??_E__non_rtti_object@@UAEPAXI@Z(long) MSVCRT___non_rtti_object_vector_dtor
-@ cdecl -i386 ??_Ebad_cast@@UAEPAXI@Z(long) MSVCRT_bad_cast_vector_dtor
-@ cdecl -i386 ??_Ebad_typeid@@UAEPAXI@Z(long) MSVCRT_bad_typeid_vector_dtor
-@ cdecl -i386 ??_Eexception@@UAEPAXI@Z(long) MSVCRT_exception_vector_dtor
+@ cdecl -i386 ??_E__non_rtti_object@@UAEPAXI@Z(long) __non_rtti_object_vector_dtor
+@ cdecl -i386 ??_Ebad_cast@@UAEPAXI@Z(long) bad_cast_vector_dtor
+@ cdecl -i386 ??_Ebad_typeid@@UAEPAXI@Z(long) bad_typeid_vector_dtor
+@ cdecl -i386 ??_Eexception@@UAEPAXI@Z(long) exception_vector_dtor
 @ stub ??_Efilebuf@@UAEPAXI@Z
 @ stub ??_Efstream@@UAEPAXI@Z
 @ stub ??_Eifstream@@UAEPAXI@Z
@@ -242,10 +242,10 @@
 @ stub ??_Estrstream@@UAEPAXI@Z
 @ stub ??_Estrstreambuf@@UAEPAXI@Z
 @ stub ??_GIostream_init@@QAEPAXI@Z
-@ cdecl -i386 ??_G__non_rtti_object@@UAEPAXI@Z(long) MSVCRT___non_rtti_object_scalar_dtor
-@ cdecl -i386 ??_Gbad_cast@@UAEPAXI@Z(long) MSVCRT_bad_cast_scalar_dtor
-@ cdecl -i386 ??_Gbad_typeid@@UAEPAXI@Z(long) MSVCRT_bad_typeid_scalar_dtor
-@ cdecl -i386 ??_Gexception@@UAEPAXI@Z(long) MSVCRT_exception_scalar_dtor
+@ cdecl -i386 ??_G__non_rtti_object@@UAEPAXI@Z(long) __non_rtti_object_scalar_dtor
+@ cdecl -i386 ??_Gbad_cast@@UAEPAXI@Z(long) bad_cast_scalar_dtor
+@ cdecl -i386 ??_Gbad_typeid@@UAEPAXI@Z(long) bad_typeid_scalar_dtor
+@ cdecl -i386 ??_Gexception@@UAEPAXI@Z(long) exception_scalar_dtor
 @ stub ??_Gfilebuf@@UAEPAXI@Z
 @ stub ??_Gfstream@@UAEPAXI@Z
 @ stub ??_Gifstream@@UAEPAXI@Z
@@ -264,11 +264,11 @@
 @ stub ??_Gstreambuf@@UAEPAXI@Z
 @ stub ??_Gstrstream@@UAEPAXI@Z
 @ stub ??_Gstrstreambuf@@UAEPAXI@Z
-@ cdecl ?_query_new_handler@@YAP6AHI@ZXZ() MSVCRT__query_new_handler
-@ cdecl -i386 ?_query_new_mode@@YAHXZ() MSVCRT__query_new_mode
-@ cdecl ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z(ptr) MSVCRT__set_new_handler
-@ cdecl ?_set_new_mode@@YAHH@Z(long) MSVCRT__set_new_mode
-@ cdecl ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z(ptr) MSVCRT__set_se_translator
+@ cdecl ?_query_new_handler@@YAP6AHI@ZXZ() _query_new_handler
+@ cdecl -i386 ?_query_new_mode@@YAHXZ() _query_new_mode
+@ cdecl ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z(ptr) _set_new_handler
+@ cdecl ?_set_new_mode@@YAHH@Z(long) _set_new_mode
+@ cdecl ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z(ptr) _set_se_translator
 @ stub ?adjustfield@ios@@2JB
 @ stub ?allocate@streambuf@@IAEHXZ
 @ stub ?attach@filebuf@@QAEPAV1@H@Z
@@ -278,7 +278,7 @@
 @ stub ?bad@ios@@QBEHXZ
 @ stub ?base@streambuf@@IBEPADXZ
 @ stub ?basefield@ios@@2JB
-@ cdecl -i386 ?before@type_info@@QBEHABV1@@Z(ptr) MSVCRT_type_info_before
+@ cdecl -i386 ?before@type_info@@QBEHABV1@@Z(ptr) type_info_before
 @ stub ?binary@filebuf@@2HB
 @ stub ?bitalloc@ios@@SAJXZ
 @ stub ?blen@streambuf@@IBEHXZ
@@ -356,7 +356,7 @@
 @ stub ?lockc@ios@@KAXXZ
 @ stub ?lockptr@ios@@IAEPAU_CRT_CRITICAL_SECTION@@XZ
 @ stub ?lockptr@streambuf@@IAEPAU_CRT_CRITICAL_SECTION@@XZ
-@ cdecl -i386 ?name@type_info@@QBEPBDXZ() MSVCRT_type_info_name
+@ cdecl -i386 ?name@type_info@@QBEPBDXZ() type_info_name
 @ stub ?oct@@YAAAVios@@AAV1@@Z
 @ stub ?open@filebuf@@QAEPAV1@PBDHH@Z
 @ stub ?open@fstream@@QAEXPBDHH@Z
@@ -384,7 +384,7 @@
 @ stub ?put@ostream@@QAEAAV1@E@Z
 @ stub ?putback@istream@@QAEAAV1@D@Z
 @ stub ?pword@ios@@QBEAAPAXH@Z
-@ cdecl -i386 ?raw_name@type_info@@QBEPBDXZ() MSVCRT_type_info_raw_name
+@ cdecl -i386 ?raw_name@type_info@@QBEPBDXZ() type_info_raw_name
 @ stub ?rdbuf@fstream@@QBEPAVfilebuf@@XZ
 @ stub ?rdbuf@ifstream@@QBEPAVfilebuf@@XZ
 @ stub ?rdbuf@ios@@QBEPAVstreambuf@@XZ
@@ -407,9 +407,9 @@
 @ stub ?seekp@ostream@@QAEAAV1@J@Z
 @ stub ?seekp@ostream@@QAEAAV1@JW4seek_dir@ios@@@Z
 @ stub ?seekpos@streambuf@@UAEJJH@Z
-@ cdecl -i386 ?set_new_handler@@YAP6AXXZP6AXXZ@Z(ptr) MSVCRT_set_new_handler
-@ cdecl ?set_terminate@@YAP6AXXZP6AXXZ@Z(ptr) MSVCRT_set_terminate
-@ cdecl ?set_unexpected@@YAP6AXXZP6AXXZ@Z(ptr) MSVCRT_set_unexpected
+@ cdecl -i386 ?set_new_handler@@YAP6AXXZP6AXXZ@Z(ptr) set_new_handler
+@ cdecl ?set_terminate@@YAP6AXXZP6AXXZ@Z(ptr) set_terminate
+@ cdecl ?set_unexpected@@YAP6AXXZP6AXXZ@Z(ptr) set_unexpected
 @ stub ?setb@streambuf@@IAEXPAD0H@Z
 @ stub ?setbuf@filebuf@@UAEPAVstreambuf@@PADH@Z
 @ stub ?setbuf@fstream@@QAEPAVstreambuf@@PADH@Z
@@ -452,7 +452,7 @@
 @ stub ?sync_with_stdio@ios@@SAXXZ
 @ stub ?tellg@istream@@QAEJXZ
 @ stub ?tellp@ostream@@QAEJXZ
-@ cdecl ?terminate@@YAXXZ() MSVCRT_terminate
+@ cdecl ?terminate@@YAXXZ() terminate
 @ stub ?text@filebuf@@2HB
 @ stub ?tie@ios@@QAEPAVostream@@PAV2@@Z
 @ stub ?tie@ios@@QBEPAVostream@@XZ
@@ -461,13 +461,13 @@
 @ stub ?underflow@filebuf@@UAEHXZ
 @ stub ?underflow@stdiobuf@@UAEHXZ
 @ stub ?underflow@strstreambuf@@UAEHXZ
-@ cdecl ?unexpected@@YAXXZ() MSVCRT_unexpected
+@ cdecl ?unexpected@@YAXXZ() unexpected
 @ stub ?unlock@ios@@QAAXXZ
 @ stub ?unlock@streambuf@@QAEXXZ
 @ stub ?unlockbuf@ios@@QAAXXZ
 @ stub ?unlockc@ios@@KAXXZ
 @ stub ?unsetf@ios@@QAEJJ@Z
-@ cdecl -i386 ?what@exception@@UBEPBDXZ() MSVCRT_what_exception
+@ cdecl -i386 ?what@exception@@UBEPBDXZ() exception_what
 @ stub ?width@ios@@QAEHH@Z
 @ stub ?width@ios@@QBEHXZ
 @ stub ?write@ostream@@QAEAAV1@PBCH@Z
@@ -505,9 +505,9 @@
 @ cdecl _XcptFilter(long ptr)
 @ cdecl -i386 __CxxFrameHandler(ptr ptr ptr ptr)
 @ stdcall -i386 __CxxLongjmpUnwind(ptr)
-@ cdecl __RTCastToVoid(ptr) MSVCRT___RTCastToVoid
-@ cdecl __RTDynamicCast(ptr long ptr ptr long) MSVCRT___RTDynamicCast
-@ cdecl __RTtypeid(ptr) MSVCRT___RTtypeid
+@ cdecl __RTCastToVoid(ptr) __RTCastToVoid
+@ cdecl __RTDynamicCast(ptr long ptr ptr long) __RTDynamicCast
+@ cdecl __RTtypeid(ptr) __RTtypeid
 @ cdecl __STRINGTOLD(ptr ptr str long)
 @ extern __argc
 @ extern __argv

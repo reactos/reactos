@@ -56,9 +56,7 @@ ULONG LdrpNumberOfProcessors;
 PVOID NtDllBase;
 extern LARGE_INTEGER RtlpTimeout;
 extern BOOLEAN RtlpTimeoutDisable;
-PVOID LdrpHeap;
 LIST_ENTRY LdrpHashTable[LDR_HASH_TABLE_ENTRIES];
-LIST_ENTRY LdrpDllNotificationList;
 HANDLE LdrpKnownDllObjectDirectory;
 UNICODE_STRING LdrpKnownDllPath;
 WCHAR LdrpKnownDllPathBuffer[128];
@@ -93,7 +91,7 @@ ULONG RtlpDisableHeapLookaside; // TODO: Move to heap.c
 ULONG RtlpShutdownProcessFlags; // TODO: Use it
 
 NTSTATUS LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders, PVOID ImageBase);
-void actctx_init(PVOID* pOldShimData);
+NTSTATUS NTAPI RtlpInitializeActCtx(PVOID* pOldShimData);
 extern BOOLEAN RtlpUse16ByteSLists;
 
 #ifdef _WIN64
@@ -517,6 +515,9 @@ LdrpInitializeThread(IN PCONTEXT Context)
             NtCurrentTeb()->RealClientId.UniqueProcess,
             NtCurrentTeb()->RealClientId.UniqueThread);
 
+    /* Acquire the loader Lock */
+    RtlEnterCriticalSection(&LdrpLoaderLock);
+
     /* Allocate an Activation Context Stack */
     DPRINT("ActivationContextStack %p\n", NtCurrentTeb()->ActivationContextStackPointer);
     Status = RtlAllocateActivationContextStack(&NtCurrentTeb()->ActivationContextStackPointer);
@@ -526,7 +527,7 @@ LdrpInitializeThread(IN PCONTEXT Context)
     }
 
     /* Make sure we are not shutting down */
-    if (LdrpShutdownInProgress) return;
+    if (LdrpShutdownInProgress) goto Exit;
 
     /* Allocate TLS */
     LdrpAllocateTls();
@@ -632,6 +633,11 @@ LdrpInitializeThread(IN PCONTEXT Context)
         /* Deactivate the ActCtx */
         RtlDeactivateActivationContextUnsafeFast(&ActCtx);
     }
+
+Exit:
+
+    /* Release the loader lock */
+    RtlLeaveCriticalSection(&LdrpLoaderLock);
 
     DPRINT("LdrpInitializeThread() done\n");
 }
@@ -1538,7 +1544,9 @@ VOID
 NTAPI
 LdrpValidateImageForMp(IN PLDR_DATA_TABLE_ENTRY LdrDataTableEntry)
 {
-    UNIMPLEMENTED;
+    DPRINT("LdrpValidateImageForMp is unimplemented\n");
+    // TODO:
+    // Scan the LockPrefixTable in the load config directory
 }
 
 BOOLEAN
@@ -1998,9 +2006,8 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     //Peb->FastPebLockRoutine = (PPEBLOCKROUTINE)RtlEnterCriticalSection;
     //Peb->FastPebUnlockRoutine = (PPEBLOCKROUTINE)RtlLeaveCriticalSection;
 
-    /* Setup Callout Lock and Notification list */
+    /* Setup Callout Lock */
     //RtlInitializeCriticalSection(&RtlpCalloutEntryLock);
-    InitializeListHead(&LdrpDllNotificationList);
 
     /* For old executables, use 16-byte aligned heap */
     if ((NtHeader->OptionalHeader.MajorSubsystemVersion <= 3) &&
@@ -2265,7 +2272,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
                    &LdrpNtDllDataTableEntry->InInitializationOrderLinks);
 
     /* Initialize Wine's active context implementation for the current process */
-    actctx_init(&OldShimData);
+    RtlpInitializeActCtx(&OldShimData);
 
     /* Set the current directory */
     Status = RtlSetCurrentDirectory_U(&CurrentDirectory);
@@ -2405,10 +2412,10 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Check whether all static imports were properly loaded and return here */
     if (!NT_SUCCESS(ImportStatus)) return ImportStatus;
 
-#if (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+    /* Following two calls are for Vista+ support, required for winesync */
     /* Initialize the keyed event for condition variables */
     RtlpInitializeKeyedEvent();
-#endif
+    RtlpInitializeThreadPooling();
 
     /* Initialize TLS */
     Status = LdrpInitializeTls();

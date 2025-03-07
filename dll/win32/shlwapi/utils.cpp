@@ -21,15 +21,8 @@
 #include <shlguid_undoc.h>
 #include <atlstr.h>
 
-/*
- * HACK!
- */
-#undef IShellFolder_GetDisplayNameOf
-#undef IShellFolder_ParseDisplayName
-#undef IShellFolder_CompareIDs
-
-#define SHLWAPI_ISHELLFOLDER_HELPERS /* HACK! */
 #include <shlwapi_undoc.h>
+#include <ishellfolder_helpers.h>
 
 #include <strsafe.h>
 

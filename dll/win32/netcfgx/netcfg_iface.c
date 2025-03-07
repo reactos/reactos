@@ -845,7 +845,7 @@ INetCfg_fnQueryNetCfgClass(
     REFIID riid,
     void **ppvObject)
 {
-    return E_FAIL;
+    return INetCfgClass_Constructor((IUnknown *)iface, riid, ppvObject, pguidClass, iface);
 }
 
 static const INetCfgVtbl vt_NetCfg =

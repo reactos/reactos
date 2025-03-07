@@ -1,7 +1,7 @@
 
 #include <win32k.h>
 #include "../diblib/DibLib_interface.h"
-DBG_DEFAULT_CHANNEL(GdiFont);
+DBG_DEFAULT_CHANNEL(GdiBlt);
 
 #define SURFOBJ_flags(pso) (CONTAINING_RECORD(pso, SURFACE, SurfObj)->flags)
 

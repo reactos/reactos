@@ -197,11 +197,9 @@ static void ParseTildeEffect(PWSTR &res, LPCWSTR &args, DWORD &len, DWORD &used,
 
 static BOOL SHELL_ArgifyW(WCHAR* out, DWORD len, const WCHAR* fmt, const WCHAR* lpFile, LPITEMIDLIST pidl, LPCWSTR args, DWORD* out_len, const WCHAR* lpDir)
 {
-    WCHAR   xlpFile[1024];
     BOOL    done = FALSE;
     BOOL    found_p1 = FALSE;
     PWSTR   res = out;
-    PCWSTR  cmd;
     DWORD   used = 0;
     bool    tildeEffect = false;
 
@@ -279,19 +277,14 @@ static BOOL SHELL_ArgifyW(WCHAR* out, DWORD len, const WCHAR* fmt, const WCHAR* 
                 break;
 
                 case '1':
-                    if (!done || (*fmt == '1'))
+                    if ((!done || (*fmt == '1')) && lpFile)
                     {
-                        /*FIXME Is the call to SearchPathW() really needed? We already have separated out the parameter string in args. */
-                        if (SearchPathW(lpDir, lpFile, L".exe", ARRAY_SIZE(xlpFile), xlpFile, NULL))
-                            cmd = xlpFile;
-                        else
-                            cmd = lpFile;
-
-                        used += wcslen(cmd);
+                        SIZE_T filelen = wcslen(lpFile);
+                        used += filelen;
                         if (used < len)
                         {
-                            wcscpy(res, cmd);
-                            res += wcslen(cmd);
+                            wcscpy(res, lpFile);
+                            res += filelen;
                         }
                     }
                     found_p1 = TRUE;
@@ -755,8 +748,10 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpVerb,
     WCHAR wBuffer[256];      /* Used to GetProfileString */
     UINT  retval = SE_ERR_NOASSOC;
     WCHAR *tok;              /* token pointer */
-    WCHAR xlpFile[256];      /* result of SearchPath */
+    WCHAR xlpFile[MAX_PATH]; /* result of PathResolve */
     DWORD attribs;           /* file attributes */
+    WCHAR curdir[MAX_PATH];
+    const WCHAR *search_paths[3] = {0};
 
     TRACE("%s\n", debugstr_w(lpFile));
 
@@ -781,17 +776,38 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpVerb,
         return 33;
     }
 
-    if (SearchPathW(lpPath, lpFile, L".exe", ARRAY_SIZE(xlpFile), xlpFile, NULL))
+    GetCurrentDirectoryW(ARRAY_SIZE(curdir), curdir);
+    if (lpPath && *lpPath)
     {
-        TRACE("SearchPathW returned non-zero\n");
-        lpFile = xlpFile;
-        /* The file was found in the application-supplied default directory (or the system search path) */
+        search_paths[0] = lpPath;
+        search_paths[1] = curdir;
     }
-    else if (lpPath && SearchPathW(NULL, lpFile, L".exe", ARRAY_SIZE(xlpFile), xlpFile, NULL))
+    else
     {
-        TRACE("SearchPathW returned non-zero\n");
+        search_paths[0] = curdir;
+    }
+
+    lstrcpyW(xlpFile, lpFile);
+    if (PathResolveW(xlpFile, search_paths, PRF_TRYPROGRAMEXTENSIONS | PRF_VERIFYEXISTS) ||
+        PathFindOnPathW(xlpFile, search_paths))
+    {
+        TRACE("PathResolveW returned non-zero\n");
         lpFile = xlpFile;
-        /* The file was found in one of the directories in the system-wide search path */
+        PathRemoveBlanksW(xlpFile);
+
+        /* Clear any trailing periods */
+        SIZE_T i = wcslen(xlpFile);
+        while (i > 0 && xlpFile[i - 1] == '.')
+        {
+            xlpFile[--i] = '\0';
+        }
+
+        lstrcpyW(lpResult, xlpFile);
+        /* The file was found in lpPath or one of the directories in the system-wide search path */
+    }
+    else
+    {
+        xlpFile[0] = '\0';
     }
 
     attribs = GetFileAttributesW(lpFile);
@@ -844,7 +860,7 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpVerb,
                     while (*p == ' ' || *p == '\t') p++;
                 }
 
-                if (wcsicmp(tok, &extension[1]) == 0) /* have to skip the leading "." */
+                if (_wcsicmp(tok, &extension[1]) == 0) /* have to skip the leading "." */
                 {
                     wcscpy(lpResult, xlpFile);
                     /* Need to perhaps check that the file has a path
@@ -931,7 +947,7 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpVerb,
         }
     }
 
-    TRACE("returning %s\n", debugstr_w(lpResult));
+    TRACE("returning path %s, retval %d\n", debugstr_w(lpResult), retval);
     return retval;
 }
 
@@ -1389,14 +1405,7 @@ static HRESULT shellex_get_dataobj( LPSHELLEXECUTEINFOW sei, CComPtr<IDataObject
         pidl = ILCreateFromPathW(fullpath);
         allocatedPidl.Attach(pidl);
     }
-
-    CComPtr<IShellFolder> shf;
-    LPCITEMIDLIST pidllast = NULL;
-    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &shf), &pidllast);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return shf->GetUIObjectOf(NULL, 1, &pidllast, IID_NULL_PPV_ARG(IDataObject, &dataObj));
+    return SHELL_GetUIObjectOfAbsoluteItem(NULL, pidl, IID_PPV_ARG(IDataObject, &dataObj));
 }
 
 static HRESULT shellex_run_context_menu_default(IShellExtInit *obj,
@@ -1452,7 +1461,7 @@ static HRESULT shellex_run_context_menu_default(IShellExtInit *obj,
 
     memset(&ici, 0, sizeof ici);
     ici.cbSize = sizeof ici;
-    ici.fMask = CMIC_MASK_UNICODE | (sei->fMask & (SEE_MASK_NO_CONSOLE | SEE_MASK_NOASYNC | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
+    ici.fMask = (sei->fMask & SEE_CMIC_COMMON_BASICFLAGS) | CMIC_MASK_UNICODE;
     ici.nShow = sei->nShow;
     ici.lpVerb = MAKEINTRESOURCEA(def);
     ici.hwnd = sei->hwnd;
@@ -1581,6 +1590,7 @@ static HRESULT ShellExecute_ContextMenuVerb(LPSHELLEXECUTEINFOW sei)
 
     enum { idFirst = 1, idLast = 0x7fff };
     HMENU hMenu = CreatePopupMenu();
+    // Note: Windows does not pass CMF_EXTENDEDVERBS so "hidden" verbs cannot be executed
     hr = cm->QueryContextMenu(hMenu, 0, idFirst, idLast, fDefault ? CMF_DEFAULTONLY : 0);
     if (!FAILED_UNEXPECTEDLY(hr))
     {
@@ -1730,7 +1740,7 @@ static BOOL SHELL_translate_idlist(LPSHELLEXECUTEINFOW sei, LPWSTR wszParameters
 
             sei->fMask &= ~SEE_MASK_INVOKEIDLIST;
         } else {
-            WCHAR target[MAX_PATH];
+            WCHAR target[max(MAX_PATH, _countof(buffer))];
             DWORD attribs;
             DWORD resultLen;
             /* Check if we're executing a directory and if so use the
@@ -1744,10 +1754,19 @@ static BOOL SHELL_translate_idlist(LPSHELLEXECUTEINFOW sei, LPWSTR wszParameters
                                            buffer, sizeof(buffer))) {
                 SHELL_ArgifyW(wszApplicationName, dwApplicationNameLen,
                               buffer, target, (LPITEMIDLIST)sei->lpIDList, NULL, &resultLen,
-                              (sei->lpDirectory && *sei->lpDirectory) ? sei->lpDirectory : NULL);
+                              !StrIsNullOrEmpty(sei->lpDirectory) ? sei->lpDirectory : NULL);
                 if (resultLen > dwApplicationNameLen)
-                    ERR("Argify buffer not large enough... truncating\n");
+                    ERR("Argify buffer not large enough... truncating\n"); // FIXME: Report this to the caller?
                 appKnownSingular = FALSE;
+                // HACKFIX: We really want the !appKnownSingular code in SHELL_execute to split the
+                // parameters for us but we cannot guarantee that the exe in the registry is quoted.
+                // We have now turned 'explorer.exe "%1" into 'explorer.exe "c:\path\from\pidl"' and
+                // need to split to application and parameters.
+                LPCWSTR params = PathGetArgsW(wszApplicationName);
+                lstrcpynW(wszParameters, params, parametersLen);
+                PathRemoveArgsW(wszApplicationName);
+                PathUnquoteSpacesW(wszApplicationName);
+                appKnownSingular = TRUE;
             }
             sei->fMask &= ~SEE_MASK_INVOKEIDLIST;
         }
@@ -1775,7 +1794,7 @@ SHELL_InvokePidl(
 
     // Invoke a command
     CMINVOKECOMMANDINFO ici = { sizeof(ici) };
-    ici.fMask = (sei->fMask & (SEE_MASK_NO_CONSOLE | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
+    ici.fMask = (sei->fMask & SEE_CMIC_COMMON_BASICFLAGS) & ~CMIC_MASK_UNICODE; // FIXME: Unicode?
     ici.nShow = sei->nShow;
     ici.hwnd = sei->hwnd;
     char szVerb[VERBKEY_CCHMAX];
@@ -2057,10 +2076,10 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
     if (sei_tmp.fMask & SEE_MASK_IDLIST &&
         (sei_tmp.fMask & SEE_MASK_INVOKEIDLIST) != SEE_MASK_INVOKEIDLIST)
     {
+        LPCITEMIDLIST pidl = (LPCITEMIDLIST)sei_tmp.lpIDList;
+
         CComPtr<IShellExecuteHookW> pSEH;
-
-        HRESULT hr = SHBindToParent((LPCITEMIDLIST)sei_tmp.lpIDList, IID_PPV_ARG(IShellExecuteHookW, &pSEH), NULL);
-
+        HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellExecuteHookW, &pSEH), NULL);
         if (SUCCEEDED(hr))
         {
             hr = pSEH->Execute(&sei_tmp);
@@ -2068,7 +2087,14 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
                 return TRUE;
         }
 
-        SHGetPathFromIDListW((LPCITEMIDLIST)sei_tmp.lpIDList, wszApplicationName);
+        hr = SHGetNameAndFlagsW(pidl, SHGDN_FORPARSING, wszApplicationName, dwApplicationNameLen, NULL);
+        if (FAILED(hr))
+        {
+            if (dwApplicationNameLen)
+                *wszApplicationName = UNICODE_NULL;
+            if (!_ILIsDesktop(pidl))
+                TRACE("Unable to get PIDL parsing path\n");
+        }
         appKnownSingular = TRUE;
         TRACE("-- idlist=%p (%s)\n", sei_tmp.lpIDList, debugstr_w(wszApplicationName));
     }
@@ -2337,6 +2363,8 @@ HINSTANCE WINAPI ShellExecuteA(HWND hWnd, LPCSTR lpVerb, LPCSTR lpFile,
     sei.dwHotKey = 0;
     sei.hProcess = 0;
 
+    if (!(SHGetAppCompatFlags(SHACF_WIN95SHLEXEC) & SHACF_WIN95SHLEXEC))
+        sei.fMask |= SEE_MASK_NOASYNC;
     ShellExecuteExA(&sei);
     return sei.hInstApp;
 }
@@ -2475,9 +2503,6 @@ ShellExecuteExW(LPSHELLEXECUTEINFOW sei)
 
 /*************************************************************************
  * ShellExecuteW            [SHELL32.294]
- * from shellapi.h
- * WINSHELLAPI HINSTANCE APIENTRY ShellExecuteW(HWND hwnd, LPCWSTR lpVerb,
- * LPCWSTR lpFile, LPCWSTR lpParameters, LPCWSTR lpDirectory, INT nShowCmd);
  */
 HINSTANCE WINAPI ShellExecuteW(HWND hwnd, LPCWSTR lpVerb, LPCWSTR lpFile,
                                LPCWSTR lpParameters, LPCWSTR lpDirectory, INT nShowCmd)
@@ -2499,7 +2524,9 @@ HINSTANCE WINAPI ShellExecuteW(HWND hwnd, LPCWSTR lpVerb, LPCWSTR lpFile,
     sei.dwHotKey = 0;
     sei.hProcess = 0;
 
-    SHELL_execute(&sei, SHELL_ExecuteW);
+    if (!(SHGetAppCompatFlags(SHACF_WIN95SHLEXEC) & SHACF_WIN95SHLEXEC))
+        sei.fMask |= SEE_MASK_NOASYNC;
+    ShellExecuteExW(&sei);
     return sei.hInstApp;
 }
 
@@ -2947,4 +2974,89 @@ RealShellExecuteW(
                                nCmdShow,
                                lphProcess,
                                0);
+}
+
+// The common helper of ShellExec_RunDLLA and ShellExec_RunDLLW
+static VOID
+ShellExec_RunDLL_Helper(
+    _In_opt_ HWND hwnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ PCWSTR pszCmdLine,
+    _In_ INT nCmdShow)
+{
+    TRACE("(%p, %p, %s, 0x%X)\n", hwnd, hInstance, wine_dbgstr_w(pszCmdLine), nCmdShow);
+
+    if (!pszCmdLine || !*pszCmdLine)
+        return;
+
+    // '?' enables us to specify the additional mask value
+    ULONG fNewMask = SEE_MASK_NOASYNC;
+    if (*pszCmdLine == L'?') // 1st question
+    {
+        INT MaskValue;
+        if (StrToIntExW(pszCmdLine + 1, STIF_SUPPORT_HEX, &MaskValue))
+            fNewMask |= MaskValue;
+
+        PCWSTR pch2ndQuestion = StrChrW(pszCmdLine + 1, L'?'); // 2nd question
+        if (pch2ndQuestion)
+            pszCmdLine = pch2ndQuestion + 1;
+    }
+
+    WCHAR szPath[2 * MAX_PATH];
+    if (PathProcessCommandAW(pszCmdLine, szPath, _countof(szPath), L'C') == -1)
+        StrCpyNW(szPath, pszCmdLine, _countof(szPath));
+
+    // Split arguments from the path
+    LPWSTR Args = PathGetArgsW(szPath);
+    if (*Args)
+        *(Args - 1) = UNICODE_NULL;
+
+    PathUnquoteSpacesW(szPath);
+
+    // Execute
+    SHELLEXECUTEINFOW execInfo = { sizeof(execInfo) };
+    execInfo.fMask = fNewMask;
+    execInfo.hwnd = hwnd;
+    execInfo.lpFile = szPath;
+    execInfo.lpParameters = Args;
+    execInfo.nShow = nCmdShow;
+    if (!ShellExecuteExW(&execInfo))
+    {
+        DWORD dwError = GetLastError();
+        if (SHELL_InRunDllProcess()) // Is it a RUNDLL process?
+            ExitProcess(dwError); // Terminate it now
+    }
+}
+
+/*************************************************************************
+ *  ShellExec_RunDLLA [SHELL32.358]
+ *
+ * @see https://www.hexacorn.com/blog/2024/11/30/1-little-known-secret-of-shellexec_rundll/
+ */
+EXTERN_C
+VOID WINAPI
+ShellExec_RunDLLA(
+    _In_opt_ HWND hwnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ PCSTR pszCmdLine,
+    _In_ INT nCmdShow)
+{
+    CStringW strCmdLine = pszCmdLine; // Keep
+    ShellExec_RunDLL_Helper(hwnd, hInstance, strCmdLine, nCmdShow);
+}
+
+/*************************************************************************
+ *  ShellExec_RunDLLW [SHELL32.359]
+ *
+ * @see https://www.hexacorn.com/blog/2024/11/30/1-little-known-secret-of-shellexec_rundll/
+ */
+EXTERN_C
+VOID WINAPI
+ShellExec_RunDLLW(
+    _In_opt_ HWND hwnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ PCWSTR pszCmdLine,
+    _In_ INT nCmdShow)
+{
+    ShellExec_RunDLL_Helper(hwnd, hInstance, pszCmdLine, nCmdShow);
 }

@@ -1,27 +1,16 @@
 /*
- *  FreeLoader
- *  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ * PROJECT:     FreeLoader
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Support for the Multiboot v1 specification.
+ * COPYRIGHT:   Copyright 1998-2002 Brian Palmer <brianp@sginet.com>
+ *              Copyright 2024 Daniel Victor <ilauncherdeveloper@gmail.com>
  */
 
 #include <asm.inc>
 #include <arch/pc/x86common.h>
 #include <multiboot.h>
 
-/* Multiboot support
+/* Multiboot v1 support
  *
  * Allows freeldr to be loaded as a "multiboot kernel" by
  * other boot loaders like GRUB.
@@ -47,6 +36,16 @@
 #define INITIAL_BASE HEX(200000)
 
 
+#ifdef _M_IX86
+#define rax eax
+#define rbx ebx
+#define rcx ecx
+#define rdi edi
+#define rdx edx
+#define rsi esi
+#endif
+
+
 #ifdef _USE_ML
 EXTERN __bss_start__:DWORD
 EXTERN __bss_end__:DWORD
@@ -54,8 +53,7 @@ EXTERN __bss_end__:DWORD
 
 
 #ifdef _USE_ML
-.MBDATA SEGMENT PUBLIC 'DATA'
-//ASSUME nothing
+.MBDATA SEGMENT 'DATA'
 #endif
 
     /* Align to 32 bits boundary */
@@ -85,8 +83,12 @@ MultibootHeader:
 #endif
 
 
+#ifdef _M_IX86
 .code32
 ASSUME ES:NOTHING, FS:NOTHING, GS:NOTHING
+#else
+.code64
+#endif
 
 MultibootEntry:
     cld
@@ -98,36 +100,35 @@ MultibootEntry:
     /* Save multiboot info structure */
     mov esi, ebx
     mov edi, offset MultibootInfo + INITIAL_BASE - FREELDR_BASE
-    mov ecx, (MB_INFO_SIZE / 4)
-    rep movsd
-    mov dword ptr ds:[MultibootInfo + INITIAL_BASE - FREELDR_BASE + MB_INFO_MMAP_ADDR_OFFSET], 0
-    mov dword ptr ds:[_MultibootInfoPtr + INITIAL_BASE - FREELDR_BASE], offset MultibootInfo
+    mov ecx, MB_INFO_SIZE
+    rep movsb
+    mov dword ptr [MultibootInfo + INITIAL_BASE - FREELDR_BASE + MB_INFO_MMAP_ADDR_OFFSET], 0
+    mov dword ptr [_MultibootInfoPtr + INITIAL_BASE - FREELDR_BASE], offset MultibootInfo
 
     /* See if the memory map was passed in */
-    test dword ptr ds:[ebx + MB_INFO_FLAGS_OFFSET], MB_INFO_FLAG_MEMORY_MAP
+    test dword ptr [rbx + MB_INFO_FLAGS_OFFSET], MB_INFO_FLAG_MEMORY_MAP
     jz mbchk_command_line
     /* Check memory map length */
-    mov ecx, dword ptr ds:[ebx + MB_INFO_MMAP_LEN_OFFSET]
+    mov rcx, [rbx + MB_INFO_MMAP_LEN_OFFSET]
     test ecx, ecx
     jz mbchk_command_line
     cmp ecx, MB_MMAP_SIZE
     jg mbchk_command_line
     /* Check memory map address */
-    mov esi, dword ptr ds:[ebx + MB_INFO_MMAP_ADDR_OFFSET]
+    mov rsi, [rbx + MB_INFO_MMAP_ADDR_OFFSET]
     test esi, esi
     jz mbchk_command_line
     /* Save memory map structure */
     mov edi, offset MultibootMemoryMap + INITIAL_BASE - FREELDR_BASE
-    shr ecx, 2
-    rep movsd
+    rep movsb
     /* Relocate memory map address */
-    mov dword ptr ds:[MultibootInfo + INITIAL_BASE - FREELDR_BASE + MB_INFO_MMAP_ADDR_OFFSET], offset MultibootMemoryMap
+    mov dword ptr [MultibootInfo + INITIAL_BASE - FREELDR_BASE + MB_INFO_MMAP_ADDR_OFFSET], offset MultibootMemoryMap
 
 mbchk_command_line:
     /* Save command line */
-    test dword ptr ds:[ebx + MB_INFO_FLAGS_OFFSET], MB_INFO_FLAG_COMMAND_LINE
+    test dword ptr [rbx + MB_INFO_FLAGS_OFFSET], MB_INFO_FLAG_COMMAND_LINE
     jz mb2
-    mov esi, dword ptr ds:[ebx + MB_INFO_COMMAND_LINE_OFFSET]
+    mov rsi, [rbx + MB_INFO_COMMAND_LINE_OFFSET]
     mov edi, offset cmdline + INITIAL_BASE - FREELDR_BASE
     mov ecx, CMDLINE_SIZE - 1
 mb1:
@@ -140,15 +141,18 @@ mb1:
 
 mb2:
     /* See if the boot device was passed in */
-    test dword ptr ds:[ebx + MB_INFO_FLAGS_OFFSET], MB_INFO_FLAG_BOOT_DEVICE
+    test dword ptr [rbx + MB_INFO_FLAGS_OFFSET], MB_INFO_FLAG_BOOT_DEVICE
 
     /* If no boot device known, assume first partition of first harddisk */
     mov dx, HEX(0180)
     jz mb3
 
     /* Load boot drive into DL, boot partition into DH */
-    mov edx, dword ptr ds:[ebx + MB_INFO_BOOT_DEVICE_OFFSET]
+    mov rdx, [rbx + MB_INFO_BOOT_DEVICE_OFFSET]
     bswap edx
+
+    cmp dh, HEX(FF)
+    jz mb3
     inc dh
 
 mb3:
@@ -156,15 +160,14 @@ mb3:
     mov esi, INITIAL_BASE
     mov edi, FREELDR_BASE
     mov ecx, offset __bss_start__ - FREELDR_BASE
-    shr ecx, 2
-    rep movsd
+    rep movsb
 
     /* Load segment registers for real-address mode */
-#ifdef _USE_ML
-    lgdt fword ptr ds:[gdtptr]
-#else
-    lgdt ds:[gdtptr]
-#endif
+    mov edi, offset gdtptr
+    lgdt lXdtPrefix [rdi]
+    mov edi, offset idtptr
+    lidt lXdtPrefix [rdi]
+
     mov ax, HEX(10)
     mov ds, ax
     mov es, ax
@@ -180,16 +183,14 @@ mbfail:
 mbstop:
     jmp short mbstop  /* We should never get here */
 
-.code16
 mb4:
     /* Disable protected mode */
-    mov eax, cr0
-    and eax, CR0_PE_CLR
-    mov cr0, eax
+    mov rax, cr0
+    data32 and eax, CR0_PE_CLR
+    mov cr0, rax
 
     /* Jump to real entry point */
     ljmp16 0, FREELDR_BASE
-.endcode16
 
 
     /* Force 8-byte alignment */
@@ -201,12 +202,22 @@ gdt:
 
 /* GDT table pointer */
 gdtptr:
-    .word HEX(17)   /* Limit */
-    .long gdt       /* Base Address */
+    .word HEX(17)       /* Limit */
+    .long gdt           /* Base Address */
+
+    /* Force 8-byte alignment */
+    .align 8
+idtptr:
+    .word HEX(3FF)      /* Limit */
+    .long HEX(0)        /* Base Address */
 
 PUBLIC _MultibootInfoPtr
 _MultibootInfoPtr:
+#ifdef _M_IX86
     .long 0
+#else
+    .quad 0
+#endif
 
 MultibootInfo:
     .space MB_INFO_SIZE

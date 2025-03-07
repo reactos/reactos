@@ -290,14 +290,15 @@ BEGIN
 END
 
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "Správce zařízení ReactOS"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
   IDS_CONFIRM_DISABLE       "Zakázáním tohoto zařízení dojde k ukončení jeho činnosti.\nOpravdu si jej přejete zakázat?"
   IDS_CONFIRM_UNINSTALL     "Varování: Chystáte se odebrat toto zařízení ze systému.\nPřejete si pokračovat?"
 END
-STRINGTABLE DISCARDABLE
+
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Aktualizovat software ovladače..."
   IDS_MENU_ENABLE           "Povolit"
@@ -308,7 +309,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Vlastnosti"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Vlastnosti"
   IDS_TOOLTIP_SCAN          "Vyhledat změny hardwaru"
@@ -319,7 +320,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Otevře seznam vlastností pro vybrané zařízení."

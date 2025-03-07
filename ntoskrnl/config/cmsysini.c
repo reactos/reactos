@@ -1164,7 +1164,7 @@ CmpCreateRegistryRoot(VOID)
         return FALSE;
     }
 
-    /* Completely sucessful */
+    /* Completely successful */
     return TRUE;
 }
 
@@ -1635,6 +1635,10 @@ CmInitSystem1(VOID)
         CmpMiniNTBoot = TRUE;
         CmpShareSystemHives = TRUE;
     }
+    /* If we are in volatile boot mode, ALL hives without exception
+     * (system hives and others) will be loaded in shared mode */
+    if (CmpVolatileBoot)
+        CmpShareSystemHives = TRUE;
 
     /* Initialize the hive list and lock */
     InitializeListHead(&CmpHiveListHead);

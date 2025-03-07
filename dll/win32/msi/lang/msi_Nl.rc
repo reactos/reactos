@@ -31,6 +31,14 @@ STRINGTABLE
     13 "De netwerkschijf met de feature ontbreekt"
     14 "Feature van:"
     15 "Kies de map die %s bevat"
+#ifdef __REACTOS__
+    34 "ReactOS Installer Package"
+    35 "ReactOS Installer Patch"
+    36 "&Install"
+    37 "Re&pair"
+    38 "&Uninstall"
+    39 "&Apply"
+#endif
     100 "New Folder"
 }
 

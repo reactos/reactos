@@ -124,6 +124,8 @@ BEGIN
     IDS_SELECT_NO_DISK "\n没有当前选择的磁盘。\nP请选择一个磁盘，再试一次。\n\n"
     IDS_SELECT_DISK "\n磁盘 %lu 现在是所选的磁盘。\n\n"
     IDS_SELECT_DISK_INVALID "\n无效的磁盘。\n\n"
+    IDS_SELECT_DISK_ENUM_NO_START "\nNo disk enumeration started yet.\n\nNo disk is currently selected.\n\n"
+    IDS_SELECT_DISK_ENUM_FINISHED "\nThe last disk has been enumerated.\n\nNo disk is currently selected.\n\n"
     IDS_SELECT_NO_PARTITION "\n有是没有当前选定的分区。\n请选择一个磁盘，再试一次。\n\n"
     IDS_SELECT_PARTITION "\n分区 %lu 现在是所选的分区。\n\n"
     IDS_SELECT_PARTITION_NO_DISK "\n没有一个选择是有分区的磁盘。\n请选择一个磁盘，再试一次。\n\n"

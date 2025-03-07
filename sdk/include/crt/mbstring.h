@@ -7,7 +7,7 @@
 #ifndef _INC_MBSTRING
 #define _INC_MBSTRING
 
-#include <crtdefs.h>
+#include <corecrt.h>
 
 #pragma pack(push,_CRT_PACKING)
 

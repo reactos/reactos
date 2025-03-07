@@ -188,7 +188,6 @@
 #define IDS_FILE_TYPES            174
 #define IDS_FILE_DETAILS          175
 #define IDS_FILE_DETAILSADV       176
-#define IDS_FILE_EXT_TYPE         999
 #define IDS_BYTES_FORMAT          177
 #define IDS_OPEN_WITH_RECOMMENDED 178
 #define IDS_OPEN_WITH_OTHER       179
@@ -282,6 +281,10 @@
 #define IDS_NETWORKPLACE           9217
 #define IDS_OBJECTS                6466
 #define IDS_OBJECTS_SELECTED       6477
+
+/* Explorer file search */
+#define IDS_SEARCH_LOCALDRIVES     10241
+#define IDS_SEARCH_BROWSEITEM      10244
 
 /* Desktop icon titles */
 #define IDS_TITLE_MYCOMP                            30386

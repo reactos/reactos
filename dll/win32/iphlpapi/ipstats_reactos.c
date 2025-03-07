@@ -219,11 +219,11 @@ DWORD getICMPStats(MIB_ICMP *stats)
 
     do {
       ptr = fgets(buf, sizeof(buf), fp);
-    } while (ptr && strncasecmp(buf, hdr, sizeof(hdr) - 1));
+    } while (ptr && _strnicmp(buf, hdr, sizeof(hdr) - 1));
     if (ptr) {
       /* last line was a header, get another */
       ptr = fgets(buf, sizeof(buf), fp);
-      if (ptr && strncasecmp(buf, hdr, sizeof(hdr) - 1) == 0) {
+      if (ptr && _strnicmp(buf, hdr, sizeof(hdr) - 1) == 0) {
         char *endPtr;
 
         ptr += sizeof(hdr);

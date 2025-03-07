@@ -8,8 +8,18 @@ CAPTION "ReactOS'i paigaldamine"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Tere tulemast ReactOS'i paigaldamus viisardisse", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "Selle CD pealt ei saa praegu veel ReactOS'i paigaldada! ReactOS'i paigaldamiseks on tarvis arvuti taaskäivitada selle CD-ga.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Vajuta lõpeta, et installeerimine lõpetada.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "This wizard will install or upgrade ReactOS on your computer, \
+and prepare the second part of the setup.", IDC_STATIC, 115, 40, 195, 27
+////
+    GROUPBOX " IMPORTANT INFORMATION ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
+    LTEXT "ReactOS is in Alpha stage: it is not feature- complete and is \
+under heavy development. It is recommended to use it only for \
+evaluation and testing and not as your daily-usage OS.\n\
+It may corrupt your data or damage your hardware.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
+    LTEXT "Backup your data or test on a secondary computer \
+if you attempt to run ReactOS on real hardware.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+////
+    LTEXT "Vajuta Edasi paigaldamise jätkamiseks.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
@@ -17,11 +27,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS'i paigaldamine"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Installeeri ReactOS", IDC_INSTALL, 7, 7, 277, 10
-    LTEXT "Paigalda uus koopia ReactOS'ist. See valik ei jäta alles teie faile, suvandeid ja programme. Võite teha muudatusi kettastele ja partitsioonidele.", IDC_INSTALLTEXT, 18, 18, 269, 25
-    AUTORADIOBUTTON "Paranda või uuenda installeeritud ReactOS'i", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Uuenda või paranda oma ReactOS'i installatsiooni. See valik säilitab teie failid, suvandid ja programmid. See valik on saadaval juhul kui ReactOS on juba paigaldatud siin arvutis.", IDC_UPDATETEXT, 18, 61, 269, 30
-    LTEXT "Vajuta Järgmine, et seadmeid paigaldada.", IDC_STATIC, 7, 128, 297, 8
+    AUTORADIOBUTTON "&Installeeri ReactOS", IDC_INSTALL, 7, 20, 277, 10
+    LTEXT "Paigalda uus koopia ReactOS'ist. See valik ei jäta alles teie faile, suvandeid ja programme. Võite teha muudatusi kettastele ja partitsioonidele.", IDC_INSTALLTEXT, 19, 36, 279, 27
+    AUTORADIOBUTTON "&Paranda või uuenda ReactOS'i", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "Uuenda või paranda oma ReactOS'i installatsiooni. See valik säilitab teie failid, suvandid ja programmid. See valik on saadaval juhul kui ReactOS on juba paigaldatud siin arvutis.", IDC_UPDATETEXT, 19, 96, 279, 27
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
@@ -160,22 +169,25 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TYPETITLE "Tere tulemast ReactOS'i paigaldama"
-    IDS_TYPESUBTITLE "Vali paigalduse tüüp."
+    IDS_CAPTION "ReactOS'i paigaldamine"
+    IDS_TYPETITLE "Installation Type"
+    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
+    IDS_UPDATETITLE "Update or Repair ReactOS"
+    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
     IDS_DEVICETITLE "Põhiliste seadmete paigaldamine"
     IDS_DEVICESUBTITLE "Ekraani ja klaviatuuri seadistamine."
     IDS_DRIVETITLE "Partitsioonide ja süsteemikausta seadistamine"
     IDS_DRIVESUBTITLE "Sihtpartitsiooni, süsteemikausta ja alglaaduri ettevalmistamine."
-    IDS_PROCESSTITLE "Partitsiooni ettevalmistamine, failide kopeerimine ja süsteemi üles seadmine"
-    IDS_PROCESSSUBTITLE "Partitsiooni loomine ja vormindamine, failide kopeerimine, alglaaduri seadistamine"
-    IDS_RESTARTTITLE "Paigaldamise esimene järk lõpetatud"
-    IDS_RESTARTSUBTITLE "Paigaldamise esimene järk on lõpetatud, teise järgu alustamiseks taaskäivita arvuti"
     IDS_SUMMARYTITLE "Paigaldamise kokkuvõte"
-    IDS_SUMMARYSUBTITLE "Seadete kontrollimine enne paigaldamise alustamist"
+    IDS_SUMMARYSUBTITLE "Seadete kontrollimine enne paigaldamise alustamist."
+    IDS_PROCESSTITLE "Partitsiooni ettevalmistamine, failide kopeerimine ja süsteemi üles seadmine"
+    IDS_PROCESSSUBTITLE "Partitsiooni loomine ja vormindamine, failide kopeerimine, alglaaduri seadistamine."
+    IDS_RESTARTTITLE "Paigaldamise esimene järk lõpetatud"
+    IDS_RESTARTSUBTITLE "Paigaldamise esimene järk on lõpetatud, teise järgu alustamiseks taaskäivita arvuti."
     IDS_ABORTSETUP "ReactOS ei ole veel lõplikult paigaldatud. Kas soovite tõesti lahkuda?"
     IDS_ABORTSETUP2 "Katkestada paigaldamine?"
     IDS_NO_TXTSETUP_SIF "Ei leitud faili 'txtsetup.sif'.\nPaigaldust ei saa lõpuni viia."
-    IDS_CAPTION "ReactOS'i paigaldamine"
+    IDS_INSTALLBTN "&Install"
     IDS_VOLUME_NOFORMAT "Not formatted"
 END
 
@@ -218,12 +230,16 @@ BEGIN
     IDS_RENAMING "Renaming %s to %s"
     IDS_DELETING "Deleting %s"
 
+    IDS_CONFIG_SYSTEM_PARTITION "Configuring the system partition..."
     IDS_PREPARE_PARTITIONS "Preparing partitions..."
     IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
     IDS_COPYING_FILES "Copying the files..."
 
     IDS_CREATE_REGISTRY "Creating the registry..."
     IDS_UPDATE_REGISTRY "Updating the registry..."
+
+    // IDS_INSTALL_FINALIZE "Finalizing the installation..."
+    IDS_INSTALL_BOOTLOADER "Installing the bootloader..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.
@@ -280,4 +296,11 @@ the Setup program cannot install ReactOS.\
 \nClick on CANCEL to quit Setup."
 
     IDS_ERROR_CHECKING_PARTITION "ChkDsk detected some disk errors.\n(Status 0x%08lx)."
+
+    IDS_ERROR_WRITE_BOOT "Setup failed to install the %s bootcode on the system partition."
+    IDS_ERROR_INSTALL_BOOTCODE "Setup failed to install the %s bootcode on the boot disk."
+    IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "Setup failed to install the bootcode on the removable media."
+    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "Setup does not currently support installing the bootloader on the computer you are using.\
+\nClick on OK to continue anyway."
+    IDS_ERROR_BOOTLDR_FAILED "Setup could not install the bootloader (Status 0x%08lx)."
 END

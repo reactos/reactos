@@ -428,7 +428,7 @@ IntGetWindow(HWND hWnd,
                 break;
 
             default:
-                Wnd = NULL;
+                EngSetLastError(ERROR_INVALID_GW_COMMAND);
                 break;
     }
 
@@ -583,6 +583,7 @@ LRESULT co_UserFreeWindow(PWND Window,
    PWND Child;
    PMENU Menu;
    BOOLEAN BelongsToThreadData;
+   USER_REFERENCE_ENTRY Ref;
 
    ASSERT(Window);
 
@@ -740,7 +741,7 @@ LRESULT co_UserFreeWindow(PWND Window,
    WndSetChild(Window, NULL);
    WndSetLastActive(Window, NULL);
 
-   UserReferenceObject(Window);
+   UserRefObjectCo(Window, &Ref);
    UserMarkObjectDestroy(Window);
 
    IntDestroyScrollBars(Window);
@@ -769,7 +770,7 @@ LRESULT co_UserFreeWindow(PWND Window,
 //   ASSERT(Window != NULL);
    UserFreeWindowInfo(Window->head.pti, Window);
 
-   UserDereferenceObject(Window);
+   UserDerefObjectCo(Window);
    UserDeleteObject(UserHMGetHandle(Window), TYPE_WINDOW);
 
    return 0;
@@ -1830,7 +1831,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
       }
       else
       { /*
-         * Note from MSDN <http://msdn.microsoft.com/en-us/library/aa913269.aspx>:
+         * Note from MSDN <https://learn.microsoft.com/en-us/previous-versions/aa913269(v=msdn.10)>:
          *
          * Dialog boxes and message boxes do not inherit layout, so you must
          * set the layout explicitly.

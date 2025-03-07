@@ -51,9 +51,7 @@ CAPTION "設定"
 FONT 9, "MS UI Gothic"
 BEGIN
     GROUPBOX "全般", -1, 4, 2, 240, 61
-    AUTOCHECKBOX "ウィンドウの場所を保存する(&S)", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "起動時に利用できるプログラムのリストを更新する(&U)", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "プログラムのインストールと削除を記録する(&L)", IDC_LOG_ENABLED, 15, 46, 219, 12
+    CONTROL "", IDC_GENERALLIST, "SysListView32", WS_TABSTOP | LVCHECKSTYLES, 15, 12, 219, 46, WS_EX_STATICEDGE
     GROUPBOX "ダウンロード処理", -1, 4, 65, 240, 51
     LTEXT "ダウンロードするフォルダ:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
@@ -214,6 +212,10 @@ BEGIN
     IDS_APP_DISPLAY_LIST "リスト"
     IDS_APP_DISPLAY_TILE "タイル"
     IDS_NO_SEARCH_RESULTS "検索結果はありません"
+    IDS_CFG_SAVE_WINDOW_POS "ウィンドウの場所を保存する"
+    IDS_CFG_UPDATE_AVLIST "起動時に利用できるプログラムのリストを更新する"
+    IDS_CFG_LOG_ENABLED "プログラムのインストールと削除を記録する"
+    IDS_CFG_SMALL_ICONS "小さいアイコン"
 END
 
 STRINGTABLE
@@ -267,4 +269,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+    IDS_INSTGEN_CONFIRMINSTRUNAPP "Installation complete, run %s now?"
 END

@@ -1193,6 +1193,12 @@ GreGetObjectOwner(HGDIOBJ hobj)
 {
     ULONG ulIndex, ulOwner;
 
+    if (hobj == NULL)
+    {
+        DPRINT("GreGetObjectOwner: invalid NULL handle\n");
+        return GDI_OBJ_HMGR_RESTRICTED;
+    }
+
     /* Get the handle index */
     ulIndex = GDI_HANDLE_GET_INDEX(hobj);
 

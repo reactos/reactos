@@ -289,7 +289,7 @@ VOID
 NTAPI
 MmRebalanceMemoryConsumers(VOID)
 {
-    // if (InterlockedCompareExchange(&PageOutThreadActive, 0, 1) == 0)
+    if (InterlockedCompareExchange(&PageOutThreadActive, 1, 0) == 0)
     {
         KeSetEvent(&MiBalancerEvent, IO_NO_INCREMENT, FALSE);
     }
@@ -314,10 +314,12 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
                             PPFN_NUMBER AllocatedPage)
 {
     PFN_NUMBER Page;
+
+    /* Delay some requests for the Memory Manager to recover pages (CORE-17624).
+     * FIXME: This is suboptimal.
+     */
     static INT i = 0;
     static LARGE_INTEGER TinyTime = {{-1L, -1L}};
-
-    /* Delay some requests for the Memory Manager to recover pages */
     if (i++ >= 100)
     {
         KeDelayExecutionThread(KernelMode, FALSE, &TinyTime);
@@ -347,20 +349,20 @@ CcRosTrimCache(
     _In_ ULONG Target,
     _Out_ PULONG NrFreed);
 
-VOID NTAPI
+VOID
+NTAPI
 MiBalancerThread(PVOID Unused)
 {
     PVOID WaitObjects[2];
     NTSTATUS Status;
-    ULONG i;
 
     WaitObjects[0] = &MiBalancerEvent;
     WaitObjects[1] = &MiBalancerTimer;
 
-    while (1)
+    while (TRUE)
     {
         KeSetEvent(&MiBalancerDoneEvent, IO_NO_INCREMENT, FALSE);
-        Status = KeWaitForMultipleObjects(2,
+        Status = KeWaitForMultipleObjects(_countof(WaitObjects),
                                           WaitObjects,
                                           WaitAny,
                                           Executive,
@@ -380,7 +382,7 @@ MiBalancerThread(PVOID Unused)
                 ULONG OldTarget = InitialTarget;
 
                 /* Trim each consumer */
-                for (i = 0; i < MC_MAXIMUM; i++)
+                for (ULONG i = 0; i < MC_MAXIMUM; i++)
                 {
                     InitialTarget = MiTrimMemoryConsumer(i, InitialTarget);
                 }
@@ -395,7 +397,7 @@ MiBalancerThread(PVOID Unused)
 
                 /* No pages left to swap! */
                 if (InitialTarget != 0 &&
-                        InitialTarget == OldTarget)
+                    InitialTarget == OldTarget)
                 {
                     /* Game over */
                     KeBugCheck(NO_PAGES_AVAILABLE);
@@ -404,7 +406,11 @@ MiBalancerThread(PVOID Unused)
             while (InitialTarget != 0);
 
             if (Status == STATUS_WAIT_0)
-                InterlockedDecrement(&PageOutThreadActive);
+            {
+                LONG Active = InterlockedExchange(&PageOutThreadActive, 0);
+                ASSERT(Active == 1);
+                DBG_UNREFERENCED_LOCAL_VARIABLE(Active);
+            }
         }
         else
         {

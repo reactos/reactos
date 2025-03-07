@@ -8,9 +8,6 @@
  * work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
-/* UTF-8 */
-#pragma code_page(65001)
-
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 1 MENU

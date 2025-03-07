@@ -20,7 +20,7 @@ add_library(msctfime MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/msctfime.def)
 set_module_type(msctfime win32dll UNICODE)
 set_target_properties(msctfime PROPERTIES SUFFIX ".ime")
-target_link_libraries(msctfime wine uuid cicero)
+target_link_libraries(msctfime cpprt wine uuid cicero)
 add_importlibs(msctfime user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_delay_importlibs(msctfime uxtheme shlwapi comctl32 msctf oleaut32 imm32)
 add_cd_file(TARGET msctfime DESTINATION reactos/system32 FOR all)

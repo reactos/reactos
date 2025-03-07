@@ -2771,7 +2771,7 @@ NtUserMessageCall( HWND hWnd,
                         }
                         ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
                      }
-                     if (lParam && !wParam && wcsicmp((WCHAR*)lParam, L"Environment") == 0)
+                     if (lParam && !wParam && _wcsicmp((WCHAR*)lParam, L"Environment") == 0)
                      {
                          /* Handle Broadcast of WM_SETTINGCHAGE for Environment */
                          co_IntDoSendMessage(HWND_BROADCAST, WM_SETTINGCHANGE,

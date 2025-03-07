@@ -46,6 +46,12 @@ static BOOL ExitReactOSInProgress = FALSE;
 
 LUID LuidNone = {0, 0};
 
+typedef struct tagLOGON_SOUND_DATA
+{
+    HANDLE UserToken;
+    BOOL IsStartup;
+} LOGON_SOUND_DATA, *PLOGON_SOUND_DATA;
+
 /* FUNCTIONS ****************************************************************/
 
 static BOOL
@@ -285,11 +291,13 @@ PlaySoundRoutine(
     return Ret;
 }
 
+static
 DWORD
 WINAPI
 PlayLogonSoundThread(
-    IN LPVOID lpParameter)
+    _In_ LPVOID lpParameter)
 {
+    PLOGON_SOUND_DATA SoundData = (PLOGON_SOUND_DATA)lpParameter;
     SERVICE_STATUS_PROCESS Info;
     DWORD dwSize;
     ULONG Index = 0;
@@ -300,7 +308,7 @@ PlayLogonSoundThread(
     if (!hSCManager)
     {
         ERR("OpenSCManager failed (%x)\n", GetLastError());
-        return 0;
+        goto Cleanup;
     }
 
     /* Open the wdmaud service */
@@ -310,7 +318,7 @@ PlayLogonSoundThread(
         /* The service is not installed */
         TRACE("Failed to open wdmaud service (%x)\n", GetLastError());
         CloseServiceHandle(hSCManager);
-        return 0;
+        goto Cleanup;
     }
 
     /* Wait for wdmaud to start */
@@ -336,44 +344,65 @@ PlayLogonSoundThread(
     if (Info.dwCurrentState != SERVICE_RUNNING)
     {
         WARN("wdmaud has not started!\n");
-        return 0;
+        goto Cleanup;
     }
 
     /* Sound subsystem is running. Play logon sound. */
-    TRACE("Playing logon sound\n");
-    if (!ImpersonateLoggedOnUser((HANDLE)lpParameter))
+    TRACE("Playing %s sound\n", SoundData->IsStartup ? "startup" : "logon");
+    if (!ImpersonateLoggedOnUser(SoundData->UserToken))
     {
         ERR("ImpersonateLoggedOnUser failed (%x)\n", GetLastError());
     }
     else
     {
-        PlaySoundRoutine(L"WindowsLogon", TRUE, SND_ALIAS | SND_NODEFAULT);
+        PlaySoundRoutine(SoundData->IsStartup ? L"SystemStart" : L"WindowsLogon",
+                         TRUE,
+                         SND_ALIAS | SND_NODEFAULT);
         RevertToSelf();
     }
+
+Cleanup:
+    HeapFree(GetProcessHeap(), 0, SoundData);
     return 0;
 }
 
 static
 VOID
 PlayLogonSound(
-    IN OUT PWLSESSION Session)
+    _In_ PWLSESSION Session)
 {
+    PLOGON_SOUND_DATA SoundData;
     HANDLE hThread;
 
-    hThread = CreateThread(NULL, 0, PlayLogonSoundThread, (PVOID)Session->UserToken, 0, NULL);
-    if (hThread)
-        CloseHandle(hThread);
+    SoundData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGON_SOUND_DATA));
+    if (!SoundData)
+        return;
+
+    SoundData->UserToken = Session->UserToken;
+    SoundData->IsStartup = IsFirstLogon(Session);
+
+    hThread = CreateThread(NULL, 0, PlayLogonSoundThread, SoundData, 0, NULL);
+    if (!hThread)
+    {
+        HeapFree(GetProcessHeap(), 0, SoundData);
+        return;
+    }
+    CloseHandle(hThread);
 }
 
 static
 VOID
-PlayLogoffSound(
-    _In_ PWLSESSION Session)
+PlayLogoffShutdownSound(
+    _In_ PWLSESSION Session,
+    _In_ BOOL bShutdown)
 {
     if (!ImpersonateLoggedOnUser(Session->UserToken))
         return;
 
-    PlaySoundRoutine(L"WindowsLogoff", FALSE, SND_ALIAS | SND_NODEFAULT);
+    /* NOTE: Logoff and shutdown sounds play synchronously */
+    PlaySoundRoutine(bShutdown ? L"SystemExit" : L"WindowsLogoff",
+                     FALSE,
+                     SND_ALIAS | SND_NODEFAULT);
 
     RevertToSelf();
 }
@@ -549,6 +578,9 @@ HandleLogon(
     /* Logon has succeeded. Play sound. */
     PlayLogonSound(Session);
 
+    /* NOTE: The logon timestamp has to be set after calling PlayLogonSound
+     * to correctly detect the startup event (first logon) */
+    SetLogonTimestamp(Session);
     ret = TRUE;
 
 cleanup:
@@ -786,8 +818,8 @@ DestroyLogoffSecurityAttributes(
 static
 NTSTATUS
 HandleLogoff(
-    IN OUT PWLSESSION Session,
-    IN UINT Flags)
+    _Inout_ PWLSESSION Session,
+    _In_ DWORD wlxAction)
 {
     PLOGOFF_SHUTDOWN_DATA LSData;
     PSECURITY_ATTRIBUTES psa;
@@ -802,7 +834,13 @@ HandleLogoff(
         ERR("Failed to allocate mem for thread data\n");
         return STATUS_NO_MEMORY;
     }
-    LSData->Flags = Flags;
+
+    LSData->Flags = EWX_LOGOFF;
+    if (wlxAction == WLX_SAS_ACTION_FORCE_LOGOFF)
+    {
+        LSData->Flags |= EWX_FORCE;
+    }
+
     LSData->Session = Session;
 
     Status = CreateLogoffSecurityAttributes(&psa);
@@ -842,7 +880,7 @@ HandleLogoff(
 
     SwitchDesktop(Session->WinlogonDesktop);
 
-    PlayLogoffSound(Session);
+    PlayLogoffShutdownSound(Session, WLX_SHUTTINGDOWN(wlxAction));
 
     SetWindowStationUser(Session->InteractiveWindowStation,
                          &LuidNone, NULL, 0);
@@ -1065,12 +1103,9 @@ DoGenericAction(
         case WLX_SAS_ACTION_SHUTDOWN_REBOOT: /* 0x0b */
             if (Session->LogonState != STATE_LOGGED_OFF)
             {
-                UINT LogOffFlags = EWX_LOGOFF;
-                if (wlxAction == WLX_SAS_ACTION_FORCE_LOGOFF)
-                    LogOffFlags |= EWX_FORCE;
                 if (!Session->Gina.Functions.WlxIsLogoffOk(Session->Gina.Context))
                     break;
-                if (!NT_SUCCESS(HandleLogoff(Session, LogOffFlags)))
+                if (!NT_SUCCESS(HandleLogoff(Session, wlxAction)))
                 {
                     RemoveStatusMessage(Session);
                     break;

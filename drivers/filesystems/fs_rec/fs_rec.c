@@ -158,10 +158,10 @@ FsRecFsControl(IN PDEVICE_OBJECT DeviceObject,
             Status = FsRecUdfsFsControl(DeviceObject, Irp);
             break;
 
-        case FS_TYPE_EXT2:
+        case FS_TYPE_EXT:
 
-            /* Send EXT2 command */
-            Status = FsRecExt2FsControl(DeviceObject, Irp);
+            /* Send EXT command */
+            Status = FsRecExtFsControl(DeviceObject, Irp);
             break;
 
         case FS_TYPE_BTRFS:
@@ -329,6 +329,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     PDEVICE_OBJECT CdfsObject;
     PDEVICE_OBJECT UdfsObject;
     PDEVICE_OBJECT FatObject;
+    PDEVICE_OBJECT ExtObject;
 
     PAGED_CODE();
 
@@ -430,14 +431,25 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                              0);
     if (NT_SUCCESS(Status)) DeviceCount++;
 
-    /* Register EXT2 */
+    /* Register EXT */
     Status = FsRecRegisterFs(DriverObject,
                              NULL,
-                             NULL,
-                             L"\\Ext2fs",
-                             L"\\FileSystem\\Ext2Recognizer",
-                             FS_TYPE_EXT2,
+                             &ExtObject,
+                             L"\\Extfs",
+                             L"\\FileSystem\\ExtRecognizer",
+                             FS_TYPE_EXT,
                              FILE_DEVICE_DISK_FILE_SYSTEM,
+                             0);
+    if (NT_SUCCESS(Status)) DeviceCount++;
+
+    /* Register EXT for CDs */
+    Status = FsRecRegisterFs(DriverObject,
+                             ExtObject,
+                             NULL,
+                             L"\\ExtfsCdrom",
+                             L"\\FileSystem\\ExtCdRomRecognizer",
+                             FS_TYPE_EXT,
+                             FILE_DEVICE_CD_ROM_FILE_SYSTEM,
                              0);
     if (NT_SUCCESS(Status)) DeviceCount++;
 

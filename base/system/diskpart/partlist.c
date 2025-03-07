@@ -37,6 +37,8 @@
 
 #define PARTITION_TBL_SIZE 4
 
+#define MBR_MAGIC 0xAA55
+
 #include <pshpack1.h>
 
 typedef struct _PARTITION
@@ -870,7 +872,7 @@ AddDiskToList(
     DiskEntry->BiosFound = FALSE;
 
     /* Check if this disk has a valid MBR */
-    if (Mbr->BootCode[0] == 0 && Mbr->BootCode[1] == 0)
+    if (Mbr->Magic != MBR_MAGIC)
         DiskEntry->NoMbr = TRUE;
     else
         DiskEntry->NoMbr = FALSE;

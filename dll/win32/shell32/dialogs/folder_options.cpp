@@ -234,6 +234,7 @@ enum {
 static DWORD CALLBACK
 ShowFolderOptionsDialogThreadProc(LPVOID param)
 {
+    CCoInit com; // Required when started from rundll32 (SHAutoComplete in PickIconDlg)
     PROPSHEETHEADERW pinfo;
     HPROPSHEETPAGE hppages[3];
     HPROPSHEETPAGE hpage;

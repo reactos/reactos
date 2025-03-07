@@ -172,6 +172,11 @@ ENDM
     .skip size, fill
 ENDM
 
+/* OFFset macro */
+#define OFF(x) offset x
+
+#define lXdtPrefix fword ptr
+
 ljmp MACRO segment, offset
     DB 0EAh
     DD offset
@@ -314,18 +319,34 @@ ENDM
 .endm
 
 /* MASM compatible ALIGN */
-#define ALIGN .align
+.macro align x
+    .align x
+.endm
 
 /* MASM compatible REPEAT, additional ENDR */
 #define REPEAT .rept
 #define ENDR .endr
 
+/* OFFset macro */
+#define OFF(x) x
+
+#define lXdtPrefix
+
 .macro ljmp segment, offset
-    jmp far ptr \segment:\offset
+    .byte 0xEA
+    .long offset
+    .word segment
 .endm
 
 .macro ljmp16 segment, offset
-    jmp far ptr \segment:\offset
+    .byte 0xEA
+    .word offset
+    .word segment
+.endm
+
+.macro data32 opcode:vararg
+    .byte 0x66
+    opcode
 .endm
 
 .macro retf
@@ -337,7 +358,8 @@ ENDM
 .endm
 
 /* MASM needs an END tag */
-#define END
+.macro END
+.endm
 
 .macro .MODEL model
 .endm

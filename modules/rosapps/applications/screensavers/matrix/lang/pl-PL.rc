@@ -1,5 +1,3 @@
-#include "resource.h"
-
 /*
  *      translated by Caemyr - Olaf Siejka (Feb, 2008)
  *      Use ReactOS forum PM or IRC to contact me
@@ -9,7 +7,7 @@
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-IDD_CONFIG DIALOGEX DISCARDABLE  0, 0, 340, 183
+IDD_CONFIG DIALOGEX 0, 0, 340, 183
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Konfiguracja wygaszacza Matrix"
 FONT 8, "MS Shell Dlg"
@@ -54,7 +52,7 @@ BEGIN
                     158,75,18
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION         "Matrix"
 END

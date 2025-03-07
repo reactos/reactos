@@ -1154,7 +1154,7 @@ cleanup:
  *
  * NOTE: We adopt a different design from Microsoft's one due to security reason.
  *       We don't use the 3rd parameter of NtUserLoadKeyboardLayoutEx.
- *       See https://bugtraq.securityfocus.com/detail/50056B96.6040306
+ *       See https://seclists.org/fulldisclosure/2012/Jul/137
  */
 HKL
 NTAPI

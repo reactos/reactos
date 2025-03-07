@@ -1552,27 +1552,141 @@ MmReturnPoolQuota(
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-/*
- * @unimplemented
+/**
+ * @brief
+ * Reserves the specified amount of memory in system virtual address space.
+ *
+ * @param[in] NumberOfBytes
+ * Size, in bytes, of memory to reserve.
+ *
+ * @param[in] PoolTag
+ * Pool Tag identifying the buffer. Usually consists from 4 characters in reversed order.
+ *
+ * @return
+ * A pointer to the 1st memory block of the reserved buffer in case of success, NULL otherwise.
+ *
+ * @remarks Must be called at IRQL <= APC_LEVEL
  */
+_Must_inspect_result_
+_IRQL_requires_max_(APC_LEVEL)
+_Ret_maybenull_
 PVOID
 NTAPI
-MmAllocateMappingAddress(IN SIZE_T NumberOfBytes,
-                         IN ULONG PoolTag)
+MmAllocateMappingAddress(
+    _In_ SIZE_T NumberOfBytes,
+    _In_ ULONG PoolTag)
 {
-    UNIMPLEMENTED;
-    return NULL;
+    PFN_NUMBER SizeInPages;
+    PMMPTE PointerPte;
+    MMPTE TempPte;
+
+    /* Fast exit if PoolTag is NULL */
+    if (!PoolTag)
+        return NULL;
+
+    /* How many PTEs does the caller want? */
+    SizeInPages = BYTES_TO_PAGES(NumberOfBytes);
+    if (SizeInPages == 0)
+    {
+        KeBugCheckEx(SYSTEM_PTE_MISUSE,
+                     PTE_MAPPING_NONE, /* Requested 0 mappings */
+                     SizeInPages,
+                     PoolTag,
+                     (ULONG_PTR)_ReturnAddress());
+    }
+
+    /* We need two extra PTEs to store size and pool tag in */
+    SizeInPages += 2;
+
+    /* Reserve our PTEs */
+    PointerPte = MiReserveSystemPtes(SizeInPages, SystemPteSpace);
+    if (!PointerPte)
+    {
+        /* Failed to reserve PTEs */
+        DPRINT1("Failed to reserve system PTEs\n");
+        return NULL;
+    }
+
+    ASSERT(SizeInPages <= MM_EMPTY_PTE_LIST);
+    TempPte.u.Long = 0;
+    TempPte.u.List.NextEntry = SizeInPages;
+    MI_WRITE_INVALID_PTE(&PointerPte[0], TempPte);
+    TempPte.u.Long = PoolTag;
+    TempPte.u.Hard.Valid = 0;
+    MI_WRITE_INVALID_PTE(&PointerPte[1], TempPte);
+    return MiPteToAddress(PointerPte + 2);
 }
 
-/*
- * @unimplemented
+/**
+ * @brief
+ * Frees previously reserved amount of memory in system virtual address space.
+ *
+ * @param[in] BaseAddress
+ * A pointer to the 1st memory block of the reserved buffer.
+ *
+ * @param[in] PoolTag
+ * Pool Tag identifying the buffer. Usually consists from 4 characters in reversed order.
+ *
+ * @return
+ * Nothing.
+ *
+ * @see MmAllocateMappingAddress
+ *
+ * @remarks Must be called at IRQL <= APC_LEVEL
  */
+_IRQL_requires_max_(APC_LEVEL)
 VOID
 NTAPI
-MmFreeMappingAddress(IN PVOID BaseAddress,
-                     IN ULONG PoolTag)
+MmFreeMappingAddress(
+    _In_ __drv_freesMem(Mem) _Post_invalid_ PVOID BaseAddress,
+    _In_ ULONG PoolTag)
 {
-    UNIMPLEMENTED;
+    PMMPTE PointerPte;
+    MMPTE TempPte;
+    PFN_NUMBER SizeInPages;
+    PFN_NUMBER i;
+
+    /* Get the first PTE we reserved */
+    PointerPte = MiAddressToPte(BaseAddress) - 2;
+
+    /* Verify that the pool tag matches */
+    TempPte.u.Long = PoolTag;
+    TempPte.u.Hard.Valid = 0;
+    if (PointerPte[1].u.Long != TempPte.u.Long)
+    {
+        KeBugCheckEx(SYSTEM_PTE_MISUSE,
+                     PTE_MAPPING_NOT_OWNED, /* Trying to free an address it does not own */
+                     (ULONG_PTR)BaseAddress,
+                     PoolTag,
+                     PointerPte[1].u.Long);
+    }
+
+    /* We must have a size */
+    SizeInPages = PointerPte[0].u.List.NextEntry;
+    if (SizeInPages < 3)
+    {
+        KeBugCheckEx(SYSTEM_PTE_MISUSE,
+                     PTE_MAPPING_EMPTY, /* Mapping apparently empty */
+                     (ULONG_PTR)BaseAddress,
+                     PoolTag,
+                     (ULONG_PTR)_ReturnAddress());
+    }
+    
+    /* Enumerate all PTEs and make sure they are empty */
+    for (i = 2; i < SizeInPages; i++)
+    {
+        if (PointerPte[i].u.Long != 0)
+        {
+            KeBugCheckEx(SYSTEM_PTE_MISUSE,
+                         PTE_MAPPING_RESERVED, /* Mapping address still reserved */
+                         (ULONG_PTR)PointerPte,
+                         PoolTag,
+                         SizeInPages - 2);
+        }
+    }
+
+    /* Release the PTEs */
+    MiReleaseSystemPtes(PointerPte, SizeInPages, SystemPteSpace);
 }
 
 /* EOF */

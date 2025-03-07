@@ -26,6 +26,7 @@
 #include "winemm.h"
 
 #include <winternl.h>
+#include <userenv.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(winmm);
 
@@ -38,6 +39,61 @@ typedef struct tagWINE_PLAYSOUND
 
 static WINE_PLAYSOUND *PlaySoundCurrent;
 static BOOL bPlaySoundStop;
+
+/* An impersonation-aware equivalent of ExpandEnvironmentStringsW */
+static DWORD PlaySound_ExpandEnvironmentStrings(LPCWSTR lpSrc, LPWSTR lpDst, DWORD nSize)
+{
+    HANDLE hToken;
+    DWORD dwError;
+    DWORD dwLength = 0;
+
+    if (!OpenThreadToken(GetCurrentThread(),
+                         TOKEN_QUERY | TOKEN_IMPERSONATE | TOKEN_DUPLICATE,
+                         TRUE,
+                         &hToken))
+    {
+        dwError = GetLastError();
+
+        if (dwError == ERROR_NO_TOKEN)
+        {
+            /* We are not impersonating, forward this to ExpandEnvironmentStrings */
+            return ExpandEnvironmentStringsW(lpSrc, lpDst, nSize);
+        }
+
+        ERR("OpenThreadToken failed (0x%x)\n", dwError);
+        return 0;
+    }
+
+    if (!ExpandEnvironmentStringsForUserW(hToken, lpSrc, lpDst, nSize))
+    {
+        dwError = GetLastError();
+
+        if (dwError == ERROR_INSUFFICIENT_BUFFER || nSize == 0)
+        {
+            /* The buffer is too small, find the required buffer size.
+             * NOTE: ExpandEnvironmentStringsForUser doesn't support retrieving buffer size. */
+            WCHAR szExpanded[1024];
+
+            if (ExpandEnvironmentStringsForUserW(hToken, lpSrc, szExpanded, ARRAY_SIZE(szExpanded)))
+            {
+                /* We success, return the required buffer size */
+                dwLength = lstrlenW(szExpanded) + 1;
+                goto Cleanup;
+            }
+        }
+
+        ERR("ExpandEnvironmentStringsForUser failed (0x%x)\n", dwError);
+    }
+    else
+    {
+        /* We success, return the size of the string */
+        dwLength = lstrlenW(lpDst) + 1;
+    }
+
+Cleanup:
+    CloseHandle(hToken);
+    return dwLength;
+}
 
 static HMMIO    get_mmioFromFile(LPCWSTR lpszName)
 {
@@ -158,7 +214,7 @@ Next:
 
     if (type == REG_EXPAND_SZ)
     {
-        count = ExpandEnvironmentStringsW(str, NULL, 0);
+        count = PlaySound_ExpandEnvironmentStrings(str, NULL, 0);
         if (count == 0)
             goto None;
 
@@ -166,7 +222,7 @@ Next:
         if (!pszSnd)
             goto None;
 
-        if (ExpandEnvironmentStringsW(str, pszSnd, count) == 0)
+        if (PlaySound_ExpandEnvironmentStrings(str, pszSnd, count) == 0)
         {
             HeapFree(GetProcessHeap(), 0, pszSnd);
             goto None;

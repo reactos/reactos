@@ -31,6 +31,56 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 EXTERN_C BOOL PathIsExeW(LPCWSTR lpszPath);
 
+static SIZE_T PathGetAppFromCommandLine(LPCWSTR pszIn, LPWSTR pszOut, SIZE_T cchMax)
+{
+    SIZE_T count = 0;
+    WCHAR stop = ' ';
+    if (pszIn[0] == '"')
+        stop = *(pszIn++);
+
+    for (LPCWSTR pwszSrc = pszIn; *pwszSrc && *pwszSrc != stop; ++pwszSrc)
+    {
+        if (++count >= cchMax)
+            return 0;
+        *(pszOut++) = *pwszSrc;
+    }
+    *pszOut = UNICODE_NULL;
+    return count;
+}
+
+HRESULT SHELL32_GetDllFromRundll32CommandLine(LPCWSTR pszCmd, LPWSTR pszOut, SIZE_T cchMax)
+{
+    WCHAR szDll[MAX_PATH + 100];
+    if (!PathGetAppFromCommandLine(pszCmd, szDll, _countof(szDll)))
+        return HRESULT_FROM_WIN32(ERROR_BUFFER_OVERFLOW);
+
+    PWSTR pszName = PathFindFileNameW(szDll);
+    if (_wcsicmp(pszName, L"rundll32") && _wcsicmp(pszName, L"rundll32.exe"))
+        return E_UNEXPECTED;
+
+    PCWSTR pszDllStart = pszCmd + (pszName - szDll) + lstrlenW(pszName);
+
+    if (*pszDllStart == '\"')
+        ++pszDllStart; // Skip possible end quote of ..\rundll32.exe" foo.dll,func
+    while (*pszDllStart <= ' ' && *pszDllStart)
+        ++pszDllStart;
+    if (PathGetAppFromCommandLine(pszDllStart, szDll, _countof(szDll)))
+    {
+        BOOL quoted = *pszDllStart == '\"';
+        PWSTR pszComma = szDll + lstrlenW(szDll);
+        while (!quoted && pszComma > szDll && *pszComma != ',' && *pszComma != '\\' && *pszComma != '/')
+            --pszComma;
+        SIZE_T cch = pszComma - szDll;
+        if (cch <= cchMax && (quoted || *pszComma == ','))
+        {
+            *pszComma = UNICODE_NULL;
+            lstrcpynW(pszOut, szDll, cchMax);
+            return S_OK;
+        }
+    }
+    return HRESULT_FROM_WIN32(ERROR_BUFFER_OVERFLOW);
+}
+
 class COpenWithList
 {
     public:
@@ -204,7 +254,7 @@ BOOL COpenWithList::SaveApp(SApp *pApp)
 COpenWithList::SApp *COpenWithList::Find(LPCWSTR pwszFilename)
 {
     for (UINT i = 0; i < m_cApp; ++i)
-        if (wcsicmp(m_pApp[i].wszFilename, pwszFilename) == 0)
+        if (_wcsicmp(m_pApp[i].wszFilename, pwszFilename) == 0)
             return &m_pApp[i];
     return NULL;
 }
@@ -396,26 +446,23 @@ BOOL COpenWithList::LoadInfo(COpenWithList::SApp *pApp)
 
 BOOL COpenWithList::GetPathFromCmd(LPWSTR pwszAppPath, LPCWSTR pwszCmd)
 {
-    WCHAR wszBuf[MAX_PATH], *pwszDest = wszBuf;
+    WCHAR wszBuf[MAX_PATH];
 
     /* Remove arguments */
-    if (pwszCmd[0] == '"')
-    {
-        for(LPCWSTR pwszSrc = pwszCmd + 1; *pwszSrc && *pwszSrc != '"'; ++pwszSrc)
-            *(pwszDest++) = *pwszSrc;
-    }
-    else
-    {
-        for(LPCWSTR pwszSrc = pwszCmd; *pwszSrc && *pwszSrc != ' '; ++pwszSrc)
-            *(pwszDest++) = *pwszSrc;
-    }
+    if (!PathGetAppFromCommandLine(pwszCmd, wszBuf, _countof(wszBuf)))
+        return FALSE;
 
-    *pwszDest = 0;
+    /* Replace rundll32.exe with the dll path */
+    SHELL32_GetDllFromRundll32CommandLine(pwszCmd, wszBuf, _countof(wszBuf));
 
-    /* Expand evn vers and optionally search for path */
+    /* Expand env. vars and optionally search for path */
     ExpandEnvironmentStrings(wszBuf, pwszAppPath, MAX_PATH);
     if (!PathFileExists(pwszAppPath))
-        return SearchPath(NULL, pwszAppPath, NULL, MAX_PATH, pwszAppPath, NULL);
+    {
+        UINT cch = SearchPathW(NULL, pwszAppPath, NULL, MAX_PATH, pwszAppPath, NULL);
+        if (!cch || cch >= MAX_PATH)
+            return FALSE;
+    }
     return TRUE;
 }
 
@@ -644,7 +691,7 @@ VOID COpenWithList::LoadRecommendedFromHKCU(LPCWSTR pwszExt)
         LoadMRUList(hKey);
         LoadProgIdList(hKey, pwszExt);
 
-        /* Handle "Aplication" value */
+        /* Handle "Application" value */
         DWORD cbBuf = sizeof(wszBuf);
         if (RegGetValueW(hKey, NULL, L"Application", RRF_RT_REG_SZ, NULL, wszBuf, &cbBuf) == ERROR_SUCCESS)
         {
@@ -771,7 +818,22 @@ BOOL COpenWithList::SetDefaultHandler(SApp *pApp, LPCWSTR pwszFilename)
 
     /* Copy static verbs from Classes\Applications key */
     /* FIXME: SHCopyKey does not copy the security attributes of the keys */
+    /* FIXME: Windows does not actually copy the verb keys */
+    /* FIXME: Should probably delete any existing DelegateExecute/DropTarget/DDE verb information first */
     LSTATUS Result = SHCopyKeyW(hSrcKey, NULL, hDestKey, 0);
+#ifdef __REACTOS__
+    // FIXME: When OpenWith is used to set a new default on Windows, the FileExts key
+    // is changed to force this association. ROS does not support this. The best
+    // we can do is to try to set the verb we (incorrectly) copied as the new default.
+    HKEY hAppKey;
+    StringCbPrintfW(wszBuf, sizeof(wszBuf), L"Applications\\%s", pApp->wszFilename);
+    if (Result == ERROR_SUCCESS && !RegOpenKeyExW(HKEY_CLASSES_ROOT, wszBuf, 0, KEY_READ, &hAppKey))
+    {
+        if (HCR_GetDefaultVerbW(hAppKey, NULL, wszBuf, _countof(wszBuf)) && *wszBuf)
+            RegSetString(hDestKey, NULL, wszBuf, REG_SZ);
+        RegCloseKey(hAppKey);
+    }
+#endif // __REACTOS__
     RegCloseKey(hDestKey);
     RegCloseKey(hSrcKey);
     RegCloseKey(hKey);
@@ -1235,6 +1297,12 @@ VOID COpenWithMenu::AddApp(PVOID pApp)
         m_idCmdLast++;
 }
 
+static const CMVERBMAP g_VerbMap[] =
+{
+    { "openas", 0 },
+    { NULL }
+};
+
 HRESULT WINAPI COpenWithMenu::QueryContextMenu(
     HMENU hMenu,
     UINT indexMenu,
@@ -1313,14 +1381,19 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
 HRESULT WINAPI
 COpenWithMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 {
+    const SIZE_T idChooseApp = m_idCmdLast;
     HRESULT hr = E_FAIL;
 
     TRACE("This %p idFirst %u idLast %u idCmd %u\n", this, m_idCmdFirst, m_idCmdLast, m_idCmdFirst + LOWORD(lpici->lpVerb));
 
-    if (HIWORD(lpici->lpVerb) == 0 && m_idCmdFirst + LOWORD(lpici->lpVerb) <= m_idCmdLast)
+    if (!IS_INTRESOURCE(lpici->lpVerb) && SHELL_MapContextMenuVerbToCmdId(lpici, g_VerbMap) == 0)
+        goto DoChooseApp;
+
+    if (IS_INTRESOURCE(lpici->lpVerb) && m_idCmdFirst + LOWORD(lpici->lpVerb) <= m_idCmdLast)
     {
-        if (m_idCmdFirst + LOWORD(lpici->lpVerb) == m_idCmdLast)
+        if (m_idCmdFirst + LOWORD(lpici->lpVerb) == idChooseApp)
         {
+DoChooseApp:
             OPENASINFO info;
             LPCWSTR pwszExt = PathFindExtensionW(m_wszPath);
 
@@ -1356,8 +1429,12 @@ HRESULT WINAPI
 COpenWithMenu::GetCommandString(UINT_PTR idCmd, UINT uType,
                                 UINT* pwReserved, LPSTR pszName, UINT cchMax )
 {
-    FIXME("%p %lu %u %p %p %u\n", this,
+    TRACE("%p %lu %u %p %p %u\n", this,
           idCmd, uType, pwReserved, pszName, cchMax );
+
+    const SIZE_T idChooseApp = m_idCmdLast;
+    if (m_idCmdFirst + idCmd == idChooseApp)
+        return SHELL_GetCommandStringImpl(0, uType, pszName, cchMax, g_VerbMap);
 
     return E_NOTIMPL;
 }

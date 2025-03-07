@@ -29,6 +29,8 @@ typedef struct _INFCONTEXT
 
 #endif
 
+C_ASSERT(sizeof(INFCONTEXT) == 2 * sizeof(HINF) + 2 * sizeof(UINT));
+
 /* Lower the MAX_INF_STRING_LENGTH value in order to avoid too much stack usage */
 #undef MAX_INF_STRING_LENGTH
 #define MAX_INF_STRING_LENGTH   1024 // Still larger than in infcommon.h
@@ -41,26 +43,13 @@ typedef struct _INFCONTEXT
 #define INF_STYLE_WIN4  0x00000002
 #endif
 
-#if 0
-typedef PVOID HINF;
-typedef struct _INFCONTEXT
-{
-    HINF Inf;
-    HINF CurrentInf;
-    UINT Section;
-    UINT Line;
-} INFCONTEXT, *PINFCONTEXT;
-#endif
 
-C_ASSERT(sizeof(INFCONTEXT) == 2 * sizeof(HINF) + 2 * sizeof(UINT));
-
+/* FUNCTIONS *****************************************************************/
 
 // #define SetupCloseInfFile InfCloseFile
 typedef VOID
 (WINAPI* pSpInfCloseInfFile)(
     IN HINF InfHandle);
-
-extern pSpInfCloseInfFile SpInfCloseInfFile;
 
 // #define SetupFindFirstLineW InfpFindFirstLineW
 typedef BOOL
@@ -70,22 +59,16 @@ typedef BOOL
     IN PCWSTR Key,
     IN OUT PINFCONTEXT Context);
 
-extern pSpInfFindFirstLine SpInfFindFirstLine;
-
 // #define SetupFindNextLine InfFindNextLine
 typedef BOOL
 (WINAPI* pSpInfFindNextLine)(
     IN  PINFCONTEXT ContextIn,
     OUT PINFCONTEXT ContextOut);
 
-extern pSpInfFindNextLine SpInfFindNextLine;
-
 // #define SetupGetFieldCount InfGetFieldCount
 typedef ULONG
 (WINAPI* pSpInfGetFieldCount)(
     IN PINFCONTEXT Context);
-
-extern pSpInfGetFieldCount SpInfGetFieldCount;
 
 // #define SetupGetBinaryField InfGetBinaryField
 typedef BOOL
@@ -96,16 +79,12 @@ typedef BOOL
     IN  ULONG ReturnBufferSize,
     OUT PULONG RequiredSize);
 
-extern pSpInfGetBinaryField SpInfGetBinaryField;
-
 // #define SetupGetIntField InfGetIntField
 typedef BOOL
 (WINAPI* pSpInfGetIntField)(
     IN PINFCONTEXT Context,
     IN ULONG FieldIndex,
     OUT INT *IntegerValue); // PINT
-
-extern pSpInfGetIntField SpInfGetIntField;
 
 // #define SetupGetMultiSzFieldW InfGetMultiSzField
 typedef BOOL
@@ -116,8 +95,6 @@ typedef BOOL
     IN  ULONG ReturnBufferSize,
     OUT PULONG RequiredSize);
 
-extern pSpInfGetMultiSzField SpInfGetMultiSzField;
-
 // #define SetupGetStringFieldW InfGetStringField
 typedef BOOL
 (WINAPI* pSpInfGetStringField)(
@@ -127,15 +104,11 @@ typedef BOOL
     IN  ULONG ReturnBufferSize,
     OUT PULONG RequiredSize);
 
-extern pSpInfGetStringField SpInfGetStringField;
-
 // #define pSetupGetField
 typedef PCWSTR
 (WINAPI* pSpInfGetField)(
     IN PINFCONTEXT Context,
     IN ULONG FieldIndex);
-
-extern pSpInfGetField SpInfGetField;
 
 /* A version of SetupOpenInfFileW with support for a user-provided LCID */
 // #define SetupOpenInfFileExW InfpOpenInfFileW
@@ -147,8 +120,32 @@ typedef HINF
     IN LCID LocaleId,
     OUT PUINT ErrorLine);
 
-extern pSpInfOpenInfFile SpInfOpenInfFile;
+typedef struct _SPINF_EXPORTS
+{
+    pSpInfCloseInfFile    SpInfCloseInfFile;
+    pSpInfFindFirstLine   SpInfFindFirstLine;
+    pSpInfFindNextLine    SpInfFindNextLine;
+    pSpInfGetFieldCount   SpInfGetFieldCount;
+    pSpInfGetBinaryField  SpInfGetBinaryField;
+    pSpInfGetIntField     SpInfGetIntField;
+    pSpInfGetMultiSzField SpInfGetMultiSzField;
+    pSpInfGetStringField  SpInfGetStringField;
+    pSpInfGetField        SpInfGetField;
+    pSpInfOpenInfFile     SpInfOpenInfFile;
+} SPINF_EXPORTS, *PSPINF_EXPORTS;
 
+extern /*SPLIBAPI*/ SPINF_EXPORTS SpInfExports;
+
+#define SpInfCloseInfFile       (SpInfExports.SpInfCloseInfFile)
+#define SpInfFindFirstLine      (SpInfExports.SpInfFindFirstLine)
+#define SpInfFindNextLine       (SpInfExports.SpInfFindNextLine)
+#define SpInfGetFieldCount      (SpInfExports.SpInfGetFieldCount)
+#define SpInfGetBinaryField     (SpInfExports.SpInfGetBinaryField)
+#define SpInfGetIntField        (SpInfExports.SpInfGetIntField)
+#define SpInfGetMultiSzField    (SpInfExports.SpInfGetMultiSzField)
+#define SpInfGetStringField     (SpInfExports.SpInfGetStringField)
+#define SpInfGetField           (SpInfExports.SpInfGetField)
+#define SpInfOpenInfFile        (SpInfExports.SpInfOpenInfFile)
 
 /* HELPER FUNCTIONS **********************************************************/
 

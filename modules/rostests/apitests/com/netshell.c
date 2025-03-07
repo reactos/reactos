@@ -20,7 +20,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         L"Both"
     },
     {
-        ID_NAME(CLSID_ConnectionFolder),
+        ID_NAME(CLSID_NetworkConnections),
         {
             {    0x0,   &IID_IPersistFolder2 },
             {    0x0,       &IID_IPersistFolder },

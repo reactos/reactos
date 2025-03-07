@@ -301,7 +301,7 @@ GetPnpKey(PHKEY PnpKey)
 	  return lError;
 	}
 
-      if (dwType == REG_SZ && stricmp(szBuffer, "pnp bios") == 0)
+      if (dwType == REG_SZ && _stricmp(szBuffer, "pnp bios") == 0)
 	{
 	  *PnpKey = hBusKey;
 	  RegCloseKey(hAdapterKey);

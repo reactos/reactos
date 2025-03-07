@@ -13,7 +13,6 @@
 /* UTF-8 */
 #pragma code_page(65001)
 
-
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif

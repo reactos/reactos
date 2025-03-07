@@ -285,7 +285,7 @@ BEGIN
     END
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_APPNAME               "ReactOS Gestor de dispositivos"
   IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
@@ -293,7 +293,7 @@ BEGIN
   IDS_CONFIRM_UNINSTALL     "Aviso: Está prestes a desinstalar este dispositivo do sistema.\nDeseja continuar?"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_MENU_UPDATE           "Actualizar software do controlador..."
   IDS_MENU_ENABLE           "Habilitar"
@@ -304,7 +304,7 @@ BEGIN
   IDS_MENU_PROPERTIES       "Propriedades"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_TOOLTIP_PROPERTIES    "Propriedades"
   IDS_TOOLTIP_SCAN          "Verificar alterações de hardware"
@@ -315,7 +315,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_PROPERTIES   " Abrir a caixa de diálogo ""Propriedades"" para a selecção actual."

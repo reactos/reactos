@@ -1420,6 +1420,7 @@ CmGetSystemDriverList(
 extern ULONG CmpTraceLevel;
 extern BOOLEAN CmpSpecialBootCondition;
 extern BOOLEAN CmpFlushOnLockRelease;
+extern ULONG CmpVolatileBoot;
 extern BOOLEAN CmpShareSystemHives;
 extern BOOLEAN CmpMiniNTBoot;
 extern BOOLEAN CmpNoVolatileCreates;
@@ -1452,14 +1453,14 @@ extern HIVE_LIST_ENTRY CmpMachineHiveList[];
 extern UNICODE_STRING CmSymbolicLinkValueName;
 extern UNICODE_STRING CmpSystemStartOptions;
 extern UNICODE_STRING CmpLoadOptions;
-extern BOOLEAN CmSelfHeal;
-extern BOOLEAN CmpSelfHeal;
 extern ULONG CmpBootType;
+extern ULONG CmSelfHeal;
+extern BOOLEAN CmpSelfHeal;
 extern HANDLE CmpRegistryRootHandle;
 extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN InitIsWinPEMode;
 extern ULONG CmpHashTableSize;
-extern ULONG CmpDelayedCloseSize, CmpDelayedCloseIndex;
+extern ULONG CmpDelayedCloseSize;
 extern BOOLEAN CmpNoWrite;
 extern BOOLEAN CmpForceForceFlush;
 extern BOOLEAN CmpWasSetupBoot;
@@ -1467,6 +1468,8 @@ extern BOOLEAN CmpProfileLoaded;
 extern PCMHIVE CmiVolatileHive;
 extern LIST_ENTRY CmiKeyObjectListHead;
 extern BOOLEAN CmpHoldLazyFlush;
+extern ULONG CmpLazyFlushIntervalInSeconds;
+extern ULONG CmpLazyFlushHiveCount;
 extern BOOLEAN HvShutdownComplete;
 
 //

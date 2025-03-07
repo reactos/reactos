@@ -25,7 +25,7 @@
     threading(both),
     uuid(00000301-a8f2-4877-ba0a-fd2b6645fb94)  /* IWICFormatConverter */
 ]
-coclass PSFactoryBuffer { interface IFactoryBuffer; }
+coclass PSFactoryBuffer { interface IPSFactoryBuffer; }
 
 [
     helpstring("WIC Imaging Factory"),
@@ -119,11 +119,18 @@ coclass WICTiffDecoder { interface IWICBitmapDecoder; }
 coclass WICTiffEncoder { interface IWICBitmapEncoder; }
 
 [
-    helpstring("WIC ICNS Encoder"),
+    helpstring("WIC DDS Decoder"),
     threading(both),
-    uuid(312fb6f1-b767-409d-8a6d-0fc154d4f05c)
+    uuid(9053699f-a341-429d-9e90-ee437cf80c73)
 ]
-coclass WICIcnsEncoder { interface IWICBitmapEncoder; }
+coclass WICDdsDecoder { interface IWICBitmapDecoder; }
+
+[
+    helpstring("WIC DDS Encoder"),
+    threading(both),
+    uuid(a61dde94-66ce-4ac1-881b-71680588895e)
+]
+coclass WICDdsEncoder { interface IWICBitmapEncoder; }
 
 [
     helpstring("WIC Default Format Converter"),
@@ -151,7 +158,7 @@ coclass WICUnknownMetadataReader { interface IWICMetadataReader; }
     threading(both),
     uuid(8f914656-9d0a-4eb2-9019-0bf96d8a9ee6)
 ]
-coclass WICIfdMetadataReader { interface IWICIfdMetadataReader; }
+coclass WICIfdMetadataReader { interface IWICMetadataReader; }
 
 [
     helpstring("WIC Png cHRM Metadata Reader"),
@@ -168,11 +175,26 @@ coclass WICPngChrmMetadataReader { interface IWICMetadataReader; }
 coclass WICPngGamaMetadataReader { interface IWICMetadataReader; }
 
 [
+    helpstring("WIC Png hIST Metadata Reader"),
+    threading(both),
+    uuid(877a0bb7-a313-4491-87b5-2e6d0594f520)
+]
+coclass WICPngHistMetadataReader { interface IWICMetadataReader; }
+
+[
     helpstring("WIC Png tEXt Metadata Reader"),
     threading(both),
     uuid(4b59afcc-b8c3-408a-b670-89e5fab6fda7)
+
 ]
 coclass WICPngTextMetadataReader { interface IWICMetadataReader; }
+
+[
+    helpstring("WIC Png tIME Metadata Reader"),
+    threading(both),
+    uuid(d94edf02-efe5-4f0d-85c8-f5a68b3000b1)
+]
+coclass WICPngTimeMetadataReader { interface IWICMetadataReader; }
 
 [
     helpstring("WIC LSD Metadata Reader"),

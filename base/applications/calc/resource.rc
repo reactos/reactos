@@ -28,7 +28,7 @@
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* Icons */
-IDI_CALC ICON DISCARDABLE "res/calc.ico"
+IDI_CALC ICON "res/calc.ico"
 
 /* Manifest */
 #include <reactos/manifest_exe.rc>

@@ -33,6 +33,14 @@ STRINGTABLE
     13 "faltando drive de rede para característica"
     14 "origem da característica:"
     15 "escolha a pasta que contém %s"
+#ifdef __REACTOS__
+    34 "Pacote de instalação do ReactOS"
+    35 "ReactOS Installer Patch"
+    36 "Instalar" //FIXME: add accel
+    37 "Reparar" //FIXME: add accel
+    38 "Desinstalar" //FIXME: add accel
+    39 "&Apply"
+#endif
     100 "New Folder"
 }
 

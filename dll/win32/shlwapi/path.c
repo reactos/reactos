@@ -891,25 +891,28 @@ LPWSTR WINAPI PathRemoveBackslashW( LPWSTR lpszPath )
  * RETURNS
  *  Nothing.
  */
-VOID WINAPI PathRemoveBlanksA(LPSTR lpszPath)
+void WINAPI PathRemoveBlanksA(LPSTR pszPath)
 {
-  TRACE("(%s)\n", debugstr_a(lpszPath));
+    LPSTR start, first;
 
-  if(lpszPath && *lpszPath)
-  {
-    LPSTR start = lpszPath;
+    TRACE("(%s)\n", debugstr_a(pszPath));
 
-    while (*lpszPath == ' ')
-      lpszPath = CharNextA(lpszPath);
+    if (!pszPath || !*pszPath)
+        return;
 
-    while(*lpszPath)
-      *start++ = *lpszPath++;
+    start = first = pszPath;
 
-    if (start != lpszPath)
-      while (start[-1] == ' ')
-        start--;
+    while (*pszPath == ' ')
+        pszPath = CharNextA(pszPath);
+
+    while (*pszPath)
+        *start++ = *pszPath++;
+
+    if (start != first)
+        while (start[-1] == ' ')
+            start--;
+
     *start = '\0';
-  }
 }
 
 /*************************************************************************
@@ -917,25 +920,28 @@ VOID WINAPI PathRemoveBlanksA(LPSTR lpszPath)
  *
  * See PathRemoveBlanksA.
  */
-VOID WINAPI PathRemoveBlanksW(LPWSTR lpszPath)
+void WINAPI PathRemoveBlanksW(LPWSTR pszPath)
 {
-  TRACE("(%s)\n", debugstr_w(lpszPath));
+    LPWSTR start, first;
 
-  if(lpszPath && *lpszPath)
-  {
-    LPWSTR start = lpszPath;
+    TRACE("(%s)\n", debugstr_w(pszPath));
 
-    while (*lpszPath == ' ')
-      lpszPath++;
+    if (!pszPath || !*pszPath)
+        return;
 
-    while(*lpszPath)
-      *start++ = *lpszPath++;
+    start = first = pszPath;
 
-    if (start != lpszPath)
-      while (start[-1] == ' ')
-        start--;
+    while (*pszPath == ' ')
+        pszPath++;
+
+    while (*pszPath)
+        *start++ = *pszPath++;
+
+    if (start != first)
+        while (start[-1] == ' ')
+            start--;
+
     *start = '\0';
-  }
 }
 
 /*************************************************************************
@@ -4061,31 +4067,23 @@ LPCWSTR WINAPI PathFindSuffixArrayW(LPCWSTR lpszSuffix, LPCWSTR *lppszArray, int
  * NOTES
  *  A decorations form is "path[n].ext" where "n" is an optional decimal number.
  */
-VOID WINAPI PathUndecorateA(LPSTR lpszPath)
+void WINAPI PathUndecorateA(LPSTR pszPath)
 {
-  TRACE("(%s)\n",debugstr_a(lpszPath));
+  char *ext, *skip;
 
-  if (lpszPath)
-  {
-    LPSTR lpszExt = PathFindExtensionA(lpszPath);
-    if (lpszExt > lpszPath && lpszExt[-1] == ']')
-    {
-      LPSTR lpszSkip = lpszExt - 2;
-      if (*lpszSkip == '[')
-        lpszSkip++;  /* [] (no number) */
-      else
-        while (lpszSkip > lpszPath && isdigit(lpszSkip[-1]))
-          lpszSkip--;
-      if (lpszSkip > lpszPath && lpszSkip[-1] == '[' && lpszSkip[-2] != '\\')
-      {
-        /* remove the [n] */
-        lpszSkip--;
-        while (*lpszExt)
-          *lpszSkip++ = *lpszExt++;
-        *lpszSkip = '\0';
-      }
-    }
-  }
+  TRACE("(%s)\n", debugstr_a(pszPath));
+
+  if (!pszPath) return;
+
+  ext = PathFindExtensionA(pszPath);
+  if (ext == pszPath || ext[-1] != ']') return;
+
+  skip = ext - 2;
+  while (skip > pszPath && '0' <= *skip && *skip <= '9')
+      skip--;
+
+  if (skip > pszPath && *skip == '[' && skip[-1] != '\\')
+      memmove(skip, ext, strlen(ext) + 1);
 }
 
 /*************************************************************************
@@ -4093,31 +4091,23 @@ VOID WINAPI PathUndecorateA(LPSTR lpszPath)
  *
  * See PathUndecorateA.
  */
-VOID WINAPI PathUndecorateW(LPWSTR lpszPath)
+void WINAPI PathUndecorateW(LPWSTR pszPath)
 {
-  TRACE("(%s)\n",debugstr_w(lpszPath));
+  WCHAR *ext, *skip;
 
-  if (lpszPath)
-  {
-    LPWSTR lpszExt = PathFindExtensionW(lpszPath);
-    if (lpszExt > lpszPath && lpszExt[-1] == ']')
-    {
-      LPWSTR lpszSkip = lpszExt - 2;
-      if (*lpszSkip == '[')
-        lpszSkip++; /* [] (no number) */
-      else
-        while (lpszSkip > lpszPath && isdigitW(lpszSkip[-1]))
-          lpszSkip--;
-      if (lpszSkip > lpszPath && lpszSkip[-1] == '[' && lpszSkip[-2] != '\\')
-      {
-        /* remove the [n] */
-        lpszSkip--;
-        while (*lpszExt)
-          *lpszSkip++ = *lpszExt++;
-        *lpszSkip = '\0';
-      }
-    }
-  }
+  TRACE("(%s)\n", debugstr_w(pszPath));
+
+  if (!pszPath) return;
+
+  ext = PathFindExtensionW(pszPath);
+  if (ext == pszPath || ext[-1] != ']') return;
+
+  skip = ext - 2;
+  while (skip > pszPath && '0' <= *skip && *skip <= '9')
+      skip--;
+
+  if (skip > pszPath && *skip == '[' && skip[-1] != '\\')
+      memmove(skip, ext, (wcslen(ext) + 1) * sizeof(WCHAR));
 }
 
 /*************************************************************************

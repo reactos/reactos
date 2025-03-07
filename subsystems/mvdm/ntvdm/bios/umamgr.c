@@ -62,7 +62,7 @@ CreateUmaDescriptor(IN OUT PLIST_ENTRY ListHead,
     UmaDesc->Type  = Type;
 
     /*
-     * We use the trick of http://www.osronline.com/article.cfm?article=499 to insert
+     * We use the trick of https://www.osronline.com/article.cfm%5earticle=499.htm to insert
      * the new descriptor just after the current entry that we specify via 'ListHead'.
      * If 'ListHead' is NULL then we insert the descriptor at the tail of 'UmaDescriptorList'
      * (which is equivalent to inserting it at the head of 'UmaDescriptorList.Blink').

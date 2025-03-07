@@ -83,17 +83,17 @@ _LocalGetPrintServerHandleData(PCWSTR pValueName, PDWORD pType, PBYTE pData, DWO
 {
     DWORD dwErrorCode;
 
-    if (wcsicmp(pValueName, SPLREG_DEFAULT_SPOOL_DIRECTORY) == 0 ||
-        wcsicmp(pValueName, SPLREG_PORT_THREAD_PRIORITY) == 0 ||
-        wcsicmp(pValueName, SPLREG_SCHEDULER_THREAD_PRIORITY) == 0 ||
-        wcsicmp(pValueName, SPLREG_BEEP_ENABLED) == 0 ||
-        wcsicmp(pValueName, SPLREG_ALLOW_USER_MANAGEFORMS) == 0)
+    if (_wcsicmp(pValueName, SPLREG_DEFAULT_SPOOL_DIRECTORY) == 0 ||
+        _wcsicmp(pValueName, SPLREG_PORT_THREAD_PRIORITY) == 0 ||
+        _wcsicmp(pValueName, SPLREG_SCHEDULER_THREAD_PRIORITY) == 0 ||
+        _wcsicmp(pValueName, SPLREG_BEEP_ENABLED) == 0 ||
+        _wcsicmp(pValueName, SPLREG_ALLOW_USER_MANAGEFORMS) == 0)
     {
         *pcbNeeded = nSize;
         return (DWORD)RegQueryValueExW(hPrintersKey, pValueName, NULL, pType, pData, pcbNeeded);
     }
-    else if (wcsicmp(pValueName, SPLREG_PORT_THREAD_PRIORITY_DEFAULT) == 0 ||
-        wcsicmp(pValueName, SPLREG_SCHEDULER_THREAD_PRIORITY_DEFAULT) == 0)
+    else if (_wcsicmp(pValueName, SPLREG_PORT_THREAD_PRIORITY_DEFAULT) == 0 ||
+        _wcsicmp(pValueName, SPLREG_SCHEDULER_THREAD_PRIORITY_DEFAULT) == 0)
     {
         // Store a DWORD value as REG_NONE.
         *pType = REG_NONE;
@@ -105,12 +105,12 @@ _LocalGetPrintServerHandleData(PCWSTR pValueName, PDWORD pType, PBYTE pData, DWO
         *((PDWORD)pData) = 0;
         return ERROR_SUCCESS;
     }
-    else if (wcsicmp(pValueName, SPLREG_NET_POPUP) == 0 ||
-        wcsicmp(pValueName, SPLREG_RETRY_POPUP) == 0 ||
-        wcsicmp(pValueName, SPLREG_NET_POPUP_TO_COMPUTER) == 0 ||
-        wcsicmp(pValueName, SPLREG_EVENT_LOG) == 0 ||
-        wcsicmp(pValueName, SPLREG_RESTART_JOB_ON_POOL_ERROR) == 0 ||
-        wcsicmp(pValueName, SPLREG_RESTART_JOB_ON_POOL_ENABLED) == 0)
+    else if (_wcsicmp(pValueName, SPLREG_NET_POPUP) == 0 ||
+        _wcsicmp(pValueName, SPLREG_RETRY_POPUP) == 0 ||
+        _wcsicmp(pValueName, SPLREG_NET_POPUP_TO_COMPUTER) == 0 ||
+        _wcsicmp(pValueName, SPLREG_EVENT_LOG) == 0 ||
+        _wcsicmp(pValueName, SPLREG_RESTART_JOB_ON_POOL_ERROR) == 0 ||
+        _wcsicmp(pValueName, SPLREG_RESTART_JOB_ON_POOL_ENABLED) == 0)
     {
         HKEY hKey;
 
@@ -126,7 +126,7 @@ _LocalGetPrintServerHandleData(PCWSTR pValueName, PDWORD pType, PBYTE pData, DWO
         RegCloseKey(hKey);
         return dwErrorCode;
     }
-    else if (wcsicmp(pValueName, SPLREG_MAJOR_VERSION) == 0)
+    else if (_wcsicmp(pValueName, SPLREG_MAJOR_VERSION) == 0)
     {
         // Store a DWORD value as REG_NONE.
         *pType = REG_NONE;
@@ -138,7 +138,7 @@ _LocalGetPrintServerHandleData(PCWSTR pValueName, PDWORD pType, PBYTE pData, DWO
         *((PDWORD)pData) = dwSpoolerMajorVersion;
         return ERROR_SUCCESS;
     }
-    else if (wcsicmp(pValueName, SPLREG_MINOR_VERSION) == 0)
+    else if (_wcsicmp(pValueName, SPLREG_MINOR_VERSION) == 0)
     {
         // Store a DWORD value as REG_NONE.
         *pType = REG_NONE;
@@ -150,7 +150,7 @@ _LocalGetPrintServerHandleData(PCWSTR pValueName, PDWORD pType, PBYTE pData, DWO
         *((PDWORD)pData) = dwSpoolerMinorVersion;
         return ERROR_SUCCESS;
     }
-    else if (wcsicmp(pValueName, SPLREG_ARCHITECTURE) == 0)
+    else if (_wcsicmp(pValueName, SPLREG_ARCHITECTURE) == 0)
     {
         // Store a string as REG_NONE with the length of the environment name string.
         *pType = REG_NONE;
@@ -162,7 +162,7 @@ _LocalGetPrintServerHandleData(PCWSTR pValueName, PDWORD pType, PBYTE pData, DWO
         CopyMemory(pData, wszCurrentEnvironment, cbCurrentEnvironment);
         return ERROR_SUCCESS;
     }
-    else if (wcsicmp(pValueName, SPLREG_OS_VERSION) == 0)
+    else if (_wcsicmp(pValueName, SPLREG_OS_VERSION) == 0)
     {
         POSVERSIONINFOW pInfo = (POSVERSIONINFOW)pData;
 
@@ -177,7 +177,7 @@ _LocalGetPrintServerHandleData(PCWSTR pValueName, PDWORD pType, PBYTE pData, DWO
         GetVersionExW(pInfo);
         return ERROR_SUCCESS;
     }
-    else if (wcsicmp(pValueName, SPLREG_OS_VERSIONEX) == 0)
+    else if (_wcsicmp(pValueName, SPLREG_OS_VERSIONEX) == 0)
     {
         POSVERSIONINFOEXW pInfo = (POSVERSIONINFOEXW)pData;
 
@@ -192,7 +192,7 @@ _LocalGetPrintServerHandleData(PCWSTR pValueName, PDWORD pType, PBYTE pData, DWO
         GetVersionExW((POSVERSIONINFOW)pInfo);
         return ERROR_SUCCESS;
     }
-    else if (wcsicmp(pValueName, SPLREG_DS_PRESENT) == 0)
+    else if (_wcsicmp(pValueName, SPLREG_DS_PRESENT) == 0)
     {
         PDSROLE_PRIMARY_DOMAIN_INFO_BASIC pInfo;
 
@@ -215,7 +215,7 @@ _LocalGetPrintServerHandleData(PCWSTR pValueName, PDWORD pType, PBYTE pData, DWO
         DsRoleFreeMemory(pInfo);
         return ERROR_SUCCESS;
     }
-    else if (wcsicmp(pValueName, SPLREG_DS_PRESENT_FOR_USER) == 0)
+    else if (_wcsicmp(pValueName, SPLREG_DS_PRESENT_FOR_USER) == 0)
     {
         DWORD cch;
         PWSTR p;
@@ -258,7 +258,7 @@ _LocalGetPrintServerHandleData(PCWSTR pValueName, PDWORD pType, PBYTE pData, DWO
         *((PDWORD)pData) = (wcscmp(wszUserSam, wszComputerName) != 0);
         return ERROR_SUCCESS;
     }
-    else if (wcsicmp(pValueName, SPLREG_REMOTE_FAX) == 0)
+    else if (_wcsicmp(pValueName, SPLREG_REMOTE_FAX) == 0)
     {
         // Store a DWORD value as REG_NONE.
         *pType = REG_NONE;
@@ -270,7 +270,7 @@ _LocalGetPrintServerHandleData(PCWSTR pValueName, PDWORD pType, PBYTE pData, DWO
         *((PDWORD)pData) = 1;
         return ERROR_SUCCESS;
     }
-    else if (wcsicmp(pValueName, SPLREG_DNS_MACHINE_NAME) == 0)
+    else if (_wcsicmp(pValueName, SPLREG_DNS_MACHINE_NAME) == 0)
     {
         DWORD cchDnsName = 0;
 
@@ -405,21 +405,21 @@ _LocalSetPrintServerHandleData(PCWSTR pValueName, DWORD Type, PBYTE pData, DWORD
 {
     DWORD dwErrorCode;
 
-    if (wcsicmp(pValueName, SPLREG_DEFAULT_SPOOL_DIRECTORY) == 0 ||
-        wcsicmp(pValueName, SPLREG_PORT_THREAD_PRIORITY) == 0 ||
-        wcsicmp(pValueName, SPLREG_SCHEDULER_THREAD_PRIORITY) == 0 ||
-        wcsicmp(pValueName, SPLREG_BEEP_ENABLED) == 0 ||
-        wcsicmp(pValueName, SPLREG_ALLOW_USER_MANAGEFORMS) == 0)
+    if (_wcsicmp(pValueName, SPLREG_DEFAULT_SPOOL_DIRECTORY) == 0 ||
+        _wcsicmp(pValueName, SPLREG_PORT_THREAD_PRIORITY) == 0 ||
+        _wcsicmp(pValueName, SPLREG_SCHEDULER_THREAD_PRIORITY) == 0 ||
+        _wcsicmp(pValueName, SPLREG_BEEP_ENABLED) == 0 ||
+        _wcsicmp(pValueName, SPLREG_ALLOW_USER_MANAGEFORMS) == 0)
     {
         return (DWORD)RegSetValueExW(hPrintersKey, pValueName, 0, Type, pData, cbData);
     }
-    else if (wcsicmp(pValueName, SPLREG_NET_POPUP) == 0 ||
-        wcsicmp(pValueName, SPLREG_RETRY_POPUP) == 0 ||
-        wcsicmp(pValueName, SPLREG_NET_POPUP_TO_COMPUTER) == 0 ||
-        wcsicmp(pValueName, SPLREG_EVENT_LOG) == 0 ||
-        wcsicmp(pValueName, SPLREG_RESTART_JOB_ON_POOL_ERROR) == 0 ||
-        wcsicmp(pValueName, SPLREG_RESTART_JOB_ON_POOL_ENABLED) == 0 ||
-        wcsicmp(pValueName, L"NoRemotePrinterDrivers") == 0)
+    else if (_wcsicmp(pValueName, SPLREG_NET_POPUP) == 0 ||
+        _wcsicmp(pValueName, SPLREG_RETRY_POPUP) == 0 ||
+        _wcsicmp(pValueName, SPLREG_NET_POPUP_TO_COMPUTER) == 0 ||
+        _wcsicmp(pValueName, SPLREG_EVENT_LOG) == 0 ||
+        _wcsicmp(pValueName, SPLREG_RESTART_JOB_ON_POOL_ERROR) == 0 ||
+        _wcsicmp(pValueName, SPLREG_RESTART_JOB_ON_POOL_ENABLED) == 0 ||
+        _wcsicmp(pValueName, L"NoRemotePrinterDrivers") == 0)
     {
         HKEY hKey;
 
@@ -434,7 +434,7 @@ _LocalSetPrintServerHandleData(PCWSTR pValueName, DWORD Type, PBYTE pData, DWORD
         RegCloseKey(hKey);
         return dwErrorCode;
     }
-    else if (wcsicmp(pValueName, SPLREG_WEBSHAREMGMT) == 0)
+    else if (_wcsicmp(pValueName, SPLREG_WEBSHAREMGMT) == 0)
     {
         WARN("Attempting to set WebShareMgmt, which is based on IIS and therefore not supported. Returning fake success!\n");
         return ERROR_SUCCESS;

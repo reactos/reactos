@@ -388,7 +388,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         g_pChildWnd->nSplitPos = 190;
         g_pChildWnd->hWnd = hWnd;
 
-        style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
+        /* ES_AUTOHSCROLL style enables horizontal scrolling and shrinking */
+        style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL;
         g_pChildWnd->hAddressBarWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Edit", NULL, style,
                                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                                       hWnd, (HMENU)0, hInst, 0);

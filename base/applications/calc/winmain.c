@@ -1015,10 +1015,16 @@ static void handle_copy_command(HWND hWnd)
     TCHAR display[MAX_CALC_SIZE];
     UINT  n;
 
+    // Read current text from output display
     n = GetDlgItemText(hWnd, IDC_TEXT_OUTPUT, display, SIZEOF(display));
 
-    if (calc.base == IDC_RADIO_DEC && _tcschr(calc.buffer, _T('.')) == NULL)
-        display[n - calc.sDecimal_len] = _T('\0');
+    // Check if result is a true number
+    if (!calc.is_nan)
+    {
+        // Remove trailing decimal point if no decimal digits exist
+        if (calc.base == IDC_RADIO_DEC && _tcschr(calc.buffer, _T('.')) == NULL)
+            display[n - calc.sDecimal_len] = _T('\0');
+    }
 
     CopyMemToClipboard(display);
 }

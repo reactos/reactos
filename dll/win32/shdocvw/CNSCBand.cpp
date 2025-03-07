@@ -93,7 +93,8 @@ CNSCBand::~CNSCBand()
 VOID CNSCBand::OnFinalMessage(HWND)
 {
     // The message loop is finished, now we can safely destruct!
-    static_cast<IDeskBand *>(this)->Release();
+    // HACKFIX: Who did this AddRef? Commenting out Release...
+    //static_cast<IDeskBand *>(this)->Release();
 }
 
 // *** helper methods ***
@@ -991,6 +992,7 @@ LRESULT CNSCBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     hr = contextMenu->QueryContextMenu(menuTemp, 0, idCmdFirst, FCIDM_SHVIEWLAST, cmf);
     if (FAILED_UNEXPECTEDLY(hr))
         return 0;
+    SHELL_RemoveVerb(contextMenu, idCmdFirst, menuTemp, L"link");
 
     enum { flags = TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON };
     UINT uCommand = ::TrackPopupMenu(menuTemp, flags, pt.x, pt.y, 0, m_hWnd, NULL);

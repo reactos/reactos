@@ -318,21 +318,21 @@ const ROS_APISET g_Apisets[] = {
     // { RTL_CONSTANT_STRING(L"api-ms-win-coremessaging-host-l1-1-0"), RTL_CONSTANT_STRING(L""), APISET_WIN10 },
     // { RTL_CONSTANT_STRING(L"api-ms-win-coreui-l1-1-0"), RTL_CONSTANT_STRING(L""), APISET_WIN8 | APISET_WIN81 },
     // { RTL_CONSTANT_STRING(L"api-ms-win-coreui-secruntime-l1-1-0"), RTL_CONSTANT_STRING(L""), APISET_WIN10 },
-    { RTL_CONSTANT_STRING(L"api-ms-win-crt-conio-l1-1-0"), RTL_CONSTANT_STRING(L"msvcrt.dll"), APISET_WIN10 }, // ucrtbase.dll
-    { RTL_CONSTANT_STRING(L"api-ms-win-crt-convert-l1-1-0"), RTL_CONSTANT_STRING(L"msvcrt.dll"), APISET_WIN10 }, // ucrtbase.dll
-    { RTL_CONSTANT_STRING(L"api-ms-win-crt-environment-l1-1-0"), RTL_CONSTANT_STRING(L"msvcrt.dll"), APISET_WIN10 }, // ucrtbase.dll
-    { RTL_CONSTANT_STRING(L"api-ms-win-crt-filesystem-l1-1-0"), RTL_CONSTANT_STRING(L"msvcrt.dll"), APISET_WIN10 }, // ucrtbase.dll
-    { RTL_CONSTANT_STRING(L"api-ms-win-crt-heap-l1-1-0"), RTL_CONSTANT_STRING(L"msvcrt.dll"), APISET_WIN10 }, // ucrtbase.dll
-    { RTL_CONSTANT_STRING(L"api-ms-win-crt-locale-l1-1-0"), RTL_CONSTANT_STRING(L"msvcrt.dll"), APISET_WIN10 }, // ucrtbase.dll
-    { RTL_CONSTANT_STRING(L"api-ms-win-crt-math-l1-1-0"), RTL_CONSTANT_STRING(L"msvcrt.dll"), APISET_WIN10 }, // ucrtbase.dll
-    { RTL_CONSTANT_STRING(L"api-ms-win-crt-multibyte-l1-1-0"), RTL_CONSTANT_STRING(L"msvcrt.dll"), APISET_WIN10 }, // ucrtbase.dll
-    { RTL_CONSTANT_STRING(L"api-ms-win-crt-private-l1-1-0"), RTL_CONSTANT_STRING(L"msvcrt.dll"), APISET_WIN10 }, // ucrtbase.dll
-    { RTL_CONSTANT_STRING(L"api-ms-win-crt-process-l1-1-0"), RTL_CONSTANT_STRING(L"msvcrt.dll"), APISET_WIN10 }, // ucrtbase.dll
-    { RTL_CONSTANT_STRING(L"api-ms-win-crt-runtime-l1-1-0"), RTL_CONSTANT_STRING(L"msvcrt.dll"), APISET_WIN10 }, // ucrtbase.dll
-    { RTL_CONSTANT_STRING(L"api-ms-win-crt-stdio-l1-1-0"), RTL_CONSTANT_STRING(L"msvcrt.dll"), APISET_WIN10 }, // ucrtbase.dll
-    { RTL_CONSTANT_STRING(L"api-ms-win-crt-string-l1-1-0"), RTL_CONSTANT_STRING(L"msvcrt.dll"), APISET_WIN10 }, // ucrtbase.dll
-    { RTL_CONSTANT_STRING(L"api-ms-win-crt-time-l1-1-0"), RTL_CONSTANT_STRING(L"msvcrt.dll"), APISET_WIN10 }, // ucrtbase.dll
-    { RTL_CONSTANT_STRING(L"api-ms-win-crt-utility-l1-1-0"), RTL_CONSTANT_STRING(L"msvcrt.dll"), APISET_WIN10 }, // ucrtbase.dll
+    { RTL_CONSTANT_STRING(L"api-ms-win-crt-conio-l1-1-0"), RTL_CONSTANT_STRING(L"ucrtbase.dll"), APISET_WIN10 },
+    { RTL_CONSTANT_STRING(L"api-ms-win-crt-convert-l1-1-0"), RTL_CONSTANT_STRING(L"ucrtbase.dll"), APISET_WIN10 },
+    { RTL_CONSTANT_STRING(L"api-ms-win-crt-environment-l1-1-0"), RTL_CONSTANT_STRING(L"ucrtbase.dll"), APISET_WIN10 },
+    { RTL_CONSTANT_STRING(L"api-ms-win-crt-filesystem-l1-1-0"), RTL_CONSTANT_STRING(L"ucrtbase.dll"), APISET_WIN10 },
+    { RTL_CONSTANT_STRING(L"api-ms-win-crt-heap-l1-1-0"), RTL_CONSTANT_STRING(L"ucrtbase.dll"), APISET_WIN10 },
+    { RTL_CONSTANT_STRING(L"api-ms-win-crt-locale-l1-1-0"), RTL_CONSTANT_STRING(L"ucrtbase.dll"), APISET_WIN10 },
+    { RTL_CONSTANT_STRING(L"api-ms-win-crt-math-l1-1-0"), RTL_CONSTANT_STRING(L"ucrtbase.dll"), APISET_WIN10 },
+    { RTL_CONSTANT_STRING(L"api-ms-win-crt-multibyte-l1-1-0"), RTL_CONSTANT_STRING(L"ucrtbase.dll"), APISET_WIN10 },
+    { RTL_CONSTANT_STRING(L"api-ms-win-crt-private-l1-1-0"), RTL_CONSTANT_STRING(L"ucrtbase.dll"), APISET_WIN10 },
+    { RTL_CONSTANT_STRING(L"api-ms-win-crt-process-l1-1-0"), RTL_CONSTANT_STRING(L"ucrtbase.dll"), APISET_WIN10 },
+    { RTL_CONSTANT_STRING(L"api-ms-win-crt-runtime-l1-1-0"), RTL_CONSTANT_STRING(L"ucrtbase.dll"), APISET_WIN10 },
+    { RTL_CONSTANT_STRING(L"api-ms-win-crt-stdio-l1-1-0"), RTL_CONSTANT_STRING(L"ucrtbase.dll"), APISET_WIN10 },
+    { RTL_CONSTANT_STRING(L"api-ms-win-crt-string-l1-1-0"), RTL_CONSTANT_STRING(L"ucrtbase.dll"), APISET_WIN10 },
+    { RTL_CONSTANT_STRING(L"api-ms-win-crt-time-l1-1-0"), RTL_CONSTANT_STRING(L"ucrtbase.dll"), APISET_WIN10 },
+    { RTL_CONSTANT_STRING(L"api-ms-win-crt-utility-l1-1-0"), RTL_CONSTANT_STRING(L"ucrtbase.dll"), APISET_WIN10 },
     // { RTL_CONSTANT_STRING(L"api-ms-win-deprecated-apis-advapi-l1-1-0"), RTL_CONSTANT_STRING(L""), APISET_WIN10 },
     // { RTL_CONSTANT_STRING(L"api-ms-win-deprecated-apis-legacy-l1-1-0"), RTL_CONSTANT_STRING(L""), APISET_WIN10 },
     // { RTL_CONSTANT_STRING(L"api-ms-win-deprecated-apis-legacy-l1-2-0"), RTL_CONSTANT_STRING(L""), APISET_WIN10 },

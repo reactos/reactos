@@ -3,12 +3,12 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-IDI_ICON  ICON  DISCARDABLE  "res/icon_mazescr.ico"
+IDI_ICON ICON "res/icon_mazescr.ico"
 
 #define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION    "Maze ScreenSaver\0"
-#define REACTOS_STR_INTERNAL_NAME       "Maze\0"
-#define REACTOS_STR_ORIGINAL_FILENAME   "mazescr.scr\0"
+#define REACTOS_STR_FILE_DESCRIPTION    "Maze ScreenSaver"
+#define REACTOS_STR_INTERNAL_NAME       "Maze"
+#define REACTOS_STR_ORIGINAL_FILENAME   "mazescr.scr"
 
 #include <reactos/version.rc>
 

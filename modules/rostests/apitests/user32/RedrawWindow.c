@@ -34,7 +34,7 @@ WndProc(
     return DefWindowProcW(hWnd, message, wParam, lParam);
 }
 
-void GetMessageRedrawWindowTest()
+void GetMessageRedrawWindowTest(void)
 {
     HWND hWnd;
     MSG msg;
@@ -52,9 +52,9 @@ void GetMessageRedrawWindowTest()
 
     ShowWindow(hWnd, SW_SHOW);
 
-    while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE ))
+    while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
     {
-        DispatchMessageA( &msg );
+        DispatchMessageW(&msg);
     }
 
     ok(got_paint == TRUE, "Did not process WM_PAINT message\n");
@@ -66,7 +66,7 @@ void GetMessageRedrawWindowTest()
     ok(ret == TRUE, "RedrawWindow failed\n");
 
     i = 0;
-    while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE ))
+    while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
     {
         RECORD_MESSAGE(1, msg.message, POST, 0, 0);
         if (msg.message == WM_PAINT)
@@ -79,7 +79,7 @@ void GetMessageRedrawWindowTest()
         }
         if (msg.message != WM_PAINT || i >= 10)
         {
-            DispatchMessageA( &msg );
+            DispatchMessageW(&msg);
         }
     }
 
@@ -136,12 +136,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return 0;
         }
     }
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    return DefWindowProcW(hwnd, uMsg, wParam, lParam);
 }
 
 LRESULT CALLBACK ChildWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    switch (uMsg) {
+    switch (uMsg)
+    {
         case WM_SYNCPAINT:
         {
             PAINTSTRUCT ps;
@@ -168,7 +169,7 @@ LRESULT CALLBACK ChildWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
             return 0;
         }
     }
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    return DefWindowProcW(hwnd, uMsg, wParam, lParam);
 }
 
 typedef struct STRUCT_TestRedrawWindow
@@ -223,10 +224,10 @@ void ServeSomeMessages(int messageTime, int messageCount)
     startTime = GetTickCount();
     while (GetTickCount() - startTime < messageTime * messageCount)
     {
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&msg);
-            DispatchMessage(&msg);
+            DispatchMessageW(&msg);
         }
         else
         {
@@ -235,7 +236,8 @@ void ServeSomeMessages(int messageTime, int messageCount)
     }
 }
 
-void TestRedrawWindow(STRUCT_TestRedrawWindow* ptestRW) {
+void TestRedrawWindow(STRUCT_TestRedrawWindow* ptestRW)
+{
     DWORD style;
     int width;
     int height;
@@ -252,7 +254,7 @@ void TestRedrawWindow(STRUCT_TestRedrawWindow* ptestRW) {
     wc.hInstance = GetModuleHandle(NULL);
     wc.lpszClassName = ptestRW->testName;
     RegisterClassW(&wc);
-    RECT rectWin = { 0, 0, 800, 600 };
+    RECT rectWin = { 0, 0, 700, 500 };
     style = WS_OVERLAPPEDWINDOW;
     AdjustWindowRectEx(&rectWin, style, FALSE, 0);
     width = rectWin.right - rectWin.left;
@@ -261,6 +263,7 @@ void TestRedrawWindow(STRUCT_TestRedrawWindow* ptestRW) {
         CW_USEDEFAULT, CW_USEDEFAULT, width, height, NULL, NULL, GetModuleHandle(NULL), NULL);
     if (hwnd == NULL)
         return;
+    MoveWindow(hwnd, 10, 10, width, height, TRUE);
 
     ShowWindow(hwnd, SW_SHOW);
     if(!ptestRW->testChild)
@@ -285,10 +288,12 @@ void TestRedrawWindow(STRUCT_TestRedrawWindow* ptestRW) {
             GetModuleHandle(NULL),
             NULL
         );
+        if (hChildWnd == NULL)
+            return;
     }
 
     HDC hdc = GetDC(hwnd);
-    RECT drect = { 0, 0, 800, 600 };
+    RECT drect = { 0, 0, 700, 500 };
     DrawContent(hdc, &drect, RGB(255, 0, 0));
     ReleaseDC(hwnd, hdc);
 
@@ -298,7 +303,7 @@ void TestRedrawWindow(STRUCT_TestRedrawWindow* ptestRW) {
         RgnUpdate = CreateRectRgn(ptestRW->regRect.left, ptestRW->regRect.top, ptestRW->regRect.right, ptestRW->regRect.bottom);
     }
 
-    prect=NULL;
+    prect = NULL;
     if (ptestRW->useRect)
     {
         prect = &ptestRW->rectRect;
@@ -337,7 +342,8 @@ void TestRedrawWindow(STRUCT_TestRedrawWindow* ptestRW) {
     ptestRW->resultWmNcPaint = resultWmNcPaint;
     ptestRW->resultPaintIndex = paintIndex;
 
-    if (RgnUpdate) DeleteObject(RgnUpdate);
+    if (RgnUpdate)
+        DeleteObject(RgnUpdate);
 
     if (hChildWnd != NULL)
         DestroyWindow(hChildWnd);
@@ -425,14 +431,7 @@ UINT TestRedrawWindow2(STRUCT_TestRedrawWindow* ptestRW, STRUCT_TestRedrawWindow
     return countErrors;
 }
 
-void InitRect(RECT *rect, int left, int top, int right, int bottom) {
-    rect->left = left;
-    rect->top = top;
-    rect->right = right;
-    rect->bottom = bottom;
-}
-
-void FlagsRedrawWindowTest()
+void FlagsRedrawWindowTest(void)
 {
     STRUCT_TestRedrawWindow testRW;
     STRUCT_TestRedrawWindowCompare testRWcompare;
@@ -440,19 +439,22 @@ void FlagsRedrawWindowTest()
     testRW.testPixelPre1x = 50;
     testRW.testPixelPre1y = 50;
     testRW.testPixelPre2x = 50;
-    testRW.testPixelPre2y = 550;
+    testRW.testPixelPre2y = 400;
     testRW.testPixelPost1x = 50;
     testRW.testPixelPost1y = 50;
     testRW.testPixelPost2x = 50;
-    testRW.testPixelPost2y = 550;
+    testRW.testPixelPost2y = 400;
+    
+    trace("Screen Width/Height (%dx%d)\n",
+          GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
     
     // RDW_ERASE tests    
     testRW.testName = L"Test1";
     testRW.flags = 0;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -460,7 +462,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x000000FF;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 0, 200, 200);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 0, 200, 200);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -470,9 +472,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test2";
     testRW.flags = RDW_ERASE;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -480,7 +482,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x000000FF;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 0, 200, 200);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 0, 200, 200);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -490,9 +492,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test3";
     testRW.flags = RDW_INVALIDATE;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -500,7 +502,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = TRUE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -510,9 +512,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test4";
     testRW.flags = RDW_INVALIDATE | RDW_ERASE;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -520,7 +522,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = TRUE;
     testRWcompare.resultWmEraseGnd = TRUE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -531,9 +533,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test5";
     testRW.flags = RDW_FRAME;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -541,7 +543,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x000000FF;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -551,9 +553,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test6";
     testRW.flags = RDW_INVALIDATE | RDW_FRAME;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -561,7 +563,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = TRUE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = TRUE;
@@ -572,9 +574,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test7";
     testRW.flags = RDW_INTERNALPAINT;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -582,7 +584,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x000000FF;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -592,9 +594,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test8";
     testRW.flags = RDW_INVALIDATE | RDW_INTERNALPAINT;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -602,7 +604,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = TRUE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -613,9 +615,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test9";
     testRW.flags = RDW_NOERASE;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -623,7 +625,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x000000FF;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -633,9 +635,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test10";
     testRW.flags = RDW_INVALIDATE | RDW_NOERASE;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -643,7 +645,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = TRUE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -653,9 +655,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test11";
     testRW.flags = RDW_NOERASE | RDW_ERASE;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -663,7 +665,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x000000FF;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -673,9 +675,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test12";
     testRW.flags = RDW_INVALIDATE | RDW_NOERASE | RDW_ERASE;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -683,7 +685,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = TRUE;
     testRWcompare.resultWmEraseGnd = TRUE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -694,9 +696,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test13";
     testRW.flags = RDW_NOFRAME;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -704,7 +706,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x000000FF;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -714,9 +716,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test14";
     testRW.flags = RDW_INVALIDATE | RDW_NOFRAME;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -724,7 +726,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = TRUE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -734,9 +736,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test15";
     testRW.flags = RDW_INVALIDATE | RDW_VALIDATE | RDW_NOFRAME;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -744,7 +746,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = TRUE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -754,9 +756,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test16";
     testRW.flags = RDW_VALIDATE | RDW_NOFRAME;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -764,7 +766,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x000000FF;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -775,9 +777,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test17";
     testRW.flags = RDW_NOINTERNALPAINT;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -785,7 +787,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x000000FF;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -795,9 +797,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test18";
     testRW.flags = RDW_INVALIDATE | RDW_NOINTERNALPAINT;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -805,7 +807,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = TRUE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -815,9 +817,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test19";
     testRW.flags = RDW_VALIDATE | RDW_NOINTERNALPAINT;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -825,7 +827,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x000000FF;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -836,9 +838,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test20";
     testRW.flags = RDW_ERASENOW;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -846,7 +848,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x000000FF;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -856,9 +858,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test21";
     testRW.flags = RDW_INVALIDATE | RDW_ERASENOW;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -866,7 +868,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = TRUE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -876,9 +878,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test22";
     testRW.flags = RDW_VALIDATE | RDW_ERASENOW;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -886,7 +888,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x000000FF;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -897,9 +899,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test23";
     testRW.flags = RDW_UPDATENOW;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -907,7 +909,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x000000FF;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -917,9 +919,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test24";
     testRW.flags = RDW_INVALIDATE | RDW_UPDATENOW;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -927,7 +929,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x0000FF00;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -937,9 +939,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test25";
     testRW.flags = RDW_VALIDATE | RDW_UPDATENOW;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -947,7 +949,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x000000FF;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -958,9 +960,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test26";
     testRW.flags = RDW_NOCHILDREN;
     testRW.useRegion = FALSE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = TRUE;
 
@@ -968,7 +970,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x0000FF00;
     testRWcompare.resultColorPost1 = 0x00FF0000;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -978,9 +980,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test27";
     testRW.flags = RDW_INVALIDATE | RDW_NOCHILDREN;
     testRW.useRegion = FALSE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = TRUE;
 
@@ -988,7 +990,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x0000FF00;
     testRWcompare.resultColorPost1 = 0x0000FF00;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -998,9 +1000,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test28";
     testRW.flags = RDW_VALIDATE | RDW_NOCHILDREN;
     testRW.useRegion = FALSE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = TRUE;
 
@@ -1008,7 +1010,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x0000FF00;
     testRWcompare.resultColorPost1 = 0x00FF0000;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -1018,9 +1020,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test29";
     testRW.flags = RDW_ALLCHILDREN;
     testRW.useRegion = FALSE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = TRUE;
 
@@ -1028,7 +1030,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x0000FF00;
     testRWcompare.resultColorPost1 = 0x00FF0000;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -1038,9 +1040,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test30";
     testRW.flags = RDW_INVALIDATE | RDW_ALLCHILDREN;
     testRW.useRegion = FALSE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = TRUE;
 
@@ -1048,7 +1050,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x0000FF00;
     testRWcompare.resultColorPre1 = 0x00FF0000;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -1058,9 +1060,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test31";
     testRW.flags = RDW_VALIDATE | RDW_ALLCHILDREN;
     testRW.useRegion = FALSE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = TRUE;
 
@@ -1068,7 +1070,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x0000FF00;
     testRWcompare.resultColorPost1 = 0x00FF0000;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -1078,9 +1080,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test32";
     testRW.flags = RDW_NOCHILDREN;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = TRUE;
 
@@ -1088,7 +1090,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x0000FF00;
     testRWcompare.resultColorPost1 = 0x00FF0000;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -1098,9 +1100,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test33";
     testRW.flags = RDW_INVALIDATE | RDW_NOCHILDREN;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = TRUE;
 
@@ -1108,7 +1110,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x0000FF00;
     testRWcompare.resultColorPre1 = 0x00FF0000;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -1118,9 +1120,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test34";
     testRW.flags = RDW_VALIDATE | RDW_NOCHILDREN;
     testRW.useRegion = TRUE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = FALSE;
-    InitRect(&testRW.rectRect, 0, 0, 200, 200);
+    SetRect(&testRW.rectRect, 0, 0, 200, 200);
     testRW.forcePaint = TRUE;
     testRW.testChild = TRUE;
 
@@ -1128,7 +1130,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x0000FF00;
     testRWcompare.resultColorPost1 = 0x00FF0000;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -1139,9 +1141,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test35";
     testRW.flags = 0;
     testRW.useRegion = FALSE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = TRUE;
-    InitRect(&testRW.rectRect, 0, 500, 800, 600);
+    SetRect(&testRW.rectRect, 0, 300, 700, 500);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -1149,7 +1151,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x000000FF;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 0, 200, 200);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 0, 200, 200);
     testRWcompare.resultNeedsUpdate = FALSE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
@@ -1159,9 +1161,9 @@ void FlagsRedrawWindowTest()
     testRW.testName = L"Test36";
     testRW.flags = RDW_INVALIDATE | RDW_ERASENOW;
     testRW.useRegion = FALSE;
-    InitRect(&testRW.regRect, 0, 500, 800, 600);
+    SetRect(&testRW.regRect, 0, 300, 700, 500);
     testRW.useRect = TRUE;
-    InitRect(&testRW.rectRect, 0, 500, 800, 600);
+    SetRect(&testRW.rectRect, 0, 300, 700, 500);
     testRW.forcePaint = TRUE;
     testRW.testChild = FALSE;
 
@@ -1169,7 +1171,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
+    SetRect(&testRWcompare.resultUpdateRect, 0, 300, 700, 500);
     testRWcompare.resultNeedsUpdate = TRUE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;

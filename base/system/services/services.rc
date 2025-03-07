@@ -8,7 +8,6 @@
 #define REACTOS_STR_ORIGINAL_FILENAME   "services.exe"
 #include <reactos/version.rc>
 
-
 /* UTF-8 */
 #pragma code_page(65001)
 

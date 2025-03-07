@@ -777,9 +777,8 @@ ScmCanonDriverImagePath(DWORD dwStartType,
 }
 
 
-/* Internal recursive function */
-/* Need to search for every dependency on every service */
-static DWORD
+/* Recursively search for every dependency on every service */
+DWORD
 Int_EnumDependentServicesW(HKEY hServicesKey,
                            PSERVICE lpService,
                            DWORD dwServiceState,
@@ -939,10 +938,6 @@ RCloseServiceHandle(
     PMANAGER_HANDLE hManager;
     PSERVICE_HANDLE hService;
     PSERVICE lpService;
-    HKEY hServicesKey;
-    DWORD dwError;
-    DWORD pcbBytesNeeded = 0;
-    DWORD dwServicesReturned = 0;
 
     DPRINT("RCloseServiceHandle() called\n");
 
@@ -986,68 +981,9 @@ RCloseServiceHandle(
         HeapFree(GetProcessHeap(), 0, hService);
         hService = NULL;
 
-        ASSERT(lpService->dwRefCount > 0);
 
-        lpService->dwRefCount--;
-        DPRINT("CloseServiceHandle - lpService->dwRefCount %u\n",
-               lpService->dwRefCount);
-
-        if (lpService->dwRefCount == 0)
-        {
-            /* If this service has been marked for deletion */
-            if (lpService->bDeleted &&
-                lpService->Status.dwCurrentState == SERVICE_STOPPED)
-            {
-                /* Open the Services Reg key */
-                dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                                        L"System\\CurrentControlSet\\Services",
-                                        0,
-                                        KEY_SET_VALUE | KEY_READ,
-                                        &hServicesKey);
-                if (dwError != ERROR_SUCCESS)
-                {
-                    DPRINT("Failed to open services key\n");
-                    ScmUnlockDatabase();
-                    return dwError;
-                }
-
-                /* Call the internal function with NULL, just to get bytes we need */
-                Int_EnumDependentServicesW(hServicesKey,
-                                           lpService,
-                                           SERVICE_ACTIVE,
-                                           NULL,
-                                           &pcbBytesNeeded,
-                                           &dwServicesReturned);
-
-                /* If pcbBytesNeeded returned a value then there are services running that are dependent on this service */
-                if (pcbBytesNeeded)
-                {
-                    DPRINT("Deletion failed due to running dependencies\n");
-                    RegCloseKey(hServicesKey);
-                    ScmUnlockDatabase();
-                    return ERROR_SUCCESS;
-                }
-
-                /* There are no references and no running dependencies,
-                   it is now safe to delete the service */
-
-                /* Delete the Service Key */
-                dwError = ScmDeleteRegKey(hServicesKey,
-                                          lpService->lpServiceName);
-
-                RegCloseKey(hServicesKey);
-
-                if (dwError != ERROR_SUCCESS)
-                {
-                    DPRINT("Failed to Delete the Service Registry key\n");
-                    ScmUnlockDatabase();
-                    return dwError;
-                }
-
-                /* Delete the Service */
-                ScmDeleteServiceRecord(lpService);
-            }
-        }
+        DPRINT("Closing service %S with %d references\n", lpService->lpServiceName, lpService->RefCount);
+        ScmDereferenceService(lpService);
 
         ScmUnlockDatabase();
 
@@ -1251,8 +1187,8 @@ RControlService(
         /* Send control code to the service */
         dwError = ScmControlService(lpService->lpImage->hControlPipe,
                                     lpService->lpServiceName,
-                                    (SERVICE_STATUS_HANDLE)lpService,
-                                    dwControl);
+                                    dwControl,
+                                    (SERVICE_STATUS_HANDLE)lpService);
 
         /* Return service status information */
         RtlCopyMemory(lpServiceStatus,
@@ -1672,6 +1608,81 @@ ScmIsValidServiceState(DWORD dwCurrentState)
     }
 }
 
+static
+DWORD
+WINAPI
+ScmStopThread(PVOID pParam)
+{
+    PSERVICE lpService = (PSERVICE)pParam;
+    WCHAR szLogBuffer[80];
+    LPCWSTR lpLogStrings[2];
+
+    /* Check if we are about to stop this service */
+    if (lpService->lpImage->dwImageRunCount == 1)
+    {
+        /* Stop the dispatcher thread.
+         * We must not send a control message while holding the database lock, otherwise it can cause timeouts
+         * We are sure that the service won't be deleted in the meantime because we still have a reference to it. */
+        DPRINT("Stopping the dispatcher thread for service %S\n", lpService->lpServiceName);
+        ScmControlService(lpService->lpImage->hControlPipe,
+                          L"",
+                          SERVICE_CONTROL_STOP,
+                          (SERVICE_STATUS_HANDLE)lpService);
+    }
+
+    /* Lock the service database exclusively */
+    ScmLockDatabaseExclusive();
+
+    DPRINT("Service %S image count:%d\n", lpService->lpServiceName, lpService->lpImage->dwImageRunCount);
+
+    /* Decrement the image run counter */
+    lpService->lpImage->dwImageRunCount--;
+
+    /* If we just stopped the last running service... */
+    if (lpService->lpImage->dwImageRunCount == 0)
+    {
+        /* Remove the service image */
+        DPRINT("Removing service image for %S\n", lpService->lpServiceName);
+        ScmRemoveServiceImage(lpService->lpImage);
+        lpService->lpImage = NULL;
+    }
+
+    /* Report the results of the status change here */
+    if (lpService->Status.dwWin32ExitCode != ERROR_SUCCESS)
+    {
+        /* Log a failed service stop */
+        StringCchPrintfW(szLogBuffer, ARRAYSIZE(szLogBuffer),
+                         L"%lu", lpService->Status.dwWin32ExitCode);
+        lpLogStrings[0] = lpService->lpDisplayName;
+        lpLogStrings[1] = szLogBuffer;
+
+        ScmLogEvent(EVENT_SERVICE_EXIT_FAILED,
+                    EVENTLOG_ERROR_TYPE,
+                    ARRAYSIZE(lpLogStrings),
+                    lpLogStrings);
+    }
+    else
+    {
+        /* Log a successful service status change */
+        LoadStringW(GetModuleHandle(NULL), IDS_SERVICE_STOPPED, szLogBuffer, ARRAYSIZE(szLogBuffer));
+        lpLogStrings[0] = lpService->lpDisplayName;
+        lpLogStrings[1] = szLogBuffer;
+
+        ScmLogEvent(EVENT_SERVICE_STATUS_SUCCESS,
+                    EVENTLOG_INFORMATION_TYPE,
+                    ARRAYSIZE(lpLogStrings),
+                    lpLogStrings);
+    }
+
+    /* Remove the reference that was added when the service started */
+    DPRINT("Service %S has %d references while stoping\n", lpService->lpServiceName, lpService->RefCount);
+    ScmDereferenceService(lpService);
+
+    /* Unlock the service database */
+    ScmUnlockDatabase();
+
+    return 0;
+}
 
 /* Function 7 */
 DWORD
@@ -1754,58 +1765,62 @@ RSetServiceStatus(
     /* Restore the previous service type */
     lpService->Status.dwServiceType = dwPreviousType;
 
-    /* Dereference a stopped service */
-    if ((lpServiceStatus->dwServiceType & SERVICE_WIN32) &&
-        (lpServiceStatus->dwCurrentState == SERVICE_STOPPED))
+    DPRINT("Service %S changed state %d to %d\n", lpService->lpServiceName, dwPreviousState, lpServiceStatus->dwCurrentState);
+
+    if (lpServiceStatus->dwCurrentState != SERVICE_STOPPED &&
+        dwPreviousState == SERVICE_STOPPED)
     {
-        /* Decrement the image run counter */
-        lpService->lpImage->dwImageRunCount--;
+        /* Keep a reference on all non stopped services */
+        ScmReferenceService(lpService);
+        DPRINT("Service %S has %d references after starting\n", lpService->lpServiceName, lpService->RefCount);
+    }
 
-        /* If we just stopped the last running service... */
-        if (lpService->lpImage->dwImageRunCount == 0)
+    /* Check if the service just stopped */
+    if (lpServiceStatus->dwCurrentState == SERVICE_STOPPED &&
+        dwPreviousState != SERVICE_STOPPED)
+    {
+        HANDLE hStopThread;
+        DWORD dwStopThreadId;
+        DPRINT("Service %S, currentstate: %d, prev: %d\n", lpService->lpServiceName, lpServiceStatus->dwCurrentState, dwPreviousState);
+
+        /*
+         * The service just changed its status to stopped.
+         * Create a thread that will complete the stop sequence.
+         * This thread will remove the reference that was added when the service started.
+         * This will ensure that the service will remain valid as long as this reference is still held.
+         */
+        hStopThread = CreateThread(NULL,
+                                   0,
+                                   ScmStopThread,
+                                   (LPVOID)lpService,
+                                   0,
+                                   &dwStopThreadId);
+        if (hStopThread == NULL)
         {
-            /* Stop the dispatcher thread */
-            ScmControlService(lpService->lpImage->hControlPipe,
-                              L"",
-                              (SERVICE_STATUS_HANDLE)lpService,
-                              SERVICE_CONTROL_STOP);
-
-            /* Remove the service image */
-            ScmRemoveServiceImage(lpService->lpImage);
-            lpService->lpImage = NULL;
+            DPRINT1("Failed to create thread to complete service stop\n");
+            /* We can't leave without releasing the reference.
+             * We also can't remove it without holding the lock. */
+            ScmDereferenceService(lpService);
+            DPRINT1("Service %S has %d references after stop\n", lpService->lpServiceName, lpService->RefCount);
+        }
+        else
+        {
+            CloseHandle(hStopThread);
         }
     }
 
     /* Unlock the service database */
     ScmUnlockDatabase();
 
-    if ((lpServiceStatus->dwCurrentState == SERVICE_STOPPED) &&
-        (dwPreviousState != SERVICE_STOPPED) &&
-        (lpServiceStatus->dwWin32ExitCode != ERROR_SUCCESS))
-    {
-        /* Log a failed service stop */
-        StringCchPrintfW(szLogBuffer, ARRAYSIZE(szLogBuffer),
-                         L"%lu", lpServiceStatus->dwWin32ExitCode);
-        lpLogStrings[0] = lpService->lpDisplayName;
-        lpLogStrings[1] = szLogBuffer;
+    /* Don't log any events here regarding a service stop as it can become invalid at any time */
 
-        ScmLogEvent(EVENT_SERVICE_EXIT_FAILED,
-                    EVENTLOG_ERROR_TYPE,
-                    2,
-                    lpLogStrings);
-    }
-    else if (lpServiceStatus->dwCurrentState != dwPreviousState &&
-             (lpServiceStatus->dwCurrentState == SERVICE_STOPPED ||
-              lpServiceStatus->dwCurrentState == SERVICE_RUNNING ||
-              lpServiceStatus->dwCurrentState == SERVICE_PAUSED))
+    if (lpServiceStatus->dwCurrentState != dwPreviousState &&
+        (lpServiceStatus->dwCurrentState == SERVICE_RUNNING ||
+         lpServiceStatus->dwCurrentState == SERVICE_PAUSED))
     {
         /* Log a successful service status change */
         switch(lpServiceStatus->dwCurrentState)
         {
-            case SERVICE_STOPPED:
-                uID = IDS_SERVICE_STOPPED;
-                break;
-
             case SERVICE_RUNNING:
                 uID = IDS_SERVICE_RUNNING;
                 break;
@@ -2217,7 +2232,7 @@ RChangeServiceConfigW(
                     DPRINT1("ScmDecryptPassword failed (Error %lu)\n", dwError);
                     goto done;
                 }
-                DPRINT1("Clear text password: %S\n", lpClearTextPassword);
+                DPRINT("Clear text password: %S\n", lpClearTextPassword);
 
                 /* Write the password */
                 dwError = ScmSetServicePassword(lpService->szServiceName,
@@ -2375,7 +2390,7 @@ RCreateServiceW(
         (lpServiceStartName))
     {
         /* We allow LocalSystem to run interactive. */
-        if (wcsicmp(lpServiceStartName, L"LocalSystem"))
+        if (_wcsicmp(lpServiceStartName, L"LocalSystem"))
         {
             return ERROR_INVALID_PARAMETER;
         }
@@ -2641,12 +2656,12 @@ RCreateServiceW(
     if (dwError != ERROR_SUCCESS)
         goto done;
 
-    lpService->dwRefCount = 1;
+    ScmReferenceService(lpService);
 
     /* Get the service tag (if Win32) */
     ScmGenerateServiceTag(lpService);
 
-    DPRINT("CreateService - lpService->dwRefCount %u\n", lpService->dwRefCount);
+    DPRINT("CreateService - lpService->RefCount %u\n", lpService->RefCount);
 
 done:
     /* Unlock the service database */
@@ -2981,8 +2996,8 @@ ROpenServiceW(
         goto Done;
     }
 
-    lpService->dwRefCount++;
-    DPRINT("OpenService - lpService->dwRefCount %u\n",lpService->dwRefCount);
+    ScmReferenceService(lpService);
+    DPRINT("OpenService %S - lpService->RefCount %u\n", lpService->lpServiceName, lpService->RefCount);
 
     *lpServiceHandle = (SC_RPC_HANDLE)hHandle;
     DPRINT("*hService = %p\n", *lpServiceHandle);
@@ -3305,7 +3320,7 @@ RStartServiceW(
         return ERROR_SERVICE_MARKED_FOR_DELETE;
 
     /* Start the service */
-    dwError = ScmStartService(lpService, argc, (LPWSTR*)argv);
+    dwError = ScmStartService(lpService, argc, (PCWSTR*)argv);
 
     return dwError;
 }
@@ -4363,7 +4378,7 @@ RStartServiceA(
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
-    LPWSTR *lpVector = NULL;
+    PWSTR* pVector = NULL;
     DWORD i;
     DWORD dwLength;
 
@@ -4402,25 +4417,25 @@ RStartServiceA(
     /* Build a Unicode argument vector */
     if (argc > 0)
     {
-        lpVector = HeapAlloc(GetProcessHeap(),
-                             HEAP_ZERO_MEMORY,
-                             argc * sizeof(LPWSTR));
-        if (lpVector == NULL)
+        pVector = HeapAlloc(GetProcessHeap(),
+                            HEAP_ZERO_MEMORY,
+                            argc * sizeof(PWSTR));
+        if (!pVector)
             return ERROR_NOT_ENOUGH_MEMORY;
 
         for (i = 0; i < argc; i++)
         {
             dwLength = MultiByteToWideChar(CP_ACP,
                                            0,
-                                           ((LPSTR*)argv)[i],
+                                           argv[i].StringPtr,
                                            -1,
                                            NULL,
                                            0);
 
-            lpVector[i] = HeapAlloc(GetProcessHeap(),
-                                    HEAP_ZERO_MEMORY,
-                                    dwLength * sizeof(WCHAR));
-            if (lpVector[i] == NULL)
+            pVector[i] = HeapAlloc(GetProcessHeap(),
+                                   HEAP_ZERO_MEMORY,
+                                   dwLength * sizeof(WCHAR));
+            if (!pVector[i])
             {
                 dwError = ERROR_NOT_ENOUGH_MEMORY;
                 goto done;
@@ -4428,26 +4443,26 @@ RStartServiceA(
 
             MultiByteToWideChar(CP_ACP,
                                 0,
-                                ((LPSTR*)argv)[i],
+                                argv[i].StringPtr,
                                 -1,
-                                lpVector[i],
+                                pVector[i],
                                 dwLength);
         }
     }
 
     /* Start the service */
-    dwError = ScmStartService(lpService, argc, lpVector);
+    dwError = ScmStartService(lpService, argc, (PCWSTR*)pVector);
 
 done:
     /* Free the Unicode argument vector */
-    if (lpVector != NULL)
+    if (pVector)
     {
         for (i = 0; i < argc; i++)
         {
-            if (lpVector[i] != NULL)
-                HeapFree(GetProcessHeap(), 0, lpVector[i]);
+            if (pVector[i])
+                HeapFree(GetProcessHeap(), 0, pVector[i]);
         }
-        HeapFree(GetProcessHeap(), 0, lpVector);
+        HeapFree(GetProcessHeap(), 0, pVector);
     }
 
     return dwError;
@@ -6725,7 +6740,7 @@ RI_ScValidatePnPService(
     hManager = ScmGetServiceManagerFromHandle(hSCManager);
     if (hManager == NULL)
     {
-        DPRINT1("Invalid handle!\n");
+        DPRINT1("Invalid handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -6735,7 +6750,7 @@ RI_ScValidatePnPService(
     if (!RtlAreAllAccessesGranted(hManager->Handle.DesiredAccess,
                                   SC_MANAGER_CONNECT))
     {
-        DPRINT1("No SC_MANAGER_CONNECT access!\n");
+        DPRINT1("No SC_MANAGER_CONNECT access\n");
         return ERROR_ACCESS_DENIED;
     }
 

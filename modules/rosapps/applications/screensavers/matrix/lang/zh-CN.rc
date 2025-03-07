@@ -1,10 +1,8 @@
 /* Simplified Chinese translation by Henry Tang Ih 2015 (henrytang2@hotmail.com) */
 
-#include "resource.h"
-
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
-IDD_CONFIG DIALOGEX DISCARDABLE  0, 0, 340, 183
+IDD_CONFIG DIALOGEX 0, 0, 340, 183
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Matrix 屏幕保护程序配置"
 FONT 9, "宋体"
@@ -49,7 +47,7 @@ BEGIN
                     158,75,18
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     IDS_DESCRIPTION         "Matrix 屏幕保护"
 END

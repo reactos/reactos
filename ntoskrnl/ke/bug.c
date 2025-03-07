@@ -615,7 +615,19 @@ KiDisplayBlueScreen(IN ULONG MessageId,
                     IN PCHAR HardErrMessage OPTIONAL,
                     IN PCHAR Message)
 {
+    ULONG BugCheckCode = (ULONG)KiBugCheckData[0];
+    BOOLEAN Enable = TRUE;
     CHAR AnsiName[107];
+
+    /* Enable headless support for bugcheck */
+    HeadlessDispatch(HeadlessCmdStartBugCheck,
+                     NULL, 0, NULL, NULL);
+    HeadlessDispatch(HeadlessCmdEnableTerminal,
+                     &Enable, sizeof(Enable),
+                     NULL, NULL);
+    HeadlessDispatch(HeadlessCmdSendBlueScreenData,
+                     &BugCheckCode, sizeof(BugCheckCode),
+                     NULL, NULL);
 
     /* Check if bootvid is installed */
     if (InbvIsBootDriverInstalled())
@@ -664,7 +676,7 @@ KiDisplayBlueScreen(IN ULONG MessageId,
     if (MessageId == BUGCODE_PSS_MESSAGE)
     {
         /* It is, so get the bug code string as well */
-        KeGetBugMessageText((ULONG)KiBugCheckData[0], NULL);
+        KeGetBugMessageText(BugCheckCode, NULL);
         InbvDisplayString("\r\n\r\n");
     }
 
@@ -683,7 +695,7 @@ KiDisplayBlueScreen(IN ULONG MessageId,
     RtlStringCbPrintfA(AnsiName,
                        sizeof(AnsiName),
                        "\r\n\r\n*** STOP: 0x%08lX (0x%p,0x%p,0x%p,0x%p)\r\n\r\n",
-                       (ULONG)KiBugCheckData[0],
+                       BugCheckCode,
                        (PVOID)KiBugCheckData[1],
                        (PVOID)KiBugCheckData[2],
                        (PVOID)KiBugCheckData[3],
@@ -1080,17 +1092,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         KeBugCheckOwner = Prcb->Number;
 
         /* Freeze the other CPUs */
-        for (ULONG i = 0; i < KeNumberProcessors; i++)
-        {
-            if (i != Prcb->Number)
-            {
-                /* Send the IPI */
-                KiIpiSend(AFFINITY_MASK(i), IPI_FREEZE);
-            }
-        }
-
-        /* Give the other CPUs one second to catch up */
-        KeStallExecutionProcessor(1000000);
+        KxFreezeExecution();
 #endif
 
         /* Display the BSOD */
@@ -1122,6 +1124,8 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         /* FIXME: Support Triage Dump */
 
         /* FIXME: Write the crash dump */
+        // TODO: The crash-dump helper must set the Reboot variable.
+        Reboot = !!IopAutoReboot;
     }
     else
     {

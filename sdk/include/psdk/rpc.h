@@ -5,10 +5,6 @@
 #endif /* _INC_WINDOWS */
 #endif
 
-#if defined(__USE_PSEH2__) && !defined(RC_INVOKED)
-#include  <pseh/pseh2.h>
-#endif
-
 #ifndef __RPC_H__
 #define __RPC_H__
 
@@ -122,25 +118,14 @@ typedef int RPC_STATUS;
     #include <excpt.h>
     #include <winerror.h>
 
-    #ifndef __USE_PSEH2__
-        #define RpcTryExcept __try {
-        #define RpcExcept(expr) } __except (expr) {
-        #define RpcEndExcept }
-        #define RpcTryFinally __try {
-        #define RpcFinally } __finally {
-        #define RpcEndFinally }
-        #define RpcExceptionCode() GetExceptionCode()
-        #define RpcAbnormalTermination() AbnormalTermination()
-    #else
-        #define RpcTryExcept _SEH2_TRY
-        #define RpcExcept(expr) _SEH2_EXCEPT((expr))
-        #define RpcEndExcept _SEH2_END;
-        #define RpcTryFinally _SEH2_TRY
-        #define RpcFinally _SEH2_FINALLY
-        #define RpcEndFinally _SEH2_END;
-        #define RpcExceptionCode() _SEH2_GetExceptionCode()
-        #define RpcAbnormalTermination() (_SEH2_GetExceptionCode() != 0)
-    #endif
+    #define RpcTryExcept _SEH2_TRY
+    #define RpcExcept(expr) _SEH2_EXCEPT((expr))
+    #define RpcEndExcept _SEH2_END;
+    #define RpcTryFinally _SEH2_TRY
+    #define RpcFinally _SEH2_FINALLY
+    #define RpcEndFinally _SEH2_END;
+    #define RpcExceptionCode() _SEH2_GetExceptionCode()
+    #define RpcAbnormalTermination() (_SEH2_GetExceptionCode() != 0)
 #endif
 
 #if defined(__RPC_WIN64__)

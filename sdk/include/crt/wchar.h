@@ -6,10 +6,12 @@
 #ifndef _INC_WCHAR
 #define _INC_WCHAR
 
-#include <crtdefs.h>
+#include <corecrt.h>
 
 #define __need___va_list
 #include <stdarg.h>
+
+#define __CORRECT_ISO_CPP_WCHAR_H_PROTO // For stl
 
 #pragma pack(push,_CRT_PACKING)
 
@@ -23,10 +25,10 @@ extern "C" {
 #endif
 
 #ifndef WCHAR_MIN
-#define WCHAR_MIN 0
+#define WCHAR_MIN 0x0000
 #endif
 #ifndef WCHAR_MAX
-#define WCHAR_MAX ((wchar_t)-1) /* UINT16_MAX */
+#define WCHAR_MAX 0xffff /* UINT16_MAX */
 #endif
 
 #ifndef WEOF
@@ -1926,6 +1928,16 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _In_z_ const wchar_t *_Str,
     wchar_t _Ch);
 
+#ifdef __cplusplus
+    extern "C++"
+    _Check_return_
+    _When_(return != NULL, _Ret_range_(_String, _String + _String_length_(_String) - 1))
+    inline wchar_t* __cdecl wcschr(_In_z_ wchar_t *_String, wchar_t _C)
+    {
+        return const_cast<wchar_t*>(wcschr(static_cast<const wchar_t*>(_String), _C));
+    }
+#endif // __cplusplus
+
   _Check_return_
   int
   __cdecl
@@ -1992,6 +2004,15 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _In_z_ const wchar_t *_Str,
     _In_z_ const wchar_t *_Control);
 
+#ifdef __cplusplus
+    extern "C++"
+    _Check_return_
+    inline wchar_t* __cdecl wcspbrk(_In_z_ wchar_t *_Str, _In_z_ const wchar_t *_Control)
+    {
+        return const_cast<wchar_t*>(wcspbrk(static_cast<const wchar_t*>(_Str), _Control));
+    }
+#endif // __cplusplus
+
   _Check_return_
   _CONST_RETURN
   wchar_t*
@@ -1999,6 +2020,15 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
   wcsrchr(
     _In_z_ const wchar_t *_Str,
     _In_ wchar_t _Ch);
+
+#ifdef __cplusplus
+    extern "C++"
+    _Check_return_
+    inline wchar_t* __cdecl wcsrchr(_In_z_ wchar_t *_Str, _In_ wchar_t _Ch)
+    {
+        return const_cast<wchar_t*>(wcsrchr(static_cast<const wchar_t*>(_Str), _Ch));
+    }
+#endif // __cplusplus
 
   _Check_return_
   size_t
@@ -2013,6 +2043,16 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
   wcsstr(
     _In_z_ const wchar_t *_Str,
     _In_z_ const wchar_t *_SubStr);
+
+#ifdef __cplusplus
+    extern "C++"
+    _Check_return_ _Ret_maybenull_
+    _When_(return != NULL, _Ret_range_(_String, _String + _String_length_(_String) - 1))
+    inline wchar_t* __cdecl wcsstr(_In_z_ wchar_t *_String, _In_z_ const wchar_t *_SubStr)
+    {
+        return const_cast<wchar_t*>(wcsstr(static_cast<const wchar_t*>(_String), _SubStr));
+    }
+#endif // __cplusplus
 
   _Check_return_
   wchar_t*
@@ -2466,6 +2506,18 @@ __CRT_INLINE wchar_t *__cdecl _wctime(const time_t *_Time) { return _wctime64(_T
     _In_reads_(_N) const wchar_t *_S,
     _In_ wchar_t _C,
     _In_ size_t _N);
+
+#ifdef __cplusplus
+    extern "C++"
+    inline wchar_t* __cdecl wmemchr(
+        _In_reads_(_N) wchar_t *_S,
+        _In_ wchar_t _C,
+        _In_ size_t _N)
+    {
+        const wchar_t *_SC = _S;
+        return const_cast<wchar_t*>(wmemchr(_SC, _C, _N));
+    }
+#endif // __cplusplus
 
   int
   __cdecl

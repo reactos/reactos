@@ -628,7 +628,7 @@ SndMixerGetLineByName(PSND_MIXER Mixer,
         {
             if (Line->DisplayControls != 0)
             {
-                if (wcsicmp(Line->Info.szName, LineName) == 0)
+                if (_wcsicmp(Line->Info.szName, LineName) == 0)
                 {
                     return &Line->Info;
                 }
@@ -636,7 +636,7 @@ SndMixerGetLineByName(PSND_MIXER Mixer,
 
             for (Connection = Line->Connections; Connection != NULL; Connection = Connection->Next)
             {
-                if (wcsicmp(Connection->Info.szName, LineName) == 0)
+                if (_wcsicmp(Connection->Info.szName, LineName) == 0)
                 {
                     return &Connection->Info;
                 }

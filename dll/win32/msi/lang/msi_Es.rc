@@ -31,6 +31,14 @@ STRINGTABLE
     13 "unidad de red para característica ausente"
     14 "característica de:"
     15 "elija qué carpeta contiene %s"
+#ifdef __REACTOS__
+    34 "Paquete de instalación de ReactOS"
+    35 "ReactOS Installer Patch"
+    36 "Instalar" //FIXME: add accel
+    37 "Reparar" //FIXME: add accel
+    38 "Desinstalar" //FIXME: add accel
+    39 "&Apply"
+#endif
     100 "New Folder"
 }
 

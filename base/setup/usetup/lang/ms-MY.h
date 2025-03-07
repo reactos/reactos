@@ -1505,14 +1505,7 @@ static MUI_ENTRY msMYBootLoaderRemovableDiskPageEntries[] =
     {
         6,
         8,
-        "Persediaan tidak dapat memasang bootloader pada komputer",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "cakera keras anda.",
+        "Persediaan sedang memasang bootloader.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

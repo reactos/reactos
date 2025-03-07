@@ -24,7 +24,7 @@
 /* UTF-8 */
 #pragma code_page(65001)
 
-STRINGTABLE MOVEABLE
+STRINGTABLE
 BEGIN
     1,   "Aleksandar Andrejevic"
     2,   "Aleksey Bragin"
@@ -43,7 +43,7 @@ BEGIN
     15,  "Brandon Turner"
 END
 
-STRINGTABLE MOVEABLE
+STRINGTABLE
 BEGIN
     16,  "Brian Palmer"
     17,  "Cameron M. Gutman"
@@ -64,7 +64,7 @@ BEGIN
     32,  "Edijs Kolesnikovics"
 END
 
-STRINGTABLE MOVEABLE
+STRINGTABLE
 BEGIN
     33,  "Emanuele Aliberti"
     34,  "Eric Kohl"
@@ -83,7 +83,7 @@ BEGIN
     47,  "Guido de Jong"
 END
 
-STRINGTABLE MOVEABLE
+STRINGTABLE
 BEGIN
     48,  "Gunnar Andre' Dalsnes"
     49,  "Hans Kremer"
@@ -102,7 +102,7 @@ BEGIN
     62,  "Jeffrey Morlan"
 END
 
-STRINGTABLE MOVEABLE
+STRINGTABLE
 BEGIN
     63,  "Jens Collin"
     64,  "Jérôme Gardou"
@@ -123,7 +123,7 @@ BEGIN
     79,  "Marc Piulachs"
 END
 
-STRINGTABLE MOVEABLE
+STRINGTABLE
 BEGIN
     80,  "Mark Tempel"
     81,  "Mark Weaver"
@@ -142,7 +142,7 @@ BEGIN
     94,  "Neeraj Yadav"
 END
 
-STRINGTABLE MOVEABLE
+STRINGTABLE
 BEGIN
     95,  "Olaf Siejka"
     96,  "Oleg Dubinskij"
@@ -162,7 +162,7 @@ BEGIN
     110, "Samuel Serapión"
 END
 
-STRINGTABLE MOVEABLE
+STRINGTABLE
 BEGIN
     111, "Saveliy Tretiakov"
     112, "Sebastian Gasiorek"

@@ -17,6 +17,7 @@
 /* FUNCTIONS ****************************************************************/
 
 PGENERIC_LIST
+NTAPI
 CreateGenericList(VOID)
 {
     PGENERIC_LIST List;
@@ -33,6 +34,7 @@ CreateGenericList(VOID)
 }
 
 VOID
+NTAPI
 DestroyGenericList(
     IN OUT PGENERIC_LIST List,
     IN BOOLEAN FreeData)
@@ -59,6 +61,7 @@ DestroyGenericList(
 }
 
 BOOLEAN
+NTAPI
 AppendGenericListEntry(
     IN OUT PGENERIC_LIST List,
     IN PVOID Data,
@@ -84,6 +87,7 @@ AppendGenericListEntry(
 }
 
 VOID
+NTAPI
 SetCurrentListEntry(
     IN PGENERIC_LIST List,
     IN PGENERIC_LIST_ENTRY Entry)
@@ -94,6 +98,7 @@ SetCurrentListEntry(
 }
 
 PGENERIC_LIST_ENTRY
+NTAPI
 GetCurrentListEntry(
     IN PGENERIC_LIST List)
 {
@@ -101,6 +106,7 @@ GetCurrentListEntry(
 }
 
 PGENERIC_LIST_ENTRY
+NTAPI
 GetFirstListEntry(
     IN PGENERIC_LIST List)
 {
@@ -111,6 +117,7 @@ GetFirstListEntry(
 }
 
 PGENERIC_LIST_ENTRY
+NTAPI
 GetNextListEntry(
     IN PGENERIC_LIST_ENTRY Entry)
 {
@@ -123,6 +130,7 @@ GetNextListEntry(
 }
 
 PVOID
+NTAPI
 GetListEntryData(
     IN PGENERIC_LIST_ENTRY Entry)
 {
@@ -137,6 +145,7 @@ GetListEntryUiData(
 }
 
 ULONG
+NTAPI
 GetNumberOfListEntries(
     IN PGENERIC_LIST List)
 {

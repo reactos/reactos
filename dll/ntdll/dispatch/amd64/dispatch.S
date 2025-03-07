@@ -33,6 +33,32 @@ PUBLIC LdrInitializeThunk
 
 PUBLIC KiUserApcDispatcher
 .PROC KiUserApcDispatcher
+
+    /* The stack is set up with a UAPC_FRAME, which ends with a MACHINE_FRAME */
+    .PUSHFRAME
+    .ALLOCSTACK CONTEXT_FRAME_LENGTH
+
+    /* The stack points to a CONTEXT structure.
+       Create unwind ops for all nonvolatile registers */
+    .SAVEREG rbx, CxRbx
+    .SAVEREG rbp, CxRbp
+    .SAVEREG rsi, CxRsi
+    .SAVEREG rdi, CxRdi
+    .SAVEREG r12, CxR12
+    .SAVEREG r13, CxR13
+    .SAVEREG r14, CxR14
+    .SAVEREG r15, CxR15
+    .SAVEXMM128 xmm6, CxXmm6
+    .SAVEXMM128 xmm7, CxXmm7
+    .SAVEXMM128 xmm8, CxXmm8
+    .SAVEXMM128 xmm9, CxXmm9
+    .SAVEXMM128 xmm10, CxXmm10
+    .SAVEXMM128 xmm11, CxXmm11
+    .SAVEXMM128 xmm12, CxXmm12
+    .SAVEXMM128 xmm13, CxXmm13
+    .SAVEXMM128 xmm14, CxXmm14
+    .SAVEXMM128 xmm15, CxXmm15
+
     .endprolog
     /* We enter with a 16 byte aligned stack */
 

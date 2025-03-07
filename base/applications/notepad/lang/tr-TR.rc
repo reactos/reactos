@@ -1,5 +1,12 @@
-// COPYRIGHT: 2012 Arda Tanrıkulu <ardatanrikulu@gmail.com>
-//            2013-2019 Erdem Ersoy
+/*
+ * PROJECT:     ReactOS Notepad
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATORS: Copyright 2012 Arda Tanrıkulu <ardatanrikulu@gmail.com>
+ *              Copyright 2013-2019 Erdem Ersoy <erdemersoy@erdemersoy.net>
+ *              Copyright 2021 Süleyman Poyraz <zaryob.dev@gmail.com>
+ *              Copyright 2024 Mahir Gül <mahirgul@gmail.com>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -173,12 +180,12 @@ BEGIN
     STRING_LINE_COLUMN "%d. Satır, %d. Sütun"
     STRING_PRINTERROR """%s"" dosyası yazdırılamıyor.\n\nYazıcının açık olduğundan ve doğru yapılandırıldığından emin olunuz."
     STRING_DEFAULTFONT "Lucida Console"
-    STRING_LINE_NUMBER_OUT_OF_RANGE "The specified line number is out of range."
-    STRING_NOWPRINTING "Now printing page..."
-    STRING_PRINTCANCELING "The print job is being canceled..."
-    STRING_PRINTCOMPLETE "Printing is successfully done."
-    STRING_PRINTCANCELED "Printing has been canceled."
-    STRING_PRINTFAILED "Printing failed."
+    STRING_LINE_NUMBER_OUT_OF_RANGE "Belirtilen satır numarası aralık dışındadır."
+    STRING_NOWPRINTING "Yazdırılıyor..."
+    STRING_PRINTCANCELING "Yazdırma işi iptal ediliyor..."
+    STRING_PRINTCOMPLETE "Yazdırma işlemi başarıyla tamamlandı."
+    STRING_PRINTCANCELED "Yazdırma işlemi iptal edildi."
+    STRING_PRINTFAILED "Yazdırma başarısız oldu."
 
     STRING_TEXT_DOCUMENT "Metin Belgesi"
     STRING_NOTEPAD_AUTHORS "Telif Hakları: 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"

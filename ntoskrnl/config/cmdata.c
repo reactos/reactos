@@ -54,13 +54,15 @@ UNICODE_STRING CmSymbolicLinkValueName =
 
 UNICODE_STRING CmpLoadOptions;
 
+/* TRUE if all hives must be loaded in shared mode */
+ULONG CmpVolatileBoot;
 /* TRUE if the system hives must be loaded in shared mode */
 BOOLEAN CmpShareSystemHives;
 /* TRUE when the registry is in PE mode */
 BOOLEAN CmpMiniNTBoot;
 
 ULONG CmpBootType;
-BOOLEAN CmSelfHeal = TRUE;
+ULONG CmSelfHeal = TRUE;
 BOOLEAN CmpSelfHeal = TRUE;
 
 USHORT CmpUnknownBusCount;
@@ -624,8 +626,6 @@ DATA_SEG("INITDATA") CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
-
     {
         L"ProductOptions",
         L"ProductSuite",
@@ -667,6 +667,41 @@ DATA_SEG("INITDATA") CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         &DummyData,
         &DummyData,
         &DummyData
+    },
+    {
+        L"Session Manager\\Configuration Manager",
+        L"SelfHealingEnabled",
+        &CmSelfHeal,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Configuration Manager",
+        L"RegistryLazyFlushInterval",
+        &CmpLazyFlushIntervalInSeconds,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Configuration Manager",
+        L"RegistryLazyFlushHiveCount",
+        &CmpLazyFlushHiveCount,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Configuration Manager",
+        L"DelayCloseSize",
+        &CmpDelayedCloseSize,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Configuration Manager",
+        L"VolatileBoot",
+        &CmpVolatileBoot,
+        NULL,
+        NULL
     },
     {
         L"Session Manager",
@@ -923,6 +958,13 @@ DATA_SEG("INITDATA") CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         L"WMI\\Trace",
         L"TraceAlignment",
         &DummyData,
+        NULL,
+        NULL
+    },
+    {
+        L"CrashControl",
+        L"AutoReboot",
+        &IopAutoReboot,
         NULL,
         NULL
     },

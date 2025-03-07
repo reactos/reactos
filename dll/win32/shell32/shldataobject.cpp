@@ -77,8 +77,9 @@ HRESULT WINAPI SHGetAttributesFromDataObject(IDataObject* pDataObject, DWORD dwA
                     data.dwAttributes = rgfInOut & dwQueryAttributes;
                     data.cItems = apidl.GetSize();
 
-                    hr = DataObject_SetData(pDataObject, g_DataObjectAttributes, &data, sizeof(data));
-                    FAILED_UNEXPECTEDLY(hr);
+                    HRESULT hr2;
+                    hr2 = DataObject_SetData(pDataObject, g_DataObjectAttributes, &data, sizeof(data));
+                    FAILED_UNEXPECTEDLY(hr2); // Report cache failure but don't fail the function
                 }
             }
         }
@@ -106,6 +107,27 @@ PIDLIST_ABSOLUTE SHELL_CIDA_ILCloneFull(_In_ const CIDA *pCIDA, _In_ UINT Index)
 
 PIDLIST_ABSOLUTE SHELL_DataObject_ILCloneFullItem(_In_ IDataObject *pDO, _In_ UINT Index)
 {
+    if (!pDO)
+        return NULL;
     CDataObjectHIDA cida(pDO);
     return SUCCEEDED(cida.hr()) ? SHELL_CIDA_ILCloneFull(cida, Index) : NULL;
+}
+
+HRESULT SHELL_CloneDataObject(_In_ IDataObject *pDO, _Out_ IDataObject **ppDO)
+{
+    *ppDO = NULL;
+    CDataObjectHIDA cida(pDO);
+    HRESULT hr = cida.hr();
+    if (SUCCEEDED(hr))
+    {
+        PCUITEMID_CHILD items = HIDA_GetPIDLItem(cida, 0);
+        hr = SHCreateFileDataObject(HIDA_GetPIDLFolder(cida), cida->cidl, &items, NULL, ppDO);
+        if (SUCCEEDED(hr))
+        {
+            POINT pt;
+            if (SUCCEEDED(DataObject_GetOffset(pDO, &pt)))
+                DataObject_SetOffset(*ppDO, &pt);
+        }
+    }
+    return hr;
 }

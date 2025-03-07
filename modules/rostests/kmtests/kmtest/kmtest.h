@@ -126,6 +126,6 @@ KmtFltDeleteService(
 DWORD KmtFltCloseService(
     _Inout_ SC_HANDLE *ServiceHandle);
 
-#endif /* KMT_FILTER_DRIVER */
+#endif /* KMT_FLT_USER_MODE */
 
 #endif /* !defined _KMTESTS_H_ */

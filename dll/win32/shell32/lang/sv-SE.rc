@@ -965,7 +965,7 @@ BEGIN
     IDS_SCR_FILE "Skärmsläckare"
     IDS_SYS_FILE "Systemfil"
     IDS_VXD_FILE "Virtuell enhetsdrivruting"
-    IDS_ANY_FILE "%s-file"
+    IDS_ANY_FILE "%s-fil"
 
     IDS_OPEN_VERB "Öppna"
     IDS_EXPLORE_VERB "Utforska"
@@ -990,10 +990,6 @@ BEGIN
     IDS_FILE_TYPES "Filtyper"
     IDS_COLUMN_EXTENSION "Filändelse"
 
-    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
-       used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s-fil"
-
     IDS_BYTES_FORMAT "byte"
     IDS_UNKNOWN_APP "Okänt program"
     IDS_EXE_DESCRIPTION "Beskrivning:"
@@ -1001,6 +997,8 @@ BEGIN
     IDS_MENU_EMPTY "(tom)"
     IDS_OBJECTS "%d objekt"
     IDS_OBJECTS_SELECTED "%d markerade objekt"
+
+    IDS_SEARCH_BROWSEITEM "Bläddra..."
 
     IDS_TITLE_MYCOMP "Den här datorn"
     IDS_TITLE_MYNET "Mina nätverksplatser"

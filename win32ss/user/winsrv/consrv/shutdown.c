@@ -66,7 +66,7 @@ NonConsoleProcessShutdown(IN PCSR_PROCESS Process,
     return CsrShutdownCsrProcess;
 }
 
-// NOTE: See http://blogs.msdn.com/b/ntdebugging/archive/2007/06/09/how-windows-shuts-down.aspx
+// NOTE: See https://web.archive.org/web/20150629001832/http://blogs.msdn.com/b/ntdebugging/archive/2007/06/09/how-windows-shuts-down.aspx
 ULONG
 NTAPI
 ConsoleClientShutdown(IN PCSR_PROCESS CsrProcess,

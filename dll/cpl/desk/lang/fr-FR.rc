@@ -46,8 +46,7 @@ BEGIN
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
     LTEXT "minutes", IDC_MINTEXT, 65, 125, 26, 9
-    CONTROL "À la reprise, demander un mot de &passe", IDC_SCREENS_USEPASSCHK, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 93, 120, 140, 19
+    AUTOCHECKBOX "À la reprise, demander un mot de &passe", IDC_SCREENS_USEPASSCHK, 93, 120, 140, 19
     GROUPBOX "Gestion de l'alimentation du moniteur", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "Pour modifier les paramètres de l'alimentation du moniteur, cliquez sur Gestion de l'alimentation.", IDC_STATIC, 16, 161, 146, 27
     PUSHBUTTON "&Gestion de l'alimentation...", IDC_SCREENS_POWER_BUTTON, 133, 172, 100, 15
@@ -82,7 +81,7 @@ BEGIN
     LTEXT "Si vous sélectionnez un paramètre de boutons et de fenêtres autre que ReactOS classique, celui-ci va remplacer les paramètres suivants exception faite de certains programmes plus anciens.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
     LTEXT "Élém&ent :", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
+             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "&Taille :", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP |
@@ -110,25 +109,17 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Effets"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Utiliser l'effet de &transition suivant pour les menus et les info-bulles :",
-            IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
+    AUTOCHECKBOX "Utiliser l'effet de &transition suivant pour les menus et les info-bulles :", IDC_EFFAPPEARANCE_ANIMATION, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Utili&ser la méthode suivante pour lisser les bords des polices d'écran :", IDC_EFFAPPEARANCE_SMOOTHING,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
+             CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "Utili&ser la méthode suivante pour lisser les bords des polices d'écran :", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    CONTROL "&Utiliser de grandes icônes", IDC_EFFAPPEARANCE_LARGEICONS, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
-    CONTROL "&Afficher une ombre sous les menus", IDC_EFFAPPEARANCE_SETDROPSHADOW,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
-    CONTROL "A&fficher le contenu des fenêtres pendant leur déplacement", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "Mas&quer les lettres soulignées de navigation au clavier jusqu'à l'appui sur la touche Alt",
-            IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 290, 19
-    //FIXME: This is the too long string, and so I used the shortened "&Cacher les lettres soulignées jusqu'à ce que j'appuie sur la touche Alt" for the backport to allow keeping the dialogs en-US original size
-    CONTROL "Utiliser les menus &plats", IDC_EFFAPPEARANCE_FLATMENUS,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
+             CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "&Utiliser de grandes icônes", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX "&Afficher une ombre sous les menus", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
+    AUTOCHECKBOX "A&fficher le contenu des fenêtres pendant leur déplacement", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
+    AUTOCHECKBOX "Mas&quer les lettres soulignées de navigation au clavier jusqu'à l'appui sur la touche Alt", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 290, 19//FIXME: This is the too long string, and so I used the shortened "&Cacher les lettres soulignées jusqu'à ce que j'appuie sur la touche Alt" for the backport to allow keeping the dialogs en-US original size
+    AUTOCHECKBOX "Utiliser les menus &plats", IDC_EFFAPPEARANCE_FLATMENUS, 10, 140, 267, 19
     PUSHBUTTON "Annuler", IDCANCEL, 226, 165, 50, 14//FIXME: someone resized the dialog from width 285 to 300 during 0.4.15-dev'ing, that is why those buttons are misplaced now. It would be better to shrink the dlg again, and shorten some texts instead.
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14//FIXME: someone resized the dialog from width 285 to 300 during 0.4.15-dev'ing, that is why those buttons are misplaced now. It would be better to shrink the dlg again, and shorten some texts instead.
 END
@@ -161,14 +152,10 @@ CAPTION "Général"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Icônes du Bureau", IDC_STATIC, 6, 4, 212, 40
-    CONTROL "&Mes documents", IDC_ICONS_MYDOCS, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 14, 14, 100, 12
-    CONTROL "Mon &réseau", IDC_ICONS_MYNET, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 116, 14, 100, 12
-    CONTROL "P&oste de travail", IDC_ICONS_MYCOMP, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 14, 28, 100, 12
-    CONTROL "&Navigateur Internet", IDC_ICONS_INTERNET, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 116, 28, 100, 12
+    AUTOCHECKBOX "&Mes documents", IDC_ICONS_MYDOCS, 14, 14, 100, 12
+    AUTOCHECKBOX "Mon &réseau", IDC_ICONS_MYNET, 116, 14, 100, 12
+    AUTOCHECKBOX "P&oste de travail", IDC_ICONS_MYCOMP, 14, 28, 100, 12
+    AUTOCHECKBOX "&Navigateur Internet", IDC_ICONS_INTERNET, 116, 28, 100, 12
     CONTROL "", IDC_ICONS_LISTVIEW, "SysListView32",
             LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP | WS_HSCROLL,
             6, 60, 212, 56

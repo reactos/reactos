@@ -34,6 +34,19 @@ PFREELDR_MEMORY_DESCRIPTOR BiosMemoryMap;
 ULONG BiosMemoryMapEntryCount;
 SIZE_T FrLdrImageSize;
 
+ULONG
+MmGetBiosMemoryMap(_Out_ PFREELDR_MEMORY_DESCRIPTOR *MemoryMap)
+{
+    *MemoryMap = BiosMemoryMap;
+    return BiosMemoryMapEntryCount;
+}
+
+PFN_NUMBER
+MmGetTotalPagesInLookupTable(VOID)
+{
+    return TotalPagesInLookupTable;
+}
+
 #if DBG
 typedef struct
 {
@@ -95,6 +108,14 @@ DbgDumpMemoryMap(
                  MmGetSystemMemoryMapTypeString(List[i].MemoryType));
     }
     DbgPrint("\n");
+}
+#else
+/* Dummy, so we can export it */
+PCSTR
+MmGetSystemMemoryMapTypeString(
+    TYPE_OF_MEMORY Type)
+{
+    return "-";
 }
 #endif
 
@@ -701,4 +722,10 @@ BOOLEAN MmAreMemoryPagesAvailable(PVOID PageLookupTable, PFN_NUMBER TotalPageCou
     }
 
     return TRUE;
+}
+
+PFN_NUMBER
+MmGetHighestPhysicalPage(VOID)
+{
+    return MmHighestPhysicalPage;
 }

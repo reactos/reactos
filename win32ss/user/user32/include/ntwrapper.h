@@ -725,22 +725,22 @@ EXTINLINE VOID NtUserxNotifyWinEvent(HWND hWnd, PVOID ne)
 
 EXTINLINE DWORD NtUserxGetWindowContextHelpId(HWND hwnd)
 {
-    return NtUserCallHwnd(hwnd, HWND_ROUTINE_GETWNDCONTEXTHLPID);
+    return (DWORD)NtUserCallHwnd(hwnd, HWND_ROUTINE_GETWNDCONTEXTHLPID);
 }
 
 EXTINLINE BOOL NtUserxDeregisterShellHookWindow(HWND hWnd)
 {
-    return NtUserCallHwnd(hWnd, HWND_ROUTINE_DEREGISTERSHELLHOOKWINDOW);
+    return (BOOL)NtUserCallHwnd(hWnd, HWND_ROUTINE_DEREGISTERSHELLHOOKWINDOW);
 }
 
 EXTINLINE BOOL NtUserxRegisterShellHookWindow(HWND hWnd)
 {
-    return NtUserCallHwnd(hWnd, HWND_ROUTINE_REGISTERSHELLHOOKWINDOW);
+    return (BOOL)NtUserCallHwnd(hWnd, HWND_ROUTINE_REGISTERSHELLHOOKWINDOW);
 }
 
 EXTINLINE BOOL NtUserxSetMessageBox(HWND hWnd)
 {
-    return NtUserCallHwnd(hWnd, HWND_ROUTINE_SETMSGBOX);
+    return (BOOL)NtUserCallHwnd(hWnd, HWND_ROUTINE_SETMSGBOX);
 }
 
 EXTINLINE VOID NtUserxClearWindowState(PWND pWnd, UINT Flag)

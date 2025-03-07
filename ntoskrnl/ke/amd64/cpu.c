@@ -206,6 +206,7 @@ KiGetFeatureBits(VOID)
     if (VersionInfo.Ecx.Bits.SSSE3) FeatureBits |= KF_SSSE3;
     if (VersionInfo.Ecx.Bits.CMPXCHG16B) FeatureBits |= KF_CMPXCHG16B;
     if (VersionInfo.Ecx.Bits.SSE4_1) FeatureBits |= KF_SSE4_1;
+    if (VersionInfo.Ecx.Bits.SSE4_2) FeatureBits |= KF_SSE4_2;
     if (VersionInfo.Ecx.Bits.XSAVE) FeatureBits |= KF_XSTATE;
     if (VersionInfo.Ecx.Bits.RDRAND) FeatureBits |= KF_RDRAND;
 
@@ -255,7 +256,7 @@ KiGetFeatureBits(VOID)
     if (signature.MaxLeaf >= CPUID_EXTENDED_STATE)
     {
         /* Read CPUID_EXTENDED_STATE */
-        CPUID_EXTENDED_STATE_SUB_LEAF_EAX_REGS ExtStateSub;
+        CPUID_EXTENDED_STATE_SUB_LEAF_REGS ExtStateSub;
         __cpuidex(ExtStateSub.AsInt32,
             CPUID_EXTENDED_STATE,
             CPUID_EXTENDED_STATE_SUB_LEAF);
@@ -665,16 +666,6 @@ KeFlushEntireTb(IN BOOLEAN Invalid,
     InterlockedExchangeAdd(&KiTbFlushTimeStamp, 1);
     KeLowerIrql(OldIrql);
 
-}
-
-KAFFINITY
-NTAPI
-KeQueryActiveProcessors(VOID)
-{
-    PAGED_CODE();
-
-    /* Simply return the number of active processors */
-    return KeActiveProcessors;
 }
 
 NTSTATUS

@@ -130,14 +130,7 @@ HRESULT CSendToMenu::GetUIObjectFromPidl(HWND hwnd, PIDLIST_ABSOLUTE pidl,
                                          REFIID riid, LPVOID *ppvOut)
 {
     *ppvOut = NULL;
-
-    PCITEMID_CHILD pidlLast;
-    CComPtr<IShellFolder> pFolder;
-    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &pFolder), &pidlLast);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    hr = pFolder->GetUIObjectOf(hwnd, 1, &pidlLast, riid, NULL, ppvOut);
+    HRESULT hr = SHELL_GetUIObjectOfAbsoluteItem(hwnd, pidl, riid, ppvOut);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

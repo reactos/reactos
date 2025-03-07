@@ -77,10 +77,10 @@
 @ stub ??1streambuf@@UAE@XZ #
 @ stub ??1strstream@@UAE@XZ #
 @ stub ??1strstreambuf@@UAE@XZ #
-@ cdecl -arch=win32 ??2@YAPAXI@Z(long) MSVCRT_operator_new
-@ cdecl -arch=win64 ??2@YAPEAX_K@Z(double) MSVCRT_operator_new
-@ cdecl -arch=win32 ??3@YAXPAX@Z(ptr) MSVCRT_operator_delete
-@ cdecl -arch=win64 ??3@YAXPEAX@Z(ptr) MSVCRT_operator_delete
+@ cdecl -arch=win32 ??2@YAPAXI@Z(long) operator_new
+@ cdecl -arch=win64 ??2@YAPEAX_K@Z(double) operator_new
+@ cdecl -arch=win32 ??3@YAXPAX@Z(ptr) operator_delete
+@ cdecl -arch=win64 ??3@YAXPEAX@Z(ptr) operator_delete
 @ stub ??4Iostream_init@@QAEAAV0@ABV0@@Z #
 @ stub ??4filebuf@@QAEAAV0@ABV0@@Z #
 @ stub ??4fstream@@QAEAAV0@AAV0@@Z #
@@ -226,11 +226,11 @@
 @ stub ??_Gstreambuf@@UAEPAXI@Z #
 @ stub ??_Gstrstream@@UAEPAXI@Z #
 @ stub ??_Gstrstreambuf@@UAEPAXI@Z #
-@ cdecl ?_query_new_handler@@YAP6AHI@ZXZ() MSVCRT__query_new_handler
-@ cdecl -i386 ?_query_new_mode@@YAHXZ() MSVCRT__query_new_mode
-@ cdecl ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z(ptr) MSVCRT__set_new_handler
-@ cdecl ?_set_new_mode@@YAHH@Z(long) MSVCRT__set_new_mode
-@ cdecl ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z(ptr) MSVCRT__set_se_translator
+@ cdecl ?_query_new_handler@@YAP6AHI@ZXZ() _query_new_handler
+@ cdecl -i386 ?_query_new_mode@@YAHXZ() _query_new_mode
+@ cdecl ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z(ptr) _set_new_handler
+@ cdecl ?_set_new_mode@@YAHH@Z(long) _set_new_mode
+@ cdecl ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z(ptr) _set_se_translator
 @ stub ?adjustfield@ios@@2JB #
 @ stub ?allocate@streambuf@@IAEHXZ #
 @ stub ?attach@filebuf@@QAEPAV1@H@Z #
@@ -365,8 +365,8 @@
 @ stub ?seekp@ostream@@QAEAAV1@J@Z #
 @ stub ?seekp@ostream@@QAEAAV1@JW4seek_dir@ios@@@Z #
 @ stub ?seekpos@streambuf@@UAEJJH@Z #
-@ cdecl ?set_terminate@@YAP6AXXZP6AXXZ@Z(ptr) MSVCRT_set_terminate
-@ cdecl ?set_unexpected@@YAP6AXXZP6AXXZ@Z(ptr) MSVCRT_set_unexpected
+@ cdecl ?set_terminate@@YAP6AXXZP6AXXZ@Z(ptr) set_terminate
+@ cdecl ?set_unexpected@@YAP6AXXZP6AXXZ@Z(ptr) set_unexpected
 @ stub ?setb@streambuf@@IAEXPAD0H@Z #
 @ stub ?setbuf@filebuf@@UAEPAVstreambuf@@PADH@Z #
 @ stub ?setbuf@fstream@@QAEPAVstreambuf@@PADH@Z #
@@ -409,7 +409,7 @@
 @ stub ?sync_with_stdio@ios@@SAXXZ #
 @ stub ?tellg@istream@@QAEJXZ #
 @ stub ?tellp@ostream@@QAEJXZ #
-@ cdecl ?terminate@@YAXXZ() MSVCRT_terminate
+@ cdecl ?terminate@@YAXXZ() terminate
 @ stub ?text@filebuf@@2HB #
 @ stub ?tie@ios@@QAEPAVostream@@PAV2@@Z #
 @ stub ?tie@ios@@QBEPAVostream@@XZ #
@@ -418,7 +418,7 @@
 @ stub ?underflow@filebuf@@UAEHXZ #
 @ stub ?underflow@stdiobuf@@UAEHXZ #
 @ stub ?underflow@strstreambuf@@UAEHXZ #
-@ cdecl ?unexpected@@YAXXZ() MSVCRT_unexpected
+@ cdecl ?unexpected@@YAXXZ() unexpected
 @ stub ?unlock@ios@@QAAXXZ #
 @ stub ?unlock@streambuf@@QAEXXZ #
 @ stub ?unlockbuf@ios@@QAAXXZ #

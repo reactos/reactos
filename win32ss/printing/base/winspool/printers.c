@@ -3600,7 +3600,7 @@ StartDocDlgW( HANDLE hPrinter, DOCINFOW *doc )
         }
 
         GetPrinterW(hPrinter, 5, (LPBYTE)pi5, len, &len);
-        if (!pi5->pPortName || wcsicmp(pi5->pPortName, FILE_Port))
+        if (!pi5->pPortName || _wcsicmp(pi5->pPortName, FILE_Port))
         {
             HeapFree(GetProcessHeap(), 0, pi5);
             return NULL;
@@ -3608,7 +3608,7 @@ StartDocDlgW( HANDLE hPrinter, DOCINFOW *doc )
         HeapFree(GetProcessHeap(), 0, pi5);
     }
 
-    if (doc->lpszOutput == NULL || !wcsicmp(doc->lpszOutput, FILE_Port))
+    if (doc->lpszOutput == NULL || !_wcsicmp(doc->lpszOutput, FILE_Port))
     {
         LPWSTR name;
 
@@ -4058,4 +4058,37 @@ XcvDataW(HANDLE hXcv, PCWSTR pszDataName, PBYTE pInputData, DWORD cbInputData, P
 Cleanup:
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
+}
+
+HANDLE
+WINAPI
+CreatePrinterIC(
+    _In_ HANDLE hPrinter,
+    _In_opt_ LPDEVMODEW pDevMode)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+BOOL
+WINAPI
+DeletePrinterIC(
+    _In_ HANDLE hPrinterIC)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+PlayGdiScriptOnPrinterIC(
+    _In_ HANDLE hPrinterIC,
+    _In_reads_bytes_(cIn) LPBYTE pIn,
+    _In_ DWORD cIn,
+    _Out_writes_bytes_(cOut) LPBYTE pOut,
+    _In_ DWORD cOut,
+    _In_ DWORD ul)
+{
+    UNIMPLEMENTED;
+    return FALSE;
 }

@@ -318,7 +318,7 @@ CmpValidateValueListByCount(
                                          ValueListData,
                                          FixHive))
             {
-                DPRINT1("The value cell is NIL (at index %lu, list count %lu)\n",
+                DPRINT1("The value cell is NIL (at index %u, list count %u)\n",
                         ListCountIndex, ListCount);
                 return CM_CHECK_REGISTRY_VALUE_CELL_NIL;
             }
@@ -338,7 +338,7 @@ CmpValidateValueListByCount(
                                          ValueListData,
                                          FixHive))
             {
-                DPRINT1("The value cell is not allocated (at index %lu, list count %lu)\n",
+                DPRINT1("The value cell is not allocated (at index %u, list count %u)\n",
                         ListCountIndex, ListCount);
                 return CM_CHECK_REGISTRY_VALUE_CELL_UNALLOCATED;
             }
@@ -354,7 +354,7 @@ CmpValidateValueListByCount(
         ValueData = (PCELL_DATA)HvGetCell(Hive, ValueCell);
         if (!ValueData)
         {
-            DPRINT1("Cell data of the value cell not found (at index %lu, value count %lu)\n",
+            DPRINT1("Cell data of the value cell not found (at index %u, value count %u)\n",
                     ListCountIndex, ListCount);
             return CM_CHECK_REGISTRY_VALUE_CELL_DATA_NOT_FOUND;
         }
@@ -371,7 +371,7 @@ CmpValidateValueListByCount(
                                          ValueListData,
                                          FixHive))
             {
-                DPRINT1("The total size is bigger than the actual cell size (total size %lu, cell size %lu, at index %lu)\n",
+                DPRINT1("The total size is bigger than the actual cell size (total size %u, cell size %u, at index %u)\n",
                         TotalValueNameLength, ValueDataSize, ListCountIndex);
                 return CM_CHECK_REGISTRY_VALUE_CELL_SIZE_NOT_SANE;
             }
@@ -551,7 +551,7 @@ CmpValidateValueList(
         TotalValueLength = ValueListCount * sizeof(HCELL_INDEX);
         if (TotalValueLength > ValueSize)
         {
-            DPRINT1("The value list is bigger than the cell (value list size %lu, cell size %lu)\n",
+            DPRINT1("The value list is bigger than the cell (value list size %u, cell size %u)\n",
                     TotalValueLength, ValueSize);
             return CM_CHECK_REGISTRY_VALUE_LIST_SIZE_NOT_SANE;
         }
@@ -576,7 +576,7 @@ CmpValidateValueList(
         /* Log how much values have been removed */
         if (ValuesRemoved > 0)
         {
-            DPRINT1("Values removed in the list -- %lu\n", ValuesRemoved);
+            DPRINT1("%u values removed in the list\n", ValuesRemoved);
         }
     }
 
@@ -730,7 +730,7 @@ CmpValidateSubKeyList(
                                            CellData,
                                            FixHive))
                 {
-                    DPRINT1("The subkeys list has invalid count (subkeys count %lu, root key index count %lu)\n",
+                    DPRINT1("The subkeys list has invalid count (subkeys count %u, root key index count %u)\n",
                             SubKeyCounts, RootKeyIndex->Count);
                     return CM_CHECK_REGISTRY_BAD_SUBKEY_COUNT;
                 }
@@ -757,7 +757,7 @@ CmpValidateSubKeyList(
                 KeyIndexCell = RootKeyIndex->List[RootIndex];
                 if (!HvIsCellAllocated(Hive, KeyIndexCell))
                 {
-                    DPRINT1("The key index cell is not allocated at index %lu\n", RootIndex);
+                    DPRINT1("The key index cell is not allocated at index %u\n", RootIndex);
                     *DoRepair = TRUE;
                     return CM_CHECK_REGISTRY_KEY_INDEX_CELL_UNALLOCATED;
                 }
@@ -798,7 +798,7 @@ CmpValidateSubKeyList(
                                            CellData,
                                            FixHive))
                 {
-                    DPRINT1("The subkeys list has invalid count (subkeys count %lu, total leaf count %lu)\n",
+                    DPRINT1("The subkeys list has invalid count (subkeys count %u, total leaf count %u)\n",
                             SubKeyCounts, TotalLeafCount);
                     return CM_CHECK_REGISTRY_BAD_SUBKEY_COUNT;
                 }
@@ -981,7 +981,7 @@ CmpValidateKey(
     CellSize = HvGetCellSize(Hive, CellData);
     if (CellSize > CMP_KEY_SIZE_THRESHOLD)
     {
-        DPRINT1("The cell size is above the threshold size (size %lu)\n", CellSize);
+        DPRINT1("The cell size is above the threshold size (size %u)\n", CellSize);
         return CM_CHECK_REGISTRY_CELL_SIZE_NOT_SANE;
     }
 
@@ -1000,7 +1000,8 @@ CmpValidateKey(
     TotalKeyNameLength = NameLength + FIELD_OFFSET(CM_KEY_NODE, Name);
     if (TotalKeyNameLength > CellSize)
     {
-        DPRINT1("The key is too big than the cell (key size %lu, cell size %lu)\n", TotalKeyNameLength, CellSize);
+        DPRINT1("The key is too big than the cell (key size %u, cell size %u)\n",
+                TotalKeyNameLength, CellSize);
         return CM_CHECK_REGISTRY_KEY_TOO_BIG_THAN_CELL;
     }
 
@@ -1248,7 +1249,7 @@ RestartValidation:
                  */
                 if (!CmpRepairParentKey(Hive, CurrentCell, ParentCell, FixHive))
                 {
-                    DPRINT1("The key is corrupt (current cell %lu, parent cell %lu)\n",
+                    DPRINT1("The key is corrupt (current cell 0x%x, parent cell 0x%x)\n",
                             CurrentCell, ParentCell);
                     CmpFree(WorkState, WorkStateLength);
                     return CmStatusCode;
@@ -1279,8 +1280,8 @@ RestartValidation:
                          */
                         if (!CmpRepairParentKey(Hive, CurrentCell, ParentCell, FixHive))
                         {
-                            DPRINT1("The lexicographical order is invalid (sibling %lu, current cell %lu)\n",
-                            CurrentCell, WorkState[StackDepth - CMP_PRIOR_STACK].Sibling);
+                            DPRINT1("The lexicographical order is invalid (sibling 0x%x, current cell 0x%x)\n",
+                                    CurrentCell, WorkState[StackDepth - CMP_PRIOR_STACK].Sibling);
                             CmpFree(WorkState, WorkStateLength);
                             return CM_CHECK_REGISTRY_BAD_LEXICOGRAPHICAL_ORDER;
                         }
@@ -1300,7 +1301,7 @@ RestartValidation:
         KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, CurrentCell);
         if (!KeyNode)
         {
-            DPRINT1("Couldn't get the node of key (current cell %lu)\n", CurrentCell);
+            DPRINT1("Couldn't get the node of key (current cell 0x%x)\n", CurrentCell);
             CmpFree(WorkState, WorkStateLength);
             return CM_CHECK_REGISTRY_NODE_NOT_FOUND;
         }
@@ -1323,7 +1324,7 @@ RestartValidation:
             ChildSubKeyCell = CmpFindSubKeyByNumber(Hive, KeyNode, WorkState[StackDepth].ChildCellIndex);
             if (ChildSubKeyCell == HCELL_NIL)
             {
-                DPRINT1("Couldn't get the child subkey cell (at stack index %lu)\n", StackDepth);
+                DPRINT1("Couldn't get the child subkey cell (at stack index %d)\n", StackDepth);
                 CmpFree(WorkState, WorkStateLength);
                 return CM_CHECK_REGISTRY_SUBKEY_NOT_FOUND;
             }
@@ -1455,7 +1456,7 @@ HvValidateBin(
                  * free space (aka Size == 0) which is a
                  * no go for a bin.
                  */
-                DPRINT1("The free cell exceeds the bin size or cell size equal to 0 (cell 0x%p, cell size %d, bin size %lu)\n",
+                DPRINT1("The free cell exceeds the bin size or cell size equal to 0 (cell 0x%p, cell size %d, bin size %u)\n",
                         Cell, Cell->Size, Bin->Size);
                 return CM_CHECK_REGISTRY_BAD_FREE_CELL;
             }
@@ -1473,7 +1474,7 @@ HvValidateBin(
                  * that exceeds the boundary of the
                  * bin size.
                  */
-                DPRINT1("The allocated cell exceeds the bin size (cell 0x%p, cell size %d, bin size %lu)\n",
+                DPRINT1("The allocated cell exceeds the bin size (cell 0x%p, cell size %d, bin size %u)\n",
                         Cell, abs(Cell->Size), Bin->Size);
                 return CM_CHECK_REGISTRY_BAD_ALLOC_CELL;
             }
@@ -1518,7 +1519,7 @@ HvValidateHive(
     /* Is the hive signature valid? */
     if (Hive->Signature != HV_HHIVE_SIGNATURE)
     {
-        DPRINT1("Hive's signature corrupted (signature %lu)\n", Hive->Signature);
+        DPRINT1("Hive's signature corrupted (signature %u)\n", Hive->Signature);
         return CM_CHECK_REGISTRY_HIVE_CORRUPT_SIGNATURE;
     }
 
@@ -1548,7 +1549,7 @@ HvValidateHive(
             if (Bin->Size > (StorageLength * HBLOCK_SIZE) ||
                 (Bin->FileOffset / HBLOCK_SIZE) != BlockIndex)
             {
-                DPRINT1("Bin size or offset is corrupt (bin size %lu, file offset %lu, storage length %lu)\n",
+                DPRINT1("Bin size or offset is corrupt (bin size %u, file offset %u, storage length %u)\n",
                         Bin->Size, Bin->FileOffset, StorageLength);
                 return CM_CHECK_REGISTRY_BIN_SIZE_OR_OFFSET_CORRUPT;
             }
@@ -1667,7 +1668,7 @@ CmCheckRegistry(
                   CM_CHECK_REGISTRY_VALIDATE_HIVE              |
                   CM_CHECK_REGISTRY_FIX_HIVE))
     {
-        DPRINT1("Invalid flag for registry check given (flag %lu)\n", Flags);
+        DPRINT1("Invalid flag for registry check given (flag %u)\n", Flags);
         return CM_CHECK_REGISTRY_INVALID_PARAMETER;
     }
 
@@ -1681,7 +1682,8 @@ CmCheckRegistry(
         CmStatusCode = HvValidateHive(Hive);
         if (!CM_CHECK_REGISTRY_SUCCESS(CmStatusCode))
         {
-            DPRINT1("The hive is not valid (hive 0x%p, check status code %lu)\n", Hive, CmStatusCode);
+            DPRINT1("The hive is not valid (hive 0x%p, check status code %u)\n",
+                    Hive, CmStatusCode);
             return CmStatusCode;
         }
     }
@@ -1708,7 +1710,8 @@ CmCheckRegistry(
     CmStatusCode = CmpValidateRegistryInternal(Hive, Flags, FALSE, ShouldFixHive);
     if (!CM_CHECK_REGISTRY_SUCCESS(CmStatusCode))
     {
-        DPRINT1("The hive is not valid (hive 0x%p, check status code %lu)\n", Hive, CmStatusCode);
+        DPRINT1("The hive is not valid (hive 0x%p, check status code %u)\n",
+                Hive, CmStatusCode);
         return CmStatusCode;
     }
 

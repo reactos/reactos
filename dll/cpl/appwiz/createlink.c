@@ -31,7 +31,7 @@ IsShortcut(HKEY hKey)
     if (Type != REG_SZ)
         return FALSE;
 
-    return (wcsicmp(Value, L"yes") == 0);
+    return (_wcsicmp(Value, L"yes") == 0);
 }
 
 BOOL
@@ -488,6 +488,9 @@ FinishDlgProc(HWND hwndDlg,
                     /* change extension if any */
                     PathRemoveExtensionW(pContext->szLinkName);
                     PathAddExtensionW(pContext->szLinkName, L".lnk");
+
+                    /* Don't set a comment */
+                    pContext->szDescription[0] = UNICODE_NULL;
 
                     if (!CreateShortcut(pContext))
                     {

@@ -500,11 +500,20 @@
 
   /* documentation is in ftbitmap.h */
 
+#ifdef __REACTOS__
+  FT_EXPORT_DEF( FT_Error )
+  FT_Bitmap_Convert_ReactOS_Hack( FT_Library        library,
+                                  const FT_Bitmap  *source,
+                                  FT_Bitmap        *target,
+                                  FT_Int            alignment,
+                                  FT_Bool           hack )
+#else
   FT_EXPORT_DEF( FT_Error )
   FT_Bitmap_Convert( FT_Library        library,
                      const FT_Bitmap  *source,
                      FT_Bitmap        *target,
                      FT_Int            alignment )
+#endif
   {
     FT_Error   error = FT_Err_Ok;
     FT_Memory  memory;
@@ -602,15 +611,20 @@
             FT_Int  val = ss[0]; /* avoid a byte->int cast on each line */
 
 #ifdef __REACTOS__
-            tt[0] = (FT_Byte)( ( val & 0x80 ) ? 0xff : 0);
-            tt[1] = (FT_Byte)( ( val & 0x40 ) ? 0xff : 0);
-            tt[2] = (FT_Byte)( ( val & 0x20 ) ? 0xff : 0);
-            tt[3] = (FT_Byte)( ( val & 0x10 ) ? 0xff : 0);
-            tt[4] = (FT_Byte)( ( val & 0x08 ) ? 0xff : 0);
-            tt[5] = (FT_Byte)( ( val & 0x04 ) ? 0xff : 0);
-            tt[6] = (FT_Byte)( ( val & 0x02 ) ? 0xff : 0);
-            tt[7] = (FT_Byte)( ( val & 0x01 ) ? 0xff : 0);
-#else
+            if (hack)
+            {
+                tt[0] = (FT_Byte)( ( val & 0x80 ) ? 0xff : 0);
+                tt[1] = (FT_Byte)( ( val & 0x40 ) ? 0xff : 0);
+                tt[2] = (FT_Byte)( ( val & 0x20 ) ? 0xff : 0);
+                tt[3] = (FT_Byte)( ( val & 0x10 ) ? 0xff : 0);
+                tt[4] = (FT_Byte)( ( val & 0x08 ) ? 0xff : 0);
+                tt[5] = (FT_Byte)( ( val & 0x04 ) ? 0xff : 0);
+                tt[6] = (FT_Byte)( ( val & 0x02 ) ? 0xff : 0);
+                tt[7] = (FT_Byte)( ( val & 0x01 ) ? 0xff : 0);
+            }
+            else
+            {
+#endif
             tt[0] = (FT_Byte)( ( val & 0x80 ) >> 7 );
             tt[1] = (FT_Byte)( ( val & 0x40 ) >> 6 );
             tt[2] = (FT_Byte)( ( val & 0x20 ) >> 5 );
@@ -619,6 +633,8 @@
             tt[5] = (FT_Byte)( ( val & 0x04 ) >> 2 );
             tt[6] = (FT_Byte)( ( val & 0x02 ) >> 1 );
             tt[7] = (FT_Byte)(   val & 0x01 );
+#ifdef __REACTOS__
+            }
 #endif
 
             tt += 8;
@@ -635,10 +651,11 @@
             for ( ; j > 0; j-- )
             {
 #ifdef __REACTOS__
-              tt[0] = (FT_Byte)( ( val & 0x80 ) ? 0xff : 0);
-#else
-              tt[0] = (FT_Byte)( ( val & 0x80 ) >> 7);
+              if (hack)
+                tt[0] = (FT_Byte)( ( val & 0x80 ) ? 0xff : 0);
+              else
 #endif
+              tt[0] = (FT_Byte)( ( val & 0x80 ) >> 7);
               val <<= 1;
               tt   += 1;
             }
@@ -794,6 +811,18 @@
     return error;
   }
 
+#ifdef __REACTOS__
+  /* documentation is in ftbitmap.h */
+
+  FT_EXPORT_DEF( FT_Error )
+  FT_Bitmap_Convert( FT_Library        library,
+                     const FT_Bitmap  *source,
+                     FT_Bitmap        *target,
+                     FT_Int            alignment )
+  {
+    return FT_Bitmap_Convert_ReactOS_Hack(library, source, target, alignment, FALSE);
+  }
+#endif
 
   /* documentation is in ftbitmap.h */
 

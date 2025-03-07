@@ -88,6 +88,7 @@ RpcServerThread(
 extern HKEY hEnumKey;
 extern HKEY hClassKey;
 extern BOOL g_IsUISuppressed;
+extern BOOL g_ShuttingDown;
 
 BOOL
 GetSuppressNewUIValue(VOID);
