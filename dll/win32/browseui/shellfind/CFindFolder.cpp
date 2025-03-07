@@ -1140,4 +1140,3 @@ STDMETHODIMP CFindFolder::GetClassID(CLSID *pClassId)
     *pClassId = CLSID_FindFolder;
     return S_OK;
 }
-  
