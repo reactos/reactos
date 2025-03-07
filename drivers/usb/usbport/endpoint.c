@@ -1074,8 +1074,9 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
 
                 KeReleaseSpinLock(&Endpoint->EndpointSpinLock,
                                   Endpoint->EndpointOldIrql);
-                RetryCount = 0;
-                while (RetryCount < 1000)
+
+                /* Wait maximum 1 second for the endpoint to be active */
+                for (RetryCount = 0; RetryCount < 1000; RetryCount++)
                 {
                     KeAcquireSpinLock(&Endpoint->EndpointSpinLock,
                                       &Endpoint->EndpointOldIrql);
@@ -1090,7 +1091,6 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
                         break;
                     }
                     USBPORT_Wait(FdoDevice, 1); // 1 msec.
-                    RetryCount++;
                 }
                 if (State != USBPORT_ENDPOINT_ACTIVE)
                 {

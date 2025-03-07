@@ -769,7 +769,7 @@ USBCCGP_PDOSelectConfiguration(
     Entry = NULL;
     do
     {
-        DPRINT("[USBCCGP] SelectConfiguration Function %x InterfaceNumber %x Alternative %x Length %lu InterfaceInformation->Length %lu\n", 
+        DPRINT1("[USBCCGP] SelectConfiguration Function %x InterfaceNumber %x Alternative %x Length %lu InterfaceInformation->Length %lu\n", 
                PDODeviceExtension->FunctionDescriptor->FunctionNumber, InterfaceInformation->InterfaceNumber, InterfaceInformation->AlternateSetting, Length, InterfaceInformation->Length);
         ASSERT(InterfaceInformation->Length);
         //

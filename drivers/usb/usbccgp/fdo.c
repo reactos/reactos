@@ -194,6 +194,7 @@ FDO_CreateChildPdo(
         if (FDODeviceExtension->FunctionDescriptor[Index].NumberOfInterfaces == 0)
         {
             // Ignore invalid devices
+            DPRINT1("[USBCCGP] Found descriptor with 0 interfaces\n");
             continue;
         }
 

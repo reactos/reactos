@@ -669,6 +669,9 @@ USBCCGP_LegacyEnum(
                 //
                 // no memory
                 //
+                FreeItem(FDODeviceExtension->FunctionDescriptor);
+                FDODeviceExtension->FunctionDescriptor = NULL;
+                FDODeviceExtension->FunctionDescriptorCount = 0;
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 
@@ -681,9 +684,11 @@ USBCCGP_LegacyEnum(
                 NextInterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(FDODeviceExtension->ConfigurationDescriptor, FDODeviceExtension->ConfigurationDescriptor, Index + SubIndex + 1, 0, -1, -1, -1);
                 if (!NextInterfaceDescriptor || NextInterfaceDescriptor->bInterfaceClass != USB_DEVICE_CLASS_AUDIO)
                 {
+                    // end of collection
                     break;
                 }
                 SubIndex++;
+                ASSERT(SubIndex < FDODeviceExtension->ConfigurationDescriptor->bNumInterfaces);
                 FDODeviceExtension->FunctionDescriptor[Index].NumberOfInterfaces++;
                 FDODeviceExtension->FunctionDescriptor[Index].InterfaceDescriptorList[SubIndex] = NextInterfaceDescriptor;
             } while (TRUE);
