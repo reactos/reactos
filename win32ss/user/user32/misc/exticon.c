@@ -350,7 +350,7 @@ static UINT ICO_ExtractIconExW(
 #ifdef __REACTOS__
     if (!(fsizel | fsizeh))
     {
-        /* Cannot map zero sized file */
+        /* Cannot map empty file */
         CloseHandle(hFile);
         return 0; /* No icons */
     }
