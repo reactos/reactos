@@ -205,7 +205,7 @@ ObpLookupEntryDirectory(
     IN POBJECT_DIRECTORY Directory,
     IN PUNICODE_STRING Name,
     IN ULONG Attributes,
-    IN UCHAR SearchShadow,
+    IN BOOLEAN SearchShadow,
     IN POBP_LOOKUP_CONTEXT Context
 );
 
@@ -648,6 +648,7 @@ extern ALIGNEDNAME ObpDosDevicesShortNameRoot;
 extern UNICODE_STRING ObpDosDevicesShortName;
 extern WCHAR ObpUnsecureGlobalNamesBuffer[128];
 extern ULONG ObpUnsecureGlobalNamesLength;
+extern ULONG ObpCaseInsensitive;
 extern ULONG ObpObjectSecurityMode;
 extern ULONG ObpProtectionMode;
 extern ULONG ObpLUIDDeviceMapsDisabled;
