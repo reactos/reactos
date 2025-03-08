@@ -157,6 +157,9 @@ if "!CMAKE_GENERATOR!" == "Ninja" (
     echo This script defaults to Ninja. Type "configure help" for alternative options.
 )
 
+REM Display information
+echo Configuring a new ReactOS build on: & (for /f "delims=" %%x in ('ver') do @echo %%x) & echo.
+
 REM Create directories
 set REACTOS_OUTPUT_PATH=output-%BUILD_ENVIRONMENT%-%ARCH%
 
@@ -189,12 +192,10 @@ if "%VS_SOLUTION%" == "1" (
     goto quit
 )
 
-echo Preparing reactos...
 
 if EXIST CMakeCache.txt (
-    del CMakeCache.txt /q
+    del /q CMakeCache.txt
 )
-
 
 if "%BUILD_ENVIRONMENT%" == "MinGW" (
     cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=%MINGW_TOOCHAIN_FILE% -DARCH:STRING=%ARCH% %BUILD_TOOLS_FLAG% %CMAKE_PARAMS% "%REACTOS_SOURCE_DIR%"
