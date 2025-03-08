@@ -1196,7 +1196,7 @@ HRESULT CShellBrowser::GetMenuBand(REFIID riid, void **shellMenu)
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
-    hResult = bandSite->QueryBand(1, &deskBand, NULL, NULL, 0);
+    hResult = bandSite->QueryBand(ITBBID_MENUBAND, &deskBand, NULL, NULL, 0);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
@@ -1491,7 +1491,10 @@ LRESULT CALLBACK CShellBrowser::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
     if (pThis->fCurrentDirectoryPIDL)
     {
         CComPtr<IMenuBand> menuBand;
-        hResult = pThis->GetMenuBand(IID_PPV_ARG(IMenuBand, &menuBand));
+        if (uMsg == WM_PARENTNOTIFY && LOWORD(wParam) == WM_DESTROY)
+            hResult = E_FAIL; // Avoid GetMenuBand FAILED_UNEXPECTEDLY while processing WM_DESTROY
+        else
+            hResult = pThis->GetMenuBand(IID_PPV_ARG(IMenuBand, &menuBand));
         if (SUCCEEDED(hResult) && menuBand.p != NULL)
         {
             hResult = menuBand->TranslateMenuMessage(&msg, &lResult);
@@ -2097,7 +2100,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::QueryStatus(const GUID *pguidCmdGroup,
             {
                 case IDM_GOTO_UPONELEVEL:
                     prgCmds->cmdf = OLECMDF_SUPPORTED;
-                    if (fCurrentDirectoryPIDL->mkid.cb != 0)
+                    if (!_ILIsDesktop(fCurrentDirectoryPIDL))
                         prgCmds->cmdf |= OLECMDF_ENABLED;
                     break;
             }
@@ -3696,6 +3699,7 @@ LRESULT CShellBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 
         fCurrentShellFolder.Release();
         ILFree(fCurrentDirectoryPIDL);
+        fCurrentDirectoryPIDL = NULL;
         ::DestroyWindow(fStatusBar);
         DestroyMenu(fCurrentMenuBar);
     }

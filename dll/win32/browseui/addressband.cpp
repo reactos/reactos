@@ -49,6 +49,11 @@ CAddressBand::~CAddressBand()
 {
 }
 
+BOOL CAddressBand::ShouldShowGoButton()
+{
+    return SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"ShowGoButton", FALSE, TRUE);
+}
+
 void CAddressBand::FocusChange(BOOL bFocus)
 {
 //    m_bFocus = bFocus;
@@ -168,7 +173,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
-    fGoButtonShown = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"ShowGoButton", FALSE, TRUE);
+    fGoButtonShown = ShouldShowGoButton();
     if (fGoButtonShown)
         CreateGoButton();
 
@@ -365,7 +370,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::OnWinEvent(
         case WM_COMMAND:
             if (wParam == IDM_TOOLBARS_GOBUTTON)
             {
-                fGoButtonShown = !SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"ShowGoButton", FALSE, TRUE);
+                fGoButtonShown = !ShouldShowGoButton();
                 SHRegSetUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"ShowGoButton", REG_SZ, fGoButtonShown ? (LPVOID)L"yes" : (LPVOID)L"no", fGoButtonShown ? 8 : 6, SHREGSET_FORCE_HKCU);
                 if (!fGoButton)
                     CreateGoButton();

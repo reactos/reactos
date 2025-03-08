@@ -51,6 +51,8 @@ private:
     void FocusChange(BOOL bFocus);
     void CreateGoButton();
 public:
+    static BOOL ShouldShowGoButton();
+
     // *** IDeskBand methods ***
     STDMETHOD(GetBandInfo)(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO *pdbi) override;
 

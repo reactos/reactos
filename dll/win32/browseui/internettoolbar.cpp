@@ -1746,6 +1746,7 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
     RBHITTESTINFO                           hitTestInfo;
     REBARBANDINFOW                          rebarBandInfo;
     int                                     bandID;
+    BOOL                                    fGoButton = FALSE;
 
     clickLocation.x = LOWORD(lParam);
     clickLocation.y = HIWORD(lParam);
@@ -1780,6 +1781,7 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
         case ITBBID_ADDRESSBAND:    // navigation band
             DeleteMenu(contextMenu, IDM_TOOLBARS_CUSTOMIZE, MF_BYCOMMAND);
             DeleteMenu(contextMenu, IDM_TOOLBARS_TEXTLABELS, MF_BYCOMMAND);
+            fGoButton = CAddressBand::ShouldShowGoButton();
             break;
         default:
             break;
@@ -1792,7 +1794,7 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_LINKSBAR, FALSE);
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_CUSTOMIZE, FALSE);
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_LOCKTOOLBARS, pSettings->fLocked);
-    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_GOBUTTON, pSettings->fShowGoButton);
+    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_GOBUTTON, fGoButton);
 
     // TODO: use GetSystemMetrics(SM_MENUDROPALIGNMENT) to determine menu alignment
     command = TrackPopupMenu(contextMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD,
