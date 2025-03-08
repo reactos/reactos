@@ -23,7 +23,7 @@
 
 #include <fslib/vfatlib.h>
 #include <fslib/btrfslib.h>
-// #include <fslib/ext2lib.h>
+#include <fslib/ext2lib.h>
 // #include <fslib/ntfslib.h>
 
 #define NDEBUG
@@ -111,6 +111,79 @@ typedef struct _BTRFS_BOOTSECTOR
 } BTRFS_BOOTSECTOR, *PBTRFS_BOOTSECTOR;
 C_ASSERT(sizeof(BTRFS_BOOTSECTOR) == BTRFS_BOOTSECTOR_SIZE);
 
+ typedef struct _EXT2_BOOTSECTOR
+{
+    UCHAR JumpOpcode[3];
+    UCHAR BootDrive;
+    UINT ExtVolumeStartSector;
+    UINT ExtBlockSize;
+    UINT ExtBlockSizeInBytes;
+    UINT ExtPointersPerBlock;
+    UINT ExtGroupDescSize;
+    UINT ExtFirstDataBlock;
+    UINT ExtInodeSize;
+    UINT ExtInodesPerGroup;
+    UCHAR VBRCode[473];
+    UCHAR BootPartition;
+    UCHAR VBRSignatureLow;
+    UCHAR VBRSignatureHigh;
+    UCHAR VBRCode2[512];
+
+    /* SuperBlock Information Ext2 */
+    UINT InodesCount;
+    UINT BlocksCountLo;
+    UINT RBlocksCountLo;
+    UINT FreeBlocksCountLo;
+    UINT FreeInodesCount;
+    UINT FirstDataBlock;
+    UINT LogBlockSize;
+    UINT LogFragSize;
+    UINT BlocksPerGroup;
+    UINT FragsPerGroup;
+    UINT InodesPerGroup;
+    UINT MTime;
+    UINT WTime;
+    USHORT MntCount;
+    USHORT MaxMntCount;
+    USHORT Magic;
+    USHORT State;
+    USHORT Errors;
+    USHORT MinorRevLevel;
+    UINT LastCheck;
+    UINT CheckInterval;
+    UINT CreatorOS;
+    UINT RevLevel;
+    USHORT DefResUID;
+    USHORT DefResGID;
+
+    /* SuperBlock Information Ext3 */
+    UINT FirstIno;
+    USHORT InodeSize;
+    USHORT BlockGroupNr;
+    UINT FeatureCompat;
+    UINT FeatureIncompat;
+    UINT FeatureROCompat;
+    UCHAR UUID[16];
+    UCHAR VolumeName[16];
+    UCHAR LastMounted[64];
+    UINT AlgorithmUsageBitmap;
+
+    /* SuperBlock Information Ext4 */
+    UCHAR PreallocBlocks;
+    UCHAR PreallocDirBlocks;
+    USHORT ReservedGdtBlocks;
+    UCHAR JournalUuid[16];
+    UINT JournalInum;
+    UINT JournalDev;
+    UINT LastOrphan;
+    UINT HashSeed[4];
+    UCHAR DefHashVersion;
+    UCHAR JournalBackupType;
+    USHORT GroupDescSize;
+    UCHAR Reserved[768];
+} EXT2_BOOTSECTOR, *PEXT2_BOOTSECTOR;
+C_ASSERT(sizeof(EXT2_BOOTSECTOR) == EXT2_BOOTSECTOR_SIZE);
+
 typedef struct _NTFS_BOOTSECTOR
 {
     UCHAR Jump[3];
@@ -167,8 +240,8 @@ static FILE_SYSTEM RegisteredFileSystems[] =
     { L"NTFS" , NtfsFormat, NtfsChkdsk },
 #endif
     { L"BTRFS", BtrfsFormat, BtrfsChkdsk },
-#if 0
     { L"EXT2" , Ext2Format, Ext2Chkdsk },
+#if 0
     { L"EXT3" , Ext2Format, Ext2Chkdsk },
     { L"EXT4" , Ext2Format, Ext2Chkdsk },
 #endif
@@ -686,6 +759,116 @@ Quit:
     {
         DPRINT1("Failed to unlock BTRFS volume (Status 0x%lx)\n", LockStatus);
     }
+
+    /* Free the new bootsector */
+    FreeBootCode(&NewBootSector);
+
+    return Status;
+}
+
+NTSTATUS
+InstallExt2BootCode(
+    IN PCWSTR SrcPath,          // Ext2 bootsector source file (on the installation medium)
+    IN HANDLE DstPath,          // Where to save the bootsector built from the source + partition information
+    IN HANDLE RootPartition)    // Partition holding the (old) EXT information
+{
+    NTSTATUS Status;
+    UNICODE_STRING Name;
+    IO_STATUS_BLOCK IoStatusBlock;
+    LARGE_INTEGER FileOffset;
+    BOOTCODE OrigBootSector = {0};
+    BOOTCODE NewBootSector  = {0};
+
+    /* Allocate and read the current original partition bootsector */
+    Status = ReadBootCodeByHandle(&OrigBootSector,
+                                  RootPartition,
+                                  EXT2_BOOTSECTOR_SIZE);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Allocate and read the new bootsector (2 sectors) from SrcPath */
+    RtlInitUnicodeString(&Name, SrcPath);
+    Status = ReadBootCodeFromFile(&NewBootSector,
+                                  &Name,
+                                  EXT2_BOOTSECTOR_SIZE);
+    if (!NT_SUCCESS(Status))
+    {
+        FreeBootCode(&OrigBootSector);
+        return Status;
+    }
+
+    PARTITION_INFORMATION PartitionInfo;
+
+
+    Status = NtDeviceIoControlFile(RootPartition,
+                                       NULL, NULL, NULL,
+                                       &IoStatusBlock,
+                                       IOCTL_DISK_GET_PARTITION_INFO,
+                                       NULL, 0,
+                                       &PartitionInfo,
+                                       sizeof(PartitionInfo));
+
+
+    if (!NT_SUCCESS(Status))
+    {
+        FreeBootCode(&OrigBootSector);
+        FreeBootCode(&NewBootSector);
+        return Status;
+    }
+
+    UINT ExtVolumeStartSector = (UINT) (PartitionInfo.StartingOffset.QuadPart / SECTORSIZE);
+    UINT ExtBlockSize = (1024 << ((PEXT2_BOOTSECTOR)OrigBootSector.BootCode)->LogBlockSize) / SECTORSIZE;
+    UINT ExtBlockSizeInBytes = ExtBlockSize * SECTORSIZE;
+    UINT ExtPointersPerBlock = ExtBlockSizeInBytes / sizeof(UINT);
+    UINT ExtFirstDataBlock = ((PEXT2_BOOTSECTOR)OrigBootSector.BootCode)->FirstDataBlock +1;
+    UCHAR BootPartition = (UCHAR)(PartitionInfo.PartitionNumber & 0xFF);
+    UINT ExtInodesPerGroup = ((PEXT2_BOOTSECTOR)OrigBootSector.BootCode)->InodesPerGroup;
+    // TODO: support ext3/4
+    UINT ExtInodeSize = 128;
+    UINT ExtGroupDescSize = 32;
+
+
+    ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->ExtVolumeStartSector = ExtVolumeStartSector;
+    ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->ExtBlockSize = ExtBlockSize;
+    ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->ExtBlockSizeInBytes = ExtBlockSizeInBytes;
+    ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->ExtPointersPerBlock = ExtPointersPerBlock;
+    ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->ExtGroupDescSize = ExtGroupDescSize;
+    ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->ExtFirstDataBlock = ExtFirstDataBlock;
+    ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->ExtFirstDataBlock = ExtFirstDataBlock;
+    ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->ExtInodeSize = ExtInodeSize;
+    ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->ExtInodesPerGroup = ExtInodesPerGroup;
+
+    ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->BootDrive = 0xFF;
+    ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->BootPartition = BootPartition;
+
+
+
+    DPRINT1("InstallExt2BootCode(): ExtVolumeStartSector = 0x%x;\n",  ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->ExtVolumeStartSector);
+    DPRINT1("InstallExt2BootCode(): ExtBlockSize = 0x%x;\n",  ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->ExtBlockSize);
+    DPRINT1("InstallExt2BootCode(): ExtBlockSizeInBytes = 0x%x;\n",  ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->ExtBlockSizeInBytes);
+    DPRINT1("InstallExt2BootCode(): ExtPointersPerBlock = 0x%x;\n",  ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->ExtPointersPerBlock);
+    DPRINT1("InstallExt2BootCode(): ExtGroupDescSize = 0x%x;\n",  ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->ExtGroupDescSize);
+    DPRINT1("InstallExt2BootCode(): ExtFirstDataBlock = 0x%x;\n",  ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->ExtFirstDataBlock);
+    DPRINT1("InstallExt2BootCode(): ExtInodeSize = 0x%x;\n",  ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->ExtInodeSize);
+    DPRINT1("InstallExt2BootCode(): ExtInodesPerGroup = 0x%x;\n",  ((PEXT2_BOOTSECTOR)NewBootSector.BootCode)->ExtInodesPerGroup);
+
+    /* Free the original bootsector */
+    FreeBootCode(&OrigBootSector);
+
+    /* Write the first sector of the new bootcode to DstPath sector 0 */
+    FileOffset.QuadPart = 0ULL;
+    Status = NtWriteFile(DstPath,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &IoStatusBlock,
+                         NewBootSector.BootCode,
+                         EXT2_BOOTSECTOR_SIZE,
+                         &FileOffset,
+                         NULL);
+
+    if (!NT_SUCCESS(Status))
+        DPRINT1("NtWriteFile() failed (Status %lx)\n",  Status);
 
     /* Free the new bootsector */
     FreeBootCode(&NewBootSector);
