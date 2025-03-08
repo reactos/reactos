@@ -1,0 +1,19 @@
+{
+    "indentation": {
+        "type": "spaces",
+        "size": 4
+    },
+    "lineLength": 100,
+    "braceStyle": "allman",
+    "namingConventions": {
+        "functions": {
+            "public": "PascalCase",
+            "private": "_PascalCase"
+        },
+        "variables": {
+            "local": "camelCase",
+            "global": "PascalCase",
+            "constants": "UPPER_CASE"
+        }
+    }
+}
