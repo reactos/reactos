@@ -40,13 +40,15 @@ while [ $# -gt 0 ]; do
 	shift
 done
 
+echo "Configuring a new ReactOS build on:"
+echo $(uname -srvpio); echo
+
 if [ "$REACTOS_SOURCE_DIR" = "$PWD" ]; then
 	echo "Creating directories in $REACTOS_OUTPUT_PATH"
 	mkdir -p "$REACTOS_OUTPUT_PATH"
 	cd "$REACTOS_OUTPUT_PATH"
 fi
 
-echo "Preparing reactos..."
 rm -f CMakeCache.txt host-tools/CMakeCache.txt
 
 cmake -G "$CMAKE_GENERATOR" -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-gcc.cmake -DARCH:STRING=$ARCH $EXTRA_ARGS $ROS_CMAKEOPTS "$REACTOS_SOURCE_DIR"

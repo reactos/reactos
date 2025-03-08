@@ -70,7 +70,7 @@ if defined ROS_ARCH (
 
 REM Checkpoint
 if not defined ARCH (
-    echo Unknown build architecture
+    echo Unknown build architecture.
     goto quit
 )
 
@@ -157,6 +157,10 @@ if "!CMAKE_GENERATOR!" == "Ninja" (
     echo This script defaults to Ninja. Type "configure help" for alternative options.
 )
 
+REM Display information
+echo Configuring a new ReactOS build on:
+(for /f "delims=" %%x in ('ver') do @echo %%x) & echo.
+
 REM Create directories
 set REACTOS_OUTPUT_PATH=output-%BUILD_ENVIRONMENT%-%ARCH%
 
@@ -188,10 +192,9 @@ if "%VS_SOLUTION%" == "1" (
     goto quit
 )
 
-echo Preparing reactos...
 
 if EXIST CMakeCache.txt (
-    del CMakeCache.txt /q
+    del /q CMakeCache.txt
 )
 
 if "%BUILD_ENVIRONMENT%" == "MinGW" (
