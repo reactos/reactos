@@ -30,6 +30,9 @@
 *.TXT text
 *.y text
 
+# Files with these extensions must always have LF (Unix) line endings.
+*.sh text eol=lf
+
 # Files with these extensions end up in the built ReactOS system, so they
 # need to have CRLF line endings.
 *.bat text eol=crlf
