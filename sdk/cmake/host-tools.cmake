@@ -2,7 +2,7 @@
 include(ExternalProject)
 
 function(setup_host_tools)
-    list(APPEND HOST_TOOLS asmpp bin2c widl gendib cabman fatten hpp isohybrid mkhive mkisofs obj2bin spec2def geninc mkshelllink txt2nls utf16le xml2sdb)
+    list(APPEND HOST_TOOLS asmpp bin2c widl gendib cabman fatten hpp isohybrid mkhive mkisofs obj2bin spec2def geninc mkshelllink txt2nls utf16le whitelister xml2sdb)
     if(NOT MSVC)
         list(APPEND HOST_TOOLS rsym pefixup)
     endif()
@@ -127,4 +127,18 @@ function(setup_host_tools)
         set_target_properties(native-${_module} PROPERTIES IMPORTED_LOCATION ${INSTALL_DIR}/bin/${HOST_EXTRA_DIR}${_module}${HOST_MODULE_SUFFIX})
         add_dependencies(native-${_module} host-tools ${INSTALL_DIR}/bin/${HOST_EXTRA_DIR}${_module}${HOST_MODULE_SUFFIX})
     endforeach()
+endfunction()
+
+function(generate_whitelist_code _whitelist_file)
+
+    # Error out on anything else than txt
+    if(NOT ${_whitelist_file} MATCHES ".*\\\.txt")
+        message(FATAL_ERROR "generate_whitelist_code only takes txt files as input.")
+    endif()
+
+    # Generate exports def and C stubs file for the DLL
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/whitelist.c
+        COMMAND native-whitelister --gen-tables ${CMAKE_CURRENT_SOURCE_DIR}/${_whitelist_file} ${CMAKE_CURRENT_BINARY_DIR}/whitelist.c ${REACTOS_SOURCE_DIR}
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_whitelist_file} ${CMAKE_CURRENT_SOURCE_DIR} native-whitelister)
 endfunction()
