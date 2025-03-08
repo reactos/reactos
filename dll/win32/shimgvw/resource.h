@@ -28,6 +28,8 @@
 #define IDB_MODIFY      64
 #define IDB_HELP_TOC    65
 
+#define IDC_TOOLBAR     42
+
 /* ToolBar buttons */
 #define IDC_TOOL_BASE   500
 #define IDC_ACCEL_BASE (IDC_TOOL_BASE + 100) /* Accelerator commands not on the toolbar */
