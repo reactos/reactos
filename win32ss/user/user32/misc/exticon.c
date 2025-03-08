@@ -347,6 +347,14 @@ static UINT ICO_ExtractIconExW(
 	hFile = CreateFileW(szExePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0);
 	if (hFile == INVALID_HANDLE_VALUE) return ret;
 	fsizel = GetFileSize(hFile,&fsizeh);
+#ifdef __REACTOS__
+    if (!(fsizel | fsizeh))
+    {
+        /* Cannot map empty file */
+        CloseHandle(hFile);
+        return 0; /* No icons */
+    }
+#endif
 
 	/* Map the file */
 	fmapping = CreateFileMappingW(hFile, NULL, PAGE_READONLY | SEC_COMMIT, 0, 0, NULL);
