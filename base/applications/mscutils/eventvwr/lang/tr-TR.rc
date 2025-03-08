@@ -168,6 +168,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "Silmeden önce bu olay kaydını kaydetmek ister misiniz?"
     IDS_RESTOREDEFAULTS "Bu günlük için tüm ayarları varsayılan değerlerine geri yüklemek istiyor musunuz?"
     IDS_EVENTSTRINGIDNOTFOUND "( %s ) kaynağındaki ( %lu ) olay kimliği için açıklama bulunamıyor. Yerel bilgisayarda, uzak bilgisayardan iletileri görüntülemesi için gerekli Kayıt Defteri bilgisi veya ileti DLL dosyaları olmayabilir.\n\nAşağıdaki bilgi olayın parçasıdır:\n\n"
+    IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
+    IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
 END
 
 STRINGTABLE

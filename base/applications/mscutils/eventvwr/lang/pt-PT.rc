@@ -167,6 +167,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "Deseja guardar este registo de eventos antes de limpar?"
     IDS_RESTOREDEFAULTS "Tem a certeza de que pretende repor todas definições deste registo para os valores predefinidos?"
     IDS_EVENTSTRINGIDNOTFOUND "A descrição do ID de Evento ( %lu ) na Origem ( %s ) não foi encontrado. O computador local talvez não possua a informação de registo necessária ou os ficheiros DLL necessárias para apresentar mensagens de um computador remoto.\n\nA informação seguinte é parte do evento:\n\n"
+    IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
+    IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
 END
 
 STRINGTABLE

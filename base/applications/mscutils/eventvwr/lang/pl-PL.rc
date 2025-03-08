@@ -170,6 +170,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "Czy chcesz zapisać dziennik zdarzeń przed czyszczeniem?"
     IDS_RESTOREDEFAULTS "Czy chcesz przywrócić wszystkie ustawienia tego dziennika do wartości domyślnych?"
     IDS_EVENTSTRINGIDNOTFOUND "Opis zdarzenia dla danego numeru ID ( %lu ) nie został odnaleziony w źródle ( %s ). Ten komputer może nie miec wystarczających informacji w rejestrze, albo bibliotek DLL, aby wyświetlić wiadomości z komputera zdalnego.\n\nThe following information is part of the event:\n\n"
+    IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
+    IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
 END
 
 STRINGTABLE

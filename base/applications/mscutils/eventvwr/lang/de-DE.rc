@@ -168,6 +168,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "Möchten Sie dieses Protokoll vor dem Löschen speichern?"
     IDS_RESTOREDEFAULTS "Möchten Sie alle Einstellungen für dieses Protokoll wieder auf die Standardwerte zurücksetzen?"
     IDS_EVENTSTRINGIDNOTFOUND "Die Bezeichnung für die Ereignis-ID ( %lu ) in der Quelle ( %s ) kann nicht gefunden werden. Es könnte sein, dass der lokale Computer die notwendigen Registry Einträge oder Nachrichten DLLs, um Nachrichten entfernter Computer anzuzeigen, nicht besitzt.\n\nDas Ereignis enthält folgende Informationen:\n\n"
+    IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
+    IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
 END
 
 STRINGTABLE

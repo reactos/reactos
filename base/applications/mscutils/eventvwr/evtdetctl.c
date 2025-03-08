@@ -792,6 +792,11 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 pData->EventLogFilter = DetailInfo->EventLogFilter;
                 pData->iEventItem     = DetailInfo->iEventItem;
             }
+            else
+            {
+                pData->iEventItem = -1;
+            }
+
             pData->bDisplayWords  = FALSE;
             pData->hMonospaceFont = CreateMonospaceFont();
 
@@ -838,31 +843,26 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 case IDC_NEXT:
                 {
                     BOOL bPrev = (LOWORD(wParam) == IDC_PREVIOUS);
-                    INT iItem, iSel;
+                    INT iItem, iSel, nItems = ListView_GetItemCount(hwndListView);
+                    WCHAR szText[200];
+
+                    if (nItems <= 0) /* No items? */
+                        break;
 
                     /* Select the previous/next item from our current one */
-                    iItem = ListView_GetNextItem(hwndListView,
-                                                 pData->iEventItem,
-                                                 bPrev ? LVNI_ABOVE : LVNI_BELOW);
-                    if (iItem == -1)
+                    iItem = ListView_GetNextItem(hwndListView, -1, LVNI_ALL | LVNI_SELECTED);
+                    iItem = ListView_GetNextItem(hwndListView, iItem,
+                                                 (bPrev ? LVNI_ABOVE : LVNI_BELOW));
+                    if (iItem < 0 || iItem >= nItems)
                     {
-                        // TODO: Localization.
-                        if (MessageBoxW(hDlg,
-                                        bPrev
-                                            ? L"You have reached the beginning of the event log. Do you want to continue from the end?"
-                                            : L"You have reached the end of the event log. Do you want to continue from the beginning?",
-                                        szTitle,
-                                        MB_YESNO | MB_ICONQUESTION)
-                            == IDNO)
-                        {
+                        LoadStringW(hInst,
+                                    (bPrev ? IDS_CONTFROMEND : IDS_CONTFROMBEGINNING),
+                                    szText, _countof(szText));
+                        if (MessageBoxW(hDlg, szText, szTitle, MB_YESNO | MB_ICONQUESTION) == IDNO)
                             break;
-                        }
 
                         /* Determine from where to restart */
-                        if (bPrev)
-                            iItem = ListView_GetItemCount(hwndListView) - 1;
-                        else
-                            iItem = 0;
+                        iItem = (bPrev ? (nItems - 1) : 0);
                     }
 
                     /*
@@ -958,4 +958,12 @@ CreateEventDetailsCtrl(HINSTANCE hInstance,
     return CreateDialogParamW(hInstance,
                               MAKEINTRESOURCEW(IDD_EVENTDETAILS_CTRL),
                               hParentWnd, EventDetailsCtrl, lParam);
+}
+
+VOID
+EnableEventDetailsButtons(HWND hWnd, BOOL bEnable)
+{
+    EnableDlgItem(hWnd, IDC_PREVIOUS, bEnable);
+    EnableDlgItem(hWnd, IDC_NEXT, bEnable);
+    EnableDlgItem(hWnd, IDC_COPY, bEnable);
 }

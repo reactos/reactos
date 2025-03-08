@@ -168,6 +168,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "このイベントをクリアする前に保存したいですか？"
     IDS_RESTOREDEFAULTS "すべての設定をデフォルトに戻しますか？"
     IDS_EVENTSTRINGIDNOTFOUND "イベント ID (%lu) (ソース %s 内) に関する説明が見つかりませんでした。 リモート コンピュータからメッセージを表示するために必要なレジストリ情報またはメッセージ DLL ファイルがローカル コンピュータにない可能性があります。\n\n次の情報はイベントの一部です:\n\n"
+    IDS_CONTFROMBEGINNING "イベント ログの最後に到達しました。最初から続けますか？"
+    IDS_CONTFROMEND "イベント ログの先頭に到達しました。最後から続けますか？"
 END
 
 STRINGTABLE

@@ -168,6 +168,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "您想在清除之前儲存這個事件記錄嗎？"
     IDS_RESTOREDEFAULTS "您要將這個記錄的所有設定還原至預設值嗎？"
     IDS_EVENTSTRINGIDNOTFOUND "找不到來源（%s）中的事件 ID（%lu）的描述。本地電腦可能沒有顯示來自遠端電腦訊息所需的註冊表資訊或訊息 DLL 檔。\n\n下列資訊是部分事件：\n\n"
+    IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
+    IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
 END
 
 STRINGTABLE

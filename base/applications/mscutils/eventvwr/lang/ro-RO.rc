@@ -169,6 +169,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "Doriți să salvați acest jurnal de evenimente înainte de a-l închide?"
     IDS_RESTOREDEFAULTS "Doriți să restabiliți toate setările pentru acest jurnal la valorile lor implicite?"
     IDS_EVENTSTRINGIDNOTFOUND "Imposibil de găsit descrierea evenimentului cu ID-ul ( %lu ) în sursa ( %s ). Este posibil ca computerul local să nu aibă informațiile de registru necesare sau fișierele DLL de mesaje pentru a afișa mesaje de la un computer la distanță.\n\nUrmătoarele informații fac parte din eveniment:\n\n"
+    IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
+    IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
 END
 
 STRINGTABLE

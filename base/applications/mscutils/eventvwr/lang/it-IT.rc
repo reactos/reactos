@@ -168,6 +168,8 @@ BEGIN
     IDS_CLEAREVENTS_MSG "Do you want to save this event log before clearing it?"
     IDS_RESTOREDEFAULTS "Do you want to restore all settings for this log to their default values?"
     IDS_EVENTSTRINGIDNOTFOUND "La descrizione per l'ID evento ( %lu ) proveniente da ( %s ) non può essere trovata. Il computer locale potrebbe non avere le informazioni sul registry necessarie o i file DLL con i messaggi necessari per la visualizzazione da un computer remoto.\n\nThe following information is part of the event:\n\n"
+    IDS_CONTFROMBEGINNING "You have reached the end of the event log. Do you want to continue from the beginning?"
+    IDS_CONTFROMEND "You have reached the beginning of the event log. Do you want to continue from the end?"
 END
 
 STRINGTABLE
