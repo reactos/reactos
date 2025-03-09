@@ -40,6 +40,8 @@ while [ $# -gt 0 ]; do
 	shift
 done
 
+echo "Configuring a new ReactOS build on:"; echo $(uname -srvpio); echo
+
 if [ "$REACTOS_SOURCE_DIR" = "$PWD" ]; then
 	echo Creating directories in $REACTOS_OUTPUT_PATH
 	mkdir -p "$REACTOS_OUTPUT_PATH"
