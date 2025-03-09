@@ -1196,11 +1196,8 @@ HRESULT CShellBrowser::GetMenuBand(REFIID riid, void **shellMenu)
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
-    hResult = bandSite->QueryBand(1, &deskBand, NULL, NULL, 0);
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-
-    return deskBand->QueryInterface(riid, shellMenu);
+    hResult = bandSite->QueryBand(ITBBID_MENUBAND, &deskBand, NULL, NULL, 0);
+    return FAILED(hResult) ? hResult : deskBand->QueryInterface(riid, shellMenu); // It is expected that this might fail during WM_DESTROY
 }
 
 HRESULT CShellBrowser::GetBaseBar(bool vertical, REFIID riid, void **theBaseBar)
@@ -2097,7 +2094,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::QueryStatus(const GUID *pguidCmdGroup,
             {
                 case IDM_GOTO_UPONELEVEL:
                     prgCmds->cmdf = OLECMDF_SUPPORTED;
-                    if (fCurrentDirectoryPIDL->mkid.cb != 0)
+                    if (!_ILIsDesktop(fCurrentDirectoryPIDL))
                         prgCmds->cmdf |= OLECMDF_ENABLED;
                     break;
             }
@@ -3696,6 +3693,7 @@ LRESULT CShellBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 
         fCurrentShellFolder.Release();
         ILFree(fCurrentDirectoryPIDL);
+        fCurrentDirectoryPIDL = NULL;
         ::DestroyWindow(fStatusBar);
         DestroyMenu(fCurrentMenuBar);
     }
