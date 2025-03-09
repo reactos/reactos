@@ -247,8 +247,6 @@ BOOL	_ILIsMyComputer		(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
 #ifdef __REACTOS__
 BOOL	_ILIsMyDocuments	(LPCITEMIDLIST pidl);
 BOOL	_ILIsBitBucket		(LPCITEMIDLIST pidl);
-BOOL	_ILIsNetHood		(LPCITEMIDLIST pidl);
-BOOL    _ILIsControlPanel   (LPCITEMIDLIST pidl);
 #define _ILIsFolderOrFile   _ILGetFSType
 #endif
 BOOL	_ILIsDrive		(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
