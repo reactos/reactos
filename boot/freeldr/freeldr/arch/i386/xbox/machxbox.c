@@ -374,7 +374,6 @@ XboxPrepareForReactOS(VOID)
 {
     /* On Xbox, prepare video and disk support */
     XboxVideoPrepareForReactOS();
-    XboxDiskInit(FALSE);
     DiskStopFloppyMotor();
 
     /* Turn off debug messages to screen */

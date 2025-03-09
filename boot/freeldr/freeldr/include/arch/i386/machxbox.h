@@ -51,7 +51,6 @@ VOID XboxPrepareForReactOS(VOID);
 VOID XboxMemInit(VOID);
 PFREELDR_MEMORY_DESCRIPTOR XboxMemGetMemoryMap(ULONG *MemoryMapSize);
 
-VOID XboxDiskInit(BOOLEAN Init);
 BOOLEAN XboxDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
 BOOLEAN XboxDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY DriveGeometry);
 ULONG XboxDiskGetCacheableBlockCount(UCHAR DriveNumber);
