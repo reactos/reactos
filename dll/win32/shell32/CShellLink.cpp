@@ -2914,7 +2914,7 @@ BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
 
     HWND hWndTarget = GetDlgItem(hwndDlg, IDC_SHORTCUT_TARGET_TEXT);
     EnableWindow(hWndTarget, !disablecontrols);
-    PostMessage(hWndTarget, EM_SETSEL, 0, -1); // Fix caret bug when first opening the tab
+    PostMessage(hWndTarget, EM_SETSEL, 0, -1); // Fix caret bug when first opening the tab [CORE-20016]
 
     /* auto-completion */
     SHAutoComplete(hWndTarget, SHACF_DEFAULT);

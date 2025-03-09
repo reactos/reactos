@@ -151,9 +151,8 @@ DoLoadIcons(HWND hwndDlg, PPICK_ICON_CONTEXT pIconContext, LPCWSTR pszFile)
         }
     }
 
-    // Set the text and reset the edit control's modification flag
     SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, pIconContext->szPath);
-    SendDlgItemMessage(hwndDlg, IDC_EDIT_PATH, EM_SETMODIFY, FALSE, 0);
+    SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, 0, 0);
 
     if (pIconContext->nIcons == 0)
     {
@@ -194,9 +193,7 @@ INT_PTR CALLBACK PickIconProc(
     HICON hIcon;
     INT index, count;
     WCHAR szText[MAX_PATH], szFilter[100];
-    CStringW strTitle;
     OPENFILENAMEW ofn;
-
     PPICK_ICON_CONTEXT pIconContext = (PPICK_ICON_CONTEXT)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch(uMsg)
@@ -251,18 +248,11 @@ INT_PTR CALLBACK PickIconProc(
             case IDOK:
             {
                 /* Check whether the path edit control has been modified; if so load the icons instead of validating */
-                if (SendDlgItemMessage(hwndDlg, IDC_EDIT_PATH, EM_GETMODIFY, 0, 0))
+                GetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, szText, _countof(szText));
+                if (lstrcmpiW(szText, pIconContext->szPath))
                 {
-                    /* Reset the edit control's modification flag and retrieve the text */
-                    SendDlgItemMessage(hwndDlg, IDC_EDIT_PATH, EM_SETMODIFY, FALSE, 0);
-                    GetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, szText, _countof(szText));
-
-                    // Load the icons
                     if (!DoLoadIcons(hwndDlg, pIconContext, szText))
                         NoIconsInFile(hwndDlg, pIconContext);
-
-                    // Set the selection
-                    SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, 0, 0);
                     break;
                 }
 
@@ -293,6 +283,7 @@ INT_PTR CALLBACK PickIconProc(
             case IDC_BUTTON_PATH:
             {
                 // Choose the module path
+                CStringW strTitle;
                 szText[0] = 0;
                 szFilter[0] = 0;
                 ZeroMemory(&ofn, sizeof(ofn));
@@ -310,9 +301,6 @@ INT_PTR CALLBACK PickIconProc(
                 // Load the icons
                 if (!DoLoadIcons(hwndDlg, pIconContext, szText))
                     NoIconsInFile(hwndDlg, pIconContext);
-
-                // Set the selection
-                SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, 0, 0);
                 break;
             }
 
@@ -331,8 +319,9 @@ INT_PTR CALLBACK PickIconProc(
             lpdis = (LPDRAWITEMSTRUCT)lParam;
             if (lpdis->itemID == (UINT)-1)
                 break;
-            switch (lpdis->itemAction)
+            switch (lpdis->itemAction) // FIXME: MSDN says that more than one of these can be set
             {
+                // FIXME: ODA_FOCUS
                 case ODA_SELECT:
                 case ODA_DRAWENTIRE:
                 {
