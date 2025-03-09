@@ -31,7 +31,7 @@ BEGIN
     STRING_FMIFS_FAIL "Nie można zlokalizować punktów wejściowych FMIFS.\n\n"
     STRING_UNKNOW_ARG "Nieprawidłowy parametr: %s\n"
     STRING_DRIVE_PARM "Brakujący wymagany parametr dysku.\n\n"
-    STRING_ERROR_DRIVE_TYPE "Nie można określić rodzaju dysku"
+    STRING_ERROR_DRIVE_TYPE "Nie można określić rodzaju dysku.\n"
     STRING_INSERT_DISK "Włóż nowy dysk do napędu %C:\ni naciśnij Enter..."
     STRING_NO_VOLUME "Nie można odczytać woluminu"
     STRING_NO_VOLUME_SIZE "Nie można odczytać rozmiaru woluminu"
