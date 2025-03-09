@@ -34,6 +34,7 @@ extern void func_SHChangeNotify(void);
 extern void func_SHCreateDataObject(void);
 extern void func_SHCreateFileDataObject(void);
 extern void func_SHCreateFileExtractIconW(void);
+extern void func_SHDefExtractIcon(void);
 extern void func_SHEnumerateUnreadMailAccountsW(void);
 extern void func_She(void);
 extern void func_ShellExec_RunDLL(void);
@@ -89,6 +90,7 @@ const struct test winetest_testlist[] =
     { "SHCreateDataObject", func_SHCreateDataObject },
     { "SHCreateFileDataObject", func_SHCreateFileDataObject },
     { "SHCreateFileExtractIconW", func_SHCreateFileExtractIconW },
+    { "SHDefExtractIcon", func_SHDefExtractIcon },
     { "SHEnumerateUnreadMailAccountsW", func_SHEnumerateUnreadMailAccountsW },
     { "She", func_She },
     { "ShellExec_RunDLL", func_ShellExec_RunDLL },

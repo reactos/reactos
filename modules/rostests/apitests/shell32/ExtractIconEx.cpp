@@ -9,6 +9,28 @@
 #include "shelltest.h"
 #include <stdio.h>
 
+EXTERN_C BOOL WINAPI SHAreIconsEqual(HICON hIcon1, HICON hIcon2);
+
+static void SafeDestroyIcon(HICON hIco)
+{
+    if (hIco)
+        DestroyIcon(hIco);
+}
+
+static UINT GetIcoSize(HICON hIco)
+{
+    ICONINFO info;
+    if (!GetIconInfo(hIco, &info))
+        return 0;
+
+    BITMAP bm;
+    if (!GetObject(info.hbmColor ? info.hbmColor : info.hbmMask, sizeof(bm), &bm))
+        bm.bmWidth = 0;
+    DeleteObject(info.hbmMask);
+    DeleteObject(info.hbmColor);
+    return bm.bmWidth;
+}
+
 typedef struct
 {
     PCWSTR pszFilePath;
@@ -121,4 +143,67 @@ START_TEST(ExtractIconEx)
 
     DeleteFileA(FileName[0]);
     DeleteFileA(FileName[1]);
+}
+
+static HRESULT SHDEI(LPCWSTR pszIconFile, int Index = 0, UINT GIL = 0, UINT Size = 0)
+{
+    HICON hIco = NULL;
+    HRESULT hr = SHDefExtractIcon(pszIconFile, Index, GIL, &hIco, NULL, Size);
+    if (hr == S_OK)
+    {
+        hr = GetIcoSize(hIco);
+        SafeDestroyIcon(hIco);
+    }
+    return hr;
+}
+
+START_TEST(SHDefExtractIcon)
+{
+    HRESULT hr;
+    int SysBigIconSize = GetSystemMetrics(SM_CXICON);
+
+    // Modern Windows requires the system image list to be initialized for GIL_SIMULATEDOC to work!
+    SHFILEINFOW shfi;
+    SHGetFileInfoW(L"x", 0, &shfi, sizeof(shfi), SHGFI_SYSICONINDEX | SHGFI_USEFILEATTRIBUTES);
+
+    WCHAR path[MAX_PATH];
+    GetSystemDirectoryW(path, _countof(path));
+    PathAppendW(path, L"user32.dll");
+    int index = 1;
+
+    ok(SHDEI(path, index, 0, 0) == SysBigIconSize, "0 size must match GetSystemMetrics\n");
+    ok(SHDEI(path, index, 0, SysBigIconSize * 2) == SysBigIconSize * 2, "Resize failed\n");
+
+    HICON hIcoLarge, hIcoSmall;
+    if (SHDefExtractIcon(path, index, 0, &hIcoLarge, &hIcoSmall, 0) != S_OK)
+        hIcoLarge = hIcoSmall = NULL;
+    ok(hIcoLarge && hIcoSmall && !SHAreIconsEqual(hIcoLarge, hIcoSmall), "Large+Small failed\n");
+    SafeDestroyIcon(hIcoLarge);
+    SafeDestroyIcon(hIcoSmall);
+
+    static const int sizes[] = { 0, SysBigIconSize * 2 };
+    for (UINT i = 0; i < _countof(sizes); ++i)
+    {
+        HICON hIcoNormal, hIcoSimDoc;
+        if (FAILED(hr = SHDefExtractIcon(path, index, 0, &hIcoNormal, NULL, sizes[i])))
+            hIcoNormal = NULL;
+        if (FAILED(hr = SHDefExtractIcon(path, index, GIL_SIMULATEDOC, &hIcoSimDoc, NULL, sizes[i])))
+            hIcoSimDoc = NULL;
+        ok(hIcoNormal && hIcoSimDoc && !SHAreIconsEqual(hIcoNormal, hIcoSimDoc), "GIL_SIMULATEDOC failed\n");
+        SafeDestroyIcon(hIcoNormal);
+        SafeDestroyIcon(hIcoSimDoc);
+    }
+
+    GetTempPathW(_countof(path), path);
+    GetTempFileNameW(path, L"TEST", 0, path);
+    ok(SHDEI(path) == S_FALSE, "Empty file should return S_FALSE\n");
+    HANDLE hFile = CreateFileW(path, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL);
+    if (hFile != INVALID_HANDLE_VALUE)
+    {
+        DWORD io;
+        WriteFile(hFile, "!", 1, &io, NULL);
+        CloseHandle(hFile);
+        ok(SHDEI(path) == S_FALSE, "File without icons should return S_FALSE\n");
+    }
+    DeleteFile(path);
 }
