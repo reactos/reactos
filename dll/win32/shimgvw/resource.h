@@ -10,6 +10,9 @@
 /* Cursors */
 #define IDC_HANDDRAG 100
 
+/* Control IDs */
+#define IDC_TOOLBAR     40
+
 /* Toolbar images */
 #define IDB_PREV_PIC    50
 #define IDB_NEXT_PIC    51
@@ -27,8 +30,6 @@
 #define IDB_SAVEAS      63
 #define IDB_MODIFY      64
 #define IDB_HELP_TOC    65
-
-#define IDC_TOOLBAR     42
 
 /* ToolBar buttons */
 #define IDC_TOOL_BASE   500

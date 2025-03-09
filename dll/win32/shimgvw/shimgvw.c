@@ -381,14 +381,13 @@ Preview_pLoadImage(PPREVIEW_DATA pData, LPCWSTR szOpenFileName)
 {
     HRESULT hr;
     BOOL bCanDel;
-    HWND hToolbar = GetDlgItem(g_hMainWnd, IDC_TOOLBAR);
     Preview_pFreeImage(pData);
     InvalidateRect(pData->m_hwnd, NULL, FALSE); /* Schedule redraw in case we change to "No preview" */
 
     GetFullPathNameW(szOpenFileName, _countof(g_szFile), g_szFile, NULL);
     hr = LoadImageFromPath(szOpenFileName, &g_pImage);
     bCanDel = hr != HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) && hr != HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
-    SendMessageW(hToolbar, TB_ENABLEBUTTON, IDC_DELETE, bCanDel);
+    SendDlgItemMessageW(g_hMainWnd, IDC_TOOLBAR, TB_ENABLEBUTTON, IDC_DELETE, bCanDel);
     if (FAILED(hr))
     {
         DPRINT1("GdipLoadImageFromStream() failed, %d\n", hr);
@@ -1395,8 +1394,9 @@ Preview_Delete(PPREVIEW_DATA pData)
     error = g_szFile[0] ? SHFileOperationW(&FileOp) : ERROR_FILE_NOT_FOUND;
     if (error != 0)
     {
+        enum { SHFO_FIRSTCUSTOMERROR = 0x71 /* DE_SAMEFILE */ };
         if (!FileOp.fAnyOperationsAborted && error != ERROR_CANCELLED)
-            ErrorBox(FileOp.hwnd, error < 0x70 ? error : E_FAIL);
+            ErrorBox(FileOp.hwnd, error < SHFO_FIRSTCUSTOMERROR ? error : E_FAIL);
         return;
     }
 
@@ -1474,13 +1474,10 @@ Preview_OnCommand(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     PPREVIEW_DATA pData = Preview_GetData(hwnd);
     UINT nCommandID = LOWORD(wParam);
-    if (!lParam || !HIWORD(wParam))
+    if ((!HIWORD(wParam) || !lParam) && IsCommandEnabled(nCommandID) == S_FALSE)
     {
-        HRESULT hr = IsCommandEnabled(nCommandID);
-        if (hr == S_FALSE)
-            MessageBeep(MB_ICONWARNING);
-        if (hr != S_OK)
-            return;
+        MessageBeep(MB_ICONWARNING);
+        return;
     }
 
     switch (nCommandID)
