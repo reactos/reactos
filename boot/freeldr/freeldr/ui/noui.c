@@ -17,7 +17,7 @@ VOID NoUiUnInitialize(VOID)
 {
 }
 
-VOID NoUiDrawBackdrop(VOID)
+VOID NoUiDrawBackdrop(ULONG DrawHeight)
 {
 }
 

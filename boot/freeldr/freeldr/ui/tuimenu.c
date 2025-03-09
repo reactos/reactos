@@ -202,7 +202,7 @@ TuiDrawMenu(
 
     // FIXME: Theme-specific
     /* Draw the backdrop */
-    UiDrawBackdrop();
+    UiDrawBackdrop(UiGetScreenHeight());
 
     /* Draw the menu box */
     TuiDrawMenuBox(MenuInfo);

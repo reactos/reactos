@@ -53,15 +53,21 @@ BOOLEAN MiniTuiInitialize(VOID)
     return TRUE;
 }
 
-VOID MiniTuiDrawBackdrop(VOID)
+VOID MiniTuiDrawBackdrop(ULONG DrawHeight)
 {
     /* Fill in a black background */
-    TuiFillArea(0, 0, UiScreenWidth - 1, UiScreenHeight - 3,
+    TuiFillArea(0, 0, UiScreenWidth - 1, DrawHeight - 1,
                 UiBackdropFillStyle,
                 ATTR(UiBackdropFgColor, UiBackdropBgColor));
 
     /* Update the screen buffer */
     VideoCopyOffScreenBufferToVRAM();
+}
+
+VOID MiniTuiFadeInBackdrop(VOID)
+{
+    /* No fade-in effect in MiniTui */
+    MiniTuiDrawBackdrop(UiScreenHeight);
 }
 
 VOID MiniTuiDrawStatusText(PCSTR StatusText)
@@ -186,7 +192,7 @@ MiniTuiDrawMenu(
     ULONG i;
 
     /* Draw the backdrop */
-    UiDrawBackdrop();
+    UiDrawBackdrop(UiGetScreenHeight());
 
     /* No GUI status bar text, just minimal text. Show the menu header. */
     if (MenuInfo->MenuHeader)
@@ -250,7 +256,7 @@ const UIVTBL MiniTuiVtbl =
     TuiEditBox,
     TuiTextToColor,
     TuiTextToFillStyle,
-    MiniTuiDrawBackdrop, /* no FadeIn */
+    MiniTuiFadeInBackdrop,
     TuiFadeOut,
     TuiDisplayMenu,
     MiniTuiDrawMenu,

@@ -114,7 +114,7 @@ LoadAndBootLinux(
     else
         strcpy(LinuxBootDescription, "Loading Linux...");
 
-    UiDrawBackdrop();
+    UiDrawBackdrop(UiGetScreenHeight());
     UiDrawStatusText(LinuxBootDescription);
     UiDrawProgressBarCenter(LinuxBootDescription);
 

@@ -1030,7 +1030,7 @@ LoadAndBootWindows(
     }
 
     /* Let the user know we started loading */
-    UiDrawBackdrop();
+    UiDrawBackdrop(UiGetScreenHeight());
     UiDrawStatusText("Loading...");
     UiDrawProgressBarCenter("Loading NT...");
 
