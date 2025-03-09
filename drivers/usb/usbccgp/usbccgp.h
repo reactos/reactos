@@ -4,6 +4,7 @@
 #include <wdm.h>
 #include <hubbusif.h>
 #include <usbbusif.h>
+#include <usb100.h>
 #include <usbdlib.h>
 
 #include <stdio.h>
