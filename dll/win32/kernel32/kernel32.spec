@@ -760,6 +760,33 @@
 @ stdcall IsValidLocale(long long)
 @ stdcall -version=0x501-0x502 IsValidUILanguage(long)
 @ stdcall IsWow64Process(ptr ptr)
+@ stdcall -version=0x601+ K32EmptyWorkingSet(long) EmptyWorkingSet
+@ stdcall -version=0x601+ K32EnumDeviceDrivers(ptr long ptr) EnumDeviceDrivers
+@ stdcall -version=0x601+ K32EnumPageFilesA(ptr ptr) EnumPageFilesA
+@ stdcall -version=0x601+ K32EnumPageFilesW(ptr ptr) EnumPageFilesW
+@ stdcall -version=0x601+ K32EnumProcessModules(long ptr long ptr) EnumProcessModules
+@ stdcall -stub -version=0x601+ K32EnumProcessModulesEx(long ptr long ptr long); EnumProcessModulesEx
+@ stdcall -version=0x601+ K32EnumProcesses(ptr long ptr) EnumProcesses
+@ stdcall -version=0x601+ K32GetDeviceDriverBaseNameA(ptr ptr long) GetDeviceDriverBaseNameA
+@ stdcall -version=0x601+ K32GetDeviceDriverBaseNameW(ptr ptr long) GetDeviceDriverBaseNameW
+@ stdcall -version=0x601+ K32GetDeviceDriverFileNameA(ptr ptr long) GetDeviceDriverFileNameA
+@ stdcall -version=0x601+ K32GetDeviceDriverFileNameW(ptr ptr long) GetDeviceDriverFileNameW
+@ stdcall -version=0x601+ K32GetMappedFileNameA(long ptr ptr long) GetMappedFileNameA
+@ stdcall -version=0x601+ K32GetMappedFileNameW(long ptr ptr long) GetMappedFileNameW
+@ stdcall -version=0x601+ K32GetModuleBaseNameA(long long ptr long) GetModuleBaseNameA
+@ stdcall -version=0x601+ K32GetModuleBaseNameW(long long ptr long) GetModuleBaseNameW
+@ stdcall -version=0x601+ K32GetModuleFileNameExA(long long ptr long) GetModuleFileNameExA
+@ stdcall -version=0x601+ K32GetModuleFileNameExW(long long ptr long) GetModuleFileNameExW
+@ stdcall -version=0x601+ K32GetModuleInformation(long long ptr long) GetModuleInformation
+@ stdcall -version=0x601+ K32GetPerformanceInfo(ptr long) GetPerformanceInfo
+@ stdcall -version=0x601+ K32GetProcessImageFileNameA(long ptr long) GetProcessImageFileNameA
+@ stdcall -version=0x601+ K32GetProcessImageFileNameW(long ptr long) GetProcessImageFileNameW
+@ stdcall -version=0x601+ K32GetProcessMemoryInfo(long ptr long) GetProcessMemoryInfo
+@ stdcall -version=0x601+ K32GetWsChanges(long ptr long) GetWsChanges
+@ stdcall -stub -version=0x601+ K32GetWsChangesEx(long ptr ptr); GetWsChangesEx
+@ stdcall -version=0x601+ K32InitializeProcessForWsWatch(long) InitializeProcessForWsWatch
+@ stdcall -version=0x601+ K32QueryWorkingSet(long ptr long) QueryWorkingSet
+@ stdcall -version=0x601+ K32QueryWorkingSetEx(long ptr long) QueryWorkingSetEx
 @ stdcall -version=0x600+ LCIDToLocaleName(long wstr long long)
 @ stdcall LCMapStringA(long long str long ptr long)
 @ stdcall -version=0x600+ LCMapStringEx(long long wstr long ptr long ptr ptr long)

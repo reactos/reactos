@@ -245,67 +245,6 @@ CallBackConvertToAscii(LPVOID pContext,
 }
 
 /*
- * @unimplemented
- */
-static VOID NTAPI
-PsParseCommandLine(VOID)
-{
-    UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-static VOID NTAPI
-PsInitializeAndStartProfile(VOID)
-{
-    UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-static VOID NTAPI
-PsStopAndAnalyzeProfile(VOID)
-{
-    UNIMPLEMENTED;
-}
-
-/* PUBLIC *********************************************************************/
-
-/*
- * @implemented
- */
-BOOLEAN
-WINAPI
-DllMain(HINSTANCE hDllHandle,
-        DWORD nReason,
-        LPVOID Reserved)
-{
-    switch(nReason)
-    {
-        case DLL_PROCESS_ATTACH:
-            DisableThreadLibraryCalls(hDllHandle);
-            if (NtCurrentPeb()->ProcessParameters->Flags & RTL_USER_PROCESS_PARAMETERS_PROFILE_USER)
-            {
-                PsParseCommandLine();
-                PsInitializeAndStartProfile();
-            }
-            break;
-
-        case DLL_PROCESS_DETACH:
-            if (NtCurrentPeb()->ProcessParameters->Flags & RTL_USER_PROCESS_PARAMETERS_PROFILE_USER)
-            {
-                PsStopAndAnalyzeProfile();
-            }
-            break;
-    }
-
-    return TRUE;
-}
-
-
-/*
  * @implemented
  */
 BOOL
