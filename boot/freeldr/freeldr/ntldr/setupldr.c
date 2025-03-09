@@ -531,7 +531,7 @@ LoadReactOSSetup(
     }
 
     /* Let the user know we started loading */
-    UiDrawBackdrop();
+    UiDrawBackdrop(UiGetScreenHeight());
     UiDrawStatusText("Setup is loading...");
     UiDrawProgressBarCenter("Loading ReactOS Setup...");
 
