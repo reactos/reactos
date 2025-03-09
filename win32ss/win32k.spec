@@ -206,10 +206,10 @@
 @ stdcall RtlUnicodeToMultiByteN(ptr long ptr ptr long) NTOSKRNL.RtlUnicodeToMultiByteN
 @ stdcall RtlUnicodeToMultiByteSize(ptr ptr long) NTOSKRNL.RtlUnicodeToMultiByteSize
 @ stdcall RtlUnwind(ptr ptr ptr ptr) NTOSKRNL.RtlUnwind
-@ cdecl -arch=x86_64,arm RtlUnwindEx(double double ptr ptr ptr ptr) NTOSKRNL.RtlUnwindEx
+@ stdcall -arch=x86_64,arm RtlUnwindEx(ptr ptr ptr ptr ptr ptr) NTOSKRNL.RtlUnwindEx
 @ stdcall RtlUpcaseUnicodeChar(long) NTOSKRNL.RtlUpcaseUnicodeChar
 @ stdcall RtlUpcaseUnicodeToMultiByteN(ptr long ptr ptr long) NTOSKRNL.RtlUpcaseUnicodeToMultiByteN
-@ cdecl -arch=x86_64,arm RtlVirtualUnwind(long double double ptr ptr ptr ptr ptr) NTOSKRNL.RtlVirtualUnwind
+@ stdcall -arch=x86_64,arm RtlVirtualUnwind(long int64 int64 ptr ptr ptr ptr ptr) NTOSKRNL.RtlVirtualUnwind
 @ stdcall -arch=x86_64,arm RtlZeroMemory(ptr long) NTOSKRNL.RtlZeroMemory
 @ stdcall STROBJ_bEnum(ptr ptr ptr)
 @ stdcall STROBJ_bEnumPositionsOnly(ptr ptr ptr)
