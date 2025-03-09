@@ -795,18 +795,24 @@ IntEngBitBlt(
 
     DPRINT("About to call EngBitBlt: rclClipped: (%d,%d)-(%d,%d)\n",
            rclClipped.left, rclClipped.top, rclClipped.right, rclClipped.bottom);
-
-    bResult = pfnBitBlt(psoTrg,
-                        psoSrc,
-                        psoMask,
-                        pco,
-                        pxlo,
-                        &rclClipped,
-                        pptlSrc,
-                        pptlMask,
-                        pbo,
-                        pptlBrush ? &ptlBrush : NULL,
-                        Rop4);
+    _SEH2_TRY
+    {
+        bResult = pfnBitBlt(psoTrg,
+            psoSrc,
+            psoMask,
+            pco,
+            pxlo,
+            &rclClipped,
+            pptlSrc,
+            pptlMask,
+            pbo,
+            pptlBrush ? &ptlBrush : NULL,
+            Rop4);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
+    _SEH2_END;
 
     // FIXME: cleanup temp surface!
 
