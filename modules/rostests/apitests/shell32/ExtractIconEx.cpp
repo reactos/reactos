@@ -20,16 +20,15 @@ static void SafeDestroyIcon(HICON hIco)
 static UINT GetIcoSize(HICON hIco)
 {
     ICONINFO info;
-    if (GetIconInfo(hIco, &info))
-    {
-        BITMAP bm;
-        if (!GetObject(info.hbmColor ? info.hbmColor : info.hbmMask, sizeof(bm), &bm))
-            bm.bmWidth = 0;
-        DeleteObject(info.hbmMask);
-        DeleteObject(info.hbmColor);
-        return bm.bmWidth ;
-    }
-    return 0;
+    if (!GetIconInfo(hIco, &info))
+        return 0;
+
+    BITMAP bm;
+    if (!GetObject(info.hbmColor ? info.hbmColor : info.hbmMask, sizeof(bm), &bm))
+        bm.bmWidth = 0;
+    DeleteObject(info.hbmMask);
+    DeleteObject(info.hbmColor);
+    return bm.bmWidth;
 }
 
 typedef struct
@@ -172,13 +171,13 @@ START_TEST(SHDefExtractIcon)
     PathAppendW(path, L"user32.dll");
     int index = 1;
 
-    ok(SHDEI(path, index, 0, 0) == SysBigIconSize, "Zero size is GetSystemMetrics\n");
-    ok(SHDEI(path, index, 0, SysBigIconSize * 2) == SysBigIconSize * 2, "Resize\n");
+    ok(SHDEI(path, index, 0, 0) == SysBigIconSize, "0 size must match GetSystemMetrics\n");
+    ok(SHDEI(path, index, 0, SysBigIconSize * 2) == SysBigIconSize * 2, "Resize failed\n");
 
     HICON hIcoLarge, hIcoSmall;
     if (SHDefExtractIcon(path, index, 0, &hIcoLarge, &hIcoSmall, 0) != S_OK)
         hIcoLarge = hIcoSmall = NULL;
-    ok(hIcoLarge && hIcoSmall && !SHAreIconsEqual(hIcoLarge, hIcoSmall), "Large+Small\n");
+    ok(hIcoLarge && hIcoSmall && !SHAreIconsEqual(hIcoLarge, hIcoSmall), "Large+Small failed\n");
     SafeDestroyIcon(hIcoLarge);
     SafeDestroyIcon(hIcoSmall);
 
@@ -190,21 +189,21 @@ START_TEST(SHDefExtractIcon)
             hIcoNormal = NULL;
         if (FAILED(hr = SHDefExtractIcon(path, index, GIL_SIMULATEDOC, &hIcoSimDoc, NULL, sizes[i])))
             hIcoSimDoc = NULL;
-        ok(hIcoNormal && hIcoSimDoc && !SHAreIconsEqual(hIcoNormal, hIcoSimDoc), "GIL_SIMULATEDOC\n");
+        ok(hIcoNormal && hIcoSimDoc && !SHAreIconsEqual(hIcoNormal, hIcoSimDoc), "GIL_SIMULATEDOC failed\n");
         SafeDestroyIcon(hIcoNormal);
         SafeDestroyIcon(hIcoSimDoc);
     }
 
     GetTempPathW(_countof(path), path);
-    GetTempFileNameW(path, L"TST", 0, path);
-    ok(SHDEI(path) == S_FALSE, "Empty file contains no icons\n");
+    GetTempFileNameW(path, L"TEST", 0, path);
+    ok(SHDEI(path) == S_FALSE, "Empty file should return S_FALSE\n");
     HANDLE hFile = CreateFileW(path, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL);
     if (hFile != INVALID_HANDLE_VALUE)
     {
         DWORD io;
         WriteFile(hFile, "!", 1, &io, NULL);
         CloseHandle(hFile);
-        ok(SHDEI(path) == S_FALSE, "File contains no icons\n");
+        ok(SHDEI(path) == S_FALSE, "File without icons should return S_FALSE\n");
     }
     DeleteFile(path);
 }
