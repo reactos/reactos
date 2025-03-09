@@ -52,6 +52,7 @@ private:
     void CreateGoButton();
 public:
     static BOOL ShouldShowGoButton();
+    static BOOL IsGoButtonVisible(IUnknown *pUnkBand);
 
     // *** IDeskBand methods ***
     STDMETHOD(GetBandInfo)(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO *pdbi) override;

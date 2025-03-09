@@ -1197,10 +1197,7 @@ HRESULT CShellBrowser::GetMenuBand(REFIID riid, void **shellMenu)
         return hResult;
 
     hResult = bandSite->QueryBand(ITBBID_MENUBAND, &deskBand, NULL, NULL, 0);
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-
-    return deskBand->QueryInterface(riid, shellMenu);
+    return FAILED(hResult) ? hResult : deskBand->QueryInterface(riid, shellMenu); // It is expected that this might fail during WM_DESTROY
 }
 
 HRESULT CShellBrowser::GetBaseBar(bool vertical, REFIID riid, void **theBaseBar)
@@ -1491,10 +1488,7 @@ LRESULT CALLBACK CShellBrowser::WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
     if (pThis->fCurrentDirectoryPIDL)
     {
         CComPtr<IMenuBand> menuBand;
-        if (uMsg == WM_PARENTNOTIFY && LOWORD(wParam) == WM_DESTROY)
-            hResult = E_FAIL; // Avoid GetMenuBand FAILED_UNEXPECTEDLY while processing WM_DESTROY
-        else
-            hResult = pThis->GetMenuBand(IID_PPV_ARG(IMenuBand, &menuBand));
+        hResult = pThis->GetMenuBand(IID_PPV_ARG(IMenuBand, &menuBand));
         if (SUCCEEDED(hResult) && menuBand.p != NULL)
         {
             hResult = menuBand->TranslateMenuMessage(&msg, &lResult);

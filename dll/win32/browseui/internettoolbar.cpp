@@ -658,6 +658,16 @@ HRESULT CInternetToolbar::EnumBands(UINT Index, int *pBandId, IUnknown **ppUnkBa
     return *ppUnkBand ? S_OK : S_FALSE;
 }
 
+HRESULT CInternetToolbar::QIBand(int BandID, REFIID riid, void **ppv)
+{
+    IUnknown *pUnk; // Not ref. counted
+    int temp = (UINT) SendMessageW(fMainReBar, RB_IDTOINDEX, BandID, 0);
+    if (EnumBands(temp, &temp, &pUnk) == S_OK)
+        return pUnk->QueryInterface(riid, ppv);
+    *ppv = NULL;
+    return E_NOINTERFACE;
+}
+
 HRESULT CInternetToolbar::ReserveBorderSpace(LONG maxHeight)
 {
     CComPtr<IDockingWindowSite>             dockingWindowSite;
@@ -1746,7 +1756,7 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
     RBHITTESTINFO                           hitTestInfo;
     REBARBANDINFOW                          rebarBandInfo;
     int                                     bandID;
-    BOOL                                    fGoButton = FALSE;
+    CComPtr<IAddressBand>                   pAddress;
 
     clickLocation.x = LOWORD(lParam);
     clickLocation.y = HIWORD(lParam);
@@ -1781,7 +1791,8 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
         case ITBBID_ADDRESSBAND:    // navigation band
             DeleteMenu(contextMenu, IDM_TOOLBARS_CUSTOMIZE, MF_BYCOMMAND);
             DeleteMenu(contextMenu, IDM_TOOLBARS_TEXTLABELS, MF_BYCOMMAND);
-            fGoButton = CAddressBand::ShouldShowGoButton();
+            QIBand(ITBBID_ADDRESSBAND, IID_PPV_ARG(IAddressBand, &pAddress));
+            pSettings->fShowGoButton = CAddressBand::IsGoButtonVisible(pAddress);
             break;
         default:
             break;
@@ -1794,7 +1805,7 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_LINKSBAR, FALSE);
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_CUSTOMIZE, FALSE);
     SHCheckMenuItem(contextMenu, IDM_TOOLBARS_LOCKTOOLBARS, pSettings->fLocked);
-    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_GOBUTTON, fGoButton);
+    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_GOBUTTON, pSettings->fShowGoButton);
 
     // TODO: use GetSystemMetrics(SM_MENUDROPALIGNMENT) to determine menu alignment
     command = TrackPopupMenu(contextMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD,
