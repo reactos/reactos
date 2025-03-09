@@ -1035,6 +1035,26 @@ VOID TuiFadeOut(VOID)
 
 }
 
+VOID TuiDisplayThermalScreen(VOID)
+{
+    MachVideoHideShowTextCursor(FALSE);
+    MachVideoClearScreen(ATTR(COLOR_WHITE, COLOR_RED));
+
+    TuiPrintf("\nOn previous session, ReactOS has shutdown due to a thermal condition\n"
+              "that would have otherwise caused fatal damage to the system.\n\n"
+              "It's extremely advised to check that your system has proper cooling\n"
+              "and that nothing blocks the airflow of your system (dust, debris, etc).\n\n"
+              "Replace the thermal paste if necessary. Avoid skin contact with the hot\n"
+              "system at all costs (if it's a laptop).\n\n"
+              "Press ENTER to continue.");
+
+    /* Have this dummy loop to act like the system was waiting on something */
+    for (;;)
+    {
+
+    }
+}
+
 BOOLEAN TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 {
     CHAR    key;
