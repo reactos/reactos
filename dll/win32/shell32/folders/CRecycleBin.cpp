@@ -508,33 +508,25 @@ fail:
 typedef struct _FILEOPDATA
 {
     PCUITEMID_CHILD_ARRAY apidl;
-    UINT cidl, index;
-    BBITEMDATA *pItem;
+    UINT cidl;
 } FILEOPDATA;
 
 static HRESULT CALLBACK FileOpCallback(FILEOPCALLBACKEVENT Event, LPCWSTR Src, LPCWSTR Dst, UINT Attrib, HRESULT hrOp, void *CallerData)
 {
     FILEOPDATA &data = *(FILEOPDATA*)CallerData;
-    if (Event == FOCE_PREMOVEITEM || Event == FOCE_PREDELETEITEM)
+    if ((Event == FOCE_POSTDELETEITEM || Event == FOCE_POSTMOVEITEM) && SUCCEEDED(hrOp))
     {
-        data.pItem = NULL;
         for (UINT i = 0; i < data.cidl; ++i)
         {
             BBITEMDATA *pItem = ValidateItem(data.apidl[i]);
             if (pItem && !_wcsicmp(Src, GetItemRecycledFullPath(*pItem)))
             {
-                data.pItem = pItem;
-                data.index = i;
+                RECYCLEBINFILEIDENTITY identity = { pItem->DeletionTime, GetItemRecycledFullPath(*pItem) };
+                RemoveFromRecycleBinDatabase(&identity);
+                CRecycleBin_NotifyRemovedFromRecycleBin(data.apidl[i]);
                 break;
             }
         }
-    }
-    else if ((Event == FOCE_POSTDELETEITEM || Event == FOCE_POSTMOVEITEM) && SUCCEEDED(hrOp) && data.pItem)
-    {
-        RECYCLEBINFILEIDENTITY identity = { data.pItem->DeletionTime, GetItemRecycledFullPath(*data.pItem) };
-        RemoveFromRecycleBinDatabase(&identity);
-        CRecycleBin_NotifyRemovedFromRecycleBin(data.apidl[data.index]);
-        data.pItem = NULL;
     }
     else if (Event == FOCE_FINISHOPERATIONS)
     {
