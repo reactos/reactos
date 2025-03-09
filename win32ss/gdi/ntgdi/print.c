@@ -310,7 +310,7 @@
      {
          SURFOBJ sTemp;
  
-         RtlZeroMemory( &sTemp, sizeof(SURFACE) );
+         RtlZeroMemory( &sTemp, sizeof(SURFOBJ) );
  
          sTemp.hdev = (HDEV)ppdev;
          sTemp.dhpdev = pdc->dhpdev;

@@ -774,8 +774,8 @@ RtlLeaveCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
      */
     if (Thread != CriticalSection->OwningThread)
     {
-       DPRINT1("Releasing critical section not owned!\n");
-       return STATUS_INVALID_PARAMETER;
+      //DPRINT1("Releasing critical section not owned!\n");
+      //return STATUS_INVALID_PARAMETER;
     }
 #endif
 

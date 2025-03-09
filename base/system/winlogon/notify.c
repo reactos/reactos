@@ -312,77 +312,7 @@ CallNotificationDll(
     NOTIFICATION_TYPE Type,
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    HMODULE hModule;
-    CHAR szFuncBuffer[128];
-    DWORD dwError = ERROR_SUCCESS;
-    PWLX_NOTIFY_HANDLER pNotifyHandler;
-
-    if (NotificationDll->bSfcNotification)
-    {
-        switch (Type)
-        {
-            case LogonHandler:
-                strcpy(szFuncBuffer, "SfcWLEventLogon");
-                break;
-
-            case LogoffHandler:
-                strcpy(szFuncBuffer, "SfcWLEventLogoff");
-                break;
-
-            default:
-                return;
-        }
-    }
-    else
-    {
-        HKEY hDllKey;
-        DWORD dwSize;
-        DWORD dwType;
-
-        dwError = RegOpenKeyExW(hNotifyKey,
-                                NotificationDll->pszKeyName,
-                                0,
-                                KEY_READ,
-                                &hDllKey);
-        if (dwError != ERROR_SUCCESS)
-        {
-            TRACE("RegOpenKeyExW()\n");
-            return;
-        }
-
-        dwSize = sizeof(szFuncBuffer);
-        dwError = RegQueryValueExA(hDllKey,
-                                   FuncNames[Type],
-                                   NULL,
-                                   &dwType,
-                                   (PBYTE)szFuncBuffer,
-                                   &dwSize);
-
-        RegCloseKey(hDllKey);
-    }
-
-    if (dwError != ERROR_SUCCESS)
-        return;
-
-    hModule = LoadLibraryW(NotificationDll->pszDllName);
-    if (!hModule)
-        return;
-
-    pNotifyHandler = (PWLX_NOTIFY_HANDLER)GetProcAddress(hModule, szFuncBuffer);
-
-    _SEH2_TRY
-    {
-        if (pNotifyHandler)
-            pNotifyHandler(pInfo);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        ERR("WL: Exception while running notification %S!%s, Status 0x%08lx\n",
-            NotificationDll->pszDllName, szFuncBuffer, _SEH2_GetExceptionCode());
-    }
-    _SEH2_END;
-
-    FreeLibrary(hModule);
+    UNREFERENCED_PARAMETER(FuncNames);
 }
 
 
