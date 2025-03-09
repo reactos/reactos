@@ -157,6 +157,9 @@ if "!CMAKE_GENERATOR!" == "Ninja" (
     echo This script defaults to Ninja. Type "configure help" for alternative options.
 )
 
+REM Display information
+echo Configuring a new ReactOS build on: & (for /f "delims=" %%x in ('ver') do @echo %%x) & echo.
+
 REM Create directories
 set REACTOS_OUTPUT_PATH=output-%BUILD_ENVIRONMENT%-%ARCH%
 
