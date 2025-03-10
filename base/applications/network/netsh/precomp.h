@@ -29,6 +29,9 @@
 #include <strsafe.h>
 #include <netsh.h>
 
+#include <stddef.h>
+#include <math.h>
+
 #include "resource.h"
 #include "hashtable.h"
 
