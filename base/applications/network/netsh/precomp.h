@@ -22,18 +22,15 @@
 #include <winreg.h>
 #include <wincon.h>
 #include <winuser.h>
-
 #include <errno.h>
-
 #include <conutils.h>
 #include <strsafe.h>
 #include <netsh.h>
-
 #include <stddef.h>
 #include <math.h>
+#include <windows.h>
 
 #include "resource.h"
-#include "hashtable.h"
 
 /* DEFINES *******************************************************************/
 
