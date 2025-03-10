@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     English (United States) resource file
  * TRANSLATOR:  Copyright 2023 Eric Kohl <eric.kohl@reactos.org>
+                Copyright 2025 Curtis Wilson <LiquidFox1776@gmail.com>
  */
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
@@ -21,23 +22,52 @@ STRINGTABLE
 BEGIN
     IDS_HELP_HEADER "\nThe following commands are available:\n"
     IDS_SUBCONTEXT_HEADER "\nThe following sub-contexts are available:\n"
-    IDS_HLP_UP             "Goes up one context level."
+    IDS_HLP_UP             "Goes up one context level.\n"
     IDS_HLP_UP_EX          "Syntax: ..\n\n        Goes up one context level.\n\n"
-    IDS_HLP_EXIT           "Exits the program."
+    IDS_HLP_EXIT           "Exits the program.\n"
     IDS_HLP_EXIT_EX        "Syntax: exit\n\n        Exits the program.\n\n"
-    IDS_HLP_HELP           "Displays a list of commands."
+    IDS_HLP_HELP           "Displays a list of commands.\n"
     IDS_HLP_HELP_EX        "Syntax: help\n\n        Displays a list of commands.\n\n"
 
-    IDS_HLP_ADD_HELPER     "Installs a helper DLL."
+    IDS_HLP_ADD_HELPER     "Installs a helper DLL.\n"
     IDS_HLP_ADD_HELPER_EX  "Syntax: add helper <dll file name>\n\n        Installs the specified helper DLL in netsh.\n\n"
 
-    IDS_HLP_DEL_HELPER     "Removes a helper DLL."
+    IDS_HLP_DEL_HELPER     "Removes a helper DLL.\n"
     IDS_HLP_DEL_HELPER_EX  "Syntax: delete helper <dll file name>\n\n        Removes the specified helper DLL from netsh.\n\n"
 
-    IDS_HLP_SHOW_HELPER    "Lists all the top-level helpers."
+    IDS_HLP_SHOW_HELPER    "Lists all the top-level helpers.\n"
     IDS_HLP_SHOW_HELPER_EX "Syntax: show helper\n\n        Lists all the top-level helpers.\n\n"
 
-    IDS_HLP_GROUP_ADD      "Adds a configuration entry to a list of entries."
-    IDS_HLP_GROUP_DELETE   "Deletes a configuration entry from a list of entries."
-    IDS_HLP_GROUP_SHOW     "Displays information."
+    IDS_HLP_GROUP_ADD      "Adds a configuration entry to a list of entries.\n"
+    IDS_HLP_GROUP_DELETE   "Deletes a configuration entry from a list of entries.\n"
+    IDS_HLP_GROUP_SHOW     "Displays information.\n"
+    IDS_HLP_GROUP_SET      "Updates configuration settings.\n"
+    
+    IDS_HLP_ABORT          "Discards changes made while in offline mode.\n"
+    IDS_HLP_ABORT_EX       "TODO IDS_HLP_ABORT_EX\n"
+    IDS_HLP_ALIAS          "Adds an alias.\n"
+    IDS_HLP_ALIAS_EX       "TODO IDS_HLP_ALIAS_EX\n"
+   
+   IDS_HLP_COMMIT          "Commits changes made while in offline mode.\n"                      
+   IDS_HLP_COMMIT_EX       "TODO IDS_HLP_COMMIT_EX\n"
+   IDS_HLP_DUMP            "Displays a configuration script.\n"            
+   IDS_HLP_DUMP_EX         "TODO IDS_HLP_DUMP_EX\n"
+   IDS_HLP_EXEC            "Runs a script file.\n"
+   IDS_HLP_EXEC_EX         "TODO IDS_HLP_EXEC_EX\n"
+   
+   IDS_HLP_PUSHD           "Pushes current context on stack.\n"           
+   IDS_HLP_PUSHD_EX        "TODO IDS_HLP_PUSHD_EX\n"
+   IDS_HLP_POPD            "Pops a context from the stack.\n"
+   IDS_HLP_POPD_EX         "TODO IDS_HLP_POPD_EX\n"
+   IDS_HLP_OFFLINE         "Sets the current mode to offline.\n"
+   IDS_HLP_OFFLINE_EX      "TODO IDS_HLP_OFFLINE_EX\n"
+   IDS_HLP_ONLINE          "Sets the current mode to online.\n"
+   IDS_HLP_ONLINE_EX       "TODO IDS_HLP_ONLINE_EX\n"
+   IDS_HLP_UNALIAS         "Deletes an alias.\n"
+   IDS_HLP_UNALIAS_EX      "TODO IDS_HLP_UNALIAS_EX\n"
+   
+   IDS_HLP_SET_MACHINE     "Sets the current machine on which to operate.\n"
+   IDS_HLP_SET_MACHINE_EX  "TODO IDS_HLP_SET_MACHINE_EX\n"
+   IDS_HLP_SET_MODE        "Sets the current mode to online or offline.\n"
+   IDS_HLP_SET_MODE_EX     "TODO IDS_HLP_SET_MODE_EX\n"
 END
