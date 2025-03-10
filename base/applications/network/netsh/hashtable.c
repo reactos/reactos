@@ -12,6 +12,7 @@
 #else
 #define STATIC static
 #include "precomp.h"
+#include "hashtable.h"
 #endif
 
 #define NDEBUG
