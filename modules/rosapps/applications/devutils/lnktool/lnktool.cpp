@@ -142,6 +142,14 @@ static HRESULT SHParseName(PCWSTR Path, PIDLIST_ABSOLUTE *ppidl)
     return SHILCreateFromPath(Path, ppidl, NULL);
 }
 
+static HRESULT SHParseNameEx(PCWSTR Path, PIDLIST_ABSOLUTE *ppidl, bool Simple)
+{
+    if (!Simple)
+        return SHParseName(Path, ppidl);
+    *ppidl = SHSimpleIDListFromPath(Path);
+    return *ppidl ? S_OK : E_FAIL;
+}
+
 static INT_PTR SHGetPidlInfo(LPCITEMIDLIST pidl, SHFILEINFOW &shfi, UINT Flags, UINT Depth = 0)
 {
     LPITEMIDLIST pidlDup = NULL, pidlChild;
@@ -389,8 +397,7 @@ static PCSTR MapToName(UINT Value, const T &Map, PCSTR Fallback = NULL)
 static HRESULT DumpCommand(PCWSTR Path)
 {
     IStream *pStream;
-    IShellLink *pSL;
-    HRESULT hr = Open(Path, &pStream, &pSL);
+    HRESULT hr = Open(Path, &pStream, NULL);
     if (FAILED(hr))
         return hr;
 
@@ -544,9 +551,12 @@ static HRESULT DumpCommand(PCWSTR Path)
     pStream->Release();
 
     // Now dump using the API
-    wprintf(L"\n");
     HRESULT hr2;
     WCHAR buf[MAX_PATH * 2];
+    IShellLink *pSL;
+    if (FAILED(hr2 = Open(Path, NULL, &pSL)))
+        return hr2;
+    wprintf(L"\n");
 
     if (SUCCEEDED(hr2 = pSL->GetIDList(&pidl)))
     {
@@ -577,24 +587,24 @@ static HRESULT DumpCommand(PCWSTR Path)
     else
         wprintf(L"%hs: %#x\n", "GetArguments", hr2);
 
+    if (SUCCEEDED(hr2 = pSL->GetDescription(buf, _countof(buf))))
+        wprintf(L"%hs: %ls\n", "GetDescription", buf);
+    else
+        wprintf(L"%hs: %#x\n", "GetDescription", hr2);
+
     int index = 123456789;
     if (SUCCEEDED(hr2 = pSL->GetIconLocation(buf, _countof(buf), &index)))
         wprintf(L"%hs: %ls,%d\n", "GetIconLocation", buf, index);
     else
         wprintf(L"%hs: %#x\n", "GetIconLocation", hr2);
 
-    if (SUCCEEDED(hr2 = pSL->GetDescription(buf, _countof(buf))))
-        wprintf(L"%hs: %ls\n", "GetDescription", buf);
-    else
-        wprintf(L"%hs: %#x\n", "GetDescription", hr2);
-
     IExtractIconW *pEI;
     if (SUCCEEDED(pSL->QueryInterface(IID_PPV_ARG(IExtractIconW, &pEI))))
     {
-        int index = 123456789;
+        index = 123456789;
         UINT flags = 0;
         if (SUCCEEDED(hr2 = pEI->GetIconLocation(0, buf, _countof(buf), &index, &flags)))
-            wprintf(L"%hs: %ls,%d %#.4x\n", "EI:GetIconLocation", buf, index, flags);
+            wprintf(L"%hs: %#x %ls,%d %#.4x\n", "EI:GetIconLocation", hr2, buf, index, flags);
         else
             wprintf(L"%hs: %#x %#.4x\n", "EI:GetIconLocation", hr2, flags);
         pEI->Release();
@@ -661,7 +671,8 @@ static HRESULT CreateCommand(PCWSTR LnkPath, UINT argc, WCHAR **argv)
         hr = E_INVALIDARG;
         if (!StrCmpIW(argv[i], L"/Pidl") && i + 1 < argc)
         {
-            if (SUCCEEDED(hr = SHParseName(argv[++i], &pidlTarget)))
+            bool Simple = !StrCmpIW(argv[i + 1], L"/Force") && i + 2 < argc && ++i;
+            if (SUCCEEDED(hr = SHParseNameEx(argv[++i], &pidlTarget, Simple)))
                 TargetCount += SUCCEEDED(hr = pSL->SetIDList(pidlTarget));
         }
         else if (!StrCmpIW(argv[i], L"/Path") && i + 1 < argc)
