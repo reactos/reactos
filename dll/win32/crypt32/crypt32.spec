@@ -39,6 +39,7 @@
 @ stdcall CertEnumCertificatesInStore(ptr ptr)
 @ stdcall CertEnumPhysicalStore(ptr long ptr ptr)
 @ stdcall CertEnumSystemStore(long ptr ptr ptr)
+@ stdcall CertEnumSystemStoreLocation(long ptr ptr)
 @ stdcall CertFindAttribute(str long ptr)
 @ stdcall CertFindCRLInStore(ptr long long long ptr ptr)
 @ stdcall CertFindCTLInStore(ptr long long long ptr ptr)
