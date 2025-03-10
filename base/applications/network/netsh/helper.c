@@ -16,36 +16,102 @@
 
 PDLL_LIST_ENTRY pDllListHead = NULL;
 PDLL_LIST_ENTRY pDllListTail = NULL;
-
 PHELPER_ENTRY pHelperListHead = NULL;
 PHELPER_ENTRY pHelperListTail = NULL;
-
 PDLL_LIST_ENTRY pCurrentDll = NULL;
 
 /* FUNCTIONS ******************************************************************/
 
+/*
+Traverse the pHelper tree using DFS and start every pfnStart function
+*/
 static
 VOID
 StartHelpers(VOID)
 {
-    PHELPER_ENTRY pHelper;
-    DWORD dwError;
+   DPRINT("%s()\n", __FUNCTION__);
+   PHELPER_ENTRY pHelper;
+   PHELPER_ENTRY pCurrent;
+   DWORD dwError;
 
-    pHelper = pHelperListHead;
-    while (pHelper != NULL)
+   pHelper = pHelperListHead;
+    
+    if (pHelper == NULL)
     {
-        if (pHelper->bStarted == FALSE)
-        {
-            if (pHelper->Attributes.pfnStart)
-            {
-                dwError = pHelper->Attributes.pfnStart(NULL, 0);
-                if (dwError == ERROR_SUCCESS)
-                    pHelper->bStarted = TRUE;
-            }
-        }
-
-        pHelper = pHelper->pNext;
+        DPRINT1("%s pHelperListHead is NULL\n", __FUNCTION__);
+        return;
     }
+        
+    STACK *stack = CreateStack();
+   
+    if (stack == NULL)
+    {
+        DPRINT1("%s stack is NULL\n", __FUNCTION__);
+        return;
+    }
+    
+    // push the root node 
+    StackPush(stack, pHelper);
+
+    while (!IsStackEmpty(stack)) 
+    {
+        pCurrent = (PHELPER_ENTRY)StackPop(stack);
+        
+        // Call the pfnStart function if its been defined
+        if (pCurrent != NULL)
+        {
+            if (pCurrent->bStarted == FALSE)
+            {
+                if (pCurrent->Attributes.pfnStart != NULL)
+                {
+                    DPRINT1("%s Starting helper....\n", __FUNCTION__);
+                    DPRINT1("{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}  %-16ls\n",
+                        pCurrent->Attributes.guidHelper.Data1,
+                        pCurrent->Attributes.guidHelper.Data2,
+                        pCurrent->Attributes.guidHelper.Data3,
+                        pCurrent->Attributes.guidHelper.Data4[0],
+                        pCurrent->Attributes.guidHelper.Data4[1],
+                        pCurrent->Attributes.guidHelper.Data4[2],
+                        pCurrent->Attributes.guidHelper.Data4[3],
+                        pCurrent->Attributes.guidHelper.Data4[4],
+                        pCurrent->Attributes.guidHelper.Data4[5],
+                        pCurrent->Attributes.guidHelper.Data4[6],
+                        pCurrent->Attributes.guidHelper.Data4[7],
+                        pCurrent->pDllEntry->pszShortName);
+                
+                    dwError = pCurrent->Attributes.pfnStart(NULL, 0);
+                    if (dwError == ERROR_SUCCESS)
+                        pCurrent->bStarted = TRUE;
+                }
+             }
+             
+             // Push sub-helpers onto the stack
+             if (pCurrent->pSubHelperHead != NULL) 
+             {
+                 PHELPER_ENTRY pChild = pCurrent->pSubHelperHead;
+                 while (pChild != NULL) 
+                 {
+                     StackPush(stack, pChild);
+                     pChild = pChild->pNext;
+                 }
+              }
+          
+              if (pCurrent->pNext != NULL)
+              {
+                  pCurrent = pCurrent->pNext;
+              
+                  while (pCurrent != NULL)
+                  {
+                     StackPush(stack, pCurrent);
+                     pCurrent = pCurrent->pNext;
+                  }
+              }
+          
+          }
+    }
+
+    DPRINT1("%s Freeing Stack\n", __FUNCTION__);
+    StackFree(stack, FALSE);
 }
 
 
@@ -54,6 +120,7 @@ VOID
 RegisterHelperDll(
     _In_ PDLL_LIST_ENTRY pEntry)
 {
+    DPRINT("%s()\n", __FUNCTION__);
     PWSTR pszValueName = NULL;
     HKEY hKey;
     DWORD dwError;
@@ -88,6 +155,7 @@ VOID
 FreeHelperDll(
     _In_ PDLL_LIST_ENTRY pEntry)
 {
+    DPRINT("%s()\n", __FUNCTION__);
     if (pEntry->hModule)
         FreeLibrary(pEntry->hModule);
 
@@ -110,6 +178,7 @@ LoadHelperDll(
     _In_ PWSTR pszDllName,
     _In_ BOOL bRegister)
 {
+    DPRINT("%s()\n", __FUNCTION__);
     PNS_DLL_INIT_FN pInitHelperDll;
     PDLL_LIST_ENTRY pEntry;
     PWSTR pszStart, pszEnd;
@@ -187,7 +256,7 @@ LoadHelperDll(
         DPRINT1("Could not load the helper dll %S (Error: %lu)\n", pEntry->pszDllName, dwError);
         goto done;
     }
-
+    
     pInitHelperDll = (PNS_DLL_INIT_FN)GetProcAddress(pEntry->hModule, "InitHelperDll");
     if (pInitHelperDll == NULL)
     {
@@ -317,6 +386,7 @@ done:
 VOID
 UnloadHelpers(VOID)
 {
+    DPRINT("%s()\n", __FUNCTION__);
     PDLL_LIST_ENTRY pEntry;
 
     while (pDllListHead != NULL)
@@ -338,17 +408,62 @@ PHELPER_ENTRY
 FindHelper(
     _In_ const GUID *pguidHelper)
 {
+    DPRINT("%s()\n", __FUNCTION__);
     PHELPER_ENTRY pHelper;
+    PHELPER_ENTRY pCurrent;
 
     pHelper = pHelperListHead;
-    while (pHelper != NULL)
-    {
-        if (IsEqualGUID(pguidHelper, &pHelper->Attributes.guidHelper))
-            return pHelper;
+    
+    if (pHelper == NULL)
+        return NULL;
+        
+    if (pguidHelper == NULL)
+        return NULL;
+        
+    STACK *stack = CreateStack();
+   
+    // push the root node 
+    StackPush(stack, pHelper);
 
-        pHelper = pHelper->pNext;
+    while (!IsStackEmpty(stack)) 
+    {
+        pCurrent = (PHELPER_ENTRY)StackPop(stack);
+        
+        if (pCurrent)
+        {
+            if (IsEqualGUID(pguidHelper, &pCurrent->Attributes.guidHelper))
+            {
+                return pCurrent;
+            }
+            
+            // Push sub-helpers onto the stack
+            if (pCurrent->pSubHelperHead != NULL) 
+            {
+                PHELPER_ENTRY pChild = pCurrent->pSubHelperHead;
+                while (pChild != NULL) 
+                {
+                    StackPush(stack, pChild);
+                    pChild = pChild->pNext; // Assuming pNext points to the next sub-helper
+                }
+            }
+        
+        }
+        
+        // Push helpers to stack
+        if (pCurrent->pNext != NULL)
+        {
+            pCurrent = pCurrent->pNext;
+            
+            while (pCurrent)
+            {
+                StackPush(stack, pCurrent);
+                pCurrent = pCurrent->pNext;
+            }
+         }
     }
 
+    
+    StackFree(stack, FALSE);
     return NULL;
 }
 
@@ -359,7 +474,7 @@ RegisterHelper(
     _In_ const GUID *pguidParentHelper,
     _In_ const NS_HELPER_ATTRIBUTES *pHelperAttributes)
 {
-    PHELPER_ENTRY pHelper = NULL, pParentHelper;
+    PHELPER_ENTRY pHelper = NULL, pParentHelper = NULL;
     DWORD dwError = ERROR_SUCCESS;
 
     DPRINT("RegisterHelper(%p %p)\n", pguidParentHelper, pHelperAttributes);
@@ -370,26 +485,34 @@ RegisterHelper(
         return 1;
     }
 
+    DPRINT1("%s Allocating memory for pHelper\n", __FUNCTION__);
     pHelper = (PHELPER_ENTRY)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(HELPER_ENTRY));
+    DPRINT1("%s pHelper address is : 0x%p\n", __FUNCTION__, pHelper);
     if (pHelper == NULL)
     {
+        DPRINT1("%s pHelper == NULL\n", __FUNCTION__);
         dwError = ERROR_OUTOFMEMORY;
         goto done;
+    
     }
-
+    
     CopyMemory(&pHelper->Attributes, pHelperAttributes, sizeof(NS_HELPER_ATTRIBUTES));
     pHelper->pDllEntry = pCurrentDll;
     DPRINT("pHelper->pDllEntry: %p\n", pHelper->pDllEntry);
 
-    if (pguidParentHelper == NULL)
+    if (pguidParentHelper == NULL) 
     {
-        if (pHelperListTail == NULL)
+        pHelper->pguidParentHelper = NULL;
+        DPRINT1("%s pguidParentHelper is NULL\n", __FUNCTION__);
+        if ((pHelperListTail == NULL) && (pHelperListHead == NULL))
         {
+            DPRINT1("%s pHelperListTail is NULL\n", __FUNCTION__);
             pHelperListHead = pHelper;
             pHelperListTail = pHelper;
         }
         else
         {
+            DPRINT1("%s inserting pHelper node into beginning of list\n", __FUNCTION__);
             pHelper->pNext = pHelperListHead;
             pHelperListHead->pPrev = pHelper;
             pHelperListHead = pHelper;
@@ -397,25 +520,34 @@ RegisterHelper(
     }
     else
     {
-        pParentHelper = FindHelper(&pHelperAttributes->guidHelper);
+        pHelper->pguidParentHelper = pguidParentHelper;
+        DPRINT1("%s pguidParentHelper is NOT NULL\n", __FUNCTION__);
+        pParentHelper = FindHelper(pguidParentHelper); 
         if (pParentHelper == NULL)
-            return ERROR_INVALID_PARAMETER;
-
-        if (pParentHelper->pSubHelperHead == NULL && pParentHelper->pSubHelperTail == NULL)
         {
+            DPRINT1("%s Could not find pguidParentHelper\n", __FUNCTION__);
+            return ERROR_INVALID_PARAMETER;
+        }
+        
+        // check if the pParentHelper subhelper list is empty
+        // and insert the first node of the list
+        if ((pParentHelper->pSubHelperHead == NULL) && (pParentHelper->pSubHelperTail == NULL))
+        {
+            DPRINT1("%s Creating pSubhelper linked list\n", __FUNCTION__);
             pParentHelper->pSubHelperHead = pHelper;
             pParentHelper->pSubHelperTail = pHelper;
         }
         else
         {
+            DPRINT1("%s Inserting pHelper into list\n", __FUNCTION__);
             pHelper->pPrev = pParentHelper->pSubHelperTail;
             pParentHelper->pSubHelperTail->pNext = pHelper;
             pParentHelper->pSubHelperTail = pHelper;
         }
+        
     }
 
 done:
-
     return dwError;
 }
 
@@ -433,7 +565,7 @@ AddHelperCommand(
 {
     DWORD dwError = ERROR_SUCCESS;
 
-    DPRINT("AddHelperCommand()\n");
+    DPRINT("%s()\n", __FUNCTION__);
 
     if (dwArgCount == 2)
     {
@@ -463,6 +595,7 @@ DeleteHelperCommand(
     LPCVOID pvData,
     BOOL *pbDone)
 {
+    DPRINT("%s()\n", __FUNCTION__);
     PDLL_LIST_ENTRY pEntry;
     HKEY hKey;
     DWORD dwError;
@@ -523,15 +656,20 @@ PrintSubContext(
     _In_ PCONTEXT_ENTRY pParentContext,
     _In_ DWORD dwLevel)
 {
+    DPRINT("%s()\n", __FUNCTION__);
     PCONTEXT_ENTRY pContext;
     PHELPER_ENTRY pHelper;
     WCHAR szPrefix[22];
     DWORD i;
 
     if (pParentContext == NULL)
+    {
+        DPRINT("%s pParentContext == NULL\n", __FUNCTION__);
         return;
-
+    }
+    
     pContext = pParentContext->pSubContextHead;
+    
     while (pContext != NULL)
     {
         pHelper = FindHelper(&pContext->Guid);
@@ -579,7 +717,8 @@ ShowHelperCommand(
     LPCVOID pvData,
     BOOL *pbDone)
 {
-    DPRINT("ShowHelperCommand()\n");
+    PCONTEXT_ENTRY pRootContext = GetRootContext();
+    DPRINT("%s()\n", __FUNCTION__);
 
     ConPrintf(StdOut, L"Helper GUID                             DLL Name          Command\n");
     ConPrintf(StdOut, L"--------------------------------------  ----------------  --------\n");
