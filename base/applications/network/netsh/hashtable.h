@@ -4,7 +4,9 @@
  * PURPOSE:    Hash Table header file
  * COPYRIGHT:  Copyright 2025 Curtis Wilson <LiquidFox1776@gmail.com>
  */
- 
+
+#include "precomp.h"
+
 // todo make bIsFull private
 typedef struct _HASH_ENTRY
 {
