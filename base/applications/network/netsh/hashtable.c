@@ -6,15 +6,16 @@
  */
 
 //#define HASH_TABLE_UNIT_TEST
-#define NDEBUG
-#include <debug.h>
 
 #ifdef HASH_TABLE_UNIT_TEST
 #define STATIC
 #else
 #define STATIC static
-#include "hashtable.h"
+#include "precomp.h"
 #endif
+
+#define NDEBUG
+#include <debug.h>
 
 typedef struct _INTERNAL_HASH_TABLE
 {
@@ -74,7 +75,7 @@ IsPrime(SIZE_T n)
     // Only check up to the square root of n
     SIZE_T limit = (SIZE_T)sqrt(n); 
 
-    // Check for factors of the form 6k ± 1
+    // Check for factors of the form 6k Â± 1
     for (SIZE_T i = 5; i <= limit; i += 6)
     {
         if (n % i == 0 || n % (i + 2) == 0)
