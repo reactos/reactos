@@ -217,7 +217,7 @@ GetULONG(
     }
 
     // make sure String only contains digits
-    if (IsStringNumericW(String) == false)
+    if (!IsStringNumericW(String))
     {
         SetLastError(ERROR_INVALID_DATA);
         return false;
