@@ -158,48 +158,6 @@ Usage()
     OutputText(IDS_USAGE);
 }
 
-static
-bool IsStringNumericW(
-    _In_z_ LPCWSTR String) 
-{
-    WORD charType = 0;
-
-    // check input parameters
-    if (String == NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return false;
-    }
-
-    // process String
-    while (*String) 
-    {
-        // gather information about the character we are on
-        if (GetStringTypeW(CT_CTYPE1, String, 1, &charType)) 
-        {
-            // check if the character is classified as a digit
-            // if it is not a digit set the last error
-            // and return
-            if ((charType & C1_DIGIT) == false) 
-            {
-                SetLastError(ERROR_INVALID_DATA);
-                return false;
-            }
-        }
-        else 
-        {
-            // Error retrieving character type
-            SetLastError(ERROR_INVALID_DATA);
-            return false;
-        }
-        String++;
-    }
-
-    // String appears to only contain digits
-    SetLastError(ERROR_SUCCESS);
-    return true;
-}
-
 static bool
 GetULONG(
     _In_ PWSTR String,
@@ -210,16 +168,9 @@ GetULONG(
     *Value = 0;
 
     // check input arguments
-    if (String == NULL || Value == NULL)
+    if (String == NULL || Value == NULL || *String == UNICODE_NULL)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
-        return false;
-    }
-
-    // make sure String only contains digits
-    if (!IsStringNumericW(String))
-    {
-        SetLastError(ERROR_INVALID_DATA);
         return false;
     }
 
@@ -229,7 +180,7 @@ GetULONG(
 
     // try to convert String to ULONG
     *Value = wcstoul(String, &StopString, 10);
-    if (errno != 0 || *StopString != UNICODE_NULL)
+    if ((errno != ERANGE) && (errno != 0 || *StopString != UNICODE_NULL))
     {
         SetLastError(ERROR_INVALID_DATA);
         return false;
@@ -691,18 +642,7 @@ GetOptionTimeout(
     // try to parse and convert value as ULONG
     // check if Timeout is within valid range
     if (!GetULONG(argv[*i], &Timeout) || (Timeout < 1))
-    {
-        // if GetULONG Fails we need to check ERANGE to see if
-        // it was due to the value being out of range
-        if (errno == ERANGE)
-        {
-            // Value should be equal to ULONG_MAX
-            // tracert on Windows seems to cap input values > ULONG_MAX 
-            // and does not report the input as an error
-            *Value = Timeout;
-            return true;
-        }
-        
+    {        
         // if we get here then Timeout is less then 1 or somthing other
         // then a numeric value
         (*i)--;
