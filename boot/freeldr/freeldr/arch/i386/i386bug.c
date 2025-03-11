@@ -12,25 +12,25 @@ typedef struct _FRAME
 
 static const CHAR *i386ExceptionDescriptionText[] =
 {
-    "Exception 00: DIVIDE BY ZERO",
-    "Exception 01: DEBUG EXCEPTION",
-    "Exception 02: NON-MASKABLE INTERRUPT EXCEPTION",
-    "Exception 03: BREAKPOINT (INT 3)",
-    "Exception 04: OVERFLOW",
-    "Exception 05: BOUND EXCEPTION",
-    "Exception 06: INVALID OPCODE",
-    "Exception 07: FPU NOT AVAILABLE",
-    "Exception 08: DOUBLE FAULT",
-    "Exception 09: COPROCESSOR SEGMENT OVERRUN",
-    "Exception 0A: INVALID TSS",
-    "Exception 0B: SEGMENT NOT PRESENT",
-    "Exception 0C: STACK EXCEPTION",
-    "Exception 0D: GENERAL PROTECTION FAULT",
-    "Exception 0E: PAGE FAULT",
-    "Exception 0F: Reserved",
-    "Exception 10: COPROCESSOR ERROR",
-    "Exception 11: ALIGNMENT CHECK",
-    "Exception 12: MACHINE CHECK"
+    "DIVIDE BY ZERO",
+    "DEBUG EXCEPTION",
+    "NON-MASKABLE INTERRUPT EXCEPTION",
+    "BREAKPOINT (INT 3)",
+    "OVERFLOW",
+    "BOUND EXCEPTION",
+    "INVALID OPCODE",
+    "FPU NOT AVAILABLE",
+    "DOUBLE FAULT",
+    "COPROCESSOR SEGMENT OVERRUN",
+    "INVALID TSS",
+    "SEGMENT NOT PRESENT",
+    "STACK EXCEPTION",
+    "GENERAL PROTECTION FAULT",
+    "PAGE FAULT",
+    "Reserved",
+    "COPROCESSOR ERROR",
+    "ALIGNMENT CHECK",
+    "MACHINE CHECK"
 };
 
 #define SCREEN_ATTR 0x1F    // Bright white on blue background
@@ -118,7 +118,10 @@ i386PrintExceptionText(ULONG TrapIndex, PKTRAP_FRAME TrapFrame, PKSPECIAL_REGIST
 
     PrintText("FreeLdr " KERNEL_VERSION_STR " " KERNEL_VERSION_BUILD_STR "\n"
               "Report this error on the ReactOS Bug Tracker: https://jira.reactos.org\n\n"
-              "0x%02lx: %s\n\n", TrapIndex, i386ExceptionDescriptionText[TrapIndex]);
+              "0x%02lx: Exception %02X: %s\n\n",
+              TrapIndex,
+              TrapIndex,
+              i386ExceptionDescriptionText[TrapIndex]);
 
 #ifdef _M_IX86
     PrintText("EAX: %.8lx        ESP: %.8lx        CR0: %.8lx        DR0: %.8lx\n",
@@ -194,6 +197,7 @@ i386PrintExceptionText(ULONG TrapIndex, PKTRAP_FRAME TrapFrame, PKSPECIAL_REGIST
               InstructionPointer[6], InstructionPointer[7]);
 }
 
+DECLSPEC_NORETURN
 VOID
 FrLdrBugCheckWithMessage(
     ULONG BugCode,
@@ -227,8 +231,9 @@ FrLdrBugCheckWithMessage(
     for (;;);
 }
 
+static
+DECLSPEC_NORETURN
 void
-NTAPI
 FrLdrBugCheckEx(
     ULONG BugCode,
     PCHAR File,
@@ -256,6 +261,7 @@ FrLdrBugCheckEx(
     for (;;);
 }
 
+DECLSPEC_NORETURN
 void
 NTAPI
 FrLdrBugCheck(ULONG BugCode)
