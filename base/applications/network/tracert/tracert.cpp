@@ -228,7 +228,7 @@ GetULONG(
     errno = 0;
 
     // try to convert String to ULONG
-    *Value =  wcstoul(String, &StopString, 10);
+    *Value = wcstoul(String, &StopString, 10);
     if (errno != 0 || *StopString != UNICODE_NULL)
     {
         SetLastError(ERROR_INVALID_DATA);
