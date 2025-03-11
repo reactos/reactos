@@ -202,7 +202,7 @@ bool IsStringNumericW(
 
 static bool
 GetULONG(
-    _In_z_ LPWSTR String,
+    _In_ PWSTR String,
     _Out_ ULONG *Value
 )
 {
