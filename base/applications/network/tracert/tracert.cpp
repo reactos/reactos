@@ -591,7 +591,7 @@ GetOptionNumberOfHops(
     // see if we have enough values    
     if ((*i + 1) > (argc - 1))
     {
-        OutputText(IDS_MISSING_OPTION_VALUE, argv[*i][0], argv[*i][1]);
+        OutputText(IDS_MISSING_OPTION_VALUE, argv[*i]);
         return false;
     }
     
@@ -603,7 +603,7 @@ GetOptionNumberOfHops(
         || ((NumberOfHops < MIN_HOP_COUNT) || (NumberOfHops > MAX_HOP_COUNT))) 
     {
         (*i)--;
-        OutputText(IDS_BAD_OPTION_VALUE, argv[*i][0], argv[*i][1]);
+        OutputText(IDS_BAD_OPTION_VALUE, argv[*i]);
         return false;
     }
     
@@ -629,7 +629,7 @@ GetOptionTimeout(
     // see if we have enough values
     if ((*i + 1) > (argc - 1))
     {
-        OutputText(IDS_MISSING_OPTION_VALUE, argv[*i][0], argv[*i][1]);
+        OutputText(IDS_MISSING_OPTION_VALUE, argv[*i]);
         return false;
     }
     
@@ -642,7 +642,7 @@ GetOptionTimeout(
         // if we get here then Timeout is less then 1 or somthing other
         // then a numeric value
         (*i)--;
-        OutputText(IDS_BAD_OPTION_VALUE, argv[*i][0], argv[*i][1]);
+        OutputText(IDS_BAD_OPTION_VALUE, argv[*i]);
         return false;
     }
     
