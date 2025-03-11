@@ -690,7 +690,7 @@ GetOptionTimeout(
     
     // try to parse and convert value as ULONG
     // check if Timeout is within valid range
-    if ((GetULONG(argv[*i], &Timeout) == FALSE) || (Timeout < 1))
+    if (!GetULONG(argv[*i], &Timeout) || (Timeout < 1))
     {
         // if GetULONG Fails we need to check ERANGE to see if
         // it was due to the value being out of range
