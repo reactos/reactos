@@ -165,7 +165,7 @@ static void draw_splitbar(HWND hWnd, int x)
     }
 
     GetWindowRect(g_pChildWnd->hTreeWnd, &rt);
-    MapWindowPoints(NULL, hWnd, (POINT *)&rt, sizeof(RECT) / sizeof(POINT));
+    MapWindowPoints(NULL, hWnd, (POINT *)&rt, sizeof(rt) / sizeof(POINT));
 
     rt.left = x - SPLIT_WIDTH/2;
     rt.right = x + SPLIT_WIDTH/2+1;
