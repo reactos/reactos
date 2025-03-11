@@ -651,7 +651,7 @@ GetOptionNumberOfHops(
     
     // try to parse and convert value as UULONG
     // check if Timeout is within valid range
-    if (GetULONG(argv[*i], &NumberOfHops) == false 
+    if (!GetULONG(argv[*i], &NumberOfHops)
         || ((NumberOfHops < MIN_HOP_COUNT) || (NumberOfHops > MAX_HOP_COUNT))) 
     {
         (*i)--;
