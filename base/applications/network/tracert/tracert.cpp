@@ -170,7 +170,6 @@ GetULONG(
     // check input arguments
     if (String == NULL || Value == NULL || *String == UNICODE_NULL)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
         return false;
     }
 
@@ -182,7 +181,6 @@ GetULONG(
     *Value = wcstoul(String, &StopString, 10);
     if ((errno != ERANGE) && (errno != 0 || *StopString != UNICODE_NULL))
     {
-        SetLastError(ERROR_INVALID_DATA);
         return false;
     }
     
@@ -587,7 +585,6 @@ GetOptionNumberOfHops(
     // check input arguments
     if (argv == NULL || i == NULL || Value == NULL)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
         return false;
     }
     
@@ -626,7 +623,6 @@ GetOptionTimeout(
     // check input arguments
     if (argv == NULL || i == NULL || Value == NULL)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
         return false;
     }
     
