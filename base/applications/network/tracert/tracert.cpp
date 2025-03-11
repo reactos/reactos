@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Trace network paths through networks
  * COPYRIGHT:   Copyright 2018 Ged Murphy <gedmurphy@reactos.org>
+                Copyright 2025 Curtis Wilson <LiquidFox1776@gmail.com>
  */
 
 #ifdef __REACTOS__
@@ -12,6 +13,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
+#include <winnls.h>
 #define _INC_WINDOWS
 #include <stdlib.h>
 #include <winsock2.h>
@@ -24,6 +26,7 @@
 #include <iphlpapi.h>
 #include <icmpapi.h>
 #include <strsafe.h>
+#include <errno.h>
 #include "resource.h"
 
 #define SIZEOF_ICMP_ERROR       8
@@ -31,6 +34,8 @@
 #define PACKET_SIZE             32
 #define MAX_IPADDRESS           32
 #define NUM_OF_PINGS            3
+#define MIN_HOP_COUNT           1
+#define MAX_HOP_COUNT           255
 
 struct TraceInfo
 {
@@ -153,23 +158,85 @@ Usage()
     OutputText(IDS_USAGE);
 }
 
-static ULONG
-GetULONG(
-    _In_z_ LPWSTR String
-)
+static
+bool IsStringNumericW(
+    _In_z_ LPCWSTR String) 
 {
-    ULONG Length;
-    Length = wcslen(String);
+    WORD charType = 0;
 
-    ULONG i = 0;
-    while ((i < Length) && ((String[i] < L'0') || (String[i] > L'9'))) i++;
-    if ((i >= Length) || ((String[i] < L'0') || (String[i] > L'9')))
+    // check input parameters
+    if (String == NULL)
     {
-        return (ULONG)-1;
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return false;
     }
 
+    // process String
+    while (*String) 
+    {
+        // gather information about the character we are on
+        if (GetStringTypeW(CT_CTYPE1, String, 1, &charType)) 
+        {
+            // check if the character is classified as a digit
+            // if it is not a digit set the last error
+            // and return
+            if ((charType & C1_DIGIT) == false) 
+            {
+                SetLastError(ERROR_INVALID_DATA);
+                return false;
+            }
+        }
+        else 
+        {
+            // Error retrieving character type
+            SetLastError(ERROR_INVALID_DATA);
+            return false;
+        }
+        String++;
+    }
+
+    // String appears to only contain digits
+    SetLastError(ERROR_SUCCESS);
+    return true;
+}
+
+static bool
+GetULONG(
+    _In_z_ LPWSTR String,
+    _Out_ ULONG *Value
+)
+{
     LPWSTR StopString;
-    return wcstoul(&String[i], &StopString, 10);
+    *Value = 0;
+
+    // check input arguments
+    if (String == NULL || Value == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return false;
+    }
+
+    // make sure String only contains digits
+    if (IsStringNumericW(String) == false)
+    {
+        SetLastError(ERROR_INVALID_DATA);
+        return false;
+    }
+
+    // clear errno so we can use its value
+    // after the call to wcstoul to check for errors
+    errno = 0;
+
+    // try to convert String to ULONG
+    *Value =  wcstoul(String, &StopString, 10);
+    if (errno != 0 || *StopString != UNICODE_NULL)
+    {
+        SetLastError(ERROR_INVALID_DATA);
+        return false;
+    }
+    
+    // the conversion was successful
+    return true;
 }
 
 static bool
@@ -558,6 +625,96 @@ Cleanup:
 }
 
 static bool
+GetOptionNumberOfHops(
+    _In_ int argc, 
+    _In_ wchar_t *argv[], 
+    _Inout_ int *i, 
+    _Out_ ULONG *Value)
+{
+    ULONG NumberOfHops = 0;
+
+    // check input arguments
+    if (argv == NULL || i == NULL || Value == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return false;
+    }
+    
+    // see if we have enough values    
+    if ((*i + 1) > (argc - 1))
+    {
+        OutputText(IDS_MISSING_OPTION_VALUE, argv[*i][0], argv[*i][1]);
+        return false;
+    }
+    
+    (*i)++;
+    
+    // try to parse and convert value as UULONG
+    // check if Timeout is within valid range
+    if (GetULONG(argv[*i], &NumberOfHops) == false 
+        || ((NumberOfHops < MIN_HOP_COUNT) || (NumberOfHops > MAX_HOP_COUNT))) 
+    {
+        (*i)--;
+        OutputText(IDS_BAD_OPTION_VALUE, argv[*i][0], argv[*i][1]);
+        return false;
+    }
+    
+    *Value = NumberOfHops;
+    return true;
+}
+
+static bool
+GetOptionTimeout(
+    _In_ int argc, 
+    _In_ wchar_t *argv[], 
+    _Inout_ int *i, 
+    _Out_ ULONG *Value)
+{
+    ULONG Timeout = 0;
+    
+    // check input arguments
+    if (argv == NULL || i == NULL || Value == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return false;
+    }
+    
+    // see if we have enough values
+    if ((*i + 1) > (argc - 1))
+    {
+        OutputText(IDS_MISSING_OPTION_VALUE, argv[*i][0], argv[*i][1]);
+        return false;
+    }
+    
+    (*i)++;
+    
+    // try to parse and convert value as ULONG
+    // check if Timeout is within valid range
+    if ((GetULONG(argv[*i], &Timeout) == FALSE) || (Timeout < 1))
+    {
+        // if GetULONG Fails we need to check ERANGE to see if
+        // it was due to the value being out of range
+        if (errno == ERANGE)
+        {
+            // Value should be equal to ULONG_MAX
+            // tracert on Windows seems to cap input values > ULONG_MAX 
+            // and does not report the input as an error
+            *Value = Timeout;
+            return true;
+        }
+        
+        // if we get here then Timeout is less then 1 or somthing other
+        // then a numeric value
+        (*i)--;
+        OutputText(IDS_BAD_OPTION_VALUE, argv[*i][0], argv[*i][1]);
+        return false;
+    }
+    
+    *Value = Timeout;
+    return true;
+}
+
+static bool
 ParseCmdline(int argc, wchar_t *argv[])
 {
     if (argc < 2)
@@ -568,7 +725,7 @@ ParseCmdline(int argc, wchar_t *argv[])
 
     for (int i = 1; i < argc; i++)
     {
-        if (argv[i][0] == '-')
+        if (argv[i][0] == '-' || argv[i][0] == '/')
         {
             switch (argv[i][1])
             {
@@ -577,7 +734,8 @@ ParseCmdline(int argc, wchar_t *argv[])
                 break;
 
             case 'h':
-                Info.MaxHops = GetULONG(argv[++i]);
+                if (GetOptionNumberOfHops(argc, argv, &i, &Info.MaxHops) == false)
+                    return false; 
                 break;
 
             case 'j':
@@ -585,7 +743,8 @@ ParseCmdline(int argc, wchar_t *argv[])
                 return false;
 
             case 'w':
-                Info.Timeout = GetULONG(argv[++i]);
+                if (GetOptionTimeout(argc, argv, &i, &Info.Timeout) == false)
+                    return false;
                 break;
 
             case '4':
@@ -606,11 +765,26 @@ ParseCmdline(int argc, wchar_t *argv[])
         }
         else
         {
+            // the host must be the last argument
+            if (i != (argc - 1))
+            {
+                Usage();
+                return false;
+            }
+            
             StringCchCopyW(Info.HostName, NI_MAXHOST, argv[i]);
             break;
         }
     }
 
+    // check for missing host
+    if (Info.HostName[0] == UNICODE_NULL)
+    {
+        OutputText(IDS_MISSING_TARGET);
+        Usage();
+        return false;
+    }
+       
     return true;
 }
 
