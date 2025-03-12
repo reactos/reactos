@@ -9,11 +9,12 @@
     Done: Clean up socket in WskCloseSocket (have RefCount and
     SocketGet / SocketPut functions).
     Done: Remove unnecessary code (like Hook of completion)
+    Done: The whole Listen / Accept mechanism
+
     Make it compile with MS VC as well
     Rebase onto latest master
     Squash commits (git rebase -i) one for tdihelpers one for netio
 
-    The whole Listen / Accept mechanism is still missing
     Some minor functions (not used by WinDRBD) are missing
     (like WskControlClient, WskSocketConnect, ...)
     Raw sockets are not supported for now.
@@ -225,6 +226,12 @@ NetioComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
     UserIrp->IoStatus.Status = Irp->IoStatus.Status;
     UserIrp->IoStatus.Information = Irp->IoStatus.Information;
 
+    if (c->PeerAddrRet != NULL) {
+        PSOCKADDR RemoteAddress =
+            (PSOCKADDR)(&((PTRANSPORT_ADDRESS) c->PeerAddrRet->RemoteAddress)->Address[0].Address[0]);
+
+        memcpy(&c->socket->RemoteAddress, RemoteAddress, sizeof(c->socket->RemoteAddress));
+    }
     IoCompleteRequest(UserIrp, IO_NETWORK_INCREMENT);
 
     SocketPut(c->socket);
@@ -329,6 +336,8 @@ ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
             DbgPrint("ListenDispatch->WskAcceptEvent returned non-successful status 0x%08x\n", Status);
                   /* ignore ... */
         }
+        memcpy(&AcceptSocket->RemoteAddress, RemoteAddress, sizeof(AcceptSocket->RemoteAddress));
+
             /* And wait for the next incoming connection. */
             /* This is done in a separate thread at IRQL = 0 */
         QueueListening(ListenSocket);
@@ -796,8 +805,17 @@ static NTSTATUS WSKAPI
 WskGetRemoteAddress(_In_ PWSK_SOCKET Socket, _Out_ PSOCKADDR RemoteAddress, _Inout_ PIRP Irp)
 {
 // DbgPrint("Function %s ...\n", __func__);
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PWSK_SOCKET_INTERNAL s = (PWSK_SOCKET_INTERNAL)Socket;
+    NTSTATUS Status = STATUS_INVALID_PARAMETER;
+
+    if (s != NULL) {
+        memcpy(RemoteAddress, &s->RemoteAddress, sizeof(*RemoteAddress));
+        Status = STATUS_SUCCESS;
+    }
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+
+    return STATUS_PENDING;  /* Caller has to wait for his completion routine */
 }
 
 static NTSTATUS WSKAPI
@@ -1138,6 +1156,8 @@ WskSocket(
     s->ListenIrp = NULL;
     s->ListenThreadHandle = NULL;
     s->ListenThreadShouldRun = FALSE;
+    memset(&s->LocalAddress, 0, sizeof(s->LocalAddress));
+    memset(&s->RemoteAddress, 0, sizeof(s->RemoteAddress));
 
     switch (SocketType)
     {
