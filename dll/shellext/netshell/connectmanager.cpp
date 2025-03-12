@@ -6,6 +6,7 @@
  */
 
 #include "precomp.h"
+#include <setupapi_undoc.h> // For IsUserAdmin()
 
 VOID NormalizeOperStatus(MIB_IFROW *IfEntry, NETCON_PROPERTIES * Props);
 

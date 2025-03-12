@@ -19,6 +19,8 @@
 #include <pseh/pseh2.h>
 #include <cfgmgr32.h>
 
+#include <setupapi_undoc.h>
+
 #include "globals.h"
 #include "resource.h"
 

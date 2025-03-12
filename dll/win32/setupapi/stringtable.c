@@ -20,6 +20,24 @@
 
 #include "setupapi_private.h"
 
+
+#define _PSETUP(func)   pSetup ## func
+
+#define StringTableInitialize       _PSETUP(StringTableInitialize)
+#define StringTableInitializeEx     _PSETUP(StringTableInitializeEx)
+#define StringTableDestroy          _PSETUP(StringTableDestroy)
+#define StringTableAddString        _PSETUP(StringTableAddString)
+#define StringTableAddStringEx      _PSETUP(StringTableAddStringEx)
+#define StringTableDuplicate        _PSETUP(StringTableDuplicate)
+#define StringTableGetExtraData     _PSETUP(StringTableGetExtraData)
+#define StringTableLookUpString     _PSETUP(StringTableLookUpString)
+#define StringTableLookUpStringEx   _PSETUP(StringTableLookUpStringEx)
+#define StringTableSetExtraData     _PSETUP(StringTableSetExtraData)
+#define StringTableStringFromId     _PSETUP(StringTableStringFromId)
+#define StringTableStringFromIdEx   _PSETUP(StringTableStringFromIdEx)
+#define StringTableTrim             _PSETUP(StringTableTrim)
+
+
 #define TABLE_DEFAULT_SIZE 256
 
 typedef struct _TABLE_SLOT
@@ -39,19 +57,21 @@ typedef struct _STRING_TABLE
 
 
 /**************************************************************************
- * pSetupStringTableInitialize [SETUPAPI.@]
+ * StringTableInitializeEx [SETUPAPI.@]
  *
  * Creates a new string table and initializes it.
  *
  * PARAMS
- *     None
+ *     dwMaxExtraDataSize [I] Maximum extra data size
+ *     dwReserved         [I] Unused
  *
  * RETURNS
  *     Success: Handle to the string table
  *     Failure: NULL
  */
 HSTRING_TABLE WINAPI
-pSetupStringTableInitialize(VOID)
+StringTableInitializeEx(DWORD dwMaxExtraDataSize,
+                        DWORD dwReserved)
 {
     PSTRING_TABLE pStringTable;
 
@@ -77,51 +97,6 @@ pSetupStringTableInitialize(VOID)
 
     pStringTable->dwUsedSlots = 0;
     pStringTable->dwMaxSlots = TABLE_DEFAULT_SIZE;
-    pStringTable->dwMaxDataSize = 0;
-
-    TRACE("Done\n");
-
-    return (HSTRING_TABLE)pStringTable;
-}
-
-
-/**************************************************************************
- * pSetupStringTableInitializeEx [SETUPAPI.@]
- *
- * Creates a new string table and initializes it.
- *
- * PARAMS
- *     dwMaxExtraDataSize [I] Maximum extra data size
- *     dwReserved         [I] Unused
- *
- * RETURNS
- *     Success: Handle to the string table
- *     Failure: NULL
- */
-HSTRING_TABLE WINAPI
-pSetupStringTableInitializeEx(DWORD dwMaxExtraDataSize,
-                              DWORD dwReserved)
-{
-    PSTRING_TABLE pStringTable;
-
-    TRACE("\n");
-
-    pStringTable = MyMalloc(sizeof(STRING_TABLE));
-    if (pStringTable == NULL) return NULL;
-
-    memset(pStringTable, 0, sizeof(STRING_TABLE));
-
-    pStringTable->pSlots = MyMalloc(sizeof(TABLE_SLOT) * TABLE_DEFAULT_SIZE);
-    if (pStringTable->pSlots == NULL)
-    {
-        MyFree(pStringTable);
-        return NULL;
-    }
-
-    memset(pStringTable->pSlots, 0, sizeof(TABLE_SLOT) * TABLE_DEFAULT_SIZE);
-
-    pStringTable->dwUsedSlots = 0;
-    pStringTable->dwMaxSlots = TABLE_DEFAULT_SIZE;
     pStringTable->dwMaxDataSize = dwMaxExtraDataSize;
 
     TRACE("Done\n");
@@ -129,9 +104,26 @@ pSetupStringTableInitializeEx(DWORD dwMaxExtraDataSize,
     return (HSTRING_TABLE)pStringTable;
 }
 
+/**************************************************************************
+ * StringTableInitialize [SETUPAPI.@]
+ *
+ * Creates a new string table and initializes it.
+ *
+ * PARAMS
+ *     None
+ *
+ * RETURNS
+ *     Success: Handle to the string table
+ *     Failure: NULL
+ */
+HSTRING_TABLE WINAPI
+StringTableInitialize(VOID)
+{
+    return StringTableInitializeEx(0, 0);
+}
 
 /**************************************************************************
- * pSetupStringTableDestroy [SETUPAPI.@]
+ * StringTableDestroy [SETUPAPI.@]
  *
  * Destroys a string table.
  *
@@ -142,7 +134,7 @@ pSetupStringTableInitializeEx(DWORD dwMaxExtraDataSize,
  *     None
  */
 VOID WINAPI
-pSetupStringTableDestroy(HSTRING_TABLE hStringTable)
+StringTableDestroy(HSTRING_TABLE hStringTable)
 {
     PSTRING_TABLE pStringTable;
     DWORD i;
@@ -171,114 +163,8 @@ pSetupStringTableDestroy(HSTRING_TABLE hStringTable)
     MyFree(pStringTable);
 }
 
-
 /**************************************************************************
- * pSetupStringTableAddString [SETUPAPI.@]
- *
- * Adds a new string to the string table.
- *
- * PARAMS
- *     hStringTable [I] Handle to the string table
- *     lpString     [I] String to be added to the string table
- *     dwFlags      [I] Flags
- *                        1: case sensitive compare
- *
- * RETURNS
- *     Success: String ID
- *     Failure: -1
- *
- * NOTES
- *     If the given string already exists in the string table it will not
- *     be added again. The ID of the existing string will be returned in
- *     this case.
- */
-DWORD WINAPI
-pSetupStringTableAddString(HSTRING_TABLE hStringTable,
-                           LPWSTR lpString,
-                           DWORD dwFlags)
-{
-    PSTRING_TABLE pStringTable;
-    DWORD i;
-
-    TRACE("%p %s %x\n", hStringTable, debugstr_w(lpString), dwFlags);
-
-    pStringTable = (PSTRING_TABLE)hStringTable;
-    if (pStringTable == NULL)
-    {
-        ERR("Invalid hStringTable!\n");
-        return (DWORD)-1;
-    }
-
-    /* Search for existing string in the string table */
-    for (i = 0; i < pStringTable->dwMaxSlots; i++)
-    {
-        if (pStringTable->pSlots[i].pString != NULL)
-        {
-            if (dwFlags & 1)
-            {
-                if (!lstrcmpW(pStringTable->pSlots[i].pString, lpString))
-                {
-                    return i + 1;
-                }
-            }
-            else
-            {
-                if (!lstrcmpiW(pStringTable->pSlots[i].pString, lpString))
-                {
-                    return i + 1;
-                }
-            }
-        }
-    }
-
-    /* Check for filled slot table */
-    if (pStringTable->dwUsedSlots == pStringTable->dwMaxSlots)
-    {
-        PTABLE_SLOT pNewSlots;
-        DWORD dwNewMaxSlots;
-
-        /* FIXME: not thread safe */
-        dwNewMaxSlots = pStringTable->dwMaxSlots * 2;
-        pNewSlots = MyMalloc(sizeof(TABLE_SLOT) * dwNewMaxSlots);
-        if (pNewSlots == NULL)
-            return (DWORD)-1;
-        memset(&pNewSlots[pStringTable->dwMaxSlots], 0, sizeof(TABLE_SLOT) * (dwNewMaxSlots - pStringTable->dwMaxSlots));
-        memcpy(pNewSlots, pStringTable->pSlots, sizeof(TABLE_SLOT) * pStringTable->dwMaxSlots);
-        pNewSlots = InterlockedExchangePointer((PVOID*)&pStringTable->pSlots, pNewSlots);
-        MyFree(pNewSlots);
-        pStringTable->dwMaxSlots = dwNewMaxSlots;
-
-        return pSetupStringTableAddString(hStringTable, lpString, dwFlags);
-    }
-
-    /* Search for an empty slot */
-    for (i = 0; i < pStringTable->dwMaxSlots; i++)
-    {
-        if (pStringTable->pSlots[i].pString == NULL)
-        {
-            pStringTable->pSlots[i].pString = MyMalloc((lstrlenW(lpString) + 1) * sizeof(WCHAR));
-            if (pStringTable->pSlots[i].pString == NULL)
-            {
-                TRACE("Couldn't allocate memory for a new string!\n");
-                return (DWORD)-1;
-            }
-
-            lstrcpyW(pStringTable->pSlots[i].pString, lpString);
-
-            pStringTable->dwUsedSlots++;
-
-            return i + 1;
-        }
-    }
-
-    TRACE("Couldn't find an empty slot!\n");
-
-    return (DWORD)-1;
-}
-
-
-/**************************************************************************
- * pSetupStringTableAddStringEx [SETUPAPI.@]
+ * StringTableAddStringEx [SETUPAPI.@]
  *
  * Adds a new string plus extra data to the string table.
  *
@@ -300,42 +186,39 @@ pSetupStringTableAddString(HSTRING_TABLE hStringTable,
  *     this case.
  */
 DWORD WINAPI
-pSetupStringTableAddStringEx(HSTRING_TABLE hStringTable,
-                             LPWSTR lpString,
-                             DWORD dwFlags,
-                             LPVOID lpExtraData,
-                             DWORD dwExtraDataSize)
+StringTableAddStringEx(HSTRING_TABLE hStringTable,
+                       LPWSTR lpString,
+                       DWORD dwFlags,
+                       LPVOID lpExtraData,
+                       DWORD dwExtraDataSize)
 {
     PSTRING_TABLE pStringTable;
     DWORD i;
 
-    TRACE("%p %s %lx\n", (PVOID)hStringTable, debugstr_w(lpString), dwFlags);
+    TRACE("%p %s %x %p, %u\n", hStringTable, debugstr_w(lpString), dwFlags,
+          lpExtraData, dwExtraDataSize);
 
     pStringTable = (PSTRING_TABLE)hStringTable;
-    if (pStringTable == NULL)
+    if (!pStringTable)
     {
         ERR("Invalid hStringTable!\n");
-        return (DWORD)-1;
+        return ~0u;
     }
 
     /* Search for existing string in the string table */
     for (i = 0; i < pStringTable->dwMaxSlots; i++)
     {
-        if (pStringTable->pSlots[i].pString != NULL)
+        if (pStringTable->pSlots[i].pString)
         {
             if (dwFlags & 1)
             {
                 if (!lstrcmpW(pStringTable->pSlots[i].pString, lpString))
-                {
                     return i + 1;
-                }
             }
             else
             {
                 if (!lstrcmpiW(pStringTable->pSlots[i].pString, lpString))
-                {
                     return i + 1;
-                }
             }
         }
     }
@@ -343,37 +226,53 @@ pSetupStringTableAddStringEx(HSTRING_TABLE hStringTable,
     /* Check for filled slot table */
     if (pStringTable->dwUsedSlots == pStringTable->dwMaxSlots)
     {
-        FIXME("Resize the string table!\n");
-        return (DWORD)-1;
+        PTABLE_SLOT pNewSlots;
+        DWORD dwNewMaxSlots;
+
+        /* FIXME: not thread safe */
+        dwNewMaxSlots = pStringTable->dwMaxSlots * 2;
+        pNewSlots = MyMalloc(sizeof(TABLE_SLOT) * dwNewMaxSlots);
+        if (!pNewSlots)
+            return ~0u;
+        memset(&pNewSlots[pStringTable->dwMaxSlots], 0, sizeof(TABLE_SLOT) * (dwNewMaxSlots - pStringTable->dwMaxSlots));
+        memcpy(pNewSlots, pStringTable->pSlots, sizeof(TABLE_SLOT) * pStringTable->dwMaxSlots);
+        pNewSlots = InterlockedExchangePointer((PVOID*)&pStringTable->pSlots, pNewSlots);
+        MyFree(pNewSlots);
+        pStringTable->dwMaxSlots = dwNewMaxSlots;
+
+        return StringTableAddStringEx(hStringTable, lpString, dwFlags, lpExtraData, dwExtraDataSize);
     }
 
     /* Search for an empty slot */
     for (i = 0; i < pStringTable->dwMaxSlots; i++)
     {
-        if (pStringTable->pSlots[i].pString == NULL)
+        if (!pStringTable->pSlots[i].pString)
         {
             pStringTable->pSlots[i].pString = MyMalloc((lstrlenW(lpString) + 1) * sizeof(WCHAR));
-            if (pStringTable->pSlots[i].pString == NULL)
+            if (!pStringTable->pSlots[i].pString)
             {
-                TRACE("Couldn't allocate memory for a new string!\n");
-                return (DWORD)-1;
+                WARN("Couldn't allocate memory for a new string!\n");
+                return ~0u;
             }
 
             lstrcpyW(pStringTable->pSlots[i].pString, lpString);
 
-            pStringTable->pSlots[i].pData = MyMalloc(dwExtraDataSize);
-            if (pStringTable->pSlots[i].pData == NULL)
+            if (dwExtraDataSize && lpExtraData)
             {
-                TRACE("Couldn't allocate memory for a new extra data!\n");
-                MyFree(pStringTable->pSlots[i].pString);
-                pStringTable->pSlots[i].pString = NULL;
-                return (DWORD)-1;
-            }
+                pStringTable->pSlots[i].pData = MyMalloc(dwExtraDataSize);
+                if (!pStringTable->pSlots[i].pData)
+                {
+                    TRACE("Couldn't allocate memory for data!\n");
+                    MyFree(pStringTable->pSlots[i].pString);
+                    pStringTable->pSlots[i].pString = NULL;
+                    return ~0u;
+                }
 
-            memcpy(pStringTable->pSlots[i].pData,
-                   lpExtraData,
-                   dwExtraDataSize);
-            pStringTable->pSlots[i].dwSize = dwExtraDataSize;
+                memcpy(pStringTable->pSlots[i].pData,
+                       lpExtraData,
+                       dwExtraDataSize);
+                pStringTable->pSlots[i].dwSize = dwExtraDataSize;
+            }
 
             pStringTable->dwUsedSlots++;
 
@@ -382,13 +281,39 @@ pSetupStringTableAddStringEx(HSTRING_TABLE hStringTable,
     }
 
     TRACE("Couldn't find an empty slot!\n");
-
-    return (DWORD)-1;
+    return ~0u;
 }
 
+/**************************************************************************
+ * StringTableAddString [SETUPAPI.@]
+ *
+ * Adds a new string to the string table.
+ *
+ * PARAMS
+ *     hStringTable [I] Handle to the string table
+ *     lpString     [I] String to be added to the string table
+ *     dwFlags      [I] Flags
+ *                        1: case sensitive compare
+ *
+ * RETURNS
+ *     Success: String ID
+ *     Failure: -1
+ *
+ * NOTES
+ *     If the given string already exists in the string table it will not
+ *     be added again. The ID of the existing string will be returned in
+ *     this case.
+ */
+DWORD WINAPI
+StringTableAddString(HSTRING_TABLE hStringTable,
+                     LPWSTR lpString,
+                     DWORD dwFlags)
+{
+    return StringTableAddStringEx(hStringTable, lpString, dwFlags, NULL, 0);
+}
 
 /**************************************************************************
- * pSetupStringTableDuplicate [SETUPAPI.@]
+ * StringTableDuplicate [SETUPAPI.@]
  *
  * Duplicates a given string table.
  *
@@ -401,7 +326,7 @@ pSetupStringTableAddStringEx(HSTRING_TABLE hStringTable,
  *
  */
 HSTRING_TABLE WINAPI
-pSetupStringTableDuplicate(HSTRING_TABLE hStringTable)
+StringTableDuplicate(HSTRING_TABLE hStringTable)
 {
     PSTRING_TABLE pSourceTable;
     PSTRING_TABLE pDestinationTable;
@@ -414,14 +339,14 @@ pSetupStringTableDuplicate(HSTRING_TABLE hStringTable)
     if (pSourceTable == NULL)
     {
         ERR("Invalid hStringTable!\n");
-        return (HSTRING_TABLE)NULL;
+        return NULL;
     }
 
     pDestinationTable = MyMalloc(sizeof(STRING_TABLE));
     if (pDestinationTable == NULL)
     {
         ERR("Could not allocate a new string table!\n");
-        return (HSTRING_TABLE)NULL;
+        return NULL;
     }
 
     memset(pDestinationTable, 0, sizeof(STRING_TABLE));
@@ -430,7 +355,7 @@ pSetupStringTableDuplicate(HSTRING_TABLE hStringTable)
     if (pDestinationTable->pSlots == NULL)
     {
         MyFree(pDestinationTable);
-        return (HSTRING_TABLE)NULL;
+        return NULL;
     }
 
     memset(pDestinationTable->pSlots, 0, sizeof(TABLE_SLOT) * pSourceTable->dwMaxSlots);
@@ -470,9 +395,8 @@ pSetupStringTableDuplicate(HSTRING_TABLE hStringTable)
     return (HSTRING_TABLE)pDestinationTable;
 }
 
-
 /**************************************************************************
- * pSetupStringTableGetExtraData [SETUPAPI.@]
+ * StringTableGetExtraData [SETUPAPI.@]
  *
  * Retrieves extra data from a given string table entry.
  *
@@ -487,10 +411,10 @@ pSetupStringTableDuplicate(HSTRING_TABLE hStringTable)
  *     Failure: FALSE
  */
 BOOL WINAPI
-pSetupStringTableGetExtraData(HSTRING_TABLE hStringTable,
-                              DWORD dwId,
-                              LPVOID lpExtraData,
-                              DWORD dwExtraDataSize)
+StringTableGetExtraData(HSTRING_TABLE hStringTable,
+                        DWORD dwId,
+                        LPVOID lpExtraData,
+                        DWORD dwExtraDataSize)
 {
     PSTRING_TABLE pStringTable;
 
@@ -510,7 +434,7 @@ pSetupStringTableGetExtraData(HSTRING_TABLE hStringTable,
         return FALSE;
     }
 
-    if (pStringTable->pSlots[dwId - 1].dwSize < dwExtraDataSize)
+    if (pStringTable->pSlots[dwId - 1].dwSize > dwExtraDataSize)
     {
         ERR("Data size is too large!\n");
         return FALSE;
@@ -518,68 +442,13 @@ pSetupStringTableGetExtraData(HSTRING_TABLE hStringTable,
 
     memcpy(lpExtraData,
            pStringTable->pSlots[dwId - 1].pData,
-           dwExtraDataSize);
+           pStringTable->pSlots[dwId - 1].dwSize);
 
     return TRUE;
 }
 
-
 /**************************************************************************
- * pSetupStringTableLookUpString [SETUPAPI.@]
- *
- * Searches a string table for a given string.
- *
- * PARAMS
- *     hStringTable [I] Handle to the string table
- *     lpString     [I] String to be searched for
- *     dwFlags      [I] Flags
- *                        1: case sensitive compare
- *
- * RETURNS
- *     Success: String ID
- *     Failure: -1
- */
-DWORD WINAPI
-pSetupStringTableLookUpString(HSTRING_TABLE hStringTable,
-                              LPWSTR lpString,
-                              DWORD dwFlags)
-{
-    PSTRING_TABLE pStringTable;
-    DWORD i;
-
-    TRACE("%p %s %x\n", hStringTable, debugstr_w(lpString), dwFlags);
-
-    pStringTable = (PSTRING_TABLE)hStringTable;
-    if (pStringTable == NULL)
-    {
-        ERR("Invalid hStringTable!\n");
-        return (DWORD)-1;
-    }
-
-    /* Search for existing string in the string table */
-    for (i = 0; i < pStringTable->dwMaxSlots; i++)
-    {
-        if (pStringTable->pSlots[i].pString != NULL)
-        {
-            if (dwFlags & 1)
-            {
-                if (!lstrcmpW(pStringTable->pSlots[i].pString, lpString))
-                    return i + 1;
-            }
-            else
-            {
-                if (!lstrcmpiW(pStringTable->pSlots[i].pString, lpString))
-                    return i + 1;
-            }
-        }
-    }
-
-    return (DWORD)-1;
-}
-
-
-/**************************************************************************
- * pSetupStringTableLookUpStringEx [SETUPAPI.@]
+ * StringTableLookUpStringEx [SETUPAPI.@]
  *
  * Searches a string table and extra data for a given string.
  *
@@ -589,18 +458,18 @@ pSetupStringTableLookUpString(HSTRING_TABLE hStringTable,
  *     dwFlags      [I] Flags
  *                        1: case sensitive compare
  *     lpExtraData  [O] Pointer to the buffer that receives the extra data
- *     lpReserved   [I/O] Unused
+ *     dwReserved   [I/O] Unused
  *
  * RETURNS
  *     Success: String ID
  *     Failure: -1
  */
 DWORD WINAPI
-pSetupStringTableLookUpStringEx(HSTRING_TABLE hStringTable,
-                                LPWSTR lpString,
-                                DWORD dwFlags,
-                                LPVOID lpExtraData,
-                                DWORD dwReserved)
+StringTableLookUpStringEx(HSTRING_TABLE hStringTable,
+                          LPWSTR lpString,
+                          DWORD dwFlags,
+                          LPVOID lpExtraData,
+                          DWORD dwReserved)
 {
     PSTRING_TABLE pStringTable;
     DWORD i;
@@ -643,9 +512,31 @@ pSetupStringTableLookUpStringEx(HSTRING_TABLE hStringTable,
     return ~0u;
 }
 
+/**************************************************************************
+ * StringTableLookUpString [SETUPAPI.@]
+ *
+ * Searches a string table for a given string.
+ *
+ * PARAMS
+ *     hStringTable [I] Handle to the string table
+ *     lpString     [I] String to be searched for
+ *     dwFlags      [I] Flags
+ *                        1: case sensitive compare
+ *
+ * RETURNS
+ *     Success: String ID
+ *     Failure: -1
+ */
+DWORD WINAPI
+StringTableLookUpString(HSTRING_TABLE hStringTable,
+                        LPWSTR lpString,
+                        DWORD dwFlags)
+{
+    return StringTableLookUpStringEx(hStringTable, lpString, dwFlags, NULL, 0);
+}
 
 /**************************************************************************
- * pSetupStringTableSetExtraData [SETUPAPI.@]
+ * StringTableSetExtraData [SETUPAPI.@]
  *
  * Sets extra data for a given string table entry.
  *
@@ -660,10 +551,10 @@ pSetupStringTableLookUpStringEx(HSTRING_TABLE hStringTable,
  *     Failure: FALSE
  */
 BOOL WINAPI
-pSetupStringTableSetExtraData(HSTRING_TABLE hStringTable,
-                              DWORD dwId,
-                              LPVOID lpExtraData,
-                              DWORD dwExtraDataSize)
+StringTableSetExtraData(HSTRING_TABLE hStringTable,
+                        DWORD dwId,
+                        LPVOID lpExtraData,
+                        DWORD dwExtraDataSize)
 {
     PSTRING_TABLE pStringTable;
 
@@ -704,9 +595,8 @@ pSetupStringTableSetExtraData(HSTRING_TABLE hStringTable,
     return TRUE;
 }
 
-
 /**************************************************************************
- * pSetupStringTableStringFromId [SETUPAPI.@]
+ * StringTableStringFromId [SETUPAPI.@]
  *
  * Returns a pointer to a string for the given string ID.
  *
@@ -719,8 +609,8 @@ pSetupStringTableSetExtraData(HSTRING_TABLE hStringTable,
  *     Failure: NULL
  */
 LPWSTR WINAPI
-pSetupStringTableStringFromId(HSTRING_TABLE hStringTable,
-                              DWORD dwId)
+StringTableStringFromId(HSTRING_TABLE hStringTable,
+                        DWORD dwId)
 {
     PSTRING_TABLE pStringTable;
     static WCHAR empty[] = {0};
@@ -740,9 +630,8 @@ pSetupStringTableStringFromId(HSTRING_TABLE hStringTable,
     return pStringTable->pSlots[dwId - 1].pString;
 }
 
-
 /**************************************************************************
- * pSetupStringTableStringFromIdEx [SETUPAPI.@]
+ * StringTableStringFromIdEx [SETUPAPI.@]
  *
  * Returns a string for the given string ID.
  *
@@ -757,10 +646,10 @@ pSetupStringTableStringFromId(HSTRING_TABLE hStringTable,
  *     Failure: FALSE
  */
 BOOL WINAPI
-pSetupStringTableStringFromIdEx(HSTRING_TABLE hStringTable,
-                                DWORD dwId,
-                                LPWSTR lpBuffer,
-                                LPDWORD lpBufferLength)
+StringTableStringFromIdEx(HSTRING_TABLE hStringTable,
+                          DWORD dwId,
+                          LPWSTR lpBuffer,
+                          LPDWORD lpBufferLength)
 {
     PSTRING_TABLE pStringTable;
     DWORD dwLength;
@@ -794,4 +683,21 @@ pSetupStringTableStringFromIdEx(HSTRING_TABLE hStringTable,
     *lpBufferLength = dwLength;
 
     return bResult;
+}
+
+/**************************************************************************
+ * StringTableTrim [SETUPAPI.@]
+ *
+ * ...
+ *
+ * PARAMS
+ *     hStringTable [I] Handle to the string table
+ *
+ * RETURNS
+ *     None
+ */
+VOID WINAPI
+StringTableTrim(HSTRING_TABLE hStringTable)
+{
+    FIXME("%p\n", hStringTable);
 }
