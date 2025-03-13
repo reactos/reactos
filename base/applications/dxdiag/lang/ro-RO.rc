@@ -239,7 +239,7 @@ BEGIN
     IDS_REG_FAIL "Eroare"
     IDS_DDTEST_ERROR "Testul de randare DirectDraw a eșuat.\nVă rugăm să consultați notele pentru mai multe informații."
     IDS_DDTEST_DESCRIPTION "Acesta va porni testarea interfeței DirectDraw. Doriți să continuați?"
-    IDS_DDPRIMARY_DESCRIPTION "Acest test va folosi DirectDraw pentru a desena pe suprafața principală.\Ar trebui desenate dreptunghiuri alb-negru. Doriți să continuați?"
+    IDS_DDPRIMARY_DESCRIPTION "Acest test va folosi DirectDraw pentru a desena pe suprafața principală.\nAr trebui desenate dreptunghiuri alb-negru. Doriți să continuați?"
     IDS_DDPRIMARY_RESULT "Ați văzut dreptunghiuri alb-negru?"
     IDS_DDOFFSCREEN_DESCRIPTION "Acest test va folosi DirectDraw pentru a desena un tampon în afara ecranului. Ar trebui desenat un dreptunghi alb în mișcare. Doriți să continuați?"
     IDS_DDOFFSCREEN_RESULT "Ați văzut dreptunghi alb în mișcare?"
