@@ -27,7 +27,6 @@ public:
         MESSAGE_HANDLER(WM_SYSCOLORCHANGE, OnSysColorChange)
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
         MESSAGE_HANDLER(WM_MOUSEWHEEL, OnMouseWheel)
-        MESSAGE_HANDLER(MAIN_WM_OUTOFMEMROY, OnOutOfMemory)
     END_MSG_MAP()
 
     CMainWindow() : m_hMenu(NULL) { }
@@ -55,7 +54,6 @@ private:
     LRESULT OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnMouseWheel(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnOutOfMemory(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     void alignChildrenToMainWindow();
     void saveImage(BOOL overwrite);

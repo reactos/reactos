@@ -702,27 +702,33 @@ LRESULT CCanvasWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     RECT rcClient;
     GetClientRect(&rcClient);
 
-    static BOOL s_bOutOfMemory = FALSE; // Don't show "Out Of Memory" multiple time
-
     PAINTSTRUCT ps;
     HDC hDC = BeginPaint(&ps);
-    if (!s_bOutOfMemory && !DoDraw(hDC, rcClient, ps.rcPaint)) // 1st try failed?
+    static BOOL s_bOutOfMemory = FALSE; // Don't show "Out Of Memory" message multiple time
+    if (!DoDraw(hDC, rcClient, ps.rcPaint)) // 1st try failed?
     {
-        // Out of memory? Reduce memory usage and try again
-        imageModel.ClearHistory();
-        if (imageModel.Crop(640, 400))
+        if (!s_bOutOfMemory)
         {
+            // Reduce memory usage and try again
             imageModel.ClearHistory();
-            if (!DoDraw(hDC, rcClient, ps.rcPaint)) // 2nd try failed?
+            if (imageModel.Crop(640, 400)) // Shrink the image
+            {
+                imageModel.ClearHistory();
+
+                if (!DoDraw(hDC, rcClient, ps.rcPaint)) // 2nd try failed?
+                    s_bOutOfMemory = TRUE;
+
+                ShowOutOfMemory();
+            }
+            else // Is shrinking failed?
             {
                 s_bOutOfMemory = TRUE;
             }
-            mainWindow.PostMessage(MAIN_WM_OUTOFMEMROY, 0, 0);
         }
-        else // Failed?
-        {
-            s_bOutOfMemory = TRUE;
-        }
+    }
+    else
+    {
+        s_bOutOfMemory = FALSE;
     }
 
     EndPaint(&ps);
