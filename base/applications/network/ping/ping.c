@@ -25,6 +25,7 @@
  * FILE:        base/applications/network/ping/ping.c
  * PURPOSE:     Network test utility
  * PROGRAMMERS: Tim Crawford <crawfxrd@gmail.com>
+                Curtis Wilson <LiquidFox1776@gmail.com>
  */
 
 #include <stdlib.h>
@@ -419,20 +420,26 @@ void
 Ping(void)
 {
     PVOID ReplyBuffer;
-    PVOID SendBuffer = NULL;
+    PUCHAR SendBuffer = NULL;
     DWORD ReplySize = 0;
     DWORD Status;
 
     if (RequestSize != 0)
     {
-        SendBuffer = malloc(RequestSize);
+        SendBuffer = (PUCHAR)malloc(RequestSize);
         if (SendBuffer == NULL)
         {
             ConResPrintf(StdErr, IDS_NO_RESOURCES);
             exit(1);
         }
 
-        ZeroMemory(SendBuffer, RequestSize);
+        // Windows ping utility fills the optional data field
+        // with ASCII characters from 'a' to 'w' wrapping back around
+        // until SendBuffer is full
+        for(int i = 0; i  < RequestSize; i++)
+        {
+            SendBuffer[i] = (UCHAR)(97 + (i % 23));
+        }
     }
 
     if (Family == AF_INET6)
@@ -472,14 +479,14 @@ Ping(void)
         Status = Icmp6SendEcho2(hIcmpFile, NULL, NULL, NULL,
                                 &Source,
                                 (struct sockaddr_in6 *)Target->ai_addr,
-                                SendBuffer, (USHORT)RequestSize, &IpOptions,
+                                (PVOID)SendBuffer, (USHORT)RequestSize, &IpOptions,
                                 ReplyBuffer, ReplySize, Timeout);
     }
     else
     {
         Status = IcmpSendEcho2(hIcmpFile, NULL, NULL, NULL,
                                ((PSOCKADDR_IN)Target->ai_addr)->sin_addr.s_addr,
-                               SendBuffer, (USHORT)RequestSize, &IpOptions,
+                               (PVOID)SendBuffer, (USHORT)RequestSize, &IpOptions,
                                ReplyBuffer, ReplySize, Timeout);
     }
 
