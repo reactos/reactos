@@ -50,7 +50,7 @@ typedef struct _APPBAR
 } APPBAR, *PAPPBAR;
 
 static inline PAPPBARDATA
-AppBar_LockOutput(_Inout_ PAPPBAR_COMMAND pData)
+AppBar_LockOutput(_In_ PAPPBAR_COMMAND pData)
 {
     return (PAPPBARDATA)SHLockShared(pData->hOutput, pData->dwProcessId);
 }
@@ -3943,7 +3943,7 @@ protected:
             case ABE_RIGHT:  prc->right  = min(prc->right, pAppBar->rc.left); break;
             case ABE_BOTTOM: prc->bottom = min(prc->bottom, pAppBar->rc.top); break;
             default:
-                ASSERT(0);
+                ASSERT(FALSE);
                 break;
         }
     }
@@ -3960,9 +3960,10 @@ protected:
             case ABE_TOP:    return pAppBar1->rc.top >= pAppBar2->rc.top;
             case ABE_RIGHT:  return pAppBar1->rc.right <= pAppBar2->rc.right;
             case ABE_BOTTOM: return pAppBar1->rc.bottom <= pAppBar2->rc.bottom;
+            default:
+                ASSERT(FALSE);
+                return FALSE;
         }
-
-        return FALSE;
     }
 
     void GetDockedRect(_Out_ PRECT prcDocked)
