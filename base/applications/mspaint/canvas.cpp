@@ -702,17 +702,26 @@ LRESULT CCanvasWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     RECT rcClient;
     GetClientRect(&rcClient);
 
+    static BOOL s_bOutOfMemory = FALSE; // Don't show "Out Of Memory" multiple time
+
     PAINTSTRUCT ps;
     HDC hDC = BeginPaint(&ps);
-    if (!DoDraw(hDC, rcClient, ps.rcPaint))
+    if (!s_bOutOfMemory && !DoDraw(hDC, rcClient, ps.rcPaint)) // 1st try failed?
     {
-        // Out of memory?
+        // Out of memory? Reduce memory usage and try again
         imageModel.ClearHistory();
-        if (imageModel.Crop(600, 300))
+        if (imageModel.Crop(640, 400))
         {
             imageModel.ClearHistory();
-            DoDraw(hDC, rcClient, ps.rcPaint);
+            if (!DoDraw(hDC, rcClient, ps.rcPaint)) // 2nd try failed?
+            {
+                s_bOutOfMemory = TRUE;
+            }
             mainWindow.PostMessage(MAIN_WM_OUTOFMEMROY, 0, 0);
+        }
+        else // Failed?
+        {
+            s_bOutOfMemory = TRUE;
         }
     }
 
