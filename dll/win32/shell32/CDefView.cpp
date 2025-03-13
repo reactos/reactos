@@ -1575,7 +1575,7 @@ HRESULT CDefView::FillList(BOOL IsRefreshCommand)
     // copy the items into the array
     while((S_OK == pEnumIDList->Next(1, &pidl, &dwFetched)) && dwFetched)
     {
-        if (DPA_InsertPtr(hdpa, 0x7fff, pidl) == -1)
+        if (DPA_AppendPtr(hdpa, pidl) == -1)
         {
             SHFree(pidl);
         }
@@ -1818,7 +1818,7 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
     int bForceFullStatusBar = false;
     BOOL bIsFileSystem = SHGetAttributes(NULL, m_pidlParent, SFGAO_FILESYSTEM) & SFGAO_FILESYSTEM;
-    m_SpecialFolder = bIsFileSystem ? -1 : 0x7f;
+    m_SpecialFolder = bIsFileSystem ? -1 : 0x7f; // FS folder or "generic" CSIDL
     if (_ILIsDesktop(m_pidlParent))
     {
         m_SpecialFolder = CSIDL_DESKTOP;
