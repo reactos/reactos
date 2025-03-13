@@ -8,8 +8,6 @@
 
 #pragma once
 
-#define MAIN_WM_OUTOFMEMROY (WM_USER + 100)
-
 class CMainWindow : public CWindowImpl<CMainWindow>
 {
 public:
