@@ -711,6 +711,7 @@ LRESULT CCanvasWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     {
         ShowOutOfMemory();
         s_bShowedOutOfMemory = TRUE;
+        imageModel.ClearHistory(); // Reduce memory usage
     }
 
     EndPaint(&ps);
