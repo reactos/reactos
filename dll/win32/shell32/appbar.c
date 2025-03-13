@@ -71,26 +71,30 @@ AppBar_CopyOut(
 /*************************************************************************
  * SHAppBarMessage            [SHELL32.@]
  */
-UINT_PTR WINAPI SHAppBarMessage(DWORD msg, PAPPBARDATA data)
+UINT_PTR
+WINAPI
+SHAppBarMessage(
+    _In_ DWORD dwMessage,
+    _Inout_ PAPPBARDATA pData)
 {
-    TRACE("msg=%d, data={cb=%d, hwnd=%p}\n", msg, data->cbSize, data->hWnd);
+    TRACE("dwMessage=%d, pData={cb=%d, hwnd=%p}\n", dwMessage, pData->cbSize, pData->hWnd);
 
     HWND hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
-    if (!hTrayWnd || data->cbSize > sizeof(APPBARDATA))
+    if (!hTrayWnd || pData->cbSize > sizeof(APPBARDATA))
     {
-        WARN("%p, %d\n", hTrayWnd, data->cbSize);
+        WARN("%p, %d\n", hTrayWnd, pData->cbSize);
         return FALSE;
     }
 
     APPBAR_COMMAND cmd;
-    cmd.data = *data;
+    cmd.data = *pData;
     cmd.data.cbSize = 0xBEEFCAFE; // For security check
-    cmd.dwMessage = msg;
+    cmd.dwMessage = dwMessage;
     cmd.dwProcessId = GetCurrentProcessId();
     cmd.hOutput = NULL;
 
     /* Make output data if necessary */
-    switch (msg)
+    switch (dwMessage)
     {
         case ABM_QUERYPOS:
         case ABM_SETPOS:
@@ -98,7 +102,7 @@ UINT_PTR WINAPI SHAppBarMessage(DWORD msg, PAPPBARDATA data)
             cmd.hOutput = AppBar_CopyIn(&cmd.data, sizeof(cmd.data), cmd.dwProcessId);
             if (!cmd.hOutput)
             {
-                ERR("AppBar_CopyIn: %d\n", msg);
+                ERR("AppBar_CopyIn: %d\n", dwMessage);
                 return FALSE;
             }
             break;
@@ -108,22 +112,22 @@ UINT_PTR WINAPI SHAppBarMessage(DWORD msg, PAPPBARDATA data)
 
     /* Send WM_COPYDATA message */
     COPYDATASTRUCT copyData = { TABDMC_APPBAR, sizeof(cmd), &cmd };
-    UINT_PTR ret = SendMessageW(hTrayWnd, WM_COPYDATA, (WPARAM)data->hWnd, (LPARAM)&copyData);
+    UINT_PTR ret = SendMessageW(hTrayWnd, WM_COPYDATA, (WPARAM)pData->hWnd, (LPARAM)&copyData);
 
     /* Apply output data */
     if (cmd.hOutput)
     {
         if (!AppBar_CopyOut(cmd.hOutput, &cmd.data, sizeof(cmd.data), cmd.dwProcessId))
         {
-            ERR("AppBar_CopyOut: %d\n", msg);
+            ERR("AppBar_CopyOut: %d\n", dwMessage);
             return FALSE;
         }
 
-        data->hWnd             = cmd.data.hWnd;
-        data->uCallbackMessage = cmd.data.uCallbackMessage;
-        data->uEdge            = cmd.data.uEdge;
-        data->rc               = cmd.data.rc;
-        data->lParam           = cmd.data.lParam;
+        pData->hWnd             = cmd.data.hWnd;
+        pData->uCallbackMessage = cmd.data.uCallbackMessage;
+        pData->uEdge            = cmd.data.uEdge;
+        pData->rc               = cmd.data.rc;
+        pData->lParam           = cmd.data.lParam;
     }
 
     return ret;
