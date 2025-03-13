@@ -41,15 +41,6 @@ HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, ICont
 #define IDHK_DESKTOP 0x1fe
 #define IDHK_PAGER 0x1ff
 
-/* For internal AppBar messaging (private) */
-typedef struct _APPBAR_COMMAND
-{
-    APPBARDATA data;
-    DWORD dwMessage;
-    DWORD dwProcessId;
-    HANDLE hOutput;
-} APPBAR_COMMAND, *PAPPBAR_COMMAND;
-
 typedef struct _APPBAR
 {
     HWND hWnd;
@@ -3642,7 +3633,7 @@ protected:
         PAPPBAR_COMMAND pData = (PAPPBAR_COMMAND)pCopyData->lpData;
 
         // For security check
-        if (pCopyData->cbData != sizeof(*pData) || pData->data.cbSize != 0xBEEFCAFE)
+        if (pCopyData->cbData != sizeof(*pData) || pData->dwMagic != 0xBEEFCAFE)
         {
             WARN("Invalid AppBar message\n");
             return 0;

@@ -19,15 +19,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(appbar);
 
-/* For internal AppBar messaging (private) */
-typedef struct _APPBAR_COMMAND
-{
-    APPBARDATA data;
-    DWORD dwMessage;
-    DWORD dwProcessId;
-    HANDLE hOutput;
-} APPBAR_COMMAND, PAPPBAR_COMMAND;
-
 static LPVOID
 AppBar_CopyIn(
     _In_ LPCVOID pvSrc,
@@ -80,7 +71,7 @@ SHAppBarMessage(
     TRACE("dwMessage=%d, pData={cb=%d, hwnd=%p}\n", dwMessage, pData->cbSize, pData->hWnd);
 
     HWND hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
-    if (!hTrayWnd || pData->cbSize > sizeof(APPBARDATA))
+    if (!hTrayWnd || pData->cbSize > sizeof(*pData))
     {
         WARN("%p, %d\n", hTrayWnd, pData->cbSize);
         return FALSE;
@@ -88,10 +79,10 @@ SHAppBarMessage(
 
     APPBAR_COMMAND cmd;
     cmd.data = *pData;
-    cmd.data.cbSize = 0xBEEFCAFE; // For security check
     cmd.dwMessage = dwMessage;
     cmd.dwProcessId = GetCurrentProcessId();
     cmd.hOutput = NULL;
+    cmd.dwMagic = 0xBEEFCAFE; // For security check
 
     /* Make output data if necessary */
     switch (dwMessage)

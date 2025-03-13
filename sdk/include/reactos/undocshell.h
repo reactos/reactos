@@ -1229,6 +1229,18 @@ typedef struct SFVM_CUSTOMVIEWINFO_DATA
     COLORREF clrTextBack;
 } SFVM_CUSTOMVIEWINFO_DATA, *LPSFVM_CUSTOMVIEWINFO_DATA;
 
+#include <shellapi.h>
+
+/* For internal AppBar messaging (private) */
+typedef struct _APPBAR_COMMAND
+{
+    APPBARDATA data;
+    DWORD dwMessage;
+    DWORD dwProcessId;
+    HANDLE hOutput;
+    DWORD dwMagic;
+} APPBAR_COMMAND, *PAPPBAR_COMMAND;
+
 #include <poppack.h>
 
 #ifdef __cplusplus
