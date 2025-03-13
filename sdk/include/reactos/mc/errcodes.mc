@@ -6145,16 +6145,16 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_FAILED_DRIVER_ENTRY
 Language=English
-The driver was not loaded because it failed it's initialization call.
+The driver was not loaded because it failed its initialization call.
 .
 Language=Russian
-The driver was not loaded because it failed it's initialization call.
+The driver was not loaded because it failed its initialization call.
 .
 Language=Polish
 Sterownik nie został załadowany, ponieważ nie powiodło się wywołanie jego inicjalizacji.
 .
 Language=Romanian
-The driver was not loaded because it failed it's initialization call.
+The driver was not loaded because it failed its initialization call.
 .
 Language=Japanese
 ドライバの初期化コールに失敗したため、ドライバがロードされませんでした。
@@ -34540,16 +34540,16 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DS_LDAP_SEND_QUEUE_FULL
 Language=English
-The LDAP servers network send queue has filled up because the client is not processing the results of it's requests fast enough. No more requests will be processed until the client catches up. If the client does not catch up then it will be disconnected.
+The LDAP servers network send queue has filled up because the client is not processing the results of its requests fast enough. No more requests will be processed until the client catches up. If the client does not catch up then it will be disconnected.
 .
 Language=Russian
-The LDAP servers network send queue has filled up because the client is not processing the results of it's requests fast enough. No more requests will be processed until the client catches up. If the client does not catch up then it will be disconnected.
+The LDAP servers network send queue has filled up because the client is not processing the results of its requests fast enough. No more requests will be processed until the client catches up. If the client does not catch up then it will be disconnected.
 .
 Language=Polish
 Kolejka odbiorcza sieci serwerów LDAP wypełniła się, ponieważ klient nie przetwarza odpowiednio szybko wyników swoich żądań. Żadne żądania nie będą przetwarzane do czasu wyrównania klienta. Jeżeli klient nie zostanie wyrównany, zostanie rozłączony.
 .
 Language=Romanian
-The LDAP servers network send queue has filled up because the client is not processing the results of it's requests fast enough. No more requests will be processed until the client catches up. If the client does not catch up then it will be disconnected.
+The LDAP servers network send queue has filled up because the client is not processing the results of its requests fast enough. No more requests will be processed until the client catches up. If the client does not catch up then it will be disconnected.
 .
 Language=Japanese
 クライアントが要求の結果を十分に速く処理できないため、LDAPサーバーのネットワーク送信キューがいっぱいになりました。クライアントが追いつくまで、これ以上のリクエストは処理されません。クライアントが追いつかない場合、クライアントは切断されます。
