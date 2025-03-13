@@ -816,6 +816,12 @@ LRESULT CMainWindow::OnSysColorChange(UINT nMsg, WPARAM wParam, LPARAM lParam, B
     return 0;
 }
 
+LRESULT CMainWindow::OnOutOfMemory(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    ShowOutOfMemory();
+    return 0;
+}
+
 LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     // Disable commands while dragging mouse

@@ -34,7 +34,7 @@ public:
     void Undo(BOOL bClearRedo = FALSE);
     void Redo(void);
     void ClearHistory(void);
-    void Crop(int nWidth, int nHeight, int nOffsetX = 0, int nOffsetY = 0);
+    BOOL Crop(int nWidth, int nHeight, int nOffsetX = 0, int nOffsetY = 0);
     void SaveImage(LPCWSTR lpFileName);
     BOOL IsImageSaved() const;
     void StretchSkew(int nStretchPercentX, int nStretchPercentY, int nSkewDegX = 0, int nSkewDegY = 0);

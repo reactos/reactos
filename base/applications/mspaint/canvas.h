@@ -62,7 +62,7 @@ protected:
 
     HITTEST CanvasHitTest(POINT pt);
     RECT GetBaseRect();
-    VOID DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint);
+    BOOL DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint);
     VOID OnHVScroll(WPARAM wParam, INT fnBar);
 
     LRESULT OnSize(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);

@@ -188,7 +188,7 @@ void ImageModel::PushDone()
     NotifyImageChanged();
 }
 
-void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
+BOOL ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
 {
     // We cannot create bitmaps of size zero
     if (nWidth <= 0)
@@ -201,7 +201,7 @@ void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
     if (!hbmNew)
     {
         ShowOutOfMemory();
-        return;
+        return FALSE;
     }
 
     // Put the master image as a sub-image
@@ -214,6 +214,7 @@ void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
     PushImageForUndo(hbmNew);
 
     NotifyImageChanged();
+    return TRUE;
 }
 
 void ImageModel::SaveImage(LPCWSTR lpFileName)
