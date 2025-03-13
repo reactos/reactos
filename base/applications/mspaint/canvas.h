@@ -57,7 +57,6 @@ public:
 protected:
     HITTEST m_hitCanvasSizeBox;
     POINT m_ptOrig; // The origin of drag start
-    HBITMAP m_ahbmCached[2]; // The cached buffer bitmaps
     CRect m_rcResizing; // Resizing rectagle
 
     HITTEST CanvasHitTest(POINT pt);
