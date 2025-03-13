@@ -703,7 +703,7 @@ LRESULT CCanvasWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     PAINTSTRUCT ps;
     HDC hDC = BeginPaint(&ps);
 
-    if (DoDraw(hDC, rcClient, ps.rcPaint)) // 1st try failed?
+    if (DoDraw(hDC, rcClient, ps.rcPaint))
     {
         s_bShowedOutOfMemory = FALSE;
     }
