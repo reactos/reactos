@@ -7,10 +7,14 @@
 
 #include <windef.h>
 #include <winbase.h>
-#include <winreg.h>
-#include <winuser.h>
+#include <strsafe.h>
 
 #include <conutils.h>
+
+
+BOOL hash_file(LPCWSTR Filename);
+BOOL asn_dump(LPCWSTR Filename);
+
 
 
 #endif /* __CERTUTIL_PRECOMP_H */
