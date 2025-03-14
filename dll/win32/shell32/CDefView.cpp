@@ -3008,9 +3008,7 @@ LRESULT CDefView::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     if (wParam == SPI_SETDESKWALLPAPER || wParam == 0)
         UpdateListColors();
 
-    if (wParam == SPI_SETICONTITLELOGFONT || !wParam)
-        m_ListView.SendMessage(uMsg, wParam, lParam);
-
+    m_ListView.SendMessage(uMsg, wParam, lParam);
     return S_OK;
 }
 
