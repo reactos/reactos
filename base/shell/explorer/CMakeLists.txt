@@ -5,6 +5,7 @@ if(DBG)
 endif()
 
 list(APPEND SOURCE
+    appbar.cpp
     desktop.cpp
     explorer.cpp
     notifyiconscust.cpp
