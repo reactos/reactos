@@ -25,7 +25,6 @@
  * FILE:        base/applications/network/ping/ping.c
  * PURPOSE:     Network test utility
  * PROGRAMMERS: Tim Crawford <crawfxrd@gmail.com>
-                Curtis Wilson <LiquidFox1776@gmail.com>
  */
 
 #include <stdlib.h>
