@@ -420,7 +420,7 @@ void
 Ping(void)
 {
     PVOID ReplyBuffer;
-    PUCHAR SendBuffer = NULL;
+    PVOID SendBuffer = NULL;
     DWORD ReplySize = 0;
     DWORD Status;
 
@@ -438,7 +438,7 @@ Ping(void)
         // until SendBuffer is full
         for(int i = 0; i  < RequestSize; i++)
         {
-            SendBuffer[i] = (UCHAR)(97 + (i % 23));
+            ((PUCHAR)SendBuffer)[i] = (UCHAR)('a' + (i % ('w' - 'a')));
         }
     }
 
@@ -479,14 +479,14 @@ Ping(void)
         Status = Icmp6SendEcho2(hIcmpFile, NULL, NULL, NULL,
                                 &Source,
                                 (struct sockaddr_in6 *)Target->ai_addr,
-                                (PVOID)SendBuffer, (USHORT)RequestSize, &IpOptions,
+                                SendBuffer, (USHORT)RequestSize, &IpOptions,
                                 ReplyBuffer, ReplySize, Timeout);
     }
     else
     {
         Status = IcmpSendEcho2(hIcmpFile, NULL, NULL, NULL,
                                ((PSOCKADDR_IN)Target->ai_addr)->sin_addr.s_addr,
-                               (PVOID)SendBuffer, (USHORT)RequestSize, &IpOptions,
+                               SendBuffer, (USHORT)RequestSize, &IpOptions,
                                ReplyBuffer, ReplySize, Timeout);
     }
 
