@@ -3,11 +3,15 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/conutils)
 spec2def(netsh.exe netsh.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    list.c
     context.c
     help.c
     helper.c
     interpreter.c
     netsh.c
+    stack.c
+    utility.c
+    hashtable.c
     precomp.h)
 
 add_executable(netsh ${SOURCE} netsh.rc ${CMAKE_CURRENT_BINARY_DIR}/netsh.def)
