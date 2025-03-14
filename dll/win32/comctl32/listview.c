@@ -12003,44 +12003,28 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 #ifdef __REACTOS__
   case WM_SETTINGCHANGE: /* Same as WM_WININICHANGE */
+    if (wParam == SPI_SETICONMETRICS ||
+        wParam == SPI_SETICONTITLELOGFONT ||
+        wParam == SPI_SETNONCLIENTMETRICS ||
+        (!wParam && !lParam))
     {
-      BOOL bSetFont = FALSE;
+      BOOL bDefaultOrNullFont = (infoPtr->hDefaultFont == infoPtr->hFont || !infoPtr->hFont);
       LOGFONTW logFont;
+      SystemParametersInfoW(SPI_GETICONTITLELOGFONT, 0, &logFont, 0);
 
-      if (wParam == SPI_SETICONMETRICS || (!wParam && !lParam))
-      {
-        ICONMETRICS metrics;
-        SystemParametersInfoW(SPI_GETICONMETRICS, 0, &metrics, 0);
-        LISTVIEW_SetIconSpacing(infoPtr, metrics.iHorzSpacing, metrics.iVertSpacing);
-        logFont = metrics.lfFont;
-        bSetFont = TRUE;
-      }
+      if (infoPtr->hDefaultFont)
+        DeleteObject(infoPtr->hDefaultFont);
+      infoPtr->hDefaultFont = CreateFontIndirectW(&logFont);
 
-      if (wParam == SPI_SETICONTITLELOGFONT || (!wParam && lParam))
-      {
-        SystemParametersInfoW(SPI_GETICONTITLELOGFONT, 0, &logFont, 0);
-        bSetFont = TRUE;
-      }
+      if (bDefaultOrNullFont)
+        infoPtr->hFont = infoPtr->hDefaultFont;
 
-      if (bSetFont)
-      {
-        BOOL bDefaultOrNullFont = (infoPtr->hDefaultFont == infoPtr->hFont || !infoPtr->hFont);
-
-        if (infoPtr->hDefaultFont)
-          DeleteObject(infoPtr->hDefaultFont);
-        infoPtr->hDefaultFont = CreateFontIndirectW(&logFont);
-
-        if (bDefaultOrNullFont)
-          infoPtr->hFont = infoPtr->hDefaultFont;
-
-        LISTVIEW_SaveTextMetrics(infoPtr);
-        LISTVIEW_UpdateItemSize(infoPtr);
-        LISTVIEW_UpdateScroll(infoPtr);
-        LISTVIEW_InvalidateRect(infoPtr, NULL);
-      }
-
-      return 0;
+      LISTVIEW_SaveTextMetrics(infoPtr);
+      LISTVIEW_UpdateItemSize(infoPtr);
+      LISTVIEW_UpdateScroll(infoPtr);
+      LISTVIEW_InvalidateRect(infoPtr, NULL);
     }
+    return 0;
 #else
 /*	case WM_WININICHANGE: */
 #endif
