@@ -183,6 +183,8 @@ void CAppBarManager::OnAppBarNotifyAll(
     }
 }
 
+/// @param pAppBar The target AppBar to subtract.
+/// @param prc The rectangle to be subtracted.
 void CAppBarManager::AppBarSubtractRect(_In_ PAPPBAR pAppBar, _Inout_ PRECT prc)
 {
     switch (pAppBar->uEdge)
@@ -198,7 +200,9 @@ void CAppBarManager::AppBarSubtractRect(_In_ PAPPBAR pAppBar, _Inout_ PRECT prc)
 }
 
 // Is pAppBar1 outside of pAppBar2?
-BOOL CAppBarManager::AppBarOutsideOf(_In_ const APPBAR *pAppBar1, _In_ const APPBAR *pAppBar2)
+BOOL CAppBarManager::AppBarOutsideOf(
+    _In_ const APPBAR *pAppBar1,
+    _In_ const APPBAR *pAppBar2)
 {
     if (pAppBar1->uEdge != pAppBar2->uEdge)
         return FALSE;
@@ -215,6 +219,9 @@ BOOL CAppBarManager::AppBarOutsideOf(_In_ const APPBAR *pAppBar1, _In_ const APP
     }
 }
 
+/// Compute the position and size of the hidden TaskBar.
+/// @param prc The rectangle before hiding TaskBar.
+/// @param uSide The side of TaskBar (ABE_...).
 void CAppBarManager::ComputeHiddenRect(_Inout_ PRECT prc, _In_ UINT uSide)
 {
     MONITORINFO mi = { sizeof(mi) };

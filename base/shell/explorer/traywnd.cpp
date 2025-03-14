@@ -3660,20 +3660,25 @@ protected:
         AppBar_UnLockOutput(pOutput);
     }
 
+    /// This function is called when AppBar and/or TaskBar is moved, removed, and/or updated.
+    /// @param hwndTarget The target window. Optional.
+    /// @param prcOld The old position and size. Optional.
+    /// @param prcNew The new position and size. Optional.
+    /// @param bTray TRUE if the tray is being moved.
     void StuckAppChange(
         _In_opt_ HWND hwndTarget,
         _In_opt_ const RECT *prcOld,
         _In_opt_ const RECT *prcNew,
-        _In_ BOOL bFlag) override
+        _In_ BOOL bTray) override
     {
         RECT rcWorkArea1, rcWorkArea2;
         HMONITOR hMon1 = NULL;
-        DWORD flags = 0;
+        UINT flags = 0;
         enum { SET_WORKAREA_1 = 1, SET_WORKAREA_2 = 2, NEED_SIZING = 4 }; // for flags
 
         if (prcOld)
         {
-            hMon1 = (bFlag ? m_PreviousMonitor : ::MonitorFromRect(prcOld, MONITOR_DEFAULTTONEAREST));
+            hMon1 = (bTray ? m_PreviousMonitor : ::MonitorFromRect(prcOld, MONITOR_DEFAULTTONEAREST));
             if (hMon1)
             {
                 WORKAREA_TYPE type1 = RecomputeWorkArea(hMon1, &rcWorkArea1);
@@ -3711,13 +3716,16 @@ protected:
             RedrawDesktop(m_DesktopWnd, &rcWorkArea2);
         }
 
-        if (bFlag || flags == NEED_SIZING)
+        if (bTray || flags == NEED_SIZING)
             ::SendMessageW(m_DesktopWnd, WM_SIZE, 0, 0);
 
         // Post ABN_POSCHANGED messages to AppBar windows
         OnAppBarNotifyAll(NULL, hwndTarget, ABN_POSCHANGED, TRUE);
     }
 
+    /// Re-compute the work area.
+    /// @param hMonitor The monitor of the work area to be re-computed.
+    /// @param prcWorkArea The work area to be re-computed.
     WORKAREA_TYPE
     RecomputeWorkArea(
         _In_ HMONITOR hMonitor,
@@ -3752,6 +3760,8 @@ protected:
         return WORKAREA_SAME_AS_MONITOR;
     }
 
+    /// Get rectangle of the tray window.
+    /// @param prcDocked The pointer to the rectangle to be received.
     void GetDockedRect(_Out_ PRECT prcDocked)
     {
         *prcDocked = m_TrayRects[m_Position];

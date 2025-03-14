@@ -45,7 +45,7 @@ public:
         _In_opt_ HWND hwndTarget,
         _In_opt_ const RECT *prcOld,
         _In_opt_ const RECT *prcNew,
-        _In_ BOOL bFlag) = 0;
+        _In_ BOOL bTray) = 0;
 
 protected:
     HDPA m_hAppBarDPA = NULL; // DPA (Dynamic Pointer Array)
