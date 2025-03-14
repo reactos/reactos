@@ -2486,7 +2486,10 @@ ChangePos:
 
     LRESULT OnCopyData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        COPYDATASTRUCT *pCopyData = (COPYDATASTRUCT *)lParam;
+        PCOPYDATASTRUCT pCopyData = (PCOPYDATASTRUCT)lParam;
+        if (!pCopyData)
+            return FALSE;
+
         switch (pCopyData->dwData)
         {
             case TABDMC_APPBAR:
