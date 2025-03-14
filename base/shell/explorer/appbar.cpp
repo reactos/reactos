@@ -113,6 +113,31 @@ void CAppBarManager::OnAppBarRemove(_In_ const APPBAR_COMMAND *pData)
     }
 }
 
+// ABM_SETPOS
+void CAppBarManager::OnAppBarSetPos(_Inout_ PAPPBAR_COMMAND pData)
+{
+    PAPPBAR pAppBar = FindAppBar(pData->data.hWnd);
+    if (!pAppBar)
+        return;
+
+    OnAppBarQueryPos(pData);
+
+    PAPPBARDATA pOutput = AppBar_LockOutput(pData);
+    if (!pOutput)
+        return;
+
+    RECT rcOld = pAppBar->rc, rcNew = pData->data.rc;
+    BOOL bChanged = !::EqualRect(&rcOld, &rcNew);
+
+    pAppBar->rc = rcNew;
+    pAppBar->uEdge = pData->data.uEdge;
+
+    AppBar_UnLockOutput(pOutput);
+
+    if (bChanged)
+        StuckAppChange(pData->data.hWnd, &rcOld, &rcNew, FALSE);
+}
+
 void CAppBarManager::OnAppBarNotifyAll(
     _In_opt_ HMONITOR hMon,
     _In_opt_ HWND hwndIgnore,
@@ -206,4 +231,12 @@ void CAppBarManager::ComputeHiddenRect(_Inout_ PRECT prc, _In_ UINT uSide)
             ASSERT(FALSE);
             break;
     }
+}
+
+void CAppBarManager::RedrawDesktop(_In_ HWND hwndDesktop, _Inout_ PRECT prc)
+{
+    if (!hwndDesktop)
+        return;
+    ::MapWindowPoints(NULL, hwndDesktop, (POINT*)prc, sizeof(*prc) / sizeof(POINT));
+    ::RedrawWindow(hwndDesktop, prc, 0, RDW_ALLCHILDREN | RDW_ERASE | RDW_INVALIDATE);
 }

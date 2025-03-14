@@ -57,10 +57,14 @@ protected:
 
     BOOL OnAppBarNew(_In_ const APPBAR_COMMAND *pData);
     void OnAppBarRemove(_In_ const APPBAR_COMMAND *pData);
+    virtual void OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData) = 0;
+    void OnAppBarSetPos(_Inout_ PAPPBAR_COMMAND pData);
 
     void OnAppBarNotifyAll(
         _In_opt_ HMONITOR hMon,
         _In_opt_ HWND hwndIgnore,
         _In_ DWORD dwNotify,
         _In_opt_ LPARAM lParam);
+
+    void RedrawDesktop(_In_ HWND hwndDesktop, _Inout_ PRECT prc);
 };

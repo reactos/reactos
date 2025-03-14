@@ -3665,31 +3665,6 @@ protected:
         AppBar_UnLockOutput(pOutput);
     }
 
-    // ABM_SETPOS
-    void OnAppBarSetPos(_Inout_ PAPPBAR_COMMAND pData)
-    {
-        PAPPBAR pAppBar = FindAppBar(pData->data.hWnd);
-        if (!pAppBar)
-            return;
-
-        OnAppBarQueryPos(pData);
-
-        PAPPBARDATA pOutput = AppBar_LockOutput(pData);
-        if (!pOutput)
-            return;
-
-        RECT rcOld = pAppBar->rc, rcNew = pData->data.rc;
-        BOOL bChanged = !::EqualRect(&rcOld, &rcNew);
-
-        pAppBar->rc = rcNew;
-        pAppBar->uEdge = pData->data.uEdge;
-
-        AppBar_UnLockOutput(pOutput);
-
-        if (bChanged)
-            StuckAppChange(pData->data.hWnd, &rcOld, &rcNew, FALSE);
-    }
-
     void StuckAppChange(
         _In_opt_ HWND hwndTarget,
         _In_opt_ const RECT *prcOld,
@@ -3731,14 +3706,14 @@ protected:
         {
             UINT fWinIni = ((flags == SET_WORKAREA_1 && m_DesktopWnd) ? SPIF_SENDCHANGE : 0);
             ::SystemParametersInfoW(SPI_SETWORKAREA, TRUE, &rcWorkArea1, fWinIni);
-            RedrawDesktop(&rcWorkArea1);
+            RedrawDesktop(m_DesktopWnd, &rcWorkArea1);
         }
 
         if (flags & SET_WORKAREA_2)
         {
             UINT fWinIni = (m_DesktopWnd ? SPIF_SENDCHANGE : 0);
             ::SystemParametersInfoW(SPI_SETWORKAREA, TRUE, &rcWorkArea2, fWinIni);
-            RedrawDesktop(&rcWorkArea2);
+            RedrawDesktop(m_DesktopWnd, &rcWorkArea2);
         }
 
         if (bFlag || flags == NEED_SIZING)
@@ -3788,14 +3763,6 @@ protected:
 
         if (IsAutoHideState() && IsHidingState())
             ComputeHiddenRect(prcDocked, m_Position);
-    }
-
-    void RedrawDesktop(_Inout_ PRECT prc)
-    {
-        if (!m_DesktopWnd)
-            return;
-        ::MapWindowPoints(NULL, m_DesktopWnd, (POINT*)prc, sizeof(*prc) / sizeof(POINT));
-        ::RedrawWindow(m_DesktopWnd, prc, 0, RDW_ALLCHILDREN | RDW_ERASE | RDW_INVALIDATE);
     }
 };
 
