@@ -3609,7 +3609,7 @@ protected:
         PAPPBARDATA pOutput = AppBar_LockOutput(pData);
         if (!pOutput)
         {
-            ERR("!pOutput: %p, %d\n", pData->hOutput, pData->dwProcessId);
+            ERR("!pOutput: %d\n", pData->dwProcessId);
             return;
         }
         pOutput->rc = pData->data.rc;
@@ -3653,7 +3653,7 @@ protected:
         AppBar_UnLockOutput(pOutput);
     }
 
-    /// This function is called when AppBar and/or TaskBar is moved, removed, and/or updated.
+    /// This function is called when AppBar and/or TaskBar is being moved, removed, and/or updated.
     /// @param hwndTarget The target window. Optional.
     /// @param prcOld The old position and size. Optional.
     /// @param prcNew The new position and size. Optional.
@@ -3717,7 +3717,7 @@ protected:
     }
 
     /// Re-compute the work area.
-    /// @param hMonitor The monitor of the work area to be re-computed.
+    /// @param hMonitor The monitor of the work area to re-compute.
     /// @param prcWorkArea The work area to be re-computed.
     WORKAREA_TYPE
     RecomputeWorkArea(
