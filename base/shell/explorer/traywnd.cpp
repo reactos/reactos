@@ -3563,7 +3563,7 @@ protected:
     BOOL IsHidingState() const override { return m_AutoHideState == AUTOHIDE_HIDING; }
 
     // ABM_QUERYPOS
-    void OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData)
+    void OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData) override
     {
         PAPPBAR pAppBar1 = FindAppBar(pData->data.hWnd);
         if (!pAppBar1)
