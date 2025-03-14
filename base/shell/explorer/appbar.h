@@ -47,7 +47,7 @@ public:
     CAppBarManager();
     virtual ~CAppBarManager();
 
-    PAPPBAR_COMMAND GetAppBarMessage(_In_ const COPYDATASTRUCT *pCopyData);
+    PAPPBAR_COMMAND GetAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData);
 
     virtual void StuckAppChange(
         _In_opt_ HWND hwndTarget,

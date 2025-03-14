@@ -17,7 +17,7 @@ CAppBarManager::~CAppBarManager()
 }
 
 PAPPBAR_COMMAND
-CAppBarManager::GetAppBarMessage(_In_ const COPYDATASTRUCT *pCopyData)
+CAppBarManager::GetAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
 {
     PAPPBAR_COMMAND pData = (PAPPBAR_COMMAND)pCopyData->lpData;
 
