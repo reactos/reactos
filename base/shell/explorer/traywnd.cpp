@@ -3811,10 +3811,10 @@ protected:
     void OnAppBarNotifyAll(
         _In_opt_ HMONITOR hMon,
         _In_opt_ HWND hwndIgnore,
-        _In_opt_ WPARAM wParam,
+        _In_ DWORD dwNotify,
         _In_opt_ LPARAM lParam)
     {
-        TRACE("%p, %p, %p, %p\n", hMon, hwndIgnore, wParam, lParam);
+        TRACE("%p, %p, 0x%X, %p\n", hMon, hwndIgnore, dwNotify, lParam);
 
         if (!m_hAppBarDPA)
             return;
@@ -3834,7 +3834,7 @@ protected:
             }
 
             if (!hMon || hMon == ::MonitorFromWindow(hwndAppBar, MONITOR_DEFAULTTONULL))
-                ::PostMessageW(hwndAppBar, pAppBar->uCallbackMessage, wParam, lParam);
+                ::PostMessageW(hwndAppBar, pAppBar->uCallbackMessage, dwNotify, lParam);
         }
     }
 
