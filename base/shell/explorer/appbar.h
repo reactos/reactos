@@ -79,17 +79,19 @@ protected:
         _In_ HMONITOR hMonitor,
         _Out_ PRECT prcWorkArea);
 
-    void RedrawDesktop(_In_ HWND hwndDesktop, _Inout_ PRECT prc);
-
-    virtual void StuckAppChange(
+    void StuckAppChange(
         _In_opt_ HWND hwndTarget,
         _In_opt_ const RECT *prcOld,
         _In_opt_ const RECT *prcNew,
-        _In_ BOOL bTray) = 0;
+        _In_ BOOL bTray);
+
+    void RedrawDesktop(_In_ HWND hwndDesktop, _Inout_ PRECT prc);
 
     virtual BOOL IsAutoHideState() const = 0;
     virtual BOOL IsHidingState() const = 0;
     virtual HMONITOR GetMonitor() const = 0;
+    virtual HMONITOR GetPreviousMonitor() const = 0;
     virtual INT GetPosition() const = 0;
     virtual LPRECT GetTrayRect() = 0;
+    virtual HWND GetDesktopWnd() const = 0;
 };

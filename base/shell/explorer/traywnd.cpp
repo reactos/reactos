@@ -3562,71 +3562,10 @@ protected:
     BOOL IsAutoHideState() const override { return g_TaskbarSettings.sr.AutoHide; }
     BOOL IsHidingState() const override { return m_AutoHideState == AUTOHIDE_HIDING; }
     HMONITOR GetMonitor() const override { return m_Monitor; }
+    HMONITOR GetPreviousMonitor() const override { return m_PreviousMonitor; }
     INT GetPosition() const override { return m_Position; }
     LPRECT GetTrayRect() override { return &m_TrayRects[m_Position]; }
-
-    /// This function is called when AppBar and/or TaskBar is being moved, removed, and/or updated.
-    /// @param hwndTarget The target window. Optional.
-    /// @param prcOld The old position and size. Optional.
-    /// @param prcNew The new position and size. Optional.
-    /// @param bTray TRUE if the tray is being moved.
-    void StuckAppChange(
-        _In_opt_ HWND hwndTarget,
-        _In_opt_ const RECT *prcOld,
-        _In_opt_ const RECT *prcNew,
-        _In_ BOOL bTray) override
-    {
-        RECT rcWorkArea1, rcWorkArea2;
-        HMONITOR hMon1 = NULL;
-        UINT flags = 0;
-        enum { SET_WORKAREA_1 = 1, SET_WORKAREA_2 = 2, NEED_SIZING = 4 }; // for flags
-
-        if (prcOld)
-        {
-            hMon1 = (bTray ? m_PreviousMonitor : ::MonitorFromRect(prcOld, MONITOR_DEFAULTTONEAREST));
-            if (hMon1)
-            {
-                WORKAREA_TYPE type1 = RecomputeWorkArea(GetTrayRect(), hMon1, &rcWorkArea1);
-                if (type1 == WORKAREA_IS_NOT_MONITOR)
-                    flags = SET_WORKAREA_1;
-                if (type1 == WORKAREA_SAME_AS_MONITOR)
-                    flags = NEED_SIZING;
-            }
-        }
-
-        if (prcNew)
-        {
-            HMONITOR hMon2 = ::MonitorFromRect(prcNew, MONITOR_DEFAULTTONULL);
-            if (hMon2 && hMon2 != hMon1)
-            {
-                WORKAREA_TYPE type2 = RecomputeWorkArea(GetTrayRect(), hMon2, &rcWorkArea2);
-                if (type2 == WORKAREA_IS_NOT_MONITOR)
-                    flags |= SET_WORKAREA_2;
-                else if (type2 == WORKAREA_SAME_AS_MONITOR && !flags)
-                    flags = NEED_SIZING;
-            }
-        }
-
-        if (flags & SET_WORKAREA_1)
-        {
-            UINT fWinIni = ((flags == SET_WORKAREA_1 && m_DesktopWnd) ? SPIF_SENDCHANGE : 0);
-            ::SystemParametersInfoW(SPI_SETWORKAREA, TRUE, &rcWorkArea1, fWinIni);
-            RedrawDesktop(m_DesktopWnd, &rcWorkArea1);
-        }
-
-        if (flags & SET_WORKAREA_2)
-        {
-            UINT fWinIni = (m_DesktopWnd ? SPIF_SENDCHANGE : 0);
-            ::SystemParametersInfoW(SPI_SETWORKAREA, TRUE, &rcWorkArea2, fWinIni);
-            RedrawDesktop(m_DesktopWnd, &rcWorkArea2);
-        }
-
-        if (bTray || flags == NEED_SIZING)
-            ::SendMessageW(m_DesktopWnd, WM_SIZE, 0, 0);
-
-        // Post ABN_POSCHANGED messages to AppBar windows
-        OnAppBarNotifyAll(NULL, hwndTarget, ABN_POSCHANGED, TRUE);
-    }
+    HWND GetDesktopWnd() const override { return m_DesktopWnd; }
 };
 
 class CTrayWindowCtxMenu :
