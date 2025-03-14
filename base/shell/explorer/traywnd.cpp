@@ -3688,7 +3688,7 @@ protected:
             }
         }
 
-        PAPPBAR pAppBar = (PAPPBAR)::LocalAlloc(LPTR, sizeof(APPBAR));
+        PAPPBAR pAppBar = (PAPPBAR)::LocalAlloc(LPTR, sizeof(*pAppBar));
         if (pAppBar)
         {
             pAppBar->hWnd = pData->data.hWnd;
