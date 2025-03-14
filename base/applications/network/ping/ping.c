@@ -434,9 +434,9 @@ Ping(void)
             exit(1);
         }
 
-        // Windows ping utility fills the optional data field
-        // with ASCII characters from 'a' to 'w' wrapping back around
-        // until SendBuffer is full
+        /* Windows ping utility fills the optional data field with
+         * ASCII characters from 'a' to 'w', wrapping back around
+         * until SendBuffer is full. */
         for(int i = 0; i  < RequestSize; i++)
         {
             ((PUCHAR)SendBuffer)[i] = (UCHAR)(ALPHABET_START + (i % ALPHABET_LENGTH));
