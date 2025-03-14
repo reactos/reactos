@@ -15,8 +15,6 @@
 
 #include "wine/test.h"
 
-extern PfnDliHook __pfnDliFailureHook2;
-
 #define ok_ulonglong(expression, result) \
     do { \
         ULONG64 _value = (expression); \
@@ -218,6 +216,10 @@ FARPROC WINAPI DliFailHook(unsigned dliNotify, PDelayLoadInfo pdli)
     /* This is not the function you are looking for, continue default behavior (throw exception) */
     return NULL;
 }
+
+/* Register the failure hook using the magic name '__pfnDliFailureHook2'. */
+PfnDliHook __pfnDliFailureHook2 = DliFailHook;
+
 
 /* Maybe our dbghelp.dll is too old? */
 static BOOL supports_pdb(HANDLE hProc, DWORD64 BaseAddress)
@@ -580,9 +582,6 @@ START_TEST(pdb)
     }
 
     init_dbghelp_version();
-
-    /* Register the failure hook using the magic name '__pfnDliFailureHook2'. */
-    __pfnDliFailureHook2 = DliFailHook;
 
     if (init_sym(FALSE))
     {
