@@ -3567,7 +3567,7 @@ protected:
     BOOL IsAutoHideState() const { return g_TaskbarSettings.sr.AutoHide; }
     BOOL IsHidingState() const { return m_AutoHideState == AUTOHIDE_HIDING; }
 
-    // TABDMC_APPBAR
+    // WM_COPYDATA TABDMC_APPBAR
     LRESULT OnAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
     {
         PAPPBAR_COMMAND pData = GetAppBarMessage(pCopyData);
