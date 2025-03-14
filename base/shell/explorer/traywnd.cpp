@@ -2398,7 +2398,6 @@ ChangePos:
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         KillTimer(TIMER_ID_IGNOREPULSERESET);
-        DestroyAppBarDPA();
         return 0;
     }
 

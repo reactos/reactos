@@ -10,11 +10,13 @@
 #include "appbar.h"
 
 CAppBarManager::CAppBarManager()
+    : m_hAppBarDPA(NULL)
 {
 }
 
 CAppBarManager::~CAppBarManager()
 {
+    DestroyAppBarDPA();
 }
 
 PAPPBAR CAppBarManager::FindAppBar(_In_ HWND hwndAppBar) const

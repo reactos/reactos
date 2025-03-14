@@ -50,7 +50,7 @@ public:
     LRESULT OnAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData);
 
 protected:
-    HDPA m_hAppBarDPA = NULL; // DPA (Dynamic Pointer Array)
+    HDPA m_hAppBarDPA; // DPA (Dynamic Pointer Array)
 
     PAPPBAR FindAppBar(_In_ HWND hwndAppBar) const;
     void EliminateAppBar(_In_ INT iItem);
