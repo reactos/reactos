@@ -12009,7 +12009,8 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       LOGFONTW logFont;
       SystemParametersInfoW(SPI_GETICONTITLELOGFONT, 0, &logFont, 0);
 
-      DeleteObject(infoPtr->hDefaultFont);
+      if (infoPtr->hDefaultFont)
+        DeleteObject(infoPtr->hDefaultFont);
       infoPtr->hDefaultFont = CreateFontIndirectW(&logFont);
 
       if (bWasSameFont || !infoPtr->hFont)
