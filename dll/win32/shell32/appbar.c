@@ -114,11 +114,7 @@ SHAppBarMessage(
             return FALSE;
         }
 
-        pData->hWnd             = cmd.data.hWnd;
-        pData->uCallbackMessage = cmd.data.uCallbackMessage;
-        pData->uEdge            = cmd.data.uEdge;
-        pData->rc               = cmd.data.rc;
-        pData->lParam           = cmd.data.lParam;
+        *pData = cmd.data;
     }
 
     return ret;
