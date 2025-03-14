@@ -47,6 +47,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#define ALPHABET_START 97
+#define ALPHABET_LENGTH 23
 #define SIZEOF_ICMP_ERROR 8
 #define SIZEOF_IO_STATUS_BLOCK 8
 #define DEFAULT_TIMEOUT 1000
@@ -438,7 +440,7 @@ Ping(void)
         // until SendBuffer is full
         for(int i = 0; i  < RequestSize; i++)
         {
-            ((PUCHAR)SendBuffer)[i] = (UCHAR)('a' + (i % ('w' - 'a')));
+            ((PUCHAR)SendBuffer)[i] = (UCHAR)(ALPHABET_START + (i % ALPHABET_LENGTH));
         }
     }
 
