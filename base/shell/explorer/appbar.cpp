@@ -17,21 +17,6 @@ CAppBarManager::~CAppBarManager()
 {
 }
 
-PAPPBAR_COMMAND
-CAppBarManager::GetAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
-{
-    PAPPBAR_COMMAND pData = (PAPPBAR_COMMAND)pCopyData->lpData;
-
-    // For security check
-    if (pCopyData->cbData != sizeof(*pData) || pData->dwMagic != 0xBEEFCAFE)
-    {
-        WARN("Invalid AppBar message\n");
-        return NULL;
-    }
-
-    return pData;
-}
-
 PAPPBAR CAppBarManager::FindAppBar(_In_ HWND hwndAppBar) const
 {
     if (!m_hAppBarDPA)
@@ -308,4 +293,48 @@ CAppBarManager::RecomputeWorkArea(
         return WORKAREA_NO_TRAY_AREA;
 
     return WORKAREA_SAME_AS_MONITOR;
+}
+
+PAPPBAR_COMMAND
+CAppBarManager::GetAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
+{
+    PAPPBAR_COMMAND pData = (PAPPBAR_COMMAND)pCopyData->lpData;
+
+    // For security check
+    if (pCopyData->cbData != sizeof(*pData) || pData->dwMagic != 0xBEEFCAFE)
+    {
+        WARN("Invalid AppBar message\n");
+        return NULL;
+    }
+
+    return pData;
+}
+
+// WM_COPYDATA TABDMC_APPBAR
+LRESULT CAppBarManager::OnAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
+{
+    PAPPBAR_COMMAND pData = GetAppBarMessage(pCopyData);
+    if (!pData)
+        return 0;
+
+    switch (pData->dwMessage)
+    {
+        case ABM_NEW:
+            return OnAppBarNew(pData);
+        case ABM_REMOVE:
+            OnAppBarRemove(pData);
+            break;
+        case ABM_QUERYPOS:
+            OnAppBarQueryPos(pData);
+            break;
+        case ABM_SETPOS:
+            OnAppBarSetPos(pData);
+            break;
+        default:
+        {
+            FIXME("0x%X\n", pData->dwMessage);
+            return FALSE;
+        }
+    }
+    return TRUE;
 }

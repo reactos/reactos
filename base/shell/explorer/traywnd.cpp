@@ -3562,35 +3562,6 @@ protected:
     BOOL IsAutoHideState() const override { return g_TaskbarSettings.sr.AutoHide; }
     BOOL IsHidingState() const override { return m_AutoHideState == AUTOHIDE_HIDING; }
 
-    // WM_COPYDATA TABDMC_APPBAR
-    LRESULT OnAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
-    {
-        PAPPBAR_COMMAND pData = GetAppBarMessage(pCopyData);
-        if (!pData)
-            return 0;
-
-        switch (pData->dwMessage)
-        {
-            case ABM_NEW:
-                return OnAppBarNew(pData);
-            case ABM_REMOVE:
-                OnAppBarRemove(pData);
-                break;
-            case ABM_QUERYPOS:
-                OnAppBarQueryPos(pData);
-                break;
-            case ABM_SETPOS:
-                OnAppBarSetPos(pData);
-                break;
-            default:
-            {
-                FIXME("0x%X\n", pData->dwMessage);
-                return FALSE;
-            }
-        }
-        return TRUE;
-    }
-
     // ABM_QUERYPOS
     void OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData)
     {

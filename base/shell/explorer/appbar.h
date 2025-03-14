@@ -47,16 +47,7 @@ public:
     CAppBarManager();
     virtual ~CAppBarManager();
 
-    PAPPBAR_COMMAND GetAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData);
-
-    virtual void StuckAppChange(
-        _In_opt_ HWND hwndTarget,
-        _In_opt_ const RECT *prcOld,
-        _In_opt_ const RECT *prcNew,
-        _In_ BOOL bTray) = 0;
-
-    virtual BOOL IsAutoHideState() const = 0;
-    virtual BOOL IsHidingState() const = 0;
+    LRESULT OnAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData);
 
 protected:
     HDPA m_hAppBarDPA = NULL; // DPA (Dynamic Pointer Array)
@@ -67,6 +58,7 @@ protected:
     void AppBarSubtractRect(_In_ PAPPBAR pAppBar, _Inout_ PRECT prc);
     BOOL AppBarOutsideOf(_In_ const APPBAR *pAppBar1, _In_ const APPBAR *pAppBar2);
     void ComputeHiddenRect(_Inout_ PRECT prc, _In_ UINT uSide);
+    PAPPBAR_COMMAND GetAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData);
 
     LRESULT OnNotifyAllAppBars(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     BOOL OnAppBarNew(_In_ const APPBAR_COMMAND *pData);
@@ -87,4 +79,13 @@ protected:
         _Out_ PRECT prcWorkArea);
 
     void RedrawDesktop(_In_ HWND hwndDesktop, _Inout_ PRECT prc);
+
+    virtual void StuckAppChange(
+        _In_opt_ HWND hwndTarget,
+        _In_opt_ const RECT *prcOld,
+        _In_opt_ const RECT *prcNew,
+        _In_ BOOL bTray) = 0;
+
+    virtual BOOL IsAutoHideState() const = 0;
+    virtual BOOL IsHidingState() const = 0;
 };
