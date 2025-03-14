@@ -19,7 +19,8 @@
 #include "bootcode.h"
 #include "fsutil.h"
 
-#include "setuplib.h" // HACK for IsUnattendedSetup
+#include "setuplib.h"
+extern BOOLEAN IsUnattendedSetup; // HACK
 
 #include "bootsup.h"
 

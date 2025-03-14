@@ -42,6 +42,7 @@
 HANDLE ProcessHeap;
 
 static USETUP_DATA USetupData;
+static BOOLEAN IsUnattendedSetup;
 
 /* The partition where to perform the installation */
 static PPARTENTRY InstallPartition = NULL;
@@ -604,8 +605,7 @@ SetupStartPage(PINPUT_RECORD Ir)
     if (WaitNoPendingInstallEvents(NULL) != STATUS_WAIT_0)
         DPRINT1("WaitNoPendingInstallEvents() failed to wait!\n");
 
-    CheckUnattendedSetup(&USetupData);
-
+    IsUnattendedSetup = CheckUnattendedSetup(&USetupData);
     if (IsUnattendedSetup)
     {
         // TODO: Read options from inf

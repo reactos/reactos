@@ -896,36 +896,14 @@ GetPartitionTypeString(
     }
     else
     {
-        UINT i;
-
         /* Do the table lookup */
-        if (PartEntry->DiskEntry->DiskStyle == PARTITION_STYLE_MBR)
+        PCSTR Description = LookupPartitionTypeString(PartEntry->DiskEntry->DiskStyle,
+                                                      &PartEntry->PartitionType);
+        if (Description)
         {
-            for (i = 0; i < ARRAYSIZE(MbrPartitionTypes); ++i)
-            {
-                if (PartEntry->PartitionType == MbrPartitionTypes[i].Type)
-                {
-                    StringCchCopyA(strBuffer, cchBuffer,
-                                   MbrPartitionTypes[i].Description);
-                    return;
-                }
-            }
+            StringCchCopyA(strBuffer, cchBuffer, Description);
+            return;
         }
-#if 0 // TODO: GPT support!
-        else if (PartEntry->DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
-        {
-            for (i = 0; i < ARRAYSIZE(GptPartitionTypes); ++i)
-            {
-                if (IsEqualPartitionType(PartEntry->PartitionType,
-                                         GptPartitionTypes[i].Guid))
-                {
-                    StringCchCopyA(strBuffer, cchBuffer,
-                                   GptPartitionTypes[i].Description);
-                    return;
-                }
-            }
-        }
-#endif
 
         /* We are here because the partition type is unknown */
         if (cchBuffer > 0) *strBuffer = '\0';

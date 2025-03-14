@@ -39,6 +39,7 @@
 
 HANDLE ProcessHeap;
 SETUPDATA SetupData;
+static BOOLEAN IsUnattendedSetup;
 
 /* The partition where to perform the installation */
 PPARTENTRY InstallPartition = NULL;
@@ -2880,8 +2881,7 @@ _tWinMain(HINSTANCE hInst,
     }
 
     /* Retrieve any supplemental options from the unattend file */
-    CheckUnattendedSetup(&SetupData.USetupData);
-    SetupData.bUnattend = IsUnattendedSetup; // FIXME :-)
+    SetupData.bUnattend = IsUnattendedSetup = CheckUnattendedSetup(&SetupData.USetupData);
 
     /* Load extra setup data (HW lists etc...) */
     if (!LoadSetupData(&SetupData))

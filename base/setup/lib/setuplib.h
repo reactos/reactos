@@ -30,8 +30,6 @@ extern "C" {
 
 #endif
 
-extern SPLIBAPI BOOLEAN IsUnattendedSetup; // HACK
-
 /* NOTE: Please keep the header inclusion order! */
 
 #include "errorcode.h"
@@ -167,7 +165,7 @@ typedef struct _USETUP_DATA
 
 #include "substset.h"
 
-VOID
+BOOLEAN
 NTAPI
 CheckUnattendedSetup(
     IN OUT PUSETUP_DATA pSetupData);
