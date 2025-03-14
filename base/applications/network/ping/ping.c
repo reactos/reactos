@@ -427,7 +427,7 @@ Ping(void)
 
     if (RequestSize != 0)
     {
-        SendBuffer = (PUCHAR)malloc(RequestSize);
+        SendBuffer = malloc(RequestSize);
         if (SendBuffer == NULL)
         {
             ConResPrintf(StdErr, IDS_NO_RESOURCES);
