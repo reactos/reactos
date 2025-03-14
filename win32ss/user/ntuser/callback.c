@@ -465,27 +465,33 @@ co_IntLoadSysMenuTemplate(VOID)
    return (HMENU)Result;
 }
 
-extern HCURSOR gDesktopCursor;
-
 BOOL APIENTRY
 co_IntLoadDefaultCursors(VOID)
 {
    NTSTATUS Status;
-   PVOID ResultPointer;
-   ULONG ResultLength;
-   BOOL DefaultCursor = TRUE;
+   PVOID Argument, ResultPointer;
+   ULONG ArgumentLength, ResultLength;
+   PLOADCURSORS_CALLBACK_ARGUMENTS Common;
 
    /* Do not allow the desktop thread to do callback to user mode */
    ASSERT(PsGetCurrentThreadWin32Thread() != gptiDesktopThread);
 
    ResultPointer = NULL;
-   ResultLength = sizeof(HCURSOR);
+   ResultLength = ArgumentLength = sizeof(LOADCURSORS_CALLBACK_ARGUMENTS);
+
+   Argument = IntCbAllocateMemory(ArgumentLength);
+   if (!Argument)
+   {
+      ERR("Load Default Cursors callback failed: out of memory\n");
+      return FALSE;
+   }
+   Common = (PLOADCURSORS_CALLBACK_ARGUMENTS)Argument;
 
    UserLeaveCo();
 
    Status = KeUserModeCallback(USER32_CALLBACK_LOADDEFAULTCURSORS,
-                               &DefaultCursor,
-                               sizeof(BOOL),
+                               Argument,
+                               ArgumentLength,
                                &ResultPointer,
                                &ResultLength);
 
@@ -493,11 +499,31 @@ co_IntLoadDefaultCursors(VOID)
 
    if (!NT_SUCCESS(Status))
    {
+      ERR("Load Default Cursors callback failed!\n");
+      IntCbFreeMemory(Argument);
       return FALSE;
    }
 
-   /* HACK: The desktop class doen't have a proper cursor yet, so set it here */
-    gDesktopCursor = *((HCURSOR*)ResultPointer);
+   RtlMoveMemory(Common, ResultPointer, ArgumentLength);
+
+   IntLoadSystemCursors(Common->hCursorArrow,       OCR_NORMAL);
+   IntLoadSystemCursors(Common->hCursorIbeam,       OCR_IBEAM);
+   IntLoadSystemCursors(Common->hCursorWait,        OCR_WAIT);
+   IntLoadSystemCursors(Common->hCursorCross,       OCR_CROSS);
+   IntLoadSystemCursors(Common->hCursorUp,          OCR_UP);
+   IntLoadSystemCursors(Common->hCursorIcon,        OCR_ICON);
+   IntLoadSystemCursors(Common->hCursorSize,        OCR_SIZE);
+   IntLoadSystemCursors(Common->hCursorSizeAll,     OCR_SIZEALL);
+   IntLoadSystemCursors(Common->hCursorSizeNwse,    OCR_SIZENWSE);
+   IntLoadSystemCursors(Common->hCursorSizeNesw,    OCR_SIZENESW);
+   IntLoadSystemCursors(Common->hCursorSizeWe,      OCR_SIZEWE);
+   IntLoadSystemCursors(Common->hCursorSizeNs,      OCR_SIZENS);
+   IntLoadSystemCursors(Common->hCursorNo,          OCR_NO);
+   IntLoadSystemCursors(Common->hCursorHand,        OCR_HAND);
+   IntLoadSystemCursors(Common->hCursorAppStarting, OCR_APPSTARTING);
+   IntLoadSystemCursors(Common->hCursorHelp,        OCR_HELP);
+
+   IntCbFreeMemory(Argument);
 
    return TRUE;
 }
@@ -982,6 +1008,61 @@ co_IntClientThreadSetup(VOID)
 }
 
 HANDLE FASTCALL
+co_IntLoadImage(LPCWSTR name, UINT type, INT desiredx, INT desiredy, UINT flags)
+{
+   HANDLE Handle;
+   NTSTATUS Status;
+   ULONG ArgumentLength, ResultLength;
+   PVOID Argument, ResultPointer;
+   PLOADIMAGE_CALLBACK_ARGUMENTS Common;
+
+   ArgumentLength = ResultLength = 0;
+   Argument = ResultPointer = NULL;
+
+   ArgumentLength = sizeof(LOADIMAGE_CALLBACK_ARGUMENTS);
+
+   Argument = IntCbAllocateMemory(ArgumentLength);
+   if (!Argument)
+   {
+      ERR("LoadImage callback failed: out of memory\n");
+      return 0;
+   }
+   Common = (PLOADIMAGE_CALLBACK_ARGUMENTS) Argument;
+
+   RtlStringCchCopyW(Common->ImageName, wcslen(name) + 1, name);
+
+   Common->ImageType = type;
+   Common->cxDesired = desiredx;
+   Common->cyDesired = desiredy;
+   Common->fuFlags = flags;
+
+   UserLeaveCo();
+
+   Status = KeUserModeCallback(USER32_CALLBACK_LOADIMAGE,
+                               Argument,
+                               ArgumentLength,
+                               &ResultPointer,
+                               &ResultLength);
+
+
+   UserEnterCo();
+
+   if (NT_SUCCESS(Status))
+   {
+      Handle = *(HANDLE*)ResultPointer;
+   }
+   else
+   {
+      ERR("LoadImage callback failed\n");
+      Handle = NULL;
+   }
+
+   IntCbFreeMemory(Argument);
+
+   return Handle;
+}
+
+HANDLE FASTCALL
 co_IntCopyImage(HANDLE hnd, UINT type, INT desiredx, INT desiredy, UINT flags)
 {
    HANDLE Handle;
@@ -1138,13 +1219,13 @@ co_IntSetWndIcons(VOID)
    gpsi->hIconSmWindows = Common->hIconSmWindows;
    gpsi->hIconWindows   = Common->hIconWindows;
 
-   IntLoadSystenIcons(Common->hIconSample,   OIC_SAMPLE);
-   IntLoadSystenIcons(Common->hIconHand,     OIC_HAND);
-   IntLoadSystenIcons(Common->hIconQuestion, OIC_QUES);
-   IntLoadSystenIcons(Common->hIconBang,     OIC_BANG);
-   IntLoadSystenIcons(Common->hIconNote,     OIC_NOTE);
-   IntLoadSystenIcons(gpsi->hIconWindows,    OIC_WINLOGO);
-   IntLoadSystenIcons(gpsi->hIconSmWindows,  OIC_WINLOGO+1);
+   IntLoadSystemIcons(Common->hIconSample,   OIC_SAMPLE);
+   IntLoadSystemIcons(Common->hIconHand,     OIC_HAND);
+   IntLoadSystemIcons(Common->hIconQuestion, OIC_QUES);
+   IntLoadSystemIcons(Common->hIconBang,     OIC_BANG);
+   IntLoadSystemIcons(Common->hIconNote,     OIC_NOTE);
+   IntLoadSystemIcons(gpsi->hIconWindows,    OIC_WINLOGO);
+   IntLoadSystemIcons(gpsi->hIconSmWindows,  OIC_WINLOGO+1);
 
    ERR("hIconSmWindows %p hIconWindows %p \n",gpsi->hIconSmWindows,gpsi->hIconWindows);
 
