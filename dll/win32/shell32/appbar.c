@@ -106,15 +106,10 @@ SHAppBarMessage(
     UINT_PTR ret = SendMessageW(hTrayWnd, WM_COPYDATA, (WPARAM)pData->hWnd, (LPARAM)&copyData);
 
     /* Apply output data */
-    if (cmd.hOutput)
+    if (cmd.hOutput && !AppBar_CopyOut(cmd.hOutput, pData, sizeof(*pData), cmd.dwProcessId))
     {
-        if (!AppBar_CopyOut(cmd.hOutput, &cmd.data, sizeof(cmd.data), cmd.dwProcessId))
-        {
-            ERR("AppBar_CopyOut: %d\n", dwMessage);
-            return FALSE;
-        }
-
-        *pData = cmd.data;
+        ERR("AppBar_CopyOut: %d\n", dwMessage);
+        return FALSE;
     }
 
     return ret;
