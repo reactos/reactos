@@ -16,6 +16,21 @@ CAppBarManager::~CAppBarManager()
 {
 }
 
+PAPPBAR_COMMAND
+CAppBarManager::GetAppBarMessage(_In_ const COPYDATASTRUCT *pCopyData)
+{
+    PAPPBAR_COMMAND pData = (PAPPBAR_COMMAND)pCopyData->lpData;
+
+    // For security check
+    if (pCopyData->cbData != sizeof(*pData) || pData->dwMagic != 0xBEEFCAFE)
+    {
+        WARN("Invalid AppBar message\n");
+        return NULL;
+    }
+
+    return pData;
+}
+
 PAPPBAR CAppBarManager::FindAppBar(_In_ HWND hwndAppBar) const
 {
     if (!m_hAppBarDPA)

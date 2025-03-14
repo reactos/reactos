@@ -39,6 +39,8 @@ public:
     CAppBarManager();
     virtual ~CAppBarManager();
 
+    PAPPBAR_COMMAND GetAppBarMessage(_In_ const COPYDATASTRUCT *pCopyData);
+
     virtual void StuckAppChange(
         _In_opt_ HWND hwndTarget,
         _In_opt_ const RECT *prcOld,

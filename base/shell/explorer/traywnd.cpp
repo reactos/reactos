@@ -3577,14 +3577,9 @@ protected:
     // TABDMC_APPBAR
     LRESULT OnAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
     {
-        PAPPBAR_COMMAND pData = (PAPPBAR_COMMAND)pCopyData->lpData;
-
-        // For security check
-        if (pCopyData->cbData != sizeof(*pData) || pData->dwMagic != 0xBEEFCAFE)
-        {
-            WARN("Invalid AppBar message\n");
+        PAPPBAR_COMMAND pData = GetAppBarMessage(pCopyData);
+        if (!pData)
             return 0;
-        }
 
         switch (pData->dwMessage)
         {
