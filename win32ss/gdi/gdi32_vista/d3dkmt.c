@@ -8,8 +8,6 @@
 #include <gdi32_vista.h>
 #include <d3dkmddi.h>
 
- 
- 
 /* Not just a syscall even in wine. */
 NTSTATUS
 WINAPI

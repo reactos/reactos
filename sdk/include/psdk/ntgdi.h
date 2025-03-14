@@ -4104,8 +4104,8 @@ W32KAPI
 NTSTATUS
 APIENTRY
 NtGdiDdDDIGetProcessSchedulingPriorityClass(
-    _In_  HANDLE                                unnamedParam1,
-    _Out_ D3DKMT_SCHEDULINGPRIORITYCLASS        *unnamedParam2);
+    _In_  HANDLE unnamedParam1,
+    _Out_ D3DKMT_SCHEDULINGPRIORITYCLASS *unnamedParam2);
 
 __kernel_entry
 W32KAPI
@@ -4246,12 +4246,14 @@ NTSTATUS
 APIENTRY
 NtGdiDdDDISetDisplayMode(
     _In_ const D3DKMT_SETDISPLAYMODE* unnamedParam1);
+
 __kernel_entry
 W32KAPI
 NTSTATUS
 APIENTRY
 NtGdiDdDDISetDisplayPrivateDriverFormat(
     _In_ const D3DKMT_SETDISPLAYPRIVATEDRIVERFORMAT* unnamedParam1);
+
 __kernel_entry
 W32KAPI
 NTSTATUS
@@ -4264,8 +4266,8 @@ W32KAPI
 NTSTATUS
 APIENTRY
 NtGdiDdDDISetProcessSchedulingPriorityClass(
-                    _In_ HANDLE                                    unnamedParam1,
-                    _In_ D3DKMT_SCHEDULINGPRIORITYCLASS            unnamedParam2);
+    _In_ HANDLE unnamedParam1,
+    _In_ D3DKMT_SCHEDULINGPRIORITYCLASS unnamedParam2);
 
 __kernel_entry
 W32KAPI
