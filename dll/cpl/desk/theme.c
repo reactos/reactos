@@ -373,12 +373,6 @@ ApplyScheme(IN COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
                           &scheme->icMetrics,
                           SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
 
-    /* Apply icon title font */
-    SystemParametersInfoW(SPI_SETICONTITLELOGFONT,
-                          sizeof(scheme->icMetrics.lfFont),
-                          &scheme->icMetrics.lfFont,
-                          SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
-
     /* Effects, save only when needed: */
     /* FIXME: XP seems to use grayed checkboxes to reflect differences between menu and tooltips settings
      * Just keep them in sync for now.
