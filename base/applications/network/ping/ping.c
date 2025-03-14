@@ -46,8 +46,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define ALPHABET_START 97
-#define ALPHABET_LENGTH 23
 #define SIZEOF_ICMP_ERROR 8
 #define SIZEOF_IO_STATUS_BLOCK 8
 #define DEFAULT_TIMEOUT 1000
