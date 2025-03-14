@@ -3556,16 +3556,8 @@ protected:
     // TODO: detect changes in the screen size and send ABN_POSCHANGED ?
     // TODO: multiple monitor support
 
-    // Return value of RecomputeWorkArea
-    enum WORKAREA_TYPE
-    {
-        WORKAREA_NO_TRAY_AREA = 0,
-        WORKAREA_IS_NOT_MONITOR = 1,
-        WORKAREA_SAME_AS_MONITOR = 2,
-    };
-
-    BOOL IsAutoHideState() const { return g_TaskbarSettings.sr.AutoHide; }
-    BOOL IsHidingState() const { return m_AutoHideState == AUTOHIDE_HIDING; }
+    BOOL IsAutoHideState() const override { return g_TaskbarSettings.sr.AutoHide; }
+    BOOL IsHidingState() const override { return m_AutoHideState == AUTOHIDE_HIDING; }
 
     // WM_COPYDATA TABDMC_APPBAR
     LRESULT OnAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
@@ -3674,7 +3666,7 @@ protected:
             hMon1 = (bTray ? m_PreviousMonitor : ::MonitorFromRect(prcOld, MONITOR_DEFAULTTONEAREST));
             if (hMon1)
             {
-                WORKAREA_TYPE type1 = RecomputeWorkArea(hMon1, &rcWorkArea1);
+                WORKAREA_TYPE type1 = RecomputeWorkArea(&m_TrayRects[m_Position], hMon1, &rcWorkArea1);
                 if (type1 == WORKAREA_IS_NOT_MONITOR)
                     flags = SET_WORKAREA_1;
                 if (type1 == WORKAREA_SAME_AS_MONITOR)
@@ -3687,7 +3679,7 @@ protected:
             HMONITOR hMon2 = ::MonitorFromRect(prcNew, MONITOR_DEFAULTTONULL);
             if (hMon2 && hMon2 != hMon1)
             {
-                WORKAREA_TYPE type2 = RecomputeWorkArea(hMon2, &rcWorkArea2);
+                WORKAREA_TYPE type2 = RecomputeWorkArea(&m_TrayRects[m_Position], hMon2, &rcWorkArea2);
                 if (type2 == WORKAREA_IS_NOT_MONITOR)
                     flags |= SET_WORKAREA_2;
                 else if (type2 == WORKAREA_SAME_AS_MONITOR && !flags)
@@ -3714,43 +3706,6 @@ protected:
 
         // Post ABN_POSCHANGED messages to AppBar windows
         OnAppBarNotifyAll(NULL, hwndTarget, ABN_POSCHANGED, TRUE);
-    }
-
-    /// Re-compute the work area.
-    /// @param hMonitor The monitor of the work area to re-compute.
-    /// @param prcWorkArea The work area to be re-computed.
-    WORKAREA_TYPE
-    RecomputeWorkArea(
-        _In_ HMONITOR hMonitor,
-        _Out_ PRECT prcWorkArea)
-    {
-        MONITORINFO mi = { sizeof(mi) };
-        if (!::GetMonitorInfoW(hMonitor, &mi))
-            return WORKAREA_NO_TRAY_AREA;
-
-        if (IsAutoHideState())
-            *prcWorkArea = mi.rcMonitor;
-        else
-            ::SubtractRect(prcWorkArea, &mi.rcMonitor, &m_TrayRects[m_Position]);
-
-        if (m_hAppBarDPA)
-        {
-            INT nItems = DPA_GetPtrCount(m_hAppBarDPA);
-            while (--nItems >= 0)
-            {
-                PAPPBAR pAppBar = (PAPPBAR)DPA_GetPtr(m_hAppBarDPA, nItems);
-                if (pAppBar && hMonitor == ::MonitorFromRect(&pAppBar->rc, MONITOR_DEFAULTTONULL))
-                    AppBarSubtractRect(pAppBar, prcWorkArea);
-            }
-        }
-
-        if (!::EqualRect(prcWorkArea, &mi.rcWork))
-            return WORKAREA_IS_NOT_MONITOR;
-
-        if (IsAutoHideState() || ::IsRectEmpty(&m_TrayRects[m_Position]))
-            return WORKAREA_NO_TRAY_AREA;
-
-        return WORKAREA_SAME_AS_MONITOR;
     }
 
     /// Get rectangle of the tray window.

@@ -33,6 +33,14 @@ Edge_IsVertical(_In_ UINT uEdge)
     return uEdge == ABE_TOP || uEdge == ABE_BOTTOM;
 }
 
+// Return value of CAppBarManager::RecomputeWorkArea
+enum WORKAREA_TYPE
+{
+    WORKAREA_NO_TRAY_AREA = 0,
+    WORKAREA_IS_NOT_MONITOR = 1,
+    WORKAREA_SAME_AS_MONITOR = 2,
+};
+
 class CAppBarManager
 {
 public:
@@ -46,6 +54,9 @@ public:
         _In_opt_ const RECT *prcOld,
         _In_opt_ const RECT *prcNew,
         _In_ BOOL bTray) = 0;
+
+    virtual BOOL IsAutoHideState() const = 0;
+    virtual BOOL IsHidingState() const = 0;
 
 protected:
     HDPA m_hAppBarDPA = NULL; // DPA (Dynamic Pointer Array)
@@ -68,6 +79,12 @@ protected:
         _In_opt_ HWND hwndIgnore,
         _In_ DWORD dwNotify,
         _In_opt_ LPARAM lParam);
+
+    WORKAREA_TYPE
+    RecomputeWorkArea(
+        _In_ const RECT *prcTray,
+        _In_ HMONITOR hMonitor,
+        _Out_ PRECT prcWorkArea);
 
     void RedrawDesktop(_In_ HWND hwndDesktop, _Inout_ PRECT prc);
 };

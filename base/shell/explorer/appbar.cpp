@@ -269,3 +269,42 @@ void CAppBarManager::RedrawDesktop(_In_ HWND hwndDesktop, _Inout_ PRECT prc)
     ::MapWindowPoints(NULL, hwndDesktop, (POINT*)prc, sizeof(*prc) / sizeof(POINT));
     ::RedrawWindow(hwndDesktop, prc, 0, RDW_ALLCHILDREN | RDW_ERASE | RDW_INVALIDATE);
 }
+
+/// Re-compute the work area.
+/// @param prcTray The position and size of the tray window
+/// @param hMonitor The monitor of the work area to re-compute.
+/// @param prcWorkArea The work area to be re-computed.
+WORKAREA_TYPE
+CAppBarManager::RecomputeWorkArea(
+    _In_ const RECT *prcTray,
+    _In_ HMONITOR hMonitor,
+    _Out_ PRECT prcWorkArea)
+{
+    MONITORINFO mi = { sizeof(mi) };
+    if (!::GetMonitorInfoW(hMonitor, &mi))
+        return WORKAREA_NO_TRAY_AREA;
+
+    if (IsAutoHideState())
+        *prcWorkArea = mi.rcMonitor;
+    else
+        ::SubtractRect(prcWorkArea, &mi.rcMonitor, prcTray);
+
+    if (m_hAppBarDPA)
+    {
+        INT nItems = DPA_GetPtrCount(m_hAppBarDPA);
+        while (--nItems >= 0)
+        {
+            PAPPBAR pAppBar = (PAPPBAR)DPA_GetPtr(m_hAppBarDPA, nItems);
+            if (pAppBar && hMonitor == ::MonitorFromRect(&pAppBar->rc, MONITOR_DEFAULTTONULL))
+                AppBarSubtractRect(pAppBar, prcWorkArea);
+        }
+    }
+
+    if (!::EqualRect(prcWorkArea, &mi.rcWork))
+        return WORKAREA_IS_NOT_MONITOR;
+
+    if (IsAutoHideState() || ::IsRectEmpty(prcTray))
+        return WORKAREA_NO_TRAY_AREA;
+
+    return WORKAREA_SAME_AS_MONITOR;
+}
