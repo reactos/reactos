@@ -4002,6 +4002,7 @@ protected:
                 prc->bottom = prc->top + cxy;
                 break;
             default:
+                ASSERT(FALSE);
                 break;
         }
     }
@@ -4010,7 +4011,7 @@ protected:
     {
         if (!m_DesktopWnd)
             return;
-        ::MapWindowPoints(NULL, m_DesktopWnd, (POINT *)prc, sizeof(RECT) / sizeof(POINT));
+        ::MapWindowPoints(NULL, m_DesktopWnd, (POINT*)prc, sizeof(*prc) / sizeof(POINT));
         ::RedrawWindow(m_DesktopWnd, prc, 0, RDW_ALLCHILDREN | RDW_ERASE | RDW_INVALIDATE);
     }
 };
