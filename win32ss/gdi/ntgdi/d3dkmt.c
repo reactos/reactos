@@ -24,7 +24,10 @@ VOID
 DxStartupDxgkInt()
 {
     DPRINT("DxStartupDxgkInt: Entry\n");
-    //TODO: Let DxgKrnl know it's time to start all adapters, and obtain the win32k<->dxgkrnl interface via an IOCTRL.
+    /*
+     * TODO: Let DxgKrnl know it's time to start all adapters, and obtain the win32k<->dxgkrnl interface via an IOCTRL. 
+     * https://jira.reactos.org/browse/CORE-20027
+     */
 }
 
 BOOLEAN

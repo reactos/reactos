@@ -10,7 +10,7 @@
 #include <d3dkmddi.h>
 
 /*
- * Every structure in here is shared across two or modules and doesn't currently
+ * Every structure in here is shared across two or more modules and doesn't currently
  * match a single Windows version/update.
  *
  * These structures DO have variants in Windows, I just would like to track what
