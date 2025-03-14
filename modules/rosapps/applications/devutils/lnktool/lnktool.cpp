@@ -18,7 +18,7 @@ static const char g_Usage[] = ""
     "/WorkingDir <Path>\n"
     "/Comment <String>\n"
     "/ShowCmd <Number>\n"
-    "/SpecialFolderOffset <CSIDL> <Offset>\n"
+    "/SpecialFolderOffset <CSIDL> <Offset|-Count>\n"
     "/AddExp <TargetPath>\n"
     "/AddExpIcon <Path>\n"
     "/RemoveExpIcon\n" // Removes the EXP_SZ_ICON block and flag
@@ -83,6 +83,40 @@ static const struct { UINT Flag; PCSTR Name; } g_DBSig[] =
     { EXP_VISTA_ID_LIST_SIG, "VISTAPIDL" },
 };
 
+static LONG StrToNum(PCWSTR in)
+{
+    PWCHAR end;
+    LONG v = wcstol(in, &end, 0);
+    if (v == LONG_MAX)
+        v = wcstoul(in, &end, 0);
+    return (end > in) ? v : 0;
+}
+
+template<class T>
+static UINT MapToNumber(PCWSTR Name, const T &Map)
+{
+    CHAR buf[200];
+    WideCharToMultiByte(CP_ACP, 0, Name, -1, buf, _countof(buf), NULL, NULL);
+    buf[_countof(buf) - 1] = ANSI_NULL;
+    for (UINT i = 0; i < _countof(Map); ++i)
+    {
+        if (!StrCmpIA(buf, Map[i].Name))
+            return Map[i].Flag;
+    }
+    return StrToNum(Name);
+}
+
+template<class T>
+static PCSTR MapToName(UINT Value, const T &Map, PCSTR Fallback = NULL)
+{
+    for (UINT i = 0; i < _countof(Map); ++i)
+    {
+        if (Map[i].Flag == Value)
+            return Map[i].Name;
+    }
+    return Fallback;
+}
+
 #define GetSLDF(Name) MapToNumber((Name), g_SLDF)
 #define GetDatablockSignature(Name) MapToNumber((Name), g_DBSig)
 
@@ -108,15 +142,6 @@ static int SuccessOrReportError(int Error)
     return Error ? ErrMsg(Error) : Error;
 }
 
-static LONG StrToNum(PCWSTR in)
-{
-    PWCHAR end;
-    LONG v = wcstol(in, &end, 0);
-    if (v == LONG_MAX)
-        v = wcstoul(in, &end, 0);
-    return (end > in) ? v : 0;
-}
-
 static inline HRESULT Seek(IStream *pStrm, int Move, int Origin = FILE_CURRENT, ULARGE_INTEGER *pNewPos = NULL)
 {
     LARGE_INTEGER Pos;
@@ -127,18 +152,20 @@ static inline HRESULT Seek(IStream *pStrm, int Move, int Origin = FILE_CURRENT, 
 static HRESULT IL_LoadFromStream(IStream *pStrm, PIDLIST_ABSOLUTE *ppidl)
 {
     HMODULE hShell32 = LoadLibraryA("SHELL32");
-    FARPROC p = GetProcAddress(hShell32, (char*)26); // NT5
-    if (!p)
-        p = GetProcAddress(hShell32, (char*)846); // NT6
-    return ((int (WINAPI*)(IStream*,PIDLIST_ABSOLUTE*))p)(pStrm, ppidl);
+    HRESULT (WINAPI*ILLFS)(IStream*, PIDLIST_ABSOLUTE*);
+    (FARPROC&)ILLFS = GetProcAddress(hShell32, (char*)26); // NT5
+    if (!ILLFS)
+        (FARPROC&)ILLFS = GetProcAddress(hShell32, (char*)846); // NT6
+    return ILLFS(pStrm, ppidl);
 }
 
 static HRESULT SHParseName(PCWSTR Path, PIDLIST_ABSOLUTE *ppidl)
 {
     HMODULE hShell32 = LoadLibraryA("SHELL32");
-    FARPROC p = GetProcAddress(hShell32, "SHParseDisplayName");
-    if (p)
-        return ((int (WINAPI*)(PCWSTR,void*,PIDLIST_ABSOLUTE*,UINT,UINT*))p)(Path, NULL, ppidl, 0, NULL);
+    int (WINAPI*SHPDN)(PCWSTR, void*, PIDLIST_ABSOLUTE*, UINT, UINT*);
+    (FARPROC&)SHPDN = GetProcAddress(hShell32, "SHParseDisplayName");
+    if (SHPDN)
+        return SHPDN(Path, NULL, ppidl, 0, NULL);
     return SHILCreateFromPath(Path, ppidl, NULL);
 }
 
@@ -188,17 +215,16 @@ static void Print(PCSTR Name, REFGUID Guid, PCSTR Indent = "")
 template<class V, class T>
 static void DumpFlags(V Value, T *pInfo, UINT Count, PCSTR Prefix = NULL)
 {
-    V Handled = 0;
     if (!Prefix)
         Prefix = "";
     for (SIZE_T i = 0; i < Count; ++i)
     {
         if (Value & pInfo[i].Flag)
             wprintf(L"%hs%#.8x:%hs\n", Prefix, pInfo[i].Flag, const_cast<PCSTR>(pInfo[i].Name));
-        Handled |= pInfo[i].Flag;
+        Value &= ~pInfo[i].Flag;
     }
-    if (Value & ~Handled)
-        wprintf(L"%hs%#.8x:%hs\n", Prefix, Value & ~Handled, "?");
+    if (Value)
+        wprintf(L"%hs%#.8x:%hs\n", Prefix, Value, "?");
 }
 
 static void Dump(LPITEMIDLIST pidl, PCSTR Heading = NULL)
@@ -307,7 +333,10 @@ static HRESULT Open(PCWSTR Path, IStream **ppStream, IShellLink **ppLink, UINT M
 }
 
 #define FreeBlock SHFree
-#define NextBlock(pdbh) ( (LPDATABLOCK_HEADER)((char*)(pdbh)+(pdbh)->cbSize) )
+static inline LPDATABLOCK_HEADER NextBlock(LPDATABLOCK_HEADER pdbh)
+{
+    return (LPDATABLOCK_HEADER)((char*)pdbh + pdbh->cbSize);
+}
 
 template<class T>
 static HRESULT ReadBlock(IStream *pStream, T **ppData = NULL)
@@ -367,31 +396,6 @@ static HRESULT ReadAndDumpString(PCSTR Name, UINT Id, const SHELL_LINK_HEADER &s
         wprintf(L"%hs=%.*hs\n", Name, cch, (PCSTR)data);
     SHFree(data);
     return S_OK;
-}
-
-template<class T>
-static UINT MapToNumber(PCWSTR Name, const T &Map)
-{
-    CHAR buf[200];
-    WideCharToMultiByte(CP_ACP, 0, Name, -1, buf, _countof(buf), NULL, NULL);
-    buf[_countof(buf) - 1] = ANSI_NULL;
-    for (UINT i = 0; i < _countof(Map); ++i)
-    {
-        if (!StrCmpIA(buf, Map[i].Name))
-            return Map[i].Flag;
-    }
-    return StrToNum(Name);
-}
-
-template<class T>
-static PCSTR MapToName(UINT Value, const T &Map, PCSTR Fallback = NULL)
-{
-    for (UINT i = 0; i < _countof(Map); ++i)
-    {
-        if (Map[i].Flag == Value)
-            return Map[i].Name;
-    }
-    return Fallback;
 }
 
 static HRESULT DumpCommand(PCWSTR Path)
