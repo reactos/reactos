@@ -12002,8 +12002,8 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       return DefWindowProcW(hwnd, uMsg, wParam, lParam);
 
 #ifdef __REACTOS__
-  case WM_WININICHANGE: /* Same as WM_SETTINGCHANGE */
-    if (!wParam || wParam == SPI_SETICONTITLELOGFONT)
+  case WM_SETTINGCHANGE: /* Same as WM_WININICHANGE */
+    if (wParam == SPI_SETICONTITLELOGFONT)
     {
       BOOL bWasSameFont = (infoPtr->hDefaultFont == infoPtr->hFont);
       LOGFONTW logFont;
@@ -12017,6 +12017,8 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         infoPtr->hFont = infoPtr->hDefaultFont;
 
       LISTVIEW_SaveTextMetrics(infoPtr);
+      LISTVIEW_UpdateItemSize(infoPtr);
+      LISTVIEW_UpdateScroll(infoPtr);
       LISTVIEW_InvalidateRect(infoPtr, NULL);
       return 0;
     }
