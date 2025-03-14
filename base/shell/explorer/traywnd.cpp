@@ -3058,13 +3058,6 @@ HandleTrayContextMenu:
         return 0;
     }
 
-    // TWM_NOTIFYALLAPPBARS
-    LRESULT OnNotifyAllAppBars(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        OnAppBarNotifyAll((HMONITOR)lParam, (HWND)wParam, ABN_POSCHANGED, FALSE);
-        return TRUE;
-    }
-
     LRESULT OnHotkey(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         return HandleHotKey(wParam);

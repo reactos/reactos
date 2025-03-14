@@ -57,6 +57,7 @@ protected:
     BOOL AppBarOutsideOf(_In_ const APPBAR *pAppBar1, _In_ const APPBAR *pAppBar2);
     void ComputeHiddenRect(_Inout_ PRECT prc, _In_ UINT uSide);
 
+    LRESULT OnNotifyAllAppBars(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     BOOL OnAppBarNew(_In_ const APPBAR_COMMAND *pData);
     void OnAppBarRemove(_In_ const APPBAR_COMMAND *pData);
     virtual void OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData) = 0;

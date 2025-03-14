@@ -106,6 +106,13 @@ BOOL CAppBarManager::OnAppBarNew(_In_ const APPBAR_COMMAND *pData)
     return FALSE;
 }
 
+// TWM_NOTIFYALLAPPBARS
+LRESULT CAppBarManager::OnNotifyAllAppBars(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    OnAppBarNotifyAll((HMONITOR)lParam, (HWND)wParam, ABN_POSCHANGED, FALSE);
+    return TRUE;
+}
+
 // ABM_REMOVE
 void CAppBarManager::OnAppBarRemove(_In_ const APPBAR_COMMAND *pData)
 {
