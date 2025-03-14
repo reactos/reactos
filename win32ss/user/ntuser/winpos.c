@@ -2037,7 +2037,17 @@ co_WinPosSetWindowPos(
       }
       else if(VisAfter)
       {
-         REGION_bOffsetRgn(VisAfter, -Window->rcWindow.left, -Window->rcWindow.top);
+          /* Clip existing update region to new window size */
+          if (Window->hrgnUpdate != NULL)
+          {
+              PREGION RgnUpdate = REGION_LockRgn(Window->hrgnUpdate);
+              if (RgnUpdate)
+              {
+                  RgnType = IntGdiCombineRgn(RgnUpdate, RgnUpdate, VisAfter, RGN_AND);
+                  REGION_UnlockRgn(RgnUpdate);
+              }
+          }
+          REGION_bOffsetRgn(VisAfter, -Window->rcWindow.left, -Window->rcWindow.top);
       }
 
       /*
