@@ -8,6 +8,7 @@
 
 #include "precomp.h"
 #include <commoncontrols.h>
+#include "appbar.h"
 
 HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
 
@@ -40,32 +41,6 @@ HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, ICont
 #define IDHK_SYS_PROPERTIES 0x1fd
 #define IDHK_DESKTOP 0x1fe
 #define IDHK_PAGER 0x1ff
-
-typedef struct _APPBAR
-{
-    HWND hWnd;
-    UINT uCallbackMessage;
-    RECT rc;
-    UINT uEdge;
-} APPBAR, *PAPPBAR;
-
-static inline PAPPBARDATA
-AppBar_LockOutput(_In_ PAPPBAR_COMMAND pData)
-{
-    return (PAPPBARDATA)SHLockShared(pData->hOutput, pData->dwProcessId);
-}
-
-static inline VOID
-AppBar_UnLockOutput(_Out_ PAPPBARDATA pOutput)
-{
-    SHUnlockShared(pOutput);
-}
-
-static inline BOOL
-Edge_IsVertical(_In_ UINT uEdge)
-{
-    return uEdge == ABE_TOP || uEdge == ABE_BOTTOM;
-}
 
 enum { NONE, TILED, CASCADED } g_Arrangement = NONE;
 
@@ -332,6 +307,7 @@ class CTrayWindow :
     public CComCoClass<CTrayWindow>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public CWindowImpl < CTrayWindow, CWindow, CControlWinTraits >,
+    public CAppBarManager,
     public ITrayWindow,
     public IShellDesktopTray,
     public IOleWindow,
@@ -2422,7 +2398,6 @@ ChangePos:
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         KillTimer(TIMER_ID_IGNOREPULSERESET);
-        DestroyAppBarDPA();
         return 0;
     }
 
@@ -2513,7 +2488,10 @@ ChangePos:
 
     LRESULT OnCopyData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        COPYDATASTRUCT *pCopyData = (COPYDATASTRUCT *)lParam;
+        PCOPYDATASTRUCT pCopyData = (PCOPYDATASTRUCT)lParam;
+        if (!pCopyData)
+            return FALSE;
+
         switch (pCopyData->dwData)
         {
             case TABDMC_APPBAR:
@@ -3085,13 +3063,6 @@ HandleTrayContextMenu:
         return 0;
     }
 
-    // TWM_NOTIFYALLAPPBARS
-    LRESULT OnNotifyAllAppBars(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        OnAppBarNotifyAll((HMONITOR)lParam, (HWND)wParam, ABN_POSCHANGED, FALSE);
-        return TRUE;
-    }
-
     LRESULT OnHotkey(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         return HandleHotKey(wParam);
@@ -3585,440 +3556,19 @@ protected:
     //////////////////////////////////////////////////////////////////////////////////////////////
     // AppBar section
     //
+    // See also: appbar.cpp
     // TODO: freedesktop _NET_WM_STRUT integration
     // TODO: find when a fullscreen app is in the foreground and send FULLSCREENAPP notifications
     // TODO: detect changes in the screen size and send ABN_POSCHANGED ?
     // TODO: multiple monitor support
 
-    HDPA m_hAppBarDPA = NULL; // DPA (Dynamic Pointer Array)
-
-    PAPPBAR FindAppBar(_In_ HWND hwndAppBar) const
-    {
-        if (!m_hAppBarDPA)
-            return NULL;
-
-        INT nItems = DPA_GetPtrCount(m_hAppBarDPA);
-        while (--nItems >= 0)
-        {
-            PAPPBAR pAppBar = (PAPPBAR)DPA_GetPtr(m_hAppBarDPA, nItems);
-            if (pAppBar && hwndAppBar == pAppBar->hWnd)
-                return pAppBar;
-        }
-
-        return NULL;
-    }
-
-    void EliminateAppBar(_In_ INT iItem)
-    {
-        LocalFree(DPA_GetPtr(m_hAppBarDPA, iItem));
-        DPA_DeletePtr(m_hAppBarDPA, iItem);
-    }
-
-    void DestroyAppBarDPA()
-    {
-        if (!m_hAppBarDPA)
-            return;
-
-        INT nItems = DPA_GetPtrCount(m_hAppBarDPA);
-        while (--nItems >= 0)
-        {
-            ::LocalFree(DPA_GetPtr(m_hAppBarDPA, nItems));
-        }
-
-        DPA_Destroy(m_hAppBarDPA);
-        m_hAppBarDPA = NULL;
-    }
-
-    BOOL IsAutoHideState() const { return g_TaskbarSettings.sr.AutoHide; }
-    BOOL IsHidingState() const { return m_AutoHideState == AUTOHIDE_HIDING; }
-
-    // TABDMC_APPBAR
-    LRESULT OnAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData)
-    {
-        PAPPBAR_COMMAND pData = (PAPPBAR_COMMAND)pCopyData->lpData;
-
-        // For security check
-        if (pCopyData->cbData != sizeof(*pData) || pData->dwMagic != 0xBEEFCAFE)
-        {
-            WARN("Invalid AppBar message\n");
-            return 0;
-        }
-
-        switch (pData->dwMessage)
-        {
-            case ABM_NEW:
-                return OnAppBarNew(pData);
-            case ABM_REMOVE:
-                OnAppBarRemove(pData);
-                break;
-            case ABM_QUERYPOS:
-                OnAppBarQueryPos(pData);
-                break;
-            case ABM_SETPOS:
-                OnAppBarSetPos(pData);
-                break;
-            default:
-            {
-                FIXME("0x%X\n", pData->dwMessage);
-                return FALSE;
-            }
-        }
-        return TRUE;
-    }
-
-    // ABM_NEW
-    BOOL OnAppBarNew(_In_ const APPBAR_COMMAND *pData)
-    {
-        if (m_hAppBarDPA)
-        {
-            if (FindAppBar(pData->data.hWnd))
-            {
-                WARN("Already exists: %p\n", pData->data.hWnd);
-                return FALSE;
-            }
-        }
-        else
-        {
-            const UINT c_nGrow = 4;
-            m_hAppBarDPA = DPA_Create(c_nGrow);
-            if (!m_hAppBarDPA)
-            {
-                ERR("Out of memory\n");
-                return FALSE;
-            }
-        }
-
-        PAPPBAR pAppBar = (PAPPBAR)::LocalAlloc(LPTR, sizeof(*pAppBar));
-        if (pAppBar)
-        {
-            pAppBar->hWnd = pData->data.hWnd;
-            pAppBar->uEdge = UINT_MAX;
-            pAppBar->uCallbackMessage = pData->data.uCallbackMessage;
-            if (DPA_InsertPtr(m_hAppBarDPA, INT_MAX, pAppBar) >= 0)
-                return TRUE; // Success!
-
-            ::LocalFree(pAppBar);
-        }
-
-        ERR("Out of memory\n");
-        return FALSE;
-    }
-
-    // ABM_REMOVE
-    void OnAppBarRemove(_In_ const APPBAR_COMMAND *pData)
-    {
-        if (!m_hAppBarDPA)
-            return;
-
-        INT nItems = DPA_GetPtrCount(m_hAppBarDPA);
-        while (--nItems >= 0)
-        {
-            PAPPBAR pAppBar = (PAPPBAR)DPA_GetPtr(m_hAppBarDPA, nItems);
-            if (!pAppBar)
-                continue;
-
-            if (pAppBar->hWnd == pData->data.hWnd)
-            {
-                RECT rcOld = pAppBar->rc;
-                EliminateAppBar(nItems);
-                StuckAppChange(pData->data.hWnd, &rcOld, NULL, FALSE);
-            }
-        }
-    }
-
-    // ABM_QUERYPOS
-    void OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData)
-    {
-        PAPPBAR pAppBar1 = FindAppBar(pData->data.hWnd);
-        if (!pAppBar1)
-        {
-            ERR("Not found: %p\n", pData->data.hWnd);
-            return;
-        }
-
-        PAPPBARDATA pOutput = AppBar_LockOutput(pData);
-        if (!pOutput)
-        {
-            ERR("!pOutput: %p, %d\n", pData->hOutput, pData->dwProcessId);
-            return;
-        }
-        pOutput->rc = pData->data.rc;
-
-        if (::IsRectEmpty(&pOutput->rc))
-            WARN("IsRectEmpty\n");
-
-        HMONITOR hMon1 = ::MonitorFromRect(&pOutput->rc, MONITOR_DEFAULTTOPRIMARY);
-        ASSERT(hMon1 != NULL);
-
-        // Subtract tray rectangle from pOutput->rc if necessary
-        if (hMon1 == m_Monitor && !IsAutoHideState())
-        {
-            APPBAR dummyAppBar;
-            dummyAppBar.uEdge = m_Position;
-            GetDockedRect(&dummyAppBar.rc);
-            AppBarSubtractRect(&dummyAppBar, &pOutput->rc);
-        }
-
-        // Subtract area from pOutput->rc
-        UINT uEdge = pData->data.uEdge;
-        INT nItems = DPA_GetPtrCount(m_hAppBarDPA);
-        while (--nItems >= 0)
-        {
-            PAPPBAR pAppBar2 = (PAPPBAR)DPA_GetPtr(m_hAppBarDPA, nItems);
-            if (!pAppBar2 || pAppBar1->hWnd == pAppBar2->hWnd)
-                continue;
-
-            if ((Edge_IsVertical(uEdge) || !Edge_IsVertical(pAppBar2->uEdge)) &&
-                (pAppBar1->uEdge != uEdge || !AppBarOutsideOf(pAppBar1, pAppBar2)))
-            {
-                if (pAppBar1->uEdge == uEdge || pAppBar2->uEdge != uEdge)
-                    continue;
-            }
-
-            HMONITOR hMon2 = ::MonitorFromRect(&pAppBar2->rc, MONITOR_DEFAULTTONULL);
-            if (hMon1 == hMon2)
-                AppBarSubtractRect(pAppBar2, &pOutput->rc);
-        }
-
-        AppBar_UnLockOutput(pOutput);
-    }
-
-    // ABM_SETPOS
-    void OnAppBarSetPos(_Inout_ PAPPBAR_COMMAND pData)
-    {
-        PAPPBAR pAppBar = FindAppBar(pData->data.hWnd);
-        if (!pAppBar)
-            return;
-
-        OnAppBarQueryPos(pData);
-
-        PAPPBARDATA pOutput = AppBar_LockOutput(pData);
-        if (!pOutput)
-            return;
-
-        RECT rcOld = pAppBar->rc, rcNew = pData->data.rc;
-        BOOL bChanged = !::EqualRect(&rcOld, &rcNew);
-
-        pAppBar->rc = rcNew;
-        pAppBar->uEdge = pData->data.uEdge;
-
-        AppBar_UnLockOutput(pOutput);
-
-        if (bChanged)
-            StuckAppChange(pData->data.hWnd, &rcOld, &rcNew, FALSE);
-    }
-
-    void OnAppBarNotifyAll(
-        _In_opt_ HMONITOR hMon,
-        _In_opt_ HWND hwndIgnore,
-        _In_ DWORD dwNotify,
-        _In_opt_ LPARAM lParam)
-    {
-        TRACE("%p, %p, 0x%X, %p\n", hMon, hwndIgnore, dwNotify, lParam);
-
-        if (!m_hAppBarDPA)
-            return;
-
-        INT nItems = DPA_GetPtrCount(m_hAppBarDPA);
-        while (--nItems >= 0)
-        {
-            PAPPBAR pAppBar = (PAPPBAR)DPA_GetPtr(m_hAppBarDPA, nItems);
-            if (!pAppBar || pAppBar->hWnd == hwndIgnore)
-                continue;
-
-            HWND hwndAppBar = pAppBar->hWnd;
-            if (!::IsWindow(hwndAppBar))
-            {
-                EliminateAppBar(nItems);
-                continue;
-            }
-
-            if (!hMon || hMon == ::MonitorFromWindow(hwndAppBar, MONITOR_DEFAULTTONULL))
-                ::PostMessageW(hwndAppBar, pAppBar->uCallbackMessage, dwNotify, lParam);
-        }
-    }
-
-    // Return value of RecomputeWorkArea
-    enum WORKAREA_TYPE
-    {
-        WORKAREA_NO_TRAY_AREA = 0,
-        WORKAREA_IS_NOT_MONITOR = 1,
-        WORKAREA_SAME_AS_MONITOR = 2,
-    };
-
-    void StuckAppChange(
-        _In_opt_ HWND hwndSpecial,
-        _In_opt_ const RECT *prcOld,
-        _In_opt_ const RECT *prcNew,
-        _In_ BOOL bFlag)
-    {
-        RECT rcWorkArea1, rcWorkArea2;
-        HMONITOR hMon1 = NULL;
-        DWORD flags = 0;
-        enum { SET_WORKAREA_1 = 1, SET_WORKAREA_2 = 2, NEED_SIZING = 4 }; // for flags
-
-        if (prcOld)
-        {
-            hMon1 = (bFlag ? m_PreviousMonitor : ::MonitorFromRect(prcOld, MONITOR_DEFAULTTONEAREST));
-            if (hMon1)
-            {
-                WORKAREA_TYPE type1 = RecomputeWorkArea(hwndSpecial, hMon1, &rcWorkArea1);
-                if (type1 == WORKAREA_IS_NOT_MONITOR)
-                    flags = SET_WORKAREA_1;
-                if (type1 == WORKAREA_SAME_AS_MONITOR)
-                    flags = NEED_SIZING;
-            }
-        }
-
-        if (prcNew)
-        {
-            HMONITOR hMon2 = ::MonitorFromRect(prcNew, MONITOR_DEFAULTTONULL);
-            if (hMon2 && hMon2 != hMon1)
-            {
-                WORKAREA_TYPE type2 = RecomputeWorkArea(hwndSpecial, hMon2, &rcWorkArea2);
-                if (type2 == WORKAREA_IS_NOT_MONITOR)
-                    flags |= SET_WORKAREA_2;
-                else if (type2 == WORKAREA_SAME_AS_MONITOR && !flags)
-                    flags = NEED_SIZING;
-            }
-        }
-
-        if (flags & SET_WORKAREA_1)
-        {
-            UINT fWinIni = ((flags == SET_WORKAREA_1 && m_DesktopWnd) ? SPIF_SENDCHANGE : 0);
-            ::SystemParametersInfoW(SPI_SETWORKAREA, TRUE, &rcWorkArea1, fWinIni);
-            RedrawDesktop(&rcWorkArea1);
-        }
-
-        if (flags & SET_WORKAREA_2)
-        {
-            UINT fWinIni = (m_DesktopWnd ? SPIF_SENDCHANGE : 0);
-            ::SystemParametersInfoW(SPI_SETWORKAREA, TRUE, &rcWorkArea2, fWinIni);
-            RedrawDesktop(&rcWorkArea2);
-        }
-
-        if (bFlag || flags == NEED_SIZING)
-            ::SendMessageW(m_DesktopWnd, WM_SIZE, 0, 0);
-
-        // Post ABN_POSCHANGED messages to AppBar windows
-        OnAppBarNotifyAll(NULL, hwndSpecial, ABN_POSCHANGED, TRUE);
-    }
-
-    WORKAREA_TYPE
-    RecomputeWorkArea(
-        _In_opt_ HWND hwndSpecial,
-        _In_ HMONITOR hMonitor,
-        _Out_ PRECT prcWorkArea)
-    {
-        MONITORINFO mi = { sizeof(mi) };
-        if (!::GetMonitorInfoW(hMonitor, &mi))
-            return WORKAREA_NO_TRAY_AREA;
-
-        if (IsAutoHideState())
-            *prcWorkArea = mi.rcMonitor;
-        else
-            ::SubtractRect(prcWorkArea, &mi.rcMonitor, &m_TrayRects[m_Position]);
-
-        if (m_hAppBarDPA)
-        {
-            INT nItems = DPA_GetPtrCount(m_hAppBarDPA);
-            while (--nItems >= 0)
-            {
-                PAPPBAR pAppBar = (PAPPBAR)DPA_GetPtr(m_hAppBarDPA, nItems);
-                if (pAppBar && hMonitor == ::MonitorFromRect(&pAppBar->rc, MONITOR_DEFAULTTONULL))
-                    AppBarSubtractRect(pAppBar, prcWorkArea);
-            }
-        }
-
-        if (!::EqualRect(prcWorkArea, &mi.rcWork))
-            return WORKAREA_IS_NOT_MONITOR;
-
-        if (IsAutoHideState() || ::IsRectEmpty(&m_TrayRects[m_Position]))
-            return WORKAREA_NO_TRAY_AREA;
-
-        return WORKAREA_SAME_AS_MONITOR;
-    }
-
-    void AppBarSubtractRect(_In_ PAPPBAR pAppBar, _Inout_ PRECT prc)
-    {
-        switch (pAppBar->uEdge)
-        {
-            case ABE_LEFT:   prc->left   = max(prc->left, pAppBar->rc.right); break;
-            case ABE_TOP:    prc->top    = max(prc->top, pAppBar->rc.bottom); break;
-            case ABE_RIGHT:  prc->right  = min(prc->right, pAppBar->rc.left); break;
-            case ABE_BOTTOM: prc->bottom = min(prc->bottom, pAppBar->rc.top); break;
-            default:
-                ASSERT(FALSE);
-                break;
-        }
-    }
-
-    // Is pAppBar1 outside of pAppBar2?
-    BOOL AppBarOutsideOf(_In_ const APPBAR *pAppBar1, _In_ const APPBAR *pAppBar2)
-    {
-        if (pAppBar1->uEdge != pAppBar2->uEdge)
-            return FALSE;
-
-        switch (pAppBar2->uEdge)
-        {
-            case ABE_LEFT:   return pAppBar1->rc.left >= pAppBar2->rc.left;
-            case ABE_TOP:    return pAppBar1->rc.top >= pAppBar2->rc.top;
-            case ABE_RIGHT:  return pAppBar1->rc.right <= pAppBar2->rc.right;
-            case ABE_BOTTOM: return pAppBar1->rc.bottom <= pAppBar2->rc.bottom;
-            default:
-                ASSERT(FALSE);
-                return FALSE;
-        }
-    }
-
-    void GetDockedRect(_Out_ PRECT prcDocked)
-    {
-        *prcDocked = m_TrayRects[m_Position];
-
-        if (IsAutoHideState() && IsHidingState())
-            ComputeHiddenRect(prcDocked, m_Position);
-    }
-
-    void ComputeHiddenRect(_Inout_ PRECT prc, _In_ UINT uSide)
-    {
-        MONITORINFO mi = { sizeof(mi) };
-        HMONITOR hMonitor = ::MonitorFromRect(prc, MONITOR_DEFAULTTONULL);
-        if (!::GetMonitorInfoW(hMonitor, &mi))
-            return;
-        RECT rcMon = mi.rcMonitor;
-
-        INT cxy = Edge_IsVertical(uSide) ? (prc->bottom - prc->top) : (prc->right - prc->left);
-        switch (uSide)
-        {
-            case ABE_LEFT:
-                prc->right = rcMon.left + GetSystemMetrics(SM_CXFRAME) / 2;
-                prc->left = prc->right - cxy;
-                break;
-            case ABE_TOP:
-                prc->bottom = rcMon.top + GetSystemMetrics(SM_CYFRAME) / 2;
-                prc->top = prc->bottom - cxy;
-                break;
-            case ABE_RIGHT:
-                prc->left = rcMon.right - GetSystemMetrics(SM_CXFRAME) / 2;
-                prc->right = prc->left + cxy;
-                break;
-            case ABE_BOTTOM:
-                prc->top = rcMon.bottom - GetSystemMetrics(SM_CYFRAME) / 2;
-                prc->bottom = prc->top + cxy;
-                break;
-            default:
-                ASSERT(FALSE);
-                break;
-        }
-    }
-
-    void RedrawDesktop(_Inout_ PRECT prc)
-    {
-        if (!m_DesktopWnd)
-            return;
-        ::MapWindowPoints(NULL, m_DesktopWnd, (POINT*)prc, sizeof(*prc) / sizeof(POINT));
-        ::RedrawWindow(m_DesktopWnd, prc, 0, RDW_ALLCHILDREN | RDW_ERASE | RDW_INVALIDATE);
-    }
+    BOOL IsAutoHideState() const override { return g_TaskbarSettings.sr.AutoHide; }
+    BOOL IsHidingState() const override { return m_AutoHideState == AUTOHIDE_HIDING; }
+    HMONITOR GetMonitor() const override { return m_Monitor; }
+    HMONITOR GetPreviousMonitor() const override { return m_PreviousMonitor; }
+    INT GetPosition() const override { return m_Position; }
+    LPRECT GetTrayRect() override { return &m_TrayRects[m_Position]; }
+    HWND GetDesktopWnd() const override { return m_DesktopWnd; }
 };
 
 class CTrayWindowCtxMenu :

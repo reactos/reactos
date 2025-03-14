@@ -19,7 +19,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(appbar);
 
-static LPVOID
+static HANDLE
 AppBar_CopyIn(
     _In_ LPCVOID pvSrc,
     _In_ SIZE_T dwSize,
@@ -105,7 +105,7 @@ SHAppBarMessage(
     COPYDATASTRUCT copyData = { TABDMC_APPBAR, sizeof(cmd), &cmd };
     UINT_PTR ret = SendMessageW(hTrayWnd, WM_COPYDATA, (WPARAM)pData->hWnd, (LPARAM)&copyData);
 
-    /* Apply output data */
+    /* Copy back output data */
     if (cmd.hOutput)
     {
         if (!AppBar_CopyOut(cmd.hOutput, &cmd.data, sizeof(cmd.data), cmd.dwProcessId))
@@ -113,12 +113,7 @@ SHAppBarMessage(
             ERR("AppBar_CopyOut: %d\n", dwMessage);
             return FALSE;
         }
-
-        pData->hWnd             = cmd.data.hWnd;
-        pData->uCallbackMessage = cmd.data.uCallbackMessage;
-        pData->uEdge            = cmd.data.uEdge;
-        pData->rc               = cmd.data.rc;
-        pData->lParam           = cmd.data.lParam;
+        *pData = cmd.data;
     }
 
     return ret;

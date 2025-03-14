@@ -1,23 +1,14 @@
 /*
- * Copyright 1999, 2000 Juergen Schmied
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     ReactOS Shell
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Undocumented shell definitions
+ * COPYRIGHT:   Copyright 1999, 2000 Juergen Schmied
+ *              Copyright 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-#ifndef __WINE_UNDOCSHELL_H
-#define __WINE_UNDOCSHELL_H
+#pragma once
+
+#include <shellapi.h>
 
 #ifndef SHSTDAPI
 #if defined(_SHELL32_) /* DECLSPEC_IMPORT disabled because of CORE-6504: */ || TRUE
@@ -1229,8 +1220,6 @@ typedef struct SFVM_CUSTOMVIEWINFO_DATA
     COLORREF clrTextBack;
 } SFVM_CUSTOMVIEWINFO_DATA, *LPSFVM_CUSTOMVIEWINFO_DATA;
 
-#include <shellapi.h>
-
 /* For internal AppBar messaging (private) */
 typedef struct _APPBAR_COMMAND
 {
@@ -1246,5 +1235,3 @@ typedef struct _APPBAR_COMMAND
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
-
-#endif /* __WINE_UNDOCSHELL_H */
