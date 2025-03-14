@@ -59,11 +59,12 @@ protected:
     BOOL AppBarOutsideOf(_In_ const APPBAR *pAppBar1, _In_ const APPBAR *pAppBar2);
     void ComputeHiddenRect(_Inout_ PRECT prc, _In_ UINT uSide);
     PAPPBAR_COMMAND GetAppBarMessage(_Inout_ PCOPYDATASTRUCT pCopyData);
+    void GetDockedRect(_Out_ PRECT prcDocked);
 
     LRESULT OnNotifyAllAppBars(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     BOOL OnAppBarNew(_In_ const APPBAR_COMMAND *pData);
     void OnAppBarRemove(_In_ const APPBAR_COMMAND *pData);
-    virtual void OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData) = 0;
+    void OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData);
     void OnAppBarSetPos(_Inout_ PAPPBAR_COMMAND pData);
 
     void OnAppBarNotifyAll(
@@ -88,4 +89,7 @@ protected:
 
     virtual BOOL IsAutoHideState() const = 0;
     virtual BOOL IsHidingState() const = 0;
+    virtual HMONITOR GetMonitor() const = 0;
+    virtual INT GetPosition() const = 0;
+    virtual LPRECT GetTrayRect() = 0;
 };

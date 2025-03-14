@@ -3554,6 +3554,7 @@ protected:
     //////////////////////////////////////////////////////////////////////////////////////////////
     // AppBar section
     //
+    // See also: appbar.cpp
     // TODO: freedesktop _NET_WM_STRUT integration
     // TODO: find when a fullscreen app is in the foreground and send FULLSCREENAPP notifications
     // TODO: detect changes in the screen size and send ABN_POSCHANGED ?
@@ -3561,63 +3562,9 @@ protected:
 
     BOOL IsAutoHideState() const override { return g_TaskbarSettings.sr.AutoHide; }
     BOOL IsHidingState() const override { return m_AutoHideState == AUTOHIDE_HIDING; }
-
-    // ABM_QUERYPOS
-    void OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData) override
-    {
-        PAPPBAR pAppBar1 = FindAppBar(pData->data.hWnd);
-        if (!pAppBar1)
-        {
-            ERR("Not found: %p\n", pData->data.hWnd);
-            return;
-        }
-
-        PAPPBARDATA pOutput = AppBar_LockOutput(pData);
-        if (!pOutput)
-        {
-            ERR("!pOutput: %d\n", pData->dwProcessId);
-            return;
-        }
-        pOutput->rc = pData->data.rc;
-
-        if (::IsRectEmpty(&pOutput->rc))
-            WARN("IsRectEmpty\n");
-
-        HMONITOR hMon1 = ::MonitorFromRect(&pOutput->rc, MONITOR_DEFAULTTOPRIMARY);
-        ASSERT(hMon1 != NULL);
-
-        // Subtract tray rectangle from pOutput->rc if necessary
-        if (hMon1 == m_Monitor && !IsAutoHideState())
-        {
-            APPBAR dummyAppBar;
-            dummyAppBar.uEdge = m_Position;
-            GetDockedRect(&dummyAppBar.rc);
-            AppBarSubtractRect(&dummyAppBar, &pOutput->rc);
-        }
-
-        // Subtract area from pOutput->rc
-        UINT uEdge = pData->data.uEdge;
-        INT nItems = DPA_GetPtrCount(m_hAppBarDPA);
-        while (--nItems >= 0)
-        {
-            PAPPBAR pAppBar2 = (PAPPBAR)DPA_GetPtr(m_hAppBarDPA, nItems);
-            if (!pAppBar2 || pAppBar1->hWnd == pAppBar2->hWnd)
-                continue;
-
-            if ((Edge_IsVertical(uEdge) || !Edge_IsVertical(pAppBar2->uEdge)) &&
-                (pAppBar1->uEdge != uEdge || !AppBarOutsideOf(pAppBar1, pAppBar2)))
-            {
-                if (pAppBar1->uEdge == uEdge || pAppBar2->uEdge != uEdge)
-                    continue;
-            }
-
-            HMONITOR hMon2 = ::MonitorFromRect(&pAppBar2->rc, MONITOR_DEFAULTTONULL);
-            if (hMon1 == hMon2)
-                AppBarSubtractRect(pAppBar2, &pOutput->rc);
-        }
-
-        AppBar_UnLockOutput(pOutput);
-    }
+    HMONITOR GetMonitor() const override { return m_Monitor; }
+    INT GetPosition() const override { return m_Position; }
+    LPRECT GetTrayRect() override { return &m_TrayRects[m_Position]; }
 
     /// This function is called when AppBar and/or TaskBar is being moved, removed, and/or updated.
     /// @param hwndTarget The target window. Optional.
@@ -3640,7 +3587,7 @@ protected:
             hMon1 = (bTray ? m_PreviousMonitor : ::MonitorFromRect(prcOld, MONITOR_DEFAULTTONEAREST));
             if (hMon1)
             {
-                WORKAREA_TYPE type1 = RecomputeWorkArea(&m_TrayRects[m_Position], hMon1, &rcWorkArea1);
+                WORKAREA_TYPE type1 = RecomputeWorkArea(GetTrayRect(), hMon1, &rcWorkArea1);
                 if (type1 == WORKAREA_IS_NOT_MONITOR)
                     flags = SET_WORKAREA_1;
                 if (type1 == WORKAREA_SAME_AS_MONITOR)
@@ -3653,7 +3600,7 @@ protected:
             HMONITOR hMon2 = ::MonitorFromRect(prcNew, MONITOR_DEFAULTTONULL);
             if (hMon2 && hMon2 != hMon1)
             {
-                WORKAREA_TYPE type2 = RecomputeWorkArea(&m_TrayRects[m_Position], hMon2, &rcWorkArea2);
+                WORKAREA_TYPE type2 = RecomputeWorkArea(GetTrayRect(), hMon2, &rcWorkArea2);
                 if (type2 == WORKAREA_IS_NOT_MONITOR)
                     flags |= SET_WORKAREA_2;
                 else if (type2 == WORKAREA_SAME_AS_MONITOR && !flags)
@@ -3680,16 +3627,6 @@ protected:
 
         // Post ABN_POSCHANGED messages to AppBar windows
         OnAppBarNotifyAll(NULL, hwndTarget, ABN_POSCHANGED, TRUE);
-    }
-
-    /// Get rectangle of the tray window.
-    /// @param prcDocked The pointer to the rectangle to be received.
-    void GetDockedRect(_Out_ PRECT prcDocked)
-    {
-        *prcDocked = m_TrayRects[m_Position];
-
-        if (IsAutoHideState() && IsHidingState())
-            ComputeHiddenRect(prcDocked, m_Position);
     }
 };
 

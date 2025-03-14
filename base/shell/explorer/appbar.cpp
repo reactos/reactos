@@ -114,6 +114,63 @@ void CAppBarManager::OnAppBarRemove(_In_ const APPBAR_COMMAND *pData)
     }
 }
 
+// ABM_QUERYPOS
+void CAppBarManager::OnAppBarQueryPos(_Inout_ PAPPBAR_COMMAND pData)
+{
+    PAPPBAR pAppBar1 = FindAppBar(pData->data.hWnd);
+    if (!pAppBar1)
+    {
+        ERR("Not found: %p\n", pData->data.hWnd);
+        return;
+    }
+
+    PAPPBARDATA pOutput = AppBar_LockOutput(pData);
+    if (!pOutput)
+    {
+        ERR("!pOutput: %d\n", pData->dwProcessId);
+        return;
+    }
+    pOutput->rc = pData->data.rc;
+
+    if (::IsRectEmpty(&pOutput->rc))
+        WARN("IsRectEmpty\n");
+
+    HMONITOR hMon1 = ::MonitorFromRect(&pOutput->rc, MONITOR_DEFAULTTOPRIMARY);
+    ASSERT(hMon1 != NULL);
+
+    // Subtract tray rectangle from pOutput->rc if necessary
+    if (hMon1 == GetMonitor() && !IsAutoHideState())
+    {
+        APPBAR dummyAppBar;
+        dummyAppBar.uEdge = GetPosition();
+        GetDockedRect(&dummyAppBar.rc);
+        AppBarSubtractRect(&dummyAppBar, &pOutput->rc);
+    }
+
+    // Subtract area from pOutput->rc
+    UINT uEdge = pData->data.uEdge;
+    INT nItems = DPA_GetPtrCount(m_hAppBarDPA);
+    while (--nItems >= 0)
+    {
+        PAPPBAR pAppBar2 = (PAPPBAR)DPA_GetPtr(m_hAppBarDPA, nItems);
+        if (!pAppBar2 || pAppBar1->hWnd == pAppBar2->hWnd)
+            continue;
+
+        if ((Edge_IsVertical(uEdge) || !Edge_IsVertical(pAppBar2->uEdge)) &&
+            (pAppBar1->uEdge != uEdge || !AppBarOutsideOf(pAppBar1, pAppBar2)))
+        {
+            if (pAppBar1->uEdge == uEdge || pAppBar2->uEdge != uEdge)
+                continue;
+        }
+
+        HMONITOR hMon2 = ::MonitorFromRect(&pAppBar2->rc, MONITOR_DEFAULTTONULL);
+        if (hMon1 == hMon2)
+            AppBarSubtractRect(pAppBar2, &pOutput->rc);
+    }
+
+    AppBar_UnLockOutput(pOutput);
+}
+
 // ABM_SETPOS
 void CAppBarManager::OnAppBarSetPos(_Inout_ PAPPBAR_COMMAND pData)
 {
@@ -203,6 +260,15 @@ BOOL CAppBarManager::AppBarOutsideOf(
             ASSERT(FALSE);
             return FALSE;
     }
+}
+
+/// Get rectangle of the tray window.
+/// @param prcDocked The pointer to the rectangle to be received.
+void CAppBarManager::GetDockedRect(_Out_ PRECT prcDocked)
+{
+    *prcDocked = *GetTrayRect();
+    if (IsAutoHideState() && IsHidingState())
+        ComputeHiddenRect(prcDocked, GetPosition());
 }
 
 /// Compute the position and size of the hidden TaskBar.
