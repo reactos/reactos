@@ -127,6 +127,7 @@ SHELL_ErrorBox(H hwndOwner, UINT Error = GetLastError())
 #endif
 
 #ifdef __cplusplus
+#ifdef DECLARE_CLASSFACTORY // ATL
 template <typename T>
 class CComCreatorCentralInstance
 {
@@ -456,6 +457,7 @@ HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, T3 initArg3, T4 
 
     return hResult;
 }
+#endif // DECLARE_CLASSFACTORY (ATL)
 
 template<class P, class R> static HRESULT SHILClone(P pidl, R *ppOut)
 {
