@@ -788,7 +788,7 @@ static HRESULT get_data_from_stream(IDataObject *data, FORMATETC *fmt, HGLOBAL *
         if(FAILED(hr)) goto error;
 
         offs.QuadPart = 0;
-        IStream_Seek(med.u.pstm, offs, STREAM_SEEK_CUR, &pos);
+        IStream_Seek(med.u.pstm, offs, STREAM_SEEK_END, &pos);
         IStream_Seek(med.u.pstm, offs, STREAM_SEEK_SET, NULL);
         hr = IStream_CopyTo(med.u.pstm, stm, pos, NULL, NULL);
         ReleaseStgMedium(&med);
@@ -2080,6 +2080,8 @@ static LRESULT CALLBACK clipbrd_wndproc(HWND hwnd, UINT message, WPARAM wparam, 
         ole_priv_data_entry *entry;
 
         TRACE("(): WM_RENDERFORMAT(cfFormat=%x)\n", cf);
+
+        if (!clipbrd || !clipbrd->cached_enum) break;
         entry = find_format_in_list(clipbrd->cached_enum->entries, clipbrd->cached_enum->count, cf);
 
         if(entry)
