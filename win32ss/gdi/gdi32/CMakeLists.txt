@@ -53,6 +53,7 @@ add_library(gdi32 MODULE
 set_module_type(gdi32 win32dll UNICODE ENTRYPOINT DllMain 12)
 
 target_link_libraries(gdi32
+    gdi32_vista_static
     winegdi
     wine
     win32ksys
