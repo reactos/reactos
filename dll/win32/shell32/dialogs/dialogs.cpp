@@ -354,7 +354,7 @@ BOOL WINAPI PickIconDlg(
     UINT nMaxFile,
     INT* lpdwIconIndex)
 {
-    CCoInit ComInit; // For SHAutoComplete [CORE-20030]
+    CCoInit ComInit; // For SHAutoComplete (CORE-20030)
     int res;
     WCHAR szExpandedPath[MAX_PATH];
 
