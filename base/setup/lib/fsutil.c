@@ -22,7 +22,7 @@
 #include "fsutil.h"
 
 #include <fslib/vfatlib.h>
-#include <fslib/btrfslib.h>
+// #include <fslib/btrfslib.h>
 // #include <fslib/ext2lib.h>
 // #include <fslib/ntfslib.h>
 
@@ -165,9 +165,7 @@ static FILE_SYSTEM RegisteredFileSystems[] =
 #if 0
     { L"FATX" , VfatxFormat, VfatxChkdsk },
     { L"NTFS" , NtfsFormat, NtfsChkdsk },
-#endif
     { L"BTRFS", BtrfsFormat, BtrfsChkdsk },
-#if 0
     { L"EXT2" , Ext2Format, Ext2Chkdsk },
     { L"EXT3" , Ext2Format, Ext2Chkdsk },
     { L"EXT4" , Ext2Format, Ext2Chkdsk },
