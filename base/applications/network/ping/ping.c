@@ -436,9 +436,7 @@ Ping(void)
          * ASCII characters from 'a' to 'w', wrapping back around
          * until SendBuffer is full. */
         for (ULONG i = 0; i < RequestSize; i++)
-        {
             ((PUCHAR)SendBuffer)[i] = (UCHAR)('a' + (i % ('w' - 'a' + 1)));
-        }
     }
 
     if (Family == AF_INET6)
