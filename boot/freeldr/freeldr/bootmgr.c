@@ -427,8 +427,8 @@ VOID RunLoader(VOID)
 
     for (;;)
     {
-        /* Redraw the backdrop */
-        UiDrawBackdrop();
+        /* Redraw the backdrop, but don't overwrite boot options */
+        UiDrawBackdrop(UiGetScreenHeight() - 2);
 
         /* Show the operating system list menu */
         if (!UiDisplayMenu("Please select the operating system to start:",

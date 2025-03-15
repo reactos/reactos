@@ -35,7 +35,7 @@ UiInitialize(IN BOOLEAN ShowUi)
     MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
 
     /* Clear the screen */
-    UiDrawBackdrop();
+    UiDrawBackdrop(UiGetScreenHeight());
     return TRUE;
 }
 
@@ -47,7 +47,7 @@ UiUnInitialize(IN PCSTR BootText)
 }
 
 VOID
-UiDrawBackdrop(VOID)
+UiDrawBackdrop(ULONG DrawHeight)
 {
     /* Clear the screen */
     MachVideoClearScreen(ATTR(COLOR_WHITE, COLOR_BLACK));
