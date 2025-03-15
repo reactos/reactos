@@ -25,8 +25,41 @@
 DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 #define SECTORSIZE 2048
+#define TAG_ISO_VOLUME 'VosI'
 #define TAG_ISO_BUFFER 'BosI'
 #define TAG_ISO_FILE 'FosI'
+
+typedef struct _ISO_VOLUME_INFO
+{
+    ULONG PvdDirectorySector;
+    ULONG PvdDirectoryLength;
+    ULONG DirectoryPathLength;
+    ULONG DirectoryLength;
+    PVOID DirectoryBuffer;
+    UCHAR DirectoryPath[261];
+} ISO_VOLUME_INFO, *PISO_VOLUME_INFO;
+
+static PISO_VOLUME_INFO IsoVolumes[MAX_FDS];
+
+static
+PCSTR
+IsoLastPathSeparator(
+    _In_ PCSTR Path)
+{
+    PCSTR Last = NULL;
+
+    ASSERT(Path != NULL);
+
+    while (*Path != ANSI_NULL)
+    {
+        if (*Path == '\\' || *Path == '/')
+            Last = Path;
+
+        ++Path;
+    }
+
+    return Last;
+}
 
 static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectoryLength, PCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 {
@@ -36,8 +69,6 @@ static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dire
     CHAR Name[32];
 
     TRACE("IsoSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectoryLength = %d FileName = %s\n", DirectoryBuffer, DirectoryLength, FileName);
-
-    RtlZeroMemory(Name, 32 * sizeof(UCHAR));
 
     Offset = 0;
     Record = (PDIR_RECORD)DirectoryBuffer;
@@ -67,7 +98,7 @@ static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dire
         {
             for (i = 0; i < Record->FileIdLength && Record->FileId[i] != ';'; i++)
                 Name[i] = Record->FileId[i];
-            Name[i] = 0;
+            Name[i] = ANSI_NULL;
             TRACE("Name '%s'\n", Name);
 
             if (strlen(FileName) == strlen(Name) && _stricmp(FileName, Name) == 0)
@@ -81,8 +112,6 @@ static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dire
             }
 
         }
-
-        RtlZeroMemory(Name, 32 * sizeof(UCHAR));
     }
 
     return FALSE;
@@ -140,91 +169,121 @@ static ARC_STATUS IsoBufferDirectory(ULONG DeviceId, ULONG DirectoryStartSector,
     return ESUCCESS;
 }
 
-
 /*
  * IsoLookupFile()
  * This function searches the file system for the
  * specified filename and fills in an ISO_FILE_INFO structure
  * with info describing the file, etc. returns ARC error code
  */
-static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO IsoFileInfoPointer)
+static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO IsoFileInfo)
 {
-    UCHAR Buffer[SECTORSIZE];
-    PPVD Pvd = (PPVD)Buffer;
-    UINT32        i;
-    ULONG            NumberOfPathParts;
-    CHAR        PathPart[261];
-    PVOID        DirectoryBuffer;
-    ULONG        DirectorySector;
-    ULONG        DirectoryLength;
-    ISO_FILE_INFO    IsoFileInfo;
-    LARGE_INTEGER Position;
-    ULONG Count;
+    PCSTR FullPath = FileName;
+    PISO_VOLUME_INFO Volume;
+    PCSTR FileNameStr;
+    ULONG i, DirectoryPathLength, DirectorySector, DirectoryLength;
+    PVOID DirectoryBuffer;
+    ULONG NumberOfPathParts;
+    CHAR PathBuffer[261];
+    CHAR* PathPart;
     ARC_STATUS Status;
+    BOOLEAN DoFullLookup;
 
     TRACE("IsoLookupFile() FileName = %s\n", FileName);
 
-    RtlZeroMemory(IsoFileInfoPointer, sizeof(ISO_FILE_INFO));
-    RtlZeroMemory(&IsoFileInfo, sizeof(ISO_FILE_INFO));
+    Volume = IsoVolumes[DeviceId];
 
-    //
-    // Read the Primary Volume Descriptor
-    //
-    Position.HighPart = 0;
-    Position.LowPart = 16 * SECTORSIZE;
-    Status = ArcSeek(DeviceId, &Position, SeekAbsolute);
-    if (Status != ESUCCESS)
-        return Status;
-    Status = ArcRead(DeviceId, Pvd, SECTORSIZE, &Count);
-    if (Status != ESUCCESS || Count < sizeof(PVD))
-        return EIO;
+    /*
+     * Extract the file name
+     * '\test.ini' --> 'test.ini'
+     * '\folder\app.exe' --> 'app.exe'
+     */
+    FileNameStr = IsoLastPathSeparator(FileName) + 1;
 
-    DirectorySector = Pvd->RootDirRecord.ExtentLocationL;
-    DirectoryLength = Pvd->RootDirRecord.DataLengthL;
+    /*
+     * Extract the directory path, including trailing slash
+     * '\test.ini' --> '\'
+     * '\folder\app.exe' --> '\folder\'
+     */
+    DirectoryPathLength = FileNameStr - FileName;
 
-    /* Skip leading path separator, if any */
-    if (*FileName == '\\' || *FileName == '/')
-        ++FileName;
-    //
-    // Figure out how many sub-directories we are nested in
-    //
-    NumberOfPathParts = FsGetNumPathParts(FileName);
+    /* See if this directory has been buffered before */
+    DoFullLookup = (DirectoryPathLength != Volume->DirectoryPathLength) ||
+                   !RtlEqualMemory(FileName, Volume->DirectoryPath, DirectoryPathLength);
+    if (!DoFullLookup)
+    {
+        PathPart = (CHAR*)FileNameStr;
+        DirectoryBuffer = Volume->DirectoryBuffer;
+        DirectoryLength = Volume->DirectoryLength;
+
+        NumberOfPathParts = 1;
+    }
+    else
+    {
+        PathPart = PathBuffer;
+        DirectorySector = Volume->PvdDirectorySector;
+        DirectoryLength = Volume->PvdDirectoryLength;
+
+        /* Skip leading path separator, if any */
+        if (*FileName == '\\' || *FileName == '/')
+            ++FileName;
+
+        /* Figure out how many sub-directories we are nested in */
+        NumberOfPathParts = FsGetNumPathParts(FileName);
+    }
 
     //
     // Loop once for each part
     //
     for (i=0; i<NumberOfPathParts; i++)
     {
-        //
-        // Get first path part
-        //
-        FsGetFirstNameFromPath(PathPart, FileName);
-
-        //
-        // Advance to the next part of the path
-        //
-        for (; (*FileName != '\\') && (*FileName != '/') && (*FileName != '\0'); FileName++)
+        if (DoFullLookup)
         {
+            /* Get first path part */
+            FsGetFirstNameFromPath(PathPart, FileName);
+
+            /* Advance to the next part of the path */
+            while ((*FileName != ANSI_NULL) && (*FileName != '\\') && (*FileName != '/'))
+            {
+                FileName++;
+            }
+            FileName++;
+
+            /* Buffer the directory contents */
+            Status = IsoBufferDirectory(DeviceId,
+                                        DirectorySector,
+                                        DirectoryLength,
+                                        &DirectoryBuffer);
+            if (Status != ESUCCESS)
+                return Status;
+
+            /* Save the directory buffer */
+            if ((i + 1) >= NumberOfPathParts)
+            {
+                if (Volume->DirectoryBuffer)
+                    FrLdrTempFree(Volume->DirectoryBuffer, TAG_ISO_BUFFER);
+
+                Volume->DirectoryPathLength = DirectoryPathLength;
+                Volume->DirectoryBuffer = DirectoryBuffer;
+                Volume->DirectoryLength = DirectoryLength;
+
+                RtlCopyMemory(Volume->DirectoryPath, FullPath, DirectoryPathLength);
+            }
         }
-        FileName++;
 
-        //
-        // Buffer the directory contents
-        //
-        Status = IsoBufferDirectory(DeviceId, DirectorySector, DirectoryLength, &DirectoryBuffer);
-        if (Status != ESUCCESS)
-            return Status;
-
-        //
-        // Search for file name in directory
-        //
-        if (!IsoSearchDirectoryBufferForFile(DirectoryBuffer, DirectoryLength, PathPart, &IsoFileInfo))
+        /* Search for file name in directory */
+        if (!IsoSearchDirectoryBufferForFile(DirectoryBuffer,
+                                             DirectoryLength,
+                                             PathPart,
+                                             IsoFileInfo))
         {
-            FrLdrTempFree(DirectoryBuffer, TAG_ISO_BUFFER);
+            /* Free the directory buffer that wasn't cached */
+            if ((i + 1) < NumberOfPathParts)
+            {
+                ASSERT(DirectoryBuffer != Volume->DirectoryBuffer);
+                FrLdrTempFree(DirectoryBuffer, TAG_ISO_BUFFER);
+            }
             return ENOENT;
         }
-
-        FrLdrTempFree(DirectoryBuffer, TAG_ISO_BUFFER);
 
         //
         // If we have another sub-directory to go then
@@ -232,17 +291,17 @@ static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO I
         //
         if ((i+1) < NumberOfPathParts)
         {
-            DirectorySector = IsoFileInfo.FileStart;
-            DirectoryLength = IsoFileInfo.FileSize;
+            FrLdrTempFree(DirectoryBuffer, TAG_ISO_BUFFER);
+
+            DirectorySector = IsoFileInfo->FileStart;
+            DirectoryLength = IsoFileInfo->FileSize;
         }
-
     }
-
-    RtlCopyMemory(IsoFileInfoPointer, &IsoFileInfo, sizeof(ISO_FILE_INFO));
 
     return ESUCCESS;
 }
 
+static
 ARC_STATUS IsoClose(ULONG FileId)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
@@ -250,6 +309,7 @@ ARC_STATUS IsoClose(ULONG FileId)
     return ESUCCESS;
 }
 
+static
 ARC_STATUS IsoGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
@@ -264,9 +324,9 @@ ARC_STATUS IsoGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
     return ESUCCESS;
 }
 
+static
 ARC_STATUS IsoOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
-    ISO_FILE_INFO TempFileInfo;
     PISO_FILE_INFO FileHandle;
     ULONG DeviceId;
     ARC_STATUS Status;
@@ -278,21 +338,22 @@ ARC_STATUS IsoOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 
     TRACE("IsoOpen() FileName = %s\n", Path);
 
-    RtlZeroMemory(&TempFileInfo, sizeof(TempFileInfo));
-    Status = IsoLookupFile(Path, DeviceId, &TempFileInfo);
-    if (Status != ESUCCESS)
-        return ENOENT;
-
-    FileHandle = FrLdrTempAlloc(sizeof(ISO_FILE_INFO), TAG_ISO_FILE);
+    FileHandle = FrLdrTempAlloc(sizeof(*FileHandle), TAG_ISO_FILE);
     if (!FileHandle)
         return ENOMEM;
 
-    RtlCopyMemory(FileHandle, &TempFileInfo, sizeof(ISO_FILE_INFO));
+    Status = IsoLookupFile(Path, DeviceId, FileHandle);
+    if (Status != ESUCCESS)
+    {
+        FrLdrTempFree(FileHandle, TAG_ISO_FILE);
+        return ENOENT;
+    }
 
     FsSetDeviceSpecific(*FileId, FileHandle);
     return ESUCCESS;
 }
 
+static
 ARC_STATUS IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     ARC_STATUS Status;
@@ -459,6 +520,7 @@ ARC_STATUS IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     return ESUCCESS;
 }
 
+static
 ARC_STATUS IsoSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
@@ -485,7 +547,7 @@ ARC_STATUS IsoSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
     return ESUCCESS;
 }
 
-const DEVVTBL Iso9660FuncTable =
+static const DEVVTBL Iso9660FuncTable =
 {
     IsoClose,
     IsoGetFileInformation,
@@ -502,6 +564,7 @@ const DEVVTBL* IsoMount(ULONG DeviceId)
     LARGE_INTEGER Position;
     ULONG Count;
     ARC_STATUS Status;
+    PISO_VOLUME_INFO Volume;
 
     TRACE("Enter IsoMount(%lu)\n", DeviceId);
 
@@ -532,6 +595,17 @@ const DEVVTBL* IsoMount(ULONG DeviceId)
     Count = (ULONG)((ULONGLONG)Pvd->VolumeSpaceSizeL * SECTORSIZE / 1024 / 1024);
     TRACE("Recognized ISO9660 drive, size %lu MB (%lu sectors)\n",
           Count, Pvd->VolumeSpaceSizeL);
+
+    Volume = FrLdrTempAlloc(sizeof(*Volume), TAG_ISO_VOLUME);
+    if (!Volume)
+        return NULL;
+    RtlZeroMemory(Volume, sizeof(*Volume));
+
+    /* Cache the PVD information */
+    Volume->PvdDirectorySector = Pvd->RootDirRecord.ExtentLocationL;
+    Volume->PvdDirectoryLength = Pvd->RootDirRecord.DataLengthL;
+
+    IsoVolumes[DeviceId] = Volume;
 
     /* Everything OK, return the ISO9660 function table */
     return &Iso9660FuncTable;
