@@ -38,10 +38,13 @@ private:
 
     WCHAR m_wszDrive[MAX_PATH];
     UINT m_FreeSpacePerc;
+    CComPtr<IDataObject> m_Multiple;
 
 public:
 	CDrvDefExt();
 	~CDrvDefExt();
+
+	HRESULT AddMainPage(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam);
 
 	// IShellExtInit
 	STDMETHOD(Initialize)(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pDataObj, HKEY hkeyProgID) override;

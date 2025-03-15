@@ -689,11 +689,39 @@ CDrvDefExt::~CDrvDefExt()
 
 }
 
+struct CDrop
+{
+    HRESULT hr;
+    STGMEDIUM stgm;
+    HDROP hDrop;
+
+    explicit CDrop(IDataObject *pDO)
+    {
+        FORMATETC format = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+        hDrop = SUCCEEDED(hr = pDO->GetData(&format, &stgm)) ? (HDROP)stgm.hGlobal : NULL;
+    }
+
+    ~CDrop()
+    {
+        if (hDrop)
+            ReleaseStgMedium(&stgm);
+    }
+
+    UINT GetCount()
+    {
+        return DragQueryFileW(hDrop, -1, NULL, 0);
+    }
+};
+
+static inline bool
+IsValidDrivePath(PCWSTR Path)
+{
+    return GetDriveTypeW(Path) > DRIVE_NO_ROOT_DIR;
+}
+
 HRESULT WINAPI
 CDrvDefExt::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pDataObj, HKEY hkeyProgID)
 {
-    FORMATETC format;
-    STGMEDIUM stgm;
     HRESULT hr;
 
     TRACE("%p %p %p %p\n", this, pidlFolder, pDataObj, hkeyProgID);
@@ -701,24 +729,20 @@ CDrvDefExt::Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pDataObj, HKEY
     if (!pDataObj)
         return E_FAIL;
 
-    format.cfFormat = CF_HDROP;
-    format.ptd = NULL;
-    format.dwAspect = DVASPECT_CONTENT;
-    format.lindex = -1;
-    format.tymed = TYMED_HGLOBAL;
 
-    hr = pDataObj->GetData(&format, &stgm);
-    if (FAILED(hr))
+    CDrop drop(pDataObj);
+    if (FAILED_UNEXPECTEDLY(hr = drop.hr))
         return hr;
 
-    if (!DragQueryFileW((HDROP)stgm.hGlobal, 0, m_wszDrive, _countof(m_wszDrive)))
+    if (!DragQueryFileW(drop.hDrop, 0, m_wszDrive, _countof(m_wszDrive)))
     {
         ERR("DragQueryFileW failed\n");
-        ReleaseStgMedium(&stgm);
         return E_FAIL;
     }
 
-    ReleaseStgMedium(&stgm);
+    if (drop.GetCount() > 1)
+        m_Multiple = pDataObj;
+
     TRACE("Drive properties %ls\n", m_wszDrive);
 
     return S_OK;
@@ -745,37 +769,75 @@ CDrvDefExt::GetCommandString(UINT_PTR idCmd, UINT uType, UINT *pwReserved, LPSTR
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI
-CDrvDefExt::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
+HRESULT
+CDrvDefExt::AddMainPage(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
 {
-    HPROPSHEETPAGE hPage;
+    WCHAR szTitle[MAX_PATH], *pszTitle = NULL;
+    if (m_Multiple)
+    {
+        CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl(SHSimpleIDListFromPathW(m_wszDrive));
+        if (SUCCEEDED(SHGetNameAndFlagsW(pidl, SHGDN_INFOLDER, szTitle, _countof(szTitle), NULL)))
+            pszTitle = szTitle;
+    }
 
+    HPROPSHEETPAGE hPage;
     hPage = SH_CreatePropertySheetPageEx(IDD_DRIVE_PROPERTIES, GeneralPageProc, (LPARAM)this,
-                                         NULL, &PropSheetPageLifetimeCallback<CDrvDefExt>);
+                                         pszTitle, &PropSheetPageLifetimeCallback<CDrvDefExt>);
     HRESULT hr = AddPropSheetPage(hPage, pfnAddPage, lParam);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
     else
         AddRef(); // For PropSheetPageLifetimeCallback
+    return hr;
+}
 
-    if (GetDriveTypeW(m_wszDrive) == DRIVE_FIXED)
+HRESULT WINAPI
+CDrvDefExt::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
+{
+    HRESULT hr = AddMainPage(pfnAddPage, lParam);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    if (m_Multiple)
     {
-        hPage = SH_CreatePropertySheetPage(IDD_DRIVE_TOOLS,
-                                           ExtraPageProc,
-                                           (LPARAM)this,
-                                           NULL);
-        if (hPage)
-            pfnAddPage(hPage, lParam);
+        CDrop drop(m_Multiple);
+        UINT count = SUCCEEDED(drop.hr) ? drop.GetCount() : 0;
+        for (UINT i = 0; ++i < count;) // Skipping the first drive since it already has a page
+        {
+            CComPtr<CDrvDefExt> SheetExt;
+            if (FAILED_UNEXPECTEDLY(hr = ShellObjectCreator(SheetExt)))
+                continue;
+            if (!DragQueryFileW(drop.hDrop, i, SheetExt->m_wszDrive, _countof(SheetExt->m_wszDrive)))
+                continue;
+            if (!IsValidDrivePath(SheetExt->m_wszDrive))
+                continue;
+
+            SheetExt->m_Multiple = m_Multiple;
+            SheetExt->AddMainPage(pfnAddPage, lParam);
+        }
     }
-
-    if (GetDriveTypeW(m_wszDrive) != DRIVE_REMOTE)
+    else
     {
-        hPage = SH_CreatePropertySheetPage(IDD_DRIVE_HARDWARE,
-                                           HardwarePageProc,
-                                           (LPARAM)this,
-                                           NULL);
-        if (hPage)
-            pfnAddPage(hPage, lParam);
+        HPROPSHEETPAGE hPage;
+        if (GetDriveTypeW(m_wszDrive) == DRIVE_FIXED)
+        {
+            hPage = SH_CreatePropertySheetPage(IDD_DRIVE_TOOLS,
+                                               ExtraPageProc,
+                                               (LPARAM)this,
+                                               NULL);
+            if (hPage)
+                pfnAddPage(hPage, lParam);
+        }
+
+        if (GetDriveTypeW(m_wszDrive) != DRIVE_REMOTE)
+        {
+            hPage = SH_CreatePropertySheetPage(IDD_DRIVE_HARDWARE,
+                                               HardwarePageProc,
+                                               (LPARAM)this,
+                                               NULL);
+            if (hPage)
+                pfnAddPage(hPage, lParam);
+        }
     }
 
     return S_OK;

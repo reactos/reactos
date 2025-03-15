@@ -84,15 +84,6 @@ SHParseDarwinIDFromCacheW(LPCWSTR lpUnknown1, LPWSTR lpUnknown2)
     return E_FAIL;
 }
 
-static HRESULT DataObject_GetHIDACount(IDataObject *pdo)
-{
-    if (!pdo)
-        return E_INVALIDARG;
-    CDataObjectHIDA cida(pdo);
-    HRESULT hr = cida.hr();
-    return SUCCEEDED(hr) ? cida->cidl : hr;
-}
-
 /*
  * Unimplemented
  */

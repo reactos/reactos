@@ -98,6 +98,15 @@ HRESULT WINAPI SHGetAttributesFromDataObject(IDataObject* pDataObject, DWORD dwA
     return hr;
 }
 
+HRESULT DataObject_GetHIDACount(IDataObject *pdo)
+{
+    if (!pdo)
+        return E_INVALIDARG;
+    CDataObjectHIDA cida(pdo);
+    HRESULT hr = cida.hr();
+    return SUCCEEDED(hr) ? cida->cidl : hr;
+}
+
 PIDLIST_ABSOLUTE SHELL_CIDA_ILCloneFull(_In_ const CIDA *pCIDA, _In_ UINT Index)
 {
     if (Index < pCIDA->cidl)
@@ -120,8 +129,10 @@ HRESULT SHELL_CloneDataObject(_In_ IDataObject *pDO, _Out_ IDataObject **ppDO)
     HRESULT hr = cida.hr();
     if (SUCCEEDED(hr))
     {
-        PCUITEMID_CHILD items = HIDA_GetPIDLItem(cida, 0);
-        hr = SHCreateFileDataObject(HIDA_GetPIDLFolder(cida), cida->cidl, &items, NULL, ppDO);
+        CCidaChildArrayHelper items(cida);
+        if (FAILED(hr = items.hr()))
+            return hr;
+        hr = SHCreateFileDataObject(HIDA_GetPIDLFolder(cida), cida->cidl, items.GetItems(), NULL, ppDO);
         if (SUCCEEDED(hr))
         {
             POINT pt;
