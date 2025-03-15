@@ -89,7 +89,6 @@ EXPORTS
   FT_Outline_Copy
   FT_Outline_Decompose
   FT_Outline_Done
-  FT_Outline_Done_Internal
   FT_Outline_Embolden
   FT_Outline_GetInsideBorder
   FT_Outline_GetOutsideBorder
@@ -98,7 +97,6 @@ EXPORTS
   FT_Outline_Get_CBox
   FT_Outline_Get_Orientation
   FT_Outline_New
-  FT_Outline_New_Internal
   FT_Outline_Render
   FT_Outline_Reverse
   FT_Outline_Transform
