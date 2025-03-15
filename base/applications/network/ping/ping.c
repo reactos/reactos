@@ -488,7 +488,7 @@ Ping(void)
                                SendBuffer, (USHORT)RequestSize, &IpOptions,
                                ReplyBuffer, ReplySize, Timeout);
     }
-
+    // TODO: Compare ReplyBuffer data to SendBuffer.
     free(SendBuffer);
 
     if (Status == 0)
