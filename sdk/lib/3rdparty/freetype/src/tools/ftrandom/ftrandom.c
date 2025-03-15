@@ -350,7 +350,11 @@
   {
     int           i;
     unsigned int  max;
+#ifdef __REACTOS__
+    char          buffer = malloc(1025);
+#else
     char          buffer[1025];
+#endif
     struct stat   statb;
 
 
@@ -374,8 +378,13 @@
 
       while ( ( ent = readdir( examples ) ) != NULL )
       {
+#ifdef __REACTOS__
+        snprintf( buffer, 1025,
+                  "%s/%s", fontdirs[i], ent->d_name );
+#else
         snprintf( buffer, sizeof ( buffer ),
                   "%s/%s", fontdirs[i], ent->d_name );
+#endif
         if ( stat( buffer, &statb ) == -1 || S_ISDIR( statb.st_mode ) )
           continue;
         if ( !extensions || extmatch( buffer, extensions ) )
@@ -402,6 +411,9 @@
       closedir( examples );
     }
 
+#ifdef __REACTOS__
+    free(buffer);
+#endif
     if ( fcnt == 0 )
     {
       fprintf( stderr, "Can't find matching font files.\n" );
@@ -517,7 +529,11 @@
   {
     int         i        = getRandom( 0, (int)( fcnt - 1 ) );
     static int  test_num = 0;
+#ifdef __REACTOS__
+    char       *buffer = malloc(1024);
+#else
     char        buffer[1024];
+#endif
 
 
     sprintf( buffer, "%s/test%d", results_dir, test_num++ );
@@ -549,6 +565,9 @@
       }
       alarm( 0 );
     }
+#ifdef __REACTOS__
+    free(buffer);
+#endif
   }
 
 
