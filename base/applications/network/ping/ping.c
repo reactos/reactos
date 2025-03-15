@@ -437,7 +437,7 @@ Ping(void)
          * until SendBuffer is full. */
         for (ULONG i = 0; i < RequestSize; i++)
         {
-            ((PUCHAR)SendBuffer)[i] = (UCHAR)('a' + (i % ('w'-'a'+1)));
+            ((PUCHAR)SendBuffer)[i] = (UCHAR)('a' + (i % ('w' - 'a' + 1)));
         }
     }
 
