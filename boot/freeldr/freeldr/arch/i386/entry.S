@@ -21,6 +21,7 @@
 #include <arch/pc/x86common.h>
 #include <arch/pc/pcbios.h>
 
+EXTERN RelocateFreeldr:PROC
 EXTERN _BootMain:PROC
 EXTERN _InitIdt:PROC
 EXTERN _i386Idt:DWORD
@@ -46,6 +47,12 @@ _RealEntryPoint:
     mov fs, ax
     mov gs, ax
     mov ss, ax
+
+    /* Keep only the low 16 bits part of stack */
+    and esp, HEX(FFFF)
+
+    /* Relocate Freeldr if needed */
+    call RelocateFreeldr
 
     /* Setup protected mode stack */
     mov esp, dword ptr ds:[stack32]
