@@ -149,4 +149,4 @@ struct CCidaChildArrayHelper
     HRESULT m_hr;
     PCUIDLIST_RELATIVE_ARRAY m_array;
 };
-#endif
+#endif // __cplusplus

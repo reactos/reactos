@@ -40,11 +40,12 @@ private:
     UINT m_FreeSpacePerc;
     CComPtr<IDataObject> m_Multiple;
 
+    HRESULT AddMainPage(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam);
+
 public:
 	CDrvDefExt();
 	~CDrvDefExt();
 
-	HRESULT AddMainPage(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam);
 
 	// IShellExtInit
 	STDMETHOD(Initialize)(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pDataObj, HKEY hkeyProgID) override;
