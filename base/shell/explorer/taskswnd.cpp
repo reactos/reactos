@@ -1,25 +1,14 @@
 /*
- * ReactOS Explorer
- *
- * Copyright 2006 - 2007 Thomas Weidenmueller <w3seek@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Handles all taskbar related stuff like taskbar grouping and taskbar buttons
+ * COPYRIGHT:   Copyright 2006 - 2007 Thomas Weidenmueller <w3seek@reactos.org>
+ *              Copyright 2023 Jesús Sanz del Rey <jesussanz2003@gmail.com>
  */
 
 #include "precomp.h"
 #include <commoncontrols.h>
+#include <psapi.h>
 
 /* Set DUMP_TASKS to 1 to enable a dump of the tasks and task groups every
    5 seconds */
@@ -65,6 +54,7 @@ typedef struct _TASK_GROUP
     DWORD dwTaskCount;
     DWORD dwProcessId;
     INT Index;
+    INT IconIndex;
     union
     {
         DWORD dwFlags;
@@ -72,6 +62,8 @@ typedef struct _TASK_GROUP
         {
 
             DWORD IsCollapsed : 1;
+            DWORD IsRightClick : 1;
+            DWORD IsTextInited : 1;
         };
     };
 } TASK_GROUP, *PTASK_GROUP;
@@ -81,7 +73,9 @@ typedef struct _TASK_ITEM
     HWND hWnd;
     PTASK_GROUP Group;
     INT Index;
+    INT GroupIndex;
     INT IconIndex;
+    INT GroupIconIndex;
 
     union
     {
@@ -196,6 +190,53 @@ public:
     }
 };
 
+class CTaskSwitchWnd;
+
+HRESULT CGroupMenuSite_CreateInstance(IN OUT CTaskSwitchWnd *pWnd, const IID & riid, PVOID * ppv);
+
+class CShellMenuCallback :
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IShellMenuCallback
+{
+private:
+    IShellMenu* pShellMenu;
+    HMENU hMenu;
+    CTaskSwitchWnd *pTaskSwitchWnd;
+
+public:
+
+    DECLARE_NOT_AGGREGATABLE(CShellMenuCallback)
+    DECLARE_PROTECT_FINAL_CONSTRUCT()
+    BEGIN_COM_MAP(CShellMenuCallback)
+        COM_INTERFACE_ENTRY_IID(IID_IShellMenuCallback, IShellMenuCallback)
+    END_COM_MAP()
+
+    void Initialize(
+        IShellMenu* pShellMenu,
+        HMENU hMenu,
+        CTaskSwitchWnd *pTaskSwitchWnd)
+    {
+        this->pShellMenu = pShellMenu;
+        this->hMenu = hMenu;
+        this->pTaskSwitchWnd = pTaskSwitchWnd;
+    }
+
+    ~CShellMenuCallback()
+    {
+    }
+
+    HRESULT OnGetObject(
+        LPSMDATA psmd,
+        REFIID iid,
+        void ** pv);
+
+    HRESULT STDMETHODCALLTYPE CallbackSM(
+        LPSMDATA psmd,
+        UINT uMsg,
+        WPARAM wParam,
+        LPARAM lParam);
+};
+
 class CTaskToolbar :
     public CWindowImplBaseT< CToolbar<TASK_ITEM>, CControlWinTraits >
 {
@@ -292,6 +333,16 @@ public:
     }
 };
 
+BOOL
+GetVersionInfoString(IN LPCWSTR szFileName,
+                     IN LPCWSTR szVersionInfo,
+                     OUT LPWSTR szBuffer,
+                     IN UINT cbBufLen);
+
+BOOL GetProcessPath(IN DWORD dwProcessId,
+                    OUT LPWSTR szBuffer,
+                    IN DWORD cbBufLen);
+
 class CTaskSwitchWnd :
     public CComCoClass<CTaskSwitchWnd>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -314,16 +365,27 @@ class CTaskSwitchWnd :
     HTHEME m_Theme;
     UINT m_ButtonsPerLine;
     WORD m_ButtonCount;
+    WORD m_DefaultButtonCount;
 
     HIMAGELIST m_ImageList;
 
-    BOOL m_IsGroupingEnabled;
     BOOL m_IsDestroying;
+
+    BOOL m_CloseTaskGroupOpen;
 
     SIZE m_ButtonSize;
 
+    HIMAGELIST m_TaskGroupImageList;
+
     UINT m_uHardErrorMsg;
     CHardErrorThread m_HardErrorThread;
+
+    //Taskbar grouping related variables
+    INT TaskGroupOpened = -1;
+    BOOL m_IsGroupingEnabled;
+    CComPtr<IMenuPopup> menuPopup;
+    CComPtr<IShellMenu2> shellMenu;
+    CComPtr<IBandSite> bandSite;
 
 public:
     CTaskSwitchWnd() :
@@ -336,9 +398,12 @@ public:
         m_Theme(NULL),
         m_ButtonsPerLine(0),
         m_ButtonCount(0),
+        m_DefaultButtonCount(0),
         m_ImageList(NULL),
-        m_IsGroupingEnabled(FALSE),
-        m_IsDestroying(FALSE)
+        m_IsDestroying(FALSE),
+        m_CloseTaskGroupOpen(FALSE),
+        m_TaskGroupImageList(NULL),
+        m_IsGroupingEnabled(FALSE)
     {
         ZeroMemory(&m_ButtonSize, sizeof(m_ButtonSize));
         m_uHardErrorMsg = RegisterWindowMessageW(L"HardError");
@@ -467,12 +532,200 @@ public:
         }
     }
 
+    VOID RegenerateTaskGroupMenu(PTASK_GROUP TaskGroup) {
+
+        if (TaskGroupOpened != -1 || TaskGroup == NULL)
+        {
+            CloseOpenedTaskGroup(FALSE);
+            TaskGroupOpened = -1;
+        }
+
+        if (m_IsDestroying)
+            return;
+
+        HMENU hMenu;
+        if ((hMenu = CreatePopupMenu()) == NULL)
+        {
+            TRACE("Failed to create Taskbar popup menu(CreatePopupMenu)\n");
+            return;
+        }
+
+        RECTL test;
+        RECTL test2;
+
+        m_TaskBar.GetWindowRect((RECT*)&test);
+        m_TaskBar.GetItemRect(TaskGroup->Index, (RECT*)&test2);
+
+        PTASK_ITEM TaskItem, LastTaskItem = NULL;
+
+        TaskItem = m_TaskItems;
+        LastTaskItem = TaskItem + m_TaskItemCount;
+
+        INT CurrentIdx = 0;
+        while (TaskItem != LastTaskItem)
+        {
+            if (TaskItem->Group == TaskGroup && TaskItem->Index != -2)
+            {
+                WCHAR windowText[255];
+
+                GetWndTextFromTaskItem(TaskItem, windowText, _countof(windowText));
+
+                InsertMenuW(hMenu, 0, MF_BYCOMMAND | MF_STRING | MF_UNCHECKED | MF_ENABLED, CurrentIdx, windowText);
+                TaskItem->GroupIndex = CurrentIdx;
+
+                CurrentIdx++;
+            }
+
+            TaskItem++;
+        }
+
+        /* Create the popup */
+        HRESULT hr;
+        if (shellMenu == NULL)
+        {
+            hr = CoCreateInstance(CLSID_MenuBand, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IShellMenu2, &shellMenu));
+            hr = CoCreateInstance(CLSID_MenuDeskBar, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IMenuPopup, &menuPopup));
+            hr = CoCreateInstance(CLSID_MenuBandSite, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IBandSite, &bandSite));
+
+            if (!shellMenu || !menuPopup || !SUCCEEDED(hr))
+            {
+                TRACE("Failed to create Taskbar popup menu(CoCreateInstance)\n");
+                return;
+            }
+
+            CComPtr<IUnknown> pSms;
+            hr = CGroupMenuSite_CreateInstance(this, IID_PPV_ARG(IUnknown, &pSms));
+            if (FAILED_UNEXPECTEDLY(hr))
+                return;
+
+            CComObject<CShellMenuCallback> *pCallback;
+            hr = CComObject<CShellMenuCallback>::CreateInstance(&pCallback);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return;
+
+            TaskGroupOpened = TaskGroup->Index;
+
+            pCallback->AddRef();
+            pCallback->Initialize(shellMenu, hMenu, this); //TODO
+
+            shellMenu->Initialize(pCallback, (UINT)-1, 0, SMINIT_TOPLEVEL | SMINIT_VERTICAL);
+
+            shellMenu->SetMenu(hMenu, NULL, SMSET_TOP);
+
+            menuPopup->SetClient(bandSite);
+            bandSite->AddBand(shellMenu);
+
+            IUnknown_SetSite(menuPopup, pSms);
+
+            CComPtr<IInitializeObject> pIo;
+            hr = menuPopup->QueryInterface(IID_PPV_ARG(IInitializeObject, &pIo));
+            if (SUCCEEDED(hr))
+                pIo->Initialize();
+        }
+        else
+        {
+            TaskGroupOpened = TaskGroup->Index;
+
+            menuPopup->OnSelect(MPOS_FULLCANCEL);
+
+            shellMenu->SetMenu(hMenu, NULL, SMSET_BOTTOM);
+        }
+
+        CComPtr<IDeskBand> pIDB;
+        hr = shellMenu->QueryInterface(IID_PPV_ARG(IDeskBand, &pIDB));
+        if (!SUCCEEDED(hr))
+            return;
+
+        HWND hWnd;
+        if (!SUCCEEDED(pIDB->GetWindow(&hWnd)))
+            return;
+
+        ::PostMessageW(hWnd, TB_SETIMAGELIST, 0, (LPARAM)m_TaskGroupImageList);
+
+        POINTL p = {test.left + test2.left,test.top};
+        menuPopup->Popup(&p, &test, MPPF_TOP | MPPF_SETFOCUS);
+
+        m_ActiveTaskItem = NULL;
+
+        m_TaskBar.CheckButton(TaskGroup->Index, TRUE);
+    }
+
+    INT GetTaskGroupItemIconIndex(IN INT Index) {
+        if (shellMenu == NULL)
+            return -1;
+
+        PTASK_ITEM TaskItem, LastTaskItem = NULL;
+
+        TaskItem = m_TaskItems;
+        LastTaskItem = TaskItem + m_TaskItemCount;
+
+        while (TaskItem != LastTaskItem)
+        {
+            if (TaskItem->Group->Index == TaskGroupOpened && TaskItem->GroupIndex == Index)
+            {
+                if (TaskItem->GroupIconIndex < 0)
+                {
+                    HICON icon = GetWndIcon(TaskItem->hWnd);
+                    if (!icon)
+                        icon = static_cast<HICON>(LoadImageW(NULL, MAKEINTRESOURCEW(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
+
+                    TaskItem->GroupIconIndex = ImageList_ReplaceIcon(m_TaskGroupImageList, -1, icon);
+                }
+
+                return TaskItem->GroupIconIndex;
+            }
+
+            TaskItem++;
+        }
+
+        return -1;
+    }
 
     INT UpdateTaskGroupButton(IN PTASK_GROUP TaskGroup)
     {
         ASSERT(TaskGroup->Index >= 0);
 
-        /* FIXME: Implement */
+        TBBUTTONINFO tbbi = { 0 };
+        HICON icon;
+        WCHAR windowText[255];
+
+        /* Open process to retrieve the filename of the executable */
+        WCHAR ExePath[MAX_PATH] = {};
+        if (GetProcessPath(TaskGroup->dwProcessId, ExePath, _countof(ExePath)))
+        {
+            if (GetVersionInfoString(ExePath, L"FileDescription", windowText, _countof(windowText)))
+                tbbi.pszText = windowText;
+
+            if (ExtractIconExW(ExePath, 0, NULL, &icon, 1) <= 0)
+                icon = static_cast<HICON>(LoadImageW(NULL, MAKEINTRESOURCEW(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
+        }
+
+        tbbi.cbSize = sizeof(tbbi);
+        tbbi.dwMask = TBIF_BYINDEX | TBIF_STATE | TBIF_TEXT | TBIF_IMAGE;
+        tbbi.fsState = TBSTATE_ENABLED;
+        if ((m_ActiveTaskItem != NULL && m_ActiveTaskItem->Group == TaskGroup) || TaskGroup->IsRightClick)
+            tbbi.fsState |= TBSTATE_CHECKED;
+
+        /* Check if we're updating a button that is the last one in the
+           line. If so, we need to set the TBSTATE_WRAP flag! */
+        if (!m_Tray->IsHorizontal() || (m_ButtonsPerLine != 0 &&
+            (TaskGroup->Index + 1) % m_ButtonsPerLine == 0))
+        {
+            tbbi.fsState |= TBSTATE_WRAP;
+        }
+
+        TaskGroup->IconIndex = ImageList_ReplaceIcon(m_ImageList, TaskGroup->IconIndex, icon);
+        tbbi.iImage = TaskGroup->IconIndex;
+
+        TaskGroup->IsTextInited = TRUE;
+
+        if (!m_TaskBar.SetButtonInfo(TaskGroup->Index, &tbbi))
+        {
+            TaskGroup->Index = -1;
+            return -1;
+        }
+
+        TRACE("Updated button %d for task group 0x%p\n", TaskGroup->Index, TaskGroup);
 
         return TaskGroup->Index;
     }
@@ -483,7 +736,58 @@ public:
         ASSERT(TaskGroup->IsCollapsed);
         ASSERT(TaskGroup->Index >= 0);
 
-        /* FIXME: Implement */
+        if (TaskGroupOpened != -1)
+        {
+            if (TaskGroup->Index != TaskGroupOpened)
+            {
+                RegenerateTaskGroupMenu(FindTaskGroupByIndex(TaskGroupOpened));
+            }
+            else
+            {
+                CloseOpenedTaskGroup(FALSE);
+                TaskGroupOpened = -1;
+            }
+        }
+
+        /* Get the items associated to this group and delete the index */
+        PTASK_ITEM TaskItem, LastTaskItem = NULL;
+        INT iIndex;
+
+        TaskGroup->IsCollapsed = FALSE;
+
+        m_TaskBar.BeginUpdate();
+
+        //ICON TODO Remove it
+        iIndex = TaskGroup->Index;
+        if (m_TaskBar.DeleteButton(iIndex))
+        {
+            TaskGroup->Index = -1;
+            m_ButtonCount--;
+
+            UpdateIndexesAfter(iIndex, FALSE);
+
+            /* Update button sizes and fix the button wrapping */
+            UpdateButtonsSize(TRUE);
+
+            TaskItem = m_TaskItems;
+            LastTaskItem = TaskItem + m_TaskItemCount;
+
+            while (TaskItem != LastTaskItem)
+            {
+                if (TaskItem->Group == TaskGroup &&
+                    TaskItem->Index < 0 && TaskItem->Index != -2)
+                {
+                    AddTaskItemButton(TaskItem, &iIndex);
+                    iIndex++;
+                }
+
+                TaskItem++;
+            }
+
+            return;
+        }
+
+        m_TaskBar.EndUpdate();
     }
 
     HICON GetWndIcon(HWND hwnd)
@@ -648,7 +952,7 @@ public:
                 ASSERT(TaskGroup->Index < 0);
                 ASSERT(!TaskGroup->IsCollapsed);
 
-                if (TaskGroup->dwTaskCount > 1)
+                if (TaskGroup->IsCollapsed && TaskGroup->dwTaskCount > 1)
                 {
                     LastTaskItem = FindLastTaskItemOfGroup(TaskGroup, TaskItem);
                     if (LastTaskItem != NULL)
@@ -677,7 +981,147 @@ public:
         return m_ButtonCount;
     }
 
-    INT AddTaskItemButton(IN OUT PTASK_ITEM TaskItem)
+    BOOL CollapseTaskGroup(PTASK_GROUP TaskGroup) {
+        ASSERT(m_IsGroupingEnabled);
+
+        if (TaskGroup->IsCollapsed)
+            return FALSE;
+
+        /* Get the items associated to this group and delete the index */
+        PTASK_ITEM TaskItem, LastTaskItem = NULL;
+        WCHAR windowText[255];
+        TBBUTTON tbBtn = { 0 };
+        INT iIndex = INT_MAX;
+        HICON icon;
+
+        TaskItem = m_TaskItems;
+        LastTaskItem = TaskItem + m_TaskItemCount;
+
+        while (TaskItem != LastTaskItem)
+        {
+            if (TaskItem->Group == TaskGroup)
+            {
+                if (TaskItem->Index >= 0)
+                {
+                    if (TaskItem->Index < iIndex)
+                        iIndex = TaskItem->Index;
+                    DeleteTaskItemButton(TaskItem);
+                }
+            }
+
+            TaskItem++;
+        }
+
+        /* Open process to retrieve the filename of the executable */
+        WCHAR ExePath[MAX_PATH] = {};
+        if (GetProcessPath(TaskGroup->dwProcessId, ExePath, _countof(ExePath)))
+        {
+            if (GetVersionInfoString(ExePath, L"FileDescription", windowText, _countof(windowText)))
+                tbBtn.iString = (DWORD_PTR) windowText;
+
+            if (ExtractIconExW(ExePath, -1, NULL, &icon, 1) <= 0)
+                icon = static_cast<HICON>(LoadImageW(NULL, MAKEINTRESOURCEW(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
+        }
+
+        TaskGroup->IconIndex = ImageList_ReplaceIcon(m_ImageList, -1, icon);
+
+        tbBtn.iBitmap = TaskGroup->IconIndex;
+        tbBtn.fsState = TBSTATE_ENABLED | TBSTATE_ELLIPSES;
+        tbBtn.fsStyle = BTNS_CHECK | BTNS_NOPREFIX | BTNS_SHOWTEXT | BTNS_DROPDOWN | BTNS_WHOLEDROPDOWN;
+        tbBtn.dwData = -1;
+        tbBtn.idCommand = iIndex;
+
+        m_TaskBar.BeginUpdate();
+
+        if (!m_TaskBar.InsertButton(iIndex, &tbBtn))
+        {
+            m_TaskBar.EndUpdate();
+
+            return FALSE;
+        }
+
+        UpdateIndexesAfter(iIndex, TRUE);
+
+        TaskGroup->Index = iIndex;
+        m_ButtonCount++;
+
+        /* Update button sizes and fix the button wrapping */
+        UpdateButtonsSize(TRUE);
+
+        TaskGroup->IsCollapsed = TRUE;
+
+        m_TaskBar.EndUpdate();
+
+        return TRUE;
+    }
+
+    VOID CollapseOrExpand(BOOL bAdding)
+    {
+        INT iMaxButtons = GetMaxButtons();
+
+        BOOL bIsLower = m_ButtonCount < iMaxButtons;
+        BOOL bIsGreater = bAdding ? (m_ButtonCount >= iMaxButtons) : (m_ButtonCount > iMaxButtons);
+
+        if (m_IsGroupingEnabled && (bIsLower || bIsGreater))
+        {
+            while (bIsGreater ? (m_ButtonCount >= iMaxButtons) :
+                  (m_ButtonCount < iMaxButtons))
+            {
+                // We expanded the taskbar size, we need to collapse if grouping is enabled
+
+                PTASK_GROUP CurrentGroup = m_TaskGroups;
+                PTASK_GROUP MaxOrMinGroup = NULL;
+                while (CurrentGroup != NULL)
+                {
+                    if (bIsGreater != CurrentGroup->IsCollapsed &&
+                        bIsGreater == (CurrentGroup->Index < 0) &&
+                        CurrentGroup->dwTaskCount > 1)
+                    {
+                        if (MaxOrMinGroup == NULL ||
+                           (bIsGreater && MaxOrMinGroup->dwTaskCount < CurrentGroup->dwTaskCount) ||
+                           (bIsLower && MaxOrMinGroup->dwTaskCount > CurrentGroup->dwTaskCount))
+                           MaxOrMinGroup = CurrentGroup;
+                    }
+
+                    CurrentGroup = CurrentGroup->Next;
+                }
+
+                if (MaxOrMinGroup == NULL)
+                    return; // We can't collapse more groups
+
+                if (bIsGreater)
+                {
+                    CollapseTaskGroup(MaxOrMinGroup);
+                }
+                else if (MaxOrMinGroup->dwTaskCount <= (DWORD)(iMaxButtons - m_ButtonCount + 1))
+                {
+                    ExpandTaskGroup(MaxOrMinGroup);
+                }
+                else
+                {
+                    return;
+                }
+            }
+        }
+        else if (!m_IsGroupingEnabled)
+        {
+            // Expand all the groups
+
+            PTASK_GROUP CurrentGroup = m_TaskGroups;
+            while (CurrentGroup != NULL)
+            {
+                if (CurrentGroup->IsCollapsed)
+                {
+                    /* Collapse the group */
+                    ExpandTaskGroup(CurrentGroup);
+                }
+
+                CurrentGroup = CurrentGroup->Next;
+            }
+        }
+    }
+
+    INT AddTaskItemButton(IN OUT PTASK_ITEM TaskItem, IN OPTIONAL PINT pRequiredIndex)
     {
         WCHAR windowText[255];
         TBBUTTON tbBtn = { 0 };
@@ -688,6 +1132,16 @@ public:
         {
             return UpdateTaskItemButton(TaskItem);
         }
+
+        /*if (m_IsGroupingEnabled &&
+            TaskItem->Group != NULL && !TaskItem->Group->IsCollapsed &&
+            TaskItem->Group->dwTaskCount > 2)
+        {
+            //TODO: Check if a resize is needed
+            CollapseTaskGroup(TaskItem->Group);
+        }*/
+
+        CollapseOrExpand(TRUE);
 
         if (TaskItem->Group != NULL &&
             TaskItem->Group->IsCollapsed)
@@ -712,7 +1166,10 @@ public:
         }
 
         /* Find out where to insert the new button */
-        iIndex = CalculateTaskItemNewButtonIndex(TaskItem);
+        if (pRequiredIndex != NULL)
+            iIndex = *pRequiredIndex;
+        else
+            iIndex = CalculateTaskItemNewButtonIndex(TaskItem);
         ASSERT(iIndex >= 0);
         tbBtn.idCommand = iIndex;
 
@@ -784,6 +1241,9 @@ public:
             return NULL;
         }
 
+        WCHAR ItemExePath[MAX_PATH] = {0};
+        GetProcessPath(dwProcessId, ItemExePath, _countof(ItemExePath));
+
         /* Try to find an existing task group */
         TaskGroup = m_TaskGroups;
         PrevLink = &m_TaskGroups;
@@ -793,6 +1253,17 @@ public:
             {
                 TaskGroup->dwTaskCount++;
                 return TaskGroup;
+            }
+            else
+            {
+                WCHAR ExePath[MAX_PATH] = {0};
+                GetProcessPath(TaskGroup->dwProcessId, ExePath, _countof(ExePath));
+
+                if(!lstrcmpW(ExePath, ItemExePath))
+                {
+                    TaskGroup->dwTaskCount++;
+                    return TaskGroup;
+                }
             }
 
             PrevLink = &TaskGroup->Next;
@@ -843,19 +1314,31 @@ public:
                 HeapFree(hProcessHeap,
                     0,
                     TaskGroup);
+
+                CollapseOrExpand(FALSE);
             }
             else if (TaskGroup->IsCollapsed &&
                 TaskGroup->Index >= 0)
             {
-                if (dwNewTaskCount > 1)
+                TaskItem->Index = -2;
+
+                if (dwNewTaskCount > 1 && m_IsGroupingEnabled)
                 {
-                    /* FIXME: Check if we should expand the group */
-                    /* Update the task group button */
-                    UpdateTaskGroupButton(TaskGroup);
+                    CollapseOrExpand(FALSE);
+                    if (TaskGroup->Index == TaskGroupOpened) {
+                        if (TaskGroup->IsCollapsed)
+                        {
+                            RegenerateTaskGroupMenu(TaskItem->Group);
+                        }
+                        else
+                        {
+                            CloseOpenedTaskGroup(FALSE);
+                            TaskGroupOpened = -1;
+                        }
+                    }
                 }
-                else
+                else if (TaskGroup->IsCollapsed)
                 {
-                    /* Expand the group of one task button to a task button */
                     ExpandTaskGroup(TaskGroup);
                 }
             }
@@ -1019,6 +1502,9 @@ public:
             TaskGroup != NULL &&
             TaskGroup->IsCollapsed)
         {
+            m_ActiveTaskItem = TaskItem;
+
+            UpdateTaskGroupButton(TaskGroup);
             /* FIXME */
             return;
         }
@@ -1039,7 +1525,11 @@ public:
                 if (CurrentTaskGroup == TaskGroup)
                     return;
 
-                /* FIXME */
+                m_ActiveTaskItem = NULL;
+                if (CurrentTaskGroup->Index >= 0) // Just to be sure
+                {
+                    UpdateTaskGroupButton(CurrentTaskGroup);
+                }
             }
             else
             {
@@ -1096,6 +1586,23 @@ public:
         return CurrentGroup;
     }
 
+    PTASK_ITEM FindTaskItemOnOpenedGroup(IN INT Index)
+    {
+        PTASK_ITEM TaskItem, LastItem;
+
+        TaskItem = m_TaskItems;
+        LastItem = TaskItem + m_TaskItemCount;
+        while (TaskItem != LastItem)
+        {
+            if (TaskItem->Group->Index == TaskGroupOpened && TaskItem->GroupIndex == Index)
+                return TaskItem;
+
+            TaskItem++;
+        }
+
+        return NULL;
+    }
+
     BOOL AddTask(IN HWND hWnd)
     {
         PTASK_ITEM TaskItem;
@@ -1113,11 +1620,13 @@ public:
                 ZeroMemory(TaskItem, sizeof(*TaskItem));
                 TaskItem->hWnd = hWnd;
                 TaskItem->Index = -1;
+                TaskItem->GroupIndex = -1;
                 TaskItem->Group = AddToTaskGroup(hWnd);
+                TaskItem->GroupIconIndex = -1;
 
                 if (!m_IsDestroying)
                 {
-                    AddTaskItemButton(TaskItem);
+                    AddTaskItemButton(TaskItem, NULL);
                 }
             }
         }
@@ -1251,6 +1760,61 @@ public:
         return FALSE;
     }
 
+    INT GetMaxButtons() {
+        RECT rcClient;
+        UINT uiRows, uiBtnsPerLine;
+        BOOL Horizontal;
+
+        if (GetClientRect(&rcClient) && !IsRectEmpty(&rcClient))
+        {
+            Horizontal = m_Tray->IsHorizontal();
+
+            if (Horizontal)
+            {
+                TBMETRICS tbm = { 0 };
+                tbm.cbSize = sizeof(tbm);
+                tbm.dwMask = TBMF_BUTTONSPACING;
+                m_TaskBar.GetMetrics(&tbm);
+
+                if (m_ButtonSize.cy + tbm.cyButtonSpacing != 0)
+                    uiRows = (rcClient.bottom + tbm.cyButtonSpacing) / (m_ButtonSize.cy + tbm.cyButtonSpacing);
+                else
+                    uiRows = 1;
+
+                if (uiRows == 0)
+                    uiRows = 1;
+
+                uiBtnsPerLine = 1;
+            }
+            else
+            {
+                uiBtnsPerLine = 1;
+                uiRows = m_ButtonCount;
+            }
+
+            int cxButtonSpacing = m_TaskBar.UpdateTbButtonSpacing(
+                Horizontal, m_Theme != NULL,
+                uiRows, m_ButtonsPerLine);
+
+            /* Determine the minimum width of a button */
+            if (Horizontal)
+            {
+                MINIMIZEDMETRICS _mmMetrics;
+                _mmMetrics.cbSize = sizeof(MINIMIZEDMETRICS);
+                SystemParametersInfo(SPI_GETMINIMIZEDMETRICS, sizeof(_mmMetrics), &_mmMetrics, 0);
+
+                /* Recalculate how many buttons actually fit into one line */
+                uiBtnsPerLine = rcClient.right / (_mmMetrics.iWidth + cxButtonSpacing);
+                if (uiBtnsPerLine == 0)
+                    uiBtnsPerLine++;
+            }
+
+            return uiBtnsPerLine * uiRows;
+        }
+
+        return -1;
+    }
+
     VOID UpdateButtonsSize(IN BOOL bRedrawDisabled)
     {
         RECT rcClient;
@@ -1366,8 +1930,11 @@ public:
                         tbbi.fsState |= TBSTATE_WRAP;
                     }
 
-                    if (m_ActiveTaskItem != NULL &&
-                        m_ActiveTaskItem->Index == (INT)ui)
+                    PTASK_GROUP TaskGroup = FindTaskGroupByIndex((INT)ui);
+
+                    if ((TaskGroup != NULL && TaskGroup->IsRightClick) ||
+                        (m_ActiveTaskItem != NULL &&
+                        m_ActiveTaskItem->Index == (INT)ui))
                     {
                         tbbi.fsState |= TBSTATE_CHECKED;
                     }
@@ -1437,6 +2004,8 @@ public:
                                        ILC_COLOR32 | ILC_MASK, 0, 1000);
         m_TaskBar.SetImageList(m_ImageList);
 
+        m_TaskGroupImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_COLOR32 | ILC_MASK, 0, 1000);
+
         /* Set proper spacing between buttons */
         m_TaskBar.UpdateTbButtonSpacing(m_Tray->IsHorizontal(), m_Theme != NULL);
 
@@ -1460,6 +2029,9 @@ public:
 
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
+        menuPopup->OnSelect(MPOS_FULLCANCEL);
+        shellMenu->SetMenu(NULL, NULL, NULL);
+
         m_IsDestroying = TRUE;
 
         /* Unregister the shell hook */
@@ -1482,16 +2054,16 @@ public:
 
         switch (GET_APPCOMMAND_LPARAM(lParam))
         {
-        case APPCOMMAND_BROWSER_SEARCH:
-            Ret = SHFindFiles(NULL,
-                NULL);
-            break;
+            case APPCOMMAND_BROWSER_SEARCH:
+                Ret = SHFindFiles(NULL,
+                    NULL);
+                break;
 
-        case APPCOMMAND_BROWSER_HOME:
-        case APPCOMMAND_LAUNCH_MAIL:
-        default:
-            TRACE("Shell app command %d unhandled!\n", (INT) GET_APPCOMMAND_LPARAM(lParam));
-            break;
+            case APPCOMMAND_BROWSER_HOME:
+            case APPCOMMAND_LAUNCH_MAIL:
+            default:
+                TRACE("Shell app command %d unhandled!\n", (INT) GET_APPCOMMAND_LPARAM(lParam));
+                break;
         }
 
         return Ret;
@@ -1512,71 +2084,71 @@ public:
 
         switch ((INT) wParam)
         {
-        case HSHELL_APPCOMMAND:
-            Ret = HandleAppCommand(wParam, lParam);
-            break;
-
-        case HSHELL_WINDOWCREATED:
-            SendPulseToTray(FALSE, (HWND)lParam);
-            AddTask((HWND) lParam);
-            break;
-
-        case HSHELL_WINDOWDESTROYED:
-            /* The window still exists! Delay destroying it a bit */
-            SendPulseToTray(TRUE, (HWND)lParam);
-            DeleteTask((HWND)lParam);
-            break;
-
-        case HSHELL_RUDEAPPACTIVATED:
-        case HSHELL_WINDOWACTIVATED:
-            SendPulseToTray(FALSE, (HWND)lParam);
-            ActivateTask((HWND)lParam);
-            break;
-
-        case HSHELL_FLASH:
-            FlashTask((HWND) lParam);
-            break;
-
-        case HSHELL_REDRAW:
-            RedrawTask((HWND) lParam);
-            break;
-
-        case HSHELL_TASKMAN:
-            ::PostMessage(m_Tray->GetHWND(), TWM_OPENSTARTMENU, 0, 0);
-            break;
-
-        case HSHELL_ACTIVATESHELLWINDOW:
-            ::SwitchToThisWindow(m_Tray->GetHWND(), TRUE);
-            ::SetForegroundWindow(m_Tray->GetHWND());
-            break;
-
-        case HSHELL_LANGUAGE:
-        case HSHELL_SYSMENU:
-        case HSHELL_ENDTASK:
-        case HSHELL_ACCESSIBILITYSTATE:
-        case HSHELL_WINDOWREPLACED:
-        case HSHELL_WINDOWREPLACING:
-
-        case HSHELL_GETMINRECT:
-        default:
-        {
-#if DEBUG_SHELL_HOOK
-            int i, found;
-            for (i = 0, found = 0; i != _countof(hshell_msg); i++)
-            {
-                if (hshell_msg[i].msg == (INT) wParam)
-                {
-                    TRACE("Shell message %ws unhandled (lParam = 0x%p)!\n", hshell_msg[i].msg_name, lParam);
-                    found = 1;
-                    break;
-                }
-            }
-            if (found)
+            case HSHELL_APPCOMMAND:
+                Ret = HandleAppCommand(wParam, lParam);
                 break;
-#endif
-            TRACE("Shell message %d unhandled (lParam = 0x%p)!\n", (INT) wParam, lParam);
-            break;
-        }
+
+            case HSHELL_WINDOWCREATED:
+                SendPulseToTray(FALSE, (HWND)lParam);
+                AddTask((HWND) lParam);
+                break;
+
+            case HSHELL_WINDOWDESTROYED:
+                /* The window still exists! Delay destroying it a bit */
+                SendPulseToTray(TRUE, (HWND)lParam);
+                DeleteTask((HWND)lParam);
+                break;
+
+            case HSHELL_RUDEAPPACTIVATED:
+            case HSHELL_WINDOWACTIVATED:
+                SendPulseToTray(FALSE, (HWND)lParam);
+                ActivateTask((HWND)lParam);
+                break;
+
+            case HSHELL_FLASH:
+                FlashTask((HWND) lParam);
+                break;
+
+            case HSHELL_REDRAW:
+                RedrawTask((HWND) lParam);
+                break;
+
+            case HSHELL_TASKMAN:
+                ::PostMessage(m_Tray->GetHWND(), TWM_OPENSTARTMENU, 0, 0);
+                break;
+
+            case HSHELL_ACTIVATESHELLWINDOW:
+                ::SwitchToThisWindow(m_Tray->GetHWND(), TRUE);
+                ::SetForegroundWindow(m_Tray->GetHWND());
+                break;
+
+            case HSHELL_LANGUAGE:
+            case HSHELL_SYSMENU:
+            case HSHELL_ENDTASK:
+            case HSHELL_ACCESSIBILITYSTATE:
+            case HSHELL_WINDOWREPLACED:
+            case HSHELL_WINDOWREPLACING:
+
+            case HSHELL_GETMINRECT:
+            default:
+            {
+    #if DEBUG_SHELL_HOOK
+                int i, found;
+                for (i = 0, found = 0; i != _countof(hshell_msg); i++)
+                {
+                    if (hshell_msg[i].msg == (INT) wParam)
+                    {
+                        TRACE("Shell message %ws unhandled (lParam = 0x%p)!\n", hshell_msg[i].msg_name, lParam);
+                        found = 1;
+                        break;
+                    }
+                }
+                if (found)
+                    break;
+    #endif
+                TRACE("Shell message %d unhandled (lParam = 0x%p)!\n", (INT) wParam, lParam);
+                break;
+            }
         }
 
         return Ret;
@@ -1616,7 +2188,26 @@ public:
 
     VOID HandleTaskGroupClick(IN OUT PTASK_GROUP TaskGroup)
     {
-        /* TODO: Show task group menu */
+        if (m_CloseTaskGroupOpen)
+        {
+            m_CloseTaskGroupOpen = FALSE;
+
+            m_TaskBar.CheckButton(TaskGroup->Index, FALSE);
+
+            TaskGroupOpened = -1;
+        }
+
+        if (TaskGroupOpened != TaskGroup->Index)
+        {
+            RegenerateTaskGroupMenu(TaskGroup);
+
+            TaskGroupOpened = TaskGroup->Index;
+        }
+        else
+        {
+            CloseOpenedTaskGroup(FALSE);
+            TaskGroupOpened = -1;
+        }
     }
 
     BOOL HandleButtonClick(IN WORD wIndex)
@@ -1640,6 +2231,89 @@ public:
             SendPulseToTray(FALSE, TaskItem->hWnd);
             HandleTaskItemClick(TaskItem);
             return TRUE;
+        }
+
+        return FALSE;
+    }
+
+    HRESULT CloseOpenedTaskGroup(BOOL bDontRemoveIndices)
+    {
+        if (shellMenu == NULL || menuPopup == NULL || bandSite == NULL || TaskGroupOpened < 0)
+            return E_FAIL;
+
+        PTASK_GROUP TaskGroup = FindTaskGroupByIndex(TaskGroupOpened);
+        if (TaskGroup == NULL)
+            return E_FAIL;
+
+        /*shellMenu->SetSubMenu(menuPopup, FALSE);
+
+        // remove the popup
+        shellMenu = NULL;
+        menuPopup = NULL;
+        bandSite = NULL;*/
+
+        if (!bDontRemoveIndices)
+        {
+            PTASK_ITEM TaskItem, LastTaskItem = NULL;
+
+            TaskItem = m_TaskItems;
+            LastTaskItem = TaskItem + m_TaskItemCount;
+            if (TaskGroupOpened != -1)
+            {
+                while (TaskItem != LastTaskItem)
+                {
+                    if (TaskItem->Group == TaskGroup)
+                    {
+                        TaskItem->GroupIndex = -1;
+                    }
+
+                    TaskItem++;
+                }
+            }
+
+            // Avoid a stack overflow
+            menuPopup->OnSelect(MPOS_FULLCANCEL);
+            shellMenu->SetMenu(NULL, NULL, NULL);
+        }
+        else
+        {
+            m_CloseTaskGroupOpen = TRUE;
+        }
+
+        // Unmark the button
+        m_TaskBar.CheckButton(TaskGroup->Index, FALSE);
+
+        return S_OK;
+    }
+
+    BOOL HandleTaskGroupSelection(IN INT iIndex)
+    {
+        if (m_IsGroupingEnabled && TaskGroupOpened >= 0)
+        {
+            // You can only have one menu open at the same time
+            // so, we can expect that the first non null task group menu is the menu clicked
+
+            // wIndex is the handle of the window, TODO: check this behaviour
+            PTASK_GROUP TaskGroup = FindTaskGroupByIndex(TaskGroupOpened);
+
+            PTASK_ITEM TaskItem, LastTaskItem = NULL;
+
+            TaskItem = m_TaskItems;
+            LastTaskItem = TaskItem + m_TaskItemCount;
+
+            while (TaskItem != LastTaskItem)
+            {
+                if (TaskItem->Group == TaskGroup && TaskItem->GroupIndex == iIndex)
+                {
+                    HandleTaskItemClick(TaskItem);
+                    break;
+                }
+
+                TaskItem++;
+            }
+
+            CloseOpenedTaskGroup(FALSE);
+            TaskGroupOpened = -1;
         }
 
         return FALSE;
@@ -1670,6 +2344,84 @@ public:
     VOID HandleTaskGroupRightClick(IN OUT PTASK_GROUP TaskGroup)
     {
         /* TODO: Show task group right click menu */
+        PTASK_ITEM TaskItem, LastTaskItem = NULL;
+        BOOL bEnableMinimizeButton = FALSE;
+        HMENU hMenu;
+
+        hMenu = LoadPopupMenu(hExplorerInstance, MAKEINTRESOURCEW(IDM_TASKGRP));
+        if (!hMenu)
+            return;
+
+        // Check if all windows are minimized
+
+        TaskItem = m_TaskItems;
+        LastTaskItem = TaskItem + m_TaskItemCount;
+
+        while (TaskItem != LastTaskItem)
+        {
+            if (TaskItem->Group == TaskGroup && ::IsWindow(TaskItem->hWnd) &&
+                !::IsIconic(TaskItem->hWnd))
+                bEnableMinimizeButton = TRUE;
+
+            TaskItem++;
+        }
+
+        if (!bEnableMinimizeButton)
+        {
+            EnableMenuItem(hMenu, ID_SHELL_CMD_MINIMIZE_GRP, MF_DISABLED | MF_GRAYED);
+        }
+
+        // Check the button
+        TaskGroup->IsRightClick = TRUE;
+        UpdateTaskGroupButton(TaskGroup);
+
+        POINT pt;
+        GetCursorPos(&pt);
+
+        SetForegroundWindow(m_hWnd);
+
+        INT iSelection = TrackPopupMenuEx(hMenu, TPM_RETURNCMD | TPM_RIGHTBUTTON,
+                               pt.x, pt.y, m_hWnd, NULL);
+
+        TaskGroup->IsRightClick = FALSE;
+        UpdateTaskGroupButton(TaskGroup);
+
+        if (!iSelection)
+            return;
+
+        CSimpleArray<HWND> kids;
+
+        TaskItem = m_TaskItems;
+
+        while (TaskItem != LastTaskItem)
+        {
+            if (TaskItem->Group == TaskGroup)
+            {
+                if (iSelection != ID_SHELL_CMD_MINIMIZE_GRP && iSelection != ID_SHELL_CMD_CLOSE_GRP)
+                {
+                    ::ShowWindowAsync(TaskItem->hWnd, SW_RESTORE);
+                    kids.Add(TaskItem->hWnd);
+                }
+                else if (iSelection == ID_SHELL_CMD_MINIMIZE_GRP &&
+                    ::IsWindow(TaskItem->hWnd) && !::IsIconic(TaskItem->hWnd))
+                {
+                    ::ShowWindowAsync(TaskItem->hWnd, SW_MINIMIZE);
+                }
+                else
+                {
+                    ::PostMessageW(TaskItem->hWnd, WM_CLOSE, NULL, NULL);
+                }
+            }
+
+            TaskItem++;
+        }
+
+        if (iSelection == ID_SHELL_CMD_CASCADE_WND)
+            CascadeWindows(NULL, MDITILE_SKIPDISABLED, NULL, kids.GetSize(), kids.GetData());
+        else if (iSelection == ID_SHELL_CMD_TILE_WND_H)
+            TileWindows(NULL, MDITILE_HORIZONTAL, NULL, kids.GetSize(), kids.GetData());
+        else if (iSelection == ID_SHELL_CMD_TILE_WND_V)
+            TileWindows(NULL, MDITILE_VERTICAL, NULL, kids.GetSize(), kids.GetData());
     }
 
     BOOL HandleButtonRightClick(IN WORD wIndex)
@@ -1736,7 +2488,148 @@ public:
         }
         else if (TaskGroup != NULL)
         {
-            /* FIXME: Implement painting for task groups */
+            Ret = CDRF_SKIPDEFAULT;
+            /* Make the entire button flashing if necessary */
+            if (nmtbcd->nmcd.uItemState & CDIS_MARKED)
+            {
+                if (!m_Theme)
+                {
+                    SelectObject(nmtbcd->nmcd.hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
+                    Rectangle(nmtbcd->nmcd.hdc,
+                        nmtbcd->nmcd.rc.left,
+                        nmtbcd->nmcd.rc.top,
+                        nmtbcd->nmcd.rc.right,
+                        nmtbcd->nmcd.rc.bottom);
+                }
+                else
+                {
+                    DrawThemeBackground(m_Theme, nmtbcd->nmcd.hdc, TDP_FLASHBUTTONGROUPMENU, 0, &nmtbcd->nmcd.rc, 0);
+                }
+                nmtbcd->clrText = GetSysColor(COLOR_HIGHLIGHTTEXT);
+            }
+
+            WCHAR buttonText[256];
+
+            TBBUTTONINFOW btni;
+            btni.cbSize = sizeof(TBBUTTONINFOW);
+            btni.dwMask = TBIF_STATE | TBIF_TEXT;
+            btni.cchText = 256;
+            btni.pszText = buttonText;
+            m_TaskBar.GetButtonInfo(TaskGroup->Index, &btni);
+
+            DWORD padding = m_TaskBar.GetPadding();
+            WORD paddingCy = HIWORD(padding);
+            WORD paddingCx = LOWORD(padding);
+            INT bitmapWidth;
+            INT bitmapHeight;
+
+            ImageList_GetIconSize(m_ImageList, &bitmapWidth, &bitmapHeight);
+
+            if (!m_Theme)
+            {
+                if (nmtbcd->nmcd.uItemState & (CDIS_SELECTED | CDIS_CHECKED))
+                    DrawEdge (nmtbcd->nmcd.hdc, &nmtbcd->nmcd.rc, EDGE_SUNKEN, BF_RECT | BF_MIDDLE);
+                else
+                    DrawEdge (nmtbcd->nmcd.hdc, &nmtbcd->nmcd.rc, EDGE_RAISED,
+                    BF_SOFT | BF_RECT | BF_MIDDLE);
+            }
+
+            RECT rcText = nmtbcd->nmcd.rc;
+            RECT rcBitmap = nmtbcd->nmcd.rc;
+            RECT rcArrow = nmtbcd->nmcd.rc;
+            InflateRect(&rcText, -GetSystemMetrics(SM_CXEDGE), 0);
+            rcText.left += bitmapWidth + 6; //TODO Default list gap
+
+            if(btni.fsState & (TBSTATE_PRESSED | TBSTATE_CHECKED))
+                OffsetRect(&rcText, 1, 1);
+
+            rcBitmap.left += GetSystemMetrics(SM_CXEDGE) + paddingCx / 2;
+            rcBitmap.top += paddingCy / 2;
+
+            if (nmtbcd->nmcd.uItemState & (CDIS_SELECTED | CDIS_CHECKED))
+            {
+                rcBitmap.left++;
+                rcBitmap.top++;
+            }
+
+            rcArrow.left = max(rcArrow.left, rcArrow.right - 13);
+            rcText.right = rcArrow.left;
+
+            ImageList_Draw(m_ImageList, TaskGroup->Index, nmtbcd->nmcd.hdc, rcBitmap.left, rcBitmap.top, (btni.fsState & CDIS_MARKED) ? ILD_BLEND50 | ILD_TRANSPARENT : ILD_TRANSPARENT);
+
+            WCHAR TaskCountText[20];
+            StringCbPrintfW(TaskCountText, 20, L"(%d)", TaskGroup->dwTaskCount);
+
+            NONCLIENTMETRICS ncm = {sizeof(ncm)};
+            if (!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, FALSE))
+                return Ret;
+
+            ncm.lfCaptionFont.lfWeight = FW_BOLD;
+            HFONT newFont = CreateFontIndirect(&ncm.lfCaptionFont);
+
+            HFONT normalFont = m_TaskBar.GetFont();
+
+            int oldBkMode = SetBkMode(nmtbcd->nmcd.hdc, nmtbcd->nStringBkMode);
+
+            HGDIOBJ oldFont = NULL;
+            if (!m_Theme)
+            {
+                oldFont = SelectObject(nmtbcd->nmcd.hdc, newFont);
+
+                SIZE TaskCountTextWidth;
+                GetTextExtentPoint32W(nmtbcd->nmcd.hdc, TaskCountText, wcslen(TaskCountText), &TaskCountTextWidth);
+
+                DrawTextW(nmtbcd->nmcd.hdc, TaskCountText, -1, &rcText, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+
+                rcText.left += TaskCountTextWidth.cx + paddingCx;
+
+                if (!(btni.fsState & (TBSTATE_PRESSED | TBSTATE_CHECKED)))
+                    SelectObject(nmtbcd->nmcd.hdc, normalFont);
+
+                DrawTextW(nmtbcd->nmcd.hdc, buttonText, -1, &rcText, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
+            }
+            else
+            {
+                RECT textRect;
+                GetThemeTextExtent(m_Theme, nmtbcd->nmcd.hdc, TDP_GROUPCOUNT, 0, TaskCountText, -1, DT_LEFT | DT_VCENTER | DT_SINGLELINE, &rcText, &textRect);
+
+                DrawThemeText(m_Theme, nmtbcd->nmcd.hdc, TDP_GROUPCOUNT, 0, TaskCountText, -1, DT_LEFT | DT_VCENTER | DT_SINGLELINE, 0, &rcText);
+
+                // Shrink the text rect
+                rcText.left += textRect.right - textRect.left + paddingCx;
+
+                if (btni.fsState & (TBSTATE_PRESSED | TBSTATE_CHECKED))
+                    oldFont = SelectObject(nmtbcd->nmcd.hdc, newFont);
+                else
+                    oldFont = SelectObject(nmtbcd->nmcd.hdc, normalFont);
+
+                DrawThemeText(m_Theme, nmtbcd->nmcd.hdc, TP_BUTTON, 0, buttonText, -1, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS, 0, &rcText);
+            }
+            SetBkMode(nmtbcd->nmcd.hdc, oldBkMode);
+
+            if (oldFont != NULL)
+                SelectObject(nmtbcd->nmcd.hdc, oldFont);
+
+            DeleteObject(newFont);
+
+            INT x, y;
+            HPEN hPen, hOldPen;
+
+            if (!(hPen = CreatePen( PS_SOLID, 1, nmtbcd->clrText)))
+                return Ret;
+
+            hOldPen = (HPEN)SelectObject(nmtbcd->nmcd.hdc, hPen);
+            INT offset = (nmtbcd->nmcd.uItemState & (CDIS_SELECTED | CDIS_CHECKED)) ? 1 : 0;
+            x = rcArrow.left + offset + 2;
+            y = rcArrow.top + offset + (rcArrow.bottom - rcArrow.top - 3) / 2;
+            MoveToEx(nmtbcd->nmcd.hdc, x, y, NULL);
+            LineTo(nmtbcd->nmcd.hdc, x+5, y++); x++;
+            MoveToEx(nmtbcd->nmcd.hdc, x, y, NULL);
+            LineTo(nmtbcd->nmcd.hdc, x+3, y++); x++;
+            MoveToEx(nmtbcd->nmcd.hdc, x, y, NULL);
+            LineTo(nmtbcd->nmcd.hdc, x+1, y);
+            SelectObject(nmtbcd->nmcd.hdc, hOldPen);
+            DeleteObject(hPen);
         }
         return Ret;
     }
@@ -1747,27 +2640,31 @@ public:
 
         switch (nmh->code)
         {
-        case NM_CUSTOMDRAW:
-        {
-            LPNMTBCUSTOMDRAW nmtbcd = (LPNMTBCUSTOMDRAW) nmh;
-
-            switch (nmtbcd->nmcd.dwDrawStage)
+            case NM_CUSTOMDRAW:
             {
+                LPNMTBCUSTOMDRAW nmtbcd = (LPNMTBCUSTOMDRAW) nmh;
 
-            case CDDS_ITEMPREPAINT:
-                Ret = HandleItemPaint(nmtbcd);
-                break;
+                switch (nmtbcd->nmcd.dwDrawStage)
+                {
+                    case CDDS_ITEMPREPAINT:
+                        Ret = HandleItemPaint(nmtbcd);
+                        break;
 
-            case CDDS_PREPAINT:
-                Ret = CDRF_NOTIFYITEMDRAW;
-                break;
+                    case CDDS_PREPAINT:
+                        Ret = CDRF_NOTIFYITEMDRAW;
+                        break;
 
-            default:
-                Ret = CDRF_DODEFAULT;
+                    default:
+                        Ret = CDRF_DODEFAULT;
+                        break;
+                }
                 break;
             }
-            break;
-        }
+            case TBN_DROPDOWN:
+            {
+                Ret = TBDDRET_TREATPRESSED;
+                break;
+            }
         }
 
         return Ret;
@@ -1821,7 +2718,7 @@ public:
         LRESULT Ret = TRUE;
         if (lParam != 0 && (HWND) lParam == m_TaskBar.m_hWnd)
         {
-            HandleButtonClick(LOWORD(wParam));
+            Ret = HandleButtonClick(LOWORD(wParam));
         }
         return Ret;
     }
@@ -1842,6 +2739,9 @@ public:
     {
         /* Update the button spacing */
         m_TaskBar.UpdateTbButtonSpacing(m_Tray->IsHorizontal(), m_Theme != NULL);
+
+        CollapseOrExpand(FALSE);
+
         return TRUE;
     }
 
@@ -1866,6 +2766,9 @@ public:
         if (bSettingsChanged)
         {
             /* Refresh each task item view */
+            /* Collapse or expand groups if necessary */
+            CollapseOrExpand(FALSE);
+
             RefreshWindowList();
             UpdateButtonsSize(FALSE);
         }
@@ -2027,7 +2930,186 @@ public:
     END_COM_MAP()
 };
 
+HRESULT CShellMenuCallback::OnGetObject(
+    LPSMDATA psmd,
+    REFIID iid,
+    void ** pv)
+{
+    if (IsEqualIID(iid, IID_IContextMenu) && psmd->uId >= 0)
+    {
+        PTASK_ITEM pItem = pTaskSwitchWnd->FindTaskItemOnOpenedGroup(psmd->uId);
+
+        if (pItem != NULL)
+            pTaskSwitchWnd->HandleTaskItemRightClick(pItem);
+    }
+
+    return S_FALSE;
+}
+
+HRESULT STDMETHODCALLTYPE CShellMenuCallback::CallbackSM(
+        LPSMDATA psmd,
+        UINT uMsg,
+        WPARAM wParam,
+        LPARAM lParam)
+{
+    switch(uMsg)
+    {
+        case SMC_EXEC:
+        {
+            pTaskSwitchWnd->HandleTaskGroupSelection(psmd->uId);
+
+            return S_OK;
+        }
+        case SMC_GETOBJECT:
+        {
+            return OnGetObject(psmd, *reinterpret_cast<IID *>(wParam), reinterpret_cast<void **>(lParam));
+        }
+        case SMC_GETINFO:
+        {
+            SMINFO *pInfo = reinterpret_cast<SMINFO *>(lParam);
+
+            if ((pInfo->dwMask & SMIM_TYPE) != 0)
+                pInfo->dwType = SMIT_STRING;
+            if ((pInfo->dwMask & SMIM_FLAGS) != 0)
+                pInfo->dwFlags = SMIF_ICON;
+            if ((pInfo->dwMask & SMIM_ICON) != 0)
+                pInfo->iIcon = pTaskSwitchWnd->GetTaskGroupItemIconIndex(psmd->uId);
+
+            return S_OK;
+        }
+    }
+
+    return S_FALSE;
+}
+
 HRESULT CTaskSwitchWnd_CreateInstance(IN HWND hWndParent, IN OUT ITrayWindow *Tray, REFIID riid, void **ppv)
 {
     return ShellObjectCreatorInit<CTaskSwitchWnd>(hWndParent, Tray, riid, ppv);
+}
+
+
+class CGroupMenuSite :
+    public CComCoClass<CGroupMenuSite>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IServiceProvider,
+    public IOleCommandTarget,
+    public IMenuPopup
+{
+    CComPtr<CTaskSwitchWnd> m_TaskSwitchWnd;
+
+public:
+    CGroupMenuSite()
+    {
+    }
+
+    virtual ~CGroupMenuSite() {}
+
+    /*******************************************************************/
+
+    virtual HRESULT STDMETHODCALLTYPE QueryService(
+        IN REFGUID guidService,
+        IN REFIID riid,
+        OUT PVOID *ppvObject)
+    {
+        if (IsEqualGUID(guidService, SID_SMenuPopup))
+        {
+            return QueryInterface(riid, ppvObject);
+        }
+
+        return E_NOINTERFACE;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE QueryStatus(
+        IN const GUID *pguidCmdGroup  OPTIONAL,
+        IN ULONG cCmds,
+        IN OUT OLECMD *prgCmds,
+        IN OUT OLECMDTEXT *pCmdText  OPTIONAL)
+    {
+        return E_NOTIMPL;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE Exec(
+        IN const GUID *pguidCmdGroup  OPTIONAL,
+        IN DWORD nCmdID,
+        IN DWORD nCmdExecOpt,
+        IN VARIANTARG *pvaIn  OPTIONAL,
+        IN VARIANTARG *pvaOut  OPTIONAL)
+    {
+        return E_NOTIMPL;
+    }
+
+    /*******************************************************************/
+
+    virtual HRESULT STDMETHODCALLTYPE GetWindow(
+        OUT HWND *phwnd)
+    {
+        TRACE("ITrayPriv::GetWindow\n");
+
+        return m_TaskSwitchWnd->GetWindow(phwnd);
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(
+        IN BOOL fEnterMode)
+    {
+        TRACE("ITrayPriv::ContextSensitiveHelp\n");
+        return E_NOTIMPL;
+    }
+
+    /*******************************************************************/
+
+    virtual HRESULT STDMETHODCALLTYPE SetClient(IUnknown *punkClient)
+    {
+        return E_NOTIMPL;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE GetClient(IUnknown ** ppunkClient)
+    {
+        return E_NOTIMPL;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE OnPosRectChangeDB(RECT *prc)
+    {
+        return E_NOTIMPL;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE Popup(POINTL *ppt, RECTL *prcExclude, MP_POPUPFLAGS dwFlags)
+    {
+        return E_NOTIMPL;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE OnSelect(DWORD dwSelectType)
+    {
+        return E_NOTIMPL;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE SetSubMenu(IMenuPopup *pmp, BOOL fSet)
+    {
+        if (!fSet)
+            return m_TaskSwitchWnd->CloseOpenedTaskGroup(TRUE);
+
+        return S_OK;
+    }
+
+    /*******************************************************************/
+
+    HRESULT Initialize(IN CTaskSwitchWnd *wnd)
+    {
+        m_TaskSwitchWnd = wnd;
+        return S_OK;
+    }
+
+    DECLARE_NOT_AGGREGATABLE(CGroupMenuSite)
+
+    DECLARE_PROTECT_FINAL_CONSTRUCT()
+    BEGIN_COM_MAP(CGroupMenuSite)
+        COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
+        COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
+        COM_INTERFACE_ENTRY_IID(IID_IMenuPopup, IMenuPopup)
+        COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
+    END_COM_MAP()
+};
+
+HRESULT CGroupMenuSite_CreateInstance(IN OUT CTaskSwitchWnd *pWnd, const IID & riid, PVOID * ppv)
+{
+    return ShellObjectCreatorInit<CGroupMenuSite>(pWnd, riid, ppv);
 }
