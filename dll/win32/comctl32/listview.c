@@ -12001,7 +12001,36 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       }
       return DefWindowProcW(hwnd, uMsg, wParam, lParam);
 
+#ifdef __REACTOS__
+  case WM_SETTINGCHANGE: /* Same as WM_WININICHANGE */
+    if (wParam == SPI_SETICONMETRICS ||
+        wParam == SPI_SETICONTITLELOGFONT ||
+        wParam == SPI_SETNONCLIENTMETRICS ||
+        (!wParam && !lParam))
+    {
+      BOOL bDefaultOrNullFont = (infoPtr->hDefaultFont == infoPtr->hFont || !infoPtr->hFont);
+      LOGFONTW logFont;
+      SystemParametersInfoW(SPI_GETICONTITLELOGFONT, 0, &logFont, 0);
+
+      if (infoPtr->autoSpacing)
+        LISTVIEW_SetIconSpacing(infoPtr, -1, -1);
+
+      if (infoPtr->hDefaultFont)
+        DeleteObject(infoPtr->hDefaultFont);
+      infoPtr->hDefaultFont = CreateFontIndirectW(&logFont);
+
+      if (bDefaultOrNullFont)
+        infoPtr->hFont = infoPtr->hDefaultFont;
+
+      LISTVIEW_SaveTextMetrics(infoPtr);
+      LISTVIEW_UpdateItemSize(infoPtr);
+      LISTVIEW_UpdateScroll(infoPtr);
+      LISTVIEW_InvalidateRect(infoPtr, NULL);
+    }
+    return 0;
+#else
 /*	case WM_WININICHANGE: */
+#endif
 
   default:
     if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))

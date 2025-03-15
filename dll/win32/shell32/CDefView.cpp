@@ -3008,6 +3008,7 @@ LRESULT CDefView::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     if (wParam == SPI_SETDESKWALLPAPER || wParam == 0)
         UpdateListColors();
 
+    m_ListView.SendMessage(uMsg, wParam, lParam);
     return S_OK;
 }
 
