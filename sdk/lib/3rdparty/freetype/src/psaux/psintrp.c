@@ -3064,6 +3064,7 @@
 #undef counterHintMap
 #undef glyphPath
 #endif
+
     return;
   }
 
