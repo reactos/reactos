@@ -122,7 +122,7 @@
             }
         }
 
-        // 3rd try: default is English
+        // default is English
         StringCchCatW(pszPath, cchPathMax, L"_en-US");
     }
 
