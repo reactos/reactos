@@ -1,29 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="en"><!-- TODO: Fix 'lang' attribute -->
 <head>
-  <meta charset="utf-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>Notepad Help</title>
-  <link rel="shortcut icon" id="favicon" />
+  <script id="top_script"></script>
+  <link rel="shortcut icon" id="top_favicon" />
+  <link rel="stylesheet" id="top_stylesheet" />
   <style>
-    body {
-      color: #000000;
-      background-color: #ddddff;
-    }
-    h1 {
-      font-size: 125%;
-    }
-    h2 {
-      font-size: 110%;
-    }
-    h3 {
-      font-size: 100%;
-    }
-    p {
-      font-size: 90%;
-    }
-    small {
-      font-size: 80%;
-    }
+    <!-- private stylesheet -->
     #notepad_icon {
       vertical-align: middle;
     }
@@ -33,6 +17,8 @@
   </style>
 </head>
 <body>
+
+<!-- TODO: [[FROM HERE]]: Translate text -->
 
 <header>
   <h1><img id="notepad_icon" alt="" /> Notepad Help</h1>
@@ -53,12 +39,24 @@
   <small><img id="roslogo" alt="[ReactOS Logo]" /> &copy; 2025 ReactOS Development Team</small>
 </footer>
 
+<!-- TODO: [[DOWN TO HERE]]: Translate text -->
+
+<!-- The following text does not need to be translated -->
 <script>
-  <!-- Embedding image data. Use this: https://dopiaza.org/goodies/data-uri-generator/ -->
-  var notepad_icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAFCElEQVRYw+2XXWwUVRTHf3d3Zne2326L2BBFA0IroHypQfrS0jb4gR9ABHkyEB+aaCRqNH3WBHgwaRMLGE3EoJAgiSGa0pa2GhMJVbAFoTZQWqGtbWFrS7vdnd2dudcH2OmW7rYFw5Oeh82ZO3fu+d///5xz98J/3USqF9WVuopGbTweNwB367+9KyamA+BKfNi/f7+q2Vujamo+UeGwxRsVZYTDFv/Gr66uUlXVVWrfvn0qGQAt8WH+ww+Rm5sLKJovKjIyDVA3v7tbf+njS0EpAoEAMwLIyMjg2rUBAkMBhBAEx0yEuMmg46sZfBLmIzhz5jT5+flkZ+VMnwM1NTVq+crlBAKDDA8PE+o/TOj6z/jy1gKKcOAkRu4aAMyhk3j9a1BKERk+hSfn6Zu6j7SgZz2FAqzRX3BnPomV/jz3z5lDXt5ceq72UFFRIZIyoGka/vv8rFqxCqUkSm3FEe2Wo9RUGSfGlPOrlIKEqUII+vp66e3pTS2BEILsrGw0TZshUOqxVHOEEGRkZOJ2u6fPAV3XkVJSX18/be3OFmDcysvL8Xg8SedoiQvEd19eXn5HgWZiInHtlACklOi6jlKKhoaGaXd0p0yUlpaiaRqjQz3sKM9UUrlwC/i84YaYJIGmaUgpKS0tvatAqZi40nmW2kO7uNx+mheKN1K6agstzV8ixHHlAHC5XAghUEpx4sSJGQOVlZXNOKezvYXaQ7sZuPoHZeu38fq7n5LZ9jvG0W8p6ujjoCYnJIgniVLKYWA6beN+suAdbT9Re3g3fw92U7R6MVuffRU72Ees5yq9ZgSt7hhfL4qiu8QEgLS0NAfA3VCulOLCmWaOH97F+I0BilYX8MSGzcTGehntbsKKhrhy+RtaWhvoWjgOwsWBhrGJHDAMA6UUUkoaGxtnXWKg6O/6jYu/HsWtwhSvWcqSx54hMvwno92NRCNh2ntMLg3A9ZGDeDLyONAcFFOqwDAMpJQopVi3bt2sdn321HG+++ojdBVi/dplLF74CObIZUY6G4iYEc5dCdM5KIhYHko3vYU7awEbXnwleSv2+XwO/U1NTTMG7zpXT1frMTY9V8SCh+dhDl1ipKuOYDjG2a4wF/slyp3OgpUvsW3H+/jS0mlra0vdB7xerwOguLh4Wgl+/P4z+i7U8uYHlfjz5jLQ+CEjYyat3Sbdgwr/3PlsrniHwhXFzmkqpcQwjOQA9uzZo+I9QEpJU1NTSsW7ztXTc76O7dtfQ1MRei6d54fWMbr6I2TPmc+S4pfx5z9K/7Civ7kZgJKSEqcbVlVVqZ07d07OgXgXjOdASUnJpJ1bloVpmtQd+ZgLJ49gGD721nyBEIL0LD/+/GWsL9/CAw8uwuv14vF4MAwDn8/nrGvbNpqmYVnWVAai0ajTq+M5kGi2bTMc+AufkUnJxvfI9M9D9+UgcROLxXC73Xi9XkKhkAM63tallM5mdF0nGo1OBWCapoNUSpkyB6SUWJZFLBbDsiyHsXgX1TQNXddxuVy4XC5nvfi3mqZhmuZUAOFwGI/Hg23bSbtd4n8GTdPQtElHiBNkurE4A0kBxBlI7ILJyjBZoNmelLZto+s64+PjUwGMjY2Rk5ODy+Wa+SJxq6ySAb39XTJQwWBwKoBgMEhHRwft7e337gYkBIWFhYRCoakAIpEItm1TUFBwT69hpmkmrwKAysrKO9J4Nna7pG63G9u2+d8S7R+4BzmhNdcIOwAAAABJRU5ErkJggg==";
-  var roslogo = "data:image/png;base64,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";
-  document.getElementById("notepad_icon").src = notepad_icon;
-  document.getElementById("favicon").href = notepad_icon;
-  document.getElementById("roslogo").src = roslogo;
+  // TODO: Choose one of the following two:
+  var common_res_url = "./res/"; // *** USE THIS FOR MASTER ***
+  //var common_res_url = "../../../../media/help/res/"; // *** USE THIS FOR LOCAL TESTING ***
+
+  // Common resources
+  var common_roslogo_url = common_res_url + "roslogo.png";
+  document.getElementById("top_script").src = common_res_url + "common.js";
+  document.getElementById("top_stylesheet").href = common_res_url + "common.css";
+  document.getElementById("top_favicon").href = common_roslogo_url;
+
+  // TODO: Embed and/or reference image(s).
+  // To embed image data, please use this: https://dopiaza.org/goodies/data-uri-generator/
+  var notepad_icon_url = "./res/notepad.png";
+  document.getElementById("notepad_icon").src = notepad_icon_url;
+  document.getElementById("roslogo").src = common_roslogo_url;
 </script>
 </body></html>

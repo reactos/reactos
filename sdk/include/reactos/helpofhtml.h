@@ -7,7 +7,7 @@
 
 #pragma once
 
-#ifdef ENABLE_HELPOFHTML
+#ifdef ENABLE_HELP
     #include <winreg.h>
     #include <string.h>
     #include <tchar.h>
@@ -153,5 +153,5 @@
         return ShellExecuteEx(&sei);
     }
 #else
-    #define HelpOfHtml(hWndMain, lpszHelp, uCommand, dwData) /* empty */
+    #define HelpOfHtml WinHelp
 #endif

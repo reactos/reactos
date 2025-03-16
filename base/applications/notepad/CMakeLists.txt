@@ -3,7 +3,8 @@ if(DBG)
     add_definitions(-D_DEBUG=1)
 endif()
 
-if(ENABLE_HELPOFHTML)
+if(ENABLE_HELP)
+    add_subdirectory(help)
     include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos)
 endif()
 
@@ -22,7 +23,3 @@ add_importlibs(notepad user32 gdi32 comctl32 comdlg32 advapi32 shell32 msvcrt ke
 add_pch(notepad notepad.h SOURCE)
 add_cd_file(TARGET notepad DESTINATION reactos FOR all)
 add_cd_file(TARGET notepad DESTINATION reactos/system32 FOR all)
-if(ENABLE_HELPOFHTML)
-    add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/help/notepad_en.txt DESTINATION reactos/Help FOR bootcd)
-    add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/help/notepad_en.html DESTINATION reactos/Help FOR bootcd)
-endif()

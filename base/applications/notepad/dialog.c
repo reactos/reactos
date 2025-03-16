@@ -9,7 +9,7 @@
  */
 
 #include "notepad.h"
-#ifdef ENABLE_HELPOFHTML
+#ifdef ENABLE_HELP
     #include "helpofhtml.h"
 #endif
 
@@ -955,7 +955,7 @@ VOID DIALOG_ViewStatusBar(VOID)
 
 VOID DIALOG_HelpContents(VOID)
 {
-#ifdef ENABLE_HELPOFHTML
+#ifdef ENABLE_HELP
     HelpOfHtml(Globals.hMainWnd, _T("notepad"), HELP_INDEX, 0);
 #else
     WinHelp(Globals.hMainWnd, _T("notepad.hlp"), HELP_INDEX, 0);
