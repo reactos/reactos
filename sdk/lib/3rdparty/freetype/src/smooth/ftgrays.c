@@ -1671,6 +1671,9 @@ typedef ptrdiff_t  FT_PtrDist;
 
 #ifdef __REACTOS__
     TCell   *buffer = malloc(FT_MAX_GRAY_POOL * sizeof(TCell));
+    if (!buffer)
+      return 1;
+    {
 #else
     TCell    buffer[FT_MAX_GRAY_POOL];
 #endif
@@ -1761,6 +1764,7 @@ typedef ptrdiff_t  FT_PtrDist;
 
 #ifdef __REACTOS__
     free(buffer);
+    }
 #endif
     return 0;
   }
@@ -1777,6 +1781,8 @@ typedef ptrdiff_t  FT_PtrDist;
 #ifndef FT_STATIC_RASTER
 #ifdef __REACTOS__
     gray_TWorker *worker = malloc(sizeof(*worker));
+    if (!worker)
+      return FT_THROW( Out_Of_Memory );
 #else
     gray_TWorker  worker[1];
 #endif
