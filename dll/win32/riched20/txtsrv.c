@@ -552,11 +552,8 @@ DECLSPEC_HIDDEN HRESULT __thiscall fnTextSrv_TxGetCachedSize(ITextServices *ifac
 
 #ifdef __ASM_USE_THISCALL_WRAPPER
 
-#ifdef _MSC_VER
-#define func) (void *) __stdcall_ ## func
-#else
 #define STDCALL(func) (void *) __stdcall_ ## func
-#endif
+
 #ifdef _MSC_VER
 #define DEFINE_STDCALL_WRAPPER(num,func) \
     __declspec(naked) HRESULT __stdcall_##func(void) \
@@ -621,7 +618,7 @@ const ITextServicesVtbl text_services_stdcall_vtbl =
     ITextServices_TxGetDropTarget,
     ITextServices_OnTxPropertyBitsChange,
     ITextServices_TxGetCachedSize,
-#else
+#else /* _MSC_VER */
     STDCALL(ITextServices_TxSendMessage),
     STDCALL(ITextServices_TxDraw),
     STDCALL(ITextServices_TxGetHScroll),
@@ -669,7 +666,7 @@ static const ITextServicesVtbl textservices_vtbl =
     fnTextSrv_TxGetDropTarget,
     fnTextSrv_OnTxPropertyBitsChange,
     fnTextSrv_TxGetCachedSize
-#else
+#else /* _MSC_VER */
     THISCALL(fnTextSrv_TxSendMessage),
     THISCALL(fnTextSrv_TxDraw),
     THISCALL(fnTextSrv_TxGetHScroll),
