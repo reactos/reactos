@@ -49,7 +49,7 @@
 
     typedef struct tagHOH_SUFFIX_AND_LANG
     {
-        LPCTSTR suffix;
+        LPCTSTR name;
         LANGID wLangId;
     } HOH_SUFFIX_AND_LANG, *PHOH_SUFFIX_AND_LANG;
 
@@ -103,7 +103,7 @@
             if (pairs[iPair].wLangId == wLangId)
             {
                 StringCchCat(pszPath, cchPathMax, TEXT("_"));
-                StringCchCat(pszPath, cchPathMax, pairs[iPair].suffix);
+                StringCchCat(pszPath, cchPathMax, pairs[iPair].name);
                 return;
             }
         }
@@ -114,13 +114,14 @@
             if (PRIMARYLANGID(pairs[iPair].wLangId) == PRIMARYLANGID(wLangId))
             {
                 StringCchCat(pszPath, cchPathMax, TEXT("_"));
-                StringCchCat(pszPath, cchPathMax, pairs[iPair].suffix);
+                StringCchCat(pszPath, cchPathMax, pairs[iPair].name);
                 return;
             }
         }
 
         // 3rd try: default is English
-        StringCchCat(pszPath, cchPathMax, TEXT("_en-US"));
+        StringCchCat(pszPath, cchPathMax, TEXT("_"));
+        StringCchCat(pszPath, cchPathMax, TEXT("en-US"));
     }
 
     static inline BOOL
@@ -174,7 +175,8 @@
 
             // English is default
             *pch = 0; // Cut off
-            StringCchCat(szPath, _countof(szPath), L"_en-US");
+            StringCchCat(szPath, _countof(szPath), L"_");
+            StringCchCat(szPath, _countof(szPath), L"en-US");
         }
 
         // Open the file
