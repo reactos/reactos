@@ -1611,8 +1611,8 @@
         TT_SBitDecoderRec *decoder = malloc(sizeof(*decoder));
         if (!decoder)
         {
-          error = FT_Err_Out_Of_Memory;
-          break;
+            error = FT_THROW( Out_Of_Memory );
+            break;
         }
 #else
         TT_SBitDecoderRec  decoder[1];
