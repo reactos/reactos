@@ -156,5 +156,5 @@
         return ShellExecuteEx(&sei);
     }
 #else
-    #define HelpOfHtml WinHelp
+    #define HelpOfHtml(hWndMain, lpszHelp, uCommand, dwData) /* empty */
 #endif
