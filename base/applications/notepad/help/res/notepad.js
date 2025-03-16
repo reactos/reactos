@@ -1,5 +1,6 @@
 function resolve_images(common_res_url) {
-  document.addEventListener("DOMContentLoaded", function() {
+  // NOTE: We don't use DOMContentLoaded yet! Use window.onload instead.
+  window.onload = (function() {
     // Common resources
     var common_roslogo_url = common_res_url + "roslogo-32x32.png";
     document.getElementById("top_script").href = common_res_url + "common.js";
