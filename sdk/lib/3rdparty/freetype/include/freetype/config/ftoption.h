@@ -126,7 +126,7 @@ FT_BEGIN_HEADER
    * macro is not defined, FreeType offers alternative LCD rendering
    * technology that produces excellent output without LCD filtering.
    */
-/* #define FT_CONFIG_OPTION_SUBPIXEL_RENDERING */
+#define FT_CONFIG_OPTION_SUBPIXEL_RENDERING
 
 
   /**************************************************************************
@@ -658,7 +658,7 @@ FT_BEGIN_HEADER
    * https://www.microsoft.com/typography/cleartype/truetypecleartype.aspx
    */
 /* #define TT_CONFIG_OPTION_SUBPIXEL_HINTING  1         */
-/* #define TT_CONFIG_OPTION_SUBPIXEL_HINTING  2         */
+#define TT_CONFIG_OPTION_SUBPIXEL_HINTING  2
 /* #define TT_CONFIG_OPTION_SUBPIXEL_HINTING  ( 1 | 2 ) */
 
 
