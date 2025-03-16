@@ -95,11 +95,11 @@
             { L"zh-HK", MAKELANGID(LANG_CHINESE,       SUBLANG_CHINESE_HONGKONG) },
             { L"zh-TW", MAKELANGID(LANG_CHINESE,       SUBLANG_CHINESE_TRADITIONAL) },
         };
-        const size_t count = _countof(pairs);
+        const size_t nPairs = _countof(pairs);
 
         // 1st try: Best match
         size_t iPair;
-        for (iPair = 0; iPair < count; ++iPair)
+        for (iPair = 0; iPair < nPairs; ++iPair)
         {
             if (pairs[iPair].wLangId == wLangId)
             {
@@ -110,7 +110,7 @@
         }
 
         // 2nd try: PRIMARYLANGID match
-        for (iPair = 0; iPair < count; ++iPair)
+        for (iPair = 0; iPair < nPairs; ++iPair)
         {
             if (PRIMARYLANGID(pairs[iPair].wLangId) == PRIMARYLANGID(wLangId))
             {
