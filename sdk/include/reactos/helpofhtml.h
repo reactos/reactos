@@ -134,7 +134,7 @@
         BOOL bBrowserAvailable = HOH_IsBrowserAvailable();
         for (iTry = 0; iTry < 3; ++iTry)
         {
-            // Add .html if the browser is available; otherwise .txt
+            // Add .html if the browser and .html are available; otherwise .txt
             if (iTry < 2 && bBrowserAvailable)
                 StringCchCat(szPath, _countof(szPath), _T(".html"));
             else
