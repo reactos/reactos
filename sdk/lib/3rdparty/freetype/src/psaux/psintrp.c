@@ -2620,14 +2620,18 @@
            */
 #ifdef __REACTOS__
           CF2_HintMapRec *counterHintMap = malloc(sizeof(*counterHintMap));
+          CF2_HintMaskRec  counterMask;
           if (counterHintMap)
           {
+            lastError = FT_Err_Out_Of_Memory;
+            goto exit;
+          }
 /* Ugly but it allows us to reduce the diff */
 #define counterHintMap (*counterHintMap)
 #else
           CF2_HintMapRec   counterHintMap;
-#endif
           CF2_HintMaskRec  counterMask;
+#endif
 
 
           cf2_hintmap_init( &counterHintMap,
