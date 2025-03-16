@@ -216,8 +216,11 @@
     FT_Error       error;
 #ifdef __REACTOS__
     T1_DecoderRec *decoder = malloc(sizeof(*decoder));
-    /* Ugly but it allows us to reduce the diff */
-    #define decoder (*decoder)
+    if (!decoder)
+      return FT_THROW( Out_Of_Memory );
+    {
+/* Ugly but it allows us to reduce the diff */
+#define decoder (*decoder)
 #else
     T1_DecoderRec  decoder;
 #endif
@@ -243,8 +246,8 @@
     if ( error )
 #ifdef __REACTOS__
     {
-      free(&decoder);
-      return error;
+        free(&decoder);
+        return error;
     }
 #else
       return error;
@@ -284,7 +287,8 @@
 
 #ifdef __REACTOS__
     free(&decoder);
-    #undef decoder
+#undef decoder
+    }
 #endif
     return FT_Err_Ok;
   }
@@ -300,8 +304,11 @@
     T1_Face        face  = (T1_Face)t1face;
 #ifdef __REACTOS__
     T1_DecoderRec *decoder = malloc(sizeof(*decoder));
-    /* Ugly but it allows us to reduce the diff */
-    #define decoder (*decoder)
+    if (!decoder)
+      return FT_THROW( Out_Of_Memory );
+/* Ugly but it allows us to reduce the diff */
+#define decoder (*decoder)
+    {
 #else
     T1_DecoderRec  decoder;
 #endif
@@ -323,6 +330,9 @@
                     first + nn ));
       }
 
+#ifdef __REACTOS__
+      free(&decoder);
+#endif
       return FT_Err_Ok;
     }
 
@@ -338,8 +348,8 @@
     if ( error )
 #ifdef __REACTOS__
     {
-      free(&decoder);
-      return error;
+        free(&decoder);
+        return error;
     }
 #else
       return error;
@@ -372,7 +382,8 @@
 
 #ifdef __REACTOS__
     free(&decoder);
-    #undef decoder
+#undef decoder
+    }
 #endif
     return FT_Err_Ok;
   }
@@ -387,9 +398,12 @@
     T1_GlyphSlot            glyph = (T1_GlyphSlot)t1glyph;
     FT_Error                error;
 #ifdef __REACTOS__
-    T1_DecoderRec          *decoder = malloc(sizeof(*decoder));
-    /* Ugly but it allows us to reduce the diff */
-    #define decoder (*decoder)
+    T1_DecoderRec *decoder = malloc(sizeof(*decoder));
+    if (!decoder)
+      return FT_THROW( Out_Of_Memory );
+/* Ugly but it allows us to reduce the diff */
+#define decoder (*decoder)
+    {
 #else
     T1_DecoderRec           decoder;
 #endif
@@ -642,7 +656,8 @@
 
 #ifdef __REACTOS__
     free(&decoder);
-    #undef decoder
+#undef decoder
+    }
 #endif
     return error;
   }
