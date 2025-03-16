@@ -2652,9 +2652,7 @@
                              0,
                              FALSE );
 #ifdef __REACTOS__
-         free(&counterHintMap);
-         #undef counterHintMap
-        }
+          free(&counterHintMap);
 #endif
         }
         break;
