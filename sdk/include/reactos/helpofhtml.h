@@ -65,6 +65,7 @@
             { TEXT("_fr"), MAKELANGID(LANG_FRENCH,   SUBLANG_NEUTRAL) },
             { TEXT("_it"), MAKELANGID(LANG_ITALIAN,  SUBLANG_NEUTRAL) },
             { TEXT("_ja"), MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT) },
+            { TEXT("_ru"), MAKELANGID(LANG_RUSSIAN,  SUBLANG_DEFAULT) },
             { TEXT("_zh"), MAKELANGID(LANG_CHINESE,  SUBLANG_CHINESE_SIMPLIFIED) },
         };
         const size_t count = _countof(pairs);
