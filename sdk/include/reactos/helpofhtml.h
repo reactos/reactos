@@ -95,6 +95,14 @@
     }
 
     static inline BOOL
+    HOH_IsBrowserAvailable(void)
+    {
+        return (HOH_IsFirefoxAvailable() ||
+                HOH_IsChromeAvailable() ||
+                HOH_IsWineGeckoAvailable());
+    }
+
+    static inline BOOL
     HelpOfHtml(
         HWND hWndMain,
         LPCTSTR lpszHelp,
@@ -123,20 +131,14 @@
         HOH_AddLangSuffix(szPath, _countof(szPath), wLangId);
 
         INT iTry;
+        BOOL bBrowserAvailable = HOH_IsBrowserAvailable();
         for (iTry = 0; iTry < 3; ++iTry)
         {
             // Add .html if the browser is available; otherwise .txt
-            if (iTry < 2 &&
-                (HOH_IsFirefoxAvailable() ||
-                 HOH_IsChromeAvailable() ||
-                 HOH_IsWineGeckoAvailable()))
-            {
+            if (iTry < 2 && bBrowserAvailable)
                 StringCchCat(szPath, _countof(szPath), _T(".html"));
-            }
             else
-            {
                 StringCchCat(szPath, _countof(szPath), _T(".txt"));
-            }
 
             if (GetFileAttributes(szPath) != INVALID_FILE_ATTRIBUTES)
                 break; // File found
