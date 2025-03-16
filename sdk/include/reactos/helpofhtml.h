@@ -12,6 +12,7 @@
     #include <string.h>
     #include <tchar.h>
     #include <shellapi.h>
+    #include <shlwapi.h>
     #include <strsafe.h>
 
     // Does registry key exist?
@@ -27,6 +28,7 @@
         return FALSE;
     }
 
+#if 0
     static inline BOOL
     HOH_IsFirefoxAvailable(void)
     {
@@ -40,6 +42,7 @@
         return HOH_IsRegKeyAvailable(L"SOFTWARE\\Google\\Chrome") ||
                HOH_IsRegKeyAvailable(L"SOFTWARE\\Wow6432Node\\Google\\Chrome");
     }
+#endif
 
     static inline BOOL
     HOH_IsWineGeckoAvailable(void)
@@ -49,50 +52,50 @@
 
     typedef struct tagHOH_LANG_NAME_AND_ID
     {
-        LPCTSTR name;
+        PCWSTR name;
         LANGID wLangId;
     } HOH_LANG_NAME_AND_ID, *PHOH_LANG_NAME_AND_ID;
 
     // Add language suffix
     static inline void
-    HOH_AddLangSuffix(LPTSTR pszPath, SIZE_T cchPathMax, LANGID wLangId)
+    HOH_AddLangSuffix(LPWSTR pszPath, SIZE_T cchPathMax, LANGID wLangId)
     {
         static const HOH_LANG_NAME_AND_ID pairs[] =
         {
             // FIXME: Add more languages
-            { TEXT("bg-BG"), MAKELANGID(LANG_BULGARIAN,     SUBLANG_DEFAULT) },
-            { TEXT("ca-ES"), MAKELANGID(LANG_CATALAN,       SUBLANG_DEFAULT) },
-            { TEXT("cs-CZ"), MAKELANGID(LANG_CZECH,         SUBLANG_DEFAULT) },
-            { TEXT("da-DK"), MAKELANGID(LANG_DANISH,        SUBLANG_DEFAULT) },
-            { TEXT("de-DE"), MAKELANGID(LANG_GERMAN,        SUBLANG_NEUTRAL) },
-            { TEXT("el-GR"), MAKELANGID(LANG_GREEK,         SUBLANG_DEFAULT) },
-            { TEXT("en-US"), MAKELANGID(LANG_ENGLISH,       SUBLANG_ENGLISH_US) },
-            { TEXT("es-ES"), MAKELANGID(LANG_SPANISH,       SUBLANG_NEUTRAL) },
-            { TEXT("et-EE"), MAKELANGID(LANG_ESTONIAN,      SUBLANG_DEFAULT) },
-            { TEXT("fr-FR"), MAKELANGID(LANG_FRENCH,        SUBLANG_NEUTRAL) },
-            { TEXT("he-IL"), MAKELANGID(LANG_HEBREW,        SUBLANG_DEFAULT) },
-            { TEXT("hr-HR"), MAKELANGID(LANG_CROATIAN,      SUBLANG_CROATIAN_CROATIA) },
-            { TEXT("hu-HU"), MAKELANGID(LANG_HUNGARIAN,     SUBLANG_DEFAULT) },
-            { TEXT("id-ID"), MAKELANGID(LANG_INDONESIAN,    SUBLANG_DEFAULT) },
-            { TEXT("it-IT"), MAKELANGID(LANG_ITALIAN,       SUBLANG_NEUTRAL) },
-            { TEXT("ja-JP"), MAKELANGID(LANG_JAPANESE,      SUBLANG_DEFAULT) },
-            { TEXT("ko-KR"), MAKELANGID(LANG_KOREAN,        SUBLANG_DEFAULT) },
-            { TEXT("lt-LT"), MAKELANGID(LANG_LITHUANIAN,    SUBLANG_DEFAULT) },
-            { TEXT("nl-NL"), MAKELANGID(LANG_DUTCH,         SUBLANG_NEUTRAL) },
-            { TEXT("no-NO"), MAKELANGID(LANG_NORWEGIAN,     SUBLANG_NORWEGIAN_BOKMAL) },
-            { TEXT("pl-PL"), MAKELANGID(LANG_POLISH,        SUBLANG_DEFAULT) },
-            { TEXT("pt-BR"), MAKELANGID(LANG_PORTUGUESE,    SUBLANG_PORTUGUESE_BRAZILIAN) },
-            { TEXT("pt-PT"), MAKELANGID(LANG_PORTUGUESE,    SUBLANG_PORTUGUESE) },
-            { TEXT("ru-RU"), MAKELANGID(LANG_RUSSIAN,       SUBLANG_DEFAULT) },
-            { TEXT("sk-SK"), MAKELANGID(LANG_SLOVAK,        SUBLANG_DEFAULT) },
-            { TEXT("sq-AL"), MAKELANGID(LANG_ALBANIAN,      SUBLANG_NEUTRAL) },
-            { TEXT("sv-SE"), MAKELANGID(LANG_SWEDISH,       SUBLANG_NEUTRAL) },
-            { TEXT("th-TH"), MAKELANGID(LANG_THAI,          SUBLANG_DEFAULT) },
-            { TEXT("tr-TR"), MAKELANGID(LANG_TURKISH,       SUBLANG_DEFAULT) },
-            { TEXT("uk-UA"), MAKELANGID(LANG_UKRAINIAN,     SUBLANG_DEFAULT) },
-            { TEXT("zh-CN"), MAKELANGID(LANG_CHINESE,       SUBLANG_CHINESE_SIMPLIFIED) },
-            { TEXT("zh-HK"), MAKELANGID(LANG_CHINESE,       SUBLANG_CHINESE_HONGKONG) },
-            { TEXT("zh-TW"), MAKELANGID(LANG_CHINESE,       SUBLANG_CHINESE_TRADITIONAL) },
+            { L"bg-BG", MAKELANGID(LANG_BULGARIAN,     SUBLANG_DEFAULT) },
+            { L"ca-ES", MAKELANGID(LANG_CATALAN,       SUBLANG_DEFAULT) },
+            { L"cs-CZ", MAKELANGID(LANG_CZECH,         SUBLANG_DEFAULT) },
+            { L"da-DK", MAKELANGID(LANG_DANISH,        SUBLANG_DEFAULT) },
+            { L"de-DE", MAKELANGID(LANG_GERMAN,        SUBLANG_NEUTRAL) },
+            { L"el-GR", MAKELANGID(LANG_GREEK,         SUBLANG_DEFAULT) },
+            { L"en-US", MAKELANGID(LANG_ENGLISH,       SUBLANG_ENGLISH_US) },
+            { L"es-ES", MAKELANGID(LANG_SPANISH,       SUBLANG_NEUTRAL) },
+            { L"et-EE", MAKELANGID(LANG_ESTONIAN,      SUBLANG_DEFAULT) },
+            { L"fr-FR", MAKELANGID(LANG_FRENCH,        SUBLANG_NEUTRAL) },
+            { L"he-IL", MAKELANGID(LANG_HEBREW,        SUBLANG_DEFAULT) },
+            { L"hr-HR", MAKELANGID(LANG_CROATIAN,      SUBLANG_CROATIAN_CROATIA) },
+            { L"hu-HU", MAKELANGID(LANG_HUNGARIAN,     SUBLANG_DEFAULT) },
+            { L"id-ID", MAKELANGID(LANG_INDONESIAN,    SUBLANG_DEFAULT) },
+            { L"it-IT", MAKELANGID(LANG_ITALIAN,       SUBLANG_NEUTRAL) },
+            { L"ja-JP", MAKELANGID(LANG_JAPANESE,      SUBLANG_DEFAULT) },
+            { L"ko-KR", MAKELANGID(LANG_KOREAN,        SUBLANG_DEFAULT) },
+            { L"lt-LT", MAKELANGID(LANG_LITHUANIAN,    SUBLANG_DEFAULT) },
+            { L"nl-NL", MAKELANGID(LANG_DUTCH,         SUBLANG_NEUTRAL) },
+            { L"no-NO", MAKELANGID(LANG_NORWEGIAN,     SUBLANG_NORWEGIAN_BOKMAL) },
+            { L"pl-PL", MAKELANGID(LANG_POLISH,        SUBLANG_DEFAULT) },
+            { L"pt-BR", MAKELANGID(LANG_PORTUGUESE,    SUBLANG_PORTUGUESE_BRAZILIAN) },
+            { L"pt-PT", MAKELANGID(LANG_PORTUGUESE,    SUBLANG_PORTUGUESE) },
+            { L"ru-RU", MAKELANGID(LANG_RUSSIAN,       SUBLANG_DEFAULT) },
+            { L"sk-SK", MAKELANGID(LANG_SLOVAK,        SUBLANG_DEFAULT) },
+            { L"sq-AL", MAKELANGID(LANG_ALBANIAN,      SUBLANG_NEUTRAL) },
+            { L"sv-SE", MAKELANGID(LANG_SWEDISH,       SUBLANG_NEUTRAL) },
+            { L"th-TH", MAKELANGID(LANG_THAI,          SUBLANG_DEFAULT) },
+            { L"tr-TR", MAKELANGID(LANG_TURKISH,       SUBLANG_DEFAULT) },
+            { L"uk-UA", MAKELANGID(LANG_UKRAINIAN,     SUBLANG_DEFAULT) },
+            { L"zh-CN", MAKELANGID(LANG_CHINESE,       SUBLANG_CHINESE_SIMPLIFIED) },
+            { L"zh-HK", MAKELANGID(LANG_CHINESE,       SUBLANG_CHINESE_HONGKONG) },
+            { L"zh-TW", MAKELANGID(LANG_CHINESE,       SUBLANG_CHINESE_TRADITIONAL) },
         };
         const size_t count = _countof(pairs);
 
@@ -102,8 +105,8 @@
         {
             if (pairs[iPair].wLangId == wLangId)
             {
-                StringCchCat(pszPath, cchPathMax, TEXT("_"));
-                StringCchCat(pszPath, cchPathMax, pairs[iPair].name);
+                StringCchCatW(pszPath, cchPathMax, L"_");
+                StringCchCatW(pszPath, cchPathMax, pairs[iPair].name);
                 return;
             }
         }
@@ -113,29 +116,34 @@
         {
             if (PRIMARYLANGID(pairs[iPair].wLangId) == PRIMARYLANGID(wLangId))
             {
-                StringCchCat(pszPath, cchPathMax, TEXT("_"));
-                StringCchCat(pszPath, cchPathMax, pairs[iPair].name);
+                StringCchCatW(pszPath, cchPathMax, L"_");
+                StringCchCatW(pszPath, cchPathMax, pairs[iPair].name);
                 return;
             }
         }
 
         // 3rd try: default is English
-        StringCchCat(pszPath, cchPathMax, TEXT("_"));
-        StringCchCat(pszPath, cchPathMax, TEXT("en-US"));
+        StringCchCatW(pszPath, cchPathMax, L"_en-US");
     }
 
     static inline BOOL
     HOH_IsBrowserAvailable(void)
     {
-        return (HOH_IsFirefoxAvailable() ||
-                HOH_IsChromeAvailable() ||
-                HOH_IsWineGeckoAvailable());
+        if (!HOH_IsWineGeckoAvailable())
+            return FALSE;
+
+        // Check file association of *.html
+        ASSOCF af = ASSOCF_INIT_IGNOREUNKNOWN | ASSOCF_NOTRUNCATE;
+        WCHAR szFile[MAX_PATH];
+        DWORD cchFile = _countof(szFile);
+        HRESULT hr = AssocQueryStringW(af, ASSOCSTR_EXECUTABLE, L".html", NULL, szFile, &cchFile);
+        return SUCCEEDED(hr) && PathFileExistsW(szFile);
     }
 
     static inline BOOL
     HelpOfHtml(
         HWND hWndMain,
-        LPCTSTR lpszHelp,
+        LPCWSTR lpszHelp,
         UINT uCommand,
         DWORD_PTR dwData)
     {
@@ -143,19 +151,15 @@
         UNREFERENCED_PARAMETER(dwData);
 
         // Build help file pathname
-        TCHAR szPath[MAX_PATH];
-        GetWindowsDirectory(szPath, _countof(szPath));
-        StringCchCat(szPath, _countof(szPath), _T("\\Help\\"));
-        StringCchCat(szPath, _countof(szPath), lpszHelp);
+        WCHAR szPath[MAX_PATH];
+        GetWindowsDirectoryW(szPath, _countof(szPath));
+        StringCchCatW(szPath, _countof(szPath), _T("\\Help\\"));
+        StringCchCatW(szPath, _countof(szPath), lpszHelp);
 
         // Delete .extension
-        LPTSTR pch = _tcsrchr(szPath, _T('\\'));
+        LPWSTR pch = PathFindExtensionW(szPath);
         if (pch)
-            pch = _tcsrchr(pch, _T('.'));
-        if (pch)
-            *pch = 0; // Cut off
-        else
-            pch = &szPath[_tcslen(szPath)];
+            PathRemoveExtensionW(szPath);
 
         LANGID wLangId = GetUserDefaultLangID();
         HOH_AddLangSuffix(szPath, _countof(szPath), wLangId);
@@ -166,25 +170,24 @@
         {
             // Add .html if the browser and .html are available; otherwise .txt
             if (iTry < 2 && bBrowserAvailable)
-                StringCchCat(szPath, _countof(szPath), _T(".html"));
+                StringCchCatW(szPath, _countof(szPath), L".html");
             else
-                StringCchCat(szPath, _countof(szPath), _T(".txt"));
+                StringCchCatW(szPath, _countof(szPath), L".txt");
 
-            if (GetFileAttributes(szPath) != INVALID_FILE_ATTRIBUTES)
+            if (PathFileExistsW(szPath))
                 break; // File found
 
             // English is default
             *pch = 0; // Cut off
-            StringCchCat(szPath, _countof(szPath), L"_");
-            StringCchCat(szPath, _countof(szPath), L"en-US");
+            StringCchCatW(szPath, _countof(szPath), L"_en-US");
         }
 
         // Open the file
-        SHELLEXECUTEINFO sei = { sizeof(sei) };
+        SHELLEXECUTEINFOW sei = { sizeof(sei) };
         sei.hwnd = hWndMain;
         sei.lpFile = szPath;
         sei.nShow = SW_SHOWNORMAL;
-        return ShellExecuteEx(&sei);
+        return ShellExecuteExW(&sei);
     }
 #else
     #define HelpOfHtml(hWndMain, lpszHelp, uCommand, dwData) /* empty */
