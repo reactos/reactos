@@ -159,8 +159,7 @@
         if (pch)
             PathRemoveExtensionW(szPath);
 
-        LANGID wLangId = GetUserDefaultLangID();
-        HOH_AddLangSuffix(szPath, _countof(szPath), wLangId);
+        HOH_AddLangSuffix(szPath, _countof(szPath), GetUserDefaultLangID());
 
         INT iTry;
         BOOL bBrowserAvailable = HOH_IsBrowserAvailable();
