@@ -534,7 +534,6 @@
     CF2_GlyphPathRec  glyphPath;
 #endif
 
-
     FT_ZERO( &storage );
     FT_ZERO( &results );
     FT_ZERO( &flexStore );
