@@ -86,6 +86,9 @@
       int                 dim;
 #ifdef __REACTOS__
       AF_LatinMetricsRec *dummy = calloc(1, sizeof(*dummy));
+      if (!dummy)
+        goto Exit;
+      {
 #else
       AF_LatinMetricsRec  dummy[1];
 #endif
@@ -275,12 +278,14 @@
       }
 #ifdef __REACTOS__
       free(dummy);
+      }
 #endif
     }
 
     FT_TRACE5(( "\n" ));
 
     af_glyph_hints_done( hints );
+
 #ifdef __REACTOS__
     free(hints);
 #endif
