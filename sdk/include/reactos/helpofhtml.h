@@ -187,6 +187,8 @@ HelpOfHtml(
     return ShellExecuteExW(&sei);
 }
 
-#else
-    #define HelpOfHtml(hWndMain, lpszHelp, uCommand, dwData) /* empty */
-#endif
+#else // !def ENABLE_HELP
+
+#define HelpOfHtml(hWndMain, lpszHelp, uCommand, dwData) /* empty */
+
+#endif // !def ENABLE_HELP
