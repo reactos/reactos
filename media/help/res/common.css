@@ -1,6 +1,7 @@
 body {
   color: black;
   background-color: rgb(214, 223, 231);
+  font-family: sans-serif;
 }
 h1 {
   font-size: 125%;
@@ -21,5 +22,9 @@ img {
   vertical-align: middle;
 }
 #top_banner_div {
-  overflow: hidden;
+  font-weight: bold;
+  padding: 4px;
+  color: white;
+  background-color: white;
+  background-image: url(banner-bg.png);
 }
