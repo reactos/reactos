@@ -937,29 +937,34 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
     SetAccountsDomainSid(NULL, ComputerName);
 
     /* Now we need to set the Hostname */
-    lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                           L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
-                           0,
-                           KEY_SET_VALUE,
-                           &hKey);
-    if (lError != ERROR_SUCCESS)
+    lError = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                             L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             KEY_WRITE,
+                             NULL,
+                             &hKey,
+                             NULL);
+    if (lError == ERROR_SUCCESS)
     {
-        DPRINT1("RegOpenKeyExW for Tcpip\\Parameters failed (%08lX)\n", lError);
-        return TRUE;
-    }
+        lError = RegSetValueEx(hKey,
+                               L"Hostname",
+                               0,
+                               REG_SZ,
+                               (LPBYTE)ComputerName,
+                               (wcslen(ComputerName) + 1) * sizeof(WCHAR));
+        if (lError != ERROR_SUCCESS)
+        {
+            DPRINT1("RegSetValueEx(\"Hostname\") failed (%08lX)\n", lError);
+        }
 
-    lError = RegSetValueEx(hKey,
-                           L"Hostname",
-                           0,
-                           REG_SZ,
-                           (LPBYTE)ComputerName,
-                           (wcslen(ComputerName) + 1) * sizeof(WCHAR));
-    if (lError != ERROR_SUCCESS)
+        RegCloseKey(hKey);
+    }
+    else
     {
-        DPRINT1("RegSetValueEx(\"Hostname\") failed (%08lX)\n", lError);
+        DPRINT1("RegCreateKeyExW for Tcpip\\Parameters failed (%08lX)\n", lError);
     }
-
-    RegCloseKey(hKey);
 
     return TRUE;
 }
