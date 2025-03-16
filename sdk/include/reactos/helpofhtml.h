@@ -9,8 +9,6 @@
 
 #ifdef ENABLE_HELP
     #include <winreg.h>
-    #include <string.h>
-    #include <tchar.h>
     #include <shellapi.h>
     #include <shlwapi.h>
     #include <strsafe.h>
