@@ -17,3 +17,6 @@ p {
 small {
   font-size: 80%;
 }
+img {
+  vertical-align: middle;
+}
