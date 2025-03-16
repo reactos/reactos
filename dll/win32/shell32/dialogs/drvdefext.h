@@ -46,7 +46,6 @@ public:
 	CDrvDefExt();
 	~CDrvDefExt();
 
-
 	// IShellExtInit
 	STDMETHOD(Initialize)(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pDataObj, HKEY hkeyProgID) override;
 
