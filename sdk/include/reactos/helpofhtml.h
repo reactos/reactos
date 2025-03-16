@@ -60,14 +60,15 @@
         static const HOH_SUFFIX_AND_LANG pairs[] =
         {
             // FIXME: Add more languages
-            { TEXT("_de"), MAKELANGID(LANG_GERMAN,   SUBLANG_NEUTRAL) },
-            { TEXT("_en"), MAKELANGID(LANG_ENGLISH,  SUBLANG_ENGLISH_US) },
-            { TEXT("_fr"), MAKELANGID(LANG_FRENCH,   SUBLANG_NEUTRAL) },
-            { TEXT("_it"), MAKELANGID(LANG_ITALIAN,  SUBLANG_NEUTRAL) },
-            { TEXT("_ja"), MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT) },
-            { TEXT("_ko"), MAKELANGID(LANG_KOREAN,   SUBLANG_DEFAULT) },
-            { TEXT("_ru"), MAKELANGID(LANG_RUSSIAN,  SUBLANG_DEFAULT) },
-            { TEXT("_zh"), MAKELANGID(LANG_CHINESE,  SUBLANG_CHINESE_SIMPLIFIED) },
+            { TEXT("de-DE"), MAKELANGID(LANG_GERMAN,   SUBLANG_NEUTRAL) },
+            { TEXT("en-US"), MAKELANGID(LANG_ENGLISH,  SUBLANG_ENGLISH_US) },
+            { TEXT("es-ES"), MAKELANGID(LANG_SPANISH,  SUBLANG_NEUTRAL) },
+            { TEXT("fr-FR"), MAKELANGID(LANG_FRENCH,   SUBLANG_NEUTRAL) },
+            { TEXT("it-IT"), MAKELANGID(LANG_ITALIAN,  SUBLANG_NEUTRAL) },
+            { TEXT("ja-JP"), MAKELANGID(LANG_JAPANESE, SUBLANG_DEFAULT) },
+            { TEXT("ko-KR"), MAKELANGID(LANG_KOREAN,   SUBLANG_DEFAULT) },
+            { TEXT("ru-RU"), MAKELANGID(LANG_RUSSIAN,  SUBLANG_DEFAULT) },
+            { TEXT("zh-CN"), MAKELANGID(LANG_CHINESE,  SUBLANG_CHINESE_SIMPLIFIED) },
         };
         const size_t count = _countof(pairs);
 
@@ -77,6 +78,7 @@
         {
             if (pairs[iPair].wLangId == wLangId)
             {
+                StringCchCat(pszPath, cchPathMax, TEXT("_"));
                 StringCchCat(pszPath, cchPathMax, pairs[iPair].suffix);
                 return;
             }
@@ -87,13 +89,14 @@
         {
             if (PRIMARYLANGID(pairs[iPair].wLangId) == PRIMARYLANGID(wLangId))
             {
+                StringCchCat(pszPath, cchPathMax, TEXT("_"));
                 StringCchCat(pszPath, cchPathMax, pairs[iPair].suffix);
                 return;
             }
         }
 
         // 3rd try: default is English
-        StringCchCat(pszPath, cchPathMax, TEXT("_en"));
+        StringCchCat(pszPath, cchPathMax, TEXT("_en-US"));
     }
 
     static inline BOOL
@@ -147,7 +150,7 @@
 
             // English is default
             *pch = 0; // Cut off
-            StringCchCat(szPath, _countof(szPath), L"_en");
+            StringCchCat(szPath, _countof(szPath), L"_en-US");
         }
 
         // Open the file
