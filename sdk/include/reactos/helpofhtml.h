@@ -14,7 +14,6 @@
 #include <shlwapi.h>
 #include <strsafe.h>
 
-// Does registry key exist?
 static inline BOOL
 HOH_IsRegKeyAvailable(LPCWSTR lpSubKey)
 {
