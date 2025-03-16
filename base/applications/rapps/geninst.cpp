@@ -47,6 +47,14 @@ enum {
     UNOP_EMPTYREGKEY = 'k',
 };
 
+BOOL IsZipFile(PCWSTR Path)
+{
+    zlib_filefunc64_def zff;
+    fill_win32_filefunc64W(&zff);
+    unzFile hzf = unzOpen2_64(Path, &zff);
+    return hzf && unzClose(hzf) == UNZ_OK;
+}
+
 static int
 ExtractFilesFromZip(LPCWSTR Archive, const CStringW &OutputDir,
                     EXTRACTCALLBACK Callback, void *Cookie)
@@ -498,7 +506,7 @@ ExtractAndInstallThread(LPVOID Parameter)
 
     if (!Info.Error)
     {
-        BOOL isCab = SplitFileAndDirectory(Archive).Right(4).CompareNoCase(L".cab") == 0;
+        BOOL isCab = LOBYTE(ClassifyFile(tempdir)) == 'C';
         Info.Error = isCab ? ExtractCab(Archive, tempdir, ExtractCallback, &Info)
                            : ExtractZip(Archive, tempdir, ExtractCallback, &Info);
     }
