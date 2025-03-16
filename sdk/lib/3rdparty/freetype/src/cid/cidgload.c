@@ -288,8 +288,11 @@
     FT_Error       error;
 #ifdef __REACTOS__
     T1_DecoderRec *decoder = malloc(sizeof(*decoder));
-    /* Ugly but it allows us to reduce the diff */
-    #define decoder (*decoder)
+    if (!decoder)
+      return FT_THROW( Out_Of_Memory );
+/* Ugly but it allows us to reduce the diff */
+#define decoder (*decoder)
+    {
 #else
     T1_DecoderRec  decoder;
 #endif
@@ -312,8 +315,8 @@
     if ( error )
 #ifdef __REACTOS__
     {
-      free(&decoder);
-      return error;
+        free(&decoder);
+        return error;
     }
 #else
       return error;
@@ -341,7 +344,8 @@
 
 #ifdef __REACTOS__
     free(&decoder);
-    #undef decoder
+#undef decoder
+    }
 #endif
     return FT_Err_Ok;
   }
@@ -360,8 +364,10 @@
     FT_Error       error;
 #ifdef __REACTOS__
     T1_DecoderRec *decoder = malloc(sizeof(*decoder));
-    /* Ugly but it allows us to reduce the diff */
-    #define decoder (*decoder)
+    if (!decoder) return FT_Err_Out_Of_Memory;
+/* Ugly but it allows us to reduce the diff */
+#define decoder (*decoder)
+    {
 #else
     T1_DecoderRec  decoder;
 #endif
@@ -548,7 +554,8 @@
 
 #ifdef __REACTOS__
     free(&decoder);
-    #undef decoder
+#undef decoder
+    }
 #endif
     return error;
   }
