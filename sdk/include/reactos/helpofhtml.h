@@ -123,12 +123,13 @@
         HOH_AddLangSuffix(szPath, _countof(szPath), wLangId);
 
         INT iTry;
-        for (iTry = 0; iTry < 2; ++iTry)
+        for (iTry = 0; iTry < 3; ++iTry)
         {
             // Add .html if the browser is available; otherwise .txt
-            if (HOH_IsFirefoxAvailable() ||
-                HOH_IsChromeAvailable() ||
-                HOH_IsWineGeckoAvailable())
+            if (iTry < 2 &&
+                (HOH_IsFirefoxAvailable() ||
+                 HOH_IsChromeAvailable() ||
+                 HOH_IsWineGeckoAvailable()))
             {
                 StringCchCat(szPath, _countof(szPath), _T(".html"));
             }
