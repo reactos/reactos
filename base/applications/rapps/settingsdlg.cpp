@@ -256,11 +256,6 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
                 case IDOK:
                 {
                     HandleGeneralListItems(GetDlgItem(hDlg, IDC_GENERALLIST), NULL, &NewSettingsInfo);
-                    if (SettingsInfo.bSmallIcons != NewSettingsInfo.bSmallIcons)
-                    {
-                        SendMessageW(hMainWnd, WM_SETTINGCHANGE, SPI_SETICONMETRICS, 0); // Note: WM_SETTINGCHANGE cannot be posted
-                        PostMessageW(hMainWnd, WM_COMMAND, ID_REFRESH, 0);
-                    }
 
                     CStringW szDir;
                     CStringW szSource;
@@ -288,23 +283,21 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
                         NewSettingsInfo.szNoProxyFor, _countof(NewSettingsInfo.szNoProxyFor), szNoProxy,
                         szNoProxy.GetLength() + 1);
 
+                    CStringW::CopyChars(
+                        NewSettingsInfo.szDownloadDir, _countof(NewSettingsInfo.szDownloadDir), szDir,
+                        szDir.GetLength() + 1);
                     dwAttr = GetFileAttributesW(szDir);
-                    if (dwAttr != INVALID_FILE_ATTRIBUTES && (dwAttr & FILE_ATTRIBUTE_DIRECTORY))
-                    {
-                        CStringW::CopyChars(
-                            NewSettingsInfo.szDownloadDir, _countof(NewSettingsInfo.szDownloadDir), szDir,
-                            szDir.GetLength() + 1);
-                    }
-                    else
+                    if (dwAttr == INVALID_FILE_ATTRIBUTES || !(dwAttr & FILE_ATTRIBUTE_DIRECTORY))
                     {
                         CStringW szMsgText;
                         szMsgText.LoadStringW(IDS_CHOOSE_FOLDER_ERROR);
 
                         if (MessageBoxW(hDlg, szMsgText, NULL, MB_YESNO) == IDYES)
                         {
-                            if (CreateDirectoryW(szDir, NULL))
+                            if (!CreateDirectoryW(szDir, NULL))
                             {
-                                EndDialog(hDlg, LOWORD(wParam));
+                                ErrorBox(hDlg);
+                                break;
                             }
                         }
                         else
@@ -330,6 +323,11 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
                             szSource.GetLength() + 1);
                     }
 
+                    if (SettingsInfo.bSmallIcons != NewSettingsInfo.bSmallIcons)
+                    {
+                        SendMessageW(hMainWnd, WM_SETTINGCHANGE, SPI_SETICONMETRICS, 0); // Note: WM_SETTINGCHANGE cannot be posted
+                        PostMessageW(hMainWnd, WM_COMMAND, ID_REFRESH, 0);
+                    }
                     SettingsInfo = NewSettingsInfo;
                     SaveSettings(GetParent(hDlg), &SettingsInfo);
                     EndDialog(hDlg, LOWORD(wParam));
