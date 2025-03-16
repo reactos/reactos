@@ -3306,6 +3306,12 @@
 #ifdef __REACTOS__
     worker = malloc(sizeof(*worker));
     buffer = malloc(FT_MAX_BLACK_POOL * sizeof(Long));
+    if (!worker || !buffer)
+    {
+        free(worker);
+        free(buffer);
+        return FT_THROW( Out_Of_Memory );
+    }
     worker->buff     = buffer;
     worker->sizeBuff = &buffer[FT_MAX_BLACK_POOL];
 #else

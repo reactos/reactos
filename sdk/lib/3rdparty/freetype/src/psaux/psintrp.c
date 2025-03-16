@@ -527,6 +527,7 @@
     CF2_HintMaskRec   hintMask;
 #ifdef __REACTOS__
     CF2_GlyphPathRec *glyphPath = malloc(sizeof(*glyphPath));
+    if (!glyphPath) return;
 /* Ugly but it allows us to reduce the diff */
 #define glyphPath (*glyphPath)
 #else
@@ -2619,6 +2620,8 @@
            */
 #ifdef __REACTOS__
           CF2_HintMapRec *counterHintMap = malloc(sizeof(*counterHintMap));
+          if (counterHintMap)
+          {
 /* Ugly but it allows us to reduce the diff */
 #define counterHintMap (*counterHintMap)
 #else
@@ -2647,6 +2650,7 @@
 #ifdef __REACTOS__
          free(&counterHintMap);
          #undef counterHintMap
+        }
 #endif
         }
         break;
