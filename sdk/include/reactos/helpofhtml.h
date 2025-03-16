@@ -159,7 +159,7 @@ HelpOfHtml(
             break; // File found
 
         // English is default
-        *pch = 0; // Cut off
+        *pch = UNICODE_NULL; // Truncate
         StringCchCatW(szPath, _countof(szPath), L"_en-US");
     }
 
