@@ -132,12 +132,11 @@
         WCHAR szFile[MAX_PATH];
         DWORD cchFile = _countof(szFile);
         HRESULT hr = AssocQueryStringW(af, ASSOCSTR_EXECUTABLE, L".html", NULL, szFile, &cchFile);
-        if (SUCCEEDED(hr) && PathFileExistsW(szFile))
-        {
-            if (!lstrcmpiW(PathFindFileNameW(buf), L"iexplore.exe"))
-                return HOH_IsWineGeckoAvailable();
-            return TRUE;
-        }
+        if (FAILED(hr) || !PathFileExistsW(szFile))
+            return FALSE;
+        if (!lstrcmpiW(PathFindFileNameW(szFile), L"iexplore.exe"))
+            return HOH_IsWineGeckoAvailable();
+        return TRUE;
     }
 
     static inline BOOL
