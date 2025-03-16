@@ -144,7 +144,7 @@
                 break; // File found
 
             // English is default
-            *pch = 0;
+            *pch = 0; // Cut off
             StringCchCat(szPath, _countof(szPath), L"_en");
         }
 
