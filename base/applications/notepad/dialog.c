@@ -5,10 +5,13 @@
  * COPYRIGHT:  Copyright 1998,99 Marcel Baur <mbaur@g26.ethz.ch>
  *             Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  *             Copyright 2002 Andriy Palamarchuk
- *             Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *             Copyright 2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "notepad.h"
+#ifdef ENABLE_HELPOFHTML
+    #include "helpofhtml.h"
+#endif
 
 #include <assert.h>
 #include <commctrl.h>
@@ -16,7 +19,6 @@
 
 LRESULT CALLBACK EDIT_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-static const TCHAR helpfile[] = _T("notepad.hlp");
 static const TCHAR empty_str[] = _T("");
 static const TCHAR szDefaultExt[] = _T("txt");
 static const TCHAR txt_files[] = _T("*.txt");
@@ -953,7 +955,11 @@ VOID DIALOG_ViewStatusBar(VOID)
 
 VOID DIALOG_HelpContents(VOID)
 {
-    WinHelp(Globals.hMainWnd, helpfile, HELP_INDEX, 0);
+#ifdef ENABLE_HELPOFHTML
+    HelpOfHtml(Globals.hMainWnd, _T("notepad"), HELP_INDEX, 0);
+#else
+    WinHelp(Globals.hMainWnd, _T("notepad.hlp"), HELP_INDEX, 0);
+#endif
 }
 
 VOID DIALOG_HelpAboutNotepad(VOID)

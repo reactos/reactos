@@ -344,8 +344,10 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         DIALOG_FileNew(); /* Initialize file info */
 
+#ifndef ENABLE_HELPOFHTML
         // For now, the "Help" dialog is disabled due to the lack of HTML Help support
         EnableMenuItem(Globals.hMenu, CMD_HELP_CONTENTS, MF_BYCOMMAND | MF_GRAYED);
+#endif
         break;
 
     case WM_COMMAND:

@@ -230,6 +230,11 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
         option(PCH "Whether to use precompiled headers" ON)
     endif()
 
+    option(ENABLE_HELPOFHTML "Enable HelpOfHtml (HOH)" ON)
+    if(ENABLE_HELPOFHTML)
+      add_definitions(-DENABLE_HELPOFHTML)
+    endif()
+
     # Version Options
     add_definitions(-DWINVER=0x502
                     -D_WIN32_IE=0x600
