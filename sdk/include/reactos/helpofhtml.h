@@ -127,15 +127,17 @@
     static inline BOOL
     HOH_IsBrowserAvailable(void)
     {
-        if (!HOH_IsWineGeckoAvailable())
-            return FALSE;
-
         // Check file association of *.html
         ASSOCF af = ASSOCF_INIT_IGNOREUNKNOWN | ASSOCF_NOTRUNCATE;
         WCHAR szFile[MAX_PATH];
         DWORD cchFile = _countof(szFile);
         HRESULT hr = AssocQueryStringW(af, ASSOCSTR_EXECUTABLE, L".html", NULL, szFile, &cchFile);
-        return SUCCEEDED(hr) && PathFileExistsW(szFile);
+        if (SUCCEEDED(hr) && PathFileExistsW(szFile))
+        {
+            if (!lstrcmpiW(PathFindFileNameW(buf), L"iexplore.exe"))
+                return HOH_IsWineGeckoAvailable();
+            return TRUE;
+        }
     }
 
     static inline BOOL
