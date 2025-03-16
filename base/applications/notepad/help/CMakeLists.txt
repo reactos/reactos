@@ -1,5 +1,5 @@
 
-# NOTE: The filenames of help document must be globally unique.
+# NOTE: The help document filenames must be globally unique.
 #       If you want to add image files, please add 'notepad-' prefix to the image filename.
 
 # res/*
