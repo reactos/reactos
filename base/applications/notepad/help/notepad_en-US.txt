@@ -5,4 +5,4 @@
 Notepad, part of ReactOS, is a basic text editor for plain text (.txt) files. Ideal for quick note-taking or coding, it's lightweight and lacks advanced formatting like bold or italics.
 
 ---
-© 2025 ReactOS Development Team
+© 2025 ReactOS
