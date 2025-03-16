@@ -4,6 +4,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>Notepad Help</title>
   <script id="top_script"></script>
+  <script src="./res/notepad.js"></script>
   <link rel="shortcut icon" id="top_favicon" />
   <link rel="stylesheet" id="top_stylesheet" />
   <style>
@@ -40,24 +41,12 @@
 
 <!-- TODO: [[DOWN TO HERE]]: Translate text -->
 
-<!-- The following text does not need to be translated -->
-<!-- [[FROM HERE]]: Bottom script -->
 <script>
-  // TODO: Choose one of the following two:
+  // TODO: Choose one of the following two lines:
   var common_res_url = "./res/"; // *** USE THIS FOR MASTER ***
   //var common_res_url = "../../../../media/help/res/"; // *** USE THIS FOR LOCAL TESTING ***
 
-  // Common resources
-  var common_roslogo_url = common_res_url + "roslogo-32x32.png";
-  document.getElementById("top_script").src = common_res_url + "common.js";
-  document.getElementById("top_stylesheet").href = common_res_url + "common.css";
-  document.getElementById("top_favicon").href = common_roslogo_url;
-
-  // TODO: Embed and/or reference image(s).
-  // To embed image data, please use this: https://dopiaza.org/goodies/data-uri-generator/
-  var app_icon_url = "./res/notepad-32x32.png";
-  document.getElementById("app_icon").src = app_icon_url;
-  document.getElementById("roslogo").src = common_roslogo_url;
+  resolve_images(common_res_url);
 </script>
-<!-- [[DOWN TO HERE]]: Bottom script -->
+
 </body></html>

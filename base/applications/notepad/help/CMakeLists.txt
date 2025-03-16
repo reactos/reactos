@@ -1,4 +1,5 @@
-# res
+# res/*
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/res/notepad.js DESTINATION reactos/Help/res FOR bootcd)
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/res/notepad-32x32.png DESTINATION reactos/Help/res FOR bootcd)
 
 # *.txt
