@@ -87,6 +87,8 @@
       int                  dim;
 #ifdef __REACTOS__
       AF_LatinMetricsRec  *dummy = calloc(1, sizeof(*dummy));
+      if (dummy) goto Exit;
+      {
 #else
       AF_LatinMetricsRec   dummy[1];
 #endif
@@ -178,6 +180,10 @@
         axis->standard_width          = stdw;
         axis->extra_light             = 0;
       }
+#ifdef __REACTOS__
+      free(dummy);
+      }
+#endif
     }
 
     af_glyph_hints_done( hints );
