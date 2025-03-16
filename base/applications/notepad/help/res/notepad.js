@@ -11,6 +11,6 @@ function resolve_images(common_res_url) {
     // To embed image data, please use this: https://dopiaza.org/goodies/data-uri-generator/
     var app_icon_url = "./res/notepad-32x32.png";
     document.getElementById("app_icon").src = app_icon_url;
-    document.getElementById("roslogo").src = common_roslogo_url;
+    document.getElementById("footer_roslogo_img").src = common_roslogo_url;
   });
 }

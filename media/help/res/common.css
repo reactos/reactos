@@ -28,3 +28,6 @@ img {
   background-color: white;
   background-image: url(banner-bg.png);
 }
+#footer_roslogo_img {
+  height: 1.7em;
+}
