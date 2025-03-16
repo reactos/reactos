@@ -20,3 +20,6 @@ small {
 img {
   vertical-align: middle;
 }
+#top_banner_div {
+  overflow: hidden;
+}
