@@ -2621,7 +2621,7 @@
 #ifdef __REACTOS__
           CF2_HintMapRec *counterHintMap = malloc(sizeof(*counterHintMap));
           CF2_HintMaskRec  counterMask;
-          if (counterHintMap)
+          if (!counterHintMap)
           {
             lastError = FT_Err_Out_Of_Memory;
             goto exit;
@@ -3061,7 +3061,8 @@
 
 #ifdef __REACTOS__
     free(&glyphPath);
-    #undef glyphPath
+#undef counterHintMap
+#undef glyphPath
 #endif
     return;
   }
