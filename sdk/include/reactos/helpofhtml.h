@@ -47,17 +47,17 @@
         return HOH_IsRegKeyAvailable(L"SOFTWARE\\Wine\\MSHTML");
     }
 
-    typedef struct tagHOH_SUFFIX_AND_LANG
+    typedef struct tagHOH_LANG_NAME_AND_ID
     {
         LPCTSTR name;
         LANGID wLangId;
-    } HOH_SUFFIX_AND_LANG, *PHOH_SUFFIX_AND_LANG;
+    } HOH_LANG_NAME_AND_ID, *PHOH_LANG_NAME_AND_ID;
 
     // Add language suffix
     static inline void
     HOH_AddLangSuffix(LPTSTR pszPath, SIZE_T cchPathMax, LANGID wLangId)
     {
-        static const HOH_SUFFIX_AND_LANG pairs[] =
+        static const HOH_LANG_NAME_AND_ID pairs[] =
         {
             // FIXME: Add more languages
             { TEXT("bg-BG"), MAKELANGID(LANG_BULGARIAN,     SUBLANG_DEFAULT) },
