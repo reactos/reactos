@@ -123,9 +123,9 @@
         if (pch)
             pch = _tcsrchr(pch, _T('.'));
         if (pch)
-            *pch = 0;
+            *pch = 0; // Cut off
         else
-            pch = szPath + _tcslen(szPath);
+            pch = &szPath[_tcslen(szPath)];
 
         LANGID wLangId = GetUserDefaultLangID();
         HOH_AddLangSuffix(szPath, _countof(szPath), wLangId);
