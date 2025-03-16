@@ -27,22 +27,6 @@ HOH_IsRegKeyAvailable(LPCWSTR lpSubKey)
     return FALSE;
 }
 
-#if 0
-static inline BOOL
-HOH_IsFirefoxAvailable(void)
-{
-    return HOH_IsRegKeyAvailable(L"SOFTWARE\\Mozilla\\Mozilla Firefox") ||
-           HOH_IsRegKeyAvailable(L"SOFTWARE\\Wow6432Node\\Mozilla\\Mozilla Firefox");
-}
-
-static inline BOOL
-HOH_IsChromeAvailable(void)
-{
-    return HOH_IsRegKeyAvailable(L"SOFTWARE\\Google\\Chrome") ||
-           HOH_IsRegKeyAvailable(L"SOFTWARE\\Wow6432Node\\Google\\Chrome");
-}
-#endif
-
 static inline BOOL
 HOH_IsWineGeckoAvailable(void)
 {
