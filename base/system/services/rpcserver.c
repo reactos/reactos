@@ -252,6 +252,7 @@ ScmCheckAccess(SC_HANDLE Handle,
 
         hMgr->Handle.DesiredAccess = dwDesiredAccess;
 
+        // TODO: Perform the actual privileges check and object audit
         return ERROR_SUCCESS;
     }
     else if (hMgr->Handle.Tag == SERVICE_TAG)
@@ -261,6 +262,7 @@ ScmCheckAccess(SC_HANDLE Handle,
 
         hMgr->Handle.DesiredAccess = dwDesiredAccess;
 
+        // TODO: Perform the actual privileges check and object audit
         return ERROR_SUCCESS;
     }
 
@@ -1865,13 +1867,31 @@ RNotifyBootConfigStatus(
     SVCCTL_HANDLEW lpMachineName,
     DWORD BootAcceptable)
 {
+    MANAGER_HANDLE hMgr; // Local handle for access checks only.
+    DWORD dwError;
+
     DPRINT("RNotifyBootConfigStatus(%p %lu)\n",
            lpMachineName, BootAcceptable);
+
+    /* Initialize the local handle */
+    hMgr.Handle.Tag = MANAGER_TAG;
+    hMgr.DatabaseName[0] = UNICODE_NULL;
+
+    /* Check the desired access */
+    dwError = ScmCheckAccess((SC_HANDLE)&hMgr, SC_MANAGER_MODIFY_BOOT_CONFIG);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("ScmCheckAccess() failed (Error %lu)\n", dwError);
+        return dwError;
+    }
+
+    // TODO: What if we are already on the LKG?
+    // return ERROR_ALREADY_RUNNING_LKG;
 
     if (BootAcceptable)
         return ScmAcceptBoot();
 
-    return ScmRunLastKnownGood();
+    return ScmRestoreLastKnownGood();
 }
 
 
