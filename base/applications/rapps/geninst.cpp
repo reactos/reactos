@@ -52,7 +52,10 @@ BOOL IsZipFile(PCWSTR Path)
     zlib_filefunc64_def zff;
     fill_win32_filefunc64W(&zff);
     unzFile hzf = unzOpen2_64(Path, &zff);
-    return hzf && unzClose(hzf) == UNZ_OK;
+    if (!hzf)
+        return FALSE;
+    unzClose(hzf);
+    return TRUE;
 }
 
 static int

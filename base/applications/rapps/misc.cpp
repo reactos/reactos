@@ -157,7 +157,7 @@ OpensWithExplorer(PCWSTR Path)
     if (SUCCEEDED(hr) && StrStrIW(szCmd, L" zipfldr.dll,")) // .zip
         return TRUE;
     PathRemoveArgsW(szCmd);
-    return SUCCEEDED(hr) && !lstrcmpiW(PathFindFileNameW(szCmd), L"Explorer.exe"); // .cab
+    return SUCCEEDED(hr) && !StrCmpIW(PathFindFileNameW(szCmd), L"explorer.exe"); // .cab
 }
 
 BOOL
