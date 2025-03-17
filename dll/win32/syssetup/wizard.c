@@ -214,6 +214,66 @@ GplDlgProc(HWND hwndDlg,
     return FALSE;
 }
 
+static BOOL
+RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
+{
+    MSG msg;
+    HWND MainWindow = GetParent(hwnd);
+    STARTUPINFOW StartupInfo;
+    PROCESS_INFORMATION ProcessInformation;
+    WCHAR CmdLine[MAX_PATH] = L"rundll32.exe shell32.dll,Control_RunDLL ";
+
+    if (!pwszCPLParameters)
+    {
+        MessageBoxW(hwnd, L"Error: Failed to launch the Control Panel Applet.", NULL, MB_ICONERROR);
+        return FALSE;
+    }
+
+    ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+    StartupInfo.cb = sizeof(StartupInfo);
+    ZeroMemory(&ProcessInformation, sizeof(ProcessInformation));
+
+    ASSERT(_countof(CmdLine) > wcslen(CmdLine) + wcslen(pwszCPLParameters));
+    wcscat(CmdLine, pwszCPLParameters);
+
+    if (!CreateProcessW(NULL,
+                        CmdLine,
+                        NULL,
+                        NULL,
+                        FALSE,
+                        0,
+                        NULL,
+                        NULL,
+                        &StartupInfo,
+                        &ProcessInformation))
+    {
+        MessageBoxW(hwnd, L"Error: Failed to launch the Control Panel Applet.", NULL, MB_ICONERROR);
+        return FALSE;
+    }
+
+    /* Disable the Back and Next buttons and the main window
+     * while we're interacting with the control panel applet */
+    PropSheet_SetWizButtons(MainWindow, 0);
+    EnableWindow(MainWindow, FALSE);
+
+    while ((MsgWaitForMultipleObjects(1, &ProcessInformation.hProcess, FALSE, INFINITE, QS_ALLINPUT|QS_ALLPOSTMESSAGE )) != WAIT_OBJECT_0)
+    {
+       /* We still need to process main window messages to avoid freeze */
+       while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
+       {
+           TranslateMessage(&msg);
+           DispatchMessageW(&msg);
+       }
+    }
+    CloseHandle(ProcessInformation.hThread);
+    CloseHandle(ProcessInformation.hProcess);
+
+    /* Enable the Back and Next buttons and the main window again */
+    PropSheet_SetWizButtons(MainWindow, PSWIZB_BACK | PSWIZB_NEXT);
+    EnableWindow(MainWindow, TRUE);
+
+    return TRUE;
+}
 
 static INT_PTR CALLBACK
 WelcomeDlgProc(HWND hwndDlg,
@@ -256,6 +316,17 @@ WelcomeDlgProc(HWND hwndDlg,
                                WM_SETFONT,
                                (WPARAM)pSetupData->hTitleFont,
                                (LPARAM)TRUE);
+
+            /* HACK: Set Mizu as default theme (0.4.15)
+             * TODO: Let's have a better way of doing this on future releases.
+             */
+            WCHAR wszParams[1024];
+            WCHAR wszTheme[MAX_PATH];
+            WCHAR* format = L"desk.cpl,,2 /Action:ActivateMSTheme /file:\"%s\"";
+
+            SHGetFolderPathAndSubDirW(0, CSIDL_RESOURCES, NULL, SHGFP_TYPE_DEFAULT, L"Themes\\Mizu\\mizu.msstyles", wszTheme);
+            swprintf(wszParams, format, wszTheme);
+            RunControlPanelApplet(hwndDlg, wszParams);
         }
         break;
 
@@ -1327,68 +1398,6 @@ SetKeyboardLayoutName(HWND hwnd)
     SetWindowTextW(hwnd, LayoutPath);
 }
 
-
-static BOOL
-RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
-{
-    MSG msg;
-    HWND MainWindow = GetParent(hwnd);
-    STARTUPINFOW StartupInfo;
-    PROCESS_INFORMATION ProcessInformation;
-    WCHAR CmdLine[MAX_PATH] = L"rundll32.exe shell32.dll,Control_RunDLL ";
-
-    if (!pwszCPLParameters)
-    {
-        MessageBoxW(hwnd, L"Error: Failed to launch the Control Panel Applet.", NULL, MB_ICONERROR);
-        return FALSE;
-    }
-
-    ZeroMemory(&StartupInfo, sizeof(StartupInfo));
-    StartupInfo.cb = sizeof(StartupInfo);
-    ZeroMemory(&ProcessInformation, sizeof(ProcessInformation));
-
-    ASSERT(_countof(CmdLine) > wcslen(CmdLine) + wcslen(pwszCPLParameters));
-    wcscat(CmdLine, pwszCPLParameters);
-
-    if (!CreateProcessW(NULL,
-                        CmdLine,
-                        NULL,
-                        NULL,
-                        FALSE,
-                        0,
-                        NULL,
-                        NULL,
-                        &StartupInfo,
-                        &ProcessInformation))
-    {
-        MessageBoxW(hwnd, L"Error: Failed to launch the Control Panel Applet.", NULL, MB_ICONERROR);
-        return FALSE;
-    }
-
-    /* Disable the Back and Next buttons and the main window
-     * while we're interacting with the control panel applet */
-    PropSheet_SetWizButtons(MainWindow, 0);
-    EnableWindow(MainWindow, FALSE);
-
-    while ((MsgWaitForMultipleObjects(1, &ProcessInformation.hProcess, FALSE, INFINITE, QS_ALLINPUT|QS_ALLPOSTMESSAGE )) != WAIT_OBJECT_0)
-    {
-       /* We still need to process main window messages to avoid freeze */
-       while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
-       {
-           TranslateMessage(&msg);
-           DispatchMessageW(&msg);
-       }
-    }
-    CloseHandle(ProcessInformation.hThread);
-    CloseHandle(ProcessInformation.hProcess);
-
-    /* Enable the Back and Next buttons and the main window again */
-    PropSheet_SetWizButtons(MainWindow, PSWIZB_BACK | PSWIZB_NEXT);
-    EnableWindow(MainWindow, TRUE);
-
-    return TRUE;
-}
-
 static VOID
 WriteUserLocale(VOID)
 {
@@ -1892,10 +1901,10 @@ static struct ThemeInfo
     LPCWSTR ThemeFile;
 
 } Themes[] = {
+    { MAKEINTRESOURCE(IDB_MIZU), IDS_MIZU, L"themes\\mizu\\mizu.msstyles"},
     { MAKEINTRESOURCE(IDB_CLASSIC), IDS_CLASSIC, NULL },
     { MAKEINTRESOURCE(IDB_LAUTUS), IDS_LAUTUS, L"themes\\lautus\\lautus.msstyles" },
     { MAKEINTRESOURCE(IDB_LUNAR), IDS_LUNAR, L"themes\\lunar\\lunar.msstyles" },
-    { MAKEINTRESOURCE(IDB_MIZU), IDS_MIZU, L"themes\\mizu\\mizu.msstyles"},
 };
 
 static INT_PTR CALLBACK

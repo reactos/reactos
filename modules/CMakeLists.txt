@@ -1,7 +1,7 @@
 
 option(ENABLE_ROSAPPS "Enable building the ReactOS extra applications" OFF)
 option(ENABLE_ROSTESTS "Enable building the ReactOS test suite" OFF)
-option(ENABLE_WALLPAPERS "Integrate wallpapers into the built ISOs" OFF)
+# option(ENABLE_WALLPAPERS "Integrate wallpapers into the built ISOs" OFF)
 
 if(ENABLE_ROSAPPS)
     add_subdirectory(rosapps)
@@ -11,9 +11,7 @@ if(ENABLE_ROSTESTS)
     add_subdirectory(rostests)
 endif()
 
-if(ENABLE_WALLPAPERS)
-    add_subdirectory(wallpapers)
-endif()
+add_subdirectory(wallpapers)
 
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/AHK_Tests/)
     add_subdirectory(AHK_Tests)
