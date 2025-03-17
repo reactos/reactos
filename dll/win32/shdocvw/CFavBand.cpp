@@ -146,7 +146,7 @@ STDMETHODIMP CFavBand::OnSelectionChanged(_In_ PCIDLIST_ABSOLUTE pidl)
     if (attrs & SFGAO_FOLDER)
     {
         HTREEITEM hItem = TreeView_GetSelection(m_hwndTreeView);
-        CItemData *pItemData = GetItemData(hItem);
+        CItemData *pItemData = _GetItemData(hItem);
         if (pItemData && !pItemData->expanded)
         {
             _InsertSubitems(hItem, pItemData->absolutePidl);

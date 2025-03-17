@@ -54,6 +54,18 @@ BOOL SHELL_IncludeItemInFolderEnum(IShellFolder *pSF, PCUITEMID_CHILD pidl, SFGA
     return TRUE;
 }
 
+HRESULT SHELL_CreateAbsolutePidl(IShellFolder *pSF, PCUIDLIST_RELATIVE pidlChild, PIDLIST_ABSOLUTE *ppPidl)
+{
+    PIDLIST_ABSOLUTE pidlFolder;
+    HRESULT hr = SHGetIDListFromObject(pSF, &pidlFolder);
+    if (SUCCEEDED(hr))
+    {
+        hr = SHILCombine(pidlFolder, pidlChild, ppPidl);
+        ILFree(pidlFolder);
+    }
+    return hr;
+}
+
 HRESULT
 Shell_NextElement(
     _Inout_ LPWSTR *ppch,
