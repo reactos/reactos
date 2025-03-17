@@ -93,7 +93,7 @@
       FT_ULong          glyph_index;
       int               dim;
 #ifdef __REACTOS__
-      AF_CJKMetricsRec *dummy = calloc(1, sizeof(*dummy));
+      AF_CJKMetricsRec *dummy = malloc(sizeof(*dummy));
       if (!dummy)
         goto Exit;
       {
@@ -176,9 +176,7 @@
       if ( error || face->glyph->outline.n_points <= 0 )
         goto Exit;
 
-#ifndef __REACTOS__
       FT_ZERO( dummy );
-#endif
 
       dummy->units_per_em = metrics->units_per_em;
 

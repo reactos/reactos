@@ -44,8 +44,7 @@ list(APPEND SOURCE
     src/truetype/truetype.c
     src/type1/type1.c
     src/type42/type42.c
-    src/winfonts/winfnt.c
-    freetype.rc)
+    src/winfonts/winfnt.c)
 
 add_library(freetype ${SOURCE})
 
@@ -55,5 +54,5 @@ if(CMAKE_C_COMPILER_ID STREQUAL "MSVC" AND ARCH STREQUAL "amd64")
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(freetype PRIVATE -fno-builtin-malloc -fno-builtin-calloc)
+    target_compile_options(freetype PRIVATE -fno-builtin-malloc)
 endif()

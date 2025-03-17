@@ -495,7 +495,7 @@
 #ifdef __REACTOS__
     AF_LoaderRec  *loader = malloc(sizeof(*loader));
     if (!loader)
-      return FT_THROW( FT_Err_Out_Of_Memory );
+      return FT_Err_Out_Of_Memory;
 #else
     AF_LoaderRec   loader[1];
 #endif
