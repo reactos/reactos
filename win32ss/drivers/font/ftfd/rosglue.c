@@ -54,16 +54,6 @@ malloc(size_t Size)
 }
 
 void *
-calloc(size_t nelem, size_t elsize)
-{
-    size_t size = nelem * elsize;
-    void *ptr = malloc(size);
-    if (ptr)
-        memset(ptr, 0, size);
-    return ptr;
-}
-
-void *
 realloc(void *Object, size_t Size)
 {
     void *NewObject;
@@ -136,11 +126,4 @@ fclose(FILE *Stream)
 {
     DPRINT1("Doubleplus ungood: freetype shouldn't fclose!\n");
     return EOF;
-}
-
-/* Getting environment variable */
-char *getenv(const char *name)
-{
-    DPRINT("getenv in freetype is disabled\n");
-    return NULL;
 }
