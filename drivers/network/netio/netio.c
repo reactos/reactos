@@ -324,8 +324,14 @@ ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
     PWSK_SOCKET_INTERNAL AcceptSocket = l->AcceptSocket;
     PWSK_CLIENT_LISTEN_DISPATCH ListenDispatch =
         (PWSK_CLIENT_LISTEN_DISPATCH) ListenSocket->ListenDispatch;
+
+        /* A PTRANSPORT_ADDRESS address field has an additional
+         * AddressLength field so the struct sockaddr_in starts
+         * at the AddressType (the address family, 2 for AF_INET)
+         * field.
+         */
     PSOCKADDR RemoteAddress =
-        (PSOCKADDR)(&((PTRANSPORT_ADDRESS) l->ReturnConnectionInfo->RemoteAddress)->Address[0].Address[0]);
+        (PSOCKADDR)(&((PTRANSPORT_ADDRESS) l->ReturnConnectionInfo->RemoteAddress)->Address[0].AddressType);
     PVOID AcceptSocketContext;
     const WSK_CLIENT_CONNECTION_DISPATCH *AcceptSocketDispatch;
     NTSTATUS Status;
