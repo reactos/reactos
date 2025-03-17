@@ -3,11 +3,6 @@ if(DBG)
     add_definitions(-D_DEBUG=1)
 endif()
 
-if(ENABLE_HELP)
-    add_subdirectory(help)
-    include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos)
-endif()
-
 list(APPEND SOURCE
     dialog.c
     main.c
@@ -23,3 +18,9 @@ add_importlibs(notepad shlwapi user32 gdi32 comctl32 comdlg32 advapi32 shell32 m
 add_pch(notepad notepad.h SOURCE)
 add_cd_file(TARGET notepad DESTINATION reactos FOR all)
 add_cd_file(TARGET notepad DESTINATION reactos/system32 FOR all)
+
+if(ENABLE_HELP)
+    add_subdirectory(help)
+    target_compile_definitions(notepad PRIVATE ENABLE_HELP)
+    target_include_directories(notepad PRIVATE ${REACTOS_SOURCE_DIR}/sdk/include/reactos)
+endif()

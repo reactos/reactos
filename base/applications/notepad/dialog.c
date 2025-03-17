@@ -10,7 +10,7 @@
 
 #include "notepad.h"
 #ifdef ENABLE_HELP
-    #include "helpofhtml.h"
+    #include "helpview.h"
 #endif
 
 #include <assert.h>
@@ -956,9 +956,7 @@ VOID DIALOG_ViewStatusBar(VOID)
 VOID DIALOG_HelpContents(VOID)
 {
 #ifdef ENABLE_HELP
-    HelpOfHtml(Globals.hMainWnd, L"notepad", HELP_INDEX, 0);
-#else
-    WinHelp(Globals.hMainWnd, _T("notepad.hlp"), HELP_INDEX, 0);
+    HelpView(Globals.hMainWnd, L"notepad.hlp", HELP_INDEX, 0);
 #endif
 }
 

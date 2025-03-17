@@ -231,9 +231,6 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     endif()
 
     option(ENABLE_HELP "Enable Help" ON)
-    if(ENABLE_HELP)
-        add_definitions(-DENABLE_HELP)
-    endif()
 
     # Version Options
     add_definitions(-DWINVER=0x502

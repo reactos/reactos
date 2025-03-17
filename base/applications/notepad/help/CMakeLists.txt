@@ -10,5 +10,5 @@ add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/res/notepad-32x32.png DESTINATION r
 # *.txt
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/notepad_en-US.txt DESTINATION reactos/Help FOR bootcd) # English
 
-# *.html
-add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/notepad_en-US.html DESTINATION reactos/Help FOR bootcd) # English
+# *.htm
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/notepad_en-US.htm DESTINATION reactos/Help FOR bootcd) # English
