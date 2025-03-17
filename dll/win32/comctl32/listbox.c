@@ -204,6 +204,10 @@ static void set_item_height( LB_DESCR *descr, UINT index, UINT height )
 
 static BOOL is_item_selected( const LB_DESCR *descr, UINT index )
 {
+#ifdef __REACTOS__
+    if (descr->style & LBS_NOSEL)
+        return FALSE;
+#endif
     if (!(descr->style & (LBS_MULTIPLESEL | LBS_EXTENDEDSEL)))
         return index == descr->selected_item;
     if (descr->style & LBS_NODATA)
