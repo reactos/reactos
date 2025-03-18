@@ -173,14 +173,10 @@ struct InstallInfo : CommonInfo
     }
 };
 
-static UINT
+static inline UINT
 ErrorBox(UINT Error = GetLastError())
 {
-    if (!Error)
-        Error = ERROR_INTERNAL_ERROR;
-    ErrorBox(g_pInfo->GetGuiOwner(), Error);
-    g_pInfo->Error = Error;
-    return Error;
+    return g_pInfo->Error = ErrorBox(g_pInfo->GetGuiOwner(), Error);
 }
 
 static LPCWSTR
