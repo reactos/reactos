@@ -54,7 +54,7 @@ ExtLdrEntryPoint:
     mov di, offset FreeLdrFileName                                      // Load target filename address
     mov cx, offset FreeLdrFileNameEnd - FreeLdrFileName                 // Length of filename to compare
     cmp byte ptr ds:[si + EXT_DIRECTORY_ENTRY_NAME_LENGTH_OFFSET], cl   // Compare if both names have the same length
-    jnz .FSkip2                                                         // Skip this entry if yes
+    jnz .FSkip2                                                         // Skip this entry if not
     add si, EXT_DIRECTORY_ENTRY_NAME_OFFSET                             // Move to filename in entry
     repe cmpsb                                                          // Compare filenames
     pop si                                                              // Restore SI
