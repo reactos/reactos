@@ -3258,8 +3258,14 @@
     const FT_Bitmap*   target_map = params->target;
 
 #ifdef __REACTOS__
-    black_TWorker *worker = NULL;
-    Long *buffer = NULL;
+    black_TWorker *worker = malloc(sizeof(*worker));
+    Long *buffer = malloc(FT_MAX_BLACK_POOL * sizeof(Long));
+    if (!worker || !buffer)
+    {
+        free(worker);
+        free(buffer);
+        return FT_THROW( Out_Of_Memory );
+    }
 #else
     black_TWorker  worker[1];
 
@@ -3303,19 +3309,10 @@
     ras.outline = *outline;
     ras.target  = *target_map;
 
-#ifdef __REACTOS__
-    worker = malloc(sizeof(*worker));
-    buffer = malloc(FT_MAX_BLACK_POOL * sizeof(Long));
-    if (!worker || !buffer)
-    {
-        free(worker);
-        free(buffer);
-        return FT_THROW( Out_Of_Memory );
-    }
     worker->buff     = buffer;
+#ifdef __REACTOS__
     worker->sizeBuff = &buffer[FT_MAX_BLACK_POOL];
 #else
-    worker->buff     = buffer;
     worker->sizeBuff = (&buffer)[1]; /* Points to right after buffer. */
 #endif
 
