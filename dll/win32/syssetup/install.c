@@ -985,6 +985,61 @@ cleanup:
     return bConsoleBoot;
 }
 
+extern VOID
+EnableVisualTheme(
+    _In_opt_ HWND hwndParent,
+    _In_opt_ PCWSTR ThemeFile);
+
+/**
+ * @brief
+ * Pre-process unattended file to apply early settings.
+ *
+ * @param[in]   IsInstall
+ * TRUE if this is ReactOS installation, invoked from InstallReactOS(),
+ * FALSE if this is run as part of LiveCD, invoked form InstallLiveCD().
+ **/
+static VOID
+PreprocessUnattend(
+    _In_ BOOL IsInstall)
+{
+    WCHAR szPath[MAX_PATH];
+    WCHAR szValue[MAX_PATH];
+    BOOL bDefaultThemesOff;
+
+    if (IsInstall)
+    {
+        /* See also wizard.c!ProcessSetupInf()
+         * Retrieve the path of the setup INF */
+        GetSystemDirectoryW(szPath, _countof(szPath));
+        wcscat(szPath, L"\\$winnt$.inf");
+    }
+    else
+    {
+        /* See also userinit/livecd.c!RunLiveCD() */
+        GetWindowsDirectoryW(szPath, _countof(szPath));
+        wcscat(szPath, L"\\unattend.inf");
+    }
+
+    /*
+     * Apply initial default theming
+     */
+
+    /* Check whether to use the classic theme (TRUE) instead of the default theme */
+    bDefaultThemesOff = FALSE;
+    if (GetPrivateProfileStringW(L"Shell", L"DefaultThemesOff", L"no", szValue, _countof(szValue), szPath) && *szValue)
+        bDefaultThemesOff = (_wcsicmp(szValue, L"yes") == 0);
+
+    if (!bDefaultThemesOff)
+    {
+        /* Retrieve the complete path to a .theme (or for ReactOS, a .msstyles) file */
+        if (!GetPrivateProfileStringW(L"Shell", L"CustomDefaultThemeFile", NULL, szValue, _countof(szValue), szPath) || !*szValue)
+            bDefaultThemesOff = TRUE; // None specified, fall back to the classic theme.
+    }
+
+    /* Enable the chosen theme, or use the classic theme */
+    EnableVisualTheme(NULL, bDefaultThemesOff ? NULL : szValue);
+}
+
 static BOOL
 CommonInstall(VOID)
 {
@@ -1007,7 +1062,7 @@ CommonInstall(VOID)
         goto Exit;
     }
 
-    if(!InstallSysSetupInfComponents())
+    if (!InstallSysSetupInfComponents())
     {
         FatalError("InstallSysSetupInfComponents() failed!\n");
         goto Exit;
@@ -1038,7 +1093,6 @@ CommonInstall(VOID)
     bResult = TRUE;
 
 Exit:
-
     if (bResult == FALSE)
     {
         SetupCloseInfFile(hSysSetupInf);
@@ -1062,6 +1116,7 @@ InstallLiveCD(VOID)
     PROCESS_INFORMATION ProcessInformation;
     BOOL bRes;
 
+    PreprocessUnattend(FALSE);
     if (!CommonInstall())
         goto error;
 
@@ -1579,6 +1634,7 @@ InstallReactOS(VOID)
 
     hHotkeyThread = CreateThread(NULL, 0, HotkeyThread, NULL, 0, NULL);
 
+    PreprocessUnattend(TRUE);
     if (!CommonInstall())
         return 0;
 

@@ -59,16 +59,12 @@ LocaleID = 409
 ; 1: ReactOS Workstation
 ProductOption = 0
 
-; enable this section to automatically launch programs
+; Enable this section to automatically launch programs
 ; after 3rd boot
-;
 ; [GuiRunOnce]
 ; %SystemRoot%\system32\cmd.exe
-; Enable the next line (+ the GuiRunOnce section) to enable the lautus theme
-; "rundll32.exe shell32.dll,Control_RunDLL desk.cpl desk,@Appearance /Action:ActivateMSTheme /file:%SYSTEMROOT%\Resources\themes\lautus\lautus.msstyles"
 
-
-; enable this section to change resolution / bpp
+; Enable this section to change resolution / bpp
 ; setting a value to 0 or skipping it will leave it unchanged
 ; [Display]
 ; BitsPerPel = 32
@@ -79,4 +75,9 @@ ProductOption = 0
 ; enable this section to add environment variables
 ;[Env]
 ;WINETEST_PLATFORM=reactos
+
+; Enable this section to enable the default ReactOS theme
+; [Shell]
+; DefaultThemesOff = no
+; CustomDefaultThemeFile = "%WINDIR%\Resources\Themes\Lautus\lautus.msstyles"
 
