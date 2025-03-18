@@ -4106,6 +4106,23 @@ HRESULT WINAPI CLSIDFromStringWrap(LPCWSTR idstr, CLSID *id)
  */
 BOOL WINAPI IsOS(DWORD feature)
 {
+#ifdef __REACTOS__
+    OSVERSIONINFOEXA osvi;
+    DWORD platform, majorv, minorv;
+
+    osvi.dwOSVersionInfoSize = sizeof(osvi);
+    if (!GetVersionExA((OSVERSIONINFOA*)&osvi))
+    {
+        osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
+        if (!GetVersionExA((OSVERSIONINFOA*)&osvi))
+        {
+            ERR("GetVersionEx failed\n");
+            return FALSE;
+        }
+        osvi.wProductType = VER_NT_WORKSTATION;
+        osvi.wSuiteMask = 0;
+    }
+#else
     OSVERSIONINFOA osvi;
     DWORD platform, majorv, minorv;
 
@@ -4114,7 +4131,7 @@ BOOL WINAPI IsOS(DWORD feature)
         ERR("GetVersionEx failed\n");
         return FALSE;
     }
-
+#endif
     majorv = osvi.dwMajorVersion;
     minorv = osvi.dwMinorVersion;
     platform = osvi.dwPlatformId;
@@ -4189,7 +4206,11 @@ BOOL WINAPI IsOS(DWORD feature)
         FIXME("(OS_DOMAINMEMBER) What should we return here?\n");
         return TRUE;
     case OS_ANYSERVER:
+#ifdef __REACTOS__
+        ISOS_RETURN(osvi.wProductType > VER_NT_WORKSTATION)
+#else
         ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
+#endif
     case OS_WOW6432:
         {
             BOOL is_wow64;
