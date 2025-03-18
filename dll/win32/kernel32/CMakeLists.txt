@@ -128,9 +128,9 @@ function(compile_message_file MESSAGE_FILE CODEPAGE)
     add_custom_command(
         OUTPUT ${HEADER_FILE} ${RESOURCE_FILE}
         COMMAND windmc -h ${CMAKE_CURRENT_BINARY_DIR} -r ${CMAKE_CURRENT_BINARY_DIR} ${MESSAGE_FILE} -C ${CODEPAGE}
-        DEPENDS ${MESSAGE_FILE}
-        COMMENT "Compiling ${MESSAGE_FILE} with windmc.exe"
-    )
+        COMMENT "Compiling ${MESSAGE_FILE} with windmc.exe")
+    add_dependencies(${HEADER_FILE} ${MESSAGE_FILE})
+    add_dependencies(${RESOURCE_FILE} ${MESSAGE_FILE})
 
     # Add header file and resource file to target
     set(GENERATED_FILES ${HEADER_FILE} ${RESOURCE_FILE})
