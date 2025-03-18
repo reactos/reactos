@@ -116,11 +116,40 @@ elseif(ARCH STREQUAL "arm")
         client/arm/thread.S)
 endif()
 
+set(COMPILED_MESSAGE_FILES "")
+
+# Compile message file
+function(compile_message_file MESSAGE_FILE CODEPAGE)
+    get_filename_component(MESSAGE_NAME ${MESSAGE_FILE} NAME_WE) # Filename without .extension
+    set(HEADER_FILE ${CMAKE_CURRENT_BINARY_DIR}/${MESSAGE_NAME}.h)
+    set(RESOURCE_FILE ${CMAKE_CURRENT_BINARY_DIR}/${MESSAGE_NAME}.rc)
+
+    # Custom command with using windmc.exe
+    add_custom_command(
+        OUTPUT ${HEADER_FILE} ${RESOURCE_FILE}
+        COMMAND windmc -h ${CMAKE_CURRENT_BINARY_DIR} -r ${CMAKE_CURRENT_BINARY_DIR} ${MESSAGE_FILE} -C ${CODEPAGE}
+        DEPENDS ${MESSAGE_FILE}
+        COMMENT "Compiling ${MESSAGE_FILE} with windmc.exe"
+    )
+
+    # Add header file and resource file to target
+    set(GENERATED_FILES ${HEADER_FILE} ${RESOURCE_FILE})
+    set_source_files_properties(${GENERATED_FILES} PROPERTIES GENERATED TRUE)
+    list(APPEND COMPILED_MESSAGE_FILES ${GENERATED_FILES})
+    set(COMPILED_MESSAGE_FILES ${COMPILED_MESSAGE_FILES} PARENT_SCOPE)
+endfunction()
+
+compile_message_file(${CMAKE_CURRENT_SOURCE_DIR}/winnls/lang/bg-BG.mc 1251)
+compile_message_file(${CMAKE_CURRENT_SOURCE_DIR}/winnls/lang/de-DE.mc 1252)
+compile_message_file(${CMAKE_CURRENT_SOURCE_DIR}/winnls/lang/pl-PL.mc 1252)
+compile_message_file(${CMAKE_CURRENT_SOURCE_DIR}/winnls/lang/ru-RU.mc 1251)
+
 add_asm_files(kernel32_asm ${ASM_SOURCE})
 add_library(kernel32 MODULE
     ${SOURCE}
     ${kernel32_asm}
     kernel32.rc
+    ${COMPILED_MESSAGE_FILES}
     ${CMAKE_CURRENT_BINARY_DIR}/kernel32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/kernel32.def)
 
@@ -135,3 +164,4 @@ add_importlibs(kernel32 ntdll)
 add_pch(kernel32 k32.h SOURCE)
 add_dependencies(kernel32 psdk errcodes asm)
 add_cd_file(TARGET kernel32 DESTINATION reactos/system32 FOR all)
+target_include_directories(kernel32 PRIVATE ${CMAKE_CURRENT_BINARY_DIR})

@@ -15,7 +15,7 @@ FacilityNames=(System=0x0:FACILITY_SYSTEM
                WIN32=0x7:FACILITY_GENERAL
               )
 
-LanguageNames=(Bulgarian=0x419:MSG00419)
+LanguageNames=(Bulgarian=0x402:MSG00402)
 
 
 ;
