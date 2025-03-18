@@ -36,6 +36,14 @@ NTSTATUS TdiListen(
     PIO_COMPLETION_ROUTINE CompletionRoutine,
     PVOID CompletionContext);
 
+NTSTATUS TdiAccept(
+    PIRP * Irp,
+    PFILE_OBJECT AcceptConnectionObject,
+    PTDI_CONNECTION_INFORMATION RequestConnectionInfo,
+    PTDI_CONNECTION_INFORMATION ReturnConnectionInfo,
+    PIO_COMPLETION_ROUTINE CompletionRoutine,
+    PVOID CompletionContext);
+
 NTSTATUS TdiReceive(
     PIRP * Irp,
     PFILE_OBJECT ConnectionObject,

@@ -80,6 +80,8 @@ ULONG DebugTraceLevel = MIN_TRACE;
 
 #endif
 
+struct ListenContext;
+
 typedef struct _WSK_SOCKET_INTERNAL
 {
     WSK_SOCKET s;
@@ -117,6 +119,7 @@ typedef struct _WSK_SOCKET_INTERNAL
     PKTHREAD ListenThread;
     KEVENT StartListenEvent;
     BOOLEAN ListenThreadShouldRun;
+    struct ListenContext *l;
 } WSK_SOCKET_INTERNAL, *PWSK_SOCKET_INTERNAL;
 
 struct NetioContext
@@ -130,6 +133,8 @@ struct NetioContext
 void
 SocketGet(PWSK_SOCKET_INTERNAL s)
 {
+    FUNCTION_TRACE;
+
     s->RefCount++;
 // DbgPrint("SocketGet: refcount is %d socket is %p\n", s->RefCount, s);
 }
@@ -138,6 +143,8 @@ static
 void SocketShutdown(PWSK_SOCKET_INTERNAL s)
 {
     NTSTATUS status;
+
+    FUNCTION_TRACE;
 
     if (s->ListenThreadHandle != NULL)
     {
@@ -180,6 +187,8 @@ void SocketShutdown(PWSK_SOCKET_INTERNAL s)
 void
 SocketPut(PWSK_SOCKET_INTERNAL s)
 {
+    FUNCTION_TRACE;
+
     s->RefCount--;
     if (s->RefCount == 0)
     {
@@ -206,6 +215,8 @@ SocketPut(PWSK_SOCKET_INTERNAL s)
 NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
+    FUNCTION_TRACE;
+
     return STATUS_SUCCESS;
 }
 
@@ -229,12 +240,14 @@ NetioComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
     struct NetioContext *c = (struct NetioContext *)Context;
     PIRP UserIrp = c->UserIrp;
 
+    FUNCTION_TRACE;
+
     UserIrp->IoStatus.Status = Irp->IoStatus.Status;
     UserIrp->IoStatus.Information = Irp->IoStatus.Information;
 
     if (c->PeerAddrRet != NULL) {
         PSOCKADDR RemoteAddress =
-            (PSOCKADDR)(&((PTRANSPORT_ADDRESS) c->PeerAddrRet->RemoteAddress)->Address[0].Address[0]);
+            (PSOCKADDR)(&((PTRANSPORT_ADDRESS) c->PeerAddrRet->RemoteAddress)->Address[0].AddressType);
 
         memcpy(&c->socket->RemoteAddress, RemoteAddress, sizeof(c->socket->RemoteAddress));
     }
@@ -254,6 +267,20 @@ NetioComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
     return STATUS_SUCCESS;
 }
 
+static NTSTATUS NTAPI
+AcceptComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
+{
+    PWSK_SOCKET_INTERNAL s = (PWSK_SOCKET_INTERNAL) Context;
+    FUNCTION_TRACE;
+
+    if (!NT_SUCCESS(Irp->IoStatus.Status))
+    {
+        DbgPrint("AcceptComplete got non-successful status 0x%08x, socket is %p\n", Irp->IoStatus.Status, s);
+        /* Close socket? */
+    }
+    return STATUS_SUCCESS;
+}
+
 struct ListenContext {
     PWSK_SOCKET_INTERNAL ListenSocket;
     PWSK_SOCKET_INTERNAL AcceptSocket;
@@ -264,6 +291,8 @@ static NTSTATUS NTAPI
 CompletionFireEvent(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
 {
     PKEVENT Event = (PKEVENT) Context;
+
+    FUNCTION_TRACE;
 
     KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
 
@@ -280,6 +309,8 @@ static NTSTATUS CreateSocket(
     PIRP NewSocketIrp;
     KEVENT CompletionEvent;
     NTSTATUS Status;
+
+    FUNCTION_TRACE;
 
     if (TheSocket == NULL)
     {
@@ -336,6 +367,8 @@ ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
     const WSK_CLIENT_CONNECTION_DISPATCH *AcceptSocketDispatch;
     NTSTATUS Status;
 
+    FUNCTION_TRACE;
+
     if (ListenSocket->CallbackMask & WSK_EVENT_ACCEPT &&
         ListenDispatch->WskAcceptEvent != NULL &&
         ListenSocket->ListenIrp != NULL &&
@@ -349,10 +382,14 @@ ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
         if (!NT_SUCCESS(Status))
         {
             DbgPrint("ListenDispatch->WskAcceptEvent returned non-successful status 0x%08x\n", Status);
-                  /* ignore ... */
         }
-        memcpy(&AcceptSocket->RemoteAddress, RemoteAddress, sizeof(AcceptSocket->RemoteAddress));
+        else
+        {
+            memcpy(&AcceptSocket->RemoteAddress, RemoteAddress, sizeof(AcceptSocket->RemoteAddress));
+        }
 
+	/* HACK!! We have a backpointer for use of TdiAccept() in RequeueListenThread() do not free l */
+        ListenSocket->l = l;
             /* And wait for the next incoming connection. */
             /* This is done in a separate thread at IRQL = 0 */
         QueueListening(ListenSocket);
@@ -361,7 +398,7 @@ ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
 
     SocketPut(AcceptSocket);
     SocketPut(ListenSocket);
-    ExFreePoolWithTag(l, TAG_NETIO);
+// ExFreePoolWithTag(l, TAG_NETIO);
 
     return STATUS_SUCCESS;
 }
@@ -374,7 +411,7 @@ StartListening(PWSK_SOCKET_INTERNAL ListenSocket)
     struct ListenContext *lc;
     PWSK_SOCKET_INTERNAL AcceptSocket;
 
-FUNCTION_TRACE;
+    FUNCTION_TRACE;
 
     if (ListenSocket->LocalAddressHandle == NULL)
     {
@@ -426,6 +463,7 @@ DbgPrint("out of CreateSocket ...\n");
     SocketGet(AcceptSocket);
 
     ListenSocket->ListenCancelled = FALSE;
+    /* pass the ConnectionFile from accept socket, not from ListenSocket ... */
     status = TdiListen(&tdiIrp, AcceptSocket->ConnectionFile, &lc->RequestConnectionInfo, &lc->ReturnConnectionInfo, ListenComplete, lc);
 
     if (!NT_SUCCESS(status))
@@ -460,13 +498,19 @@ err_out_free_accept_socket:
 
 static void QueueListening(PWSK_SOCKET_INTERNAL ListenSocket)
 {
+    FUNCTION_TRACE;
+
     KeSetEvent(&ListenSocket->StartListenEvent, IO_NO_INCREMENT, FALSE);
 }
 
 static void WSKAPI RequeueListenThread(void *p)
 {
     PWSK_SOCKET_INTERNAL ListenSocket = (PWSK_SOCKET_INTERNAL) p;
+    PWSK_SOCKET_INTERNAL AcceptSocket;
     NTSTATUS status;
+    PIRP AcceptIrp;
+
+    FUNCTION_TRACE;
 
     while (ListenSocket->ListenThreadShouldRun)
     {
@@ -479,6 +523,23 @@ static void WSKAPI RequeueListenThread(void *p)
         {
             break;
         }
+
+        /* We need to call TdiAccept here at IRQL == 0 */
+        if (ListenSocket->l != NULL)
+        {
+            AcceptIrp = NULL;
+            AcceptSocket = ListenSocket->l->AcceptSocket;
+
+            status = TdiAccept(&AcceptIrp, AcceptSocket->ConnectionFile, ListenSocket->l->RequestConnectionInfo, ListenSocket->l->ReturnConnectionInfo, AcceptComplete, AcceptSocket);
+
+            if (!NT_SUCCESS(status))
+            {
+                DbgPrint("TdiAccept returned non-successful status 0x%08x\n", status);
+            }
+            ListenSocket->l = NULL;
+        }
+
+        /* From here, ListenSocket->l may become invalid ... */
         StartListening(ListenSocket);
     }
 }
@@ -1219,6 +1280,7 @@ DbgPrint("out of TdiOpenConnectionEndpointFile ...\n");
             {
                 KeInitializeEvent(&s->StartListenEvent, SynchronizationEvent, FALSE);
                 s->ListenThreadShouldRun = TRUE;
+                s->l = NULL;
 
                 status = PsCreateSystemThread(&s->ListenThreadHandle, THREAD_ALL_ACCESS, NULL, NULL, NULL, RequeueListenThread, s);
                 if (status != STATUS_SUCCESS)
