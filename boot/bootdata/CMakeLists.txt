@@ -55,6 +55,9 @@ add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/bootcd-regtest.ini DESTINATION root
 # Unattend
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/bootcd/unattend.inf DESTINATION reactos NO_CAB FOR bootcd)
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/bootcdregtest/unattend.inf DESTINATION reactos NO_CAB FOR regtest)
+####
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/livecd/unattend.inf DESTINATION reactos NO_CAB FOR livecd)
+####
 
 # LiveImage shortcuts
 macro(add_livecd_shortcut name app dest)
