@@ -49,28 +49,23 @@ static void promptdisk_init(HWND hwnd, struct promptdisk_params *params)
         WCHAR format[256];
         WCHAR unknown[256];
         DWORD_PTR args[2];
-        LoadStringW(hInstance, IDS_PROMPTDISK, format,
-            sizeof(format)/sizeof(format[0]));
+        LoadStringW(SETUPAPI_hInstance, IDS_PROMPTDISK, format, ARRAY_SIZE(format));
 
         args[0] = (DWORD_PTR)params->FileSought;
         if(params->DiskName)
             args[1] = (DWORD_PTR)params->DiskName;
         else
         {
-            LoadStringW(hInstance, IDS_UNKNOWN, unknown,
-                sizeof(unknown)/sizeof(unknown[0]));
+            LoadStringW(SETUPAPI_hInstance, IDS_UNKNOWN, unknown, ARRAY_SIZE(unknown));
             args[1] = (DWORD_PTR)unknown;
         }
         FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ARGUMENT_ARRAY,
-                       format, 0, 0, message, sizeof(message)/sizeof(*message),
-                       (__ms_va_list*)args);
+                       format, 0, 0, message, ARRAY_SIZE(message), (va_list *)args);
         SetDlgItemTextW(hwnd, IDC_FILENEEDED, message);
 
-        LoadStringW(hInstance, IDS_INFO, message,
-            sizeof(message)/sizeof(message[0]));
+        LoadStringW(SETUPAPI_hInstance, IDS_INFO, message, ARRAY_SIZE(message));
         SetDlgItemTextW(hwnd, IDC_INFO, message);
-        LoadStringW(hInstance, IDS_COPYFROM, message,
-            sizeof(message)/sizeof(message[0]));
+        LoadStringW(SETUPAPI_hInstance, IDS_COPYFROM, message, ARRAY_SIZE(message));
         SetDlgItemTextW(hwnd, IDC_COPYFROM, message);
     }
     if(params->DiskPromptStyle & IDF_NOBROWSE)
@@ -88,12 +83,12 @@ static void promptdisk_ok(HWND hwnd, struct promptdisk_params *params)
     int requiredSize;
     WCHAR aux[MAX_PATH];
     GetWindowTextW(GetDlgItem(hwnd, IDC_PATH), aux, MAX_PATH);
-    requiredSize = strlenW(aux)+1;
+    requiredSize = lstrlenW(aux)+1;
 
     if(params->PathRequiredSize)
     {
         *params->PathRequiredSize = requiredSize;
-        TRACE("returning PathRequiredSize=%d\n",*params->PathRequiredSize);
+        TRACE("returning PathRequiredSize=%ld\n",*params->PathRequiredSize);
     }
     if(!params->PathBuffer)
     {
@@ -105,7 +100,7 @@ static void promptdisk_ok(HWND hwnd, struct promptdisk_params *params)
         EndDialog(hwnd, DPROMPT_BUFFERTOOSMALL);
         return;
     }
-    strcpyW(params->PathBuffer, aux);
+    lstrcpyW(params->PathBuffer, aux);
     TRACE("returning PathBuffer=%s\n", debugstr_w(params->PathBuffer));
     EndDialog(hwnd, DPROMPT_SUCCESS);
 }
@@ -122,16 +117,16 @@ static void promptdisk_browse(HWND hwnd, struct promptdisk_params *params)
     ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
     ofn.hwndOwner = hwnd;
     ofn.nMaxFile = MAX_PATH;
-    ofn.lpstrFile = HeapAlloc(GetProcessHeap(), 0, MAX_PATH*sizeof(WCHAR));
-    strcpyW(ofn.lpstrFile, params->FileSought);
+    ofn.lpstrFile = malloc(MAX_PATH * sizeof(WCHAR));
+    lstrcpyW(ofn.lpstrFile, params->FileSought);
 
     if(GetOpenFileNameW(&ofn))
     {
-        WCHAR* last_slash = strrchrW(ofn.lpstrFile, '\\');
+        WCHAR* last_slash = wcsrchr(ofn.lpstrFile, '\\');
         if (last_slash) *last_slash = 0;
         SetDlgItemTextW(hwnd, IDC_PATH, ofn.lpstrFile);
     }
-    HeapFree(GetProcessHeap(), 0, ofn.lpstrFile);
+    free(ofn.lpstrFile);
 }
 
 /* Handles the messages sent to the SetupPromptForDisk dialog
@@ -179,7 +174,7 @@ UINT WINAPI SetupPromptForDiskA(HWND hwndParent, PCSTR DialogTitle, PCSTR DiskNa
     WCHAR *FileSoughtW, *TagFileW, PathBufferW[MAX_PATH];
     UINT ret, length;
 
-    TRACE("%p, %s, %s, %s, %s, %s, 0x%08x, %p, %d, %p\n", hwndParent, debugstr_a(DialogTitle),
+    TRACE("%p, %s, %s, %s, %s, %s, 0x%08lx, %p, %ld, %p\n", hwndParent, debugstr_a(DialogTitle),
           debugstr_a(DiskName), debugstr_a(PathToSource), debugstr_a(FileSought),
           debugstr_a(TagFile), DiskPromptStyle, PathBuffer, PathBufferSize,
           PathRequiredSize);
@@ -193,11 +188,11 @@ UINT WINAPI SetupPromptForDiskA(HWND hwndParent, PCSTR DialogTitle, PCSTR DiskNa
     ret = SetupPromptForDiskW(hwndParent, DialogTitleW, DiskNameW, PathToSourceW,
             FileSoughtW, TagFileW, DiskPromptStyle, PathBufferW, MAX_PATH, PathRequiredSize);
 
-    HeapFree(GetProcessHeap(), 0, DialogTitleW);
-    HeapFree(GetProcessHeap(), 0, DiskNameW);
-    HeapFree(GetProcessHeap(), 0, PathToSourceW);
-    HeapFree(GetProcessHeap(), 0, FileSoughtW);
-    HeapFree(GetProcessHeap(), 0, TagFileW);
+    free(DialogTitleW);
+    free(DiskNameW);
+    free(PathToSourceW);
+    free(FileSoughtW);
+    free(TagFileW);
 
     if(ret == DPROMPT_SUCCESS)
     {
@@ -223,7 +218,7 @@ UINT WINAPI SetupPromptForDiskW(HWND hwndParent, PCWSTR DialogTitle, PCWSTR Disk
     struct promptdisk_params params;
     UINT ret;
 
-    TRACE("%p, %s, %s, %s, %s, %s, 0x%08x, %p, %d, %p\n", hwndParent, debugstr_w(DialogTitle),
+    TRACE("%p, %s, %s, %s, %s, %s, 0x%08lx, %p, %ld, %p\n", hwndParent, debugstr_w(DialogTitle),
           debugstr_w(DiskName), debugstr_w(PathToSource), debugstr_w(FileSought),
           debugstr_w(TagFile), DiskPromptStyle, PathBuffer, PathBufferSize,
           PathRequiredSize);
@@ -236,24 +231,22 @@ UINT WINAPI SetupPromptForDiskW(HWND hwndParent, PCWSTR DialogTitle, PCWSTR Disk
 
     if (PathToSource && (DiskPromptStyle & IDF_CHECKFIRST))
     {
-        static const WCHAR format[] = {'%', 's', '\\', '%', 's', '\0'};
         WCHAR filepath[MAX_PATH];
 
-        if (strlenW(PathToSource) + 1 + strlenW(FileSought) < sizeof(filepath))
+        if (lstrlenW(PathToSource) + 1 + lstrlenW(FileSought) < ARRAY_SIZE(filepath))
         {
-            snprintfW(filepath, MAX_PATH, format, PathToSource, FileSought);
-
+            swprintf(filepath, ARRAY_SIZE(filepath), L"%s\\%s", PathToSource, FileSought);
             if (GetFileAttributesW(filepath) != INVALID_FILE_ATTRIBUTES)
             {
                 if (PathRequiredSize)
-                    *PathRequiredSize = strlenW(PathToSource) + 1;
+                    *PathRequiredSize = lstrlenW(PathToSource) + 1;
 
                 if (!PathBuffer)
                     return DPROMPT_SUCCESS;
 
-                if (PathBufferSize >= strlenW(PathToSource) + 1)
+                if (PathBufferSize >= lstrlenW(PathToSource) + 1)
                 {
-                    strcpyW(PathBuffer, PathToSource);
+                    lstrcpyW(PathBuffer, PathToSource);
                     return DPROMPT_SUCCESS;
                 }
                 else
@@ -272,7 +265,7 @@ UINT WINAPI SetupPromptForDiskW(HWND hwndParent, PCWSTR DialogTitle, PCWSTR Disk
     params.PathBufferSize = PathBufferSize;
     params.PathRequiredSize = PathRequiredSize;
 
-    ret = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDPROMPTFORDISK),
+    ret = DialogBoxParamW(SETUPAPI_hInstance, MAKEINTRESOURCEW(IDPROMPTFORDISK),
         hwndParent, promptdisk_proc, (LPARAM)&params);
 
     if(ret == DPROMPT_CANCEL)

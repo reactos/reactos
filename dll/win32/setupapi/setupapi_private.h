@@ -33,7 +33,6 @@
 #include <winuser.h>
 #include <wingdi.h>
 #include <winreg.h>
-#include <winspool.h>
 #include <wincon.h>
 
 #include <commdlg.h>
@@ -57,6 +56,40 @@ WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 #ifdef __REACTOS__
 #undef __WINESRC__
 #endif
+
+#ifdef __REACTOS__
+
+#define ARRAY_SIZE(a) (sizeof(a)/sizeof((a)[0]))
+
+#include <malloc.h>
+// Redefine _recalloc since the header contains the function definition
+// as exported from msvcrt.dll, which we do not currently support (NT 6+)
+#define _recalloc _my_recalloc
+static inline void* /*__cdecl*/ _recalloc(void *mem, size_t num, size_t size)
+{
+    size_t old_size;
+    void *ret;
+
+    if(!mem)
+        return calloc(num, size);
+
+    size = num*size;
+    old_size = _msize(mem);
+
+    ret = realloc(mem, size);
+    if(!ret) {
+        *_errno() = ENOMEM;
+        return NULL;
+    }
+
+    if(size>old_size)
+        memset((BYTE*)ret+old_size, 0, size-old_size);
+    return ret;
+}
+
+#endif
+
+#include <setupapi_undoc.h>
 
 #include "resource.h"
 
@@ -245,7 +278,7 @@ struct FileLog /* HSPFILELOG */
     LPWSTR LogName;
 };
 
-extern HINSTANCE hInstance;
+extern HINSTANCE SETUPAPI_hInstance;
 extern OSVERSIONINFOEXW OsVersionInfo;
 
 /*
@@ -262,13 +295,25 @@ extern DWORD GlobalSetupFlags;
 #define REGPART_RENAME "\\Rename"
 #define REG_VERSIONCONFLICT "Software\\Microsoft\\VersionConflictManager"
 
-inline static WCHAR *strdupAtoW( const char *str )
+static inline char *strdupWtoA( const WCHAR *str )
+{
+    char *ret = NULL;
+    if (str)
+    {
+        DWORD len = WideCharToMultiByte( CP_ACP, 0, str, -1, NULL, 0, NULL, NULL );
+        if ((ret = malloc( len )))
+            WideCharToMultiByte( CP_ACP, 0, str, -1, ret, len, NULL, NULL );
+    }
+    return ret;
+}
+
+static inline WCHAR *strdupAtoW( const char *str )
 {
     WCHAR *ret = NULL;
     if (str)
     {
         DWORD len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
-        if ((ret = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
+        if ((ret = malloc( len * sizeof(WCHAR) )))
             MultiByteToWideChar( CP_ACP, 0, str, -1, ret, len );
     }
     return ret;
@@ -282,6 +327,8 @@ extern const WCHAR *PARSER_get_inf_filename( HINF hinf ) DECLSPEC_HIDDEN;
 extern WCHAR *PARSER_get_src_root( HINF hinf ) DECLSPEC_HIDDEN;
 extern WCHAR *PARSER_get_dest_dir( INFCONTEXT *context ) DECLSPEC_HIDDEN;
 
+extern WCHAR *get_destination_dir( HINF hinf, const WCHAR *section );
+
 /* support for Ascii queue callback functions */
 
 struct callback_WtoA_context
@@ -291,10 +338,6 @@ struct callback_WtoA_context
 };
 
 UINT CALLBACK QUEUE_callback_WtoA( void *context, UINT notification, UINT_PTR, UINT_PTR );
-
-/* from msvcrt/sys/stat.h */
-#define _S_IWRITE 0x0080
-#define _S_IREAD  0x0100
 
 /* devinst.c */
 

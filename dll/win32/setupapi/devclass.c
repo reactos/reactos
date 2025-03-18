@@ -262,7 +262,7 @@ SETUP_GetIconIndex(
     Buffer[dwLength / sizeof(WCHAR)] = 0;
 
     /* Transform icon value to a INT */
-    *ImageIndex = atoiW(Buffer);
+    *ImageIndex = wcstol(Buffer, NULL, 10);
     ret = TRUE;
 
 cleanup:
@@ -417,7 +417,7 @@ SETUP_GetClassIconInfo(IN CONST GUID *ClassGuid, OUT PINT OutIndex, OUT LPWSTR *
             SetLastError(ERROR_FILE_NOT_FOUND);
             goto cleanup;
         }
-        Comma = strchrW(Buffer, ',');
+        Comma = wcschr(Buffer, ',');
         if (!Comma)
         {
             SetLastError(ERROR_GEN_FAILURE);
@@ -572,7 +572,7 @@ SetupDiGetClassImageListExW(
                 }
                 else if(!DllName)
                 {
-                    hIcon = LoadImage(hInstance, MAKEINTRESOURCE(miniIconIndex), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+                    hIcon = LoadImage(SETUPAPI_hInstance, MAKEINTRESOURCE(miniIconIndex), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
                     list->IconIndexes[i] = ImageList_AddIcon(ClassImageListData->ImageList, hIcon);
                 }
 
@@ -593,7 +593,7 @@ SetupDiGetClassImageListExW(
         /* Finally, add the overlay icons to the image list */
         for (i = 0; i <= 2; i++)
         {
-            hIcon = LoadImage(hInstance, MAKEINTRESOURCE(500 + i), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+            hIcon = LoadImage(SETUPAPI_hInstance, MAKEINTRESOURCE(500 + i), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
             if (hIcon)
             {
                 idx = ImageList_AddIcon(ClassImageListData->ImageList, hIcon);
@@ -676,7 +676,7 @@ SetupDiLoadClassIcon(
             if(DllName)
                 iconIndex = UNKNOWN_ICON_INDEX;
 
-            hIcon = LoadImage(hInstance, MAKEINTRESOURCE(iconIndex), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+            hIcon = LoadImage(SETUPAPI_hInstance, MAKEINTRESOURCE(iconIndex), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
 
             if(!hIcon)
                 goto cleanup;
@@ -806,7 +806,7 @@ SetupDiInstallClassExW(
                 hInf,
                 ClassInstall32,
                 SectionName,
-                MAX_PATH - strlenW(DotServices),
+                MAX_PATH - lstrlenW(DotServices),
                 NULL,
                 NULL);
             if (!ret)
