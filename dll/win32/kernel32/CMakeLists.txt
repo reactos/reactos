@@ -119,18 +119,19 @@ endif()
 set(COMPILED_MESSAGE_FILES "")
 
 # Compile message file
-function(compile_message_file MESSAGE_FILE CODEPAGE)
+function(compile_message_file TARGET MESSAGE_FILE CODEPAGE)
     get_filename_component(MESSAGE_NAME ${MESSAGE_FILE} NAME_WE) # Filename without .extension
     set(HEADER_FILE ${CMAKE_CURRENT_BINARY_DIR}/${MESSAGE_NAME}.h)
     set(RESOURCE_FILE ${CMAKE_CURRENT_BINARY_DIR}/${MESSAGE_NAME}.rc)
 
-    # Custom command with using windmc.exe
-    add_custom_command(
-        OUTPUT ${HEADER_FILE} ${RESOURCE_FILE}
+    # Custom target to generate header and resource files
+    add_custom_target(${MESSAGE_NAME}_target
         COMMAND windmc -h ${CMAKE_CURRENT_BINARY_DIR} -r ${CMAKE_CURRENT_BINARY_DIR} ${MESSAGE_FILE} -C ${CODEPAGE}
-        COMMENT "Compiling ${MESSAGE_FILE} with windmc.exe")
-    add_dependencies(${HEADER_FILE} ${MESSAGE_FILE})
-    add_dependencies(${RESOURCE_FILE} ${MESSAGE_FILE})
+        COMMENT "Compiling ${MESSAGE_FILE} with windmc.exe"
+        SOURCES ${MESSAGE_FILE})
+
+    # Add dependency between the main target and the custom target
+    add_dependencies(${TARGET} ${MESSAGE_NAME}_target)
 
     # Add header file and resource file to target
     set(GENERATED_FILES ${HEADER_FILE} ${RESOURCE_FILE})
@@ -138,11 +139,6 @@ function(compile_message_file MESSAGE_FILE CODEPAGE)
     list(APPEND COMPILED_MESSAGE_FILES ${GENERATED_FILES})
     set(COMPILED_MESSAGE_FILES ${COMPILED_MESSAGE_FILES} PARENT_SCOPE)
 endfunction()
-
-compile_message_file(${CMAKE_CURRENT_SOURCE_DIR}/winnls/lang/bg-BG.mc 1251)
-compile_message_file(${CMAKE_CURRENT_SOURCE_DIR}/winnls/lang/de-DE.mc 1252)
-compile_message_file(${CMAKE_CURRENT_SOURCE_DIR}/winnls/lang/pl-PL.mc 1252)
-compile_message_file(${CMAKE_CURRENT_SOURCE_DIR}/winnls/lang/ru-RU.mc 1251)
 
 add_asm_files(kernel32_asm ${ASM_SOURCE})
 add_library(kernel32 MODULE
@@ -164,4 +160,9 @@ add_importlibs(kernel32 ntdll)
 add_pch(kernel32 k32.h SOURCE)
 add_dependencies(kernel32 psdk errcodes asm)
 add_cd_file(TARGET kernel32 DESTINATION reactos/system32 FOR all)
+
+compile_message_file(kernel32 ${CMAKE_CURRENT_SOURCE_DIR}/winnls/lang/bg-BG.mc 1251)
+compile_message_file(kernel32 ${CMAKE_CURRENT_SOURCE_DIR}/winnls/lang/de-DE.mc 1252)
+compile_message_file(kernel32 ${CMAKE_CURRENT_SOURCE_DIR}/winnls/lang/pl-PL.mc 1252)
+compile_message_file(kernel32 ${CMAKE_CURRENT_SOURCE_DIR}/winnls/lang/ru-RU.mc 1251)
 target_include_directories(kernel32 PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
