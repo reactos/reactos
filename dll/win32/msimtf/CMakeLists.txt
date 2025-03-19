@@ -17,4 +17,4 @@ target_link_libraries(msimtf uuid wine)
 add_importlibs(msimtf imm32 msvcrt kernel32 ntdll)
 add_pch(msimtf precomp.h SOURCE)
 add_cd_file(TARGET msimtf DESTINATION reactos/system32 FOR all)
-set_wine_module(msimtf)
+set_wine_module_FIXME_2(msimtf) # FIXME: ARRAY_SIZE and CONST_VTABLE?

@@ -114,4 +114,4 @@ add_importlibs(mshtml urlmon shlwapi shell32 ole32 oleaut32 user32 gdi32 advapi3
 add_dependencies(mshtml mshtml_nsiface_header)
 add_pch(mshtml mshtml_private.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET mshtml DESTINATION reactos/system32 FOR all)
-set_wine_module(mshtml)
+set_wine_module_FIXME_2(mshtml) # FIXME: CONST_VTABLE?

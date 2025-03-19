@@ -11,4 +11,4 @@ set_target_properties(msadp32.acm PROPERTIES SUFFIX "")
 target_link_libraries(msadp32.acm wine)
 add_importlibs(msadp32.acm winmm user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET msadp32.acm DESTINATION reactos/system32 FOR all)
-set_wine_module(msadp32.acm)
+set_wine_module_FIXME_2(msadp32.acm) # FIXME: ARRAY_SIZE?
