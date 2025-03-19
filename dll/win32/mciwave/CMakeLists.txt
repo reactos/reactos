@@ -13,7 +13,7 @@ set_module_type(mciwave win32dll)
 target_link_libraries(mciwave wine)
 add_importlibs(mciwave user32 winmm msvcrt kernel32 ntdll)
 add_cd_file(TARGET mciwave DESTINATION reactos/system32 FOR all)
-set_wine_module(mciwave)
+set_wine_module_FIXME_2(mciwave)
 
 if(MSVC)
     # Disable warning C4305: '=': truncation from 'UINT' to 'WORD'
