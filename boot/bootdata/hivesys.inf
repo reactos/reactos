@@ -1055,7 +1055,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage\EUDCCodeRange","950",2,"FA40
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage\EUDCCodeRange","Unicode",2,"E000-F8FF"
 
 ; NLS Language settings
-; FIXME: We don't need this values actually? ntoskrnl/ex/locale.c
+; FIXME: We don't need these values actually? ntoskrnl/ex/locale.c
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0401",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0801",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Language","0c01",0x00000000,"l_intl.nls"
