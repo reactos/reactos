@@ -679,7 +679,7 @@ USBCCGP_LegacyEnum(
             // store interface descriptor
             //
             FDODeviceExtension->FunctionDescriptor[Index].InterfaceDescriptorList[SubIndex] = InterfaceDescriptor;
-            do
+            while (TRUE)
             {
                 NextInterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(FDODeviceExtension->ConfigurationDescriptor, FDODeviceExtension->ConfigurationDescriptor, Index + SubIndex + 1, 0, -1, -1, -1);
                 if (!NextInterfaceDescriptor || NextInterfaceDescriptor->bInterfaceClass != USB_DEVICE_CLASS_AUDIO)
@@ -691,7 +691,7 @@ USBCCGP_LegacyEnum(
                 ASSERT(SubIndex < FDODeviceExtension->ConfigurationDescriptor->bNumInterfaces);
                 FDODeviceExtension->FunctionDescriptor[Index].NumberOfInterfaces++;
                 FDODeviceExtension->FunctionDescriptor[Index].InterfaceDescriptorList[SubIndex] = NextInterfaceDescriptor;
-            } while (TRUE);
+            }
         }
         else
         {
