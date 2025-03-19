@@ -411,6 +411,7 @@ StartListening(PWSK_SOCKET_INTERNAL ListenSocket)
     NTSTATUS status;
     struct ListenContext *lc;
     PWSK_SOCKET_INTERNAL AcceptSocket;
+    PIRP AcceptIrp;
 
     FUNCTION_TRACE;
 
@@ -476,6 +477,13 @@ DbgPrint("out of CreateSocket ...\n");
     }
     ListenSocket->ListenIrp = tdiIrp;
 
+    AcceptIrp = NULL;
+    status = TdiAccept(&AcceptIrp, AcceptSocket->ConnectionFile, lc->RequestConnectionInfo, lc->ReturnConnectionInfo, AcceptComplete, AcceptSocket);
+
+    if (!NT_SUCCESS(status))
+    {
+        DbgPrint("TdiAccept returned non-successful status 0x%08x\n", status);
+    }
     return STATUS_PENDING;
 
 err_out_free_lc_and_req_conn_info:
@@ -507,9 +515,9 @@ static void QueueListening(PWSK_SOCKET_INTERNAL ListenSocket)
 static void WSKAPI RequeueListenThread(void *p)
 {
     PWSK_SOCKET_INTERNAL ListenSocket = (PWSK_SOCKET_INTERNAL) p;
-    PWSK_SOCKET_INTERNAL AcceptSocket;
+    // PWSK_SOCKET_INTERNAL AcceptSocket;
     NTSTATUS status;
-    PIRP AcceptIrp;
+    // PIRP AcceptIrp;
 
     FUNCTION_TRACE;
 
@@ -525,6 +533,7 @@ static void WSKAPI RequeueListenThread(void *p)
             break;
         }
 
+#if 0
         /* We need to call TdiAccept here at IRQL == 0 */
         if (ListenSocket->l != NULL)
         {
@@ -540,6 +549,7 @@ static void WSKAPI RequeueListenThread(void *p)
             }
             ListenSocket->l = NULL;
         }
+#endif
 
         /* From here, ListenSocket->l may become invalid ... */
         StartListening(ListenSocket);
