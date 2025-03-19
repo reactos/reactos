@@ -189,8 +189,15 @@ FDO_CreateChildPdo(
     }
 
     /* Create pdo for each function */
-    for(Index = 0; Index < FDODeviceExtension->FunctionDescriptorCount; Index++)
+    for (Index = 0; Index < FDODeviceExtension->FunctionDescriptorCount; Index++)
     {
+        if (FDODeviceExtension->FunctionDescriptor[Index].NumberOfInterfaces == 0)
+        {
+            // Ignore invalid devices
+            DPRINT1("[USBCCGP] Found descriptor with 0 interfaces\n");
+            continue;
+        }
+
         /* Create the PDO */
         Status = IoCreateDevice(FDODeviceExtension->DriverObject,
                                 sizeof(PDO_DEVICE_EXTENSION),
