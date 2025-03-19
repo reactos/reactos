@@ -293,7 +293,6 @@
 293 stdcall SHFreeNameMappings(ptr)
 294 stdcall SHGetDataFromIDListA(ptr ptr long ptr long)
 295 stdcall SHGetDataFromIDListW(ptr ptr long ptr long)
-@ stdcall -version=0x600+ SHGetIDListFromObject(ptr ptr)
 296 stdcall SHGetDesktopFolder(ptr)
 297 stdcall SHGetDiskFreeSpaceA(str ptr ptr ptr) kernel32.GetDiskFreeSpaceExA
 298 stdcall SHGetDiskFreeSpaceExA(str ptr ptr ptr) kernel32.GetDiskFreeSpaceExA
@@ -306,6 +305,7 @@
 305 stdcall SHGetFolderPathAndSubDirA(long long long long str ptr)
 306 stdcall SHGetFolderPathAndSubDirW(long long long long wstr ptr)
 307 stdcall SHGetFolderPathW(long long long long ptr)
+@ stdcall -version=0x600+ SHGetIDListFromObject(ptr ptr)
 308 stdcall SHGetIconOverlayIndexA(str long)
 309 stdcall SHGetIconOverlayIndexW(wstr long)
 310 stdcall SHGetInstanceExplorer(long)

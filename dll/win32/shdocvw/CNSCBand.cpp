@@ -886,8 +886,8 @@ LRESULT CNSCBand::OnEndLabelEdit(_In_ LPNMTVDISPINFO dispInfo)
         CComHeapPtr<ITEMIDLIST> pidlNewAbs(ILCombine(pidlParent, pidlNew));
         if (RenamedCurrent)
         {
-            // Get the new name and icon of item from the folder. RegItems can be renamed to
-            // their default name by the folder (which is not the string in NMTVDISPINFO).
+            // Get the new item name from the folder because RegItems can be renamed to their
+            // default name by the folder (which is not the string we have in NMTVDISPINFO).
             WCHAR wszDisplayName[MAX_PATH];
             if (SUCCEEDED(_GetNameOfItem(pParent, pidlNew, wszDisplayName)))
             {
@@ -1324,7 +1324,7 @@ STDMETHODIMP CNSCBand::TranslateAcceleratorIO(LPMSG lpMsg)
         }
         else
         {
-            MessageBeep(0);
+            MessageBeep(0xFFFFFFFF);
         }
     }
 

@@ -159,7 +159,7 @@ BOOL SHELL_FS_HideExtension(LPCWSTR pwszPath);
 
 static inline BOOL IsIllegalFsFileName(PCWSTR Name)
 {
-    return StrIsNullOrEmpty(Name) || StrCSpnIW(Name, INVALID_FILETITLE_CHARACTERSW) < lstrlenW(Name);
+    return StrIsNullOrEmpty(Name) || StrPBrkW(Name, INVALID_FILETITLE_CHARACTERSW);
 }
 
 void CloseRegKeyArray(HKEY* array, UINT cKeys);
