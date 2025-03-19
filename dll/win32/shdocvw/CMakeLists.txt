@@ -26,7 +26,6 @@ add_importlibs(shdocvw shlwapi advapi32 msvcrt comctl32 kernel32 ntdll)
 add_dependencies(shdocvw stdole2)
 add_pch(shdocvw precomp.h SOURCE)
 add_cd_file(TARGET shdocvw DESTINATION reactos/system32 FOR all)
-set_wine_module(shdocvw)
 
 add_library(shdocvw_sublib OBJECT
     CExplorerBand.cpp
