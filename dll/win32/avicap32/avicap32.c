@@ -16,7 +16,12 @@
 #include <winver.h>
 #include <winnls.h>
 #include <wingdi.h>
+#ifdef __REACTOS__
+#include <ndk/rtltypes.h>
+#include <ndk/rtlfuncs.h>
+#else
 #include <winternl.h>
+#endif
 #include <vfw.h>
 #include <wine/debug.h>
 
