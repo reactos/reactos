@@ -1,6 +1,5 @@
 
 add_definitions(
-    -D__WINESRC__
     -D_WINE
     -D__ROS_LONG64__)
 
@@ -32,3 +31,4 @@ add_delay_importlibs(comdlg32 ole32)
 add_importlibs(comdlg32 shell32 shlwapi comctl32 winspool user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_pch(comdlg32 precomp.h SOURCE)
 add_cd_file(TARGET comdlg32 DESTINATION reactos/system32 FOR all)
+set_wine_module(comdlg32)

@@ -3,7 +3,6 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(
-    -D__WINESRC__
     -D__ROS_LONG64__
     -DCOM_NO_WINDOWS_H
     -D_OLEAUT32_
@@ -63,3 +62,4 @@ add_delay_importlibs(oleaut32 comctl32 urlmon windowscodecs)
 add_importlibs(oleaut32 ole32 rpcrt4 user32 gdi32 advapi32 kernel32_vista msvcrt kernel32 ntdll)
 add_pch(oleaut32 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET oleaut32 DESTINATION reactos/system32 FOR all)
+set_wine_module(oleaut32)

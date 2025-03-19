@@ -1,6 +1,5 @@
 
 add_definitions(
-    -D__WINESRC__
     -DENTRY_PREFIX=STI_
     -DPROXY_DELEGATION
     -DWINE_REGISTER_DLL)
@@ -29,3 +28,4 @@ target_link_libraries(sti wine uuid ${PSEH_LIB})
 add_importlibs(sti ole32 oleaut32 rpcrt4 advapi32 msvcrt kernel32 ntdll)
 add_pch(sti precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET sti DESTINATION reactos/system32 FOR all)
+set_wine_module(sti)

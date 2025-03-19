@@ -3,7 +3,6 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(
-    -D__WINESRC__
     -D_RPCRT4_
     -DCOM_NO_WINDOWS_H
     -DMSWMSG)
@@ -70,3 +69,4 @@ add_importlibs(rpcrt4 advapi32 advapi32_vista kernel32_vista ws2_32 msvcrt kerne
 add_dependencies(rpcrt4 ndr_types_header)
 add_pch(rpcrt4 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET rpcrt4 DESTINATION reactos/system32 FOR all)
+set_wine_module(rpcrt4)

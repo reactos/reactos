@@ -2,7 +2,6 @@
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-add_definitions(-D__WINESRC__)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(msctf.dll msctf.spec ADD_IMPORTLIB)
 
@@ -36,3 +35,4 @@ add_importlibs(msctf user32 advapi32 advapi32_vista msvcrt kernel32 ntdll)
 add_delay_importlibs(msctf shell32 shlwapi ole32 oleaut32 imm32 gdi32)
 add_pch(msctf precomp.h SOURCE)
 add_cd_file(TARGET msctf DESTINATION reactos/system32 FOR all)
+set_wine_module(msctf)

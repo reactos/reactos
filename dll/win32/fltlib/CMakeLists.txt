@@ -1,5 +1,4 @@
 
-add_definitions(-D__WINESRC__)
 spec2def(fltlib.dll fltlib.spec ADD_IMPORTLIB)
 
 include_directories(
@@ -19,3 +18,4 @@ target_link_libraries(fltlib wine)
 target_compile_definitions(fltlib PRIVATE NTDDI_VERSION=NTDDI_WS03SP1)
 add_importlibs(fltlib msvcrt kernel32 ntdll)
 add_cd_file(TARGET fltlib DESTINATION reactos/system32 FOR all)
+set_wine_module(fltlib)

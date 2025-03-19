@@ -1,6 +1,5 @@
 
 add_definitions(
-    -D__WINESRC__
     -D_URLMON_
     -DENTRY_PREFIX=URLMON_
     -DPROXY_DELEGATION
@@ -56,3 +55,4 @@ add_delay_importlibs(urlmon advpack)
 add_importlibs(urlmon rpcrt4 propsys ole32 oleaut32 shlwapi shell32 wininet user32 advapi32 kernel32_vista msvcrt kernel32 ntdll)
 add_pch(urlmon precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET urlmon DESTINATION reactos/system32 FOR all)
+set_wine_module(urlmon)

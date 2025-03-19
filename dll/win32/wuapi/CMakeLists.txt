@@ -1,6 +1,5 @@
 
 add_definitions(
-    -D__WINESRC__
     -DCOM_NO_WINDOWS_H)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
@@ -30,3 +29,4 @@ add_importlibs(wuapi msvcrt kernel32 ntdll)
 add_dependencies(wuapi stdole2) # wuapi_tlb.tlb needs stdole2.tlb
 add_pch(wuapi precomp.h SOURCE)
 add_cd_file(TARGET wuapi DESTINATION reactos/system32 FOR all)
+set_wine_module(wuapi)

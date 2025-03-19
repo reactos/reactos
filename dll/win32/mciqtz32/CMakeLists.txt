@@ -1,5 +1,4 @@
 
-add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(mciqtz32.dll mciqtz32.spec)
 
@@ -13,3 +12,4 @@ target_link_libraries(mciqtz32 wine strmiids)
 add_importlibs(mciqtz32 winmm ole32 user32 gdi32 msvcrt kernel32 ntdll)
 add_dependencies(mciqtz32 dxsdk)
 add_cd_file(TARGET mciqtz32 DESTINATION reactos/system32 FOR all)
+set_wine_module(mciqtz32)

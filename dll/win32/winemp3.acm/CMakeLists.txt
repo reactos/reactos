@@ -1,6 +1,5 @@
 
 add_definitions(
-    -D__WINESRC__
     -DWIN32)
 
 include_directories(
@@ -18,3 +17,4 @@ set_target_properties(winemp3.acm PROPERTIES SUFFIX "")
 target_link_libraries(winemp3.acm wine libmpg123 oldnames)
 add_importlibs(winemp3.acm shlwapi winmm user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET winemp3.acm DESTINATION reactos/system32 FOR all)
+set_wine_module(winemp3.acm)

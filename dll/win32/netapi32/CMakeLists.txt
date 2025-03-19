@@ -3,7 +3,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 
-add_definitions(-D__WINESRC__)
 spec2def(netapi32.dll netapi32.spec ADD_IMPORTLIB)
 add_rpc_files(client
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/atsvc.idl
@@ -58,6 +57,7 @@ add_delay_importlibs(netapi32 samlib secur32)
 add_importlibs(netapi32 iphlpapi ws2_32 advapi32 rpcrt4 msvcrt kernel32 ntdll)
 add_pch(netapi32 netapi32.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET netapi32 DESTINATION reactos/system32 FOR all)
+set_wine_module(netapi32)
 
 if(MSVC)
     # Disable warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data

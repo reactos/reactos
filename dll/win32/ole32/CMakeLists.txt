@@ -3,7 +3,6 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(
-    -D__WINESRC__
     -D_OLE32_
     -D__ROS_LONG64__
     -DCOM_NO_WINDOWS_H
@@ -94,3 +93,4 @@ add_importlibs(ole32 advapi32 user32 gdi32 rpcrt4 msvcrt kernel32 kernel32_vista
 add_dependencies(ole32 ole32idl)
 add_pch(ole32 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET ole32 DESTINATION reactos/system32 FOR all)
+set_wine_module(ole32)

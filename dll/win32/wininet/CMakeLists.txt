@@ -7,7 +7,6 @@ add_definitions(
     -D_WIN32_WINNT=0x600)
 
 add_definitions(
-    -D__WINESRC__
     -D_WINE
     -D__ROS_LONG64__)
 
@@ -51,3 +50,4 @@ add_delay_importlibs(wininet secur32 crypt32 cryptui iphlpapi dhcpcsvc)
 add_importlibs(wininet mpr shlwapi shell32 user32 advapi32 ws2_32 normaliz kernel32_vista msvcrt kernel32 ntdll)
 add_pch(wininet precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET wininet DESTINATION reactos/system32 FOR all)
+set_wine_module(wininet)

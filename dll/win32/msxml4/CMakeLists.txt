@@ -3,7 +3,6 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x601)
 
 add_definitions(
-    -D__WINESRC__
     -D_WINE
     -DCOM_NO_WINDOWS_H)
 
@@ -22,3 +21,4 @@ target_link_libraries(msxml4 wine)
 add_importlibs(msxml4 msxml3 msvcrt kernel32)
 add_dependencies(msxml4 stdole2)
 add_cd_file(TARGET msxml4 DESTINATION reactos/system32 FOR all)
+set_wine_module(msxml4)

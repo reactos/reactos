@@ -1,6 +1,4 @@
 
-add_definitions(-D__WINESRC__)
-
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
@@ -34,3 +32,4 @@ add_importlibs(wshom oleaut32 ole32 shell32 advapi32 advapi32_vista user32 msvcr
 add_dependencies(wshom stdole2 wshom_idlheader)
 add_pch(wshom precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET wshom DESTINATION reactos/system32 FOR all)
+set_wine_module(wshom)

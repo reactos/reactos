@@ -2,7 +2,6 @@
 project(SHELL)
 
 add_definitions(
-    -D__WINESRC__
     -D_SHLWAPI_)
 
 spec2def(shlwapi.dll shlwapi.spec ADD_IMPORTLIB)
@@ -54,3 +53,4 @@ add_delay_importlibs(shlwapi userenv oleaut32 ole32 comdlg32 mpr mlang urlmon sh
 add_importlibs(shlwapi user32 gdi32 advapi32 wininet msvcrt kernel32 ntdll)
 add_pch(shlwapi precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET shlwapi DESTINATION reactos/system32 FOR all)
+set_wine_module(shlwapi)

@@ -1,5 +1,4 @@
 
-add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(fusion.dll fusion.spec)
 
@@ -26,6 +25,7 @@ target_link_libraries(fusion fusion_common uuid wine)
 add_importlibs(fusion bcrypt advapi32 dbghelp shlwapi user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET fusion DESTINATION reactos/Microsoft.NET/Framework/v1.0.3705 FOR all)
 add_cd_file(TARGET fusion DESTINATION reactos/system32 FOR all)
+set_wine_module(fusion)
 
 add_subdirectory(fusion_1_1)
 add_subdirectory(fusion_2_0)

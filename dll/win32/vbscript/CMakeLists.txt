@@ -1,5 +1,5 @@
 
-add_definitions(-D__WINESRC__ -D__ROS_LONG64__)
+add_definitions(-D__ROS_LONG64__)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(vbscript.dll vbscript.spec)
 
@@ -50,3 +50,4 @@ add_importlibs(vbscript oleaut32 ole32 user32 msvcrt kernel32 ntdll)
 add_dependencies(vbscript vbscript_idlheader stdole2)
 add_pch(vbscript precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET vbscript DESTINATION reactos/system32 FOR all)
+set_wine_module(vbscript)

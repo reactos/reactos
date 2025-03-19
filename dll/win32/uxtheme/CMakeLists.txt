@@ -1,6 +1,6 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-add_definitions(-D__WINESRC__ -D__ROS_LONG64__)
+add_definitions(-D__ROS_LONG64__)
 spec2def(uxtheme.dll uxtheme.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -46,3 +46,4 @@ else()
 endif()
 add_pch(uxtheme uxthemep.h SOURCE)
 add_cd_file(TARGET uxtheme DESTINATION reactos/system32 FOR all)
+set_wine_module(uxtheme)

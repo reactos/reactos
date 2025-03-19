@@ -1,6 +1,5 @@
 
 add_definitions(
-    -D__WINESRC__
     -DCOM_NO_WINDOWS_H)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
@@ -17,3 +16,4 @@ target_link_libraries(mlang uuid wine oldnames)
 add_delay_importlibs(mlang oleaut32)
 add_importlibs(mlang gdi32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET mlang DESTINATION reactos/system32 FOR all)
+set_wine_module(mlang)

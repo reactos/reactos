@@ -1,6 +1,5 @@
 
 add_definitions(
-    -D__WINESRC__
     -DHAVE_ZLIB)
 
 include_directories(
@@ -28,3 +27,4 @@ target_link_libraries(cabinet wine zlib)
 add_importlibs(cabinet msvcrt kernel32 ntdll)
 add_pch(cabinet precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET cabinet DESTINATION reactos/system32 FOR all)
+set_wine_module(cabinet)

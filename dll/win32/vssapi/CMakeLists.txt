@@ -1,5 +1,4 @@
 
-add_definitions(-D__WINESRC__)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(vssapi.dll vssapi.spec)
 
@@ -17,3 +16,4 @@ set_module_type(vssapi win32dll)
 target_link_libraries(vssapi wine)
 add_importlibs(vssapi msvcrt kernel32 ntdll)
 add_cd_file(TARGET vssapi DESTINATION reactos/system32 FOR all)
+set_wine_module(vssapi)
