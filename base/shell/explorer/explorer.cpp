@@ -202,6 +202,8 @@ StartWithDesktop(IN HINSTANCE hInstance)
     /* Initialize CLSID_ShellWindows class */
     _WinList_Init();
 
+    InitializeServerAdminUI();
+
     CComPtr<ITrayWindow> Tray;
     CreateTrayWindow(&Tray);
 
@@ -221,8 +223,6 @@ StartWithDesktop(IN HINSTANCE hInstance)
     /* WinXP: Notify msgina to hide the welcome screen */
     if (!SetShellReadyEvent(L"msgina: ShellReadyEvent"))
         SetShellReadyEvent(L"Global\\msgina: ShellReadyEvent");
-
-    InitializeServerAdminUI();
 
     if (DoStartStartupItems(Tray))
     {
