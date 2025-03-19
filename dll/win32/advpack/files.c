@@ -27,7 +27,12 @@
 #include "winreg.h"
 #include "winnls.h"
 #include "winver.h"
+#ifdef __REACTOS__
+#include <ndk/rtltypes.h>
+#include <ndk/rtlfuncs.h>
+#else
 #include "winternl.h"
+#endif
 #include "setupapi.h"
 #include "advpub.h"
 #include "fdi.h"

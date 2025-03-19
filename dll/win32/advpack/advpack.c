@@ -26,7 +26,12 @@
 #include "winbase.h"
 #include "winuser.h"
 #include "winreg.h"
+#ifdef __REACTOS__
+#include <ndk/rtltypes.h>
+#include <ndk/rtlfuncs.h>
+#else
 #include "winternl.h"
+#endif
 #include "winnls.h"
 #include "setupapi.h"
 #include "advpub.h"

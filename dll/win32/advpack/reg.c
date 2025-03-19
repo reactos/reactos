@@ -25,7 +25,12 @@
 #include "winnls.h"
 #include "winerror.h"
 #include "winuser.h"
+#ifdef __REACTOS__
+#include <ndk/rtltypes.h>
+#include <ndk/rtlfuncs.h>
+#else
 #include "winternl.h"
+#endif
 #include "advpub.h"
 #include "wine/debug.h"
 
