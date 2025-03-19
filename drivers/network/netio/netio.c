@@ -267,6 +267,7 @@ NetioComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
     return STATUS_SUCCESS;
 }
 
+#if 0
 static NTSTATUS NTAPI
 AcceptComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
 {
@@ -280,6 +281,7 @@ AcceptComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
     }
     return STATUS_SUCCESS;
 }
+#endif
 
 struct ListenContext {
     PWSK_SOCKET_INTERNAL ListenSocket;
@@ -411,7 +413,7 @@ StartListening(PWSK_SOCKET_INTERNAL ListenSocket)
     NTSTATUS status;
     struct ListenContext *lc;
     PWSK_SOCKET_INTERNAL AcceptSocket;
-    PIRP AcceptIrp;
+//    PIRP AcceptIrp;
 
     FUNCTION_TRACE;
 
@@ -477,6 +479,7 @@ DbgPrint("out of CreateSocket ...\n");
     }
     ListenSocket->ListenIrp = tdiIrp;
 
+#if 0
     AcceptIrp = NULL;
     status = TdiAccept(&AcceptIrp, AcceptSocket->ConnectionFile, lc->RequestConnectionInfo, lc->ReturnConnectionInfo, AcceptComplete, AcceptSocket);
 
@@ -484,6 +487,7 @@ DbgPrint("out of CreateSocket ...\n");
     {
         DbgPrint("TdiAccept returned non-successful status 0x%08x\n", status);
     }
+#endif
     return STATUS_PENDING;
 
 err_out_free_lc_and_req_conn_info:
