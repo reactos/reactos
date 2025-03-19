@@ -44,7 +44,7 @@ BEGIN
         MENUITEM "&Copier\tCtrl+C", IDM_EDITCOPY
         MENUITEM "C&oller\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "Ro&gner la sélection", IDM_CROPSELECTION
         MENUITEM "&Effacer la sélection\tDel", IDM_EDITDELETESELECTION
         MENUITEM "&Inverser la sélection", IDM_EDITINVERTSELECTION
         MENUITEM "&Sélectionner tout\tCtrl+A", IDM_EDITSELECTALL
@@ -110,7 +110,7 @@ BEGIN
         MENUITEM "&Copier\tCtrl+C", IDM_EDITCOPY
         MENUITEM "C&oller\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "Ro&gner la sélection", IDM_CROPSELECTION
         MENUITEM "&Effacer la sélection\tDel", IDM_EDITDELETESELECTION
         MENUITEM "&Sélectionner tout\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
@@ -269,8 +269,8 @@ BEGIN
     IDS_UNDERLINE "Underline"
     IDS_VERTICAL "Vertical"
     IDS_PRINTRES "%d x %d pixel/cm"
-    IDS_CANTPASTE "Failed to paste from the clipboard. The data format is either incorrect or not supported."
-    IDS_SAVEERROR "Failed to save the bitmap to file:\n\n%s"
-    IDS_CANTSENDMAIL "Failed to send a mail."
-    IDS_LOSECOLOR "The color information will be lost in this operation. Are you sure to proceed?"
+    IDS_CANTPASTE "Échec lors de la copie depuis le presse-papiers. Les données sont soit incorrectes soit non supportées."
+    IDS_SAVEERROR "Échec lors de la sauvegarde dans le fichier :\n\n%s"
+    IDS_CANTSENDMAIL "Échec lors de l'envoi d'un mail."
+    IDS_LOSECOLOR "Les informations de couleurs vont être perdues dans cette opération. Êtes-vous sûr de continuer ?"
 END

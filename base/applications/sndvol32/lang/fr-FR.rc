@@ -58,7 +58,7 @@ BEGIN
     LTEXT "Volume", -1, 4, 58, 80, 8
     CONTROL "", IDC_LINE_SLIDER_VERT, "msctls_trackbar32", TBS_VERT | TBS_BOTH | TBS_DOWNISLEFT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 32, 67, 30, 56
     AUTOCHECKBOX "&Muet", IDC_LINE_SWITCH, 4, 123, 55, 12
-    PUSHBUTTON "&Advanced", IDC_LINE_ADVANCED, 4, 138, 80, 14
+    PUSHBUTTON "&Avancé", IDC_LINE_ADVANCED, 4, 138, 80, 14
     CONTROL "", IDC_LINE_SEP, "static", SS_ETCHEDVERT | WS_CHILD | WS_VISIBLE, 90, 1, 1, 137
 END
 
@@ -75,7 +75,7 @@ BEGIN
     LTEXT "Volume", -1, 4, 58, 60, 8
     CONTROL "", IDC_LINE_SLIDER_VERT, "msctls_trackbar32", TBS_VERT | TBS_BOTH | TBS_DOWNISLEFT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 67, 30, 56
     AUTOCHECKBOX "&Muet", IDC_LINE_SWITCH, 4, 123, 55, 12
-    PUSHBUTTON "&Advanced", IDC_LINE_ADVANCED, 7, 138, 55, 14
+    PUSHBUTTON "&Avancé", IDC_LINE_ADVANCED, 7, 138, 55, 14
     CONTROL "", IDC_LINE_SEP, "static", SS_ETCHEDVERT | WS_CHILD | WS_VISIBLE, 70, 25, 1, 113
 END
 
@@ -118,7 +118,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_MAINAPP, -1, "static", SS_ICON | WS_CHILD | WS_VISIBLE, 7, 7, 32, 32
     LTEXT "Ces paramètres peuvent être utilisés pour des ajustements fins de l'audio.", -1, 44, 7, 200, 32
-    GROUPBOX "Contrôles du ton", IDC_ADV_TONE_CONTROLS, 7, 33, 240, 80
+    GROUPBOX "Contrôles de tonalité", IDC_ADV_TONE_CONTROLS, 7, 33, 240, 80
     LTEXT "Ces paramètres contrôlent la tonalité de l'audio.", -1, 17, 48, 200, 14
     LTEXT "&Basses :", -1, 17, 62, 50, 8
     LTEXT "Bas", IDC_ADV_BASS_LOW, 77, 62, 20, 8
