@@ -7,7 +7,6 @@ add_definitions(
     -DCOM_NO_WINDOWS_H
     -DMSWMSG)
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(rpcrt4.dll rpcrt4.spec ADD_IMPORTLIB)
 
 add_rpc_files(client epm.idl)

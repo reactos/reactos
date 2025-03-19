@@ -5,7 +5,6 @@ add_definitions(-D_WIN32_WINNT=0x600)
 add_definitions(
     -D_WINE)
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(winhttp.dll winhttp.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

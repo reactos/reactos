@@ -3,8 +3,7 @@ add_definitions(
     -D_WINE
     -D__ROS_LONG64__)
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-spec2def(comdlg32.dll comdlg32.spec ADD_IMPORTLIB)
+pec2def(comdlg32.dll comdlg32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     autocomp.cpp

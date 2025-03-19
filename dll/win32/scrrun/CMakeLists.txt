@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_definitions(-D__ROS_LONG64__)
 spec2def(scrrun.dll scrrun.spec)
 add_idl_headers(scrrun_idlheader scrrun.idl)

@@ -4,7 +4,6 @@ add_definitions(
     -DPROXY_DELEGATION
     -DWINE_REGISTER_DLL)
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(oleacc.dll oleacc.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

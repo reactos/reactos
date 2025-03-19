@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(mscat32.dll mscat32.spec)
 
 list(APPEND SOURCE

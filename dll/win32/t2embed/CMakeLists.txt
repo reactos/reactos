@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(t2embed.dll t2embed.spec)
 
 list(APPEND SOURCE

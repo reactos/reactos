@@ -1,6 +1,5 @@
 
 add_typelib(mshtml_tlb.idl)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_library(mshtml.tlb MODULE rsrc.rc)
 
 list(APPEND mshtml_tlb_rc_deps

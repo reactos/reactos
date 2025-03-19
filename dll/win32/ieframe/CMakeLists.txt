@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_definitions(-D__ROS_LONG64__)
 spec2def(ieframe.dll ieframe.spec ADD_IMPORTLIB)
 

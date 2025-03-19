@@ -1,5 +1,4 @@
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(twain_32.dll twain_32.spec)
 
 list(APPEND SOURCE

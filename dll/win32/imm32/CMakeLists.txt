@@ -1,6 +1,5 @@
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/win32ss/include)
 
 spec2def(imm32.dll imm32.spec ADD_IMPORTLIB)

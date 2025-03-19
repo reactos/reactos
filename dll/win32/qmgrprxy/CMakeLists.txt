@@ -2,7 +2,6 @@
 add_definitions(
     -DWINE_REGISTER_DLL)
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 generate_idl_iids(qmgrprxy.idl)
 spec2def(qmgrprxy.dll qmgrprxy.spec)
 add_rpcproxy_files(qmgrprxy.idl)

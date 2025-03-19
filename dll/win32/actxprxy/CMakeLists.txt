@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_definitions(-DWINE_REGISTER_DLL -DPROXY_DELEGATION)
 spec2def(actxprxy.dll actxprxy.spec)
 

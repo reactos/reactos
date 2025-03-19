@@ -2,7 +2,6 @@
 add_definitions(
     -DCOM_NO_WINDOWS_H)
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(mlang.dll mlang.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

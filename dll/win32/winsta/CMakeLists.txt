@@ -1,8 +1,6 @@
 
 spec2def(winsta.dll winsta.spec)
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-
 list(APPEND SOURCE
     logon.c
     main.c

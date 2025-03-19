@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(softpub.dll softpub.spec)
 
 add_library(softpub MODULE

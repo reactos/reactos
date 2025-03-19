@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(activeds.dll activeds.spec)
 
 list(APPEND SOURCE

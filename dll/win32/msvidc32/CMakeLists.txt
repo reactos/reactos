@@ -2,7 +2,6 @@
 add_definitions(
     -D_WINE)
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(msvidc32.dll msvidc32.spec)
 
 list(APPEND SOURCE

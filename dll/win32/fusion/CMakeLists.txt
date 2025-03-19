@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(fusion.dll fusion.spec)
 
 list(APPEND COMMON_SOURCE

@@ -3,7 +3,6 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(-D__ROS_LONG64__)
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(wbemprox.dll wbemprox.spec)
 
 list(APPEND SOURCE

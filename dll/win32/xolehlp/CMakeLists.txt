@@ -1,5 +1,4 @@
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(xolehlp.dll xolehlp.spec)
 
 list(APPEND SOURCE

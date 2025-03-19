@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_definitions(-D__ROS_LONG64__)
 spec2def(uxtheme.dll uxtheme.spec ADD_IMPORTLIB)
 

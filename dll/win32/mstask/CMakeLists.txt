@@ -1,6 +1,5 @@
 
 include_directories(BEFORE
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
     ${REACTOS_BINARY_DIR}/dll/win32/netapi32)
 generate_idl_iids(mstask_local.idl)
 spec2def(mstask.dll mstask.spec)

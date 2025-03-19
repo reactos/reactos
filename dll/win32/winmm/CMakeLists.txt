@@ -1,6 +1,5 @@
 
 add_definitions(-D_WINE)
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(winmm.dll winmm.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

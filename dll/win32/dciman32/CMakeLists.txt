@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(dciman32.dll dciman32.spec)
 
 list(APPEND SOURCE

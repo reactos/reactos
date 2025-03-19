@@ -28,8 +28,8 @@ list(APPEND PCH_SKIP_SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/wininet_stubs.c)
 
 add_library(wininet_inflate OBJECT inflate.c)
-target_include_directories(wininet_inflate BEFORE PRIVATE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_dependencies(wininet_inflate psdk)
+set_wine_module(wininet_inflate)
 
 add_library(wininet MODULE
     ${SOURCE}

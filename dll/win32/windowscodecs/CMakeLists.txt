@@ -9,7 +9,6 @@ remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(
-    BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libjpeg
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libpng

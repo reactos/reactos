@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(cryptdll.dll cryptdll.spec)
 
 list(APPEND SOURCE

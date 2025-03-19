@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(riched32.dll riched32.spec)
 
 list(APPEND SOURCE

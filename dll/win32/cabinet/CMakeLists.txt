@@ -3,7 +3,6 @@ add_definitions(
     -DHAVE_ZLIB)
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
 
 spec2def(cabinet.dll cabinet.spec ADD_IMPORTLIB)

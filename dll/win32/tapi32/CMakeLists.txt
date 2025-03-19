@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(tapi32.dll tapi32.spec)
 
 list(APPEND SOURCE

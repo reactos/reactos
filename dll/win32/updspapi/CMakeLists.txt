@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(updspapi.dll updspapi.spec)
 
 list(APPEND SOURCE

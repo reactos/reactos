@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(fontsub.dll fontsub.spec)
 
 add_library(fontsub MODULE

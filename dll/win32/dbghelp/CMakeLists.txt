@@ -30,9 +30,6 @@ else()
         -DHAVE_ALLOCA_H
         -D_IMAGEHLP_SOURCE_)
 
-    include_directories(
-        BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-
     spec2def(dbghelp.dll dbghelp.spec ADD_IMPORTLIB)
 
     list(APPEND SOURCE

@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(xinput1_1.dll xinput1_1.spec)
 
 list(APPEND SOURCE

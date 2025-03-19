@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(mgmtapi.dll mgmtapi.spec)
 
 list(APPEND SOURCE

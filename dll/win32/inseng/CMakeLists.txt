@@ -6,7 +6,6 @@ add_definitions(
     -Dstrcasecmp=_stricmp
     -Dstrncasecmp=_strnicmp
 )
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(inseng.dll inseng.spec)
 
 list(APPEND SOURCE

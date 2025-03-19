@@ -1,7 +1,6 @@
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl)
 
 spec2def(samlib.dll samlib.spec ADD_IMPORTLIB)
 add_rpc_files(client ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/sam.idl)

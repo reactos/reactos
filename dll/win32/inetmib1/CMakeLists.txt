@@ -1,6 +1,5 @@
 
 add_definitions(-D__ROS_LONG64__)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(inetmib1.dll inetmib1.spec)
 
 list(APPEND SOURCE

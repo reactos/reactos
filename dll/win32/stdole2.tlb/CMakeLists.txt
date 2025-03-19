@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_typelib(std_ole_v2.idl)
 spec2def(stdole2.tlb stdole2.tlb.spec)
 

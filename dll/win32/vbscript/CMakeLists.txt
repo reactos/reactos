@@ -1,6 +1,5 @@
 
 add_definitions(-D__ROS_LONG64__)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(vbscript.dll vbscript.spec)
 
 list(APPEND SOURCE

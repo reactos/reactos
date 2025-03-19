@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(mciavi32.dll mciavi32.spec)
 
 list(APPEND SOURCE

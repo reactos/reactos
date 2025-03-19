@@ -1,5 +1,4 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(wldap32.dll wldap32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

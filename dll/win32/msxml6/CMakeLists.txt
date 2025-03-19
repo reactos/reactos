@@ -6,7 +6,6 @@ add_definitions(
     -D_WINE
     -DCOM_NO_WINDOWS_H)
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(msxml6.dll msxml6.spec)
 add_typelib(msxml6_tlb.idl)
 
