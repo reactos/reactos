@@ -398,6 +398,7 @@ ListenComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
 
     SocketPut(AcceptSocket);
     SocketPut(ListenSocket);
+// TODO: free ReturnConnectionInfo, RequestConnectionInfo
 // ExFreePoolWithTag(l, TAG_NETIO);
 
     return STATUS_SUCCESS;
@@ -530,7 +531,8 @@ static void WSKAPI RequeueListenThread(void *p)
             AcceptIrp = NULL;
             AcceptSocket = ListenSocket->l->AcceptSocket;
 
-            status = TdiAccept(&AcceptIrp, AcceptSocket->ConnectionFile, ListenSocket->l->RequestConnectionInfo, ListenSocket->l->ReturnConnectionInfo, AcceptComplete, AcceptSocket);
+/* HACK: ReturnConnectionInfo already filled out with the remote address */
+            status = TdiAccept(&AcceptIrp, AcceptSocket->ConnectionFile, ListenSocket->l->ReturnConnectionInfo, NULL, AcceptComplete, AcceptSocket);
 
             if (!NT_SUCCESS(status))
             {
