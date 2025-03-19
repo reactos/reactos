@@ -152,7 +152,7 @@ ApicRequestSelfInterrupt(IN UCHAR Vector, UCHAR TriggerMode)
     ULONG IrrBit = 1UL << VectorLow;
 
     /* Setup the command register */
-    Icr.Long0 = 0;
+    Icr.LongLong = 0;
     Icr.Vector = Vector;
     Icr.MessageType = APIC_MT_Fixed;
     Icr.TriggerMode = TriggerMode;
@@ -168,7 +168,8 @@ ApicRequestSelfInterrupt(IN UCHAR Vector, UCHAR TriggerMode)
         IcrStatus.Long0 = ApicRead(APIC_ICR0);
     } while (IcrStatus.DeliveryStatus);
 
-    /* Write the low dword to send the interrupt */
+    /* Write high dword first, then low dword to send the interrupt */
+    ApicWrite(APIC_ICR1, Icr.Long1);
     ApicWrite(APIC_ICR0, Icr.Long0);
 
     /* Wait until we see the interrupt request.
@@ -176,7 +177,7 @@ ApicRequestSelfInterrupt(IN UCHAR Vector, UCHAR TriggerMode)
      */
     while (!(ApicRead(Irr) & IrrBit))
     {
-        NOTHING;
+        YieldProcessor();
     }
 
     /* Finally, restore the original interrupt state */
