@@ -13,4 +13,4 @@ set_module_type(msvidc32 win32dll)
 target_link_libraries(msvidc32 wine)
 add_importlibs(msvidc32 user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET msvidc32 DESTINATION reactos/system32 FOR all)
-set_wine_module(msvidc32)
+set_wine_module_FIXME_2(msvidc32) # FIXME: ARRAY_SIZE?
