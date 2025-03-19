@@ -29,7 +29,6 @@ list(APPEND PCH_SKIP_SOURCE
 
 add_library(wininet_inflate OBJECT inflate.c)
 add_dependencies(wininet_inflate psdk)
-set_wine_module(wininet_inflate)
 
 add_library(wininet MODULE
     ${SOURCE}

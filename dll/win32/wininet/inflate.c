@@ -26,7 +26,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#ifdef __REACTOS__
+#include <wine/winternl.h>
+#else
 #include "winternl.h"
+#endif
 #include "zlib.h"
 
 #define DEF_WBITS MAX_WBITS
