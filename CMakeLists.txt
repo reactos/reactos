@@ -68,6 +68,9 @@ include(sdk/cmake/config.cmake)
 # Compiler flags handling
 include(sdk/cmake/compilerflags.cmake)
 
+# set_wine_module function
+include(sdk/cmake/set_wine_module.cmake)
+
 add_definitions(
     -D__REACTOS__
     # swprintf without count argument is used in most of the codebase
