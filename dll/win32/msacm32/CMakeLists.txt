@@ -22,4 +22,4 @@ target_link_libraries(msacm32 wine oldnames)
 add_importlibs(msacm32 advapi32 user32 winmm msvcrt kernel32 ntdll)
 add_pch(msacm32 precomp.h SOURCE)
 add_cd_file(TARGET msacm32 DESTINATION reactos/system32 FOR all)
-set_wine_module(msacm32)
+set_wine_module_FIXME_2(msacm32) # FIXME: ARRAY_SIZE?

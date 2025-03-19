@@ -45,4 +45,4 @@ set_source_files_properties(imm32.rc PROPERTIES OBJECT_DEPENDS "${imm32_rc_deps}
 target_link_libraries(imm32 wine win32ksys uuid)
 add_importlibs(imm32 advapi32 user32 gdi32 kernel32 ntdll)
 add_cd_file(TARGET imm32 DESTINATION reactos/system32 FOR all)
-set_wine_module(imm32)
+set_wine_module_FIXME_1(imm32)

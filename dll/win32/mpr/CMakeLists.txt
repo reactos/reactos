@@ -24,4 +24,4 @@ target_link_libraries(mpr wine)
 add_importlibs(mpr advapi32 user32 msvcrt kernel32 ntdll)
 add_pch(mpr precomp.h SOURCE)
 add_cd_file(TARGET mpr DESTINATION reactos/system32 FOR all)
-set_wine_module(mpr)
+set_wine_module_FIXME_2(mpr) # FIXME: ARRAY_SIZE?

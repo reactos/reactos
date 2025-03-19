@@ -71,7 +71,7 @@ else()
     add_importlibs(dbghelp psapi msvcrt kernel32 ntdll)
     add_pch(dbghelp precomp.h SOURCE)
     add_cd_file(TARGET dbghelp DESTINATION reactos/system32 FOR all)
-    set_wine_module_FIXME_1(dbghelp)
+    set_wine_module_FIXME_2(dbghelp)
 
     if(MSVC)
         # Disable warning C4146: unary minus operator applied to unsigned type, result still unsigned

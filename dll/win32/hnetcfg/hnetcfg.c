@@ -123,8 +123,10 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID reserved)
     TRACE("(0x%p, %d, %p)\n", hInstDLL, fdwReason, reserved);
 
     switch(fdwReason) {
+#ifndef __REACTOS__
         case DLL_WINE_PREATTACH:
             return FALSE;
+#endif
         case DLL_PROCESS_ATTACH:
             instance = hInstDLL;
             DisableThreadLibraryCalls(hInstDLL);
