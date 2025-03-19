@@ -1120,10 +1120,22 @@ PspExitProcess(IN BOOLEAN LastThread,
             ZwSetTimerResolution(KeMaximumIncrement, 0, &Actual);
         }
 
-        /* Check if we are part of a Job that has a completion port */
-        if ((Process->Job) && (Process->Job->CompletionPort))
+        /* Check if we are part of a Job that has a completion port
+           and do I/O completion if needed */
+        if (Process->Job &&
+            Process->Job->CompletionPort &&
+            !(Process->JobStatus & JOB_NOT_REALLY_ACTIVE))
         {
-            /* FIXME: Check job status code and do I/O completion if needed */
+            ExEnterCriticalRegionAndAcquireResourceShared(&Process->Job->JobLock);
+
+            IoSetIoCompletion(Process->Job->CompletionPort,
+                              Process->Job->CompletionKey,
+                              Process->UniqueProcessId,
+                              STATUS_SUCCESS,
+                              JOB_OBJECT_MSG_EXIT_PROCESS,
+                              FALSE);
+
+            ExReleaseResourceAndLeaveCriticalRegion(&Process->Job->JobLock);
         }
 
         /* FIXME: Notify the Prefetcher */
