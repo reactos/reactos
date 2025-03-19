@@ -52,7 +52,6 @@ DWORD gdwWinlogonSectionSize = 128;
 PDESKTOP gpdeskInputDesktop = NULL;
 HDC ScreenDeviceContext = NULL;
 PTHREADINFO gptiDesktopThread = NULL;
-HCURSOR gDesktopCursor = NULL;
 PKEVENT gpDesktopThreadStartedEvent = NULL;
 
 /* OBJECT CALLBACKS **********************************************************/
@@ -1457,7 +1456,7 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
 {
     PAINTSTRUCT Ps;
     ULONG Value;
-    //ERR("DesktopWindowProc\n");
+    TRACE("DesktopWindowProc\n");
 
     *lResult = 0;
 
@@ -1502,25 +1501,6 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
             co_UserRedrawWindow(Wnd, NULL, NULL, RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);
             return TRUE;
 
-        case WM_SETCURSOR:
-        {
-            PCURICON_OBJECT pcurOld, pcurNew;
-            pcurNew = UserGetCurIconObject(gDesktopCursor);
-            if (!pcurNew)
-            {
-                return TRUE;
-            }
-
-            pcurNew->CURSORF_flags |= CURSORF_CURRENT;
-            pcurOld = UserSetCursor(pcurNew, FALSE);
-            if (pcurOld)
-            {
-                pcurOld->CURSORF_flags &= ~CURSORF_CURRENT;
-                UserDereferenceObject(pcurOld);
-            }
-            return TRUE;
-        }
-
         case WM_WINDOWPOSCHANGING:
         {
             PWINDOWPOS pWindowPos = (PWINDOWPOS)lParam;
@@ -1531,6 +1511,7 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
             }
             break;
         }
+
         default:
             TRACE("DWP calling IDWP Msg %d\n",Msg);
             //*lResult = IntDefWindowProc(Wnd, Msg, wParam, lParam, FALSE);
