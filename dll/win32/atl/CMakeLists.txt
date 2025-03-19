@@ -5,6 +5,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 add_definitions(
     -D_ATL_VER=_ATL_VER_30)
 
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(atl.dll atl.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

@@ -38,4 +38,4 @@ add_importlibs(wbemprox iphlpapi oleaut32 advapi32 user32 gdi32 version winspool
 add_dependencies(wbemprox d3d_idl_headers)
 add_pch(wbemprox precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET wbemprox DESTINATION reactos/system32/wbem FOR all)
-set_wine_module(wbemprox)
+set_wine_module_FIXME_2(wbemprox)
