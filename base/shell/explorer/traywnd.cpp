@@ -2454,6 +2454,9 @@ ChangePos:
             CheckTrayWndPosition();
         }
 
+        if (m_DesktopWnd)
+            ::SendMessageW(m_DesktopWnd, uMsg, wParam, lParam);
+
         if (m_StartMenuPopup && lstrcmpiW((LPCWSTR)lParam, L"TraySettings") == 0)
         {
             HideStartMenu();
