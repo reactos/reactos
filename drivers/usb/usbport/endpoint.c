@@ -1090,6 +1090,7 @@ USBPORT_OpenPipe(IN PDEVICE_OBJECT FdoDevice,
                     {
                         break;
                     }
+
                     USBPORT_Wait(FdoDevice, 1); // 1 msec.
                 }
                 if (State != USBPORT_ENDPOINT_ACTIVE)
