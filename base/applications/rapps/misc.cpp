@@ -12,6 +12,18 @@
 
 static HANDLE hLog = NULL;
 
+UINT
+ErrorBox(HWND hOwner, UINT Error)
+{
+    if (!Error)
+        Error = ERROR_INTERNAL_ERROR; // Note: geninst.cpp depends on this
+    WCHAR buf[400];
+    UINT fmf = FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM;
+    FormatMessageW(fmf, NULL, Error, 0, buf, _countof(buf), NULL);
+    MessageBoxW(hOwner, buf, 0, MB_OK | MB_ICONSTOP);
+    return Error;
+}
+
 VOID
 CopyTextToClipboard(LPCWSTR lpszText)
 {

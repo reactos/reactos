@@ -26,6 +26,9 @@ ErrorFromHResult(HRESULT hr)
         return hr >= 0 ? ERROR_SUCCESS : hr;
 }
 
+UINT
+ErrorBox(HWND hOwner, UINT Error = GetLastError());
+
 VOID
 CopyTextToClipboard(LPCWSTR lpszText);
 VOID
