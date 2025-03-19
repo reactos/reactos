@@ -79,7 +79,6 @@ typedef struct _TIMEZONE_ENTRY
 
 extern void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow);
 
-
 static VOID
 CenterWindow(HWND hWnd)
 {
@@ -214,67 +213,6 @@ GplDlgProc(HWND hwndDlg,
     return FALSE;
 }
 
-static BOOL
-RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
-{
-    MSG msg;
-    HWND MainWindow = GetParent(hwnd);
-    STARTUPINFOW StartupInfo;
-    PROCESS_INFORMATION ProcessInformation;
-    WCHAR CmdLine[MAX_PATH] = L"rundll32.exe shell32.dll,Control_RunDLL ";
-
-    if (!pwszCPLParameters)
-    {
-        MessageBoxW(hwnd, L"Error: Failed to launch the Control Panel Applet.", NULL, MB_ICONERROR);
-        return FALSE;
-    }
-
-    ZeroMemory(&StartupInfo, sizeof(StartupInfo));
-    StartupInfo.cb = sizeof(StartupInfo);
-    ZeroMemory(&ProcessInformation, sizeof(ProcessInformation));
-
-    ASSERT(_countof(CmdLine) > wcslen(CmdLine) + wcslen(pwszCPLParameters));
-    wcscat(CmdLine, pwszCPLParameters);
-
-    if (!CreateProcessW(NULL,
-                        CmdLine,
-                        NULL,
-                        NULL,
-                        FALSE,
-                        0,
-                        NULL,
-                        NULL,
-                        &StartupInfo,
-                        &ProcessInformation))
-    {
-        MessageBoxW(hwnd, L"Error: Failed to launch the Control Panel Applet.", NULL, MB_ICONERROR);
-        return FALSE;
-    }
-
-    /* Disable the Back and Next buttons and the main window
-     * while we're interacting with the control panel applet */
-    PropSheet_SetWizButtons(MainWindow, 0);
-    EnableWindow(MainWindow, FALSE);
-
-    while ((MsgWaitForMultipleObjects(1, &ProcessInformation.hProcess, FALSE, INFINITE, QS_ALLINPUT|QS_ALLPOSTMESSAGE )) != WAIT_OBJECT_0)
-    {
-       /* We still need to process main window messages to avoid freeze */
-       while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
-       {
-           TranslateMessage(&msg);
-           DispatchMessageW(&msg);
-       }
-    }
-    CloseHandle(ProcessInformation.hThread);
-    CloseHandle(ProcessInformation.hProcess);
-
-    /* Enable the Back and Next buttons and the main window again */
-    PropSheet_SetWizButtons(MainWindow, PSWIZB_BACK | PSWIZB_NEXT);
-    EnableWindow(MainWindow, TRUE);
-
-    return TRUE;
-}
-
 static INT_PTR CALLBACK
 WelcomeDlgProc(HWND hwndDlg,
                UINT uMsg,
@@ -317,16 +255,6 @@ WelcomeDlgProc(HWND hwndDlg,
                                (WPARAM)pSetupData->hTitleFont,
                                (LPARAM)TRUE);
 
-            /* HACK: Set Mizu as default theme (0.4.15)
-             * TODO: Let's have a better way of doing this on future releases.
-             */
-            WCHAR wszParams[1024];
-            WCHAR wszTheme[MAX_PATH];
-            WCHAR* format = L"desk.cpl,,2 /Action:ActivateMSTheme /file:\"%s\"";
-
-            SHGetFolderPathAndSubDirW(0, CSIDL_RESOURCES, NULL, SHGFP_TYPE_DEFAULT, L"Themes\\Mizu\\mizu.msstyles", wszTheme);
-            swprintf(wszParams, format, wszTheme);
-            RunControlPanelApplet(hwndDlg, wszParams);
         }
         break;
 
@@ -1398,6 +1326,152 @@ SetKeyboardLayoutName(HWND hwnd)
     SetWindowTextW(hwnd, LayoutPath);
 }
 
+
+static BOOL
+RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
+{
+    MSG msg;
+    HWND MainWindow = GetParent(hwnd);
+    STARTUPINFOW StartupInfo;
+    PROCESS_INFORMATION ProcessInformation;
+    WCHAR CmdLine[MAX_PATH] = L"rundll32.exe shell32.dll,Control_RunDLL ";
+
+    if (!pwszCPLParameters)
+    {
+        MessageBoxW(hwnd, L"Error: Failed to launch the Control Panel Applet.", NULL, MB_ICONERROR);
+        return FALSE;
+    }
+
+    ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+    StartupInfo.cb = sizeof(StartupInfo);
+    ZeroMemory(&ProcessInformation, sizeof(ProcessInformation));
+
+    ASSERT(_countof(CmdLine) > wcslen(CmdLine) + wcslen(pwszCPLParameters));
+    wcscat(CmdLine, pwszCPLParameters);
+
+    if (!CreateProcessW(NULL,
+                        CmdLine,
+                        NULL,
+                        NULL,
+                        FALSE,
+                        0,
+                        NULL,
+                        NULL,
+                        &StartupInfo,
+                        &ProcessInformation))
+    {
+        MessageBoxW(hwnd, L"Error: Failed to launch the Control Panel Applet.", NULL, MB_ICONERROR);
+        return FALSE;
+    }
+
+    /* Disable the Back and Next buttons and the main window
+     * while we're interacting with the control panel applet */
+    PropSheet_SetWizButtons(MainWindow, 0);
+    EnableWindow(MainWindow, FALSE);
+
+    while ((MsgWaitForMultipleObjects(1, &ProcessInformation.hProcess, FALSE, INFINITE, QS_ALLINPUT|QS_ALLPOSTMESSAGE )) != WAIT_OBJECT_0)
+    {
+       /* We still need to process main window messages to avoid freeze */
+       while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
+       {
+           TranslateMessage(&msg);
+           DispatchMessageW(&msg);
+       }
+    }
+    CloseHandle(ProcessInformation.hThread);
+    CloseHandle(ProcessInformation.hProcess);
+
+    /* Enable the Back and Next buttons and the main window again */
+    PropSheet_SetWizButtons(MainWindow, PSWIZB_BACK | PSWIZB_NEXT);
+    EnableWindow(MainWindow, TRUE);
+
+    return TRUE;
+}
+
+
+VOID
+EnableVisualTheme(
+    _In_opt_ HWND hwndParent,
+    _In_opt_ PCWSTR ThemeFile)
+{
+    enum { THEME_FILE, STYLE_FILE, UNKNOWN } fType;
+    WCHAR szPath[MAX_PATH]; // Expanded path of the file to use.
+    WCHAR szStyleFile[MAX_PATH];
+
+    fType = THEME_FILE; // Default to Classic theme.
+    if (ThemeFile)
+    {
+        /* Expand the path if possible */
+        if (ExpandEnvironmentStringsW(ThemeFile, szPath, _countof(szPath)) != 0)
+            ThemeFile = szPath;
+
+        /* Determine the file type from its extension */
+        fType = UNKNOWN; {
+        PCWSTR pszExt = wcsrchr(ThemeFile, L'.'); // PathFindExtensionW(ThemeFile);
+        if (pszExt)
+        {
+            if (_wcsicmp(pszExt, L".theme") == 0)
+                fType = THEME_FILE;
+            else if (_wcsicmp(pszExt, L".msstyles") == 0)
+                fType = STYLE_FILE;
+        } }
+        if (fType == UNKNOWN)
+        {
+            DPRINT1("EnableVisualTheme(): Unknown file '%S'\n", ThemeFile);
+            return;
+        }
+    }
+
+    DPRINT1("Applying visual %s '%S'\n",
+            (fType == THEME_FILE) ? "theme" : "style",
+            ThemeFile ? ThemeFile : L"(Classic)");
+
+//
+// TODO: Use instead uxtheme!SetSystemVisualStyle() once it is implemented,
+// https://stackoverflow.com/a/1036903
+// https://pinvoke.net/default.aspx/uxtheme.SetSystemVisualStyle
+// or ApplyTheme(NULL, 0, NULL) for restoring the classic theme.
+//
+// NOTE: The '/Action:ActivateMSTheme' is ReactOS-specific.
+//
+
+    if (ThemeFile && (fType == THEME_FILE))
+    {
+        /* Retrieve the visual style specified in the theme file.
+         * If none, fall back to the classic theme. */
+        if (GetPrivateProfileStringW(L"VisualStyles", L"Path", NULL,
+                                     szStyleFile, _countof(szStyleFile), ThemeFile) && *szStyleFile)
+        {
+            /* Expand the path if possible */
+            ThemeFile = szStyleFile;
+            if (ExpandEnvironmentStringsW(ThemeFile, szPath, _countof(szPath)) != 0)
+                ThemeFile = szPath;
+        }
+        else
+        {
+            ThemeFile = NULL;
+        }
+
+        DPRINT1("--> Applying visual style '%S'\n",
+                ThemeFile ? ThemeFile : L"(Classic)");
+    }
+
+    if (ThemeFile)
+    {
+        WCHAR wszParams[1024];
+        // FIXME: L"desk.cpl desk,@Appearance" regression, see commit 50d260a7f0
+        PCWSTR format = L"desk.cpl,,2 /Action:ActivateMSTheme /file:\"%s\"";
+
+        StringCchPrintfW(wszParams, _countof(wszParams), format, ThemeFile);
+        RunControlPanelApplet(hwndParent, wszParams);
+    }
+    else
+    {
+        RunControlPanelApplet(hwndParent, L"desk.cpl,,2 /Action:ActivateMSTheme");
+    }
+}
+
+
 static VOID
 WriteUserLocale(VOID)
 {
@@ -1958,13 +2032,14 @@ ThemePageDlgProc(HWND hwndDlg,
 
             /* Register the imagelist */
             ListView_SetImageList(hListView, himl, LVSIL_NORMAL);
-            /* Transparant background */
+            /* Transparent background */
             ListView_SetBkColor(hListView, CLR_NONE);
             ListView_SetTextBkColor(hListView, CLR_NONE);
             /* Reduce the size between the items */
             ListView_SetIconSpacing(hListView, 190, 173);
             break;
         }
+
         case WM_NOTIFY:
             switch (((LPNMHDR)lParam)->code)
             {
@@ -1978,17 +2053,13 @@ ThemePageDlgProc(HWND hwndDlg,
 
                         if (Themes[iTheme].ThemeFile)
                         {
-                            WCHAR wszParams[1024];
                             WCHAR wszTheme[MAX_PATH];
-                            WCHAR* format = L"desk.cpl,,2 /Action:ActivateMSTheme /file:\"%s\"";
-
                             SHGetFolderPathAndSubDirW(0, CSIDL_RESOURCES, NULL, SHGFP_TYPE_DEFAULT, Themes[iTheme].ThemeFile, wszTheme);
-                            swprintf(wszParams, format, wszTheme);
-                            RunControlPanelApplet(hwndDlg, wszParams);
+                            EnableVisualTheme(hwndDlg, wszTheme);
                         }
                         else
                         {
-                            RunControlPanelApplet(hwndDlg, L"desk.cpl,,2 /Action:ActivateMSTheme");
+                            EnableVisualTheme(hwndDlg, Themes[iTheme].ThemeFile);
                         }
                     }
                     break;
