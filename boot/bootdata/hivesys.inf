@@ -1298,7 +1298,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","0000082c",0x00000000,"5"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","0000042d",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","0000042f",0x00000000,"5"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000436",0x00000000,"1"
-HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000437",0x00000000,"10" ; ka-GE 1079
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000437",0x00000000,"10" ; ka-GE Georgian 1079
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000438",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000439",0x00000000,"f"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","0000043e",0x00000000,"1"
@@ -1309,8 +1309,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000441",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000443",0x00000000,"6"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000843",0x00000000,"5"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000444",0x00000000,"5"
-HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000445",0x00000000,"f" ; bn-IN 1093
-HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000455",0x00000000,"1" ; my-MM 1109
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000445",0x00000000,"f" ; bn-IN Bangla (India) 1093
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000455",0x00000000,"1" ; Burmese (Myanmar [Burma]) 1109
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000456",0x00000000,"1"
 ;HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","0000048f",0x00000000,"1" ; tdd-Tale-CN, reserved 1167
 ;HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","00000490",0x00000000,"1" ; khb-Talu-CN, reserved 1168
