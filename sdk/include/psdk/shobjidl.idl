@@ -793,6 +793,9 @@ interface IShellView : IOleWindow
 interface IShellView2 : IShellView
 {
     typedef GUID SHELLVIEWID;
+cpp_quote("#define SV2GV_CURRENTVIEW ((UINT)-1)")
+cpp_quote("#define SV2GV_DEFAULTVIEW ((UINT)-2)")
+
 cpp_quote("#include <pshpack8.h>")
     typedef struct _SV2CVW2_PARAMS
     {

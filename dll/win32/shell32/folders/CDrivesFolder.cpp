@@ -936,8 +936,8 @@ HRESULT WINAPI CDrivesFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVO
     }
     else if (IsEqualIID(riid, IID_IShellView))
     {
-            SFV_CREATE sfvparams = { sizeof(SFV_CREATE), this, NULL, static_cast<IShellFolderViewCB*>(this) };
-            hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppvOut);
+        SFV_CREATE sfvparams = { sizeof(SFV_CREATE), this, NULL, this };
+        hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppvOut);
     }
     TRACE("-- (%p)->(interface=%p)\n", this, ppvOut);
     return hr;
@@ -1383,6 +1383,7 @@ HRESULT WINAPI CDrivesFolder::ShouldShow(IShellFolder *psf, PCIDLIST_ABSOLUTE pi
     return S_OK;
 }
 
+<<<<<<< HEAD
 /**************************************************************************
  *    CDrivesFolder::MessageSFVCB (IShellFolderViewCB)
  */
@@ -1403,6 +1404,11 @@ STDMETHODIMP CDrivesFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam
                 g_IsFloppyCache = 0;
             }
             break;
+        #if ROSPOLICY_SHELLFOLDER_DEFLARGEICONS & ( 1 << (PT_COMPUTER_REGITEM >> 4) )
+        case SFVM_DEFVIEWMODE:
+            *((FOLDERVIEWMODE*)lParam) = FVM_ICON;
+            return S_OK;
+        #endif
     }
     return E_NOTIMPL;
 }

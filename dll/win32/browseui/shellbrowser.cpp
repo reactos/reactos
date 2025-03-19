@@ -907,27 +907,18 @@ HRESULT CShellBrowser::CreateRelativeBrowsePIDL(LPCITEMIDLIST relative, UINT Sbs
 
 HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
 {
+    // Called by shell view to browse to new folder
+    // also called by explorer band to navigate to new folder
     CComPtr<IShellFolder>   newFolder;
     FOLDERSETTINGS          newFolderSettings = m_deffoldersettings.FolderSettings;
-    HRESULT                 hResult;
-    CLSID                   clsid;
-    BOOL                    HasIconViewType;
 
-    // called by shell view to browse to new folder
-    // also called by explorer band to navigate to new folder
-    hResult = SHBindToFolder(pidl, &newFolder);
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-    // HACK & FIXME: Get view mode from shellbag when fully implemented.
-    IUnknown_GetClassID(newFolder, &clsid);
-    HasIconViewType = clsid == CLSID_MyComputer || clsid == CLSID_ControlPanel ||
-                      clsid == CLSID_ShellDesktop;
+    HRESULT hr = SHBindToFolder(pidl, &newFolder);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    if (HasIconViewType)
-        newFolderSettings.ViewMode = FVM_ICON;
-    hResult = BrowseToPath(newFolder, pidl, &newFolderSettings, flags);
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
+    hr = BrowseToPath(newFolder, pidl, &newFolderSettings, flags);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
     return S_OK;
 }
 
@@ -1116,8 +1107,22 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     absolutePIDL = fCurrentDirectoryPIDL;
 
     // create view window
-    hResult = newShellView->CreateViewWindow(saveCurrentShellView, folderSettings,
-        this, &shellViewWindowBounds, &newShellViewWindow);
+    SHELLVIEWID vid;
+    SV2CVW2_PARAMS cvw2 = { sizeof(cvw2), saveCurrentShellView, folderSettings, this, &shellViewWindowBounds, NULL };
+
+    CComPtr<IShellView2> newShellView2;
+    if (SUCCEEDED(newShellView->QueryInterface(IID_PPV_ARG(IShellView2, &newShellView2))))
+    {
+        if (SUCCEEDED(newShellView2->GetView(&vid, SV2GV_DEFAULTVIEW)))
+            cvw2.pvid = &vid;
+        hResult = newShellView2->CreateViewWindow2(&cvw2);
+    }
+    else
+    {
+        hResult = newShellView->CreateViewWindow(cvw2.psvPrev, cvw2.pfs, this, cvw2.prcView, &cvw2.hwndView);
+    }
+    newShellViewWindow = cvw2.hwndView;
+
     if (FAILED_UNEXPECTEDLY(hResult) || newShellViewWindow == NULL)
     {
         fCurrentShellView = saveCurrentShellView;
