@@ -14,7 +14,7 @@ add_library(fusion_common STATIC ${COMMON_SOURCE})
 target_link_libraries(fusion_common oldnames)
 add_dependencies(fusion_common psdk)
 add_pch(fusion_common precomp.h COMMON_SOURCE)
-set_wine_module(fusion_common)
+set_wine_module_FIXME_2(fusion_common)
 
 add_library(fusion MODULE
     version.rc

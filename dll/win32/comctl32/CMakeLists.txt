@@ -75,7 +75,7 @@ add_delay_importlibs(comctl32 winmm uxtheme)
 add_importlibs(comctl32 user32 gdi32 advapi32 usp10 imm32 msvcrt kernel32 ntdll)
 add_pch(comctl32 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET comctl32 DESTINATION reactos/system32 FOR all)
-set_wine_module(comctl32)
+set_wine_module_FIXME_2(comctl32)
 
 add_cd_file(TARGET comctl32 DESTINATION reactos/winsxs/${WINARCH}_microsoft.windows.common-controls_6595b64144ccf1df_5.82.2600.2982_none_deadbeef FOR all)
 add_cd_file(TARGET comctl32 DESTINATION reactos/winsxs/${WINARCH}_microsoft.windows.common-controls_6595b64144ccf1df_6.0.2600.2982_none_deadbeef FOR all)

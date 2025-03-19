@@ -417,9 +417,6 @@ typedef struct _FILE_FS_VOLUME_INFORMATION {
  unknown
 */
 
-#ifndef _FILE_FS_STRUCTS_DEFINED
-#define _FILE_FS_STRUCTS_DEFINED
-
 /* FileFsSizeInformation = 3 */
 typedef struct _FILE_FS_SIZE_INFORMATION {
 	LARGE_INTEGER	TotalAllocationUnits;
@@ -470,8 +467,6 @@ typedef struct _FILE_PIPE_PEEK_BUFFER {
     ULONG   MessageLength;
     CHAR    Data[1];
 } FILE_PIPE_PEEK_BUFFER, *PFILE_PIPE_PEEK_BUFFER;
-
-#endif  /* ndef _FILE_FS_STRUCTS_DEFINED */
 
 /* Device GUIDs */
 #ifdef DEFINE_GUID

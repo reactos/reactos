@@ -823,9 +823,6 @@ typedef struct _FILE_TRACKING_INFORMATION
     CHAR ObjectInformation[1];
 } FILE_TRACKING_INFORMATION, *PFILE_TRACKING_INFORMATION;
 
-#ifndef _FILE_FS_STRUCTS_DEFINED
-#define _FILE_FS_STRUCTS_DEFINED
-
 //
 // File System Information structures for NtQueryInformationFile
 //
@@ -899,8 +896,6 @@ typedef struct _FILE_MODE_INFORMATION
 {
     ULONG Mode;
 } FILE_MODE_INFORMATION, *PFILE_MODE_INFORMATION;
-
-#endif  /* ndef _FILE_FS_STRUCTS_DEFINED */
 
 //
 // I/O Error Log Structures
