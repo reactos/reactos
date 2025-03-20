@@ -24,7 +24,6 @@ list(APPEND SOURCE
     OpenAs_RunDLL.cpp
     PathIsEqualOrSubFolder.cpp
     PathIsTemporary.cpp
-    PathMakeUniqueName.cpp
     PathResolve.cpp
     RealShellExecuteEx.cpp
     SHAppBarMessage.cpp
