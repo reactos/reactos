@@ -953,8 +953,8 @@
 #define DLL_THREAD_ATTACH    2
 #define DLL_THREAD_DETACH    3
 #ifndef __REACTOS__ /* We don't use DLL_WINE_PREATTACH any more */
-#define DLL_WINE_PREATTACH    8 /* Never called, but defined for compatibility with Wine source */
-#endif /* __REACTOS__ */
+#define DLL_WINE_PREATTACH    8
+#endif
 #define TAPE_ABSOLUTE_POSITION 0
 #define TAPE_LOGICAL_POSITION 1
 #define TAPE_PSEUDO_LOGICAL_POSITION 2
