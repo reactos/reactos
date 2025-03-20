@@ -29,7 +29,7 @@ START_TEST(PathMakeUniqueName)
 
     if (pIsLFNDriveW)
         bUseLong = pIsLFNDriveW(szTempDir) && IsWindowsVistaOrGreater();
-    trace("IsLFNDriveW: %d\n", bUseLong);
+    trace("bUseLong: %d\n", bUseLong);
 
     DeleteFileW(L"test.txt");
 
