@@ -674,7 +674,7 @@ static BOOL PathMakeUniqueNameW(
     _In_opt_ PCWSTR pszLongPlate,
     _In_opt_ PCWSTR pszDir)
 {
-    TRACE("%p %u %s %s %s stub\n",
+    TRACE("%p %u %s %s %s\n",
           pszUniqueName, cchMax, debugstr_w(pszTemplate),
           debugstr_w(pszLongPlate), debugstr_w(pszDir));
 
