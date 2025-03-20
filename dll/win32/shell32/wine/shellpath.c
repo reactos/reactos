@@ -758,7 +758,6 @@ static BOOL PathMakeUniqueNameW(
     }
     else
     {
-        PCWSTR pszSrc = pszTitle;
         PCWSTR openParen = StrChrW(pszTitle, L'(');
         PCWSTR pchDotExt = NULL;
         INT cchTitle = 0;
@@ -811,9 +810,9 @@ static BOOL PathMakeUniqueNameW(
         else if (remainingChars > 0)
             maxCount = 1000;
         else
-            maxCount = 0;
+            maxCount = 1;
 
-        if (StringCchCopyNW(pszDest, cchMax - dirLength, pszSrc, cchTitle) != S_OK)
+        if (StringCchCopyNW(pszDest, cchMax - dirLength, pszTitle, cchTitle) != S_OK)
             return FALSE;
 
         LPWSTR pchTitle = pszDest + cchTitle;
