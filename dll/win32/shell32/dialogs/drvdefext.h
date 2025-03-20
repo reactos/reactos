@@ -38,6 +38,9 @@ private:
 
     WCHAR m_wszDrive[MAX_PATH];
     UINT m_FreeSpacePerc;
+    CComPtr<IDataObject> m_Multiple;
+
+    HRESULT AddMainPage(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam);
 
 public:
 	CDrvDefExt();

@@ -509,16 +509,7 @@ SHELL32_ShowPropertiesDialog(IDataObject *pdtobj)
 {
     if (!pdtobj)
         return E_INVALIDARG;
-
-    CDataObjectHIDA cida(pdtobj);
-    if (FAILED_UNEXPECTEDLY(cida.hr()))
-        return cida.hr();
-    if (cida->cidl > 1)
-    {
-        ERR("SHMultiFileProperties is not yet implemented\n");
-        return E_FAIL;
-    }
-    return SHELL32_ShowFilesystemItemPropertiesDialogAsync(pdtobj);
+    return SHELL32_ShowFilesystemItemsPropertiesDialogAsync(NULL, pdtobj);
 }
 
 HRESULT
