@@ -742,7 +742,7 @@ static BOOL PathMakeUniqueNameW(
         INT ich;
         for (ich = 1; ich < maxCount; ++ich)
         {
-            WCHAR tempName[260];
+            WCHAR tempName[MAX_PATH];
             if (StringCchPrintfW(tempName, _countof(tempName), formatString, ich) != S_OK ||
                 StringCchCatW(tempName, _countof(tempName), pchDotExt) != S_OK)
             {
