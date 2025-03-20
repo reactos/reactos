@@ -14,8 +14,12 @@
 START_TEST(PathMakeUniqueName)
 {
     FILE *fout;
-    WCHAR szPathName[MAX_PATH];
+    WCHAR szPathName[MAX_PATH], szTempDir[MAX_PATH], szCurDir[MAX_PATH];
     BOOL ret;
+
+    GetCurrentDirectoryW(_countof(szCurDir), szCurDir);
+    GetEnvironmentVariableW(L"TEMP", szTempDir, _countof(szTempDir));
+    SetCurrentDirectoryW(szTempDir);
 
     DeleteFileW(L"_TestFile.txt");
     DeleteFileW(L"_TestFile (1).txt");
@@ -72,4 +76,6 @@ START_TEST(PathMakeUniqueName)
 
     DeleteFileW(L"_TestFile (1).txt");
     DeleteFileW(L"_TestFile.txt");
+
+    SetCurrentDirectoryW(szCurDir);
 }
