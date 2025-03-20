@@ -640,12 +640,9 @@ HRESULT CNSCBand::_AddFavorite()
     }
     SHDOCVW_DeletePathInvalidChars(fileInfo.szDisplayName);
 
-    WCHAR szFavDir[MAX_PATH];
-    SHGetSpecialFolderPathW(m_hWnd, szFavDir, CSIDL_FAVORITES, TRUE);
-
     WCHAR szPath[MAX_PATH];
-    PathMakeUniqueName(szPath, _countof(szPath),
-                       fileInfo.szDisplayName, fileInfo.szDisplayName, szFavDir);
+    SHGetSpecialFolderPathW(m_hWnd, szPath, CSIDL_FAVORITES, TRUE);
+    PathAppendW(szPath, fileInfo.szDisplayName);
 
     return SHDOCVW_CreateShortcut(szPath, pidlCurrent, NULL);
 }

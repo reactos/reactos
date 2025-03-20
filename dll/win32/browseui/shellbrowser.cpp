@@ -3942,12 +3942,9 @@ LRESULT CShellBrowser::OnAddToFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl
     }
     BrowseUI_DeletePathInvalidChars(fileInfo.szDisplayName);
 
-    WCHAR szFavDir[MAX_PATH];
-    SHGetSpecialFolderPathW(m_hWnd, szFavDir, CSIDL_FAVORITES, TRUE);
-
     WCHAR szPath[MAX_PATH];
-    PathMakeUniqueName(szPath, _countof(szPath),
-                       fileInfo.szDisplayName, fileInfo.szDisplayName, szFavDir);
+    SHGetSpecialFolderPathW(m_hWnd, szPath, CSIDL_FAVORITES, TRUE);
+    PathAppendW(szPath, fileInfo.szDisplayName);
 
     CreateShortcut(szPath, fCurrentDirectoryPIDL, NULL);
     return 0;
