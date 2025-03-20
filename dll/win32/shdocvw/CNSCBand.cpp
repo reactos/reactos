@@ -644,7 +644,8 @@ HRESULT CNSCBand::_AddFavorite()
     SHGetSpecialFolderPathW(m_hWnd, szFavDir, CSIDL_FAVORITES, TRUE);
 
     WCHAR szPath[MAX_PATH];
-    PathMakeUniqueName(szPath, _countof(szPath), fileInfo.szDisplayName, NULL, szFavDir);
+    PathMakeUniqueName(szPath, _countof(szPath),
+                       fileInfo.szDisplayName, fileInfo.szDisplayName, szFavDir);
 
     return SHDOCVW_CreateShortcut(szPath, pidlCurrent, NULL);
 }

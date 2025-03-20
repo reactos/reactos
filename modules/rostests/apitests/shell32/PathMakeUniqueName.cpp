@@ -13,69 +13,97 @@
 
 START_TEST(PathMakeUniqueName)
 {
-    FILE *fout;
-    WCHAR szPathName[MAX_PATH], szTempDir[MAX_PATH], szCurDir[MAX_PATH];
-    BOOL ret;
+    WCHAR szPath[MAX_PATH], szCurDir[MAX_PATH], szTempDir[MAX_PATH];
+    BOOL result;
 
+    // Move to temporary folder
     GetCurrentDirectoryW(_countof(szCurDir), szCurDir);
     GetEnvironmentVariableW(L"TEMP", szTempDir, _countof(szTempDir));
     SetCurrentDirectoryW(szTempDir);
 
-    DeleteFileW(L"_TestFile.txt");
-    DeleteFileW(L"_TestFile (1).txt");
-    DeleteFileW(L"_TestFile (2).txt");
+    DeleteFileW(L"test.txt");
 
-    ret = PathMakeUniqueName(szPathName, 0, L"_TestFile.txt", L"_TestFile.txt", L".");
-    ok_int(ret, FALSE);
+    // Test 1: Basic operation
+    szPath[0] = UNICODE_NULL;
+    result = PathMakeUniqueName(szPath, _countof(szPath), L"test.txt", NULL, NULL);
+    ok_int(result, TRUE);
+    ok_wstri(szPath, L"test (1).txt");
 
-    ret = PathMakeUniqueName(NULL, _countof(szPathName), L"_TestFile.txt", L"_TestFile.txt", L".");
-    ok_int(ret, FALSE);
+    // Test 2: Specify directory
+    szPath[0] = UNICODE_NULL;
+    result = PathMakeUniqueName(szPath, _countof(szPath), L"test.txt", NULL, L".");
+    ok_int(result, TRUE);
+    ok_wstri(szPath, L".\\test (1).txt");
 
-    szPathName[0] = UNICODE_NULL;
-    ret = PathMakeUniqueName(szPathName, _countof(szPathName), L"_TestFile.txt", L"_TestFile.txt", L".");
-    ok_int(ret, TRUE);
-    ok_wstri(szPathName, L".\\_TestFile (1).txt");
+    // Test 3: Duplicated filename
+    CreateFileW(L"test.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    szPath[0] = UNICODE_NULL;
+    result = PathMakeUniqueName(szPath, _countof(szPath), L"test.txt", NULL, NULL);
+    ok_int(result, TRUE);
+    ok_wstri(szPath, L"test (1).txt");
+    DeleteFileW(L"test.txt");
 
-    szPathName[0] = UNICODE_NULL;
-    ret = PathMakeUniqueName(szPathName, _countof(szPathName), L"_TestFile.txt", NULL, L".");
-    ok_int(ret, TRUE);
-    ok_wstri(szPathName, L".\\_TestFile (1).txt");
+    // Build long name
+    WCHAR longName[MAX_PATH + 32];
+    for (auto& ch : longName)
+        ch = L'A';
+    longName[_countof(longName) - 10] = UNICODE_NULL;
+    lstrcatW(longName, L".txt");
 
-    szPathName[0] = UNICODE_NULL;
-    ret = PathMakeUniqueName(szPathName, _countof(szPathName), NULL, L"_TestFile.txt", L".");
-    ok_int(ret, TRUE);
-    ok_wstri(szPathName, L".\\_TestFile (1).txt");
+    // Test 4: Long filename
+    result = PathMakeUniqueName(szPath, _countof(szPath), longName, NULL, NULL);
+    szPath[0] = UNICODE_NULL;
+    ok_int(result, FALSE);
+    ok_wstri(szPath, L"");
 
-    fout = _wfopen(L"_TestFile.txt", L"wb");
-    if (fout)
-        fclose(fout);
+    // Test 5: Invalid parameter
+    szPath[0] = UNICODE_NULL;
+    result = PathMakeUniqueName(NULL, 0, L"test.txt", NULL, NULL);
+    ok_int(result, FALSE);
 
-    szPathName[0] = UNICODE_NULL;
-    ret = PathMakeUniqueName(szPathName, _countof(szPathName), L"_TestFile.txt", L"_TestFile.txt", L".");
-    ok_int(ret, TRUE);
-    ok_wstri(szPathName, L".\\_TestFile (1).txt");
+    // Test 6: Template and longplate
+    szPath[0] = UNICODE_NULL;
+    result = PathMakeUniqueName(szPath, _countof(szPath), L"template.txt", L"longplate.txt", NULL);
+    ok_int(result, TRUE);
+    ok_wstri(szPath, L"longplate (1).txt");
 
-    szPathName[0] = UNICODE_NULL;
-    ret = PathMakeUniqueName(szPathName, _countof(szPathName), L"_TestFile.txt", NULL, L".");
-    ok_int(ret, TRUE);
-    ok_wstri(szPathName, L".\\_TestFile (1).txt");
+    // Test 7: Template only
+    szPath[0] = UNICODE_NULL;
+    result = PathMakeUniqueName(szPath, _countof(szPath), L"template.txt", NULL, NULL);
+    ok_int(result, TRUE);
+    ok_wstri(szPath, L"template (1).txt");
 
-    szPathName[0] = UNICODE_NULL;
-    ret = PathMakeUniqueName(szPathName, _countof(szPathName), NULL, L"_TestFile.txt", L".");
-    ok_int(ret, TRUE);
-    ok_wstri(szPathName, L".\\_TestFile (1).txt");
+    // Test 8: Folder and duplicated filename
+    CreateFileW(L".\\temp\\test.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    szPath[0] = UNICODE_NULL;
+    result = PathMakeUniqueName(szPath, _countof(szPath), L"test.txt", NULL, L".");
+    ok_int(result, TRUE);
+    ok_wstri(szPath, L".\\test (1).txt");
+    DeleteFileW(L".\\test.txt");
 
-    fout = _wfopen(L"_TestFile (1).txt", L"wb");
-    if (fout)
-        fclose(fout);
+    // Test 9: Test extension
+    CreateFileW(L".\\test.hoge", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    szPath[0] = UNICODE_NULL;
+    result = PathMakeUniqueName(szPath, _countof(szPath), L"test.hoge", NULL, L".");
+    ok_int(result, TRUE);
+    ok_wstri(szPath, L".\\test (1).hoge");
+    DeleteFileW(L".\\test.hoge");
 
-    szPathName[0] = UNICODE_NULL;
-    ret = PathMakeUniqueName(szPathName, _countof(szPathName), NULL, L"_TestFile.txt", L".");
-    ok_int(ret, TRUE);
-    ok_wstri(szPathName, L".\\_TestFile (2).txt");
+    // Test 10: Folder in folder
+    CreateDirectoryW(L".\\hoge", NULL);
+    szPath[0] = UNICODE_NULL;
+    result = PathMakeUniqueName(szPath, _countof(szPath), L"test.txt", NULL, L".\\hoge");
+    ok_int(result, TRUE);
+    ok_wstri(szPath, L".\\hoge\\test (1).txt");
+    RemoveDirectoryW(L".\\hoge");
 
-    DeleteFileW(L"_TestFile (1).txt");
-    DeleteFileW(L"_TestFile.txt");
+    // Test 11: File in folder
+    CreateFileW(L".\\hoge.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    szPath[0] = UNICODE_NULL;
+    result = PathMakeUniqueName(szPath, _countof(szPath), L"test.txt", NULL, L".");
+    ok_int(result, TRUE);
+    ok_wstri(szPath, L".\\test (1).txt");
+    DeleteFileW(L".\\hoge.txt");
 
     SetCurrentDirectoryW(szCurDir);
 }
