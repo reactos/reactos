@@ -952,7 +952,7 @@
 #define DLL_PROCESS_ATTACH    1
 #define DLL_THREAD_ATTACH    2
 #define DLL_THREAD_DETACH    3
-#ifndef __REACTOS__ /* We don't use DLL_WINE_PREATTACH any more */
+#if 0 /* Nonexistent on native NT. Add '#ifndef __REACTOS__' to related WINE code. */
 #define DLL_WINE_PREATTACH    8
 #endif
 #define TAPE_ABSOLUTE_POSITION 0
