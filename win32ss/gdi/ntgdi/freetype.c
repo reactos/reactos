@@ -4217,6 +4217,10 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         Width64 = 0;
 #endif
 
+    /* We do not handle small widths well, so just use zero for these. See CORE-19870. */
+    if (lfWidth < 10)
+        Width64 = 0;
+
     req.type           = FT_SIZE_REQUEST_TYPE_NOMINAL;
     req.width          = Width64;
     req.height         = (EmHeight << 6);
