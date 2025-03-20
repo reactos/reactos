@@ -640,6 +640,7 @@ HRESULT CNSCBand::_AddFavorite()
     }
     SHDOCVW_DeletePathInvalidChars(fileInfo.szDisplayName);
 
+    // Build shortcut pathname
     WCHAR szPath[MAX_PATH];
     SHGetSpecialFolderPathW(m_hWnd, szPath, CSIDL_FAVORITES, TRUE);
     PathAppendW(szPath, fileInfo.szDisplayName);
