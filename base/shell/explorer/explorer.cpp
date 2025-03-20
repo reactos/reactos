@@ -66,7 +66,9 @@ InitializeServerAdminUI()
         if (value)
         {
             // TODO: Apply registry tweaks with RegInstallW; RegServerAdmin in the REGINST resource in shell32.
+            #if !ROSPOLICY_SHELL_NODEFKEYBOARDCUES
             SystemParametersInfo(SPI_SETKEYBOARDCUES, 0, IntToPtr(TRUE), SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+            #endif
         }
     }
     RegCloseKey(hKey);
