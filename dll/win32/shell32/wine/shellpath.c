@@ -665,6 +665,60 @@ static BOOL PathMakeUniqueNameA(
 /*************************************************************************
  * PathMakeUniqueNameW	[internal]
  */
+#ifdef __REACTOS__
+static BOOL PathMakeUniqueNameW(
+    _Out_ PWSTR pszUniqueName,
+    _In_ UINT cchMax,
+    _In_ PCWSTR pszTemplate,
+    _In_opt_ PCWSTR pszLongPlate,
+    _In_opt_ PCWSTR pszDir)
+{
+    /* https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-pathmakeuniquename */
+    WCHAR szPath[MAX_PATH], szDotExt[64], szSuffix[32];
+    LPWSTR pchDotExt;
+    INT iTry;
+
+    TRACE("%p %u %s %s %s stub\n",
+          pszUniqueName, cchMax, debugstr_w(pszTemplate),
+          debugstr_w(pszLongPlate), debugstr_w(pszDir));
+
+    if (!cchMax || !pszUniqueName ||
+        (lstrlenW(pszTemplate) >= MAX_PATH) ||
+        (pszLongPlate && lstrlenW(pszLongPlate) >= MAX_PATH) ||
+        (pszDir && lstrlenW(pszDir) >= MAX_PATH))
+    {
+        return FALSE;
+    }
+
+    if (pszDir)
+        StringCchCopyW(szPath, _countof(szPath), pszDir);
+    else
+        szPath[0] = UNICODE_NULL;
+
+    PathAppendW(szPath, (pszLongPlate && IsLFNDriveW(pszDir) ? pszLongPlate : pszTemplate));
+
+    pchDotExt = PathFindExtensionW(szPath);
+    if (pchDotExt)
+    {
+        StringCchCopyW(szDotExt, _countof(szDotExt), pchDotExt);
+        *pchDotExt = UNICODE_NULL;
+    }
+
+    for (iTry = 1; iTry <= 999; ++iTry)
+    {
+        PathAddExtensionW(szPath, szDotExt);
+        if (!PathFileExistsW(szPath))
+            break;
+
+        *pchDotExt = UNICODE_NULL;
+        StringCchPrintfW(szSuffix, _countof(szSuffix), L" (%d)", iTry);
+        StringCchCatW(szPath, _countof(szPath), szSuffix);
+    }
+
+    StringCchCopyW(pszUniqueName, cchMax, szPath);
+    return TRUE;
+}
+#else
 static BOOL PathMakeUniqueNameW(
 	LPWSTR lpszBuffer,
 	DWORD dwBuffSize,
@@ -677,6 +731,7 @@ static BOOL PathMakeUniqueNameW(
 	 debugstr_w(lpszLongName), debugstr_w(lpszPathName));
 	return TRUE;
 }
+#endif
 
 /*************************************************************************
  * PathMakeUniqueName	[SHELL32.47]

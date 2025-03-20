@@ -409,6 +409,14 @@ SHStartNetConnectionDialogW(
     _In_ LPCWSTR pszRemoteName,
     _In_ DWORD dwType);
 
+BOOL WINAPI
+PathMakeUniqueName(
+    _Out_ PWSTR pszUniqueName,
+    _In_ UINT cchMax,
+    _In_ PCWSTR pszTemplate,
+    _In_opt_ PCWSTR pszLongPlate,
+    _In_opt_ PCWSTR pszDir);
+
 /*****************************************************************************
  * IContextMenu interface
  */

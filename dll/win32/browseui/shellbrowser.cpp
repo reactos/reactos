@@ -3931,23 +3931,6 @@ BrowseUI_DeletePathInvalidChars(LPWSTR pszDisplayName)
     *pch = UNICODE_NULL;
 }
 
-static void
-BrowseUI_FindNewShortcutName(LPWSTR pszPath)
-{
-    WCHAR szSuffix[32];
-
-    const INT ich = lstrlenW(pszPath);
-    for (INT iTry = 2; iTry <= 999; ++iTry)
-    {
-        PathAddExtensionW(pszPath, L".lnk");
-        if (!PathFileExistsW(pszPath))
-            break;
-        pszPath[ich] = UNICODE_NULL; // Truncate
-        wsprintfW(szSuffix, L" (%d)", iTry);
-        lstrcatW(pszPath, szSuffix);
-    }
-}
-
 LRESULT CShellBrowser::OnAddToFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
     // Get display name of current directory PIDL
@@ -3957,13 +3940,13 @@ LRESULT CShellBrowser::OnAddToFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl
     {
         return 0;
     }
+    BrowseUI_DeletePathInvalidChars(fileInfo.szDisplayName);
+
+    WCHAR szFavDir[MAX_PATH];
+    SHGetSpecialFolderPathW(m_hWnd, szFavDir, CSIDL_FAVORITES, TRUE);
 
     WCHAR szPath[MAX_PATH];
-    SHGetSpecialFolderPathW(m_hWnd, szPath, CSIDL_FAVORITES, TRUE);
-
-    BrowseUI_DeletePathInvalidChars(fileInfo.szDisplayName);
-    PathAppendW(szPath, fileInfo.szDisplayName);
-    BrowseUI_FindNewShortcutName(szPath);
+    PathMakeUniqueName(szPath, _countof(szPath), fileInfo.szDisplayName, NULL, szFavDir);
 
     CreateShortcut(szPath, fCurrentDirectoryPIDL, NULL);
     return 0;

@@ -626,23 +626,6 @@ SHDOCVW_DeletePathInvalidChars(LPWSTR pszDisplayName)
     *pch = UNICODE_NULL;
 }
 
-static void
-SHDOCVW_FindNewShortcutName(LPWSTR pszPath)
-{
-    WCHAR szSuffix[32];
-
-    const INT ich = lstrlenW(pszPath);
-    for (INT iTry = 2; iTry <= 999; ++iTry)
-    {
-        PathAddExtensionW(pszPath, L".lnk");
-        if (!PathFileExistsW(pszPath))
-            break;
-        pszPath[ich] = UNICODE_NULL; // Truncate
-        wsprintfW(szSuffix, L" (%d)", iTry);
-        lstrcatW(pszPath, szSuffix);
-    }
-}
-
 HRESULT CNSCBand::_AddFavorite()
 {
     CComHeapPtr<ITEMIDLIST> pidlCurrent;
@@ -655,13 +638,13 @@ HRESULT CNSCBand::_AddFavorite()
     {
         return 0;
     }
+    SHDOCVW_DeletePathInvalidChars(fileInfo.szDisplayName);
+
+    WCHAR szFavDir[MAX_PATH];
+    SHGetSpecialFolderPathW(m_hWnd, szFavDir, CSIDL_FAVORITES, TRUE);
 
     WCHAR szPath[MAX_PATH];
-    SHGetSpecialFolderPathW(m_hWnd, szPath, CSIDL_FAVORITES, TRUE);
-
-    SHDOCVW_DeletePathInvalidChars(fileInfo.szDisplayName);
-    PathAppendW(szPath, PathFindFileNameW(fileInfo.szDisplayName));
-    SHDOCVW_FindNewShortcutName(szPath);
+    PathMakeUniqueName(szPath, _countof(szPath), fileInfo.szDisplayName, NULL, szFavDir);
 
     return SHDOCVW_CreateShortcut(szPath, pidlCurrent, NULL);
 }
