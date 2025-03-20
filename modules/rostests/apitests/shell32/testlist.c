@@ -26,7 +26,7 @@ extern void func_menu(void);
 extern void func_OpenAs_RunDLL(void);
 extern void func_PathIsEqualOrSubFolder(void);
 extern void func_PathIsTemporary(void);
-extern void func_PathMakeUniquePath(void);
+extern void func_PathMakeUniqueName(void);
 extern void func_PathResolve(void);
 extern void func_PIDL(void);
 extern void func_RealShellExecuteEx(void);
