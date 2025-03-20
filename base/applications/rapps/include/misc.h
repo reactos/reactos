@@ -35,6 +35,10 @@ VOID
 ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem, POINT *Point = NULL);
 VOID
 EmulateDialogReposition(HWND hwnd);
+UINT
+ClassifyFile(PCWSTR Path);
+BOOL
+OpensWithExplorer(PCWSTR Path);
 BOOL
 StartProcess(const CStringW &Path, BOOL Wait);
 BOOL

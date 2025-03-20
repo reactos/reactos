@@ -1115,7 +1115,14 @@ end:
     if (bTempfile)
     {
         if (bCancelled || (SettingsInfo.bDelInstaller && Info.DLType == DLTYPE_APPLICATION))
-            DeleteFileW(Path);
+        {
+            // Don't delete .zip/.cab files so the user can extract from them
+            if (bCancelled || Info.IType == INSTALLER_GENERATE || !OpensWithExplorer(Path) ||
+                HIBYTE(ClassifyFile(Path)) != PERCEIVED_TYPE_COMPRESSED)
+            {
+                DeleteFileW(Path);
+            }
+        }
     }
 
     SendMessageW(hDlg, WM_SETSTATUS, DLSTATUS_FINISHED, 0);
