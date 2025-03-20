@@ -7,6 +7,7 @@
 
 #include "shelltest.h"
 #include <stdio.h>
+#include <versionhelpers.h>
 
 #define ok_wstri(x, y) \
     ok(_wcsicmp(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
@@ -14,7 +15,7 @@
 START_TEST(PathMakeUniqueName)
 {
     WCHAR szPath[MAX_PATH], szCurDir[MAX_PATH], szTempDir[MAX_PATH];
-    BOOL result;
+    BOOL result, bVistaPlus = IsWindowsVistaOrGreater();
 
     // Move to temporary folder
     GetCurrentDirectoryW(_countof(szCurDir), szCurDir);
@@ -33,7 +34,7 @@ START_TEST(PathMakeUniqueName)
     szPath[0] = UNICODE_NULL;
     result = PathMakeUniqueName(szPath, _countof(szPath), L"test.txt", NULL, L".");
     ok_int(result, TRUE);
-    ok_wstri(szPath, L".\\test (1).txt");
+    ok_wstri(szPath, (bVistaPlus ? L".\\test (1).txt" : L".\\test1.txt"));
 
     // Test 3: Duplicated filename
     CreateFileW(L"test.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -78,7 +79,7 @@ START_TEST(PathMakeUniqueName)
     szPath[0] = UNICODE_NULL;
     result = PathMakeUniqueName(szPath, _countof(szPath), L"test.txt", NULL, L".");
     ok_int(result, TRUE);
-    ok_wstri(szPath, L".\\test (1).txt");
+    ok_wstri(szPath, (bVistaPlus ? L".\\test (1).txt" : L".\\test1.txt"));
     DeleteFileW(L".\\test.txt");
 
     // Test 9: Test extension
@@ -86,7 +87,7 @@ START_TEST(PathMakeUniqueName)
     szPath[0] = UNICODE_NULL;
     result = PathMakeUniqueName(szPath, _countof(szPath), L"test.hoge", NULL, L".");
     ok_int(result, TRUE);
-    ok_wstri(szPath, L".\\test (1).hoge");
+    ok_wstri(szPath, (bVistaPlus ? L".\\test (1).hoge" : L".\\test1.hoge"));
     DeleteFileW(L".\\test.hoge");
 
     // Test 10: Folder in folder
@@ -94,7 +95,7 @@ START_TEST(PathMakeUniqueName)
     szPath[0] = UNICODE_NULL;
     result = PathMakeUniqueName(szPath, _countof(szPath), L"test.txt", NULL, L".\\hoge");
     ok_int(result, TRUE);
-    ok_wstri(szPath, L".\\hoge\\test (1).txt");
+    ok_wstri(szPath, (bVistaPlus ? L".\\hoge\\test (1).txt" : L".\\hoge\\test1.txt"));
     RemoveDirectoryW(L".\\hoge");
 
     // Test 11: File in folder
@@ -102,7 +103,7 @@ START_TEST(PathMakeUniqueName)
     szPath[0] = UNICODE_NULL;
     result = PathMakeUniqueName(szPath, _countof(szPath), L"test.txt", NULL, L".");
     ok_int(result, TRUE);
-    ok_wstri(szPath, L".\\test (1).txt");
+    ok_wstri(szPath, (bVistaPlus ? L".\\test (1).txt" : L".\\test1.txt"));
     DeleteFileW(L".\\hoge.txt");
 
     SetCurrentDirectoryW(szCurDir);
