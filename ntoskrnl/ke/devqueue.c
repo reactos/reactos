@@ -44,6 +44,7 @@ KeInsertDeviceQueue(IN PKDEVICE_QUEUE DeviceQueue,
     KLOCK_QUEUE_HANDLE DeviceLock;
     BOOLEAN Inserted;
     ASSERT_DEVICE_QUEUE(DeviceQueue);
+    //ASSERT(DeviceQueueEntry->Inserted == FALSE);
 
     DPRINT("KeInsertDeviceQueue() DevQueue %p, Entry %p\n", DeviceQueue, DeviceQueueEntry);
 
@@ -89,6 +90,7 @@ KeInsertByKeyDeviceQueue(IN PKDEVICE_QUEUE DeviceQueue,
     PLIST_ENTRY NextEntry;
     PKDEVICE_QUEUE_ENTRY LastEntry;
     ASSERT_DEVICE_QUEUE(DeviceQueue);
+    ASSERT(DeviceQueueEntry->Inserted == FALSE);
 
     DPRINT("KeInsertByKeyDeviceQueue() DevQueue %p, Entry %p, SortKey 0x%x\n", DeviceQueue, DeviceQueueEntry, SortKey);
 
@@ -137,6 +139,9 @@ KeInsertByKeyDeviceQueue(IN PKDEVICE_QUEUE DeviceQueue,
         InsertTailList(NextEntry, &DeviceQueueEntry->DeviceListEntry);
         Inserted = TRUE;
     }
+
+    /* Set the Insert state into the entry */
+    DeviceQueueEntry->Inserted = Inserted;
 
     /* Release the lock */
     KiReleaseDeviceQueueLock(&DeviceLock);
