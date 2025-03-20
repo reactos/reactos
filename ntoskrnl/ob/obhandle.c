@@ -3071,7 +3071,7 @@ ObInsertObject(IN PVOID Object,
                                      ObjectCreateInfo->Attributes,
                                      ObjectType,
                                      (ObjectHeader->Flags & OB_FLAG_KERNEL_MODE) ?
-                                     KernelMode : UserMode,
+                                        KernelMode : UserMode,
                                      ObjectCreateInfo->ParseContext,
                                      ObjectCreateInfo->SecurityQos,
                                      Object,
@@ -3189,12 +3189,21 @@ ObInsertObject(IN PVOID Object,
         /* Check if anything until now failed */
         if (!NT_SUCCESS(Status))
         {
-            /* Check if the directory was added */
+            PVOID Directory = NULL;
+
+            /* Check if the directory was already added */
             if (Context.DirectoryLocked)
             {
-                /* Weird case where we need to do a manual delete */
-                DPRINT1("Unhandled path\n");
-                ASSERT(FALSE);
+                /* We need to revert and do a manual delete */
+                ObpDeleteEntryDirectory(&Context);
+
+                // TODO: Investigate more, see the failure cleanup path
+                // in ObpDeleteNameCheck(): Do we need to cleanup as well:
+                // - the created symbolic link? (possibly yes)
+                // - toying around the kernel exclusive stuff? (probably no)
+
+                /* Get the directory for later dereferencing */
+                Directory = ObjectNameInfo->Directory;
             }
 
             /* Cleanup the lookup */
@@ -3202,6 +3211,16 @@ ObInsertObject(IN PVOID Object,
 
             /* Remove query reference that we added */
             ObpDereferenceNameInfo(ObjectNameInfo);
+
+            // /* Check if we were inserted in a directory */
+            // if (Directory)
+            // {
+                // /* We were, so first remove the extra reference we had added */
+                // ObpDereferenceNameInfo(ObjectNameInfo);
+
+                // /* Now dereference the object as well */
+                // ObDereferenceObject(Object);
+            // }
 
             /* Dereference the object and delete the access state */
             ObDereferenceObject(Object);
@@ -3212,7 +3231,6 @@ ObInsertObject(IN PVOID Object,
             }
 
             /* Return failure code */
-            ASSERT(FALSE);
             return Status;
         }
     }
@@ -3272,7 +3290,11 @@ ObInsertObject(IN PVOID Object,
     ObpFreeObjectCreateInformation(ObjectCreateInfo);
 
     /* Check if we created our own access state and delete it if so */
-    if (AccessState == &LocalAccessState) SeDeleteAccessState(AccessState);
+    if (AccessState == &LocalAccessState)
+    {
+        /* We used a local one; delete it */
+        SeDeleteAccessState(AccessState);
+    }
 
     /* Return status code */
     OBTRACE(OB_HANDLE_DEBUG,
