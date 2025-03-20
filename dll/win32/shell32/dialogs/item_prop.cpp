@@ -17,6 +17,9 @@ SHELL_GetCaptionFromDataObject(IDataObject *pDO, LPWSTR Buf, UINT cchBuf)
     {
         hr = SHGetNameAndFlagsW(pidl, SHGDN_INFOLDER, Buf, cchBuf, NULL);
         ILFree(pidl);
+
+        if (SUCCEEDED(hr) && DataObject_GetHIDACount(pDO) > 1)
+            StringCchCatW(Buf, cchBuf, L", ...");
     }
     return hr;
 }
@@ -130,7 +133,15 @@ FSFolderItemPropDialogInitCallback(LPCWSTR InitString, IDataObject *pDO, HKEY *h
     CDataObjectHIDA cida(pDO);
     if (SUCCEEDED(cida.hr()) && cida->cidl)
     {
+#if 0
+        CCidaChildArrayHelper items(cida);
+        if (FAILED(hr = items.hr()))
+            return hr;
+#else
+        // Note: Since we are only passing a single item to AddFSClassKeysToArray,
+        // we don't need the rest of the array to be valid.
         PCUITEMID_CHILD pidl = HIDA_GetPIDLItem(cida, 0);
+#endif
         AddFSClassKeysToArray(1, &pidl, hKeys, cKeys); // Add file-type specific pages
     }
 }
@@ -154,7 +165,7 @@ SHELL32_ShowFilesystemItemPropertiesDialogAsync(IDataObject *pDO)
     ShellPropSheetDialog::PFNINITIALIZE InitFunc = NULL;
     LPCWSTR InitString = NULL;
 
-    if (_ILIsDrive(HIDA_GetPIDLItem(cida, 0)))
+    if (cida->cidl && _ILIsDrive(HIDA_GetPIDLItem(cida, 0)))
     {
         pClsid = &CLSID_ShellDrvDefExt;
         InitFunc = ClassPropDialogInitCallback;
@@ -167,6 +178,18 @@ SHELL32_ShowFilesystemItemPropertiesDialogAsync(IDataObject *pDO)
     }
     ShellPropSheetDialog Dialog;
     return Dialog.ShowAsync(pClsid, pDO, InitFunc, InitString);
+}
+
+HRESULT
+SHELL32_ShowFilesystemItemsPropertiesDialogAsync(HWND hOwner, IDataObject *pDO)
+{
+    if (DataObject_GetHIDACount(pDO) == 1)
+        return SHELL32_ShowFilesystemItemPropertiesDialogAsync(pDO);
+
+    ERR("SHMultiFileProperties is not implemented yet\n");
+    HRESULT hr = HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
+    SHELL_ErrorBox(hOwner, hr);
+    return hr; // TODO: return SHMultiFileProperties(pDO, 0);
 }
 
 HRESULT
