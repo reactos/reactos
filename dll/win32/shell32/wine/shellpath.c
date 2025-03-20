@@ -699,7 +699,8 @@ static BOOL PathMakeUniqueNameW(
 
     PCWSTR pszTitle = pszLongPlate ? pszLongPlate : pszTemplate;
 
-    if (!pszTitle || !IsLFNDriveW(pszDir)
+    if (   !pszTitle
+        || !IsLFNDriveW(pszDir)
 #if (NTDDI_VERSION < NTDDI_VISTA)
         || pszDir
 #endif
