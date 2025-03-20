@@ -3915,24 +3915,55 @@ HRESULT GetFavsLocation(HWND hWnd, LPITEMIDLIST *pPidl)
     return hr;
 }
 
+static void
+BrowseUI_DeletePathInvalidChars(LPWSTR pszDisplayName)
+{
+#define PATH_VALID_ELEMENT ( \
+    PATH_CHAR_CLASS_DOT | PATH_CHAR_CLASS_SEMICOLON | PATH_CHAR_CLASS_COMMA | \
+    PATH_CHAR_CLASS_SPACE | PATH_CHAR_CLASS_OTHER_VALID \
+)
+    PWCHAR pch, pchSrc;
+    for (pch = pchSrc = pszDisplayName; *pchSrc; ++pchSrc)
+    {
+        if (PathIsValidCharW(*pchSrc, PATH_VALID_ELEMENT))
+            *pch++ = *pchSrc;
+    }
+    *pch = UNICODE_NULL;
+}
+
+static void
+BrowseUI_FindNewShortcutName(LPWSTR pszPath)
+{
+    WCHAR szSuffix[32];
+
+    const INT ich = lstrlenW(pszPath);
+    for (INT iTry = 2; iTry <= 999; ++iTry)
+    {
+        PathAddExtensionW(pszPath, L".lnk");
+        if (!PathFileExistsW(pszPath))
+            break;
+        pszPath[ich] = UNICODE_NULL; // Truncate
+        wsprintfW(szSuffix, L" (%d)", iTry);
+        lstrcatW(pszPath, szSuffix);
+    }
+}
+
 LRESULT CShellBrowser::OnAddToFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    LPITEMIDLIST pidlFavs;
-    HRESULT hr = GetFavsLocation(m_hWnd, &pidlFavs);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return 0;
-
+    // Get display name of current directory PIDL
     SHFILEINFOW fileInfo = { NULL };
-    if (!SHGetFileInfoW((LPCWSTR)fCurrentDirectoryPIDL, 0, &fileInfo, sizeof(fileInfo),
+    if (!SHGetFileInfoW((LPCWSTR)(LPITEMIDLIST)fCurrentDirectoryPIDL, 0, &fileInfo, sizeof(fileInfo),
                         SHGFI_PIDL | SHGFI_DISPLAYNAME))
     {
         return 0;
     }
 
     WCHAR szPath[MAX_PATH];
-    SHGetPathFromIDListW(pidlFavs, szPath);
+    SHGetSpecialFolderPathW(m_hWnd, szPath, CSIDL_FAVORITES, TRUE);
+
+    BrowseUI_DeletePathInvalidChars(fileInfo.szDisplayName);
     PathAppendW(szPath, fileInfo.szDisplayName);
-    PathAddExtensionW(szPath, L".lnk");
+    BrowseUI_FindNewShortcutName(szPath);
 
     CreateShortcut(szPath, fCurrentDirectoryPIDL, NULL);
     return 0;
