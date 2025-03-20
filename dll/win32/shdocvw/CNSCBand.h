@@ -192,7 +192,7 @@ protected:
         _In_ LPCITEMIDLIST pEltRelative,
         _In_ BOOL bSort);
     BOOL _InsertSubitems(HTREEITEM hItem, LPCITEMIDLIST entry);
-    HRESULT _UpdateBrowser(LPCITEMIDLIST pidlGoto, BOOL EatSelfNavigation = FALSE);
+    HRESULT _UpdateBrowser(LPCITEMIDLIST pidlGoto, BOOL IgnoreSelfNavigation = FALSE);
     HRESULT _GetCurrentLocation(_Out_ PIDLIST_ABSOLUTE *ppidl);
     HRESULT _IsCurrentLocation(_In_ PCIDLIST_ABSOLUTE pidl);
     void _Refresh();

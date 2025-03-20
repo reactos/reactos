@@ -818,7 +818,7 @@ LRESULT CNSCBand::OnBeginLabelEdit(_In_ LPNMTVDISPINFO dispInfo)
     return TRUE;
 }
 
-HRESULT CNSCBand::_UpdateBrowser(LPCITEMIDLIST pidlGoto, BOOL EatSelfNavigation)
+HRESULT CNSCBand::_UpdateBrowser(LPCITEMIDLIST pidlGoto, BOOL IgnoreSelfNavigation)
 {
     CComPtr<IShellBrowser> pBrowserService;
     HRESULT hr = IUnknown_QueryService(m_pSite, SID_STopLevelBrowser,
@@ -828,7 +828,7 @@ HRESULT CNSCBand::_UpdateBrowser(LPCITEMIDLIST pidlGoto, BOOL EatSelfNavigation)
 
     if (_IsCurrentLocation(pidlGoto) == S_OK) // Don't add duplicates to the travel log
     {
-        if (EatSelfNavigation)
+        if (IgnoreSelfNavigation)
             return S_FALSE;
 
         CComPtr<IShellView> psv;
