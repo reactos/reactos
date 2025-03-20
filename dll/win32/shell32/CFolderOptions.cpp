@@ -117,7 +117,7 @@ static HRESULT ResetGlobalFolderSettings()
 {
     IGlobalFolderSettings *pgfs;
     HRESULT hr = CoCreateInstance(CLSID_GlobalFolderSettings, NULL, CLSCTX_INPROC_SERVER,
-                                  IID_IGlobalFolderSettings, (void **)&pgfs);
+                                  IID_PPV_ARG(IGlobalFolderSettings, &pgfs));
     if (SUCCEEDED(hr))
     {
         hr = pgfs->Set(NULL, 0, 0);
