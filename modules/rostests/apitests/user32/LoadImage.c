@@ -1,6 +1,18 @@
 
 #include "precomp.h"
 
+static BOOL AreIconsEqual(HICON h1, HICON h2)
+{
+    BOOL result = FALSE;
+    BOOL (WINAPI*pfnSHAreIconsEqual)(HICON, HICON);
+    HMODULE hMod = LoadLibraryA("SHLWAPI");
+    pfnSHAreIconsEqual = GetProcAddress(hMod, (char*)548);
+    result = pfnSHAreIconsEqual && pfnSHAreIconsEqual(h1, h2);
+    if (hMod)
+        FreeLibrary(hMod);
+    return result;
+}
+
 static void test_LoadImage_DataFile(void)
 {
     static const struct
@@ -45,23 +57,23 @@ static void test_LoadImage_DataFile(void)
     }
 }
 
-static void test_LoadImage_System()
+static void test_LoadImage_System(void)
 {
     HINSTANCE hInst = GetModuleHandleW(L"USER32");
-    static const WORD icomap[] = {
-        100, (WORD)(SIZE_T)IDI_APPLICATION,
-        101, (WORD)(SIZE_T)IDI_ERROR,
-        102, (WORD)(SIZE_T)IDI_QUESTION,
-        103, (WORD)(SIZE_T)IDI_WARNING,
-        104, (WORD)(SIZE_T)IDI_INFORMATION,
-        105, (WORD)(SIZE_T)IDI_WINLOGO
+    static const WORD icomap[][2] = {
+        { 100, (WORD)(SIZE_T)IDI_APPLICATION },
+        { 101, (WORD)(SIZE_T)IDI_WARNING },
+        { 102, (WORD)(SIZE_T)IDI_QUESTION },
+        { 103, (WORD)(SIZE_T)IDI_ERROR },
+        { 104, (WORD)(SIZE_T)IDI_INFORMATION },
+        { 105, (WORD)(SIZE_T)IDI_WINLOGO }
     };
 
-    for (UINT i = 0; i < _countof(icomap); i += 2)
+    for (UINT i = 0; i < _countof(icomap); i++)
     {
-        HICON hIcoRes = LoadIconW(hInst, MAKEINTRESOURCEW(icomap[i + 0]));
-        HICON hIcoSys = LoadIconW(NULL, MAKEINTRESOURCEW(icomap[i + 1]));
-        ok(hIcoRes && hIcoSys, "SysIcon %d must be resource %d\n", icomap[i + 1], icomap[i + 0]);
+        HICON hIcoRes = LoadIconW(hInst, MAKEINTRESOURCEW(icomap[i][0]));
+        HICON hIcoSys = LoadIconW(NULL, MAKEINTRESOURCEW(icomap[i][1]));
+        ok(hIcoRes && AreIconsEqual(hIcoRes, hIcoSys), "SysIcon %d must be resource %d\n", icomap[i][1], icomap[i][0]);
     }
 }
 

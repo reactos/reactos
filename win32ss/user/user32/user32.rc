@@ -56,9 +56,9 @@ OCR_HAND CURSOR "resources/ocr_hand.cur"
 /* Icons */
 
 100 ICON "resources/oic_sample.ico"     /* IDI_APPLICATION */
-101 ICON "resources/oic_bang.ico"       /* IDI_ERROR */
+101 ICON "resources/oic_bang.ico"       /* IDI_WARNING */
 102 ICON "resources/oic_ques.ico"       /* IDI_QUESTION */
-103 ICON "resources/oic_hand.ico"       /* IDI_WARNING */
+103 ICON "resources/oic_hand.ico"       /* IDI_ERROR */
 104 ICON "resources/oic_note.ico"       /* IDI_INFORMATION */
 105 ICON "resources/oic_reactos.ico"    /* IDI_WINLOGO */
 /* 106 ICON "resources/oic_shield.ico"     IDI_SHIELD */
