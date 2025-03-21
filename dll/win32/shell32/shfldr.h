@@ -95,6 +95,9 @@ BOOL
 SHELL_IncludeItemInFolderEnum(IShellFolder *pSF, PCUITEMID_CHILD pidl, SFGAOF Query, SHCONTF Flags);
 
 HRESULT
+SHELL_CreateAbsolutePidl(IShellFolder *pSF, PCUIDLIST_RELATIVE pidlChild, PIDLIST_ABSOLUTE *ppPidl);
+
+HRESULT
 Shell_NextElement(
     _Inout_ LPWSTR *ppch,
     _Out_ LPWSTR pszOut,
@@ -153,6 +156,11 @@ static __inline int SHELL32_GUIDToStringW (REFGUID guid, LPWSTR str)
 
 void SHELL_FS_ProcessDisplayFilename(LPWSTR szPath, DWORD dwFlags);
 BOOL SHELL_FS_HideExtension(LPCWSTR pwszPath);
+
+static inline BOOL IsIllegalFsFileName(PCWSTR Name)
+{
+    return StrIsNullOrEmpty(Name) || StrPBrkW(Name, INVALID_FILETITLE_CHARACTERSW);
+}
 
 void CloseRegKeyArray(HKEY* array, UINT cKeys);
 LSTATUS AddClassKeyToArray(const WCHAR* szClass, HKEY* array, UINT* cKeys);

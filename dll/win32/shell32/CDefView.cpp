@@ -324,7 +324,8 @@ public:
     int LV_AddItem(PCUITEMID_CHILD pidl);
     BOOLEAN LV_DeleteItem(PCUITEMID_CHILD pidl);
     BOOLEAN LV_RenameItem(PCUITEMID_CHILD pidlOld, PCUITEMID_CHILD pidlNew);
-    BOOLEAN LV_UpdateItem(PCUITEMID_CHILD pidl);
+    BOOL LV_UpdateItem(INT nItem, PCUITEMID_CHILD pidl);
+    BOOL LV_UpdateItem(PCUITEMID_CHILD pidl);
     void LV_RefreshIcon(INT iItem);
     void LV_RefreshIcons();
     static INT CALLBACK fill_list(LPVOID ptr, LPVOID arg);
@@ -1434,18 +1435,11 @@ BOOLEAN CDefView::LV_RenameItem(PCUITEMID_CHILD pidlOld, PCUITEMID_CHILD pidlNew
     return FALSE;
 }
 
-BOOLEAN CDefView::LV_UpdateItem(PCUITEMID_CHILD pidl)
+BOOL CDefView::LV_UpdateItem(INT nItem, PCUITEMID_CHILD pidl)
 {
-    int nItem;
+    BOOL bResult = FALSE;
     LVITEMW lvItem;
-
-    TRACE("(%p)(pidl=%p)\n", this, pidl);
-
-    ASSERT(m_ListView);
-
-    nItem = LV_FindItemByPidl(pidl);
-
-    if (-1 != nItem)
+    if (nItem >= 0)
     {
         _DoFolderViewCB(SFVM_UPDATINGOBJECT, nItem, (LPARAM)pidl);
 
@@ -1459,13 +1453,20 @@ BOOLEAN CDefView::LV_UpdateItem(PCUITEMID_CHILD pidl)
         PCUITEMID_CHILD pidlOld = _PidlByItem(nItem);
         if (pidlOld && (lvItem.lParam = reinterpret_cast<LPARAM>(ILClone(pidl))) != NULL)
             lvItem.mask |= LVIF_PARAM;
-        if (m_ListView.SetItem(&lvItem) && lvItem.lParam && pidlOld)
+        bResult = m_ListView.SetItem(&lvItem);
+        if (bResult && lvItem.lParam && pidlOld)
             ILFree(const_cast<PUITEMID_CHILD>(pidlOld));
         for (UINT i = 0; m_ListView.SetItemText(nItem, i, LPSTR_TEXTCALLBACK); ++i) {} // Update all columns
-        return TRUE;
     }
+    return bResult;
+}
 
-    return FALSE;
+BOOL CDefView::LV_UpdateItem(PCUITEMID_CHILD pidl)
+{
+    TRACE("(%p)(pidl=%p)\n", this, pidl);
+    ASSERT(m_ListView);
+    INT nItem = LV_FindItemByPidl(pidl);
+    return nItem >= 0 ? LV_UpdateItem(nItem, pidl) : FALSE;
 }
 
 void CDefView::LV_RefreshIcon(INT iItem)
@@ -2824,29 +2825,32 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         {
             TRACE("-- LVN_ENDLABELEDITW %p\n", this);
             m_isEditing = FALSE;
+            if (!lpdi->item.pszText)
+                return TRUE;
 
-            if (lpdi->item.pszText)
+            pidl = _PidlByItem(lpdi->item);
+            // We have to copy the old PIDL because SetNameOf might generate a SHCNE_UPDATEITEM
+            // and that notification can cause us to call LV_UpdateItem and free the old PIDL too soon.
+            CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlOld(ILClone(pidl));
+            if (!pidlOld)
             {
-                HRESULT hr;
-                LVITEMW lvItem;
-
-                pidl = _PidlByItem(lpdi->item);
-                PITEMID_CHILD pidlNew = NULL;
-                hr = m_pSFParent->SetNameOf(0, pidl, lpdi->item.pszText, SHGDN_INFOLDER, &pidlNew);
-
-                if (SUCCEEDED(hr) && pidlNew)
-                {
-                    lvItem.mask = LVIF_PARAM|LVIF_IMAGE;
-                    lvItem.iItem = lpdi->item.iItem;
-                    lvItem.iSubItem = 0;
-                    lvItem.lParam = reinterpret_cast<LPARAM>(pidlNew);
-                    lvItem.iImage = SHMapPIDLToSystemImageListIndex(m_pSFParent, pidlNew, 0);
-                    m_ListView.SetItem(&lvItem);
-                    m_ListView.Update(lpdi->item.iItem);
-                    return TRUE;
-                }
+                SHELL_ErrorBox(lpdi->hdr.hwndFrom, E_OUTOFMEMORY);
+                return FALSE;
             }
-
+            PITEMID_CHILD pidlNew = NULL;
+            HRESULT hr = m_pSFParent->SetNameOf(0, pidlOld, lpdi->item.pszText, SHGDN_INFOLDER, &pidlNew);
+            if (SUCCEEDED(hr) && pidlNew)
+            {
+                int iNew = LV_FindItemByPidl(pidlNew);
+                if (iNew != lpdi->item.iItem && iNew >= 0)
+                    ILFree(pidlNew);// A SHCNE has updated the item already
+                else if (!LV_UpdateItem(lpdi->item.iItem, pidlNew))
+                    ILFree(pidlNew);
+            }
+            else
+            {
+                ::PostMessageW(m_ListView, LVM_EDITLABEL, lpdi->item.iItem, 0); // Renaming failed, let the user try again
+            }
             return FALSE;
         }
         default:

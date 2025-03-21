@@ -235,7 +235,7 @@ CExplorerBand::_NavigateToPIDL(
     HTREEITEM hParent = NULL, tmp;
     while (TRUE)
     {
-        CItemData *pItemData = GetItemData(hItem);
+        CItemData *pItemData = _GetItemData(hItem);
         if (!pItemData)
         {
             ERR("Something has gone wrong, no data associated to node\n");
