@@ -3946,7 +3946,6 @@ LRESULT CShellBrowser::OnAddToFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl
     WCHAR szPath[MAX_PATH];
     SHGetSpecialFolderPathW(m_hWnd, szPath, CSIDL_FAVORITES, TRUE);
     PathAppendW(szPath, fileInfo.szDisplayName);
-    PathRemoveExtensionW(szPath);
     PathAddExtensionW(szPath, L".lnk");
 
     CreateShortcut(szPath, fCurrentDirectoryPIDL, NULL);
