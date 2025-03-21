@@ -130,6 +130,7 @@ void ImageModel::PushImageForUndo()
     if (hbm == NULL)
     {
         ShowOutOfMemory();
+        ClearHistory();
         return;
     }
 
@@ -143,6 +144,7 @@ void ImageModel::PushImageForUndo(HBITMAP hbm)
     if (hbm == NULL)
     {
         ShowOutOfMemory();
+        ClearHistory();
         return;
     }
 
@@ -201,6 +203,7 @@ void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
     if (!hbmNew)
     {
         ShowOutOfMemory();
+        ClearHistory();
         return;
     }
 
