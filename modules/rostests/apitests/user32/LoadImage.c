@@ -3,10 +3,10 @@
 
 static BOOL AreIconsEqual(HICON h1, HICON h2)
 {
+    typedef BOOL (WINAPI*SHAIE)(HICON, HICON);
     BOOL result = FALSE;
-    BOOL (WINAPI*pfnSHAreIconsEqual)(HICON, HICON);
     HMODULE hMod = LoadLibraryA("SHLWAPI");
-    pfnSHAreIconsEqual = GetProcAddress(hMod, (char*)548);
+    SHAIE pfnSHAreIconsEqual = (SHAIE) GetProcAddress(hMod, (char*)548);
     result = pfnSHAreIconsEqual && pfnSHAreIconsEqual(h1, h2);
     if (hMod)
         FreeLibrary(hMod);
