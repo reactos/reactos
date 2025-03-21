@@ -41,7 +41,10 @@ public:
         CComHeapPtr<ITEMIDLIST> relativePidl;
         BOOL expanded = FALSE;
     };
-    CItemData* GetItemData(_In_ HTREEITEM hItem);
+    CItemData* _GetItemData(_In_ HTREEITEM hItem);
+    CItemData* _GetItemData(_In_ UINT ItemSpec = TVGN_CARET);
+    SFGAOF _GetAttributesOfItem(_In_ CItemData *pData, _In_ SFGAOF Query);
+    HRESULT _GetNameOfItem(IShellFolder *pSF, PCUITEMID_CHILD pidl, PWSTR Name);
 
     // *** IOleWindow methods ***
     STDMETHODIMP GetWindow(HWND *lphwnd) override;
@@ -189,7 +192,7 @@ protected:
         _In_ LPCITEMIDLIST pEltRelative,
         _In_ BOOL bSort);
     BOOL _InsertSubitems(HTREEITEM hItem, LPCITEMIDLIST entry);
-    HRESULT _UpdateBrowser(LPCITEMIDLIST pidlGoto);
+    HRESULT _UpdateBrowser(LPCITEMIDLIST pidlGoto, BOOL IgnoreSelfNavigation = FALSE);
     HRESULT _GetCurrentLocation(_Out_ PIDLIST_ABSOLUTE *ppidl);
     HRESULT _IsCurrentLocation(_In_ PCIDLIST_ABSOLUTE pidl);
     void _Refresh();

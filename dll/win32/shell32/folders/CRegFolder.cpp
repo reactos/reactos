@@ -755,33 +755,35 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
 HRESULT WINAPI CRegFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,    /* simple pidl */
         LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut)
 {
-    GUID const *clsid = _ILGetGUIDPointer (pidl);
-    LPOLESTR pStr;
-    HRESULT hr;
+    GUID const *clsid = IsRegItem(pidl);
     WCHAR szName[100];
+
+    if (!lpName || (*lpName && IsIllegalFsFileName(lpName))) // Note: Must allow empty name
+        return E_INVALIDARG;
 
     if (!clsid)
     {
         ERR("Pidl is not reg item!\n");
         return E_FAIL;
     }
+    FormatGUIDKey(szName, _countof(szName), L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\%s", clsid);
 
-    hr = StringFromCLSID(*clsid, &pStr);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    swprintf(szName, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\%s", pStr);
-
+    BOOL bEmpty = StrIsNullOrEmpty(lpName); // Empty resets to the default name
     DWORD cbData = (wcslen(lpName) + 1) * sizeof(WCHAR);
-    LONG res = SHSetValueW(HKEY_CURRENT_USER, szName, NULL, RRF_RT_REG_SZ, lpName, cbData);
-
-    CoTaskMemFree(pStr);
+    LONG res = bEmpty ? SHDeleteValueW(HKEY_CURRENT_USER, szName, NULL)
+                      : SHSetValueW(HKEY_CURRENT_USER, szName, NULL, RRF_RT_REG_SZ, lpName, cbData);
 
     if (res == ERROR_SUCCESS)
     {
-        return pPidlOut ? SHILClone(pidl, pPidlOut) : S_OK;
+        HRESULT hr = pPidlOut ? SHILClone(pidl, pPidlOut) : S_OK; // Copy the PIDL before SHChangeNotify
+        PIDLIST_ABSOLUTE pidlAbs;
+        if (SUCCEEDED(SHELL_CreateAbsolutePidl(m_pOuterFolder, pidl, &pidlAbs)))
+        {
+            SHChangeNotify(SHCNE_UPDATEITEM, SHCNF_IDLIST, pidlAbs, NULL);
+            ILFree(pidlAbs);
+        }
+        return hr;
     }
-
     return E_FAIL;
 }
 

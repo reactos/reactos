@@ -307,6 +307,7 @@
 307 stdcall SHGetFolderPathW(long long long long ptr)
 308 stdcall SHGetIconOverlayIndexA(str long)
 309 stdcall SHGetIconOverlayIndexW(wstr long)
+@ stdcall -version=0x600+ SHGetIDListFromObject(ptr ptr)
 310 stdcall SHGetInstanceExplorer(long)
 311 stdcall SHGetMalloc(ptr)
 312 stdcall SHGetNewLinkInfo(str str ptr long long) SHGetNewLinkInfoA
