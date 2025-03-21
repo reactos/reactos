@@ -4,6 +4,7 @@
 #include <arch/pc/x86common.h>
 #include <arch/pc/pcbios.h>
 
+EXTERN RelocateFreeldr:PROC
 EXTERN BootMain:PROC
 EXTERN cmdline:DWORD
 
@@ -27,6 +28,12 @@ RealEntryPoint:
 //    mov ss, ax
 
     //mov word ptr [HEX(b8000)], HEX(0e00) + '1'
+
+    /* Keep only the low 16 bits part of stack */
+    and rsp, HEX(FFFF)
+
+    /* Relocate Freeldr if needed */
+    call RelocateFreeldr
 
     /* Setup long mode stack */
     mov rsp, qword ptr [stack64]
@@ -214,7 +221,7 @@ SwitchToRealCompSegment:
     .byte HEX(0EA) // 32bit long jmp
 AddressOfRealModeEntryPoint:
     .long 0 // receives address of RealModeEntryPoint
-    .word HEX(20)//RMODE_CS
+    .word L_RMODE_CS
     nop
 
 CallRealMode_return:
