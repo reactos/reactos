@@ -1,18 +1,6 @@
 
 #include "precomp.h"
 
-static BOOL AreIconsEqual(HICON h1, HICON h2)
-{
-    typedef BOOL (WINAPI*SHAIE)(HICON, HICON);
-    BOOL result = FALSE;
-    HMODULE hMod = LoadLibraryA("SHLWAPI");
-    SHAIE pfnSHAreIconsEqual = (SHAIE) GetProcAddress(hMod, (char*)548);
-    result = pfnSHAreIconsEqual && pfnSHAreIconsEqual(h1, h2);
-    if (hMod)
-        FreeLibrary(hMod);
-    return result;
-}
-
 static void test_LoadImage_DataFile(void)
 {
     static const struct
@@ -59,7 +47,6 @@ static void test_LoadImage_DataFile(void)
 
 static void test_LoadImage_System(void)
 {
-    HINSTANCE hInst = GetModuleHandleW(L"USER32");
     static const WORD icomap[][2] = {
         { 100, (WORD)(SIZE_T)IDI_APPLICATION },
         { 101, (WORD)(SIZE_T)IDI_WARNING },
@@ -68,13 +55,30 @@ static void test_LoadImage_System(void)
         { 104, (WORD)(SIZE_T)IDI_INFORMATION },
         { 105, (WORD)(SIZE_T)IDI_WINLOGO }
     };
+    HINSTANCE hInst = GetModuleHandleW(L"USER32");
+    typedef BOOL (WINAPI*SHAIE)(HICON, HICON);
+    SHAIE pfnSHAreIconsEqual;
+    HMODULE hSHLWAPI = LoadLibraryA("SHLWAPI");
+    if (!hSHLWAPI)
+    {
+        skip("Could not initialize\n");
+        return;
+    }
+    pfnSHAreIconsEqual = (SHAIE)GetProcAddress(hSHLWAPI, MAKEINTRESOURCEA(548));
+    if (!pfnSHAreIconsEqual)
+    {
+        FreeLibrary(hSHLWAPI);
+        skip("Could not initialize\n");
+        return;
+    }
 
     for (UINT i = 0; i < _countof(icomap); i++)
     {
         HICON hIcoRes = LoadIconW(hInst, MAKEINTRESOURCEW(icomap[i][0]));
         HICON hIcoSys = LoadIconW(NULL, MAKEINTRESOURCEW(icomap[i][1]));
-        ok(hIcoRes && AreIconsEqual(hIcoRes, hIcoSys), "SysIcon %d must be resource %d\n", icomap[i][1], icomap[i][0]);
+        ok(hIcoRes && pfnSHAreIconsEqual(hIcoRes, hIcoSys), "SysIcon %d must be resource %d\n", icomap[i][1], icomap[i][0]);
     }
+    FreeLibrary(hSHLWAPI);
 }
 
 START_TEST(LoadImage)
