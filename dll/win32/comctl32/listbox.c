@@ -204,10 +204,6 @@ static void set_item_height( LB_DESCR *descr, UINT index, UINT height )
 
 static BOOL is_item_selected( const LB_DESCR *descr, UINT index )
 {
-#ifdef __REACTOS__
-    if (descr->style & LBS_NOSEL)
-        return FALSE;
-#endif
     if (!(descr->style & (LBS_MULTIPLESEL | LBS_EXTENDEDSEL)))
         return index == descr->selected_item;
     if (descr->style & LBS_NODATA)
@@ -615,6 +611,9 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect,
     if (index < descr->nb_items)
     {
         item_str = get_item_string(descr, index);
+#ifdef __REACTOS__
+        if (!(descr->style & LBS_NOSEL))
+#endif
         selected = is_item_selected(descr, index);
     }
 
