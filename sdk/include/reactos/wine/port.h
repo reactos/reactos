@@ -381,4 +381,8 @@ ffs(int mask)
 
 #endif /* NO_LIBWINE_PORT */
 
+#if 0 /* Nonexistent on native NT. Add '#ifndef __REACTOS__' to related WINE code. */
+#define DLL_WINE_PREATTACH 8
+#endif
+
 #endif /* !defined(__WINE_WINE_PORT_H) */
