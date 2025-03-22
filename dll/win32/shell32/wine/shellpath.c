@@ -683,7 +683,7 @@ static BOOL PathMakeUniqueNameW(
 
     pszUniqueName[0] = UNICODE_NULL;
 
-    LPWSTR pszDest = pszUniqueName;
+    PWSTR pszDest = pszUniqueName;
     UINT dirLength = 0;
     if (pszDir)
     {
@@ -792,7 +792,7 @@ static BOOL PathMakeUniqueNameW(
     if (StringCchCopyNW(pszDest, cchMax - dirLength, pszTitle, cchTitle) != S_OK)
         return FALSE;
 
-    LPWSTR pchTitle = pszDest + cchTitle;
+    PWSTR pchTitle = pszDest + cchTitle;
     INT count;
     for (count = 1; count < maxCount; ++count)
     {
