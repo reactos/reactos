@@ -699,7 +699,7 @@ static BOOL PathMakeUniqueNameW(
 
     PCWSTR pszTitle = pszLongPlate ? pszLongPlate : pszTemplate;
     PCWSTR pchDotExt = NULL;
-    LPCWSTR formatString = L"%d";
+    PCWSTR formatString = L"%d";
 
     if (   !pszTitle
         || !IsLFNDriveW(pszDir)
