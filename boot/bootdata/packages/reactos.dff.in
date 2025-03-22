@@ -102,6 +102,8 @@ Signature = "$Windows NT$"
 79 = winsxs\arm64_microsoft.windows.gdiplus_6595b64144ccf1df_1.1.7601.23038_none_deadbeef
 81 = winsxs\arm64_microsoft.windows.gdiplus_6595b64144ccf1df_1.0.14393.0_none_deadbeef
 
+82 = Help\res
+
 .InfEnd
 
 ; Contents of disk

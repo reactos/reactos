@@ -230,6 +230,8 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
         option(PCH "Whether to use precompiled headers" ON)
     endif()
 
+    option(ENABLE_HELP "Enable Help" ON)
+
     # Version Options
     add_definitions(-DWINVER=0x502
                     -D_WIN32_IE=0x600

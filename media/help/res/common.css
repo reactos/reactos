@@ -1,0 +1,32 @@
+body {
+  color: black;
+  background-color: rgb(214, 223, 231);
+  font-family: sans-serif;
+}
+h1 {
+  font-size: 125%;
+}
+h2 {
+  font-size: 110%;
+}
+h3 {
+  font-size: 100%;
+}
+p {
+  font-size: 90%;
+}
+small {
+  font-size: 80%;
+}
+img {
+  vertical-align: middle;
+}
+#top_banner_div {
+  font-weight: bold;
+  padding: 4px;
+  color: white;
+  background-color: rgb(61, 153, 221);
+}
+#footer_roslogo_img {
+  height: 1.7em;
+}

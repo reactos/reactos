@@ -246,6 +246,8 @@ macro(dir_to_num dir var)
     elseif(${dir} STREQUAL reactos/winsxs/arm64_microsoft.windows.gdiplus_6595b64144ccf1df_1.0.14393.0_none_deadbeef)
         set(${var} 81)
 
+    elseif(${dir} STREQUAL reactos/Help/res)
+        set(${var} 82)
 
     else()
         message(FATAL_ERROR "Wrong destination: ${dir}")

@@ -1,6 +1,9 @@
 
 add_subdirectory(fonts)
 add_subdirectory(inf)
+if(ENABLE_HELP)
+    add_subdirectory(help)
+endif()
 add_subdirectory(nls)
 add_subdirectory(sdb)
 add_subdirectory(sounds)
