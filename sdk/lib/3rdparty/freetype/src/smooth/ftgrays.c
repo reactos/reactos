@@ -153,13 +153,8 @@
 
 #define ft_memset   memset
 
-#ifdef __REACTOS__
-#define ft_longjmp(env, val) (env)
-#define ft_setjmp(b)         0
-#else
 #define ft_setjmp   setjmp
 #define ft_longjmp  longjmp
-#endif
 #define ft_jmp_buf  jmp_buf
 
 typedef ptrdiff_t  FT_PtrDist;
