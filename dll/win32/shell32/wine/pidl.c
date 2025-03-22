@@ -1763,30 +1763,29 @@ LPITEMIDLIST _ILCreateDesktop(void)
 LPITEMIDLIST _ILCreateMyComputer(void)
 {
     TRACE("()\n");
-    return _ILCreateGuid(PT_GUID, &CLSID_MyComputer);
+    return _ILCreateGuid(PT_DESKTOP_REGITEM, &CLSID_MyComputer);
 }
 
 LPITEMIDLIST _ILCreateMyDocuments(void)
 {
     TRACE("()\n");
-    return _ILCreateGuid(PT_GUID, &CLSID_MyDocuments);
+    return _ILCreateGuid(PT_DESKTOP_REGITEM, &CLSID_MyDocuments);
 }
 
 LPITEMIDLIST _ILCreateIExplore(void)
 {
     TRACE("()\n");
-    return _ILCreateGuid(PT_GUID, &CLSID_Internet);
+    return _ILCreateGuid(PT_DESKTOP_REGITEM, &CLSID_Internet);
 }
 
 LPITEMIDLIST _ILCreateControlPanel(void)
 {
-    LPITEMIDLIST parent = _ILCreateGuid(PT_GUID, &CLSID_MyComputer), ret = NULL;
+    LPITEMIDLIST parent = _ILCreateMyComputer(), ret = NULL;
 
     TRACE("()\n");
     if (parent)
     {
-        LPITEMIDLIST cpl = _ILCreateGuid(PT_SHELLEXT, &CLSID_ControlPanel);
-
+        LPITEMIDLIST cpl = _ILCreateGuid(PT_COMPUTER_REGITEM, &CLSID_ControlPanel);
         if (cpl)
         {
             ret = ILCombine(parent, cpl);
@@ -1827,13 +1826,13 @@ LPITEMIDLIST _ILCreatePrinters(void)
 LPITEMIDLIST _ILCreateNetwork(void)
 {
     TRACE("()\n");
-    return _ILCreateGuid(PT_GUID, &CLSID_NetworkPlaces);
+    return _ILCreateGuid(PT_DESKTOP_REGITEM, &CLSID_NetworkPlaces);
 }
 
 LPITEMIDLIST _ILCreateBitBucket(void)
 {
     TRACE("()\n");
-    return _ILCreateGuid(PT_GUID, &CLSID_RecycleBin);
+    return _ILCreateGuid(PT_DESKTOP_REGITEM, &CLSID_RecycleBin);
 }
 
 LPITEMIDLIST _ILCreateAdminTools(void)
@@ -2057,28 +2056,6 @@ BOOL _ILIsMyDocuments(LPCITEMIDLIST pidl)
 
     if (iid)
         return IsEqualIID(iid, &CLSID_MyDocuments);
-    return FALSE;
-}
-
-BOOL _ILIsNetHood(LPCITEMIDLIST pidl)
-{
-    IID *iid = _ILGetGUIDPointer(pidl);
-
-    TRACE("(%p)\n", pidl);
-
-    if (iid)
-        return IsEqualIID(iid, &CLSID_NetworkPlaces);
-    return FALSE;
-}
-
-BOOL _ILIsControlPanel(LPCITEMIDLIST pidl)
-{
-    IID *iid = _ILGetGUIDPointer(pidl);
-
-    TRACE("(%p)\n", pidl);
-
-    if (iid)
-        return IsEqualIID(iid, &CLSID_ControlPanel);
     return FALSE;
 }
 

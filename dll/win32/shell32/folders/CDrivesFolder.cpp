@@ -78,6 +78,12 @@ static const CLSID* IsRegItem(PCUITEMID_CHILD pidl)
     return NULL;
 }
 
+static bool IsRegItem(PCUITEMID_CHILD pidl, REFCLSID clsid)
+{
+    const CLSID *pClass = IsRegItem(pidl);
+    return pClass && *pClass == clsid;
+}
+
 BOOL _ILGetDriveType(LPCITEMIDLIST pidl)
 {
     WCHAR szDrive[8];
@@ -552,7 +558,7 @@ static const shvheader MyComputerSFHeader[] = {
 
 static const DWORD dwComputerAttributes =
     SFGAO_CANRENAME | SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_DROPTARGET |
-    SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_HASSUBFOLDER;
+    SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_CANLINK;
 static const DWORD dwControlPanelAttributes =
     SFGAO_HASSUBFOLDER | SFGAO_FOLDER | SFGAO_CANLINK;
 static const DWORD dwDriveAttributes =
@@ -840,7 +846,6 @@ HRESULT WINAPI CDrivesFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY a
     if (*rgfInOut == 0)
         *rgfInOut = ~0;
 
-    /* FIXME: always add SFGAO_CANLINK */
     if(cidl == 0)
         *rgfInOut &= dwComputerAttributes;
     else
@@ -854,7 +859,7 @@ HRESULT WINAPI CDrivesFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY a
                 if (_ILGetDriveType(apidl[i]) == DRIVE_CDROM)
                     *rgfInOut &= ~SFGAO_CANRENAME; // CD-ROM drive cannot rename
             }
-            else if (_ILIsControlPanel(apidl[i]))
+            else if (IsRegItem(apidl[i], CLSID_ControlPanel))
             {
                 *rgfInOut &= dwControlPanelAttributes;
             }

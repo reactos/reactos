@@ -49,9 +49,15 @@ static BOOL IsSelf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
 
 static const CLSID* IsRegItem(PCUITEMID_CHILD pidl)
 {
-    if (pidl && pidl->mkid.cb == 2 + 2 + sizeof(CLSID) && pidl->mkid.abID[0] == PT_GUID)
+    if (pidl && pidl->mkid.cb == 2 + 2 + sizeof(CLSID) && pidl->mkid.abID[0] == PT_DESKTOP_REGITEM)
         return (const CLSID*)(&pidl->mkid.abID[2]);
     return NULL;
+}
+
+static bool IsRegItem(PCUITEMID_CHILD pidl, REFCLSID clsid)
+{
+    const CLSID *pClass = IsRegItem(pidl);
+    return pClass && *pClass == clsid;
 }
 
 STDMETHODIMP
@@ -688,12 +694,12 @@ HRESULT WINAPI CDesktopFolder::GetAttributesOf(
         /* TODO: always add SFGAO_CANLINK */
         for (UINT i = 0; i < cidl; ++i)
         {
-            pdump(*apidl);
-            if (_ILIsDesktop(*apidl))
+            pdump(apidl[i]);
+            if (_ILIsDesktop(apidl[i]))
                 *rgfInOut &= dwDesktopAttributes;
             else if (_ILIsMyComputer(apidl[i]))
                 *rgfInOut &= dwMyComputerAttributes;
-            else if (_ILIsNetHood(apidl[i]))
+            else if (IsRegItem(apidl[i], CLSID_NetworkPlaces))
                 *rgfInOut &= dwMyNetPlacesAttributes;
             else if (_ILIsFolderOrFile(apidl[i]) || _ILIsSpecialFolder(apidl[i]))
             {
