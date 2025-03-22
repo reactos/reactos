@@ -19,6 +19,13 @@ IEILIsEqual(
     _In_ LPCITEMIDLIST pidl2,
     _In_ BOOL bUnknown);
 
+HRESULT WINAPI
+AddUrlToFavorites(
+    _In_ HWND hwnd,
+    _In_opt_ LPCWSTR pszUrlW,
+    _In_ LPCWSTR pszTitleW,
+    _In_ BOOL fDisplayUI);
+
 BOOL WINAPI WinList_Init(VOID);
 VOID WINAPI WinList_Terminate(VOID);
 HRESULT WINAPI WinList_Revoke(_In_ LONG lCookie);

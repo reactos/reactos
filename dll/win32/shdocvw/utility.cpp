@@ -139,3 +139,84 @@ IEILIsEqual(
     FIXME("%p, %p\n", pidl1, pidl2);
     return FALSE;
 }
+
+static VOID
+SHDOCVW_DeletePathInvalidChars(LPWSTR pszDisplayName)
+{
+#define PATH_VALID_ELEMENT ( \
+    PATH_CHAR_CLASS_DOT | PATH_CHAR_CLASS_SEMICOLON | PATH_CHAR_CLASS_COMMA | \
+    PATH_CHAR_CLASS_SPACE | PATH_CHAR_CLASS_OTHER_VALID \
+)
+    PWCHAR pch, pchSrc;
+    for (pch = pchSrc = pszDisplayName; *pchSrc; ++pchSrc)
+    {
+        if (PathIsValidCharW(*pchSrc, PATH_VALID_ELEMENT))
+            *pch++ = *pchSrc;
+    }
+    *pch = UNICODE_NULL;
+}
+
+static HRESULT
+SHDOCVW_CreateShortcut(
+    _In_ LPCWSTR pszLnkFileName, 
+    _In_ PCIDLIST_ABSOLUTE pidlTarget,
+    _In_opt_ LPCWSTR pszDescription)
+{
+    HRESULT hr;
+
+    CComPtr<IShellLink> psl;
+    hr = CoCreateInstance(CLSID_ShellLink, NULL,  CLSCTX_INPROC_SERVER,
+                          IID_PPV_ARG(IShellLink, &psl));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    psl->SetIDList(pidlTarget);
+
+    if (pszDescription)
+        psl->SetDescription(pszDescription);
+
+    CComPtr<IPersistFile> ppf;
+    hr = psl->QueryInterface(IID_PPV_ARG(IPersistFile, &ppf));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return ppf->Save(pszLnkFileName, TRUE);
+}
+
+/*************************************************************************
+ *      AddUrlToFavorites [SHDOCVW.106]
+ */
+EXTERN_C HRESULT WINAPI
+AddUrlToFavorites(
+    _In_ HWND hwnd,
+    _In_ LPCWSTR pszUrlW,
+    _In_opt_ LPCWSTR pszTitleW,
+    _In_ BOOL fDisplayUI)
+{
+    TRACE("%p, %S, %S, %d\n", hwnd, pszUrlW, pszTitleW, fDisplayUI);
+
+    if (!pszTitleW)
+        pszTitleW = PathFindFileNameW(pszUrlW);
+
+    if (fDisplayUI)
+        FIXME("fDisplayUI is not supported yet\n");
+
+    CComHeapPtr<ITEMIDLIST> pidl(ILCreateFromPath(pszUrlW));
+
+    // Get display name of current directory PIDL
+    SHFILEINFOW fileInfo = { NULL };
+    if (!SHGetFileInfoW(pszUrlW, 0, &fileInfo, sizeof(fileInfo), SHGFI_DISPLAYNAME))
+        return E_FAIL;
+
+    SHDOCVW_DeletePathInvalidChars(fileInfo.szDisplayName);
+
+    // Build shortcut pathname
+    WCHAR szPath[MAX_PATH];
+    SHGetSpecialFolderPathW(hwnd, szPath, CSIDL_FAVORITES, TRUE);
+    PathAppendW(szPath, fileInfo.szDisplayName);
+    PathRemoveExtensionW(szPath);
+    PathAddExtensionW(szPath, L".lnk");
+
+    SHDOCVW_CreateShortcut(szPath, pidl, NULL);
+    return S_OK;
+}

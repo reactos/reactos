@@ -45,33 +45,6 @@ SHDOCVW_GetPathOfShortcut(
     return S_OK;
 }
 
-HRESULT
-SHDOCVW_CreateShortcut(
-    _In_ LPCWSTR pszLnkFileName, 
-    _In_ PCIDLIST_ABSOLUTE pidlTarget,
-    _In_opt_ LPCWSTR pszDescription)
-{
-    HRESULT hr;
-
-    CComPtr<IShellLink> psl;
-    hr = CoCreateInstance(CLSID_ShellLink, NULL,  CLSCTX_INPROC_SERVER,
-                          IID_PPV_ARG(IShellLink, &psl));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    psl->SetIDList(pidlTarget);
-
-    if (pszDescription)
-        psl->SetDescription(pszDescription);
-
-    CComPtr<IPersistFile> ppf;
-    hr = psl->QueryInterface(IID_PPV_ARG(IPersistFile, &ppf));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return ppf->Save(pszLnkFileName, TRUE);
-}
-
 CNSCBand::CNSCBand()
 {
     SHDOCVW_LockModule();
@@ -610,43 +583,16 @@ LRESULT CNSCBand::OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
     return 0;
 }
 
-static VOID
-SHDOCVW_DeletePathInvalidChars(LPWSTR pszDisplayName)
-{
-#define PATH_VALID_ELEMENT ( \
-    PATH_CHAR_CLASS_DOT | PATH_CHAR_CLASS_SEMICOLON | PATH_CHAR_CLASS_COMMA | \
-    PATH_CHAR_CLASS_SPACE | PATH_CHAR_CLASS_OTHER_VALID \
-)
-    PWCHAR pch, pchSrc;
-    for (pch = pchSrc = pszDisplayName; *pchSrc; ++pchSrc)
-    {
-        if (PathIsValidCharW(*pchSrc, PATH_VALID_ELEMENT))
-            *pch++ = *pchSrc;
-    }
-    *pch = UNICODE_NULL;
-}
-
 HRESULT CNSCBand::_AddFavorite()
 {
     CComHeapPtr<ITEMIDLIST> pidlCurrent;
     _GetCurrentLocation(&pidlCurrent);
 
-    // Get display name of current directory PIDL
-    SHFILEINFOW fileInfo = { NULL };
-    if (!SHGetFileInfoW((LPCWSTR)(LPITEMIDLIST)pidlCurrent, 0, &fileInfo, sizeof(fileInfo),
-                        SHGFI_PIDL | SHGFI_DISPLAYNAME))
-    {
-        return 0;
-    }
-    SHDOCVW_DeletePathInvalidChars(fileInfo.szDisplayName);
+    WCHAR szURL[MAX_PATH], szTitle[MAX_PATH];
+    ILGetDisplayNameEx(NULL, pidlCurrent, szURL, ILGDN_FORPARSING);
+    ILGetDisplayNameEx(NULL, pidlCurrent, szTitle, ILGDN_NORMAL);
 
-    // Build shortcut pathname
-    WCHAR szPath[MAX_PATH];
-    SHGetSpecialFolderPathW(m_hWnd, szPath, CSIDL_FAVORITES, TRUE);
-    PathAppendW(szPath, fileInfo.szDisplayName);
-    PathAddExtensionW(szPath, L".lnk");
-
-    return SHDOCVW_CreateShortcut(szPath, pidlCurrent, NULL);
+    return AddUrlToFavorites(m_hWnd, szURL, szTitle, FALSE);
 }
 
 LRESULT CNSCBand::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)

@@ -23,6 +23,7 @@
 #include <shellapi.h>
 #include <htiframe.h>
 #include <strsafe.h>
+#include <shdocvw_undoc.h>
 
 extern HRESULT IUnknown_ShowDW(IUnknown * punk, BOOL fShow);
 
@@ -3871,41 +3872,6 @@ LRESULT CShellBrowser::OnBackspace(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
     return 0;
 }
 
-static BOOL
-CreateShortcut(
-    IN LPCWSTR pszLnkFileName,
-    IN LPCITEMIDLIST pidl,
-    IN LPCWSTR pszDescription OPTIONAL)
-{
-    IPersistFile *pPF;
-    IShellLinkW *pSL;
-    HRESULT hr = CoInitialize(NULL);
-    if (FAILED(hr))
-        return hr;
-
-    hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
-                          IID_IShellLinkW, (LPVOID*)&pSL);
-    if (SUCCEEDED(hr))
-    {
-        pSL->SetIDList(pidl);
-
-        if (pszDescription)
-            pSL->SetDescription(pszDescription);
-
-        hr = pSL->QueryInterface(IID_IPersistFile, (LPVOID*)&pPF);
-        if (SUCCEEDED(hr))
-        {
-            hr = pPF->Save(pszLnkFileName, TRUE);
-            pPF->Release();
-        }
-        pSL->Release();
-    }
-
-    CoUninitialize();
-
-    return SUCCEEDED(hr);
-}
-
 HRESULT GetFavsLocation(HWND hWnd, LPITEMIDLIST *pPidl)
 {
     HRESULT hr = SHGetSpecialFolderLocation(hWnd, CSIDL_FAVORITES, pPidl);
@@ -3915,40 +3881,13 @@ HRESULT GetFavsLocation(HWND hWnd, LPITEMIDLIST *pPidl)
     return hr;
 }
 
-static void
-BrowseUI_DeletePathInvalidChars(LPWSTR pszDisplayName)
-{
-#define PATH_VALID_ELEMENT ( \
-    PATH_CHAR_CLASS_DOT | PATH_CHAR_CLASS_SEMICOLON | PATH_CHAR_CLASS_COMMA | \
-    PATH_CHAR_CLASS_SPACE | PATH_CHAR_CLASS_OTHER_VALID \
-)
-    PWCHAR pch, pchSrc;
-    for (pch = pchSrc = pszDisplayName; *pchSrc; ++pchSrc)
-    {
-        if (PathIsValidCharW(*pchSrc, PATH_VALID_ELEMENT))
-            *pch++ = *pchSrc;
-    }
-    *pch = UNICODE_NULL;
-}
-
 LRESULT CShellBrowser::OnAddToFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    // Get display name of current directory PIDL
-    SHFILEINFOW fileInfo = { NULL };
-    if (!SHGetFileInfoW((LPCWSTR)(LPITEMIDLIST)fCurrentDirectoryPIDL, 0, &fileInfo, sizeof(fileInfo),
-                        SHGFI_PIDL | SHGFI_DISPLAYNAME))
-    {
-        return 0;
-    }
-    BrowseUI_DeletePathInvalidChars(fileInfo.szDisplayName);
+    WCHAR szURL[MAX_PATH], szTitle[MAX_PATH];
+    ILGetDisplayNameEx(NULL, fCurrentDirectoryPIDL, szURL, ILGDN_FORPARSING);
+    ILGetDisplayNameEx(NULL, fCurrentDirectoryPIDL, szTitle, ILGDN_NORMAL);
 
-    // Build shortcut pathname
-    WCHAR szPath[MAX_PATH];
-    SHGetSpecialFolderPathW(m_hWnd, szPath, CSIDL_FAVORITES, TRUE);
-    PathAppendW(szPath, fileInfo.szDisplayName);
-    PathAddExtensionW(szPath, L".lnk");
-
-    CreateShortcut(szPath, fCurrentDirectoryPIDL, NULL);
+    AddUrlToFavorites(m_hWnd, szURL, szTitle, FALSE);
     return 0;
 }
 
