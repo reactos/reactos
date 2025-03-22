@@ -218,5 +218,5 @@ BEGIN
     IDS_RESTORE_ALL "&Açık Pencereleri Göster"
     IDS_TRAYWND_UNDO_CASCADE "&Kademeyi Geri Al"
     IDS_TRAYWND_UNDO_TILE "&Döşemeyi Geri Al"
-    IDS_TRAYDESKBTN_TOOLTIP "Masaüstünü Göster"
+    IDS_TRAYDESKBTN_TOOLTIP "Masaüstünü/Pencereleri Göster"
 END
