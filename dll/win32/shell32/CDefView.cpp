@@ -217,6 +217,10 @@ static inline COLORREF GetViewColor(COLORREF Clr, UINT SysFallback)
     return Clr != CLR_INVALID ? Clr : GetSysColor(SysFallback);
 }
 
+#define VID_Default ( *(const SHELLVIEWID*)&IID_CDefView )
+extern HRESULT ShellViewIdToFolderViewMode(const SHELLVIEWID *pVid);
+extern const SHELLVIEWID* FolderViewModeToShellViewId(UINT FVM);
+
 class CDefView :
     public CWindowImpl<CDefView, CWindow, CControlWinTraits>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -362,6 +366,11 @@ public:
         return 0;
     }
 
+    static inline bool IsSupportedFolderViewMode(int Mode)
+    {
+        return Mode >= FVM_FIRST && Mode <= FVM_DETAILS; // We don't support Tile nor Thumbstrip
+    }
+
     // *** IOleWindow methods ***
     STDMETHOD(GetWindow)(HWND *lphwnd) override;
     STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
@@ -380,7 +389,7 @@ public:
     STDMETHOD(GetItemObject)(UINT uItem, REFIID riid, void **ppv) override;
 
     // *** IShellView2 methods ***
-    STDMETHOD(GetView)(SHELLVIEWID *view_guid, ULONG view_type) override;
+    STDMETHOD(GetView)(SHELLVIEWID *pVid, ULONG view_type) override;
     STDMETHOD(CreateViewWindow2)(LPSV2CVW2_PARAMS view_params) override;
     STDMETHOD(HandleRename)(LPCITEMIDLIST new_pidl) override;
     STDMETHOD(SelectAndPositionItem)(LPCITEMIDLIST item, UINT flags, POINT *point) override;
@@ -819,10 +828,7 @@ LRESULT CDefView::OnUpdateStatusbar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 // creates the list view window
 BOOL CDefView::CreateList()
 {
-    HRESULT hr;
     DWORD dwStyle, dwExStyle, ListExStyle;
-    UINT ViewMode;
-
     TRACE("%p\n", this);
 
     dwStyle = WS_TABSTOP | WS_VISIBLE | WS_CHILDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
@@ -843,16 +849,6 @@ BOOL CDefView::CreateList()
 #if 0 // FIXME: Temporarily disabled until ListView is fixed (CORE-19624, CORE-19818)
         ListExStyle |= LVS_EX_DOUBLEBUFFER;
 #endif
-    }
-
-    ViewMode = m_FolderSettings.ViewMode;
-    hr = _DoFolderViewCB(SFVM_DEFVIEWMODE, 0, (LPARAM)&ViewMode);
-    if (SUCCEEDED(hr))
-    {
-        if (ViewMode >= FVM_FIRST && ViewMode <= FVM_LAST)
-            m_FolderSettings.ViewMode = ViewMode;
-        else
-            ERR("Ignoring invalid ViewMode from SFVM_DEFVIEWMODE: %u (was: %u)\n", ViewMode, m_FolderSettings.ViewMode);
     }
 
     switch (m_FolderSettings.ViewMode)
@@ -3550,7 +3546,7 @@ FOLDERVIEWMODE CDefView::GetDefaultViewMode()
 {
     FOLDERVIEWMODE mode = ((m_FolderSettings.fFlags & FWF_DESKTOP) || !IsOS(OS_SERVERADMINUI)) ? FVM_ICON : FVM_DETAILS;
     FOLDERVIEWMODE temp = mode;
-    if (SUCCEEDED(_DoFolderViewCB(SFVM_DEFVIEWMODE, 0, (LPARAM)&temp)) && temp >= FVM_FIRST && temp <= FVM_LAST)
+    if (SUCCEEDED(_DoFolderViewCB(SFVM_DEFVIEWMODE, 0, (LPARAM)&temp)) && IsSupportedFolderViewMode(temp))
         mode = temp;
     return mode;
 }
@@ -3775,10 +3771,22 @@ HRESULT STDMETHODCALLTYPE CDefView::SelectAndPositionItems(UINT cidl, PCUITEMID_
 
 // IShellView2 implementation
 
-HRESULT STDMETHODCALLTYPE CDefView::GetView(SHELLVIEWID *view_guid, ULONG view_type)
+HRESULT STDMETHODCALLTYPE CDefView::GetView(SHELLVIEWID *pVid, ULONG view_type)
 {
-    FIXME("(%p)->(%p, %lu) stub\n", this, view_guid, view_type);
-    return E_NOTIMPL;
+    if (view_type == SV2GV_DEFAULTVIEW)
+    {
+        *pVid = VID_Default;
+        return S_OK;
+    }
+    if (view_type == SV2GV_CURRENTVIEW)
+        view_type = m_FolderSettings.ViewMode;
+    if ((int)view_type < 0)
+        return E_UNEXPECTED;
+
+    if (!IsSupportedFolderViewMode(view_type += FVM_FIRST))
+        return E_INVALIDARG;
+    *pVid = *FolderViewModeToShellViewId(view_type);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow2(LPSV2CVW2_PARAMS view_params)
@@ -3807,9 +3815,6 @@ HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow3(IShellBrowser *psb, IShell
     if (view_flags & ~SUPPORTED_SV3CVW3)
         FIXME("unsupported view flags 0x%08x\n", view_flags & ~SUPPORTED_SV3CVW3);
 
-    if (mode == FVM_AUTO)
-        mode = GetDefaultViewMode();
-
     /* Set up the member variables */
     m_pShellBrowser = psb;
     m_FolderSettings.ViewMode = mode;
@@ -3817,22 +3822,22 @@ HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow3(IShellBrowser *psb, IShell
 
     if (view_id)
     {
-        if (IsEqualIID(*view_id, VID_LargeIcons))
-            m_FolderSettings.ViewMode = FVM_ICON;
-        else if (IsEqualIID(*view_id, VID_SmallIcons))
-            m_FolderSettings.ViewMode = FVM_SMALLICON;
-        else if (IsEqualIID(*view_id, VID_List))
-            m_FolderSettings.ViewMode = FVM_LIST;
-        else if (IsEqualIID(*view_id, VID_Details))
-            m_FolderSettings.ViewMode = FVM_DETAILS;
-        else if (IsEqualIID(*view_id, VID_Thumbnails))
-            m_FolderSettings.ViewMode = FVM_THUMBNAIL;
-        else if (IsEqualIID(*view_id, VID_Tile))
-            m_FolderSettings.ViewMode = FVM_TILE;
-        else if (IsEqualIID(*view_id, VID_ThumbStrip))
-            m_FolderSettings.ViewMode = FVM_THUMBSTRIP;
+        FOLDERVIEWMODE temp = (FOLDERVIEWMODE)ShellViewIdToFolderViewMode(view_id);
+        if (IsSupportedFolderViewMode(temp))
+            mode = temp;
+        else if (*view_id == VID_Default)
+            mode = FVM_AUTO;
         else
             FIXME("Ignoring unrecognized VID %s\n", debugstr_guid(view_id));
+    }
+    if (mode == FVM_AUTO)
+        m_FolderSettings.ViewMode = GetDefaultViewMode();
+
+    if (!IsSupportedFolderViewMode(m_FolderSettings.ViewMode))
+    {
+        ERR("Ignoring %s FVM %u\n", FolderViewModeToShellViewId(m_FolderSettings.ViewMode)
+            ? "unsupported" : "invalid", m_FolderSettings.ViewMode);
+        m_FolderSettings.ViewMode = FVM_ICON;
     }
     const UINT requestedViewMode = m_FolderSettings.ViewMode;
 
