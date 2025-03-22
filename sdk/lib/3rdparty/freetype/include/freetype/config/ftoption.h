@@ -417,7 +417,7 @@ FT_BEGIN_HEADER
    *   Do not `#undef` these macros here since the build system might define
    *   them for certain configurations only.
    */
-#ifdef __REACTOS__
+#if defined(__REACTOS__) && !defined(NDEBUG)
 #define FT_DEBUG_LEVEL_ERROR
 #else
 /* #define FT_DEBUG_LEVEL_ERROR */
