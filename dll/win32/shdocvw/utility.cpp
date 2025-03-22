@@ -221,7 +221,8 @@ AddUrlToFavorites(
 
     // Build shortcut pathname
     WCHAR szPath[MAX_PATH];
-    SHGetSpecialFolderPathW(hwnd, szPath, CSIDL_FAVORITES, TRUE);
+    if (!SHGetSpecialFolderPathW(hwnd, szPath, CSIDL_FAVORITES, TRUE))
+        SHGetSpecialFolderPathW(hwnd, szPath, CSIDL_COMMON_FAVORITES, TRUE);
     PathAppendW(szPath, szTitle);
     PathAddExtensionW(szPath, L".lnk");
 
