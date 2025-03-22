@@ -698,6 +698,8 @@ static BOOL PathMakeUniqueNameW(
     }
 
     PCWSTR pszTitle = pszLongPlate ? pszLongPlate : pszTemplate;
+    PCWSTR pchDotExt = NULL;
+    LPCWSTR formatString = L"%d";
 
     if (   !pszTitle
         || !IsLFNDriveW(pszDir)
@@ -710,12 +712,8 @@ static BOOL PathMakeUniqueNameW(
             return FALSE;
 
         PCWSTR pszSrc = pszTemplate;
-        PCWSTR pchDotExt = PathFindExtensionW(pszTemplate);
+        pchDotExt = PathFindExtensionW(pszTemplate);
         INT extLength = lstrlenW(pchDotExt);
-
-        WCHAR formatString[MAX_PATH];
-        if (StringCchCopyW(formatString, _countof(formatString), L"%d") != S_OK)
-            return FALSE;
 
         INT cchTitle = pchDotExt - pszTemplate;
         if (cchTitle > 1)
@@ -728,8 +726,9 @@ static BOOL PathMakeUniqueNameW(
             }
         }
 
-        if (cchTitle > 7)
-            cchTitle = 7;
+#define MSDOS_8DOT3_FILENAME_TITLE_LEN 8
+        if (cchTitle > MSDOS_8DOT3_FILENAME_TITLE_LEN - 1)
+            cchTitle = MSDOS_8DOT3_FILENAME_TITLE_LEN - 1;
 
         while (extLength + cchTitle + dirLength + 1 > (cchMax - 1) && cchTitle > 1)
             --cchTitle;
@@ -764,9 +763,7 @@ static BOOL PathMakeUniqueNameW(
     else
     {
         PCWSTR openParen = StrChrW(pszTitle, L'(');
-        PCWSTR pchDotExt = NULL;
         INT cchTitle = 0;
-        WCHAR formatString[MAX_PATH];
 
         if (openParen)
         {
@@ -786,23 +783,19 @@ static BOOL PathMakeUniqueNameW(
             {
                 pchDotExt = openParen + 1;
                 cchTitle = pchDotExt - pszTitle;
-                if (StringCchCopyW(formatString, _countof(formatString), L"%d") != S_OK)
-                    return FALSE;
             }
             else
             {
                 pchDotExt = PathFindExtensionW(pszTitle);
                 cchTitle = pchDotExt - pszTitle;
-                if (StringCchCopyW(formatString, _countof(formatString), L" (%d)") != S_OK)
-                    return FALSE;
+                formatString = L" (%d)";
             }
         }
         else
         {
             pchDotExt = PathFindExtensionW(pszTitle);
             cchTitle = pchDotExt - pszTitle;
-            if (StringCchCopyW(formatString, _countof(formatString), L" (%d)") != S_OK)
-                return FALSE;
+            formatString = L" (%d)";
         }
 
         INT maxCount = 1;
