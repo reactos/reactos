@@ -141,7 +141,7 @@ IEILIsEqual(
 }
 
 static VOID
-SHDOCVW_DeletePathInvalidChars(LPWSTR pszDisplayName)
+SHDOCVW_PathDeleteInvalidChars(LPWSTR pszDisplayName)
 {
 #define PATH_VALID_ELEMENT ( \
     PATH_CHAR_CLASS_DOT | PATH_CHAR_CLASS_SEMICOLON | PATH_CHAR_CLASS_COMMA | \
@@ -193,6 +193,7 @@ AddUrlToFavorites(
     _In_opt_ LPCWSTR pszTitleW,
     _In_ BOOL fDisplayUI)
 {
+    // FIXME: Internet Shortcut
     TRACE("%p, %S, %S, %d\n", hwnd, pszUrlW, pszTitleW, fDisplayUI);
 
     if (fDisplayUI)
@@ -208,7 +209,7 @@ AddUrlToFavorites(
         ILGetDisplayNameEx(NULL, pidl, szTitle, ILGDN_NORMAL);
 
     // Delete invalid characters
-    SHDOCVW_DeletePathInvalidChars(szTitle);
+    SHDOCVW_PathDeleteInvalidChars(szTitle);
 
     // Build shortcut pathname
     WCHAR szPath[MAX_PATH];
