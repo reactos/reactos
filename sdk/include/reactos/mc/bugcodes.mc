@@ -1179,6 +1179,14 @@ Language=English
 WIN32K_INIT_OR_RIT_FAILURE
 .
 
+MessageId=0x92
+Severity=Success
+Facility=System
+SymbolicName=UP_DRIVER_ON_MP_SYSTEM
+Language=English
+UP_DRIVER_ON_MP_SYSTEM
+.
+
 MessageId=0x93
 Severity=Success
 Facility=System
