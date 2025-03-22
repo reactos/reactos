@@ -588,11 +588,10 @@ HRESULT CNSCBand::_AddFavorite()
     CComHeapPtr<ITEMIDLIST> pidlCurrent;
     _GetCurrentLocation(&pidlCurrent);
 
-    WCHAR szURL[MAX_PATH], szTitle[MAX_PATH];
+    WCHAR szURL[MAX_PATH];
     ILGetDisplayNameEx(NULL, pidlCurrent, szURL, ILGDN_FORPARSING);
-    ILGetDisplayNameEx(NULL, pidlCurrent, szTitle, ILGDN_NORMAL);
 
-    return AddUrlToFavorites(m_hWnd, szURL, szTitle, FALSE);
+    return AddUrlToFavorites(m_hWnd, szURL, NULL, TRUE);
 }
 
 LRESULT CNSCBand::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)

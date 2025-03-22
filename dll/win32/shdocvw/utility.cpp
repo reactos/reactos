@@ -195,26 +195,34 @@ AddUrlToFavorites(
 {
     TRACE("%p, %S, %S, %d\n", hwnd, pszUrlW, pszTitleW, fDisplayUI);
 
-    if (!pszTitleW)
-        pszTitleW = PathFindFileNameW(pszUrlW);
-
     if (fDisplayUI)
         FIXME("fDisplayUI is not supported yet\n");
 
     CComHeapPtr<ITEMIDLIST> pidl(ILCreateFromPath(pszUrlW));
 
-    // Get display name of current directory PIDL
-    SHFILEINFOW fileInfo = { NULL };
-    if (!SHGetFileInfoW(pszUrlW, 0, &fileInfo, sizeof(fileInfo), SHGFI_DISPLAYNAME))
-        return E_FAIL;
+    // Get title
+    WCHAR szTitle[MAX_PATH];
+    if (pszTitleW)
+    {
+        lstrcpynW(szTitle, pszTitleW, _countof(szTitle));
+    }
+    else
+    {
+        SHFILEINFOW fileInfo = { NULL };
+        if (!SHGetFileInfoW((LPCWSTR)(LPITEMIDLIST)pidl, 0, &fileInfo, sizeof(fileInfo),
+                            SHGFI_PIDL | SHGFI_DISPLAYNAME))
+            return E_FAIL;
 
-    SHDOCVW_DeletePathInvalidChars(fileInfo.szDisplayName);
+        lstrcpynW(szTitle, fileInfo.szDisplayName, _countof(szTitle));
+    }
+
+    // Delete invalid characters
+    SHDOCVW_DeletePathInvalidChars(szTitle);
 
     // Build shortcut pathname
     WCHAR szPath[MAX_PATH];
     SHGetSpecialFolderPathW(hwnd, szPath, CSIDL_FAVORITES, TRUE);
-    PathAppendW(szPath, fileInfo.szDisplayName);
-    PathRemoveExtensionW(szPath);
+    PathAppendW(szPath, szTitle);
     PathAddExtensionW(szPath, L".lnk");
 
     SHDOCVW_CreateShortcut(szPath, pidl, NULL);

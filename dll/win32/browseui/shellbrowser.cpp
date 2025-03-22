@@ -3883,11 +3883,10 @@ HRESULT GetFavsLocation(HWND hWnd, LPITEMIDLIST *pPidl)
 
 LRESULT CShellBrowser::OnAddToFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    WCHAR szURL[MAX_PATH], szTitle[MAX_PATH];
+    WCHAR szURL[MAX_PATH];
     ILGetDisplayNameEx(NULL, fCurrentDirectoryPIDL, szURL, ILGDN_FORPARSING);
-    ILGetDisplayNameEx(NULL, fCurrentDirectoryPIDL, szTitle, ILGDN_NORMAL);
 
-    AddUrlToFavorites(m_hWnd, szURL, szTitle, FALSE);
+    AddUrlToFavorites(m_hWnd, szURL, NULL, TRUE);
     return 0;
 }
 
