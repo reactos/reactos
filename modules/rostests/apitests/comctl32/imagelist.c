@@ -48,12 +48,8 @@ static BOOL IL_AddImagesForTest(HIMAGELIST himl)
     HINSTANCE hInst = LoadLibraryW(L"USER32");
     if (!hInst)
         return FALSE;
-    HICON hIco = (HICON)LoadImage(hInst, MAKEINTRESOURCE(100), /* Windows */
+    HICON hIco = (HICON)LoadImage(hInst, MAKEINTRESOURCE(100),
                                   IMAGE_ICON, IL_IMGSIZE, IL_IMGSIZE, 0);
-    if (!hIco)
-        hIco = (HICON)LoadImage(hInst, MAKEINTRESOURCE(32512), /* ReactOS */
-                                IMAGE_ICON, IL_IMGSIZE, IL_IMGSIZE, 0);
-
     if (hIco)
     {
         idx = ImageList_AddIcon(himl, hIco);
