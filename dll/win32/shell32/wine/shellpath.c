@@ -700,8 +700,7 @@ static BOOL PathMakeUniqueNameW(
     PCWSTR pszTitle = pszLongPlate ? pszLongPlate : pszTemplate;
     PCWSTR pchDotExt = NULL;
     PCWSTR formatString = L"%d";
-    INT maxCount;
-    INT cchTitle = 0;
+    INT maxCount, cchTitle = 0;
 
     if (   !pszTitle
         || !IsLFNDriveW(pszDir)
@@ -714,7 +713,6 @@ static BOOL PathMakeUniqueNameW(
             return FALSE;
 
         pchDotExt = PathFindExtensionW(pszTemplate);
-        INT extLength = lstrlenW(pchDotExt);
 
         cchTitle = pchDotExt - pszTemplate;
         if (cchTitle > 1)
@@ -731,13 +729,16 @@ static BOOL PathMakeUniqueNameW(
         if (cchTitle > MSDOS_8DOT3_FILENAME_TITLE_LEN - 1)
             cchTitle = MSDOS_8DOT3_FILENAME_TITLE_LEN - 1;
 
+        INT extLength = lstrlenW(pchDotExt);
         while (extLength + cchTitle + dirLength + 1 > (cchMax - 1) && cchTitle > 1)
             --cchTitle;
 
-        if (cchTitle >= 1)
-            maxCount = (cchTitle != 1) ? 100 : 10;
-        else
+        if (cchTitle <= 0)
             maxCount = 1;
+        else if (cchTitle == 1)
+            maxCount = 10;
+        else
+            maxCount = 100;
 
         if (StringCchCopyNW(pszDest, cchMax - dirLength, pszTemplate, cchTitle) != S_OK)
             return FALSE;
@@ -779,14 +780,14 @@ static BOOL PathMakeUniqueNameW(
         }
 
         INT remainingChars = cchMax - cchTitle - dirLength - lstrlenW(formatString) + 2;
-        if (remainingChars == 1)
+        if (remainingChars <= 0)
+            maxCount = 1;
+        else if (remainingChars == 1)
             maxCount = 10;
         else if (remainingChars == 2)
             maxCount = 100;
-        else if (remainingChars > 0)
-            maxCount = 1000;
         else
-            maxCount = 1;
+            maxCount = 1000;
 
         if (StringCchCopyNW(pszDest, cchMax - dirLength, pszTitle, cchTitle) != S_OK)
             return FALSE;
