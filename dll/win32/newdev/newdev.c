@@ -90,7 +90,7 @@ UpdateDriverForPlugAndPlayDevicesW(
         /* Match Hardware ID */
         FoundHardwareId = FALSE;
         Property = SPDRP_HARDWAREID;
-        while(TRUE)
+        while (TRUE)
         {
             /* Get IDs data */
             Buffer = NULL;
