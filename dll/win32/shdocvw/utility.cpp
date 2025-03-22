@@ -202,6 +202,8 @@ AddUrlToFavorites(
         FIXME("Internet Shortcut\n");
 
     CComHeapPtr<ITEMIDLIST> pidl(ILCreateFromPath(pszUrlW));
+    if (!pidl)
+        return E_OUTOFMEMORY;
 
     // Get title
     WCHAR szTitle[MAX_PATH];
