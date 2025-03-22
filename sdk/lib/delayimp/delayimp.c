@@ -15,13 +15,16 @@
 
 /**** Linker magic: provide a default (NULL) pointer, but allow the user to override it ****/
 
-/* The actual items we use */
-PfnDliHook __pfnDliNotifyHook2;
-PfnDliHook __pfnDliFailureHook2;
+#if defined(__GNUC__)
 
-#if !defined(__GNUC__)
+/* The fallback (weak) symbols we may use */
+__attribute__((weak)) PfnDliHook __pfnDliNotifyHook2  = NULL;
+__attribute__((weak)) PfnDliHook __pfnDliFailureHook2 = NULL;
+
+#else // !__GNUC__
+
 /* The fallback symbols */
-PfnDliHook __pfnDliNotifyHook2Default = NULL;
+PfnDliHook __pfnDliNotifyHook2Default  = NULL;
 PfnDliHook __pfnDliFailureHook2Default = NULL;
 
 /* Tell the linker to use the fallback symbols */
@@ -32,7 +35,8 @@ PfnDliHook __pfnDliFailureHook2Default = NULL;
 #pragma comment(linker, "/alternatename:__pfnDliNotifyHook2=__pfnDliNotifyHook2Default")
 #pragma comment(linker, "/alternatename:__pfnDliFailureHook2=__pfnDliFailureHook2Default")
 #endif
-#endif
+
+#endif // __GNUC__
 
 
 /**** Helper functions to convert from RVA to address ****/
