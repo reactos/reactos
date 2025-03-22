@@ -201,10 +201,11 @@ AddUrlToFavorites(
     if (PathIsURLW(pszUrlW))
         FIXME("Internet Shortcut\n");
 
-    CComHeapPtr<ITEMIDLIST> pidl(ILCreateFromPath(pszUrlW));
+    CComHeapPtr<ITEMIDLIST> pidl;
+    SHParseDisplayName(pszUrlW, NULL, &pidl, 0, NULL);
     if (!pidl)
     {
-        ERR("Out of memory\n");
+        ERR("Out of memory: %s\n", wine_dbgstr_w(pszUrlW));
         return E_OUTOFMEMORY;
     }
 

@@ -3883,10 +3883,20 @@ HRESULT GetFavsLocation(HWND hWnd, LPITEMIDLIST *pPidl)
 
 LRESULT CShellBrowser::OnAddToFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    WCHAR szURL[MAX_PATH];
-    ILGetDisplayNameEx(NULL, fCurrentDirectoryPIDL, szURL, ILGDN_FORPARSING);
+    CComPtr<IShellFolder> pDesktop;
+    HRESULT hr = SHGetDesktopFolder(&pDesktop);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return 0;
 
-    AddUrlToFavorites(m_hWnd, szURL, NULL, TRUE);
+    STRRET strret;
+    hr = pDesktop->GetDisplayNameOf(fCurrentDirectoryPIDL, SHGDN_FORPARSING, &strret);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return 0;
+
+    CComHeapPtr<WCHAR> pszURL;
+    StrRetToStrW(&strret, NULL, &pszURL);
+
+    AddUrlToFavorites(m_hWnd, pszURL, NULL, TRUE);
     return 0;
 }
 
