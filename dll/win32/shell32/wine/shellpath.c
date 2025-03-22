@@ -713,7 +713,6 @@ static BOOL PathMakeUniqueNameW(
         if (!pszTemplate)
             return FALSE;
 
-        PCWSTR pszSrc = pszTemplate;
         pchDotExt = PathFindExtensionW(pszTemplate);
         INT extLength = lstrlenW(pchDotExt);
 
@@ -740,7 +739,7 @@ static BOOL PathMakeUniqueNameW(
         else
             maxCount = 1;
 
-        if (StringCchCopyNW(pszDest, cchMax - dirLength, pszSrc, cchTitle) != S_OK)
+        if (StringCchCopyNW(pszDest, cchMax - dirLength, pszTemplate, cchTitle) != S_OK)
             return FALSE;
     }
     else
