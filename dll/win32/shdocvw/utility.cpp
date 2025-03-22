@@ -203,18 +203,9 @@ AddUrlToFavorites(
     // Get title
     WCHAR szTitle[MAX_PATH];
     if (pszTitleW)
-    {
         lstrcpynW(szTitle, pszTitleW, _countof(szTitle));
-    }
     else
-    {
-        SHFILEINFOW fileInfo = { NULL };
-        if (!SHGetFileInfoW((LPCWSTR)(LPITEMIDLIST)pidl, 0, &fileInfo, sizeof(fileInfo),
-                            SHGFI_PIDL | SHGFI_DISPLAYNAME))
-            return E_FAIL;
-
-        lstrcpynW(szTitle, fileInfo.szDisplayName, _countof(szTitle));
-    }
+        ILGetDisplayNameEx(NULL, pidl, szTitle, ILGDN_NORMAL);
 
     // Delete invalid characters
     SHDOCVW_DeletePathInvalidChars(szTitle);
@@ -225,6 +216,5 @@ AddUrlToFavorites(
     PathAppendW(szPath, szTitle);
     PathAddExtensionW(szPath, L".lnk");
 
-    SHDOCVW_CreateShortcut(szPath, pidl, NULL);
-    return S_OK;
+    return SHDOCVW_CreateShortcut(szPath, pidl, NULL);
 }
