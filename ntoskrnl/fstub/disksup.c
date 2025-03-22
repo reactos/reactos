@@ -1690,7 +1690,7 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
     /* Make sure to override volume verification */
     IoStackLocation = IoGetNextIrpStackLocation(Irp);
     IoStackLocation->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
-
+    //__debugbreak();
     /* Call the driver */
     Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)

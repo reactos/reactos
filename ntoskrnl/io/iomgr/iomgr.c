@@ -409,7 +409,7 @@ IopMarkBootPartition(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     RtlInitAnsiString(&DeviceString, Buffer);
     Status = RtlAnsiStringToUnicodeString(&DeviceName, &DeviceString, TRUE);
     if (!NT_SUCCESS(Status)) return FALSE;
-
+    __debugbreak();
     /* Open it */
     InitializeObjectAttributes(&ObjectAttributes,
                                &DeviceName,
@@ -569,7 +569,7 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* No one should need loader block any longer */
     IopLoaderBlock = NULL;
-
+    __debugbreak();
     /* Create ARC names for boot devices */
     Status = IopCreateArcNames(LoaderBlock);
     if (!NT_SUCCESS(Status))
