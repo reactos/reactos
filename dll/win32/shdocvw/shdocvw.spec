@@ -3,7 +3,7 @@
 103 stub -noname CreateShortcutInDirW # FIXME: Inspect
 104 stdcall -noname WhichPlatformFORWARD()
 105 stub -noname CreateShortcutInDirEx # FIXME: Inspect
-106 stub AddUrlToFavorites
+106 stdcall AddUrlToFavorites(ptr wstr wstr long)
 @ stdcall -private DllCanUnloadNow()
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
 @ stdcall -private DllGetVersion(ptr)
