@@ -1612,37 +1612,72 @@ void WINAPI InstallHinfSectionA( HWND hwnd, HINSTANCE handle, LPCSTR cmdline, IN
 /***********************************************************************
  *              SetupInstallServicesFromInfSectionW  (SETUPAPI.@)
  */
-BOOL WINAPI SetupInstallServicesFromInfSectionW( HINF Inf, PCWSTR SectionName, DWORD Flags)
+BOOL
+WINAPI
+SetupInstallServicesFromInfSectionW(
+    _In_ HINF InfHandle,
+    _In_ PCWSTR SectionName,
+    _In_ DWORD Flags)
 {
-    return SetupInstallServicesFromInfSectionExW( Inf, SectionName, Flags,
-                                                  NULL, NULL, NULL, NULL );
+    return SetupInstallServicesFromInfSectionExW(InfHandle,
+                                                 SectionName,
+                                                 Flags,
+                                                 INVALID_HANDLE_VALUE,
+                                                 NULL,
+                                                 NULL,
+                                                 NULL);
 }
 
 /***********************************************************************
  *              SetupInstallServicesFromInfSectionA  (SETUPAPI.@)
  */
-BOOL WINAPI SetupInstallServicesFromInfSectionA( HINF Inf, PCSTR SectionName, DWORD Flags)
+BOOL
+WINAPI
+SetupInstallServicesFromInfSectionA(
+    _In_ HINF InfHandle,
+    _In_ PCSTR SectionName,
+    _In_ DWORD Flags)
 {
-    return SetupInstallServicesFromInfSectionExA( Inf, SectionName, Flags,
-                                                  NULL, NULL, NULL, NULL );
+    return SetupInstallServicesFromInfSectionExA(InfHandle,
+                                                 SectionName,
+                                                 Flags,
+                                                 INVALID_HANDLE_VALUE,
+                                                 NULL,
+                                                 NULL,
+                                                 NULL);
 }
 
 /***********************************************************************
  *		SetupInstallServicesFromInfSectionExA  (SETUPAPI.@)
  */
-BOOL WINAPI SetupInstallServicesFromInfSectionExA( HINF hinf, PCSTR sectionname, DWORD flags, HDEVINFO devinfo, PSP_DEVINFO_DATA devinfo_data, PVOID reserved1, PVOID reserved2 )
+BOOL
+WINAPI
+SetupInstallServicesFromInfSectionExA(
+    _In_ HINF InfHandle,
+    _In_ PCSTR SectionName,
+    _In_ DWORD Flags,
+    _In_opt_ HDEVINFO DeviceInfoSet,
+    _In_opt_ PSP_DEVINFO_DATA DeviceInfoData,
+    _Reserved_ PVOID Reserved1,
+    _Reserved_ PVOID Reserved2)
 {
-    UNICODE_STRING sectionnameW;
-    BOOL ret = FALSE;
+    UNICODE_STRING SectionNameW;
+    BOOL ret;
 
-    if (RtlCreateUnicodeStringFromAsciiz( &sectionnameW, sectionname ))
+    if (!RtlCreateUnicodeStringFromAsciiz(&SectionNameW, SectionName))
     {
-        ret = SetupInstallServicesFromInfSectionExW( hinf, sectionnameW.Buffer, flags, devinfo, devinfo_data, reserved1, reserved2 );
-        RtlFreeUnicodeString( &sectionnameW );
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
     }
-    else
-        SetLastError( ERROR_NOT_ENOUGH_MEMORY );
 
+    ret = SetupInstallServicesFromInfSectionExW(InfHandle,
+                                                SectionNameW.Buffer,
+                                                Flags,
+                                                DeviceInfoSet,
+                                                DeviceInfoData,
+                                                Reserved1,
+                                                Reserved2);
+    RtlFreeUnicodeString(&SectionNameW);
     return ret;
 }
 
@@ -2078,29 +2113,61 @@ cleanup:
 /***********************************************************************
  *		SetupInstallServicesFromInfSectionExW  (SETUPAPI.@)
  */
-BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname, DWORD flags, HDEVINFO DeviceInfoSet, PSP_DEVINFO_DATA DeviceInfoData, PVOID reserved1, PVOID reserved2 )
+BOOL
+WINAPI
+SetupInstallServicesFromInfSectionExW(
+    _In_ HINF InfHandle,
+    _In_ PCWSTR SectionName,
+    _In_ DWORD Flags,
+    _In_opt_ HDEVINFO DeviceInfoSet,
+    _In_opt_ PSP_DEVINFO_DATA DeviceInfoData,
+    _Reserved_ PVOID Reserved1,
+    _Reserved_ PVOID Reserved2)
 {
-    struct DeviceInfoSet *list = NULL;
+    struct DeviceInfoSet *list;
     BOOL ret = FALSE;
 
-    TRACE("%p, %s, 0x%lx, %p, %p, %p, %p\n", hinf, debugstr_w(sectionname),
-        flags, DeviceInfoSet, DeviceInfoData, reserved1, reserved2);
+    /* FIXME: SPSVCINST_ASSOCSERVICE is not fully supported */
+    static const DWORD SupportedFlags =
+        SPSVCINST_TAGTOFRONT | SPSVCINST_DELETEEVENTLOGENTRY | SPSVCINST_NOCLOBBER_DISPLAYNAME |
+        SPSVCINST_NOCLOBBER_STARTTYPE | SPSVCINST_NOCLOBBER_ERRORCONTROL |
+        SPSVCINST_NOCLOBBER_LOADORDERGROUP | SPSVCINST_NOCLOBBER_DEPENDENCIES |
+        SPSVCINST_STOPSERVICE;
 
-    if (!sectionname)
-        SetLastError(ERROR_INVALID_PARAMETER);
-    else if (flags & ~(SPSVCINST_TAGTOFRONT | SPSVCINST_DELETEEVENTLOGENTRY | SPSVCINST_NOCLOBBER_DISPLAYNAME | SPSVCINST_NOCLOBBER_STARTTYPE | SPSVCINST_NOCLOBBER_ERRORCONTROL | SPSVCINST_NOCLOBBER_LOADORDERGROUP | SPSVCINST_NOCLOBBER_DEPENDENCIES | SPSVCINST_STOPSERVICE))
+    TRACE("%p, %s, 0x%lx, %p, %p, %p, %p\n",
+          InfHandle,
+          debugstr_w(SectionName),
+          Flags,
+          DeviceInfoSet,
+          DeviceInfoData,
+          Reserved1,
+          Reserved2);
+
+    if (!DeviceInfoSet || DeviceInfoSet == INVALID_HANDLE_VALUE)
     {
-        TRACE("Unknown flags: 0x%08lx\n", flags & ~(SPSVCINST_TAGTOFRONT | SPSVCINST_DELETEEVENTLOGENTRY | SPSVCINST_NOCLOBBER_DISPLAYNAME | SPSVCINST_NOCLOBBER_STARTTYPE | SPSVCINST_NOCLOBBER_ERRORCONTROL | SPSVCINST_NOCLOBBER_LOADORDERGROUP | SPSVCINST_NOCLOBBER_DEPENDENCIES | SPSVCINST_STOPSERVICE));
+        list = NULL;
+    } else
+    {
+        list = (struct DeviceInfoSet*)DeviceInfoSet;
+    }
+
+    if (Flags & ~(SupportedFlags))
+    {
+        TRACE("Unknown flags: 0x%08lx\n", Flags & ~(SupportedFlags));
         SetLastError(ERROR_INVALID_FLAGS);
     }
-    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
-        SetLastError(ERROR_INVALID_HANDLE);
-    else if (DeviceInfoSet && (list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
-        SetLastError(ERROR_INVALID_HANDLE);
-    else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
-        SetLastError(ERROR_INVALID_USER_BUFFER);
-    else if (reserved1 != NULL || reserved2 != NULL)
+    else if (!SectionName || Reserved1 || Reserved2)
+    {
         SetLastError(ERROR_INVALID_PARAMETER);
+    }
+    else if (list && list->magic != SETUP_DEVICE_INFO_SET_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+    }
+    else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
+    {
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    }
     else
     {
         struct needs_callback_info needs_info;
@@ -2111,16 +2178,16 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
         BOOL bNeedReboot = FALSE;
 
         /* Parse 'Include' and 'Needs' directives */
-        iterate_section_fields( hinf, sectionname, Include, include_callback, NULL);
+        iterate_section_fields(InfHandle, SectionName, Include, include_callback, NULL);
         needs_info.type = 1;
-        needs_info.flags = flags;
+        needs_info.flags = Flags;
         needs_info.devinfo = DeviceInfoSet;
         needs_info.devinfo_data = DeviceInfoData;
-        needs_info.reserved1 = reserved1;
-        needs_info.reserved2 = reserved2;
-        iterate_section_fields( hinf, sectionname, Needs, needs_callback, &needs_info);
+        needs_info.reserved1 = Reserved1;
+        needs_info.reserved2 = Reserved2;
+        iterate_section_fields(InfHandle, SectionName, Needs, needs_callback, &needs_info);
 
-        if (flags & SPSVCINST_STOPSERVICE)
+        if (Flags & SPSVCINST_STOPSERVICE)
         {
             FIXME("Stopping the device not implemented\n");
             /* This may lead to require a reboot */
@@ -2136,16 +2203,16 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
                 goto done;
             }
 #endif
-            flags &= ~SPSVCINST_STOPSERVICE;
+            Flags &= ~SPSVCINST_STOPSERVICE;
         }
 
-        if (!(ret = SetupFindFirstLineW( hinf, sectionname, NULL, &ContextService )))
+        if (!(ret = SetupFindFirstLineW(InfHandle, SectionName, NULL, &ContextService)))
         {
-            SetLastError( ERROR_SECTION_NOT_FOUND );
+            SetLastError(ERROR_SECTION_NOT_FOUND);
             goto done;
         }
 
-        ret = SetupFindFirstLineW(hinf, sectionname, AddService, &ContextService);
+        ret = SetupFindFirstLineW(InfHandle, SectionName, AddService, &ContextService);
         while (ret)
         {
             if (!GetStringField(&ContextService, 1, &ServiceName))
@@ -2164,11 +2231,11 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
             if (!GetStringField(&ContextService, 3, &ServiceSection))
                 goto done;
 
-            ret = InstallOneService(list, hinf, ServiceSection, ServiceName, (ServiceFlags & ~SPSVCINST_ASSOCSERVICE) | flags);
+            ret = InstallOneService(list, InfHandle, ServiceSection, ServiceName, (ServiceFlags & ~SPSVCINST_ASSOCSERVICE) | Flags);
             if (!ret)
                 goto done;
 
-            if (ServiceFlags & SPSVCINST_ASSOCSERVICE)
+            if (list && (ServiceFlags & SPSVCINST_ASSOCSERVICE))
             {
                 ret = SetupDiSetDeviceRegistryPropertyW(DeviceInfoSet, DeviceInfoData, SPDRP_SERVICE, (LPBYTE)ServiceName, (strlenW(ServiceName) + 1) * sizeof(WCHAR));
                 if (!ret)
