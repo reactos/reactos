@@ -413,7 +413,9 @@ FT_BEGIN_HEADER
    *   Do not `#undef` these macros here since the build system might define
    *   them for certain configurations only.
    */
-/* #define FT_DEBUG_LEVEL_ERROR */
+#ifndef NDEBUG
+#define FT_DEBUG_LEVEL_ERROR
+#endif
 /* #define FT_DEBUG_LEVEL_TRACE */
 
 

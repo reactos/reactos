@@ -50,6 +50,7 @@
 
   /* documentation is in ftdebug.h */
 
+#ifndef __REACTOS__
   FT_BASE_DEF( void )
   FT_Message( const char*  fmt,
               ... )
@@ -61,10 +62,11 @@
     vfprintf( stderr, fmt, ap );
     va_end( ap );
   }
-
+#endif
 
   /* documentation is in ftdebug.h */
 
+#ifndef __REACTOS__
   FT_BASE_DEF( void )
   FT_Panic( const char*  fmt,
             ... )
@@ -78,6 +80,7 @@
 
     exit( EXIT_FAILURE );
   }
+#endif
 
 
   /* documentation is in ftdebug.h */
