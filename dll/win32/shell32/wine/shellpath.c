@@ -793,11 +793,11 @@ static BOOL PathMakeUniqueNameW(
     }
 
     LPWSTR pchTitle = pszDest + cchTitle;
-    INT ich;
-    for (ich = 1; ich < maxCount; ++ich)
+    INT count;
+    for (count = 1; count < maxCount; ++count)
     {
         WCHAR tempName[MAX_PATH];
-        if (StringCchPrintfW(tempName, _countof(tempName), formatString, ich) != S_OK ||
+        if (StringCchPrintfW(tempName, _countof(tempName), formatString, count) != S_OK ||
             StringCchCatW(tempName, _countof(tempName), pchDotExt) != S_OK)
         {
             return FALSE;
