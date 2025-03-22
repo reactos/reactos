@@ -193,7 +193,7 @@ AddUrlToFavorites(
     _In_opt_ LPCWSTR pszTitleW,
     _In_ BOOL fDisplayUI)
 {
-    TRACE("%p, %S, %S, %d\n", hwnd, pszUrlW, pszTitleW, fDisplayUI);
+    TRACE("%p, %s, %s, %d\n", hwnd, wine_dbgstr_w(pszUrlW), wine_dbgstr_w(pszTitleW), fDisplayUI);
 
     if (fDisplayUI)
         FIXME("fDisplayUI\n"); // NOTE: Use SHBrowseForFolder callback
