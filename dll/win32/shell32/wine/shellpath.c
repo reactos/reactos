@@ -698,9 +698,8 @@ static BOOL PathMakeUniqueNameW(
     }
 
     PCWSTR pszTitle = pszLongPlate ? pszLongPlate : pszTemplate;
-    PCWSTR pchDotExt = NULL;
-    PCWSTR formatString = L"%d";
-    INT maxCount, cchTitle = 0;
+    PCWSTR pchDotExt, formatString = L"%d";
+    INT maxCount, cchTitle;
 
     if (   !pszTitle
         || !IsLFNDriveW(pszDir)
@@ -730,7 +729,7 @@ static BOOL PathMakeUniqueNameW(
             cchTitle = MSDOS_8DOT3_FILENAME_TITLE_LEN - 1;
 
         INT extLength = lstrlenW(pchDotExt);
-        while ((dirLength + cchTitle + extLength + 1 > (cchMax - 1)) && cchTitle > 1)
+        while (cchTitle > 1 && (dirLength + cchTitle + extLength + 1 > (cchMax - 1)))
             --cchTitle;
 
         if (cchTitle <= 0)
