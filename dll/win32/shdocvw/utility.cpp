@@ -193,11 +193,13 @@ AddUrlToFavorites(
     _In_opt_ LPCWSTR pszTitleW,
     _In_ BOOL fDisplayUI)
 {
-    // FIXME: Internet Shortcut
     TRACE("%p, %S, %S, %d\n", hwnd, pszUrlW, pszTitleW, fDisplayUI);
 
     if (fDisplayUI)
         FIXME("fDisplayUI is not supported yet\n");
+
+    if (PathIsURLW(pszUrlW))
+        FIXME("Internet Shortcut\n");
 
     CComHeapPtr<ITEMIDLIST> pidl(ILCreateFromPath(pszUrlW));
 
