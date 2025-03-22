@@ -21,7 +21,7 @@ BEGIN
         MENUITEM "&Pencereleri basamakla", ID_SHELL_CMD_CASCADE_WND
         MENUITEM "P&encereleri yan yana göster", ID_SHELL_CMD_TILE_WND_H
         MENUITEM "Pe&ncereleri üst üste göster", ID_SHELL_CMD_TILE_WND_V
-        MENUITEM "&Masaüstünü/Pencereleri Göster", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "&Masaüstünü Göster", ID_SHELL_CMD_SHOW_DESKTOP
         MENUITEM "&Geri Al", ID_SHELL_CMD_UNDO_ACTION
         MENUITEM SEPARATOR
         MENUITEM "&Görev Yöneticisi", ID_SHELL_CMD_OPEN_TASKMGR
