@@ -2618,9 +2618,9 @@ HKEY WINAPI SetupDiCreateDeviceInterfaceRegKeyW(
         HINF InfHandle,
         PCWSTR InfSectionName)
 {
-    HKEY hKey, hDevKey;
-    LPWSTR SymbolicLink;
-    DWORD Length, Index;
+    HKEY hKey, hDevKey, hRefKey, hDevParamKey;
+    LPWSTR SymbolicLink, ReferenceString;
+    DWORD Length, RefLength, Index;
     LONG rc;
     WCHAR bracedGuidString[39];
     struct DeviceInterface *DevItf;
@@ -2681,9 +2681,17 @@ HKEY WINAPI SetupDiCreateDeviceInterfaceRegKeyW(
 
     wcscpy(SymbolicLink, DevItf->SymbolicLink);
 
+    /* Enumerate all characters in symbolic link */
     Index = 0;
     while(SymbolicLink[Index])
     {
+        /* Check for a start position of reference string */
+        if (SymbolicLink[Index] == L'}' && SymbolicLink[Index + 1] == L'\\')
+        {
+            /* Found it */
+            break;
+        }
+        /* Replace all '\' backslashes by '#' pounds in symbolic link */
         if (SymbolicLink[Index] == L'\\')
         {
             SymbolicLink[Index] = L'#';
@@ -2691,11 +2699,47 @@ HKEY WINAPI SetupDiCreateDeviceInterfaceRegKeyW(
         Index++;
     }
 
-    rc = RegCreateKeyExW(hKey, SymbolicLink, 0, NULL, 0, samDesired, NULL, &hDevKey, NULL);
+    /* Create reference string */
+    RefLength = (Length / sizeof(WCHAR) - Index) * sizeof(WCHAR);
+    ReferenceString = HeapAlloc(GetProcessHeap(), 0, RefLength);
+    if (!ReferenceString)
+    {
+        HeapFree(GetProcessHeap(), 0, SymbolicLink);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return INVALID_HANDLE_VALUE;
+    }
 
-    RegCloseKey(hKey);
+    ReferenceString[0] = L'#';
+    wcscpy(ReferenceString + 1, &SymbolicLink[Index + 2]); /* Skip first '\' backslash */
+
+    /* Null-terminate symbolic link at the beginning of the reference part,
+     * as we don't need a ref part in key name. */
+    SymbolicLink[Index + 1] = '\0';
+
+    /* Open device instance key */
+    rc = RegOpenKeyExW(hKey, SymbolicLink, 0, samDesired, &hDevKey);
     HeapFree(GetProcessHeap(), 0, SymbolicLink);
+    RegCloseKey(hKey);
+    if (rc != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, ReferenceString);
+        SetLastError(rc);
+        return INVALID_HANDLE_VALUE;
+    }
 
+    /* Open reference key */
+    rc = RegOpenKeyExW(hDevKey, ReferenceString, 0, samDesired, &hRefKey);
+    HeapFree(GetProcessHeap(), 0, ReferenceString);
+    RegCloseKey(hDevKey);
+    if (rc != ERROR_SUCCESS)
+    {
+        SetLastError(rc);
+        return INVALID_HANDLE_VALUE;
+    }
+
+    /* Create/open "Device Parameters" subkey */
+    rc = RegCreateKeyExW(hRefKey, L"Device Parameters", 0, NULL, 0, samDesired, NULL, &hDevParamKey, NULL);
+    RegCloseKey(hRefKey);
     if (rc == ERROR_SUCCESS)
     {
         if (InfHandle && InfSectionName)
@@ -2704,7 +2748,7 @@ HKEY WINAPI SetupDiCreateDeviceInterfaceRegKeyW(
                                             InfHandle,
                                             InfSectionName,
                                             SPINST_INIFILES | SPINST_REGISTRY | SPINST_INI2REG | SPINST_FILES | SPINST_BITREG | SPINST_REGSVR | SPINST_UNREGSVR | SPINST_PROFILEITEMS | SPINST_COPYINF,
-                                            hDevKey,
+                                            hDevParamKey,
                                             NULL,
                                             0,
                                             set->SelectedDevice->InstallParams.InstallMsgHandler,
@@ -2712,14 +2756,14 @@ HKEY WINAPI SetupDiCreateDeviceInterfaceRegKeyW(
                                             INVALID_HANDLE_VALUE,
                                             NULL))
             {
-                RegCloseKey(hDevKey);
+                RegCloseKey(hDevParamKey);
                 return INVALID_HANDLE_VALUE;
             }
         }
     }
 
     SetLastError(rc);
-    return hDevKey;
+    return hDevParamKey;
 }
 
 /***********************************************************************
