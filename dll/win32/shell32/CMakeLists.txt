@@ -84,7 +84,7 @@ list(APPEND SOURCE
     CFolderItemVerbs.cpp)
 
 list(APPEND PCH_SKIP_SOURCE
-    wine/appbar.c
+    appbar.c
     wine/classes.c
     wine/clipboard.c
     wine/control.c
