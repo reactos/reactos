@@ -126,7 +126,11 @@ FT_BEGIN_HEADER
    * macro is not defined, FreeType offers alternative LCD rendering
    * technology that produces excellent output without LCD filtering.
    */
+#ifdef __REACTOS__
 #define FT_CONFIG_OPTION_SUBPIXEL_RENDERING
+#else
+/* #define FT_CONFIG_OPTION_SUBPIXEL_RENDERING */
+#endif
 
 
   /**************************************************************************
@@ -413,8 +417,10 @@ FT_BEGIN_HEADER
    *   Do not `#undef` these macros here since the build system might define
    *   them for certain configurations only.
    */
-#ifndef NDEBUG
+#ifdef __REACTOS__
 #define FT_DEBUG_LEVEL_ERROR
+#else
+/* #define FT_DEBUG_LEVEL_ERROR */
 #endif
 /* #define FT_DEBUG_LEVEL_TRACE */
 
@@ -532,7 +538,7 @@ FT_BEGIN_HEADER
    * outlines (from the 'COLR'/'CPAL' tables) in all formats using the 'sfnt'
    * module (namely TrueType~& OpenType).
    */
-/* #define TT_CONFIG_OPTION_COLOR_LAYERS */
+#define TT_CONFIG_OPTION_COLOR_LAYERS
 
 
   /**************************************************************************
