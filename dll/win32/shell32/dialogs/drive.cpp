@@ -21,10 +21,12 @@
 
 #include "precomp.h"
 #include <process.h>
+#include <ndk/obfuncs.h> // For NtQueryObject
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-EXTERN_C NTSTATUS WINAPI NtQueryObject(HANDLE, OBJECT_INFORMATION_CLASS, PVOID, ULONG, PULONG);
+//EXTERN_C NTSTATUS WINAPI NtQueryObject(HANDLE, OBJECT_INFORMATION_CLASS, PVOID, ULONG, PULONG);
+extern BOOL IsDriveFloppyW(LPCWSTR pszDriveRoot);
 
 typedef struct
 {
@@ -34,7 +36,7 @@ typedef struct
     BOOL bFormattingNow;
     HWND hWndMain;
     HWND hWndTip, hWndTipTrigger;
-    WCHAR szTip[400];
+    struct tagTip { UNICODE_STRING Name; WCHAR Buffer[400]; } Tip;
 } FORMAT_DRIVE_CONTEXT, *PFORMAT_DRIVE_CONTEXT;
 
 static inline BOOL
@@ -42,6 +44,11 @@ DevIoCtl(HANDLE hDevice, UINT Code, LPVOID pIn, UINT cbIn, LPVOID pOut, UINT cbO
 {
     DWORD cb = 0;
     return DeviceIoControl(hDevice, Code, pIn, cbIn, pOut, cbOut, &cb, NULL);
+}
+
+static BOOL IsFloppy(PCWSTR pszDrive)
+{
+    return GetDriveTypeW(pszDrive) == DRIVE_REMOVABLE && IsDriveFloppyW(pszDrive);
 }
 
 /*
@@ -100,45 +107,46 @@ GetLogicalDriveSize(WORD DriveNumber, ULARGE_INTEGER &Result)
 }
 
 static PWSTR
-GetTipText(FORMAT_DRIVE_CONTEXT &Ctx)
+CreateTipText(FORMAT_DRIVE_CONTEXT &Ctx)
 {
     HANDLE hDevice = OpenLogicalDriveHandle(Ctx.Drive);
-    if (hDevice != INVALID_HANDLE_VALUE)
-    {
-        ULONG cb;
-        ZeroMemory(Ctx.szTip, sizeof(Ctx.szTip));
-        UNICODE_STRING &NameInfo = (UNICODE_STRING&)Ctx.szTip;
-        NtQueryObject(hDevice, ObjectNameInformation, Ctx.szTip, sizeof(Ctx.szTip), &cb);
-        if (!NameInfo.Buffer || NameInfo.Buffer[0] != '\\')
-            (NameInfo.Buffer = Ctx.szTip)[0] = UNICODE_NULL;
+    if (hDevice == INVALID_HANDLE_VALUE)
+        return NULL;
 
-        PARTITION_INFORMATION_EX pie;
+    ULONG cb;
+    ZeroMemory(&Ctx.Tip, sizeof(Ctx.Tip));
+    NtQueryObject(hDevice, ObjectNameInformation, &Ctx.Tip, sizeof(Ctx.Tip), &cb);
+    if (Ctx.Tip.Name.Buffer && Ctx.Tip.Name.Buffer[0] == '\\')
+        StringCbCatW(Ctx.Tip.Name.Buffer, sizeof(Ctx.Tip) - sizeof(UNICODE_STRING), L"\n");
+    else
+        (Ctx.Tip.Name.Buffer = Ctx.Tip.Buffer)[0] = UNICODE_NULL;
+
+    PARTITION_INFORMATION_EX pie;
+    if (!DevIoCtl(hDevice, IOCTL_DISK_GET_PARTITION_INFO_EX, NULL, 0, &pie, sizeof(pie)))
+    {
         pie.PartitionStyle = PARTITION_STYLE_RAW;
-        if (!DevIoCtl(hDevice, IOCTL_DISK_GET_PARTITION_INFO_EX, NULL, 0, &pie, sizeof(pie)))
+        PARTITION_INFORMATION pi;
+        if (DevIoCtl(hDevice, IOCTL_DISK_GET_PARTITION_INFO, NULL, 0, &pi, sizeof(pi)))
         {
-            PARTITION_INFORMATION pi;
-            if (DevIoCtl(hDevice, IOCTL_DISK_GET_PARTITION_INFO, NULL, 0, &pi, sizeof(pi)))
-            {
-                pie.PartitionStyle = PARTITION_STYLE_MBR;
-                pie.PartitionNumber = pi.PartitionNumber;
-            }
+            pie.PartitionStyle = PARTITION_STYLE_MBR;
+            pie.PartitionNumber = pi.PartitionNumber;
         }
-        WCHAR buf[150], guidbuf[39];
-        buf[0] = UNICODE_NULL;
-        if (pie.PartitionStyle == PARTITION_STYLE_GPT)
-        {
-            StringFromGUID2(pie.Gpt.PartitionId, guidbuf, _countof(guidbuf));
-            StringCchPrintfW(buf, _countof(buf), L"\nGPT %s %s", guidbuf, pie.Gpt.Name);
-        }
-        if (pie.PartitionStyle == PARTITION_STYLE_MBR)
-        {
-            StringCchPrintfW(buf, _countof(buf), L"\nMBR (%d)", pie.PartitionNumber);
-        }
-        StringCbCatW(NameInfo.Buffer, sizeof(Ctx.szTip) - sizeof(UNICODE_STRING), buf);
-        CloseHandle(hDevice);
-        return NameInfo.Buffer;
     }
-    return NULL;
+    CloseHandle(hDevice);C_ASSERT(sizeof(Ctx.Tip) > 800);
+
+    WCHAR szBuf[150], szGuid[39], *pszTip = Ctx.Tip.Name.Buffer;
+    szBuf[0] = UNICODE_NULL;
+    if (pie.PartitionStyle == PARTITION_STYLE_GPT)
+    {
+        StringFromGUID2(pie.Gpt.PartitionId, szGuid, _countof(szGuid));
+        StringCchPrintfW(szBuf, _countof(szBuf), L"GPT %s %s", szGuid, pie.Gpt.Name);
+    }
+    if (pie.PartitionStyle == PARTITION_STYLE_MBR)
+    {
+        StringCchPrintfW(szBuf, _countof(szBuf), L"MBR (%d)", pie.PartitionNumber);
+    }
+    StringCbCatW(pszTip, sizeof(Ctx.Tip) - sizeof(Ctx.Tip.Name), szBuf);
+    return pszTip;
 }
 
 static BOOL
@@ -327,7 +335,7 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
         }
 
         SendMessageW(GetDlgItem(hwndDlg, 28675), BM_SETCHECK, BST_UNCHECKED, 0);
-        #if 0 // TODO: Call EnableVolumeCompression if checked
+#if 0 // TODO: Call EnableVolumeCompression if checked
         if (!_wcsicmp(wszBuf, L"EXT2") ||
             !_wcsicmp(wszBuf, L"BtrFS") ||
             !_wcsicmp(wszBuf, L"NTFS"))
@@ -336,7 +344,7 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
             EnableWindow(GetDlgItem(hwndDlg, 28675), TRUE);
         }
         else
-        #endif
+#endif
         {
             /* Disable the "Enable Compression" button */
             EnableWindow(GetDlgItem(hwndDlg, 28675), FALSE);
@@ -351,7 +359,7 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
 }
 
 static VOID
-EnableControls(HWND hwndDlg, int EnableState)
+EnableFormatDriveDlgControls(HWND hwndDlg, int EnableState)
 {
     BOOL CanClose = EnableState != 0, Enable = EnableState > 0;
     HMENU hSysMenu = GetSystemMenu(hwndDlg, FALSE);
@@ -381,7 +389,7 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     tool.hwnd = hwndDlg;
     tool.uFlags = TTF_SUBCLASS | TTF_IDISHWND | TTF_TRACK | TTF_ABSOLUTE;
     tool.uId = (UINT_PTR)pContext->hWndTipTrigger;
-    tool.lpszText = (PWSTR)LPSTR_TEXTCALLBACK;
+    tool.lpszText = LPSTR_TEXTCALLBACKW;
     pContext->hWndTip = CreateWindowExW(WS_EX_TOPMOST, TOOLTIPS_CLASSW, NULL, WS_POPUP |
                                         TTS_BALLOON | TTS_NOPREFIX | TTS_ALWAYSTIP,
                                         0, 0, 0, 0, hwndDlg, NULL, NULL, NULL);
@@ -427,7 +435,7 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     else
     {
         /* No known size, don't allow format (no partition or no floppy) */
-        EnableControls(hwndDlg, -1);
+        EnableFormatDriveDlgControls(hwndDlg, -1);
     }
 
     if (pContext->Options & SHFMT_OPT_FULL)
@@ -447,6 +455,9 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
         if (!_wcsicmp(szText, szFs))
             iForceDefault = dwDefault = dwIndex; /* default to the same filesystem */
 
+        if (iForceDefault < 0 && !_wcsicmp(szText, L"NTFS") && !IsFloppy(szDrive))
+            dwDefault = dwIndex;
+
         SendMessageW(hwndFileSystems, CB_ADDSTRING, 0, (LPARAM)szText);
         dwIndex++;
     }
@@ -458,13 +469,6 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     }
 
     /* select default filesys */
-    PCWSTR priority[] = { L"NTFS", L"FAT32" };
-    for (UINT i = 0; i < _countof(priority) && iForceDefault < 0; ++i)
-    {
-        int idx = SendMessageW(hwndFileSystems, CB_FINDSTRINGEXACT, -1, (LPARAM)priority[i]);
-        if (idx >= 0)
-            iForceDefault = dwDefault = idx;
-    }
     SendMessageW(hwndFileSystems, CB_SETCURSEL, dwDefault, 0);
     /* setup cluster combo */
     InsertDefaultClusterSizeForFs(hwndDlg, pContext);
@@ -473,7 +477,7 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
 static inline PFORMAT_DRIVE_CONTEXT
 GetFormatContext()
 {
-    // FormatEx does not allow us to specify a context parmeter so we have to store it in the thread
+    // FormatEx does not allow us to specify a context parameter so we have to store it in the thread
     return (PFORMAT_DRIVE_CONTEXT)NtCurrentTeb()->NtTib.ArbitraryUserPointer;
 }
 
@@ -642,14 +646,14 @@ FormatDrive(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
 
 
 static DWORD CALLBACK
-FormatDriveThread(void *args)
+FormatDriveThread(PVOID pThreadParameter)
 {
-    PFORMAT_DRIVE_CONTEXT pContext = (PFORMAT_DRIVE_CONTEXT)args;
+    PFORMAT_DRIVE_CONTEXT pContext = (PFORMAT_DRIVE_CONTEXT)pThreadParameter;
     HWND hwndDlg = pContext->hWndMain;
     WCHAR szDrive[] = { WCHAR(pContext->Drive + 'A'), ':', '\\', '\0' };
 
     /* Disable controls during format */
-    EnableControls(hwndDlg, FALSE);
+    EnableFormatDriveDlgControls(hwndDlg, FALSE);
 
     SHChangeNotify(SHCNE_MEDIAREMOVED, SHCNF_PATHW | SHCNF_FLUSH, szDrive, NULL);
 
@@ -660,7 +664,7 @@ FormatDriveThread(void *args)
     SHChangeNotify(SHCNE_UPDATEITEM, SHCNF_PATHW, szDrive, NULL);
 
     /* Re-enable controls after format */
-    EnableControls(hwndDlg, TRUE);
+    EnableFormatDriveDlgControls(hwndDlg, TRUE);
     pContext->bFormattingNow = FALSE;
 
     return 0;
@@ -715,9 +719,8 @@ FormatDriveDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             NMTTDISPINFO &ttdi = *(NMTTDISPINFO*)lParam;
             if (ttdi.hdr.code == TTN_NEEDTEXTW)
             {
-                ShowWindow(ttdi.hdr.hwndFrom, SW_HIDE);
                 ttdi.uFlags |= TTF_DI_SETITEM;
-                if (PWSTR pszTip = GetTipText(*pContext))
+                if (PWSTR pszTip = CreateTipText(*pContext))
                     ttdi.lpszText = pszTip;
             }
             break;
@@ -762,7 +765,6 @@ WINAPI
 SHFormatDrive(HWND hwnd, UINT drive, UINT fmtID, UINT options)
 {
     FORMAT_DRIVE_CONTEXT Context;
-    Context.szTip[0] = UNICODE_NULL;
     int result;
 
     TRACE("%p, 0x%08x, 0x%08x, 0x%08x - stub\n", hwnd, drive, fmtID, options);
