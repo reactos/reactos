@@ -851,7 +851,7 @@ RtlVirtualUnwind(
     _In_ ULONG64 ControlPc,
     _In_ PRUNTIME_FUNCTION FunctionEntry,
     _Inout_ PCONTEXT Context,
-    _Outptr_ PVOID* HandlerData,
+    _Out_ PVOID* HandlerData,
     _Out_ PULONG64 EstablisherFrame,
     _Inout_opt_ PKNONVOLATILE_CONTEXT_POINTERS ContextPointers
 );
@@ -1868,9 +1868,24 @@ RtlCharToInteger(
 //
 #ifdef NTOS_MODE_USER
 
-unsigned short __cdecl _byteswap_ushort(unsigned short);
-unsigned long  __cdecl _byteswap_ulong (unsigned long);
-unsigned __int64 __cdecl _byteswap_uint64(unsigned __int64);
+_Check_return_
+unsigned short
+__cdecl
+_byteswap_ushort(
+    _In_ unsigned short _Short);
+
+_Check_return_
+unsigned long
+__cdecl
+_byteswap_ulong(
+    _In_ unsigned long _Long);
+
+_Check_return_
+unsigned __int64
+__cdecl
+_byteswap_uint64(
+    _In_ unsigned __int64 _Int64);
+
 #ifdef _MSC_VER
 #pragma intrinsic(_byteswap_ushort)
 #pragma intrinsic(_byteswap_ulong)
@@ -3839,50 +3854,6 @@ DbgCommandString(
 );
 
 //
-// Generic Table Functions
-//
-#if defined(NTOS_MODE_USER) || defined(_NTIFS_)
-NTSYSAPI
-PVOID
-NTAPI
-RtlInsertElementGenericTable(
-    _In_ PRTL_GENERIC_TABLE Table,
-    _In_reads_bytes_(BufferSize) PVOID Buffer,
-    _In_ CLONG BufferSize,
-    _Out_opt_ PBOOLEAN NewElement
-);
-
-NTSYSAPI
-PVOID
-NTAPI
-RtlInsertElementGenericTableFull(
-    _In_ PRTL_GENERIC_TABLE Table,
-    _In_reads_bytes_(BufferSize) PVOID Buffer,
-    _In_ CLONG BufferSize,
-    _Out_opt_ PBOOLEAN NewElement,
-    _In_ PVOID NodeOrParent,
-    _In_ TABLE_SEARCH_RESULT SearchResult
-);
-
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlIsGenericTableEmpty(
-    _In_ PRTL_GENERIC_TABLE Table
-);
-
-NTSYSAPI
-PVOID
-NTAPI
-RtlLookupElementGenericTableFull(
-    _In_ PRTL_GENERIC_TABLE Table,
-    _In_ PVOID Buffer,
-    _Out_ PVOID *NodeOrParent,
-    _Out_ TABLE_SEARCH_RESULT *SearchResult
-);
-#endif
-
-//
 // Handle Table Functions
 //
 NTSYSAPI
@@ -5140,6 +5111,59 @@ RtlReleaseSRWLockShared(IN OUT PRTL_SRWLOCK SRWLock);
 VOID
 NTAPI
 RtlReleaseSRWLockExclusive(IN OUT PRTL_SRWLOCK SRWLock);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlConvertLCIDToString(
+    _In_ LCID LcidValue,
+    _In_ ULONG Base,
+    _In_ ULONG Padding,
+    _Out_writes_(Size) PWSTR pResultBuf,
+    _In_ ULONG Size);
+
+_Success_(return != FALSE)
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlCultureNameToLCID(
+    _In_ PCUNICODE_STRING String,
+    _Out_ PLCID Lcid);
+
+_Success_(return != FALSE)
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlLCIDToCultureName(
+    _In_ LCID Lcid,
+    _Inout_ PUNICODE_STRING String);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlLcidToLocaleName(
+    _In_ LCID Lcid,
+    _Inout_ PUNICODE_STRING LocaleName,
+    _In_ ULONG Flags,
+    _In_ BOOLEAN AllocateDestinationString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlLocaleNameToLcid(
+    _In_ PCWSTR LocaleName,
+    _Out_ PLCID Lcid,
+    _In_ ULONG Flags);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlIsValidLocaleName(
+    _In_ LPCWSTR LocaleName,
+    _In_ ULONG Flags);
+
+// Flags for RtlLocaleNameToLcid / RtlLcidToLocaleName / RtlIsValidLocaleName
+#define RTL_LOCALE_ALLOW_NEUTRAL_NAMES 0x00000002 // Return locales like "en" or "de"
 
 #endif /* Win vista or Reactos Ntdll build */
 
