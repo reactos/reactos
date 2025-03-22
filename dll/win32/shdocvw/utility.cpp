@@ -196,7 +196,7 @@ AddUrlToFavorites(
     TRACE("%p, %S, %S, %d\n", hwnd, pszUrlW, pszTitleW, fDisplayUI);
 
     if (fDisplayUI)
-        FIXME("fDisplayUI is not supported yet\n");
+        FIXME("fDisplayUI\n"); // NOTE: Use SHBrowseForFolder callback
 
     if (PathIsURLW(pszUrlW))
         FIXME("Internet Shortcut\n");
