@@ -203,7 +203,10 @@ AddUrlToFavorites(
 
     CComHeapPtr<ITEMIDLIST> pidl(ILCreateFromPath(pszUrlW));
     if (!pidl)
+    {
+        ERR("Out of memory\n");
         return E_OUTOFMEMORY;
+    }
 
     // Get title
     WCHAR szTitle[MAX_PATH];
