@@ -159,13 +159,8 @@
                                 /*       `jmp_buf` is defined as a macro */
                                 /*       on certain platforms            */
 
-#ifdef __REACTOS__
-#define ft_longjmp(env, val) (env)
-#define ft_setjmp(b)         0
-#else
 #define ft_longjmp     longjmp
 #define ft_setjmp( b ) setjmp( *(ft_jmp_buf*) &(b) ) /* same thing here */
-#endif
 
 
   /* The following is only used for debugging purposes, i.e., if   */
