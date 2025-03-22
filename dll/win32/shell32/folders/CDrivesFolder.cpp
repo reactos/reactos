@@ -232,7 +232,13 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
         return E_FAIL;
     }
     nDriveType = GetDriveTypeW(szDrive);
-    GetVolumeInformationW(szDrive, NULL, 0, NULL, NULL, &dwFlags, NULL, 0);
+    if (!GetVolumeInformationW(szDrive, NULL, 0, NULL, NULL, &dwFlags, NULL, 0))
+    {
+        if (nDriveType >= DRIVE_REMOTE)
+            dwFlags = FILE_READ_ONLY_VOLUME;
+        else
+            dwFlags = 0; // Assume drive with unknown filesystem, allow format
+    }
 
 // custom command IDs
 #if 0 // Disabled until our menu building system is fixed
