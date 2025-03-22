@@ -671,7 +671,7 @@ static BOOL PathMakeUniqueNameW(
     _Out_ PWSTR pszUniqueName,
     _In_ UINT cchMax,
     _In_ PCWSTR pszTemplate,
-    _In_opt_ PCWSTR pszLongPlate,
+    _In_opt_ PCWSTR pszLongPlate, /* Long template */
     _In_opt_ PCWSTR pszDir)
 {
     TRACE("%p %u %s %s %s\n",
@@ -730,7 +730,7 @@ static BOOL PathMakeUniqueNameW(
             cchTitle = MSDOS_8DOT3_FILENAME_TITLE_LEN - 1;
 
         INT extLength = lstrlenW(pchDotExt);
-        while (extLength + cchTitle + dirLength + 1 > (cchMax - 1) && cchTitle > 1)
+        while ((dirLength + cchTitle + extLength + 1 > (cchMax - 1)) && cchTitle > 1)
             --cchTitle;
 
         if (cchTitle <= 0)
@@ -778,7 +778,7 @@ static BOOL PathMakeUniqueNameW(
             formatString = L" (%d)";
         }
 
-        INT remainingChars = cchMax - cchTitle - dirLength - lstrlenW(formatString) + 2;
+        INT remainingChars = cchMax - (dirLength + cchTitle + (lstrlenW(formatString) - 2));
         if (remainingChars <= 0)
             maxCount = 1;
         else if (remainingChars == 1)
