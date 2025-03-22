@@ -202,12 +202,9 @@ AddUrlToFavorites(
         FIXME("Internet Shortcut\n");
 
     CComHeapPtr<ITEMIDLIST> pidl;
-    SHParseDisplayName(pszUrlW, NULL, &pidl, 0, NULL);
-    if (!pidl)
-    {
-        ERR("Out of memory: %s\n", wine_dbgstr_w(pszUrlW));
-        return E_OUTOFMEMORY;
-    }
+    HRESULT hr = SHParseDisplayName(pszUrlW, NULL, &pidl, 0, NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     // Get title
     WCHAR szTitle[MAX_PATH];

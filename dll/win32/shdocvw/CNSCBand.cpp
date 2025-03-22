@@ -588,18 +588,21 @@ HRESULT CNSCBand::_AddFavorite()
     CComHeapPtr<ITEMIDLIST> pidlCurrent;
     _GetCurrentLocation(&pidlCurrent);
 
-    CComPtr<IShellFolder> pDesktop;
-    HRESULT hr = SHGetDesktopFolder(&pDesktop);
+    CComPtr<IShellFolder> pParent;
+    LPCITEMIDLIST pidlLast;
+    HRESULT hr = SHBindToParent(pidlCurrent, IID_PPV_ARG(IShellFolder, &pParent), &pidlLast);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     STRRET strret;
-    hr = pDesktop->GetDisplayNameOf(pidlCurrent, SHGDN_FORPARSING, &strret);
+    hr = pParent->GetDisplayNameOf(pidlLast, SHGDN_FORPARSING, &strret);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     CComHeapPtr<WCHAR> pszURL;
-    StrRetToStrW(&strret, NULL, &pszURL);
+    hr = StrRetToStrW(&strret, NULL, &pszURL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     return AddUrlToFavorites(m_hWnd, pszURL, NULL, TRUE);
 }
