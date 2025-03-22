@@ -400,7 +400,7 @@ main:
 
     /* Now the complete freeldr imag is loaded.
        Jump to the realmode entry point. */
-    ljmp16 0, FREELDR_BASE
+    ljmp16 FREELDR_BASE / 16, 0
 
 
 
