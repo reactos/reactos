@@ -228,7 +228,7 @@
 @ stub SetupAdjustDiskSpaceListW
 @ stub SetupBackupErrorA
 @ stub SetupBackupErrorW
-@ stub SetupCancelTemporarySourceList
+@ stdcall SetupCancelTemporarySourceList()
 @ stdcall SetupCloseFileQueue(ptr)
 @ stdcall SetupCloseInfFile(long)
 @ stdcall SetupCloseLog()
@@ -331,7 +331,7 @@
 @ stdcall SetupDiGetDeviceRegistryPropertyW(long ptr long ptr ptr long ptr)
 @ stdcall SetupDiGetDriverInfoDetailA(ptr ptr ptr ptr long ptr)
 @ stdcall SetupDiGetDriverInfoDetailW(ptr ptr ptr ptr long ptr)
-@ stub SetupDiGetDriverInstallParamsA
+@ stdcall SetupDiGetDriverInstallParamsA(ptr ptr ptr ptr)
 @ stdcall SetupDiGetDriverInstallParamsW(ptr ptr ptr ptr)
 @ stub SetupDiGetHwProfileFriendlyNameA
 @ stub SetupDiGetHwProfileFriendlyNameExA
@@ -396,8 +396,8 @@
 @ stdcall SetupFindNextLine(ptr ptr)
 @ stdcall SetupFindNextMatchLineA(ptr str ptr)
 @ stdcall SetupFindNextMatchLineW(ptr wstr ptr)
-@ stub SetupFreeSourceListA
-@ stub SetupFreeSourceListW
+@ stdcall SetupFreeSourceListA(ptr long)
+@ stdcall SetupFreeSourceListW(ptr long)
 @ stub SetupGetBackupInformationA
 @ stub SetupGetBackupInformationW
 @ stdcall SetupGetBinaryField(ptr long ptr long ptr)
@@ -477,8 +477,8 @@
 @ stdcall SetupQueryInfOriginalFileInformationW(ptr long ptr ptr)
 @ stub SetupQueryInfVersionInformationA
 @ stub SetupQueryInfVersionInformationW
-@ stub SetupQuerySourceListA
-@ stub SetupQuerySourceListW
+@ stdcall SetupQuerySourceListA(long ptr ptr)
+@ stdcall SetupQuerySourceListW(long ptr ptr)
 @ stdcall SetupQuerySpaceRequiredOnDriveA(long str ptr ptr long)
 @ stdcall SetupQuerySpaceRequiredOnDriveW(long wstr ptr ptr long)
 @ stdcall SetupQueueCopyA(long str str str str str str str long)
@@ -555,7 +555,7 @@
 @ stdcall pSetupGetGlobalFlags()
 @ stub pSetupGetInfSections
 @ stdcall pSetupGetQueueFlags(ptr)
-@ stub pSetupGetRealSystemTime
+@ stdcall pSetupGetRealSystemTime(ptr)
 @ stdcall pSetupGetVersionInfoFromImage(wstr ptr ptr)
 @ stdcall pSetupGuidFromString(wstr ptr)
 @ stub pSetupHandleFailedVerification

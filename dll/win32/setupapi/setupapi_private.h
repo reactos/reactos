@@ -1,6 +1,6 @@
 /*
  * Copyright 2001 Andreas Mohr
- * Copyright 2005-2006 Hervé Poussineau
+ * Copyright 2005-2006 HervÃ© Poussineau
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -253,6 +253,10 @@ extern OSVERSIONINFOEXW OsVersionInfo;
  * for more information.
  */
 extern DWORD GlobalSetupFlags;
+extern PVOID *srclist_temporary_sources;
+extern UINT srclist_temporary_sources_count;
+extern BOOLEAN noBrowse;
+
 #define PSPGF_NO_BACKUP         0x0002
 #define PSPGF_NONINTERACTIVE    0x0004
 

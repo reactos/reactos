@@ -228,7 +228,7 @@ UINT WINAPI SetupPromptForDiskW(HWND hwndParent, PCWSTR DialogTitle, PCWSTR Disk
           debugstr_w(TagFile), DiskPromptStyle, PathBuffer, PathBufferSize,
           PathRequiredSize);
 
-    if(!FileSought)
+    if(!FileSought || noBrowse)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return DPROMPT_CANCEL;

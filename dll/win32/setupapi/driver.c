@@ -1999,6 +1999,60 @@ done:
 }
 
 /***********************************************************************
+ *      SetupDiGetDriverInstallParamsW (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiGetDriverInstallParamsA(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    IN PSP_DRVINFO_DATA_A DriverInfoData,
+    OUT PSP_DRVINSTALL_PARAMS DriverInstallParams)
+{
+    BOOL ret = FALSE;
+
+    TRACE("(%p %p %p %p)\n", DeviceInfoSet, DeviceInfoData, DriverInfoData, DriverInstallParams);
+
+    if (!DeviceInfoSet || !DriverInfoData || !DriverInstallParams)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else if (DriverInfoData->cbSize != sizeof(SP_DRVINFO_DATA_V1_A) && DriverInfoData->cbSize != sizeof(SP_DRVINFO_DATA_V2_A))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else if (DriverInstallParams->cbSize != sizeof(SP_DRVINSTALL_PARAMS))
+       SetLastError(ERROR_INVALID_USER_BUFFER);
+    else
+    {
+        SP_DEVINSTALL_PARAMS_A InstallParams;
+
+        InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_A);
+        if (SetupDiGetDeviceInstallParamsA(DeviceInfoSet, DeviceInfoData, &InstallParams))
+        {
+            struct DriverInfoElement *driverInfo;
+            driverInfo = (struct DriverInfoElement *)InstallParams.ClassInstallReserved;
+            ERR("ret - driverInfo=%p\n",driverInfo);
+            if (driverInfo == NULL)
+                SetLastError(ERROR_NO_DRIVER_SELECTED);
+            else
+            {
+                ERR("ret - driverInfo->Params=0x%X DriverInstallParams->cbSize=%d\n",driverInfo->Params,DriverInstallParams->cbSize);
+                memcpy(
+                    DriverInstallParams,
+                    &driverInfo->Params,
+                    DriverInstallParams->cbSize);
+                ret = TRUE;
+            }
+        }
+    }
+
+    TRACE("SetupDiGetDeviceInstallParamsA - Returning %d\n", ret);
+    return ret;
+}
+
+/***********************************************************************
  *		SetupDiGetDriverInstallParamsW (SETUPAPI.@)
  */
 BOOL WINAPI

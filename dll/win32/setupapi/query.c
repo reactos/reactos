@@ -693,3 +693,384 @@ BOOL WINAPI SetupQueryInfOriginalFileInformationW(
 
     return TRUE;
 }
+
+/***********************************************************************
+ *      pSetupGetRealSystemTime (SETUPAPI.@)
+ */
+
+VOID
+WINAPI
+pSetupGetRealSystemTime(
+    _Out_ LPSYSTEMTIME lpRealSystemTime)
+{
+    GetSystemTime(lpRealSystemTime);
+}
+
+
+/***********************************************************************
+ *      SetupFreeSourceListA (SETUPAPI.@)
+ */
+
+BOOL WINAPI SetupFreeSourceListA(
+  PCSTR **List,
+  UINT  Count)
+{
+  TRACE("(%p, %d)\n", List, Count);
+
+  for(int i=0; i<Count;i++){
+    if(!HeapFree(GetProcessHeap(),0,(LPVOID)(*(List[i]))))
+        return FALSE;
+  }
+
+  if(!HeapFree(GetProcessHeap(),0,(LPVOID)*List))
+    return FALSE;
+
+  *List = NULL;
+  return TRUE;
+}
+
+/***********************************************************************
+ *      SetupFreeSourceListW (SETUPAPI.@)
+ */
+
+BOOL WINAPI SetupFreeSourceListW(
+  PCWSTR **List,
+  UINT  Count)
+{
+  TRACE("(%p, %d)\n", List, Count);
+
+  for(int i=0; i<Count;i++){
+    if(!HeapFree(GetProcessHeap(),0,(LPVOID)(*(List[i]))))
+        return FALSE;
+  }
+
+  if(!HeapFree(GetProcessHeap(),0,(LPVOID)*List))
+    return FALSE;
+
+  *List = NULL;
+  return TRUE;
+}
+
+/***********************************************************************
+ *      SetupQuerySourceListW (SETUPAPI.@)
+ */
+
+BOOL WINAPI SetupQuerySourceListW(
+  DWORD Flags,
+  PCWSTR **List,
+  PUINT Count
+){
+    TRACE("(%X, %p, %d)\n", Flags, List, Count);
+
+    WCHAR buffer[MAX_PATH * 2] = {0};
+    PWSTR szInstallationSource = buffer;
+    PCWSTR* listSources = NULL;
+    UINT iCount = 0;
+
+    if(srclist_temporary_sources != NULL){
+        iCount = srclist_temporary_sources_count;
+        for(int i=0; i<srclist_temporary_sources_count; i++){
+            wcscpy(szInstallationSource,srclist_temporary_sources[i]);
+            szInstallationSource += wcslen(szInstallationSource)+1;
+        }
+
+    }
+    else{
+        LSTATUS statusUser = 0,statusSystem = 0;
+        HKEY handle;
+        DWORD len = 0, nRead = 0;
+
+        if(Flags & SRCLIST_SYSTEM || Flags == 0){
+            statusSystem = RegOpenKeyExW(HKEY_LOCAL_MACHINE,L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup",0,KEY_QUERY_VALUE,&handle);
+            if(!statusSystem){
+                statusSystem = RegQueryValueExW(handle,L"Installation Sources",0,NULL,(LPBYTE)szInstallationSource,&len);
+                RegCloseKey(handle);
+            }
+            if(statusSystem){
+                SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, szInstallationSource);
+                len = wcslen(szInstallationSource);
+            }
+
+
+            nRead = 0;
+            while(*szInstallationSource && nRead < len){
+                nRead += wcslen(szInstallationSource) + 1;
+                szInstallationSource += wcslen(szInstallationSource) + 1;
+                iCount++;
+            }
+        }
+
+        if(Flags & SRCLIST_USER || Flags == 0){
+            statusUser = RegOpenKeyExW(HKEY_CURRENT_USER,L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup",0,KEY_QUERY_VALUE,&handle);
+            if(!statusUser){
+                statusUser = RegQueryValueExW(handle,L"Installation Sources",0,NULL,(LPBYTE)szInstallationSource,&len);
+                RegCloseKey(handle);
+            }
+            if(statusUser && !statusSystem){
+                SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, szInstallationSource);
+                len = wcslen(szInstallationSource);
+            }
+
+
+            nRead = 0;
+            while(*szInstallationSource && nRead < len){
+                nRead += wcslen(szInstallationSource) + 1;
+                szInstallationSource += wcslen(szInstallationSource) + 1;
+                iCount++;
+            }
+        }
+    }
+
+    if(!(Flags & SRCLIST_NOSTRIPPLATFORM)){
+        szInstallationSource = buffer;
+        for(int i=0; i<iCount; i++){
+            PWSTR platformSource = wcsstr(szInstallationSource,L"\\x");
+            if(platformSource && (platformSource[4] == L'\\' || platformSource[4] == 0)  && ((platformSource[2] == L'8' && platformSource[3] ==  L'6') || (platformSource[2] == L'6' && platformSource[3] == L'4')))
+                memcpy(platformSource,&platformSource[4],platformSource-szInstallationSource- 4 * sizeof(WCHAR));
+            szInstallationSource += wcslen(szInstallationSource)+1;
+        }
+    }
+
+    listSources = (PCWSTR*)HeapAlloc(GetProcessHeap(),0, iCount * sizeof(PCWSTR));
+    if(!listSources)
+        return FALSE;
+
+    szInstallationSource = buffer;
+    for(int i=0; i<iCount; i++){
+        listSources[i]  = HeapAlloc(GetProcessHeap(),0,(wcslen(szInstallationSource)+1)*sizeof(WCHAR));
+        if(!listSources[i]){
+            SetupFreeSourceListW(&listSources,i);
+            return FALSE;
+        }
+        wcscpy(listSources[i],szInstallationSource);
+        szInstallationSource += wcslen(szInstallationSource) + 1;
+    }
+
+    *List = ((const WCHAR ***))listSources;
+    *Count = iCount;
+
+    return TRUE;
+}
+
+/***********************************************************************
+ *      SetupQuerySourceListA (SETUPAPI.@)
+ */
+BOOL WINAPI SetupQuerySourceListA(
+  DWORD Flags,
+  PCSTR **List,
+  PUINT Count
+)
+{
+    TRACE("(%X, %p, %d)\n", Flags, List, Count);
+
+    CHAR buffer[MAX_PATH * 2] = {0}; // FIXME - how much...?
+    PSTR szInstallationSource = buffer;
+    PCSTR* listSources = NULL;
+    UINT iCount = 0;
+
+    if(srclist_temporary_sources != NULL){
+        iCount = srclist_temporary_sources_count;
+        for(int i=0; i<srclist_temporary_sources_count; i++){
+            //WideCharToMultiByte(CP_ACP,0,srclist_temporary_sources[i],wcslen(srclist_temporary_sources[i])+1,szInstallationSource,wcslen(srclist_temporary_sources[i])+1,NULL,NULL);
+            strcpy(szInstallationSource,(PSTR)srclist_temporary_sources[i]);
+            szInstallationSource += strlen(szInstallationSource)+1;
+        }
+
+    }
+    else{
+        LSTATUS statusUser = 0, statusSystem = 0;
+        HKEY handle;
+        DWORD len = 0, nRead = 0;
+
+        if(Flags & SRCLIST_SYSTEM || Flags == 0){
+            statusSystem = RegOpenKeyExA(HKEY_LOCAL_MACHINE,"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup",0,KEY_QUERY_VALUE,&handle);
+            if(!statusSystem){
+                statusSystem = RegQueryValueExA(handle,"Installation Sources",0,NULL,(LPBYTE)szInstallationSource,&len);
+                RegCloseKey(handle);
+            }
+            if(statusSystem){
+                SHGetFolderPathA(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, szInstallationSource);
+                len = strlen(szInstallationSource);
+            }
+
+            nRead = 0;
+            while(*szInstallationSource && nRead < len){
+                nRead += strlen(szInstallationSource) + 1;
+                szInstallationSource += strlen(szInstallationSource) + 1;
+                iCount++;
+            }
+        }
+
+        if(Flags & SRCLIST_USER || Flags == 0){
+            statusUser = RegOpenKeyExA(HKEY_CURRENT_USER,"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup",0,KEY_QUERY_VALUE,&handle);
+            if(!statusUser){
+                statusUser = RegQueryValueExA(handle,"Installation Sources",0,NULL,(LPBYTE)szInstallationSource,&len);
+                RegCloseKey(handle);
+            }
+            if(statusUser && !statusSystem){
+                SHGetFolderPathA(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, szInstallationSource);
+                len = strlen(szInstallationSource);
+            }
+
+            nRead = 0;
+            while(*szInstallationSource && nRead < len){
+                nRead += strlen(szInstallationSource) + 1;
+                szInstallationSource += strlen(szInstallationSource) + 1;
+                iCount++;
+            }
+        }
+    }
+
+    if(!(Flags & SRCLIST_NOSTRIPPLATFORM)){
+        szInstallationSource = buffer;
+        for(int i=0; i<iCount; i++){
+            PSTR platformSource = strstr(szInstallationSource,"\\x");
+            if(platformSource && (platformSource[4] == '\\' || platformSource[4] == 0)  && ((platformSource[2] == '8' && platformSource[3] ==  '6') || (platformSource[2] == '6' && platformSource[3] == '4')))
+                memcpy(platformSource,&platformSource[4],platformSource - szInstallationSource - 4 * sizeof(WCHAR));
+            szInstallationSource += strlen(szInstallationSource)+1;
+        }
+    }
+
+    listSources = (PCSTR*)HeapAlloc(GetProcessHeap(),0,iCount*sizeof(PCSTR));
+    if(!listSources)
+        return FALSE;
+
+    szInstallationSource = buffer;
+    for(int i=0; i<iCount; i++){
+        listSources[i]  = (PCSTR*)HeapAlloc(GetProcessHeap(),0,(strlen(szInstallationSource)+1)*sizeof(CHAR));
+        if(!listSources[i]){
+            SetupFreeSourceListA(&listSources,i);
+            return FALSE;
+        }
+        strcpy(listSources[i],szInstallationSource);
+        szInstallationSource += strlen(szInstallationSource) + 1;
+    }
+
+    *List = listSources;
+    *Count = iCount;
+
+    return TRUE;
+}
+
+/***********************************************************************
+ *      SetupCancelTemporarySourceList (SETUPAPI.@)
+ */
+BOOL WINAPI SetupCancelTemporarySourceList(){
+    if(srclist_temporary_sources == NULL)
+        return FALSE;
+    srclist_temporary_sources = NULL;
+    srclist_temporary_sources_count = 0;
+    noBrowse = FALSE;
+    return TRUE;
+}
+
+/***********************************************************************
+ *      SetupSetSourceListA (SETUPAPI.@)
+ */
+BOOL WINAPI SetupSetSourceListA(DWORD flags, PCSTR *list, UINT count)
+{
+    TRACE("(%X, %p, %d)\n", flags, list, count);
+
+    if(flags & SRCLIST_TEMPORARY){
+        srclist_temporary_sources = (PVOID*)*list;
+        srclist_temporary_sources_count = count;
+    }
+    else{
+        HKEY handle;
+        LSTATUS status = 0;
+        UINT len = 0;
+        BYTE buffer[MAX_PATH]; // size?
+        PCHAR currentPos = NULL;
+        currentPos = buffer;
+        for(int i=0; i < count; i++){
+            strcpy(currentPos,list[i]);
+            currentPos += strlen(list[i]) + 1;
+        }
+        len = currentPos - buffer;
+
+        if(flags & SRCLIST_SYSTEM){
+            status = RegOpenKeyExA(HKEY_LOCAL_MACHINE,"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup",0,KEY_SET_VALUE,&handle);
+            if(status)
+                return FALSE;
+            status = RegSetValueExA(handle,"Installation Sources",0,REG_MULTI_SZ,buffer,len);
+            if(status)
+                return FALSE;
+            RegCloseKey(handle);
+        }
+
+        if(flags & SRCLIST_USER){
+            status = RegOpenKeyExA(HKEY_CURRENT_USER,"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup",0,KEY_SET_VALUE,&handle);
+            if(status)
+                return FALSE;
+            status = RegSetValueExA(handle,"Installation Sources",0,REG_MULTI_SZ,buffer,len);
+            RegCloseKey(handle);
+            if(status)
+                return FALSE;
+        }
+    }
+
+    if(flags & SRCLIST_NOBROWSE)
+        noBrowse = TRUE;
+
+    return TRUE;
+}
+
+/***********************************************************************
+ *      SetupSetSourceListW (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupSetSourceListW(DWORD flags, PCWSTR *list, UINT count)
+{
+    TRACE("(%X, %p, %d)\n", flags, list, count);
+
+    if (flags & SRCLIST_TEMPORARY)
+    {
+        srclist_temporary_sources = (PVOID *)*list;
+        srclist_temporary_sources_count = count;
+    }
+    else
+    {
+        HKEY handle = NULL;
+        LSTATUS status = 0;
+        UINT len = 0;
+        BYTE buffer[MAX_PATH];
+        BYTE *currentPos = NULL;
+
+        currentPos = buffer;
+        for (int i = 0; i < count; i++)
+        {
+            wcscpy((wchar_t *)currentPos, list[i]);
+            currentPos += wcslen(list[i]) + 1;
+        }
+        len = currentPos - buffer;
+
+        if (flags & SRCLIST_SYSTEM)
+        {
+            status = RegOpenKeyExW(
+                HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup", 0, KEY_SET_VALUE, &handle);
+            if (status)
+                return FALSE;
+            status = RegSetValueExW(handle, L"Installation Sources", 0, REG_MULTI_SZ, buffer, len);
+            if (status)
+                return FALSE;
+            RegCloseKey(handle);
+        }
+
+        if (flags & SRCLIST_USER)
+        {
+            status = RegOpenKeyExW(
+                HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup", 0, KEY_SET_VALUE, &handle);
+            if (status)
+                return FALSE;
+            status = RegSetValueExW(handle, L"Installation Sources", 0, REG_MULTI_SZ, buffer, len);
+            RegCloseKey(handle);
+            if (status)
+                return FALSE;
+        }
+    }
+
+    if (flags & SRCLIST_NOBROWSE)
+        noBrowse = TRUE;
+
+    return TRUE;
+}
