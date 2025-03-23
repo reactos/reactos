@@ -1391,21 +1391,26 @@ typedef ptrdiff_t  FT_PtrDist;
     TPos  delta;
 
 
+DbgPrint("2.1\n");
     if ( !outline )
       return FT_THROW( Invalid_Outline );
 
+DbgPrint("2.2\n");
     if ( !func_interface )
       return FT_THROW( Invalid_Argument );
 
+DbgPrint("2.3\n");
     shift = func_interface->shift;
     delta = func_interface->delta;
     first = 0;
 
+DbgPrint("2.4\n");
     for ( n = 0; n < outline->n_contours; n++ )
     {
       int  last;  /* index of last point in contour */
 
 
+DbgPrint("2.5\n");
       FT_TRACE5(( "FT_Outline_Decompose: Outline %d\n", n ));
 
       last  = outline->contours[n];
@@ -1413,6 +1418,7 @@ typedef ptrdiff_t  FT_PtrDist;
         goto Invalid_Outline;
       limit = outline->points + last;
 
+DbgPrint("2.6\n");
       v_start   = outline->points[first];
       v_start.x = SCALED( v_start.x );
       v_start.y = SCALED( v_start.y );
@@ -1427,10 +1433,12 @@ typedef ptrdiff_t  FT_PtrDist;
       tags  = outline->tags   + first;
       tag   = FT_CURVE_TAG( tags[0] );
 
+DbgPrint("2.7\n");
       /* A contour cannot start with a cubic control point! */
       if ( tag == FT_CURVE_TAG_CUBIC )
         goto Invalid_Outline;
 
+DbgPrint("2.8\n");
       /* check first point to determine origin */
       if ( tag == FT_CURVE_TAG_CONIC )
       {
@@ -1454,6 +1462,7 @@ typedef ptrdiff_t  FT_PtrDist;
         point--;
         tags--;
       }
+DbgPrint("2.9\n");
 
       FT_TRACE5(( "  move to (%.2f, %.2f)\n",
                   v_start.x / 64.0, v_start.y / 64.0 ));
@@ -1461,6 +1470,7 @@ typedef ptrdiff_t  FT_PtrDist;
       if ( error )
         goto Exit;
 
+DbgPrint("2.10\n");
       while ( point < limit )
       {
         point++;
@@ -1588,11 +1598,13 @@ typedef ptrdiff_t  FT_PtrDist;
         }
       }
 
+DbgPrint("2.11\n");
       /* close the contour with a line segment */
       FT_TRACE5(( "  line to (%.2f, %.2f)\n",
                   v_start.x / 64.0, v_start.y / 64.0 ));
       error = func_interface->line_to( &v_start, user );
 
+DbgPrint("2.12\n");
    Close:
       if ( error )
         goto Exit;
@@ -1600,14 +1612,17 @@ typedef ptrdiff_t  FT_PtrDist;
       first = last + 1;
     }
 
+DbgPrint("2.13\n");
     FT_TRACE5(( "FT_Outline_Decompose: Done\n", n ));
     return 0;
 
   Exit:
+DbgPrint("2.14\n");
     FT_TRACE5(( "FT_Outline_Decompose: Error 0x%x\n", error ));
     return error;
 
   Invalid_Outline:
+DbgPrint("2.15\n");
     return FT_THROW( Invalid_Outline );
   }
 
@@ -1636,27 +1651,36 @@ typedef ptrdiff_t  FT_PtrDist;
 
     if ( ft_setjmp( ras.jump_buffer ) == 0 )
     {
+DbgPrint("1\n");
       if ( continued )
         FT_Trace_Disable();
+DbgPrint("2\n");
       error = FT_Outline_Decompose( &ras.outline, &func_interface, &ras );
+DbgPrint("3\n");
       if ( continued )
         FT_Trace_Enable();
+DbgPrint("4\n");
 
       if ( !ras.invalid )
         gray_record_cell( RAS_VAR );
+DbgPrint("5\n");
 
       FT_TRACE7(( "band [%d..%d]: %d cell%s\n",
                   ras.min_ey,
                   ras.max_ey,
                   ras.num_cells,
                   ras.num_cells == 1 ? "" : "s" ));
+DbgPrint("6\n");
     }
     else
     {
+DbgPrint("7\n");
       error = FT_THROW( Memory_Overflow );
+DbgPrint("8\n");
 
       FT_TRACE7(( "band [%d..%d]: to be bisected\n",
                   ras.min_ey, ras.max_ey ));
+DbgPrint("9\n");
     }
 
     return error;

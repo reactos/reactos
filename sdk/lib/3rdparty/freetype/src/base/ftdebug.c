@@ -98,6 +98,8 @@
              line,
              error,
              FT_Error_String( error ) );
+#elif defined(__REACTOS__)
+    DbgPrint("%s:%d: error 0x%02x: %s\n", file, line, error, FT_Error_String(error));
 #else
     FT_UNUSED( error );
     FT_UNUSED( line );
