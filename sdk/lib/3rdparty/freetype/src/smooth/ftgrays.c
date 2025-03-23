@@ -90,6 +90,9 @@
 #undef  FT_COMPONENT
 #define FT_COMPONENT  smooth
 
+#ifdef __REACTOS__
+unsigned long DbgPrint(const char *Format, ...);
+#endif
 
 #ifdef STANDALONE_
 
@@ -1391,26 +1394,21 @@ typedef ptrdiff_t  FT_PtrDist;
     TPos  delta;
 
 
-DbgPrint("2.1\n");
     if ( !outline )
       return FT_THROW( Invalid_Outline );
 
-DbgPrint("2.2\n");
     if ( !func_interface )
       return FT_THROW( Invalid_Argument );
 
-DbgPrint("2.3\n");
     shift = func_interface->shift;
     delta = func_interface->delta;
     first = 0;
 
-DbgPrint("2.4\n");
     for ( n = 0; n < outline->n_contours; n++ )
     {
       int  last;  /* index of last point in contour */
 
 
-DbgPrint("2.5\n");
       FT_TRACE5(( "FT_Outline_Decompose: Outline %d\n", n ));
 
       last  = outline->contours[n];
@@ -1418,7 +1416,6 @@ DbgPrint("2.5\n");
         goto Invalid_Outline;
       limit = outline->points + last;
 
-DbgPrint("2.6\n");
       v_start   = outline->points[first];
       v_start.x = SCALED( v_start.x );
       v_start.y = SCALED( v_start.y );
@@ -1433,12 +1430,10 @@ DbgPrint("2.6\n");
       tags  = outline->tags   + first;
       tag   = FT_CURVE_TAG( tags[0] );
 
-DbgPrint("2.7\n");
       /* A contour cannot start with a cubic control point! */
       if ( tag == FT_CURVE_TAG_CUBIC )
         goto Invalid_Outline;
 
-DbgPrint("2.8\n");
       /* check first point to determine origin */
       if ( tag == FT_CURVE_TAG_CONIC )
       {
@@ -1462,7 +1457,6 @@ DbgPrint("2.8\n");
         point--;
         tags--;
       }
-DbgPrint("2.9\n");
 
       FT_TRACE5(( "  move to (%.2f, %.2f)\n",
                   v_start.x / 64.0, v_start.y / 64.0 ));
@@ -1470,7 +1464,6 @@ DbgPrint("2.9\n");
       if ( error )
         goto Exit;
 
-DbgPrint("2.10\n");
       while ( point < limit )
       {
         point++;
@@ -1598,13 +1591,11 @@ DbgPrint("2.10\n");
         }
       }
 
-DbgPrint("2.11\n");
       /* close the contour with a line segment */
       FT_TRACE5(( "  line to (%.2f, %.2f)\n",
                   v_start.x / 64.0, v_start.y / 64.0 ));
       error = func_interface->line_to( &v_start, user );
 
-DbgPrint("2.12\n");
    Close:
       if ( error )
         goto Exit;
@@ -1612,17 +1603,14 @@ DbgPrint("2.12\n");
       first = last + 1;
     }
 
-DbgPrint("2.13\n");
     FT_TRACE5(( "FT_Outline_Decompose: Done\n", n ));
     return 0;
 
   Exit:
-DbgPrint("2.14\n");
     FT_TRACE5(( "FT_Outline_Decompose: Error 0x%x\n", error ));
     return error;
 
   Invalid_Outline:
-DbgPrint("2.15\n");
     return FT_THROW( Invalid_Outline );
   }
 
@@ -1649,6 +1637,9 @@ DbgPrint("2.15\n");
     volatile int  error = 0;
 
 
+DbgPrint("0\n");
+DbgPrint("%p\n", worker);
+DbgPrint("%p\n", &ras.jump_buffer);
     if ( ft_setjmp( ras.jump_buffer ) == 0 )
     {
 DbgPrint("1\n");
