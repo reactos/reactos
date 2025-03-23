@@ -611,6 +611,9 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect,
     if (index < descr->nb_items)
     {
         item_str = get_item_string(descr, index);
+#ifdef __REACTOS__
+        if (!(descr->style & LBS_NOSEL))
+#endif
         selected = is_item_selected(descr, index);
     }
 
