@@ -671,7 +671,7 @@ static BOOL PathMakeUniqueNameW(
     _Out_ PWSTR pszUniqueName,
     _In_ UINT cchMax,
     _In_ PCWSTR pszTemplate,
-    _In_opt_ PCWSTR pszLongPlate,
+    _In_opt_ PCWSTR pszLongPlate, /* Long template */
     _In_opt_ PCWSTR pszDir)
 {
     TRACE("%p %u %s %s %s\n",
@@ -683,7 +683,7 @@ static BOOL PathMakeUniqueNameW(
 
     pszUniqueName[0] = UNICODE_NULL;
 
-    LPWSTR pszDest = pszUniqueName;
+    PWSTR pszDest = pszUniqueName;
     UINT dirLength = 0;
     if (pszDir)
     {
@@ -698,6 +698,8 @@ static BOOL PathMakeUniqueNameW(
     }
 
     PCWSTR pszTitle = pszLongPlate ? pszLongPlate : pszTemplate;
+    PCWSTR pchDotExt, formatString = L"%d";
+    INT maxCount, cchTitle;
 
     if (   !pszTitle
         || !IsLFNDriveW(pszDir)
@@ -709,15 +711,9 @@ static BOOL PathMakeUniqueNameW(
         if (!pszTemplate)
             return FALSE;
 
-        PCWSTR pszSrc = pszTemplate;
-        PCWSTR pchDotExt = PathFindExtensionW(pszTemplate);
-        INT extLength = lstrlenW(pchDotExt);
+        pchDotExt = PathFindExtensionW(pszTemplate);
 
-        WCHAR formatString[MAX_PATH];
-        if (StringCchCopyW(formatString, _countof(formatString), L"%d") != S_OK)
-            return FALSE;
-
-        INT cchTitle = pchDotExt - pszTemplate;
+        cchTitle = pchDotExt - pszTemplate;
         if (cchTitle > 1)
         {
             PCWSTR pch = pchDotExt - 1;
@@ -728,46 +724,26 @@ static BOOL PathMakeUniqueNameW(
             }
         }
 
-        if (cchTitle > 7)
-            cchTitle = 7;
+#define MSDOS_8DOT3_FILENAME_TITLE_LEN 8
+        if (cchTitle > MSDOS_8DOT3_FILENAME_TITLE_LEN - 1)
+            cchTitle = MSDOS_8DOT3_FILENAME_TITLE_LEN - 1;
 
-        while (extLength + cchTitle + dirLength + 1 > (cchMax - 1) && cchTitle > 1)
+        INT extLength = lstrlenW(pchDotExt);
+        while (cchTitle > 1 && (dirLength + cchTitle + extLength + 1 > (cchMax - 1)))
             --cchTitle;
 
-        INT maxCount;
-        if (cchTitle >= 1)
-            maxCount = (cchTitle != 1) ? 100 : 10;
-        else
+        if (cchTitle <= 0)
             maxCount = 1;
+        else if (cchTitle == 1)
+            maxCount = 10;
+        else
+            maxCount = 100;
 
-        if (StringCchCopyNW(pszDest, cchMax - dirLength, pszSrc, cchTitle) != S_OK)
-            return FALSE;
-
-        LPWSTR pchTitle = pszDest + cchTitle;
-        INT ich;
-        for (ich = 1; ich < maxCount; ++ich)
-        {
-            WCHAR tempName[MAX_PATH];
-            if (StringCchPrintfW(tempName, _countof(tempName), formatString, ich) != S_OK ||
-                StringCchCatW(tempName, _countof(tempName), pchDotExt) != S_OK)
-            {
-                return FALSE;
-            }
-
-            if (StringCchCopyW(pchTitle, cchMax - (pchTitle - pszUniqueName), tempName) != S_OK)
-                return FALSE;
-
-            if (!PathFileExistsW(pszUniqueName))
-                return TRUE;
-        }
+        pszTitle = pszTemplate;
     }
     else
     {
         PCWSTR openParen = StrChrW(pszTitle, L'(');
-        PCWSTR pchDotExt = NULL;
-        INT cchTitle = 0;
-        WCHAR formatString[MAX_PATH];
-
         if (openParen)
         {
             while (openParen)
@@ -786,57 +762,51 @@ static BOOL PathMakeUniqueNameW(
             {
                 pchDotExt = openParen + 1;
                 cchTitle = pchDotExt - pszTitle;
-                if (StringCchCopyW(formatString, _countof(formatString), L"%d") != S_OK)
-                    return FALSE;
             }
             else
             {
                 pchDotExt = PathFindExtensionW(pszTitle);
                 cchTitle = pchDotExt - pszTitle;
-                if (StringCchCopyW(formatString, _countof(formatString), L" (%d)") != S_OK)
-                    return FALSE;
+                formatString = L" (%d)";
             }
         }
         else
         {
             pchDotExt = PathFindExtensionW(pszTitle);
             cchTitle = pchDotExt - pszTitle;
-            if (StringCchCopyW(formatString, _countof(formatString), L" (%d)") != S_OK)
-                return FALSE;
+            formatString = L" (%d)";
         }
 
-        INT maxCount = 1;
-        INT remainingChars = cchMax - cchTitle - dirLength - lstrlenW(formatString) + 2;
-
-        if (remainingChars == 1)
+        INT remainingChars = cchMax - (dirLength + cchTitle + (lstrlenW(formatString) - 2));
+        if (remainingChars <= 0)
+            maxCount = 1;
+        else if (remainingChars == 1)
             maxCount = 10;
         else if (remainingChars == 2)
             maxCount = 100;
-        else if (remainingChars > 0)
-            maxCount = 1000;
         else
-            maxCount = 1;
+            maxCount = 1000;
+    }
 
-        if (StringCchCopyNW(pszDest, cchMax - dirLength, pszTitle, cchTitle) != S_OK)
+    if (StringCchCopyNW(pszDest, cchMax - dirLength, pszTitle, cchTitle) != S_OK)
+        return FALSE;
+
+    PWSTR pchTitle = pszDest + cchTitle;
+    INT count;
+    for (count = 1; count < maxCount; ++count)
+    {
+        WCHAR tempName[MAX_PATH];
+        if (StringCchPrintfW(tempName, _countof(tempName), formatString, count) != S_OK ||
+            StringCchCatW(tempName, _countof(tempName), pchDotExt) != S_OK)
+        {
+            return FALSE;
+        }
+
+        if (StringCchCopyW(pchTitle, cchMax - (pchTitle - pszUniqueName), tempName) != S_OK)
             return FALSE;
 
-        LPWSTR pchTitle = pszDest + cchTitle;
-        INT ich;
-        for (ich = 1; ich < maxCount; ++ich)
-        {
-            WCHAR tempName[MAX_PATH];
-            if (StringCchPrintfW(tempName, _countof(tempName), formatString, ich) != S_OK ||
-                StringCchCatW(tempName, _countof(tempName), pchDotExt) != S_OK)
-            {
-                return FALSE;
-            }
-
-            if (StringCchCopyW(pchTitle, cchMax - (pchTitle - pszUniqueName), tempName) != S_OK)
-                return FALSE;
-
-            if (!PathFileExistsW(pszUniqueName))
-                return TRUE;
-        }
+        if (!PathFileExistsW(pszUniqueName))
+            return TRUE;
     }
 
     pszUniqueName[0] = UNICODE_NULL;
