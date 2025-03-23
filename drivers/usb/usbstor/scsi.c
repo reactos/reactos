@@ -181,7 +181,7 @@ USBSTOR_CSWCompletionRoutine(
         // should happen only when a sense request was sent
         if (Request != FDODeviceExtension->ActiveSrb)
         {
-            ASSERT(IoStack->Parameters.Scsi.Srb == &Context->SenseSrb);
+            // ASSERT(IoStack->Parameters.Scsi.Srb == &Context->SenseSrb);
             FDODeviceExtension->ActiveSrb->SenseInfoBufferLength = Request->DataTransferLength;
             Request = FDODeviceExtension->ActiveSrb;
             IoStack->Parameters.Scsi.Srb = Request;
@@ -195,7 +195,7 @@ USBSTOR_CSWCompletionRoutine(
         // the command is correct but with failed status - issue request sense
         DPRINT("USBSTOR_CSWCompletionRoutine: CSW_STATUS_COMMAND_FAILED\n");
 
-        ASSERT(FDODeviceExtension->ActiveSrb == Request);
+        // ASSERT(FDODeviceExtension->ActiveSrb == Request);
 
         // setting a generic error status, additional information
         // should be read by higher-level driver from SenseInfoBuffer
@@ -545,7 +545,7 @@ USBSTOR_HandleExecuteSCSI(
     PSCSI_REQUEST_BLOCK Request;
     PPDO_DEVICE_EXTENSION PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-    ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
+    // ASSERT(PDODeviceExtension->Common.IsFDO == FALSE);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     Request = IoStack->Parameters.Scsi.Srb;

@@ -1,6 +1,6 @@
 ﻿========================
-ReactOS™ Version 0.4.x
-Updated October 9, 2021
+ReactOS™ Version 0.4.15
+Updated 23 March 2025
 ========================
 
 1. What is ReactOS?

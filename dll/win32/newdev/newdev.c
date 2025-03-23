@@ -1,7 +1,7 @@
 /*
  * New device installer (newdev.dll)
  *
- * Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
+ * Copyright 2005-2006 HervÃ© Poussineau (hpoussin@reactos.org)
  *           2005 Christoph von Wittich (Christoph@ActiveVB.de)
  *           2009 Colin Finck (colin@reactos.org)
  *
@@ -50,6 +50,7 @@ UpdateDriverForPlugAndPlayDevicesW(
     LPWSTR Buffer = NULL;
     DWORD BufferSize;
     LPCWSTR CurrentHardwareId; /* Pointer into Buffer */
+    DWORD Property;
     BOOL FoundHardwareId, FoundAtLeastOneDevice = FALSE;
     BOOL ret = FALSE;
 
@@ -86,51 +87,58 @@ UpdateDriverForPlugAndPlayDevicesW(
             break;
         }
 
-        /* Get Hardware ID */
-        HeapFree(GetProcessHeap(), 0, Buffer);
-        Buffer = NULL;
-        BufferSize = 0;
-        while (!SetupDiGetDeviceRegistryPropertyW(
-            DevInstData.hDevInfo,
-            &DevInstData.devInfoData,
-            SPDRP_HARDWAREID,
-            NULL,
-            (PBYTE)Buffer,
-            BufferSize,
-            &BufferSize))
-        {
-            if (GetLastError() == ERROR_FILE_NOT_FOUND)
-            {
-                Buffer = NULL;
-                break;
-            }
-            else if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-            {
-                TRACE("SetupDiGetDeviceRegistryPropertyW() failed with error 0x%x\n", GetLastError());
-                goto cleanup;
-            }
-            /* This error was expected */
-            HeapFree(GetProcessHeap(), 0, Buffer);
-            Buffer = HeapAlloc(GetProcessHeap(), 0, BufferSize);
-            if (!Buffer)
-            {
-                TRACE("HeapAlloc() failed\n", GetLastError());
-                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                goto cleanup;
-            }
-        }
-        if (Buffer == NULL)
-            continue;
-
-        /* Check if we match the given hardware ID */
+        /* Match Hardware ID */
         FoundHardwareId = FALSE;
-        for (CurrentHardwareId = Buffer; *CurrentHardwareId != UNICODE_NULL; CurrentHardwareId += wcslen(CurrentHardwareId) + 1)
+        Property = SPDRP_HARDWAREID;
+        while (TRUE)
         {
-            if (wcscmp(CurrentHardwareId, HardwareId) == 0)
+            /* Get IDs data */
+            Buffer = NULL;
+            BufferSize = 0;
+            while (!SetupDiGetDeviceRegistryPropertyW(DevInstData.hDevInfo,
+                                                      &DevInstData.devInfoData,
+                                                      Property,
+                                                      NULL,
+                                                      (PBYTE)Buffer,
+                                                      BufferSize,
+                                                      &BufferSize))
             {
-                FoundHardwareId = TRUE;
+                if (GetLastError() == ERROR_FILE_NOT_FOUND)
+                {
+                    break;
+                }
+                else if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+                {
+                    TRACE("SetupDiGetDeviceRegistryPropertyW() failed with error 0x%x\n", GetLastError());
+                    goto cleanup;
+                }
+                /* This error was expected */
+                HeapFree(GetProcessHeap(), 0, Buffer);
+                Buffer = HeapAlloc(GetProcessHeap(), 0, BufferSize);
+                if (!Buffer)
+                {
+                    TRACE("HeapAlloc() failed\n", GetLastError());
+                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                    goto cleanup;
+                }
+            }
+            if (Buffer)
+            {
+                /* Check if we match the given hardware ID */
+                for (CurrentHardwareId = Buffer; *CurrentHardwareId != UNICODE_NULL; CurrentHardwareId += wcslen(CurrentHardwareId) + 1)
+                {
+                    if (_wcsicmp(CurrentHardwareId, HardwareId) == 0)
+                    {
+                        FoundHardwareId = TRUE;
+                        break;
+                    }
+                }
+            }
+            if (FoundHardwareId || Property == SPDRP_COMPATIBLEIDS)
+            {
                 break;
             }
+            Property = SPDRP_COMPATIBLEIDS;
         }
         if (!FoundHardwareId)
             continue;

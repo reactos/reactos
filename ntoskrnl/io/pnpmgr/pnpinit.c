@@ -107,6 +107,7 @@ PiInitCacheGroupInformation(VOID)
                                   NULL,
                                   &GroupString,
                                   KEY_READ);
+
     if (NT_SUCCESS(Status))
     {
         /* Get the list */
