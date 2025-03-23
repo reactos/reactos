@@ -95,9 +95,6 @@ CURSORICON_ConvertPngToBmpIcon(
     _In_ DWORD fileSize,
     _Out_ PDWORD pBmpIconSize)
 {
-    if (!pngBits || fileSize < PNG_CHECK_SIG_SIZE || !png_check_sig(pngBits, PNG_CHECK_SIG_SIZE))
-        return NULL;
-
     TRACE("pngBits %p fileSize %d\n", pngBits, fileSize);
 
     if (!LibPngExists())
@@ -105,6 +102,9 @@ CURSORICON_ConvertPngToBmpIcon(
         ERR("No libpng.dll\n");
         return NULL;
     }
+
+    if (!pngBits || fileSize < PNG_CHECK_SIG_SIZE || !png_check_sig(pngBits, PNG_CHECK_SIG_SIZE))
+        return NULL;
 
     png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr)
@@ -2890,7 +2890,7 @@ HICON WINAPI CreateIconFromResourceEx(
             /* Convert PNG raw data to BMP icon if the icon was PNG icon */
             pbBmpIcon = CURSORICON_ConvertPngToBmpIcon(pbIconBits, cbIconBits, &BmpIconSize);
             if (!pbBmpIcon)
-                goto end; /* Not PNG icon or failed */
+                return NULL; /* Not PNG icon or failed */
 
             /* Find icon entry from BMP icon */
             CURSORICONFILEDIR *dir = (CURSORICONFILEDIR *)pbBmpIcon;
@@ -2926,7 +2926,6 @@ HICON WINAPI CreateIconFromResourceEx(
     if(isAnimated)
         HeapFree(GetProcessHeap(), 0, cursorData.aspcur);
 
-end:
     HeapFree(GetProcessHeap(), 0, pbBmpIcon);
     return hIcon;
 
@@ -2935,9 +2934,9 @@ end_error:
     HeapFree(GetProcessHeap(), 0, pbBmpIcon);
     if(isAnimated)
         HeapFree(GetProcessHeap(), 0, cursorData.aspcur);
-    DeleteObject(cursorData.hbmMask);
-    if(cursorData.hbmColor) DeleteObject(cursorData.hbmColor);
-    if(cursorData.hbmAlpha) DeleteObject(cursorData.hbmAlpha);
+    if (cursorData.hbmMask) DeleteObject(cursorData.hbmMask);
+    if (cursorData.hbmColor) DeleteObject(cursorData.hbmColor);
+    if (cursorData.hbmAlpha) DeleteObject(cursorData.hbmAlpha);
 
     return NULL;
 }
