@@ -1,27 +1,10 @@
 /*
- * ReactOS Explorer
- *
- * Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
- * Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     The combo box of the address band
+ * COPYRIGHT:   Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
+ *              Copyright 2023-2025 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
-
-/*
-This class handles the combo box of the address band.
-*/
 
 #include "precomp.h"
 
@@ -371,12 +354,13 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::OnWinEvent(
             if (HIWORD(wParam) == CBN_SELCHANGE)
             {
                 HWND hwndCombo = (HWND)lParam;
-                UINT iItem = (UINT)SendMessageW(hwndCombo, CB_GETCURSEL, 0, 0);
+                INT iItem = (INT)SendMessageW(hwndCombo, CB_GETCURSEL, 0, 0);
                 PIDLIST_ABSOLUTE pidl =
                     (PIDLIST_ABSOLUTE)SendMessageW(hwndCombo, CB_GETITEMDATA, iItem, 0);
                 m_pidlLastParsed.Free();
                 if (pidl)
                     m_pidlLastParsed.Attach(ILClone(pidl));
+
                 Execute(0);
             }
             break;
