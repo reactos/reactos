@@ -41,7 +41,7 @@ BEGIN
     LTEXT       "L'installation de ReactOS peut mettre à niveau les installations disponibles de ReactOS listées ci-dessous, ou, si une installation de ReactOS est endommagée, l'installation peut essayer de la réparer.", IDC_STATIC, 6, 6, 300, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "&Ne pas mettre à jour", IDC_SKIPUPGRADE, 230, 128, 80, 14
-    LTEXT       "Appuyer sur Suivant pour mettre à niveau l'installation sélectionnée, ou sur 'Ne pas mettre à niveau' pour continuer une nouvelle installation.", IDC_STATIC, 7, 124, 222, 16
+    LTEXT       "Appuyer sur Suivant pour mettre à niveau l'installation sélectionnée, ou sur 'Ne pas mettre à jour' pour continuer une nouvelle installation.", IDC_STATIC, 7, 124, 222, 16
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
@@ -66,7 +66,7 @@ BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
     PUSHBUTTON "&Initialiser", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "&Créer", IDC_PARTCREATE, 7, 122, 50, 14
-    PUSHBUTTON "&Formatter", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "&Formater", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "&Supprimer", IDC_PARTDELETE, 63, 122, 50, 14
     PUSHBUTTON "&Pilote", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
     PUSHBUTTON "&Options avancées...", IDC_PARTMOREOPTS, 230, 122, 80, 14
@@ -75,7 +75,7 @@ END
 
 IDD_PARTITION DIALOGEX 0, 0, 200, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Créer et formatter une partition"
+CAPTION "Créer et formater une partition"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Taille :", IDC_STATIC, 7, 9, 70, 9
@@ -93,7 +93,7 @@ END
 
 IDD_FORMAT DIALOGEX 0, 0, 200, 83
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Formatter une partition"
+CAPTION "Formater une partition"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Système de fichier :", IDC_FS_STATIC, 7, 9, 70, 9
@@ -181,7 +181,7 @@ BEGIN
     IDS_SUMMARYTITLE "Résumé de l'installation"
     IDS_SUMMARYSUBTITLE "Lister les propriétés d'installation à vérifier avant application sur le périphérique d'installation."
     IDS_PROCESSTITLE "Configurer la partition, copier les fichiers et configurer le système"
-    IDS_PROCESSSUBTITLE "Créer et formatter la partition, copier les fichiers, installer et configurer le chargeur de démarrage."
+    IDS_PROCESSSUBTITLE "Créer et formater la partition, copier les fichiers, installer et configurer le chargeur de démarrage."
     IDS_RESTARTTITLE "Première étape de configuration terminée"
     IDS_RESTARTSUBTITLE "La première étape de l'installation est terminée. Veuillez redémarrer pour continuer avec la seconde étape."
     IDS_ABORTSETUP "ReactOS n'est pas complètement installé sur votre ordinateur. Si vous quittez l'installation maintenant, vous devrez lancer l'installation de nouveau pour installer ReactOS. Voulez-vous quitter ?"
@@ -269,33 +269,33 @@ Les caractères d'espacement ne sont pas autorisés."
     IDS_ERROR_DIRECTORY_NAME "Le chemin d'installation de ReactOS doit être au format DOS de noms 8.3, \
 et contenir seulement des lettres, chiffres, tirets et points. Les caractères d'espacement ne sont pas autorisés."
 
-    IDS_ERROR_CREATE_PARTITION_TITLE "Create partition"
-    IDS_ERROR_CREATE_PARTITION "Failed to create a new partition."
+    IDS_ERROR_CREATE_PARTITION_TITLE "Créer une partition"
+    IDS_ERROR_CREATE_PARTITION "Échec lors de la création d'une nouvelle partition."
 
-    IDS_WARN_DELETE_PARTITION_TITLE "Delete partition?"
-    IDS_WARN_DELETE_PARTITION "Are you sure you want to delete the selected partition?"
-    IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "Are you sure you want to delete the selected extended partition and ALL the logical partitions it contains?"
+    IDS_WARN_DELETE_PARTITION_TITLE "Supprimer la partition ?"
+    IDS_WARN_DELETE_PARTITION "Êtes-vous sûr de vouloir supprimer la partition sélectionnée ?"
+    IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "Êtes-vous sûr de vouloir supprimer la partition étendue sélectionnée et TOUTES les partitions logiques qu'elle contient ?"
 
-    IDS_ERROR_WRITE_PTABLE "Setup failed to write partition tables."
+    IDS_ERROR_WRITE_PTABLE "Le programme d'installation a échoué à écrire les tables de partition."
 
-    IDS_ERROR_SYSTEM_PARTITION "The ReactOS Setup could not find a supported system partition\n\
-on your system or could not create a new one. Without such a partition\n\
-the Setup program cannot install ReactOS.\
-\nClick on OK to return to the partition selection list."
+    IDS_ERROR_SYSTEM_PARTITION "Le programme d'installation de ReactOS ne peut pas trouver une partition système supportée\n\
+sur votre système, ou ne peut pas en créer une nouvelle. Sans une telle partition,\n\
+le programme d'installation ne peut pas installer ReactOS.\
+\nCliquez sur OK pour revenir à la liste de sélection des partitions."
 
-    IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Unrecognized volume while attempting to format the partition."
+    IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Volume non reconnu lors du formatage de la partition."
 
-    IDS_ERROR_COULD_NOT_FORMAT "Setup is currently unable to format a partition in %s.\n\
-\nClick on OK to continue Setup.\
-\nClick on CANCEL to quit Setup."
+    IDS_ERROR_COULD_NOT_FORMAT "Le programme d'installation ne parvient actuellement pas à formater une partition en %s.\n\
+\nCliquez sur OK pour continuer l'installation.\
+\nCliquez sur Annuler pour quitter l'installation."
 
-    IDS_ERROR_FORMATTING_PARTITION "Setup is unable to format the partition:\n %s\n"
+    IDS_ERROR_FORMATTING_PARTITION "Le programme d'installation ne parvient pas à formater la partition :\n %s\n"
 
-    IDS_ERROR_COULD_NOT_CHECK "Setup is currently unable to check a partition formatted in %s.\n\
-\nClick on OK to continue Setup.\
-\nClick on CANCEL to quit Setup."
+    IDS_ERROR_COULD_NOT_CHECK "Le programme d'installation ne parvient actuellement pas à vérifier une partition formatée en %s.\n\
+\nCliquez sur OK pour continuer l'installation.\
+\nCliquez sur Annuler pour quitter l'installation."
 
-    IDS_ERROR_CHECKING_PARTITION "ChkDsk detected some disk errors.\n(Status 0x%08lx)."
+    IDS_ERROR_CHECKING_PARTITION "ChkDsk a détecté des erreurs disque.\n(Status 0x%08lx)."
 
     IDS_ERROR_WRITE_BOOT "Échec de l'installation du code de démarrage %s sur la partition système."
     IDS_ERROR_INSTALL_BOOTCODE "Échec de l'installation du code de démarrage %s sur le disque système."
