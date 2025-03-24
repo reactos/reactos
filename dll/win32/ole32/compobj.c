@@ -166,24 +166,6 @@ struct class_reg_data
     } u;
 };
 
-struct registered_psclsid
-{
-    struct list entry;
-    IID iid;
-    CLSID clsid;
-};
-
-static struct list registered_psclsid_list = LIST_INIT(registered_psclsid_list);
-
-static CRITICAL_SECTION cs_registered_psclsid_list;
-static CRITICAL_SECTION_DEBUG psclsid_cs_debug =
-{
-    0, 0, &cs_registered_psclsid_list,
-    { &psclsid_cs_debug.ProcessLocksList, &psclsid_cs_debug.ProcessLocksList },
-      0, 0, { (DWORD_PTR)(__FILE__ ": cs_registered_psclsid_list") }
-};
-static CRITICAL_SECTION cs_registered_psclsid_list = { &psclsid_cs_debug, -1, 0, 0, 0, 0 };
-
 /*
  * This is a marshallable object exposing registered local servers.
  * IServiceProvider is used only because it happens meet requirements
@@ -237,6 +219,8 @@ static CRITICAL_SECTION_DEBUG class_cs_debug =
       0, 0, { (DWORD_PTR)(__FILE__ ": csRegisteredClassList") }
 };
 static CRITICAL_SECTION csRegisteredClassList = { &class_cs_debug, -1, 0, 0, 0, 0 };
+
+extern void WINAPI InternalRevokeAllPSClsids(void);
 
 static inline enum comclass_miscfields dvaspect_to_miscfields(DWORD aspect)
 {
@@ -780,21 +764,6 @@ static void COM_RevokeAllClasses(const struct apartment *apt)
   }
 
   LeaveCriticalSection( &csRegisteredClassList );
-}
-
-static void revoke_registered_psclsids(void)
-{
-    struct registered_psclsid *psclsid, *psclsid2;
-
-    EnterCriticalSection( &cs_registered_psclsid_list );
-
-    LIST_FOR_EACH_ENTRY_SAFE(psclsid, psclsid2, &registered_psclsid_list, struct registered_psclsid, entry)
-    {
-        list_remove(&psclsid->entry);
-        HeapFree(GetProcessHeap(), 0, psclsid);
-    }
-
-    LeaveCriticalSection( &cs_registered_psclsid_list );
 }
 
 /******************************************************************************
@@ -2003,7 +1972,7 @@ void WINAPI DECLSPEC_HOTPATCH CoUninitialize(void)
   {
     TRACE("() - Releasing the COM libraries\n");
 
-    revoke_registered_psclsids();
+    InternalRevokeAllPSClsids();
     RunningObjectTableImpl_UnInitialize();
   }
   else if (lCOMRefCnt<1) {
@@ -2150,193 +2119,6 @@ HRESULT COM_OpenKeyForAppIdFromCLSID(REFCLSID clsid, REGSAM access, HKEY *subkey
 
     return S_OK;
 }
-
-static HRESULT get_ps_clsid_from_registry(const WCHAR* path, REGSAM access, CLSID *pclsid)
-{
-    HKEY hkey;
-    WCHAR value[CHARS_IN_GUID];
-    DWORD len;
-
-    access |= KEY_READ;
-
-    if (open_classes_key(HKEY_CLASSES_ROOT, path, access, &hkey))
-        return REGDB_E_IIDNOTREG;
-
-    len = sizeof(value);
-    if (ERROR_SUCCESS != RegQueryValueExW(hkey, NULL, NULL, NULL, (BYTE *)value, &len))
-        return REGDB_E_IIDNOTREG;
-    RegCloseKey(hkey);
-
-    if (CLSIDFromString(value, pclsid) != NOERROR)
-        return REGDB_E_IIDNOTREG;
-
-    return S_OK;
-}
-
-/*****************************************************************************
- *             CoGetPSClsid [OLE32.@]
- *
- * Retrieves the CLSID of the proxy/stub factory that implements
- * IPSFactoryBuffer for the specified interface.
- *
- * PARAMS
- *  riid   [I] Interface whose proxy/stub CLSID is to be returned.
- *  pclsid [O] Where to store returned proxy/stub CLSID.
- * 
- * RETURNS
- *   S_OK
- *   E_OUTOFMEMORY
- *   REGDB_E_IIDNOTREG if no PSFactoryBuffer is associated with the IID, or it could not be parsed
- *
- * NOTES
- *
- * The standard marshaller activates the object with the CLSID
- * returned and uses the CreateProxy and CreateStub methods on its
- * IPSFactoryBuffer interface to construct the proxies and stubs for a
- * given object.
- *
- * CoGetPSClsid determines this CLSID by searching the
- * HKEY_CLASSES_ROOT\Interface\{string form of riid}\ProxyStubClsid32
- * in the registry and any interface id registered by
- * CoRegisterPSClsid within the current process.
- *
- * BUGS
- *
- * Native returns S_OK for interfaces with a key in HKCR\Interface, but
- * without a ProxyStubClsid32 key and leaves garbage in pclsid. This should be
- * considered a bug in native unless an application depends on this (unlikely).
- *
- * SEE ALSO
- *  CoRegisterPSClsid.
- */
-HRESULT WINAPI CoGetPSClsid(REFIID riid, CLSID *pclsid)
-{
-    static const WCHAR wszInterface[] = {'I','n','t','e','r','f','a','c','e','\\',0};
-    static const WCHAR wszPSC[] = {'\\','P','r','o','x','y','S','t','u','b','C','l','s','i','d','3','2',0};
-    WCHAR path[ARRAY_SIZE(wszInterface) - 1 + CHARS_IN_GUID - 1 + ARRAY_SIZE(wszPSC)];
-    APARTMENT *apt;
-    struct registered_psclsid *registered_psclsid;
-    ACTCTX_SECTION_KEYED_DATA data;
-    HRESULT hr;
-    REGSAM opposite = (sizeof(void*) > sizeof(int)) ? KEY_WOW64_32KEY : KEY_WOW64_64KEY;
-    BOOL is_wow64;
-
-    TRACE("() riid=%s, pclsid=%p\n", debugstr_guid(riid), pclsid);
-
-    if (!(apt = apartment_get_current_or_mta()))
-    {
-        ERR("apartment not initialised\n");
-        return CO_E_NOTINITIALIZED;
-    }
-    apartment_release(apt);
-
-    if (!pclsid)
-        return E_INVALIDARG;
-
-    EnterCriticalSection(&cs_registered_psclsid_list);
-
-    LIST_FOR_EACH_ENTRY(registered_psclsid, &registered_psclsid_list, struct registered_psclsid, entry)
-        if (IsEqualIID(&registered_psclsid->iid, riid))
-        {
-            *pclsid = registered_psclsid->clsid;
-            LeaveCriticalSection(&cs_registered_psclsid_list);
-            return S_OK;
-        }
-
-    LeaveCriticalSection(&cs_registered_psclsid_list);
-
-    data.cbSize = sizeof(data);
-    if (FindActCtxSectionGuid(0, NULL, ACTIVATION_CONTEXT_SECTION_COM_INTERFACE_REDIRECTION,
-                              riid, &data))
-    {
-        struct ifacepsredirect_data *ifaceps = (struct ifacepsredirect_data*)data.lpData;
-        *pclsid = ifaceps->iid;
-        return S_OK;
-    }
-
-    /* Interface\\{string form of riid}\\ProxyStubClsid32 */
-    lstrcpyW(path, wszInterface);
-    StringFromGUID2(riid, path + ARRAY_SIZE(wszInterface) - 1, CHARS_IN_GUID);
-    lstrcpyW(path + ARRAY_SIZE(wszInterface) - 1 + CHARS_IN_GUID - 1, wszPSC);
-
-    hr = get_ps_clsid_from_registry(path, 0, pclsid);
-    if (FAILED(hr) && (opposite == KEY_WOW64_32KEY ||
-                       (IsWow64Process(GetCurrentProcess(), &is_wow64) && is_wow64)))
-        hr = get_ps_clsid_from_registry(path, opposite, pclsid);
-
-    if (hr == S_OK)
-        TRACE ("() Returning CLSID=%s\n", debugstr_guid(pclsid));
-    else
-        WARN("No PSFactoryBuffer object is registered for IID %s\n", debugstr_guid(riid));
-
-    return hr;
-}
-
-/*****************************************************************************
- *             CoRegisterPSClsid [OLE32.@]
- *
- * Register a proxy/stub CLSID for the given interface in the current process
- * only.
- *
- * PARAMS
- *  riid   [I] Interface whose proxy/stub CLSID is to be registered.
- *  rclsid [I] CLSID of the proxy/stub.
- * 
- * RETURNS
- *   Success: S_OK
- *   Failure: E_OUTOFMEMORY
- *
- * NOTES
- *
- * Unlike CoRegisterClassObject(), CLSIDs registered with CoRegisterPSClsid()
- * will be returned from other apartments in the same process.
- *
- * This function does not add anything to the registry and the effects are
- * limited to the lifetime of the current process.
- *
- * SEE ALSO
- *  CoGetPSClsid.
- */
-HRESULT WINAPI CoRegisterPSClsid(REFIID riid, REFCLSID rclsid)
-{
-    APARTMENT *apt;
-    struct registered_psclsid *registered_psclsid;
-
-    TRACE("(%s, %s)\n", debugstr_guid(riid), debugstr_guid(rclsid));
-
-    if (!(apt = apartment_get_current_or_mta()))
-    {
-        ERR("apartment not initialised\n");
-        return CO_E_NOTINITIALIZED;
-    }
-    apartment_release(apt);
-
-    EnterCriticalSection(&cs_registered_psclsid_list);
-
-    LIST_FOR_EACH_ENTRY(registered_psclsid, &registered_psclsid_list, struct registered_psclsid, entry)
-        if (IsEqualIID(&registered_psclsid->iid, riid))
-        {
-            registered_psclsid->clsid = *rclsid;
-            LeaveCriticalSection(&cs_registered_psclsid_list);
-            return S_OK;
-        }
-
-    registered_psclsid = HeapAlloc(GetProcessHeap(), 0, sizeof(struct registered_psclsid));
-    if (!registered_psclsid)
-    {
-        LeaveCriticalSection(&cs_registered_psclsid_list);
-        return E_OUTOFMEMORY;
-    }
-
-    registered_psclsid->iid = *riid;
-    registered_psclsid->clsid = *rclsid;
-    list_add_head(&registered_psclsid_list, &registered_psclsid->entry);
-
-    LeaveCriticalSection(&cs_registered_psclsid_list);
-
-    return S_OK;
-}
-
 
 /***
  * COM_GetRegisteredClassObject
@@ -3876,6 +3658,17 @@ HRESULT WINAPI CoRegisterSurrogateEx(REFGUID guid, void *reserved)
     FIXME("(%s %p): stub\n", debugstr_guid(guid), reserved);
 
     return E_NOTIMPL;
+}
+
+BOOL WINAPI InternalIsInitialized(void)
+{
+    struct apartment *apt;
+
+    if (!(apt = apartment_get_current_or_mta()))
+        return FALSE;
+    apartment_release(apt);
+
+    return TRUE;
 }
 
 typedef struct {
