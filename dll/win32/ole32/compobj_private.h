@@ -319,6 +319,9 @@ extern HRESULT HandlerCF_Create(REFCLSID rclsid, REFIID riid, LPVOID *ppv) DECLS
 extern HRESULT WINAPI GlobalOptions_CreateInstance(IClassFactory *iface, IUnknown *pUnk,
                                                    REFIID riid, void **ppv) DECLSPEC_HIDDEN;
 extern IClassFactory GlobalOptionsCF DECLSPEC_HIDDEN;
+extern HRESULT WINAPI GlobalInterfaceTable_CreateInstance(IClassFactory *iface, IUnknown *outer, REFIID riid,
+        void **obj) DECLSPEC_HIDDEN;
+extern IClassFactory GlobalInterfaceTableCF DECLSPEC_HIDDEN;
 
 /* Exported non-interface Data Advise Holder functions */
 HRESULT DataAdviseHolder_OnConnect(IDataAdviseHolder *iface, IDataObject *pDelegate) DECLSPEC_HIDDEN;

@@ -290,62 +290,12 @@ StdGlobalInterfaceTable_GetInterfaceFromGlobal(
   return S_OK;
 }
 
-/* Classfactory definition - despite what MSDN says, some programs need this */
-
-static HRESULT WINAPI
-GITCF_QueryInterface(LPCLASSFACTORY iface,REFIID riid, LPVOID *ppv)
+HRESULT WINAPI GlobalInterfaceTable_CreateInstance(IClassFactory *iface, IUnknown *outer, REFIID riid, void **obj)
 {
-  *ppv = NULL;
-  if (IsEqualIID(riid, &IID_IUnknown) ||
-      IsEqualIID(riid, &IID_IClassFactory))
-  {
-    *ppv = iface;
-    return S_OK;
-  }
-  return E_NOINTERFACE;
-}
-
-static ULONG WINAPI GITCF_AddRef(LPCLASSFACTORY iface)
-{
-  return 2;
-}
-
-static ULONG WINAPI GITCF_Release(LPCLASSFACTORY iface)
-{
-  return 1;
-}
-
-static HRESULT WINAPI
-GITCF_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pUnk,
-                     REFIID riid, LPVOID *ppv)
-{
-  IGlobalInterfaceTable *git = get_std_git();
-  HRESULT hr = IGlobalInterfaceTable_QueryInterface(git, riid, ppv);
-  IGlobalInterfaceTable_Release(git);
-  return hr;
-}
-
-static HRESULT WINAPI GITCF_LockServer(LPCLASSFACTORY iface, BOOL fLock)
-{
-    FIXME("(%d), stub!\n",fLock);
-    return S_OK;
-}
-
-static const IClassFactoryVtbl GITClassFactoryVtbl = {
-    GITCF_QueryInterface,
-    GITCF_AddRef,
-    GITCF_Release,
-    GITCF_CreateInstance,
-    GITCF_LockServer
-};
-
-static IClassFactory git_classfactory = { &GITClassFactoryVtbl };
-
-HRESULT StdGlobalInterfaceTable_GetFactory(LPVOID *ppv)
-{
-  *ppv = &git_classfactory;
-  TRACE("Returning GIT classfactory\n");
-  return S_OK;
+    IGlobalInterfaceTable *git = get_std_git();
+    HRESULT hr = IGlobalInterfaceTable_QueryInterface(git, riid, obj);
+    IGlobalInterfaceTable_Release(git);
+    return hr;
 }
 
 /* Virtual function table */
