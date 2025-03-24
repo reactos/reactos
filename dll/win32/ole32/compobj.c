@@ -3152,65 +3152,6 @@ HRESULT WINAPI CoGetCurrentLogicalThreadId(GUID *id)
     return S_OK;
 }
 
-/******************************************************************************
- *		CoRegisterMessageFilter	[OLE32.@]
- *
- * Registers a message filter.
- *
- * PARAMS
- *  lpMessageFilter [I] Pointer to interface.
- *  lplpMessageFilter [O] Indirect pointer to prior instance if non-NULL.
- *
- * RETURNS
- *  Success: S_OK.
- *  Failure: HRESULT code.
- *
- * NOTES
- *  Both lpMessageFilter and lplpMessageFilter are optional. Passing in a NULL
- *  lpMessageFilter removes the message filter.
- *
- *  If lplpMessageFilter is not NULL the previous message filter will be
- *  returned in the memory pointer to this parameter and the caller is
- *  responsible for releasing the object.
- *
- *  The current thread be in an apartment otherwise the function will crash.
- */
-HRESULT WINAPI CoRegisterMessageFilter(
-    LPMESSAGEFILTER lpMessageFilter,
-    LPMESSAGEFILTER *lplpMessageFilter)
-{
-    struct apartment *apt;
-    IMessageFilter *lpOldMessageFilter;
-
-    TRACE("(%p, %p)\n", lpMessageFilter, lplpMessageFilter);
-
-    apt = COM_CurrentApt();
-
-    /* can't set a message filter in a multi-threaded apartment */
-    if (!apt || apt->multi_threaded)
-    {
-        WARN("can't set message filter in MTA or uninitialized apt\n");
-        return CO_E_NOT_SUPPORTED;
-    }
-
-    if (lpMessageFilter)
-        IMessageFilter_AddRef(lpMessageFilter);
-
-    EnterCriticalSection(&apt->cs);
-
-    lpOldMessageFilter = apt->filter;
-    apt->filter = lpMessageFilter;
-
-    LeaveCriticalSection(&apt->cs);
-
-    if (lplpMessageFilter)
-        *lplpMessageFilter = lpOldMessageFilter;
-    else if (lpOldMessageFilter)
-        IMessageFilter_Release(lpOldMessageFilter);
-
-    return S_OK;
-}
-
 /***********************************************************************
  *           CoIsOle1Class [OLE32.@]
  *
