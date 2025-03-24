@@ -2975,7 +2975,6 @@ HRESULT WINAPI DECLSPEC_HOTPATCH CoCreateInstanceEx(
 {
     IUnknown *unk = NULL;
     IClassFactory *cf;
-    APARTMENT *apt;
     CLSID clsid;
     HRESULT hres;
 
@@ -2992,13 +2991,6 @@ HRESULT WINAPI DECLSPEC_HOTPATCH CoCreateInstanceEx(
     hres = CoGetTreatAsClass(rclsid, &clsid);
     if(FAILED(hres))
         clsid = *rclsid;
-
-    if (!(apt = apartment_get_current_or_mta()))
-    {
-        ERR("apartment not initialised\n");
-        return CO_E_NOTINITIALIZED;
-    }
-    apartment_release(apt);
 
     /*
      * Get a class factory to construct the object we want.
