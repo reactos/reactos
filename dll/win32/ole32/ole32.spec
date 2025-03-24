@@ -290,7 +290,7 @@
 @ stdcall STGMEDIUM_UserUnmarshal(ptr ptr ptr)
 @ stdcall SetConvertStg(ptr long)
 @ stub SetDocumentBitStg
-@ stdcall SetErrorInfo(long ptr)
+@ stdcall SetErrorInfo(long ptr) combase.SetErrorInfo
 @ stdcall StgConvertPropertyToVariant(ptr long ptr ptr)
 @ stdcall StgConvertVariantToProperty(ptr long ptr ptr long long ptr)
 @ stdcall StgCreateDocfile(wstr long long ptr)
