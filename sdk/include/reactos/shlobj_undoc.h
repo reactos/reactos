@@ -354,7 +354,7 @@ DECLARE_INTERFACE_(IAddressEditBox, IUnknown)
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	 /*** IAddressEditBox ***/
 	STDMETHOD(Init)(THIS_ HWND comboboxEx, HWND editControl, long param14, IUnknown *param18) PURE;
-	STDMETHOD(SetCurrentDir)(THIS_ long paramC) PURE;
+	STDMETHOD(SetCurrentDir)(THIS_ PCWSTR pszPath) PURE;
 	STDMETHOD(ParseNow)(THIS_ long paramC) PURE;
 	STDMETHOD(Execute)(THIS_ long paramC) PURE;
 	STDMETHOD(Save)(THIS_ long paramC) PURE;

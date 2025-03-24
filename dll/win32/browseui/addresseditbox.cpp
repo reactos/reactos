@@ -90,8 +90,9 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Init(HWND comboboxEx, HWND editContro
     return hResult;
 }
 
-HRESULT STDMETHODCALLTYPE CAddressEditBox::SetCurrentDir(long paramC)
+HRESULT STDMETHODCALLTYPE CAddressEditBox::SetCurrentDir(PCWSTR pszPath)
 {
+    pidlLastParsed = ILCreateFromPathW(pszPath);
     return E_NOTIMPL;
 }
 
@@ -200,8 +201,8 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
     ULONG attributes;
     HRESULT hr;
     HWND topLevelWindow;
-    PIDLIST_ABSOLUTE pidlCurrent= NULL;
-    PIDLIST_RELATIVE pidlRelative = NULL;
+    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlCurrent;
+    CComHeapPtr<ITEMIDLIST_RELATIVE> pidlRelative;
     CComPtr<IShellFolder> psfCurrent;
 
     CComPtr<IBrowserService> pbs;
@@ -245,7 +246,6 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
     if (SUCCEEDED(hr))
     {
         pidlLastParsed = ILCombine(pidlCurrent, pidlRelative);
-        ILFree(pidlRelative);
         goto cleanup;
     }
 
@@ -254,8 +254,6 @@ parseabsolute:
     hr = psfDesktop->ParseDisplayName(topLevelWindow, NULL, address, &eaten, &pidlLastParsed, &attributes);
 
 cleanup:
-    if (pidlCurrent)
-        ILFree(pidlCurrent);
     return hr;
 }
 

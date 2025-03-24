@@ -62,7 +62,7 @@ public:
 
     // *** IAddressEditBox methods ***
     STDMETHOD(Init)(HWND comboboxEx, HWND editControl, long param14, IUnknown *param18) override;
-    STDMETHOD(SetCurrentDir)(long paramC) override;
+    STDMETHOD(SetCurrentDir)(PCWSTR pszPath) override;
     STDMETHOD(ParseNow)(long paramC) override;
     STDMETHOD(Execute)(long paramC) override;
     STDMETHOD(Save)(long paramC) override;
