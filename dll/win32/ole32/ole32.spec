@@ -317,10 +317,10 @@
 @ stub UtConvertDvtd32toDvtd16
 @ stub UtGetDvtd16Info
 @ stub UtGetDvtd32Info
-@ stdcall WdtpInterfacePointer_UserFree(ptr)
-@ stdcall WdtpInterfacePointer_UserMarshal(ptr long ptr ptr ptr)
-@ stdcall WdtpInterfacePointer_UserSize(ptr long long ptr ptr)
-@ stdcall WdtpInterfacePointer_UserUnmarshal(ptr ptr ptr ptr)
+@ stdcall WdtpInterfacePointer_UserFree(ptr) combase.WdtpInterfacePointer_UserFree
+@ stdcall WdtpInterfacePointer_UserMarshal(ptr long ptr ptr ptr) combase.WdtpInterfacePointer_UserMarshal
+@ stdcall WdtpInterfacePointer_UserSize(ptr long long ptr ptr) combase.WdtpInterfacePointer_UserSize
+@ stdcall WdtpInterfacePointer_UserUnmarshal(ptr ptr ptr ptr) combase.WdtpInterfacePointer_UserUnmarshal
 @ stdcall WriteClassStg(ptr ptr)
 @ stdcall WriteClassStm(ptr ptr)
 @ stdcall WriteFmtUserTypeStg(ptr long ptr)
