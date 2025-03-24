@@ -1781,19 +1781,6 @@ DWORD WINAPI CoBuildVersion(void)
     return (rmm<<16)+rup;
 }
 
-static struct init_spy *get_spy_entry(struct oletls *info, unsigned int id)
-{
-    struct init_spy *spy;
-
-    LIST_FOR_EACH_ENTRY(spy, &info->spies, struct init_spy, entry)
-    {
-        if (id == spy->id && spy->spy)
-            return spy;
-    }
-
-    return NULL;
-}
-
 /*
  * When locked, don't modify list (unless we add a new head), so that it's
  * safe to iterate it. Freeing of list entries is delayed and done on unlock.
