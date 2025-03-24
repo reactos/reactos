@@ -2904,22 +2904,6 @@ done:
     return res;
 }
 
-/******************************************************************************
- *		CoGetCurrentProcess	[OLE32.@]
- */
-DWORD WINAPI CoGetCurrentProcess(void)
-{
-    struct oletls *info = COM_CurrentInfo();
-
-    if (!info)
-        return 0;
-
-    if (!info->thread_seqid)
-        info->thread_seqid = rpcss_get_next_seqid();
-
-    return info->thread_seqid;
-}
-
 /***********************************************************************
  *           CoIsOle1Class [OLE32.@]
  *

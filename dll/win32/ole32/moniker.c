@@ -41,7 +41,6 @@
 #include "compobj_private.h"
 #include "moniker.h"
 #include "irot.h"
-#include "irpcss.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -78,7 +77,6 @@ typedef struct RunningObjectTableImpl
 
 static RunningObjectTableImpl* runningObjectTableInstance = NULL;
 static IrotHandle irot_handle;
-static RPC_BINDING_HANDLE irpcss_handle;
 
 /* define the EnumMonikerImpl structure */
 typedef struct EnumMonikerImpl
@@ -133,21 +131,6 @@ static IrotHandle get_irot_handle(void)
             RpcBindingFree(&new_handle);
     }
     return irot_handle;
-}
-
-static RPC_BINDING_HANDLE get_irpcss_handle(void)
-{
-    if (!irpcss_handle)
-    {
-        unsigned short protseq[] = IROT_PROTSEQ;
-        unsigned short endpoint[] = IROT_ENDPOINT;
-
-        RPC_BINDING_HANDLE new_handle = get_rpc_handle(protseq, endpoint);
-        if (InterlockedCompareExchangePointer(&irpcss_handle, new_handle, NULL))
-            /* another thread beat us to it */
-            RpcBindingFree(&new_handle);
-    }
-    return irpcss_handle;
 }
 
 static BOOL start_rpcss(void)
