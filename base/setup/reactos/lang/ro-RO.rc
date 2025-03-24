@@ -4,7 +4,7 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2025 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -17,16 +17,16 @@ CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bun venit la instalarea ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "This wizard will install or upgrade ReactOS on your computer, \
-and prepare the second part of the setup.", IDC_STATIC, 115, 40, 195, 27
+    LTEXT "Acest expert va instala sau va face upgrade la ReactOS pe computer \
+și va pregăti a doua parte a instalatorului.", IDC_STATIC, 115, 40, 195, 27
 ////
     GROUPBOX " IMPORTANT INFORMATION ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
-    LTEXT "ReactOS is in Alpha stage: it is not feature- complete and is \
-under heavy development. It is recommended to use it only for \
-evaluation and testing and not as your daily-usage OS.\n\
-It may corrupt your data or damage your hardware.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
-    LTEXT "Backup your data or test on a secondary computer \
-if you attempt to run ReactOS on real hardware.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+    LTEXT "ReactOS este în stadiu Alfa: nu e o caracteristică- completă și e \
+în curs de dezvoltare intensă. E recomandat să îl folosiți numai pentru \
+evaluare și testare și nu ca SO de utilizare zilnică.\n\
+Vă poate deteriora datele sau vă poate deteriora hardware-ul.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
+    LTEXT "Faceți o copie de rezervă a datelor sau testați-l pe un computer secundar \
+dacă încrecați să folosiți ReactOS pe hardware real.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
 ////
     LTEXT "Apăsați Înainte pentru a continua.", IDC_STATIC, 115, 169, 195, 17
 END
@@ -58,7 +58,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Calculator:", IDC_STATIC, 20, 15, 80, 10
+    LTEXT "Computer:", IDC_STATIC, 20, 15, 80, 10
     COMBOBOX IDC_COMPUTER, 100, 15, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     LTEXT "Ecran:", IDC_STATIC, 20, 35, 80, 10
     COMBOBOX IDC_DISPLAY, 100, 35, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
@@ -73,12 +73,12 @@ CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
-    PUSHBUTTON "&Initialize", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
-    PUSHBUTTON "&Crează", IDC_PARTCREATE, 7, 122, 50, 14
-    PUSHBUTTON "&Format", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
-    PUSHBUTTON "Șt&erge", IDC_PARTDELETE, 63, 122, 50, 14
+    PUSHBUTTON "&Initializare", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "&Creare", IDC_PARTCREATE, 7, 122, 50, 14
+    PUSHBUTTON "&Formatare", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "Șt&ergere", IDC_PARTDELETE, 63, 122, 50, 14
     PUSHBUTTON "&Driver", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
-    PUSHBUTTON "Opțiuni a&vansate…", IDC_PARTMOREOPTS, 230, 122, 80, 14
+    PUSHBUTTON "&Opțiuni complexe…", IDC_PARTMOREOPTS, 230, 122, 80, 14
     // LTEXT "Apăsați pe Înainte pentru a verifica sumarul.", IDC_STATIC, 7, 128, 277, 8
 END
 
@@ -87,15 +87,15 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Crearea și formatarea partiției"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Mărime:", IDC_STATIC, 7, 9, 70, 9
+    LTEXT "&Dimensiune:", IDC_STATIC, 7, 9, 70, 9
     EDITTEXT IDC_EDIT_PARTSIZE, 82, 7, 47, 13, ES_RIGHT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_PARTSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 22, 9, 13
     LTEXT "MO", IDC_UNIT, 134, 9, 14, 9
-    AUTOCHECKBOX "&Extended partition", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
+    AUTOCHECKBOX "Partiție &extinsă", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
     LTEXT "&Sistemul de fișiere:", IDC_FS_STATIC, 7, 46, 70, 9
     COMBOBOX IDC_FSTYPE, 82, 44, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
+    AUTOCHECKBOX "&Formatare rapidă", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
     PUSHBUTTON "OK", IDOK, 88, 98, 50, 14
     PUSHBUTTON "Revocare", IDCANCEL, 143, 98, 50, 14
 END
@@ -107,20 +107,20 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Sistemul de fișiere:", IDC_FS_STATIC, 7, 9, 70, 9
     COMBOBOX IDC_FSTYPE, 82, 7, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
+    AUTOCHECKBOX "&Formatare rapidă", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
     PUSHBUTTON "OK", IDOK, 88, 61, 50, 14
     PUSHBUTTON "Revocare", IDCANCEL, 143, 61, 50, 14
 END
 
 IDD_ADVINSTOPTS DIALOGEX 0, 0, 305, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Advanced Installation Options"
+CAPTION "Opțiuni de instalare complexă"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Choose the &directory where you want to install ReactOS:", IDC_STATIC, 7, 9, 291, 10
+    LTEXT "Alegeți &directorul unde vreți să instalați ReactOS:", IDC_STATIC, 7, 9, 291, 10
     EDITTEXT IDC_PATH, 7, 23, 291, 13
     GROUPBOX "Bootloader", IDC_STATIC, 7, 45, 291, 60
-    LTEXT "Select the location where the FreeLoader\nbootloader should be installed.\n\nBy default, it is installed on the system partition of the boot disk (and either in the Master or the Volume Boot Record for BIOS-based computers).", IDC_STATIC, 13, 57, 279, 44
+    LTEXT "Selectați locația unde ar trebui\ninstalat bootloader-ul FreeLoader.\n\nÎn mod implicit, este instalat pe partiția de sistem a discului de pornire (și fie în Master, fie în Volume Boot Record pentru computerele bazate pe BIOS).", IDC_STATIC, 13, 57, 279, 44
     COMBOBOX IDC_INSTFREELDR, 150, 58, 142, 45, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     DEFPUSHBUTTON "OK", IDOK, 193, 113, 50, 14
     PUSHBUTTON "Revocare", IDCANCEL, 248, 113, 50, 14
@@ -137,7 +137,7 @@ BEGIN
     EDITTEXT IDC_INSTALLSOURCE, 95, 16, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Arhitectură:", IDC_STATIC, 18, 29, 74, 11
     EDITTEXT IDC_ARCHITECTURE, 95, 28, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Calculator:", IDC_STATIC, 18, 41, 74, 11
+    LTEXT "Computer:", IDC_STATIC, 18, 41, 74, 11
     EDITTEXT IDC_COMPUTER, 95, 40, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Ecran:", IDC_STATIC, 18, 53, 74, 11
     EDITTEXT IDC_DISPLAY, 95, 52, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
@@ -147,9 +147,9 @@ BEGIN
     EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Director de destinație:", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    AUTOCHECKBOX "Confirm că toate opțiunile de instalare sunt corecte. De asemenea, conștientizez că\nReactOS nu a ajuns la maturitate și în consecință îmi poate deteriora calculatorul sau datele.",
+    AUTOCHECKBOX "Confirm că toate setările de instalare sunt corecte. Recunosc, de asemenea, că\nReactOS este un software de calitate alfa și se poate deteriora pe computerul meu sau îmi poate deteriora datele.",
         IDC_CONFIRM_INSTALL, 7, 104, 310, 18, BS_MULTILINE
-    LTEXT "Verificați că toate opțiunile de instalare sunt corecte,\napoi acționați Instalează pentru a porni procesul de instalare.", IDC_STATIC, 7, 124, 303, 18
+    LTEXT "Vă rugăm să confirmați că toate setările de instalare sunt corecte,\nfaceți clic pe Instalare pentru a începe procesul de instalare.", IDC_STATIC, 7, 124, 303, 18
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
@@ -164,14 +164,14 @@ END
 
 IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expert de instalare ReactOS"
+CAPTION "Se finalizează instalarea ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Finalizarea instalării asistate a ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Ați dus la bun sfârșit prima etapă de instalare a ReactOS.", IDC_STATIC, 115, 50, 195, 17
-    LTEXT "Când veți apăsa Sfârșit, calculatorul va reporni.", IDC_STATIC, 115, 80, 195, 17
+    LTEXT "Se finalizează expertul de instalare ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "Ați finalizat cu succes prima etapă a instalării ReactOS.", IDC_STATIC, 115, 50, 195, 17
+    LTEXT "Când veți apăsa Terminare, calculatorul va reporni.", IDC_STATIC, 115, 80, 195, 17
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
-    LTEXT "Dacă aveți vreun CD în calculator, scoateți-l, după care apăsați Sfârșit pentru a reporni.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Dacă există un CD într-o unitate, scoateți-l. Apoi, pentru a reporni computerul, faceți clic pe Terminare.", IDC_STATIC, 115, 169, 195, 17
 END
 
 /* Strings */
@@ -179,32 +179,32 @@ END
 STRINGTABLE
 BEGIN
     IDS_CAPTION "Expertul de instalare ReactOS"
-    IDS_TYPETITLE "Installation Type"
-    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
-    IDS_UPDATETITLE "Update or Repair ReactOS"
-    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
-    IDS_DEVICETITLE "Instalare dispozitive de bază"
-    IDS_DEVICESUBTITLE "Stabilirea parametrilor de afișare și tastatură."
-    IDS_DRIVETITLE "Stabilirea destinației"
-    IDS_DRIVESUBTITLE "Pregătirea partiției de instalare, a folderului de sistem și a inițializatorului."
-    IDS_SUMMARYTITLE "Rezumat de instalare"
-    IDS_SUMMARYSUBTITLE "Lista cu opțiuni de instalare ce necesită verificare înainte de a continua instalarea."
-    IDS_PROCESSTITLE "Executare pași de instalare"
-    IDS_PROCESSSUBTITLE "Crearea și formatarea partiției, copierea de fișiere și instalarea inițializatorului."
-    IDS_RESTARTTITLE "Finalizare primă etapă"
-    IDS_RESTARTSUBTITLE "Prima etapă a instalarii a fost încheiată cu succes, reporniți pentru a doua etapă."
-    IDS_ABORTSETUP "ReactOS încă nu este complet instalat în calculator. Daca întrerupeți procesul de instalare, pentru a instala va fi necesară repetarea pașilor parcurși până acum. Sigur doriți asta?"
-    IDS_ABORTSETUP2 "Abandonați instalarea?"
-    IDS_NO_TXTSETUP_SIF "Fișierului „txtsetup.sif” nu poate fi găsit.\nInstalarea nu poate continua."
-    IDS_INSTALLBTN "&Install"
-    IDS_VOLUME_NOFORMAT "Not formatted"
+    IDS_TYPETITLE "Tipul de instalare"
+    IDS_TYPESUBTITLE "Puteți configura o nouă instalare ReactOS sau puteți actualiza/repara o instalare existentă."
+    IDS_UPDATETITLE "Actualizare sau reparare ReactOS"
+    IDS_UPDATESUBTITLE "Alegeți instalarea existentă ReactOS pe care doriți să o actualizați sau să reparați."
+    IDS_DEVICETITLE "Configurare a dispozitivelor de bază"
+    IDS_DEVICESUBTITLE "Setați setările pentru afișaj și tastatură."
+    IDS_DRIVETITLE "Configurați partiția de instalare și folderul de sistem"
+    IDS_DRIVESUBTITLE "Se pregătește instalarea partiției, a folderului de sistem și a încărcătorului de pornire."
+    IDS_SUMMARYTITLE "Rezumatul instalării"
+    IDS_SUMMARYSUBTITLE "Listează proprietățile de instalare de verificat înainte de le a aplica dispozitivului de instalare."
+    IDS_PROCESSTITLE "Se configurează partiția, se copiază fișierele și se configurează sistemul"
+    IDS_PROCESSSUBTITLE "Crează sau formatează partiția, copiază fișierele, instalează și configurează bootloader-ul"
+    IDS_RESTARTTITLE "Prima etapă de configurare s-a încheiat"
+    IDS_RESTARTSUBTITLE "Prima etapă de configurare s-a încheiat, reporniți pentru a continua cu a doua etapă."
+    IDS_ABORTSETUP "ReactOS nu este isntalat complet în computer. Dacă părăsiți Instalatorul acum, va trebui să rulați din nou Instalatorul pentru a instala ReactOS. Chiar renunțați?"
+    IDS_ABORTSETUP2 "Renunțați la instalare?"
+    IDS_NO_TXTSETUP_SIF "Nu s-a putut găsi 'txtsetup.sif'.\nInstalatorul nu poate continua."
+    IDS_INSTALLBTN "&Instalare"
+    IDS_VOLUME_NOFORMAT "Neformatat"
 END
 
 STRINGTABLE
 BEGIN
     IDS_INSTALLATION_NAME "Nume"
-    IDS_INSTALLATION_PATH "Cale de instalare"
-    IDS_INSTALLATION_VENDOR "Nume de producător"
+    IDS_INSTALLATION_PATH "Calea de instalare"
+    IDS_INSTALLATION_VENDOR "Numele producătorului"
 END
 
 STRINGTABLE
@@ -217,10 +217,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BOOTLOADER_NOINST "No installation"
-    IDS_BOOTLOADER_REMOVABLE "Removable media"
-    IDS_BOOTLOADER_SYSTEM "System partition (Default)"
-    IDS_BOOTLOADER_MBRVBR "MBR și VBR (Default)"
+    IDS_BOOTLOADER_NOINST "Nicio instalare"
+    IDS_BOOTLOADER_REMOVABLE "Suport media amovibil"
+    IDS_BOOTLOADER_SYSTEM "Partiție de sistem (Implicită)"
+    IDS_BOOTLOADER_MBRVBR "MBR și VBR (Implicit)"
     IDS_BOOTLOADER_VBRONLY "Numai VBR"
 END
 
@@ -228,88 +228,88 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_FORMATTING_PROGRESS1 "Formatting volume %c: (%s) in %s..."
-    IDS_FORMATTING_PROGRESS2 "Formatting volume %s in %s..."
+    IDS_FORMATTING_PROGRESS1 "Se formatează volumul %c: (%s) în %s..."
+    IDS_FORMATTING_PROGRESS2 "Se formatează volumul %s în %s..."
 
-    IDS_CHECKING_PROGRESS1 "Checking volume %c: (%s)..."
-    IDS_CHECKING_PROGRESS2 "Checking volume %s..."
+    IDS_CHECKING_PROGRESS1 "Se verifică volumul %c: (%s)..."
+    IDS_CHECKING_PROGRESS2 "Se verifică volumul %s..."
 
-    IDS_COPYING  "Copying %s"
-    IDS_MOVING   "Moving %s to %s"
-    IDS_RENAMING "Renaming %s to %s"
-    IDS_DELETING "Deleting %s"
+    IDS_COPYING  "Se copiază %s"
+    IDS_MOVING   "Se mută %s în %s"
+    IDS_RENAMING "Se redenumește din %s în %s"
+    IDS_DELETING "Se șterge %s"
 
-    IDS_CONFIG_SYSTEM_PARTITION "Configuring the system partition..."
-    IDS_PREPARE_PARTITIONS "Preparing partitions..."
-    IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
-    IDS_COPYING_FILES "Copying the files..."
+    IDS_CONFIG_SYSTEM_PARTITION "Se configurează partiția de sistem..."
+    IDS_PREPARE_PARTITIONS "Se pregătesc partițiile..."
+    IDS_PREPARE_FILES "Se pregătește lista fișierelor ce urmează să fie copiate, așteptați..."
+    IDS_COPYING_FILES "Se copiază fișierele..."
 
-    IDS_CREATE_REGISTRY "Creating the registry..."
-    IDS_UPDATE_REGISTRY "Updating the registry..."
+    IDS_CREATE_REGISTRY "Se crează registrul..."
+    IDS_UPDATE_REGISTRY "Se actualizează registrul..."
 
-    // IDS_INSTALL_FINALIZE "Finalizing the installation..."
-    IDS_INSTALL_BOOTLOADER "Installing the bootloader..."
+    // IDS_INSTALL_FINALIZE "Se finalizează instalația..."
+    IDS_INSTALL_BOOTLOADER "Se instalează bootloader-ul..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.
 STRINGTABLE
 BEGIN
-    IDS_REG_DONE "Done"
-    IDS_REG_REGHIVEUPDATE "Updating registry hives"
-    IDS_REG_IMPORTFILE "Importing %s"
-    IDS_REG_DISPLAYSETTINGSUPDATE "Updating display registry settings"
-    IDS_REG_LOCALESETTINGSUPDATE "Updating locale settings"
-    IDS_REG_ADDKBLAYOUTS "Adding keyboard layouts"
-    IDS_REG_KEYBOARDSETTINGSUPDATE "Updating keyboard layout settings"
-    IDS_REG_CODEPAGEINFOUPDATE "Adding codepage information"
-    IDS_REG_UNKNOWN "Unknown status %d"
+    IDS_REG_DONE "Gata"
+    IDS_REG_REGHIVEUPDATE "Se actualizează intrările de registru"
+    IDS_REG_IMPORTFILE "Se importă %s"
+    IDS_REG_DISPLAYSETTINGSUPDATE "Se actualizează setările registrului de afișare"
+    IDS_REG_LOCALESETTINGSUPDATE "Se actualizează setările de localizare"
+    IDS_REG_ADDKBLAYOUTS "Se adaugă limbi pentru tastatură"
+    IDS_REG_KEYBOARDSETTINGSUPDATE "Se actualizează setările pentru limbilor pentru tastatură"
+    IDS_REG_CODEPAGEINFOUPDATE "Se adaugă informațiile din pagina de coduri"
+    IDS_REG_UNKNOWN "Stare necunoscută %d"
 END
 
 /* Error Strings */
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE "Invalid character"
-    IDS_ERROR_INVALID_INSTALLDIR_CHAR "The only valid characters are:\n\
-alphanumericals (a-z, A-Z, 0-9), and\n . \\ - _\n\
-Spaces are not allowed."
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE "Caracter nevalid"
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR "Singuirele caractere valide sunt:\n\
+alfanumerice (a-z, A-Z, 0-9) și\n . \\ - _\n\
+Spațiile nu sunt permise."
 
-    IDS_ERROR_DIRECTORY_NAME_TITLE "Invalid installation path"
-    IDS_ERROR_DIRECTORY_NAME "The ReactOS installation path must follow the DOS 8.3 naming scheme, \
-and only contain letters, digits, dashes and periods. Spaces are not allowed."
+    IDS_ERROR_DIRECTORY_NAME_TITLE "Calea instalării nu e validă"
+    IDS_ERROR_DIRECTORY_NAME "Calea de isntalare ReactOS trebuie să urmeze schema de denumire DOS 8.3 \
+și să conțină numai litere, cifre, liniuțe și puncte. Spațiile nu sunt permise."
 
-    IDS_ERROR_CREATE_PARTITION_TITLE "Create partition"
-    IDS_ERROR_CREATE_PARTITION "Failed to create a new partition."
+    IDS_ERROR_CREATE_PARTITION_TITLE "Crearea partiției"
+    IDS_ERROR_CREATE_PARTITION "Imposibil de creat noua partiție."
 
-    IDS_WARN_DELETE_PARTITION_TITLE "Delete partition?"
-    IDS_WARN_DELETE_PARTITION "Are you sure you want to delete the selected partition?"
-    IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "Are you sure you want to delete the selected extended partition and ALL the logical partitions it contains?"
+    IDS_WARN_DELETE_PARTITION_TITLE "Ștergeți partiția?"
+    IDS_WARN_DELETE_PARTITION "Sigur vreți să ștergeți partiția selectată?"
+    IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "Sigur vreți să ștergeți partiția selectată extinsă și TOATE partițiile logice pe care le conține?"
 
-    IDS_ERROR_WRITE_PTABLE "Setup failed to write partition tables."
+    IDS_ERROR_WRITE_PTABLE "Instalatorul a eșuat să scrie tabelele de partiții."
 
-    IDS_ERROR_SYSTEM_PARTITION "The ReactOS Setup could not find a supported system partition\n\
-on your system or could not create a new one. Without such a partition\n\
-the Setup program cannot install ReactOS.\
-\nClick on OK to return to the partition selection list."
+    IDS_ERROR_SYSTEM_PARTITION "Instalatorul ReactOS nu a putut găsi o partiție de sistem acceptată\n\
+pe sistem sau nu a putut crea unul nou. Fără o astfel de partiție\n\
+programul de instalare nu poate instala ReactOS.\
+\nApăsați OK pentru a reveni la lista de selecție a partițiilor."
 
-    IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Unrecognized volume while attempting to format the partition."
+    IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Volum necunoscut în timpul încercării de a formata partiția."
 
-    IDS_ERROR_COULD_NOT_FORMAT "Setup is currently unable to format a partition in %s.\n\
-\nClick on OK to continue Setup.\
-\nClick on CANCEL to quit Setup."
+    IDS_ERROR_COULD_NOT_FORMAT "Instalatorul nu poate în prezent, să formateze o partiție în %s.\n\
+\nApăsați pe OK pentru a continua configurarea.\
+\nApăsați pe REVOCARE pentru a ieși din Instalator."
 
-    IDS_ERROR_FORMATTING_PARTITION "Setup is unable to format the partition:\n %s\n"
+    IDS_ERROR_FORMATTING_PARTITION "Instalatorul nu poate formata partiția:\n %s\n"
 
-    IDS_ERROR_COULD_NOT_CHECK "Setup is currently unable to check a partition formatted in %s.\n\
-\nClick on OK to continue Setup.\
-\nClick on CANCEL to quit Setup."
+    IDS_ERROR_COULD_NOT_CHECK "În prezent, Instalatorul nu poate verifica o partiție formatată în %s.\n\
+\nApăsați pe OK pentru a continua configurarea.\
+\nApăsați pe REVOCARE pentru a ieși din Instalator."
 
-    IDS_ERROR_CHECKING_PARTITION "ChkDsk detected some disk errors.\n(Status 0x%08lx)."
+    IDS_ERROR_CHECKING_PARTITION "ChkDsk a detectat niște erori de disc.\n(Statutul 0x%08lx)."
 
-    IDS_ERROR_WRITE_BOOT "Setup failed to install the %s bootcode on the system partition."
-    IDS_ERROR_INSTALL_BOOTCODE "Setup failed to install the %s bootcode on the boot disk."
-    IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "Setup failed to install the bootcode on the removable media."
-    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "Setup does not currently support installing the bootloader on the computer you are using.\
-\nClick on OK to continue anyway."
-    IDS_ERROR_BOOTLDR_FAILED "Setup could not install the bootloader (Status 0x%08lx)."
+    IDS_ERROR_WRITE_BOOT "Instalatorul nu a reușit să instaleze codul de pornire %s pe partiția de sistem."
+    IDS_ERROR_INSTALL_BOOTCODE "Instalatorul nu a reușit să instaleze codul de pornire %s pe discul de pornire."
+    IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "Instalatorul nu a reușit să instaleze codul de pornire pe suportul amovibil."
+    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "În prezent, Instalatorul nu a reușit să instaleze codul de pornire pe computerul pe care îl folosiți.\
+\nApăsați pe OK pentru a continua oricum."
+    IDS_ERROR_BOOTLDR_FAILED "Instalatorul nu a putut instala bootloader-ul (Statutul 0x%08lx)."
 END
