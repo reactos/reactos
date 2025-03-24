@@ -3465,35 +3465,6 @@ HRESULT WINAPI CoAllowSetForegroundWindow(IUnknown *pUnk, void *pvReserved)
 }
 
 /***********************************************************************
- *           CoGetCallContext [OLE32.@]
- *
- * Gets the context of the currently executing server call in the current
- * thread.
- *
- * PARAMS
- *  riid [I] Context interface to return.
- *  ppv  [O] Pointer to memory that will receive the context on return.
- *
- * RETURNS
- *  Success: S_OK.
- *  Failure: HRESULT code.
- */
-HRESULT WINAPI CoGetCallContext(REFIID riid, void **ppv)
-{
-    struct oletls *info = COM_CurrentInfo();
-
-    TRACE("(%s, %p)\n", debugstr_guid(riid), ppv);
-
-    if (!info)
-        return E_OUTOFMEMORY;
-
-    if (!info->call_state)
-        return RPC_E_CALL_COMPLETE;
-
-    return IUnknown_QueryInterface(info->call_state, riid, ppv);
-}
-
-/***********************************************************************
  *           CoSwitchCallContext [OLE32.@]
  *
  * Switches the context of the currently executing server call in the current
