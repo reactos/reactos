@@ -246,7 +246,7 @@ void OLEDD_UnInitialize(void) DECLSPEC_HIDDEN;
 
 /* Apartment Functions */
 
-struct apartment *apartment_findfromoxid(OXID oxid, BOOL ref) DECLSPEC_HIDDEN;
+struct apartment *apartment_findfromoxid(OXID oxid) DECLSPEC_HIDDEN;
 struct apartment *apartment_findfromtid(DWORD tid) DECLSPEC_HIDDEN;
 DWORD apartment_release(struct apartment *apt) DECLSPEC_HIDDEN;
 HRESULT apartment_disconnectproxies(struct apartment *apt) DECLSPEC_HIDDEN;

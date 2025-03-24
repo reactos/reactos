@@ -1468,7 +1468,7 @@ static HRESULT std_unmarshal_interface(MSHCTX dest_context, void *dest_context_d
      * ignore table marshaling and normal marshaling rules regarding number of
      * unmarshals, etc, but if you abuse these rules then your proxy could end
      * up returning RPC_E_DISCONNECTED. */
-    if ((stub_apt = apartment_findfromoxid(obj.std.oxid, TRUE)))
+    if ((stub_apt = apartment_findfromoxid(obj.std.oxid)))
     {
         if ((stubmgr = get_stub_manager(stub_apt, obj.std.oid)))
         {
@@ -1555,7 +1555,7 @@ static HRESULT std_release_marshal_data(IStream *pStm)
         wine_dbgstr_longlong(obj.std.oid),
         wine_dbgstr_guid(&obj.std.ipid));
 
-    if (!(apt = apartment_findfromoxid(obj.std.oxid, TRUE)))
+    if (!(apt = apartment_findfromoxid(obj.std.oxid)))
     {
         WARN("Could not map OXID %s to apartment object\n",
             wine_dbgstr_longlong(obj.std.oxid));

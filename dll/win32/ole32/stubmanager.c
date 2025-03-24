@@ -503,7 +503,7 @@ static HRESULT ipid_to_ifstub(const IPID *ipid, struct apartment **stub_apt,
 {
     /* FIXME: hack for IRemUnknown */
     if (ipid->Data2 == 0xffff)
-        *stub_apt = apartment_findfromoxid(*(const OXID *)ipid->Data4, TRUE);
+        *stub_apt = apartment_findfromoxid(*(const OXID *)ipid->Data4);
     else
         *stub_apt = apartment_findfromtid(ipid->Data2);
     if (!*stub_apt)
