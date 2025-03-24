@@ -4257,44 +4257,6 @@ HRESULT WINAPI CoSwitchCallContext(IUnknown *pObject, IUnknown **ppOldObject)
 }
 
 /***********************************************************************
- *           CoImpersonateClient [OLE32.@]
- *
- * Impersonates the client of the currently executing server call in the
- * current thread.
- *
- * PARAMS
- *  None.
- *
- * RETURNS
- *  Success: S_OK.
- *  Failure: HRESULT code.
- *
- * NOTES
- *  If this function fails then the current thread will not be impersonating
- *  the client and all actions will take place on behalf of the server.
- *  Therefore, it is important to check the return value from this function.
- *
- * SEE ALSO
- *  CoRevertToSelf, CoQueryClientBlanket, CoGetCallContext.
- */
-HRESULT WINAPI CoImpersonateClient(void)
-{
-    IServerSecurity *pSrvSec;
-    HRESULT hr;
-
-    TRACE("\n");
-
-    hr = CoGetCallContext(&IID_IServerSecurity, (void **)&pSrvSec);
-    if (SUCCEEDED(hr))
-    {
-        hr = IServerSecurity_ImpersonateClient(pSrvSec);
-        IServerSecurity_Release(pSrvSec);
-    }
-
-    return hr;
-}
-
-/***********************************************************************
  *           CoRevertToSelf [OLE32.@]
  *
  * Ends the impersonation of the client of the currently executing server
