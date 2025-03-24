@@ -7,10 +7,10 @@ LANGUAGE LANG_FRENCH, SUBLANG_DEFAULT
 
 IDD_COLUMNLISTBOXSTYLES DIALOGEX 0, 0, 227, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Styles de boîtes de la liste de la colonne"
+CAPTION "Styles de la zone de liste en colonnes"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-   GROUPBOX "Styles des colonnes de la Liste", -1, 6, 7, 158, 71
+   GROUPBOX "Styles de la zone de liste en colonnes", -1, 6, 7, 158, 71
    CHECKBOX "&Standard", 1710, 10, 20, 42, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
    CHECKBOX "&Bordure", 1713, 10, 30, 34, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
    CHECKBOX "Tr&i", 1705, 10, 40, 26, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
