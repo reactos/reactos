@@ -155,10 +155,10 @@
 @ stdcall HACCEL_UserMarshal(ptr ptr ptr)
 @ stdcall HACCEL_UserSize(ptr long ptr)
 @ stdcall HACCEL_UserUnmarshal(ptr ptr ptr)
-@ stdcall HBITMAP_UserFree(ptr ptr)
-@ stdcall HBITMAP_UserMarshal(ptr ptr ptr)
-@ stdcall HBITMAP_UserSize(ptr long ptr)
-@ stdcall HBITMAP_UserUnmarshal(ptr ptr ptr)
+@ stdcall HBITMAP_UserFree(ptr ptr) combase.HBITMAP_UserFree
+@ stdcall HBITMAP_UserMarshal(ptr ptr ptr) combase.HBITMAP_UserMarshal
+@ stdcall HBITMAP_UserSize(ptr long ptr) combase.HBITMAP_UserSize
+@ stdcall HBITMAP_UserUnmarshal(ptr ptr ptr) combase.HBITMAP_UserUnmarshal
 @ stdcall HBRUSH_UserFree(ptr ptr) combase.HBRUSH_UserFree
 @ stdcall HBRUSH_UserMarshal(ptr ptr ptr) combase.HBRUSH_UserMarshal
 @ stdcall HBRUSH_UserSize(ptr long ptr) combase.HBRUSH_UserSize
