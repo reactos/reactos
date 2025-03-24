@@ -1777,58 +1777,6 @@ static HRESULT get_unmarshaler_from_stream(IStream *stream, IMarshal **marshal, 
     return hr;
 }
 
-/***********************************************************************
- *		CoGetMarshalSizeMax	[OLE32.@]
- *
- * Gets the maximum amount of data that will be needed by a marshal.
- *
- * PARAMS
- *  pulSize       [O] Address where maximum marshal size will be stored.
- *  riid          [I] Identifier of the interface to marshal.
- *  pUnk          [I] Pointer to the object to marshal.
- *  dwDestContext [I] Destination. Used to enable or disable optimizations.
- *  pvDestContext [I] Reserved. Must be NULL.
- *  mshlFlags     [I] Flags that affect the marshaling. See CoMarshalInterface().
- *
- * RETURNS
- *  Success: S_OK.
- *  Failure: HRESULT code.
- *
- * SEE ALSO
- *  CoMarshalInterface().
- */
-HRESULT WINAPI CoGetMarshalSizeMax(ULONG *pulSize, REFIID riid, IUnknown *pUnk,
-                                   DWORD dwDestContext, void *pvDestContext,
-                                   DWORD mshlFlags)
-{
-    HRESULT hr;
-    LPMARSHAL pMarshal;
-    BOOL std_marshal = FALSE;
-
-    if(!pUnk)
-        return E_POINTER;
-
-    hr = IUnknown_QueryInterface(pUnk, &IID_IMarshal, (void**)&pMarshal);
-    if (hr != S_OK)
-    {
-        std_marshal = TRUE;
-        hr = CoGetStandardMarshal(riid, pUnk, dwDestContext, pvDestContext,
-                                  mshlFlags, &pMarshal);
-    }
-    if (hr != S_OK)
-        return hr;
-
-    hr = IMarshal_GetMarshalSizeMax(pMarshal, riid, pUnk, dwDestContext,
-                                    pvDestContext, mshlFlags, pulSize);
-    if (!std_marshal)
-        /* add on the size of the whole OBJREF structure like native does */
-        *pulSize += sizeof(OBJREF);
-
-    IMarshal_Release(pMarshal);
-    return hr;
-}
-
-
 static void dump_MSHLFLAGS(MSHLFLAGS flags)
 {
     if (flags & MSHLFLAGS_TABLESTRONG)
