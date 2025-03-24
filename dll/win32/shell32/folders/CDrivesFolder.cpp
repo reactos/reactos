@@ -259,7 +259,7 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
 
         UINT idCmdFirst = pqcminfo->idCmdFirst;
         UINT idCmd = 0;
-        if (!(dwFlags & FILE_READ_ONLY_VOLUME) && nDriveType != DRIVE_REMOTE)
+        if (!(dwFlags & FILE_READ_ONLY_VOLUME) && nDriveType != DRIVE_REMOTE && cidl == 1)
         {
             /* add separator and Format */
             idCmd = idCmdFirst + CMDID_FORMAT;
