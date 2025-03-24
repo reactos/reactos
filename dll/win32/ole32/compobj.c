@@ -3714,56 +3714,6 @@ done:
 }
 
 /******************************************************************************
- *              CoGetTreatAsClass        [OLE32.@]
- *
- * Gets the TreatAs value of a class.
- *
- * PARAMS
- *  clsidOld [I] Class to get the TreatAs value of.
- *  clsidNew [I] The class the clsidOld should be treated as.
- *
- * RETURNS
- *  Success: S_OK.
- *  Failure: HRESULT code.
- *
- * SEE ALSO
- *  CoSetTreatAsClass
- */
-HRESULT WINAPI CoGetTreatAsClass(REFCLSID clsidOld, LPCLSID clsidNew)
-{
-    static const WCHAR wszTreatAs[] = {'T','r','e','a','t','A','s',0};
-    HKEY hkey = NULL;
-    WCHAR szClsidNew[CHARS_IN_GUID];
-    HRESULT res = S_OK;
-    LONG len = sizeof(szClsidNew);
-
-    TRACE("(%s,%p)\n", debugstr_guid(clsidOld), clsidNew);
-
-    if (!clsidOld || !clsidNew)
-        return E_INVALIDARG;
-
-    *clsidNew = *clsidOld; /* copy over old value */
-
-    res = COM_OpenKeyForCLSID(clsidOld, wszTreatAs, KEY_READ, &hkey);
-    if (FAILED(res))
-    {
-        res = S_FALSE;
-        goto done;
-    }
-    if (RegQueryValueW(hkey, NULL, szClsidNew, &len))
-    {
-        res = S_FALSE;
-	goto done;
-    }
-    res = CLSIDFromString(szClsidNew,clsidNew);
-    if (FAILED(res))
-        ERR("Failed CLSIDFromStringA(%s), hres 0x%08x\n", debugstr_w(szClsidNew), res);
-done:
-    if (hkey) RegCloseKey(hkey);
-    return res;
-}
-
-/******************************************************************************
  *		CoGetCurrentProcess	[OLE32.@]
  */
 DWORD WINAPI CoGetCurrentProcess(void)
