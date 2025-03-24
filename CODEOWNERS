@@ -338,6 +338,11 @@
 amd64/                                      @tkreuzer
 /boot/freeldr/freeldr/arch/realmode/amd64.S @tkreuzer
 
+# Wine DirectX
+#   M: The_DarkFire_, Justin Miller
+#   S: Upstream
+/dll/directx/wine/ @DarkFire01
+
 # Translations
 # This is the list of translation teams in ReactOS GitHub organization.
 # If you want to be part of one - hit us at https://chat.reactos.org/
