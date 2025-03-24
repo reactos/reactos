@@ -359,8 +359,8 @@ IMPL_WIREM_HANDLE(HACCEL)
 IMPL_WIREM_HANDLE(HMENU)
 IMPL_WIREM_HANDLE(HWND)
 IMPL_WIREM_HANDLE(HDC)
-#endif
 IMPL_WIREM_HANDLE(HICON)
+#endif
 IMPL_WIREM_HANDLE(HBRUSH)
 
 /******************************************************************************
