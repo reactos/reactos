@@ -3441,69 +3441,6 @@ HRESULT WINAPI DECLSPEC_HOTPATCH CoCreateInstanceEx(
 }
 
 /***********************************************************************
- *           CoGetInstanceFromIStorage [OLE32.@]
- */
-HRESULT WINAPI CoGetInstanceFromIStorage(
-  COSERVERINFO *server_info,
-  CLSID        *rclsid,
-  IUnknown     *outer,
-  DWORD         cls_context,
-  IStorage     *storage,
-  DWORD         count,
-  MULTI_QI     *results
-)
-{
-  IPersistStorage *ps = NULL;
-  IUnknown* unk = NULL;
-  STATSTG stat;
-  HRESULT hr;
-
-  if (count == 0 || !results || !storage)
-    return E_INVALIDARG;
-
-  if (server_info)
-    FIXME("() non-NULL server_info not supported\n");
-
-  init_multi_qi(count, results, E_NOINTERFACE);
-
-  /* optionally get CLSID from a file */
-  if (!rclsid)
-  {
-    memset(&stat.clsid, 0, sizeof(stat.clsid));
-    hr = IStorage_Stat(storage, &stat, STATFLAG_NONAME);
-    if (FAILED(hr))
-    {
-      ERR("failed to get CLSID from a file\n");
-      return hr;
-    }
-
-    rclsid = &stat.clsid;
-  }
-
-  hr = CoCreateInstance(rclsid,
-			outer,
-			cls_context,
-			&IID_IUnknown,
-			(void**)&unk);
-
-  if (hr != S_OK)
-    return hr;
-
-  /* init from IStorage */
-  hr = IUnknown_QueryInterface(unk, &IID_IPersistStorage, (void**)&ps);
-  if (FAILED(hr))
-      ERR("failed to get IPersistStorage\n");
-
-  if (ps)
-  {
-      IPersistStorage_Load(ps, storage);
-      IPersistStorage_Release(ps);
-  }
-
-  return return_multi_qi(unk, count, results, FALSE);
-}
-
-/***********************************************************************
  *           CoLoadLibrary (OLE32.@)
  *
  * Loads a library.
