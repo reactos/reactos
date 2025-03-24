@@ -2193,31 +2193,6 @@ HRESULT WINAPI CoDisconnectObject( LPUNKNOWN lpUnk, DWORD reserved )
 }
 
 /******************************************************************************
- *		StringFromCLSID	[OLE32.@]
- *		StringFromIID   [OLE32.@]
- *
- * Converts a GUID into the respective string representation.
- * The target string is allocated using the OLE IMalloc.
- *
- * PARAMS
- *  id    [I] the GUID to be converted.
- *  idstr [O] A pointer to a to-be-allocated pointer pointing to the resulting string.
- *
- * RETURNS
- *   S_OK
- *   E_FAIL
- *
- * SEE ALSO
- *  StringFromGUID2, CLSIDFromString
- */
-HRESULT WINAPI StringFromCLSID(REFCLSID id, LPOLESTR *idstr)
-{
-    if (!(*idstr = CoTaskMemAlloc(CHARS_IN_GUID * sizeof(WCHAR)))) return E_OUTOFMEMORY;
-    StringFromGUID2( id, *idstr, CHARS_IN_GUID );
-    return S_OK;
-}
-
-/******************************************************************************
  *		StringFromGUID2	[OLE32.@]
  *
  * Modified version of StringFromCLSID that allows you to specify max
