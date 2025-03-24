@@ -104,8 +104,10 @@ START_TEST(PathProcessCommand)
     s_PathProcessCommand = (FN_PathProcessCommand)
         GetProcAddress(GetModuleHandleW(L"shell32"), "PathProcessCommand");
     if (!s_PathProcessCommand)
+    {
         s_PathProcessCommand = (FN_PathProcessCommand)
             GetProcAddress(GetModuleHandleW(L"shell32"), MAKEINTRESOURCEA(653));
+    }
     if (!s_PathProcessCommand)
     {
         skip("PathProcessCommand not found\n");
