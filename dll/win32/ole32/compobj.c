@@ -4296,15 +4296,6 @@ HRESULT WINAPI CoGetContextToken( ULONG_PTR *token )
     return S_OK;
 }
 
-/***********************************************************************
- *           CoGetDefaultContext [OLE32.@]
- */
-HRESULT WINAPI CoGetDefaultContext(APTTYPE type, REFIID riid, LPVOID *ppv)
-{
-    FIXME("%d %s %p stub\n", type, debugstr_guid(riid), ppv);
-    return E_NOINTERFACE;
-}
-
 HRESULT Handler_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     static const WCHAR wszInprocHandler32[] = {'I','n','p','r','o','c','H','a','n','d','l','e','r','3','2',0};
