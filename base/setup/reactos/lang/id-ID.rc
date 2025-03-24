@@ -173,7 +173,7 @@ BEGIN
     IDS_TYPETITLE "Jenis Pemasangan"
     IDS_TYPESUBTITLE "Kamu bisa menyetel pemasangan baru ReactOS, atau memperbarui/meningkatkan pemasangan yang telah ada."
     IDS_UPDATETITLE "Perbarui atau Perbaiki ReactOS"
-    IDS_UPDATESUBTITLE "Pilih pemasangan ReactOS yang ada yang ingin kamu perbarui atau perbaiki.."
+    IDS_UPDATESUBTITLE "Pilih pemasangan ReactOS yang ada yang ingin kamu perbarui atau perbaiki."
     IDS_DEVICETITLE "Menyetel perangkat dasar"
     IDS_DEVICESUBTITLE "Setel pengaturan tampilan dan papan ketik."
     IDS_DRIVETITLE "Penyetelan pemasangan partisi dan folder sistem"
