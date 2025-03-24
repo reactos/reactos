@@ -10,15 +10,15 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_THEMES DIALOGEX 0, 0, 246, 210
-CAPTION "Themes"
+CAPTION "Teme"
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "O temă este un fundal plus un set de sunete, pictograme şi alte elemente care vă ajută să vă personalizaţi computerul cu un singur clic.", IDC_STATIC, 5, 5, 235, 30
     LTEXT "&Temă:", IDC_STATIC, 5, 42, 55, 10
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Salvează &ca…", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
-    PUSHBUTTON "Şt&erge", IDC_THEMES_DELETE, 170, 70, 70, 14
+    PUSHBUTTON "Salvare &ca…", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
+    PUSHBUTTON "Şt&ergere", IDC_THEMES_DELETE, 170, 70, 70, 14
     CONTROL "", IDC_THEMES_PREVIEW, "STATIC", SS_BITMAP, 5, 90, 235, 115, WS_EX_CLIENTEDGE
 END
 
@@ -30,32 +30,32 @@ BEGIN
     CONTROL "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
     CONTROL "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 8, 104, 174, 86
-    LTEXT "Selectaţi o imagine pentru a o folosi ca fundal de desktop:", IDC_STATIC, 8, 93, 230, 9//FIXME: add accel. I used "I&magine pentru a o folosi ca decor de birou:" for the backport
-    PUSHBUTTON "Spe&cificare…", IDC_BROWSE_BUTTON, 188, 104, 55, 15
-    PUSHBUTTON "C&uloare…", IDC_COLOR_BUTTON, 188, 167, 55, 15
-    LTEXT "Poziţie:", IDC_STATIC, 188, 128, 55, 9//FIXME: add accel. I used "&Poziţie:" for the backport
+    LTEXT "&Selectaţi o imagine pentru a o folosi ca fundal de desktop:", IDC_STATIC, 8, 93, 230, 9
+    PUSHBUTTON "&Răsfoire…", IDC_BROWSE_BUTTON, 188, 104, 55, 15
+    PUSHBUTTON "&Culoare…", IDC_COLOR_BUTTON, 188, 167, 55, 15
+    LTEXT "&Poziţie:", IDC_STATIC, 188, 128, 55, 9
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Personalizează &desktopul...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
+    PUSHBUTTON "Personalizare a &desktopului...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 202
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Regim de inactivitate"
+CAPTION "Economizor de ecran"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
-    GROUPBOX "P&rotector de ecran", IDC_SCREENS_DUMMY, 8, 92, 230, 52//FIXME: accelerator collision &R. I decided to use &P here for the backport to fix that
+    GROUPBOX "&Economizor de ecran", IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Setări", IDC_SCREENS_SETTINGS, 120, 102, 50, 15, WS_GROUP
     PUSHBUTTON "Pre&vizionare", IDC_SCREENS_TESTSC, 175, 102, 50, 15
-    LTEXT "În vigoare &după", IDC_WAITTEXT, 14, 125, 54, 9
+    LTEXT "Se &așteaptă", IDC_WAITTEXT, 14, 125, 54, 9
     EDITTEXT IDC_SCREENS_TIMEDELAY, 68, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 88, 123, 12, 13
     LTEXT "minute", IDC_MINTEXT, 102, 125, 23, 9
-    AUTOCHECKBOX "Solicită pa&rolă la revenire", IDC_SCREENS_USEPASSCHK, 129, 120, 96, 19//FIXME: accelerator collision &R
-    GROUPBOX "Mecanisme de gestiune a consumului", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
-    LTEXT "Pentru a ajusta setările de alimentare ale monitorului dvs., apăsaţi pe Setări de alimentare.", IDC_STATIC, 16, 161, 146, 27
+    AUTOCHECKBOX "Solicitare a pa&rolei la revenire", IDC_SCREENS_USEPASSCHK, 129, 120, 96, 19
+    GROUPBOX "Caracteristicile de economisire a energiei ale monitorului", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
+    LTEXT "Pentru a regla setările de alimentare pentru monitor, faceți clic pe Setări de alimentare.", IDC_STATIC, 16, 161, 146, 27
     PUSHBUTTON "Ali&mentare…", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
 END
 
@@ -65,48 +65,48 @@ CAPTION "Aspect"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "Stil vizual:", IDC_STATIC, 7, 130, 104, 9//FIXME: add accel. I used "&Stil vizual:" for the backport
+    LTEXT "Stil &vizual:", IDC_STATIC, 7, 130, 104, 9
     COMBOBOX IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Colorit:", IDC_STATIC, 7, 157, 104, 9//FIXME: add accel. I used "&Colorit:" for the backport
+    LTEXT "Schemă de &culori", IDC_STATIC, 7, 157, 104, 9
     COMBOBOX IDC_APPEARANCE_COLORSCHEME, 7, 167, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Dimensiune:", IDC_STATIC, 7, 184, 104, 9//FIXME: add accel. I used "&Dimensiune:" for the backport
+    LTEXT "&Dimensiune a fontului:", IDC_STATIC, 7, 184, 104, 9
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 194, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Efecte…", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
-    PUSHBUTTON "A&vansate…", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
+    PUSHBUTTON "&Complex…", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
 
 IDD_ADVAPPEARANCE DIALOGEX 0, 0, 250, 239
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Setări avansate"
+CAPTION "Aspect complex"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "Dacă selectaţi o temă alta decât ReactOS clasic, va suprascrie următoarele setări, cu excepţia unor programe mai vechi.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
+    LTEXT "Dacă selectați o altă temă decât ReactOS clasic, aceasta va înlocui următoarele setări, cu excepția unor programe mai vechi.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
     LTEXT "&Element", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Mărime", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
+    LTEXT "&Dimensiune", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP |
             UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
-    LTEXT "Culoare &1", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
+    LTEXT "Culoarea &1", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
-    LTEXT "Culoare &2", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
+    LTEXT "Culoarea &2", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
-    LTEXT "F&ont", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
+    LTEXT "&Tip caractere", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Mă&rime", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
+    LTEXT "Di&mensiune", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
     LTEXT "&Culoare", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9
     CHECKBOX "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
     AUTOCHECKBOX "A", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
     AUTOCHECKBOX "C", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
-    PUSHBUTTON "Anulare", IDCANCEL, 191, 220, 50, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 191, 220, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 137, 220, 50, 14
 END
 
@@ -116,18 +116,18 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Efecte vizuale"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTOCHECKBOX "Aplică &efect de tranziţie pentru meniuri şi ponturi:", IDC_EFFAPPEARANCE_ANIMATION, 10, 5, 267, 19
+    AUTOCHECKBOX "&Utilizare a următorului efect de tranziție pentru meniuri și sfaturi cu instrumente:", IDC_EFFAPPEARANCE_ANIMATION, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "&Rotunjeşte marginile de text folosind metoda:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
+    AUTOCHECKBOX "&Folosire a următoarei metode pentru a netezi marginile fonturilor de pe ecran:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "&Pictograme mari", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX "Afişează &umbre sub meniuri", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
-    AUTOCHECKBOX "Afişează ferestrele şi în timpul &mişcării lor", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
-    AUTOCHECKBOX "&Amână sublinierea literelor navigării din tastatură până la apăsarea tastei «Alt»", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19
-    AUTOCHECKBOX "F&oloseşte meniuri plate", IDC_EFFAPPEARANCE_FLATMENUS, 10, 140, 267, 19
-    PUSHBUTTON "Anulare", IDCANCEL, 226, 165, 50, 14
+    AUTOCHECKBOX "Se folosesc &pictograme mari", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX "Afişare a &umbrelor sub meniuri", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
+    AUTOCHECKBOX "Afișare a conținutului &ferestrei în timpul tragerii", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
+    AUTOCHECKBOX "&Ascunde litere subliniate pentru navigarea din tastatură până se apasă tasta Alt", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19
+    AUTOCHECKBOX "F&olosire a meniurilor plate", IDC_EFFAPPEARANCE_FLATMENUS, 10, 140, 267, 19
+    PUSHBUTTON "Revocare", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
 END
 
@@ -137,20 +137,20 @@ CAPTION "Setări"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_RESOLUTION_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
-    LTEXT "Trageţi pictogramele monitorului pentru a se potrivi cu aranjamentul fizic al monitoarelor dvs.", IDC_SETTINGS_MONTEXT, 3, 3, 240, 20
+    LTEXT "Trageți pictogramele monitorului pentru a se potrivi cu aranjamentul fizic al monitoarelor", IDC_SETTINGS_MONTEXT, 3, 3, 240, 20
     CONTROL "", IDC_SETTINGS_MONSEL, "MONITORSELWNDCLASS", WS_CHILD | WS_VISIBLE |
             WS_TABSTOP, 3, 23, 240, 82, WS_EX_CLIENTEDGE
-    LTEXT "&Dispozitive de afişare:", 1820, 3, 107, 75, 9
-    LTEXT "<nespecificat>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
-    GROUPBOX "Re&zoluţie ecran", 1818, 3, 127, 115, 43
+    LTEXT "&Afișare:", 1820, 3, 107, 75, 9
+    LTEXT "<nimic>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
+    GROUPBOX "&Zona ecranului", 1818, 3, 127, 115, 43
     CONTROL "", IDC_SETTINGS_RESOLUTION, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
-    LTEXT "Mică", 1815, 9, 137, 25, 9, NOT WS_GROUP
-    LTEXT "Mare", 1816, 93, 137, 20, 9, NOT WS_GROUP
+    LTEXT "Minim", 1815, 9, 137, 25, 9, NOT WS_GROUP
+    LTEXT "Maxim", 1816, 93, 137, 20, 9, NOT WS_GROUP
     LTEXT "", IDC_SETTINGS_RESOLUTION_TEXT, 10, 157, 100, 10, NOT WS_GROUP | SS_CENTER
-    GROUPBOX "Amplitudine &culoare", 1817, 125, 127, 115, 43
+    GROUPBOX "&Culori", 1817, 125, 127, 115, 43
     COMBOBOX IDC_SETTINGS_BPP, 131, 137, 103, 80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     CONTROL "", IDC_SETTINGS_SPECTRUM, "Static", SS_OWNERDRAW | SS_SUNKEN, 131, 155, 103, 9
-    PUSHBUTTON "A&vansate…", IDC_SETTINGS_ADVANCED, 170, 174, 70, 15
+    PUSHBUTTON "C&omplex…", IDC_SETTINGS_ADVANCED, 170, 174, 70, 15
 END
 
 IDD_DESKTOP_GENERAL DIALOGEX 0, 0, 293, 202
@@ -159,31 +159,31 @@ CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Pictograme de desktop", IDC_STATIC, 6, 4, 212, 40
-    AUTOCHECKBOX "&Documente", IDC_ICONS_MYDOCS, 14, 14, 100, 12
-    AUTOCHECKBOX "Locurile din &reţeaua mea", IDC_ICONS_MYNET, 116, 14, 100, 12//FIXME: accelerator collision &R
+    AUTOCHECKBOX "&Documentele mele", IDC_ICONS_MYDOCS, 14, 14, 100, 12
+    AUTOCHECKBOX "&Locațiile din reţeaua mea", IDC_ICONS_MYNET, 116, 14, 100, 12
     AUTOCHECKBOX "&Computerul meu", IDC_ICONS_MYCOMP, 14, 28, 100, 12
     AUTOCHECKBOX "&Navigatorul de Internet", IDC_ICONS_INTERNET, 116, 28, 100, 12
     CONTROL "", IDC_ICONS_LISTVIEW, "SysListView32",
             LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP | WS_HSCROLL,
             6, 60, 251, 54
-    PUSHBUTTON "&Schimbă pictograma...", IDC_ICONS_CHANGEICON, 70, 120, 80, 15
-    PUSHBUTTON "&Restabileşte valorile implicite", IDC_ICONS_SETDEFAULT, 154, 120, 103, 15//FIXME: accelerator collision &R
+    PUSHBUTTON "&Modificare pictogramă…", IDC_ICONS_CHANGEICON, 70, 120, 80, 15
+    PUSHBUTTON "R&estabilire valori implicite", IDC_ICONS_SETDEFAULT, 154, 120, 103, 15
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX 0, 0, 253, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Generale"
+CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Afişare", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Mărime font:", -1, 14, 20, 222, 9//FIXME: add accel. I used "&Mărime font:" for the backport. 2k3sp2 does now call this "&DPI setting:". Feel free to translate that.
+    LTEXT "Setare &DPI:", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Compatibilitate", -1, 7, 67, 237, 97
-    LTEXT "Unele programe funcţionează necorespunzător dacă nu reporniţi computerul după ce modificaţi setările de culoare.\n\nDupă ce schimb setările de culoare", -1, 12, 78, 228, 34
-    AUTORADIOBUTTON "&Reporneşte computerul înainte de a aplica noile setări de culoare", IDC_RESTART_RB, 14, 116, 228, 10
-    AUTORADIOBUTTON "Aplică noua &setări de culoare fără a repornire", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
-    AUTORADIOBUTTON "Întreabă-mă înainte de a aplica noile setări de culoare", IDC_ASKME_RB, 14, 146, 228, 10//FIXME: add accel. I used "Î&ntreabă-mă înainte de a aplica noile setări" for the backport
+    LTEXT "Unele programe funcționează necorespunzător dacă nu reporniți computerul după ce modificați setările de culoare.\n\nDupă ce schimb setările de culoare", -1, 12, 78, 228, 34
+    AUTORADIOBUTTON "Se &reporneşte computerul înainte de a aplica noile setări de culoare", IDC_RESTART_RB, 14, 116, 228, 10
+    AUTORADIOBUTTON "Se aplică noile &setări de culoare fără repornire", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
+    AUTORADIOBUTTON "Î&ntreabă-mă înainte de a aplica noile setări de culoare", IDC_ASKME_RB, 14, 146, 228, 10
 END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
@@ -193,8 +193,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Doriţi să păstraţi aceste setări de afişare?", IDC_STATIC, 7, 7, 219, 8
     LTEXT "", IDC_TIMEOUTTEXT, 7, 20, 219, 8
-    PUSHBUTTON "D&a", IDYES, 121, 36, 50, 14
-    DEFPUSHBUTTON "N&u", IDNO, 175, 36, 50, 14
+    PUSHBUTTON "&Da", IDYES, 121, 36, 50, 14
+    DEFPUSHBUTTON "&Nu", IDNO, 175, 36, 50, 14
 END
 
 IDR_PREVIEW_MENU MENU
@@ -211,7 +211,7 @@ BEGIN
         MENUITEM "&Ataşat", ID_MENU_ATTACHED
         MENUITEM "&Primar", ID_MENU_PRIMARY
         MENUITEM SEPARATOR
-        MENUITEM "I&dentificare", ID_MENU_IDENTIFY
+        MENUITEM "&Identificare", ID_MENU_IDENTIFY
         MENUITEM "P&roprietăţi", ID_MENU_PROPERTIES
     END
 END
@@ -235,31 +235,31 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MULTIPLEMONITORS "(monitoare multiple)"
-    IDS_UNKNOWNMONITOR "(monitor necunoscut)"
-    IDS_ADVANCEDTITLEFMT "%s cu %s"
+    IDS_MULTIPLEMONITORS "(Monitoare multiple)"
+    IDS_UNKNOWNMONITOR "(Monitor necunoscut)"
+    IDS_ADVANCEDTITLEFMT "%s și %s"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Afişaj"
-    IDS_CPLDESCRIPTION "Personalizează afişajului desktopului şi al protectorului de ecran."
-    IDS_NONE "(nespecificată)"
+    IDS_CPLNAME "Afişare"
+    IDS_CPLDESCRIPTION "Personalizează afișarea desktopului și economizorului de ecran."
+    IDS_NONE "(Nimic)"
     IDS_CENTER "Centrat"
     IDS_STRETCH "Extins"
-    IDS_TILE "Tapiţat"
-    IDS_FIT "Potrivit"
+    IDS_TILE "Mozaic"
+    IDS_FIT "Potrivire"
     IDS_FILL "Umplere"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_COLOR_4BIT "Joasă (4 biţi, 16 culori)"
-    IDS_COLOR_8BIT "Limitată (8 biţi, 256 culori)"
-    IDS_COLOR_16BIT "Înaltă (16 biţi, > 65k culori)"
-    IDS_COLOR_24BIT "Foto (24 biţi, > 16M culori)"
-    IDS_COLOR_32BIT "Maximă (32 biţi, > 16M culori)"
-    IDS_PIXEL "%lux%lu pixeli"
+    IDS_COLOR_4BIT "16 culori"
+    IDS_COLOR_8BIT "256 de culori"
+    IDS_COLOR_16BIT "Culori înalte (16 biți)"
+    IDS_COLOR_24BIT "Culori adevărate (24 de biți)"
+    IDS_COLOR_32BIT "Culori adevărate (32 de biți)"
+    IDS_PIXEL "%lux%lu (de) pixeli"
 END
 
 STRINGTABLE
@@ -271,16 +271,16 @@ STRINGTABLE
 BEGIN
     IDS_INACTWIN "Fereastră inactivă"
     IDS_ACTWIN "Fereastră activă"
-    IDS_WINTEXT "Text în fereastră"
-    IDS_MESSBOX "Fereastră mesaj"
-    IDS_MESSTEXT "Text mesaj"
-    IDS_BUTTEXT "Î&nchide"
-    IDS_CLASSIC_THEME "Temă clasică"
+    IDS_WINTEXT "Textul ferestrei"
+    IDS_MESSBOX "Casetă de mesaje"
+    IDS_MESSTEXT "Casetă de mesaje"
+    IDS_BUTTEXT "OK"
+    IDS_CLASSIC_THEME "Tema clasică"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ELEMENT_0 "Fundal"
+    IDS_ELEMENT_0 "Desktop"
     IDS_ELEMENT_1 "Titlul ferestrelor inactive"
     IDS_ELEMENT_2 "Chenarul ferestrelor inactive"
     IDS_ELEMENT_3 "Titlul ferestrelor active"
@@ -290,13 +290,13 @@ BEGIN
     IDS_ELEMENT_7 "Ferestre"
     IDS_ELEMENT_8 "Bare de defilare"
     IDS_ELEMENT_9 "Obiecte 3D"
-    IDS_ELEMENT_10 "Titlu paletă"
-    IDS_ELEMENT_11 "Bară de titlu"
+    IDS_ELEMENT_10 "Titlul paletei"
+    IDS_ELEMENT_11 "Butoane pentru bara de titlu"
     IDS_ELEMENT_12 "Fereastră de dialog"
-    IDS_ELEMENT_13 "Fundal aplicaţie"
-    IDS_ELEMENT_14 "Distanţă simbol (orizontal)"
-    IDS_ELEMENT_15 "Distanţă simbol (vertical)"
-    IDS_ELEMENT_16 "Pont"
+    IDS_ELEMENT_13 "Fundalul aplicaţiei"
+    IDS_ELEMENT_14 "Distanţa pictogramei (orizontală)"
+    IDS_ELEMENT_15 "Distanţa pictogramei (verticală)"
+    IDS_ELEMENT_16 "Informații rapide"
     IDS_ELEMENT_17 "Simbol"
 //  IDS_ELEMENT_18 "Elemente de meniu dezactivate"
 END
@@ -304,7 +304,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_DISPLAY_SETTINGS "Setări de afişare"
-    IDS_APPLY_FAILED "Nu s-au putut aplica noile setări."
-    IDS_APPLY_NEEDS_RESTART "Trebuie să reporniţi computerul înainte să aplicaţi noile setări."
+    IDS_APPLY_FAILED "Imposibil de aplicat noile setări…"
+    IDS_APPLY_NEEDS_RESTART "Trebuie să reporniți computerul pentru a aplica modificările."
     IDS_TIMEOUTTEXT "Revenire la setările anterioare în %d secunde."
 END
