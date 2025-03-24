@@ -8,4 +8,5 @@
 #pragma once
 
 VOID
+APIENTRY
 DxStartupDxgkInt(VOID);

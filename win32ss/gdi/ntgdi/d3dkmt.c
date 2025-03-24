@@ -21,7 +21,8 @@ static REACTOS_WIN32K_DXGKRNL_INTERFACE DxgAdapterCallbacks = {0};
  * Dxg gets start inevitably anyway it seems at least on vista.
  */
 VOID
-DxStartupDxgkInt()
+APIENTRY
+DxStartupDxgkInt(VOID)
 {
     DPRINT("DxStartupDxgkInt: Entry\n");
     /*
@@ -40,16 +41,16 @@ NtGdiDdDDICheckExclusiveOwnership(VOID)
 
 NTSTATUS
 APIENTRY
-NtGdiDdDDIGetProcessSchedulingPriorityClass(_In_  HANDLE                                unnamedParam1,
-                                            _Out_ D3DKMT_SCHEDULINGPRIORITYCLASS        *unnamedParam2)
+NtGdiDdDDIGetProcessSchedulingPriorityClass(_In_  HANDLE unnamedParam1,
+                                            _Out_ D3DKMT_SCHEDULINGPRIORITYCLASS *unnamedParam2)
 {
     return 1;
 }
 
 NTSTATUS
 APIENTRY
-NtGdiDdDDISetProcessSchedulingPriorityClass(_In_ HANDLE                                     unnamedParam1,
-                                            _In_ D3DKMT_SCHEDULINGPRIORITYCLASS             unnamedParam2)
+NtGdiDdDDISetProcessSchedulingPriorityClass(_In_ HANDLE unnamedParam1,
+                                            _In_ D3DKMT_SCHEDULINGPRIORITYCLASS unnamedParam2)
 {
     return 1;
 }
