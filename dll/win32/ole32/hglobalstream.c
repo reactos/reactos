@@ -224,8 +224,6 @@ static HGLOBALStreamImpl *hglobalstream_construct(void)
 
     if (This)
     {
-        This->IStream_iface.lpVtbl = &HGLOBALStreamImplVtbl;
-        This->ref = 1;
         This->handle = NULL;
         This->currentPosition.QuadPart = 0;
     }
