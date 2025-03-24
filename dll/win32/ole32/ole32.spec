@@ -87,7 +87,7 @@
 @ stdcall CoRegisterChannelHook(ptr ptr)
 @ stdcall CoRegisterClassObject(ptr ptr long long ptr)
 @ stdcall CoRegisterInitializeSpy(ptr ptr)
-@ stdcall CoRegisterMallocSpy(ptr) combase.CoRegisterMallocSpy
+@ stdcall CoRegisterMallocSpy(ptr)
 @ stdcall CoRegisterMessageFilter(ptr ptr)
 @ stdcall CoRegisterPSClsid(ptr ptr)
 @ stdcall CoRegisterSurrogate(ptr)
@@ -124,7 +124,7 @@
 @ stdcall CreateClassMoniker(ptr ptr)
 @ stdcall CreateDataAdviseHolder(ptr)
 @ stdcall CreateDataCache(ptr ptr ptr ptr)
-@ stdcall CreateErrorInfo(ptr) combase.CreateErrorInfo
+@ stdcall CreateErrorInfo(ptr)
 @ stdcall CreateFileMoniker(wstr ptr)
 @ stdcall CreateGenericComposite(ptr ptr ptr)
 @ stdcall CreateILockBytesOnHGlobal(ptr long ptr)
@@ -142,7 +142,7 @@
 @ stdcall DoDragDrop(ptr ptr long ptr)
 @ stub EnableHookObject
 @ stdcall FmtIdToPropStgName(ptr wstr)
-@ stdcall FreePropVariantArray(long ptr) combase.FreePropVariantArray
+@ stdcall FreePropVariantArray(long ptr)
 @ stdcall GetClassFile(wstr ptr)
 @ stdcall GetConvertStg(ptr)
 @ stub GetDocumentBitStg
@@ -175,8 +175,8 @@
 @ stdcall HGLOBAL_UserMarshal(ptr ptr ptr)
 @ stdcall HGLOBAL_UserSize(ptr long ptr)
 @ stdcall HGLOBAL_UserUnmarshal(ptr ptr ptr)
-@ stdcall HICON_UserFree(ptr ptr) combase.HICON_UserFree
-@ stdcall HICON_UserMarshal(ptr ptr ptr) combase.HICON_UserMarshal
+@ stdcall HICON_UserFree(ptr ptr)
+@ stdcall HICON_UserMarshal(ptr ptr ptr)
 @ stdcall HICON_UserSize(ptr long ptr) 
 @ stdcall HICON_UserUnmarshal(ptr ptr ptr)
 @ stdcall HMENU_UserFree(ptr ptr)
@@ -269,7 +269,7 @@
 @ stdcall PropStgNameToFmtId(wstr ptr)
 @ stdcall PropSysAllocString(wstr)
 @ stdcall PropSysFreeString(wstr)
-@ stdcall PropVariantClear(ptr) combase.PropVariantClear
+@ stdcall PropVariantClear(ptr)
 @ stdcall PropVariantCopy(ptr ptr)
 @ stdcall ReadClassStg(ptr ptr)
 @ stdcall ReadClassStm(ptr ptr)
