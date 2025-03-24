@@ -2207,24 +2207,3 @@ HRESULT MARSHAL_GetStandardMarshalCF(LPVOID *ppv)
     *ppv = &StdMarshalCF;
     return S_OK;
 }
-
-/***********************************************************************
- *		CoUnmarshalHresult	[OLE32.@]
- *
- * Unmarshals an HRESULT value from a stream.
- *
- * PARAMS
- *  pStm     [I] Stream that hresult will be unmarshalled from.
- *  phresult [I] Pointer to HRESULT where the value will be unmarshalled to.
- *
- * RETURNS
- *  Success: S_OK
- *  Failure: A COM error code
- *
- * SEE ALSO
- *  CoMarshalHresult().
- */
-HRESULT WINAPI CoUnmarshalHresult(LPSTREAM pStm, HRESULT * phresult)
-{
-    return IStream_Read(pStm, phresult, sizeof(*phresult), NULL);
-}
