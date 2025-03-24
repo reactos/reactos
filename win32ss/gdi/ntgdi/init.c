@@ -76,7 +76,6 @@ GdiThreadDestroy(PETHREAD Thread)
 }
 
 BOOL
-APIENTRY
 InitializeGreCSRSS(VOID)
 {
     /* Initialize Dxgkrnl interfaces and run startup routine */
