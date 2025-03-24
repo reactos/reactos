@@ -158,15 +158,6 @@ HGLOBAL WINAPI OleMetafilePictFromIconAndLabel(HICON hIcon, LPOLESTR lpszLabel,
 	return hmem;
 }
 
-/***********************************************************************
- *      CoGetActivationState (ole32.@)
- */
-HRESULT WINAPI CoGetActivationState(GUID guid, DWORD unknown, DWORD *unknown2)
-{
-    FIXME("%s, %x, %p\n", debugstr_guid(&guid), unknown, unknown2);
-    return E_NOTIMPL;
-}
-
 /******************************************************************************
  *		IsValidInterface	[OLE32.@]
  *
