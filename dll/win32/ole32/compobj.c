@@ -2192,32 +2192,6 @@ HRESULT WINAPI CoDisconnectObject( LPUNKNOWN lpUnk, DWORD reserved )
     return S_OK;
 }
 
-/******************************************************************************
- *		CoCreateGuid [OLE32.@]
- *
- * Simply forwards to UuidCreate in RPCRT4.
- *
- * PARAMS
- *  pguid [O] Points to the GUID to initialize.
- *
- * RETURNS
- *  Success: S_OK.
- *  Failure: HRESULT code.
- *
- * SEE ALSO
- *   UuidCreate
- */
-HRESULT WINAPI CoCreateGuid(GUID *pguid)
-{
-    DWORD status;
-
-    if(!pguid) return E_INVALIDARG;
-
-    status = UuidCreate(pguid);
-    if (status == RPC_S_OK || status == RPC_S_UUID_LOCAL_ONLY) return S_OK;
-    return HRESULT_FROM_WIN32( status );
-}
-
 static inline BOOL is_valid_hex(WCHAR c)
 {
     if (!(((c >= '0') && (c <= '9'))  ||
