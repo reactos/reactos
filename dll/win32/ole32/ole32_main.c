@@ -167,15 +167,6 @@ HRESULT WINAPI CoGetActivationState(GUID guid, DWORD unknown, DWORD *unknown2)
     return E_NOTIMPL;
 }
 
-/***********************************************************************
- *      CoGetCallState (ole32.@)
- */
-HRESULT WINAPI CoGetCallState(int unknown, PULONG unknown2)
-{
-    FIXME("%d, %p\n", unknown, unknown2);
-    return E_NOTIMPL;
-}
-
 /******************************************************************************
  *		IsValidInterface	[OLE32.@]
  *
