@@ -85,7 +85,7 @@ static inline struct proxy_manager *impl_from_IClientSecurity( IClientSecurity *
     return CONTAINING_RECORD(iface, struct proxy_manager, IClientSecurity_iface);
 }
 
-static HRESULT unmarshal_object(const STDOBJREF *stdobjref, APARTMENT *apt,
+static HRESULT unmarshal_object(const STDOBJREF *stdobjref, struct apartment *apt,
                                 MSHCTX dest_context, void *dest_context_data,
                                 REFIID riid, const OXID_INFO *oxid_info,
                                 void **object);
@@ -118,7 +118,7 @@ static inline HRESULT get_facbuf_for_iid(REFIID riid, IPSFactoryBuffer **facbuf)
 }
 
 /* marshals an object into a STDOBJREF structure */
-HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnknown *object,
+HRESULT marshal_object(struct apartment *apt, STDOBJREF *stdobjref, REFIID riid, IUnknown *object,
     DWORD dest_context, void *dest_context_data, MSHLFLAGS mshlflags)
 {
     struct stub_manager *manager;
@@ -310,7 +310,7 @@ static HRESULT WINAPI ClientIdentity_QueryMultipleInterfaces(IMultiQI *iface, UL
          * the interfaces were returned */
         if (SUCCEEDED(hr))
         {
-            APARTMENT *apt = apartment_get_current_or_mta();
+            struct apartment *apt = apartment_get_current_or_mta();
 
             /* try to unmarshal each object returned to us */
             for (i = 0; i < nonlocal_mqis; i++)
@@ -791,7 +791,7 @@ static void ifproxy_destroy(struct ifproxy * This)
 }
 
 static HRESULT proxy_manager_construct(
-    APARTMENT * apt, ULONG sorflags, OXID oxid, OID oid,
+    struct apartment * apt, ULONG sorflags, OXID oxid, OID oid,
     const OXID_INFO *oxid_info, struct proxy_manager ** proxy_manager)
 {
     struct proxy_manager * This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
@@ -1197,7 +1197,7 @@ static void proxy_manager_destroy(struct proxy_manager * This)
 /* finds the proxy manager corresponding to a given OXID and OID that has
  * been unmarshaled in the specified apartment. The caller must release the
  * reference to the proxy_manager when the object is no longer used. */
-static BOOL find_proxy_manager(APARTMENT * apt, OXID oxid, OID oid, struct proxy_manager ** proxy_found)
+static BOOL find_proxy_manager(struct apartment * apt, OXID oxid, OID oid, struct proxy_manager ** proxy_found)
 {
     BOOL found = FALSE;
     struct list * cursor;
@@ -1306,7 +1306,7 @@ StdMarshalImpl_MarshalInterface(
 {
     ULONG                 res;
     HRESULT               hres;
-    APARTMENT *apt;
+    struct apartment *apt;
     OBJREF objref;
 
     TRACE("(...,%s,...)\n", debugstr_guid(riid));
@@ -1337,7 +1337,7 @@ StdMarshalImpl_MarshalInterface(
 /* helper for StdMarshalImpl_UnmarshalInterface - does the unmarshaling with
  * no questions asked about the rules surrounding same-apartment unmarshals
  * and table marshaling */
-static HRESULT unmarshal_object(const STDOBJREF *stdobjref, APARTMENT *apt,
+static HRESULT unmarshal_object(const STDOBJREF *stdobjref, struct apartment *apt,
                                 MSHCTX dest_context, void *dest_context_data,
                                 REFIID riid, const OXID_INFO *oxid_info,
                                 void **object)
@@ -1413,8 +1413,7 @@ static HRESULT std_unmarshal_interface(MSHCTX dest_context, void *dest_context_d
     struct OR_STANDARD obj;
     ULONG res;
     HRESULT hres;
-    APARTMENT *apt;
-    APARTMENT *stub_apt;
+    struct apartment *apt, *stub_apt;
     OXID oxid;
 
     TRACE("(...,%s,....)\n", debugstr_guid(riid));
@@ -1540,7 +1539,7 @@ static HRESULT std_release_marshal_data(IStream *pStm)
     ULONG                res;
     HRESULT              hres;
     struct stub_manager *stubmgr;
-    APARTMENT           *apt;
+    struct apartment    *apt;
 
     hres = IStream_Read(pStm, &obj, FIELD_OFFSET(struct OR_STANDARD, saResAddr.aStringArray), &res);
     if (hres != S_OK) return STG_E_READFAULT;

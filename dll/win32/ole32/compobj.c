@@ -73,8 +73,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
  * This section defines variables internal to the COM module.
  */
 
-static APARTMENT *MTA; /* protected by csApartment */
-static APARTMENT *MainApartment; /* the first STA apartment */
+static struct apartment *MTA; /* protected by csApartment */
+static struct apartment *MainApartment; /* the first STA apartment */
 static struct list apts = LIST_INIT( apts ); /* protected by csApartment */
 
 static CRITICAL_SECTION csApartment;
@@ -176,7 +176,7 @@ struct LocalServer
 {
     IServiceProvider IServiceProvider_iface;
     LONG ref;
-    APARTMENT *apt;
+    struct apartment *apt;
     IStream *marshal_stream;
 };
 
@@ -614,9 +614,9 @@ static DWORD apartment_addref(struct apartment *apt)
 
 /* allocates memory and fills in the necessary fields for a new apartment
  * object. must be called inside apartment cs */
-static APARTMENT *apartment_construct(DWORD model)
+static struct apartment *apartment_construct(DWORD model)
 {
-    APARTMENT *apt;
+    struct apartment *apt;
 
     TRACE("creating new apartment, model=%d\n", model);
 
@@ -657,9 +657,9 @@ static APARTMENT *apartment_construct(DWORD model)
 /* gets and existing apartment if one exists or otherwise creates an apartment
  * structure which stores OLE apartment-local information and stores a pointer
  * to it in the thread-local storage */
-static APARTMENT *apartment_get_or_create(DWORD model)
+static struct apartment *apartment_get_or_create(DWORD model)
 {
-    APARTMENT *apt = COM_CurrentApt();
+    struct apartment *apt = COM_CurrentApt();
 
     if (!apt)
     {
@@ -705,7 +705,7 @@ static APARTMENT *apartment_get_or_create(DWORD model)
     return apt;
 }
 
-static inline BOOL apartment_is_model(const APARTMENT *apt, DWORD model)
+static inline BOOL apartment_is_model(const struct apartment *apt, DWORD model)
 {
     return (apt->multi_threaded == !(model & COINIT_APARTMENTTHREADED));
 }
@@ -713,9 +713,9 @@ static inline BOOL apartment_is_model(const APARTMENT *apt, DWORD model)
 /* gets the multi-threaded apartment if it exists. The caller must
  * release the reference from the apartment as soon as the apartment pointer
  * is no longer required. */
-static APARTMENT *apartment_find_mta(void)
+static struct apartment *apartment_find_mta(void)
 {
-    APARTMENT *apt;
+    struct apartment *apt;
 
     EnterCriticalSection(&csApartment);
 
@@ -729,9 +729,9 @@ static APARTMENT *apartment_find_mta(void)
 
 /* Return the current apartment if it exists, or, failing that, the MTA. Caller
  * must free the returned apartment in either case. */
-APARTMENT *apartment_get_current_or_mta(void)
+struct apartment *apartment_get_current_or_mta(void)
 {
-    APARTMENT *apt = COM_CurrentApt();
+    struct apartment *apt = COM_CurrentApt();
     if (apt)
     {
         apartment_addref(apt);
@@ -965,7 +965,7 @@ static ULONG WINAPI LocalServer_Release(IServiceProvider *iface)
 static HRESULT WINAPI LocalServer_QueryService(IServiceProvider *iface, REFGUID guid, REFIID riid, void **ppv)
 {
     LocalServer *This = impl_from_IServiceProvider(iface);
-    APARTMENT *apt = COM_CurrentApt();
+    struct apartment *apt = COM_CurrentApt();
     RegisteredClass *iter;
     HRESULT hres = E_FAIL;
 
@@ -997,7 +997,7 @@ static const IServiceProviderVtbl LocalServerVtbl = {
     LocalServer_QueryService
 };
 
-static HRESULT get_local_server_stream(APARTMENT *apt, IStream **ret)
+static HRESULT get_local_server_stream(struct apartment *apt, IStream **ret)
 {
     HRESULT hres = S_OK;
 
@@ -1063,7 +1063,7 @@ HRESULT WINAPI DECLSPEC_HOTPATCH CoRevokeClassObject(
 {
   HRESULT hr = E_INVALIDARG;
   RegisteredClass *curClass;
-  APARTMENT *apt;
+  struct apartment *apt;
 
   TRACE("(%08x)\n",dwRegister);
 
@@ -1248,9 +1248,9 @@ DWORD apartment_release(struct apartment *apt)
  * The ref parameter is here mostly to ensure people remember that
  * they get one, you should normally take a ref for thread safety.
  */
-APARTMENT *apartment_findfromoxid(OXID oxid, BOOL ref)
+struct apartment *apartment_findfromoxid(OXID oxid, BOOL ref)
 {
-    APARTMENT *result = NULL;
+    struct apartment *result = NULL;
     struct list *cursor;
 
     EnterCriticalSection(&csApartment);
@@ -1272,9 +1272,9 @@ APARTMENT *apartment_findfromoxid(OXID oxid, BOOL ref)
 /* gets the apartment which has a given creator thread ID. The caller must
  * release the reference from the apartment as soon as the apartment pointer
  * is no longer required. */
-APARTMENT *apartment_findfromtid(DWORD tid)
+struct apartment *apartment_findfromtid(DWORD tid)
 {
-    APARTMENT *result = NULL;
+    struct apartment *result = NULL;
     struct list *cursor;
 
     EnterCriticalSection(&csApartment);
@@ -1296,9 +1296,9 @@ APARTMENT *apartment_findfromtid(DWORD tid)
 /* gets the main apartment if it exists. The caller must
  * release the reference from the apartment as soon as the apartment pointer
  * is no longer required. */
-static APARTMENT *apartment_findmain(void)
+static struct apartment *apartment_findmain(void)
 {
-    APARTMENT *result;
+    struct apartment *result;
 
     EnterCriticalSection(&csApartment);
 
@@ -1554,7 +1554,7 @@ static HRESULT apartment_hostobject_in_hostapt(
 
     if (!multi_threaded && main_apartment)
     {
-        APARTMENT *host_apt = apartment_findmain();
+        struct apartment *host_apt = apartment_findmain();
         if (host_apt)
         {
             apartment_hwnd = apartment_getwindow(host_apt);
@@ -1607,7 +1607,7 @@ static HRESULT apartment_hostobject_in_hostapt(
      * us to create the thread for the host apartment */
     if (!apartment_hwnd && !multi_threaded && main_apartment)
     {
-        APARTMENT *host_apt = apartment_findmain();
+        struct apartment *host_apt = apartment_findmain();
         if (host_apt)
         {
             apartment_hwnd = apartment_getwindow(host_apt);
@@ -2014,7 +2014,7 @@ HRESULT WINAPI CoDisconnectObject( LPUNKNOWN lpUnk, DWORD reserved )
     struct stub_manager *manager;
     HRESULT hr;
     IMarshal *marshal;
-    APARTMENT *apt;
+    struct apartment *apt;
 
     TRACE("(%p, 0x%08x)\n", lpUnk, reserved);
 
@@ -2209,7 +2209,7 @@ HRESULT WINAPI CoRegisterClassObject(
   RegisteredClass* newClass;
   LPUNKNOWN        foundObject;
   HRESULT          hr;
-  APARTMENT *apt;
+  struct apartment *apt;
 
   TRACE("(%s,%p,0x%08x,0x%08x,%p)\n",
 	debugstr_guid(rclsid),pUnk,dwClsContext,flags,lpdwRegister);
@@ -2327,7 +2327,7 @@ static enum comclass_threadingmodel get_threading_model(const struct class_reg_d
         return data->u.actctx.threading_model;
 }
 
-static HRESULT get_inproc_class_object(APARTMENT *apt, const struct class_reg_data *regdata,
+static HRESULT get_inproc_class_object(struct apartment *apt, const struct class_reg_data *regdata,
                                        REFCLSID rclsid, REFIID riid,
                                        BOOL hostifnecessary, void **ppv)
 {
@@ -2411,7 +2411,7 @@ HRESULT WINAPI DECLSPEC_HOTPATCH CoGetClassObject(
     struct class_reg_data clsreg = { 0 };
     IUnknown *regClassObject;
     HRESULT	hres = E_UNEXPECTED;
-    APARTMENT  *apt;
+    struct apartment *apt;
 
     TRACE("CLSID: %s,IID: %s\n", debugstr_guid(rclsid), debugstr_guid(iid));
 
@@ -3156,7 +3156,7 @@ HRESULT Handler_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 HRESULT WINAPI CoGetApartmentType(APTTYPE *type, APTTYPEQUALIFIER *qualifier)
 {
     struct oletls *info = COM_CurrentInfo();
-    APARTMENT *apt;
+    struct apartment *apt;
 
     TRACE("(%p, %p)\n", type, qualifier);
 

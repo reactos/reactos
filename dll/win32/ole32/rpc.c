@@ -630,7 +630,7 @@ static HRESULT WINAPI ClientRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface,
     ULONG extension_count;
     IPID ipid;
     HRESULT hr;
-    APARTMENT *apt = NULL;
+    struct apartment *apt = NULL;
 
     TRACE("(%p)->(%p,%s)\n", This, olemsg, debugstr_guid(riid));
 
@@ -803,7 +803,7 @@ static DWORD WINAPI rpc_sendreceive_thread(LPVOID param)
     return 0;
 }
 
-static inline HRESULT ClientRpcChannelBuffer_IsCorrectApartment(ClientRpcChannelBuffer *This, APARTMENT *apt)
+static inline HRESULT ClientRpcChannelBuffer_IsCorrectApartment(ClientRpcChannelBuffer *This, struct apartment *apt)
 {
     OXID oxid;
     if (!apt)
@@ -827,7 +827,7 @@ static HRESULT WINAPI ClientRpcChannelBuffer_SendReceive(LPRPCCHANNELBUFFER ifac
     ORPC_EXTENT_ARRAY orpc_ext_array;
     WIRE_ORPC_EXTENT *first_wire_orpc_extent = NULL;
     HRESULT hrFault = S_OK;
-    APARTMENT *apt = apartment_get_current_or_mta();
+    struct apartment *apt = apartment_get_current_or_mta();
 
     TRACE("(%p) iMethod=%d\n", olemsg, olemsg->iMethod);
 
@@ -1095,7 +1095,7 @@ static const IRpcChannelBufferVtbl ServerRpcChannelBufferVtbl =
 HRESULT RPC_CreateClientChannel(const OXID *oxid, const IPID *ipid,
                                 const OXID_INFO *oxid_info, const IID *iid,
                                 DWORD dest_context, void *dest_context_data,
-                                IRpcChannelBuffer **chan, APARTMENT *apt)
+                                IRpcChannelBuffer **chan, struct apartment *apt)
 {
     ClientRpcChannelBuffer *This;
     WCHAR                   endpoint[200];
@@ -1444,7 +1444,7 @@ static void __RPC_STUB dispatch_rpc(RPC_MESSAGE *msg)
 {
     struct dispatch_params *params;
     struct stub_manager *stub_manager;
-    APARTMENT *apt;
+    struct apartment *apt;
     IPID ipid;
     HRESULT hr;
 

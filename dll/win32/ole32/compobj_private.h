@@ -40,7 +40,6 @@
 #include "winternl.h"
 
 struct apartment;
-typedef struct apartment APARTMENT;
 typedef struct LocalServer LocalServer;
 
 DEFINE_OLEGUID( CLSID_DfMarshal, 0x0000030b, 0, 0 );
@@ -89,7 +88,7 @@ struct stub_manager
     struct list       entry;      /* entry in apartment stubmgr list (CS apt->cs) */
     struct list       ifstubs;    /* list of active ifstubs for the object (CS lock) */
     CRITICAL_SECTION  lock;
-    APARTMENT        *apt;        /* owning apt (RO) */
+    struct apartment *apt;        /* owning apt (RO) */
 
     ULONG             extrefs;    /* number of 'external' references (CS lock) */
     ULONG             refs;       /* internal reference count (CS apt->cs) */
@@ -203,17 +202,18 @@ ULONG stub_manager_ext_release(struct stub_manager *m, ULONG refs, BOOL tablewea
 struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *sb, REFIID iid,
      DWORD dest_context, void *dest_context_data, MSHLFLAGS flags) DECLSPEC_HIDDEN;
 struct ifstub *stub_manager_find_ifstub(struct stub_manager *m, REFIID iid, MSHLFLAGS flags) DECLSPEC_HIDDEN;
-struct stub_manager *get_stub_manager(APARTMENT *apt, OID oid) DECLSPEC_HIDDEN;
-struct stub_manager *get_stub_manager_from_object(APARTMENT *apt, IUnknown *object, BOOL alloc) DECLSPEC_HIDDEN;
+struct stub_manager *get_stub_manager(struct apartment *apt, OID oid) DECLSPEC_HIDDEN;
+struct stub_manager *get_stub_manager_from_object(struct apartment *apt, IUnknown *object, BOOL alloc) DECLSPEC_HIDDEN;
 BOOL stub_manager_notify_unmarshal(struct stub_manager *m, const IPID *ipid) DECLSPEC_HIDDEN;
 BOOL stub_manager_is_table_marshaled(struct stub_manager *m, const IPID *ipid) DECLSPEC_HIDDEN;
 void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs, const IPID *ipid, BOOL tableweak) DECLSPEC_HIDDEN;
 void stub_manager_disconnect(struct stub_manager *m) DECLSPEC_HIDDEN;
-HRESULT ipid_get_dispatch_params(const IPID *ipid, APARTMENT **stub_apt, struct stub_manager **manager, IRpcStubBuffer **stub,
+HRESULT ipid_get_dispatch_params(const IPID *ipid, struct apartment **stub_apt, struct stub_manager **manager, IRpcStubBuffer **stub,
                                  IRpcChannelBuffer **chan, IID *iid, IUnknown **iface) DECLSPEC_HIDDEN;
-HRESULT start_apartment_remote_unknown(APARTMENT *apt) DECLSPEC_HIDDEN;
+HRESULT start_apartment_remote_unknown(struct apartment *apt) DECLSPEC_HIDDEN;
 
-HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnknown *obj, DWORD dest_context, void *dest_context_data, MSHLFLAGS mshlflags) DECLSPEC_HIDDEN;
+HRESULT marshal_object(struct apartment *apt, STDOBJREF *stdobjref, REFIID riid, IUnknown *obj, DWORD dest_context,
+        void *dest_context_data, MSHLFLAGS mshlflags) DECLSPEC_HIDDEN;
 
 /* RPC Backend */
 
@@ -223,7 +223,7 @@ void    RPC_StartRemoting(struct apartment *apt) DECLSPEC_HIDDEN;
 HRESULT RPC_CreateClientChannel(const OXID *oxid, const IPID *ipid,
                                 const OXID_INFO *oxid_info, const IID *iid,
                                 DWORD dest_context, void *dest_context_data,
-                                IRpcChannelBuffer **chan, APARTMENT *apt) DECLSPEC_HIDDEN;
+                                IRpcChannelBuffer **chan, struct apartment *apt) DECLSPEC_HIDDEN;
 HRESULT RPC_CreateServerChannel(DWORD dest_context, void *dest_context_data, IRpcChannelBuffer **chan) DECLSPEC_HIDDEN;
 void    RPC_ExecuteCall(struct dispatch_params *params) DECLSPEC_HIDDEN;
 HRESULT RPC_RegisterInterface(REFIID riid) DECLSPEC_HIDDEN;
@@ -246,8 +246,8 @@ void OLEDD_UnInitialize(void) DECLSPEC_HIDDEN;
 
 /* Apartment Functions */
 
-APARTMENT *apartment_findfromoxid(OXID oxid, BOOL ref) DECLSPEC_HIDDEN;
-APARTMENT *apartment_findfromtid(DWORD tid) DECLSPEC_HIDDEN;
+struct apartment *apartment_findfromoxid(OXID oxid, BOOL ref) DECLSPEC_HIDDEN;
+struct apartment *apartment_findfromtid(DWORD tid) DECLSPEC_HIDDEN;
 DWORD apartment_release(struct apartment *apt) DECLSPEC_HIDDEN;
 HRESULT apartment_disconnectproxies(struct apartment *apt) DECLSPEC_HIDDEN;
 static inline HRESULT apartment_getoxid(const struct apartment *apt, OXID *oxid)
@@ -259,7 +259,7 @@ HRESULT apartment_createwindowifneeded(struct apartment *apt) DECLSPEC_HIDDEN;
 HWND apartment_getwindow(const struct apartment *apt) DECLSPEC_HIDDEN;
 HRESULT enter_apartment(struct oletls *info, DWORD model) DECLSPEC_HIDDEN;
 void leave_apartment(struct oletls *info) DECLSPEC_HIDDEN;
-APARTMENT *apartment_get_current_or_mta(void) DECLSPEC_HIDDEN;
+struct apartment *apartment_get_current_or_mta(void) DECLSPEC_HIDDEN;
 
 /* DCOM messages used by the apartment window (not compatible with native) */
 #define DM_EXECUTERPC   (WM_USER + 0) /* WPARAM = 0, LPARAM = (struct dispatch_params *) */
@@ -282,7 +282,7 @@ static inline struct oletls *COM_CurrentInfo(void)
     return NtCurrentTeb()->ReservedForOle;
 }
 
-static inline APARTMENT* COM_CurrentApt(void)
+static inline struct apartment * COM_CurrentApt(void)
 {  
     return COM_CurrentInfo()->apt;
 }

@@ -177,7 +177,7 @@ struct ifstub *stub_manager_find_ifstub(struct stub_manager *m, REFIID iid, MSHL
 /* creates a new stub manager and adds it into the apartment. caller must
  * release stub manager when it is no longer required. the apartment and
  * external refs together take one implicit ref */
-static struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object)
+static struct stub_manager *new_stub_manager(struct apartment *apt, IUnknown *object)
 {
     struct stub_manager *sm;
     HRESULT hres;
@@ -311,7 +311,7 @@ static ULONG stub_manager_int_addref(struct stub_manager *This)
 ULONG stub_manager_int_release(struct stub_manager *This)
 {
     ULONG refs;
-    APARTMENT *apt = This->apt;
+    struct apartment *apt = This->apt;
 
     EnterCriticalSection(&apt->cs);
     refs = --This->refs;
@@ -334,7 +334,7 @@ ULONG stub_manager_int_release(struct stub_manager *This)
 /* gets the stub manager associated with an object - caller must have
  * a reference to the apartment while a reference to the stub manager is held.
  * it must also call release on the stub manager when it is no longer needed */
-struct stub_manager *get_stub_manager_from_object(APARTMENT *apt, IUnknown *obj, BOOL alloc)
+struct stub_manager *get_stub_manager_from_object(struct apartment *apt, IUnknown *obj, BOOL alloc)
 {
     struct stub_manager *result = NULL;
     struct list         *cursor;
@@ -377,7 +377,7 @@ struct stub_manager *get_stub_manager_from_object(APARTMENT *apt, IUnknown *obj,
 /* gets the stub manager associated with an object id - caller must have
  * a reference to the apartment while a reference to the stub manager is held.
  * it must also call release on the stub manager when it is no longer needed */
-struct stub_manager *get_stub_manager(APARTMENT *apt, OID oid)
+struct stub_manager *get_stub_manager(struct apartment *apt, OID oid)
 {
     struct stub_manager *result = NULL;
     struct list         *cursor;
@@ -471,7 +471,7 @@ ULONG stub_manager_ext_release(struct stub_manager *m, ULONG refs, BOOL tablewea
 /* gets the stub manager associated with an ipid - caller must have
  * a reference to the apartment while a reference to the stub manager is held.
  * it must also call release on the stub manager when it is no longer needed */
-static struct stub_manager *get_stub_manager_from_ipid(APARTMENT *apt, const IPID *ipid, struct ifstub **ifstub)
+static struct stub_manager *get_stub_manager_from_ipid(struct apartment *apt, const IPID *ipid, struct ifstub **ifstub)
 {
     struct stub_manager *result = NULL;
     struct list         *cursor;
@@ -498,7 +498,7 @@ static struct stub_manager *get_stub_manager_from_ipid(APARTMENT *apt, const IPI
     return result;
 }
 
-static HRESULT ipid_to_ifstub(const IPID *ipid, APARTMENT **stub_apt,
+static HRESULT ipid_to_ifstub(const IPID *ipid, struct apartment **stub_apt,
                               struct stub_manager **stubmgr_ret, struct ifstub **ifstub)
 {
     /* FIXME: hack for IRemUnknown */
@@ -521,7 +521,7 @@ static HRESULT ipid_to_ifstub(const IPID *ipid, APARTMENT **stub_apt,
     return S_OK;
 }
 
-static HRESULT ipid_to_stub_manager(const IPID *ipid, APARTMENT **stub_apt, struct stub_manager **stub)
+static HRESULT ipid_to_stub_manager(const IPID *ipid, struct apartment **stub_apt, struct stub_manager **stub)
 {
     struct ifstub *ifstub;
     return ipid_to_ifstub(ipid, stub_apt, stub, &ifstub);
@@ -530,14 +530,14 @@ static HRESULT ipid_to_stub_manager(const IPID *ipid, APARTMENT **stub_apt, stru
 /* gets the apartment, stub and channel of an object. the caller must
  * release the references to all objects (except iface) if the function
  * returned success, otherwise no references are returned. */
-HRESULT ipid_get_dispatch_params(const IPID *ipid, APARTMENT **stub_apt,
+HRESULT ipid_get_dispatch_params(const IPID *ipid, struct apartment **stub_apt,
                                  struct stub_manager **manager,
                                  IRpcStubBuffer **stub, IRpcChannelBuffer **chan,
                                  IID *iid, IUnknown **iface)
 {
     struct stub_manager *stubmgr;
     struct ifstub *ifstub;
-    APARTMENT *apt;
+    struct apartment *apt;
     HRESULT hr;
 
     hr = ipid_to_ifstub(ipid, &apt, &stubmgr, &ifstub);
@@ -703,7 +703,7 @@ static HRESULT WINAPI RemUnknown_RemQueryInterface(IRemUnknown *iface,
     HRESULT hr;
     USHORT i;
     USHORT successful_qis = 0;
-    APARTMENT *apt;
+    struct apartment *apt;
     struct stub_manager *stubmgr;
     struct ifstub *ifstub;
     DWORD dest_context;
@@ -750,7 +750,7 @@ static HRESULT WINAPI RemUnknown_RemAddRef(IRemUnknown *iface,
 
     for (i = 0; i < cInterfaceRefs; i++)
     {
-        APARTMENT *apt;
+        struct apartment *apt;
         struct stub_manager *stubmgr;
 
         pResults[i] = ipid_to_stub_manager(&InterfaceRefs[i].ipid, &apt, &stubmgr);
@@ -782,7 +782,7 @@ static HRESULT WINAPI RemUnknown_RemRelease(IRemUnknown *iface,
 
     for (i = 0; i < cInterfaceRefs; i++)
     {
-        APARTMENT *apt;
+        struct apartment *apt;
         struct stub_manager *stubmgr;
 
         hr = ipid_to_stub_manager(&InterfaceRefs[i].ipid, &apt, &stubmgr);
@@ -815,7 +815,7 @@ static const IRemUnknownVtbl RemUnknown_Vtbl =
 };
 
 /* starts the IRemUnknown listener for the current apartment */
-HRESULT start_apartment_remote_unknown(APARTMENT *apt)
+HRESULT start_apartment_remote_unknown(struct apartment *apt)
 {
     IRemUnknown *pRemUnknown;
     HRESULT hr = S_OK;
