@@ -23,6 +23,7 @@ Test_PathProcessCommand(void)
     FILE *fout;
     WCHAR szCurDir[MAX_PATH];
     WCHAR szFull1[MAX_PATH], szFull2[MAX_PATH], szFull3[MAX_PATH], szFull4[MAX_PATH];
+    WCHAR szFull5[MAX_PATH];
 
     fout = _wfopen(L"_Test.exe", L"wb");
     fclose(fout);
@@ -35,11 +36,15 @@ Test_PathProcessCommand(void)
     lstrcpynW(szFull1, szCurDir, _countof(szFull1));
     lstrcpynW(szFull2, szCurDir, _countof(szFull2));
     lstrcpynW(szFull4, szCurDir, _countof(szFull4));
+    lstrcpynW(szFull5, szCurDir, _countof(szFull5));
 
     lstrcatW(szFull1, L"\\_Test.exe");
     lstrcatW(szFull2, L"\\test with spaces.exe");
     wsprintfW(szFull3, L"\"%s\"", szFull2);
     lstrcatW(szFull4, L"\\_Test.exe arg1 arg2");
+    lstrcatW(szFull5, L"\\_TestDir.exe");
+
+    CreateDirectoryW(L"_TestDir.exe", NULL);
 
     // Test case 1: Basic functionality (no flags)
     lstrcpynW(buffer, L"<>", _countof(buffer));
@@ -93,6 +98,19 @@ Test_PathProcessCommand(void)
     ok_int(result, lstrlenW(szFull1) + 1);
     ok_wstri(buffer, szFull1);
 
+    // Test case 9: No directories
+    lstrcpynW(buffer, L"<>", _countof(buffer));
+    result = s_PathProcessCommand(L"_TestDir.exe", buffer, _countof(buffer), PPCF_NODIRECTORIES);
+    ok_int(result, -1);
+    ok_wstri(buffer, L"<>");
+
+    // Test case 10: With directories
+    lstrcpynW(buffer, L"<>", _countof(buffer));
+    result = s_PathProcessCommand(L"_TestDir.exe", buffer, _countof(buffer), 0);
+    ok_int(result, lstrlenW(szFull5) + 1);
+    ok_wstri(buffer, szFull5);
+
+    RemoveDirectoryW(L"_TestDir.exe");
     DeleteFileW(L"_Test.exe");
     DeleteFileW(L"test with spaces.exe");
 }
