@@ -638,6 +638,11 @@ HRESULT WINAPI CreateStreamOnHGlobal(
     hGlobal = GlobalAlloc(GMEM_MOVEABLE|GMEM_NODISCARD|GMEM_SHARE, 0);
 
   This->handle = handle_create(hGlobal, fDeleteOnRelease);
+  if (!This->handle)
+  {
+      HeapFree(GetProcessHeap(), 0, This);
+      return E_OUTOFMEMORY;
+  }
 
   /* start at the beginning */
   This->currentPosition.u.HighPart = 0;
