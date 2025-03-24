@@ -220,3 +220,20 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv)
 
     return Handler_DllGetClassObject(rclsid, iid, ppv);
 }
+
+/***********************************************************************
+ *           Ole32DllGetClassObject [OLE32.@]
+ */
+HRESULT WINAPI Ole32DllGetClassObject(REFCLSID rclsid, REFIID riid, void **obj)
+{
+    if (IsEqualCLSID(rclsid, &CLSID_StdGlobalInterfaceTable))
+        return IClassFactory_QueryInterface(&GlobalInterfaceTableCF, riid, obj);
+    else if (IsEqualCLSID(rclsid, &CLSID_ManualResetEvent))
+        return IClassFactory_QueryInterface(&ManualResetEventCF, riid, obj);
+    else if (IsEqualCLSID(rclsid, &CLSID_GlobalOptions))
+        return IClassFactory_QueryInterface(&GlobalOptionsCF, riid, obj);
+    else if (IsEqualCLSID(rclsid, &CLSID_InProcFreeMarshaler))
+        return FTMarshalCF_Create(riid, obj);
+    else
+        return CLASS_E_CLASSNOTAVAILABLE;
+}

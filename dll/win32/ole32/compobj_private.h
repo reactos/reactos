@@ -325,6 +325,7 @@ extern IClassFactory GlobalInterfaceTableCF DECLSPEC_HIDDEN;
 extern HRESULT WINAPI ManualResetEvent_CreateInstance(IClassFactory *iface, IUnknown *outer, REFIID riid,
         void **obj) DECLSPEC_HIDDEN;
 extern IClassFactory ManualResetEventCF DECLSPEC_HIDDEN;
+extern HRESULT WINAPI Ole32DllGetClassObject(REFCLSID clsid, REFIID riid, void **obj) DECLSPEC_HIDDEN;
 
 /* Exported non-interface Data Advise Holder functions */
 HRESULT DataAdviseHolder_OnConnect(IDataAdviseHolder *iface, IDataObject *pDelegate) DECLSPEC_HIDDEN;

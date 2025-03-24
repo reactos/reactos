@@ -2761,13 +2761,14 @@ HRESULT WINAPI DECLSPEC_HOTPATCH CoGetClassObject(
 
     if (CLSCTX_INPROC_SERVER & dwClsContext)
     {
-        if (IsEqualCLSID(rclsid, &CLSID_InProcFreeMarshaler))
+        if (IsEqualCLSID(rclsid, &CLSID_InProcFreeMarshaler) ||
+                IsEqualCLSID(rclsid, &CLSID_GlobalOptions) ||
+                IsEqualCLSID(rclsid, &CLSID_ManualResetEvent) ||
+                IsEqualCLSID(rclsid, &CLSID_StdGlobalInterfaceTable))
         {
             apartment_release(apt);
-            return FTMarshalCF_Create(iid, ppv);
+            return Ole32DllGetClassObject(rclsid, iid, ppv);
         }
-        if (IsEqualCLSID(rclsid, &CLSID_GlobalOptions))
-            return IClassFactory_QueryInterface(&GlobalOptionsCF, iid, ppv);
     }
 
     if (CLSCTX_INPROC & dwClsContext)
@@ -2998,23 +2999,6 @@ HRESULT WINAPI DECLSPEC_HOTPATCH CoCreateInstanceEx(
         return CO_E_NOTINITIALIZED;
     }
     apartment_release(apt);
-
-    /*
-     * The Standard Global Interface Table (GIT) object is a process-wide singleton.
-     */
-    if (IsEqualIID(&clsid, &CLSID_StdGlobalInterfaceTable))
-    {
-        IGlobalInterfaceTable *git = get_std_git();
-        TRACE("Retrieving GIT\n");
-        return return_multi_qi((IUnknown*)git, cmq, pResults, FALSE);
-    }
-
-    if (IsEqualCLSID(&clsid, &CLSID_ManualResetEvent)) {
-        hres = ManualResetEvent_CreateInstance(&ManualResetEventCF, pUnkOuter, pResults[0].pIID, (void**)&unk);
-        if (FAILED(hres))
-            return hres;
-        return return_multi_qi(unk, cmq, pResults, TRUE);
-    }
 
     /*
      * Get a class factory to construct the object we want.
