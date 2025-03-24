@@ -37,7 +37,7 @@ private:
     CContainedWindow                        fEditWindow;
     DWORD                                   fAdviseCookie;
     CComPtr<IUnknown>                       fSite;
-    LPITEMIDLIST                            pidlLastParsed;
+    CComHeapPtr<ITEMIDLIST_ABSOLUTE>        m_pidlLastParsed;
     HWND                                    hComboBoxEx;
 public:
     CAddressEditBox();
