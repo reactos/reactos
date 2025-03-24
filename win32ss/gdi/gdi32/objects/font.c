@@ -2071,9 +2071,8 @@ RemoveFontResourceExA(LPCSTR lpFileName,
                       PVOID pdv)
 {
     NTSTATUS Status;
-    CHAR szSafeFileNameA[MAX_PATH];
-    WCHAR szFileNameW[MAX_PATH];
-    ULONG ResultSize;
+    LPWSTR lpFileNameW;
+    BOOL result;
 
     if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
     {
@@ -2081,18 +2080,25 @@ RemoveFontResourceExA(LPCSTR lpFileName,
         return FALSE;
     }
 
-    if (!lstrcpynA(szSafeFileNameA, lpFileName, RTL_NUMBER_OF(szSafeFileNameA)))
-        return FALSE;
+    _SEH2_TRY
+    {
+        Status = HEAP_strdupA2W(&lpFileNameW, lpFileName);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return FALSE);
+    }
+    _SEH2_END;
 
-    Status = RtlMultiByteToUnicodeN(szFileNameW, sizeof(szFileNameW), &ResultSize,
-                                    szSafeFileNameA, strlen(szSafeFileNameA) + 1);
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }
 
-    return RemoveFontResourceExW(szFileNameW, fl, pdv);
+    result = RemoveFontResourceExW(lpFileNameW, fl, pdv);
+    HEAP_free(lpFileNameW);
+    return result;
 }
 
 /*
