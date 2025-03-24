@@ -3012,23 +3012,6 @@ void WINAPI DECLSPEC_HOTPATCH CoFreeUnusedLibrariesEx(DWORD dwUnloadDelay, DWORD
     apartment_freeunusedlibraries(apt, dwUnloadDelay);
 }
 
-/***********************************************************************
- *           CoFreeUnusedLibraries [OLE32.@]
- *
- * Frees any unused libraries. Unused are identified as those that return
- * S_OK from their DllCanUnloadNow function.
- *
- * RETURNS
- *  Nothing.
- *
- * SEE ALSO
- *  CoLoadLibrary, CoFreeAllLibraries, CoFreeLibrary
- */
-void WINAPI DECLSPEC_HOTPATCH CoFreeUnusedLibraries(void)
-{
-    CoFreeUnusedLibrariesEx(INFINITE, 0);
-}
-
 /******************************************************************************
  *		CoLockObjectExternal	[OLE32.@]
  *
