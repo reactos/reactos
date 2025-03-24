@@ -2079,51 +2079,6 @@ HRESULT WINAPI CoReleaseMarshalData(IStream *pStream)
     return hr;
 }
 
-
-/***********************************************************************
- *		CoMarshalInterThreadInterfaceInStream	[OLE32.@]
- *
- * Marshal an interface across threads in the same process.
- *
- * PARAMS
- *  riid  [I] Identifier of the interface to be marshalled.
- *  pUnk  [I] Pointer to IUnknown-derived interface that will be marshalled.
- *  ppStm [O] Pointer to IStream object that is created and then used to store the marshalled interface.
- *
- * RETURNS
- *  Success: S_OK
- *  Failure: E_OUTOFMEMORY and other COM error codes
- *
- * SEE ALSO
- *   CoMarshalInterface(), CoUnmarshalInterface() and CoGetInterfaceAndReleaseStream()
- */
-HRESULT WINAPI CoMarshalInterThreadInterfaceInStream(
-    REFIID riid, LPUNKNOWN pUnk, LPSTREAM * ppStm)
-{
-    ULARGE_INTEGER	xpos;
-    LARGE_INTEGER		seekto;
-    HRESULT		hres;
-
-    TRACE("(%s, %p, %p)\n",debugstr_guid(riid), pUnk, ppStm);
-
-    hres = CreateStreamOnHGlobal(NULL, TRUE, ppStm);
-    if (FAILED(hres)) return hres;
-    hres = CoMarshalInterface(*ppStm, riid, pUnk, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
-
-    if (SUCCEEDED(hres))
-    {
-        memset(&seekto, 0, sizeof(seekto));
-        IStream_Seek(*ppStm, seekto, STREAM_SEEK_SET, &xpos);
-    }
-    else
-    {
-        IStream_Release(*ppStm);
-        *ppStm = NULL;
-    }
-
-    return hres;
-}
-
 static HRESULT WINAPI StdMarshalCF_QueryInterface(LPCLASSFACTORY iface,
                                                   REFIID riid, LPVOID *ppv)
 {
