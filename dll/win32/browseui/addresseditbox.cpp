@@ -178,19 +178,20 @@ BOOL CAddressEditBox::ExecuteCommandLine()
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
 {
-    ULONG eaten;
-    ULONG attributes;
-    HRESULT hr;
-    HWND topLevelWindow;
+    ULONG eaten, attributes;
     CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlCurrent;
     CComHeapPtr<ITEMIDLIST_RELATIVE> pidlRelative;
     CComPtr<IShellFolder> psfCurrent;
+    HRESULT hr;
+
+    ATLASSERT(!m_pidlLastParsed);
 
     CComPtr<IBrowserService> pbs;
     hr = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &pbs));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
+    HWND topLevelWindow;
     hr = IUnknown_GetWindow(pbs, &topLevelWindow);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
@@ -213,7 +214,7 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
     CComPtr<IShellFolder> psfDesktop;
     hr = SHGetDesktopFolder(&psfDesktop);
     if (FAILED_UNEXPECTEDLY(hr))
-        goto cleanup;
+        return hr;
 
     hr = pbs->GetPidl(&pidlCurrent);
     if (FAILED_UNEXPECTEDLY(hr))
@@ -226,17 +227,13 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
     hr = psfCurrent->ParseDisplayName(topLevelWindow, NULL, address, &eaten,  &pidlRelative, &attributes);
     if (SUCCEEDED(hr))
     {
-        ATLASSERT(!m_pidlLastParsed);
         m_pidlLastParsed.Attach(ILCombine(pidlCurrent, pidlRelative));
-        goto cleanup;
+        return hr;
     }
 
 parseabsolute:
     /* We couldn't parse a relative path, attempt to parse an absolute path */
-    ATLASSERT(!m_pidlLastParsed);
     hr = psfDesktop->ParseDisplayName(topLevelWindow, NULL, address, &eaten, &m_pidlLastParsed, &attributes);
-
-cleanup:
     return hr;
 }
 
