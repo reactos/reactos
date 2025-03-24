@@ -265,7 +265,7 @@
 @ stdcall OleTranslateAccelerator(ptr ptr ptr)
 @ stdcall OleUninitialize()
 @ stub OpenOrCreateStream
-@ stdcall ProgIDFromCLSID(ptr ptr)
+@ stdcall ProgIDFromCLSID(ptr ptr) combase.ProgIDFromCLSID
 @ stdcall PropStgNameToFmtId(wstr ptr)
 @ stdcall PropSysAllocString(wstr)
 @ stdcall PropSysFreeString(wstr)
