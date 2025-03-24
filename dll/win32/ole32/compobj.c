@@ -3707,23 +3707,6 @@ void WINAPI DECLSPEC_HOTPATCH CoFreeUnusedLibraries(void)
     CoFreeUnusedLibrariesEx(INFINITE, 0);
 }
 
-/***********************************************************************
- *           CoFileTimeNow [OLE32.@]
- *
- * Retrieves the current time in FILETIME format.
- *
- * PARAMS
- *  lpFileTime [O] The current time.
- *
- * RETURNS
- *	S_OK.
- */
-HRESULT WINAPI CoFileTimeNow( FILETIME *lpFileTime )
-{
-    GetSystemTimeAsFileTime( lpFileTime );
-    return S_OK;
-}
-
 /******************************************************************************
  *		CoLockObjectExternal	[OLE32.@]
  *
