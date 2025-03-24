@@ -928,12 +928,12 @@ static const ISynchronizeHandleVtbl SynchronizeHandleVtbl = {
     SynchronizeHandle_GetHandle
 };
 
-static HRESULT ManualResetEvent_Construct(IUnknown *punkouter, REFIID iid, void **ppv)
+HRESULT WINAPI ManualResetEvent_CreateInstance(IClassFactory *iface, IUnknown *outer, REFIID iid, void **ppv)
 {
     MREImpl *This = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MREImpl));
     HRESULT hr;
 
-    if(punkouter)
+    if (outer)
         FIXME("Aggregation not implemented.\n");
 
     This->ref = 1;
@@ -3010,7 +3010,7 @@ HRESULT WINAPI DECLSPEC_HOTPATCH CoCreateInstanceEx(
     }
 
     if (IsEqualCLSID(&clsid, &CLSID_ManualResetEvent)) {
-        hres = ManualResetEvent_Construct(pUnkOuter, pResults[0].pIID, (void**)&unk);
+        hres = ManualResetEvent_CreateInstance(&ManualResetEventCF, pUnkOuter, pResults[0].pIID, (void**)&unk);
         if (FAILED(hres))
             return hres;
         return return_multi_qi(unk, cmq, pResults, TRUE);

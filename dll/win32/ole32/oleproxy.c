@@ -170,6 +170,17 @@ static const IClassFactoryVtbl GlobalInterfaceTableCFVtbl =
 
 IClassFactory GlobalInterfaceTableCF = { &GlobalInterfaceTableCFVtbl };
 
+static const IClassFactoryVtbl ManualResetEventCFVtbl =
+{
+    ClassFactory_QueryInterface,
+    ClassFactory_AddRef,
+    ClassFactory_Release,
+    ManualResetEvent_CreateInstance,
+    ClassFactory_LockServer
+};
+
+IClassFactory ManualResetEventCF = { &ManualResetEventCFVtbl };
+
 /***********************************************************************
  *           DllGetClassObject [OLE32.@]
  */
@@ -186,6 +197,8 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv)
 	return MARSHAL_GetStandardMarshalCF(ppv);
     if (IsEqualCLSID(rclsid, &CLSID_StdGlobalInterfaceTable))
         return IClassFactory_QueryInterface(&GlobalInterfaceTableCF, iid, ppv);
+    if (IsEqualCLSID(rclsid, &CLSID_ManualResetEvent))
+        return IClassFactory_QueryInterface(&ManualResetEventCF, iid, ppv);
     if (IsEqualCLSID(rclsid, &CLSID_FileMoniker))
         return IClassFactory_QueryInterface(&FileMonikerCF, iid, ppv);
     if (IsEqualCLSID(rclsid, &CLSID_ItemMoniker))
