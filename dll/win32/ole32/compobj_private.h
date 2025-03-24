@@ -269,16 +269,15 @@ APARTMENT *apartment_get_current_or_mta(void) DECLSPEC_HIDDEN;
  * Per-thread values are stored in the TEB on offset 0xF80
  */
 
+extern HRESULT WINAPI InternalTlsAllocData(struct oletls **tlsdata);
+
 /* will create if necessary */
 static inline struct oletls *COM_CurrentInfo(void)
 {
+    struct oletls *oletls;
+
     if (!NtCurrentTeb()->ReservedForOle)
-    {
-        struct oletls *oletls = heap_alloc_zero(sizeof(*oletls));
-        if (oletls)
-            list_init(&oletls->spies);
-        NtCurrentTeb()->ReservedForOle = oletls;
-    }
+        InternalTlsAllocData(&oletls);
 
     return NtCurrentTeb()->ReservedForOle;
 }
