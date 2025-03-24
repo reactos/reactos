@@ -4,7 +4,7 @@
  * PURPOSE:     Turkish resource file
  * TRANSLATORS: Copyright 2013-2015 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
  *              Copyright 2021 Süleyman Poyraz <zaryob.dev@gmail.com>
- *              Copyright 2024 Ethem De Santa (scropool) <oyunyumru4@gmail.com>
+ *              Copyright 2024-2025 Ethem Çılgın (snapzenic) <ethemc606@gmail.com>
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -20,10 +20,10 @@ BEGIN
         MENUITEM "&Pencereleri basamakla", ID_SHELL_CMD_CASCADE_WND
         MENUITEM "P&encereleri yan yana göster", ID_SHELL_CMD_TILE_WND_H
         MENUITEM "Pe&ncereleri üst üste göster", ID_SHELL_CMD_TILE_WND_V
-        MENUITEM "&Masaüstünü göster", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "&Masaüstünü Göster", ID_SHELL_CMD_SHOW_DESKTOP
         MENUITEM "&Geri Al", ID_SHELL_CMD_UNDO_ACTION
         MENUITEM SEPARATOR
-        MENUITEM "&Görev Yöneticisi'ni başlat", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM "&Görev Yöneticisi", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
         MENUITEM "G&örev çubuğunu kilitle", ID_LOCKTASKBAR
         MENUITEM "&Özellikler", ID_SHELL_CMD_PROPERTIES
@@ -217,5 +217,5 @@ BEGIN
     IDS_RESTORE_ALL "&Açık Pencereleri Göster"
     IDS_TRAYWND_UNDO_CASCADE "&Kademeyi Geri Al"
     IDS_TRAYWND_UNDO_TILE "&Döşemeyi Geri Al"
-    IDS_TRAYDESKBTN_TOOLTIP "Show Desktop/Windows"
+    IDS_TRAYDESKBTN_TOOLTIP "Masaüstünü/Pencereleri Göster"
 END
