@@ -4197,51 +4197,6 @@ HRESULT WINAPI CoAllowSetForegroundWindow(IUnknown *pUnk, void *pvReserved)
     FIXME("(%p, %p): stub\n", pUnk, pvReserved);
     return S_OK;
 }
- 
-/***********************************************************************
- *           CoQueryProxyBlanket [OLE32.@]
- *
- * Retrieves the security settings being used by a proxy.
- *
- * PARAMS
- *  pProxy        [I] Pointer to the proxy object.
- *  pAuthnSvc     [O] The type of authentication service.
- *  pAuthzSvc     [O] The type of authorization service.
- *  ppServerPrincName [O] Optional. The server prinicple name.
- *  pAuthnLevel   [O] The authentication level.
- *  pImpLevel     [O] The impersonation level.
- *  ppAuthInfo    [O] Information specific to the authorization/authentication service.
- *  pCapabilities [O] Flags affecting the security behaviour.
- *
- * RETURNS
- *  Success: S_OK.
- *  Failure: HRESULT code.
- *
- * SEE ALSO
- *  CoCopyProxy, CoSetProxyBlanket.
- */
-HRESULT WINAPI CoQueryProxyBlanket(IUnknown *pProxy, DWORD *pAuthnSvc,
-    DWORD *pAuthzSvc, OLECHAR **ppServerPrincName, DWORD *pAuthnLevel,
-    DWORD *pImpLevel, void **ppAuthInfo, DWORD *pCapabilities)
-{
-    IClientSecurity *pCliSec;
-    HRESULT hr;
-
-    TRACE("%p\n", pProxy);
-
-    hr = IUnknown_QueryInterface(pProxy, &IID_IClientSecurity, (void **)&pCliSec);
-    if (SUCCEEDED(hr))
-    {
-        hr = IClientSecurity_QueryBlanket(pCliSec, pProxy, pAuthnSvc,
-                                          pAuthzSvc, ppServerPrincName,
-                                          pAuthnLevel, pImpLevel, ppAuthInfo,
-                                          pCapabilities);
-        IClientSecurity_Release(pCliSec);
-    }
-
-    if (FAILED(hr)) ERR("-- failed with 0x%08x\n", hr);
-    return hr;
-}
 
 /***********************************************************************
  *           CoSetProxyBlanket [OLE32.@]
