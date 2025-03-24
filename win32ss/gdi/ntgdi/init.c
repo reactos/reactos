@@ -79,7 +79,7 @@ BOOL
 InitializeGreCSRSS(VOID)
 {
     /* Initialize Dxgkrnl interfaces and run startup routine */
-    DxStartupDxgkInt(VOID);
+    DxStartupDxgkInt();
 
     /* Initialize Legacy DirectX graphics driver */
     if (DxDdStartupDxGraphics(0, NULL, 0, NULL, NULL, gpepCSRSS) != STATUS_SUCCESS)
