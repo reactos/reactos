@@ -44,11 +44,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
-/* see MSDN docs for IROTData::GetComparisonData, which states what this
- * constant is
- */
-#define MAX_COMPARISON_DATA 2048
-
 static LONG WINAPI rpc_filter(EXCEPTION_POINTERS *eptr)
 {
     return I_RpcExceptionFilter(eptr->ExceptionRecord->ExceptionCode);
@@ -190,33 +185,6 @@ HRESULT __cdecl irpcss_get_thread_seq_id(handle_t h, DWORD *id)
     return S_OK;
 }
 
-DWORD rpcss_get_next_seqid(void)
-{
-    DWORD id = 0;
-    HRESULT hr;
-
-    for (;;)
-    {
-        __TRY
-        {
-            hr = irpcss_get_thread_seq_id(get_irpcss_handle(), &id);
-        }
-        __EXCEPT(rpc_filter)
-        {
-            hr = HRESULT_FROM_WIN32(GetExceptionCode());
-        }
-        __ENDTRY
-        if (hr == HRESULT_FROM_WIN32(RPC_S_SERVER_UNAVAILABLE))
-        {
-            if (start_rpcss())
-                continue;
-        }
-        break;
-    }
-
-    return id;
-}
-
 static HRESULT create_stream_on_mip_ro(const InterfaceData *mip, IStream **stream)
 {
     HGLOBAL hglobal = GlobalAlloc(0, mip->ulCntData);
@@ -279,7 +247,7 @@ static HRESULT get_moniker_comparison_data(IMoniker *pMoniker, MonikerComparison
     hr = IMoniker_QueryInterface(pMoniker, &IID_IROTData, (void *)&pROTData);
     if (SUCCEEDED(hr))
     {
-        ULONG size = MAX_COMPARISON_DATA;
+        ULONG size = ROT_COMPARE_MAX;
         *moniker_data = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(MonikerComparisonData, abData[size]));
         if (!*moniker_data)
         {
