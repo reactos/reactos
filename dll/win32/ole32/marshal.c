@@ -2124,36 +2124,6 @@ HRESULT WINAPI CoMarshalInterThreadInterfaceInStream(
     return hres;
 }
 
-/***********************************************************************
- *		CoGetInterfaceAndReleaseStream	[OLE32.@]
- *
- * Unmarshalls an interface from a stream and then releases the stream.
- *
- * PARAMS
- *  pStm [I] Stream that contains the marshalled interface.
- *  riid [I] Interface identifier of the object to unmarshall.
- *  ppv  [O] Address of pointer where the requested interface object will be stored.
- *
- * RETURNS
- *  Success: S_OK
- *  Failure: A COM error code
- *
- * SEE ALSO
- *  CoMarshalInterThreadInterfaceInStream() and CoUnmarshalInterface()
- */
-HRESULT WINAPI CoGetInterfaceAndReleaseStream(LPSTREAM pStm, REFIID riid,
-                                              LPVOID *ppv)
-{
-    HRESULT hres;
-
-    TRACE("(%p, %s, %p)\n", pStm, debugstr_guid(riid), ppv);
-
-    if(!pStm) return E_INVALIDARG;
-    hres = CoUnmarshalInterface(pStm, riid, ppv);
-    IStream_Release(pStm);
-    return hres;
-}
-
 static HRESULT WINAPI StdMarshalCF_QueryInterface(LPCLASSFACTORY iface,
                                                   REFIID riid, LPVOID *ppv)
 {
