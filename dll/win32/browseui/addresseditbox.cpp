@@ -92,6 +92,8 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Init(HWND comboboxEx, HWND editContro
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::SetCurrentDir(PCWSTR pszPath)
 {
+    if (pidlLastParsed)
+        ILFree(pidlLastParsed);
     pidlLastParsed = ILCreateFromPathW(pszPath);
     return E_NOTIMPL;
 }
