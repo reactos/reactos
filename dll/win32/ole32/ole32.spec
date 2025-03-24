@@ -124,7 +124,7 @@
 @ stdcall CreateClassMoniker(ptr ptr)
 @ stdcall CreateDataAdviseHolder(ptr)
 @ stdcall CreateDataCache(ptr ptr ptr ptr)
-@ stdcall CreateErrorInfo(ptr)
+@ stdcall CreateErrorInfo(ptr) combase.CreateErrorInfo
 @ stdcall CreateFileMoniker(wstr ptr)
 @ stdcall CreateGenericComposite(ptr ptr ptr)
 @ stdcall CreateILockBytesOnHGlobal(ptr long ptr)
