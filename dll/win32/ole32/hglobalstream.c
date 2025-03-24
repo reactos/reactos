@@ -216,6 +216,22 @@ static inline HGLOBALStreamImpl *impl_from_IStream(IStream *iface)
   return CONTAINING_RECORD(iface, HGLOBALStreamImpl, IStream_iface);
 }
 
+static const IStreamVtbl HGLOBALStreamImplVtbl;
+
+static HGLOBALStreamImpl *hglobalstream_construct(void)
+{
+    HGLOBALStreamImpl *This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
+
+    if (This)
+    {
+        This->IStream_iface.lpVtbl = &HGLOBALStreamImplVtbl;
+        This->ref = 1;
+        This->handle = NULL;
+        This->currentPosition.QuadPart = 0;
+    }
+    return This;
+}
+
 static HRESULT WINAPI HGLOBALStreamImpl_QueryInterface(
 		  IStream*     iface,
 		  REFIID         riid,	      /* [in] */
@@ -643,10 +659,6 @@ HRESULT WINAPI CreateStreamOnHGlobal(
       HeapFree(GetProcessHeap(), 0, This);
       return E_OUTOFMEMORY;
   }
-
-  /* start at the beginning */
-  This->currentPosition.u.HighPart = 0;
-  This->currentPosition.u.LowPart = 0;
 
   *ppstm = &This->IStream_iface;
 
