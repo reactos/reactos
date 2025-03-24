@@ -4257,56 +4257,6 @@ HRESULT WINAPI CoSwitchCallContext(IUnknown *pObject, IUnknown **ppOldObject)
 }
 
 /***********************************************************************
- *           CoQueryClientBlanket [OLE32.@]
- *
- * Retrieves the authentication information about the client of the currently
- * executing server call in the current thread.
- *
- * PARAMS
- *  pAuthnSvc     [O] Optional. The type of authentication service.
- *  pAuthzSvc     [O] Optional. The type of authorization service.
- *  pServerPrincName [O] Optional. The server prinicple name.
- *  pAuthnLevel   [O] Optional. The authentication level.
- *  pImpLevel     [O] Optional. The impersonation level.
- *  pPrivs        [O] Optional. Information about the privileges of the client.
- *  pCapabilities [IO] Optional. Flags affecting the security behaviour.
- *
- * RETURNS
- *  Success: S_OK.
- *  Failure: HRESULT code.
- *
- * SEE ALSO
- *  CoImpersonateClient, CoRevertToSelf, CoGetCallContext.
- */
-HRESULT WINAPI CoQueryClientBlanket(
-    DWORD *pAuthnSvc,
-    DWORD *pAuthzSvc,
-    OLECHAR **pServerPrincName,
-    DWORD *pAuthnLevel,
-    DWORD *pImpLevel,
-    RPC_AUTHZ_HANDLE *pPrivs,
-    DWORD *pCapabilities)
-{
-    IServerSecurity *pSrvSec;
-    HRESULT hr;
-
-    TRACE("(%p, %p, %p, %p, %p, %p, %p)\n",
-        pAuthnSvc, pAuthzSvc, pServerPrincName, pAuthnLevel, pImpLevel,
-        pPrivs, pCapabilities);
-
-    hr = CoGetCallContext(&IID_IServerSecurity, (void **)&pSrvSec);
-    if (SUCCEEDED(hr))
-    {
-        hr = IServerSecurity_QueryBlanket(
-            pSrvSec, pAuthnSvc, pAuthzSvc, pServerPrincName, pAuthnLevel,
-            pImpLevel, pPrivs, pCapabilities);
-        IServerSecurity_Release(pSrvSec);
-    }
-
-    return hr;
-}
-
-/***********************************************************************
  *           CoImpersonateClient [OLE32.@]
  *
  * Impersonates the client of the currently executing server call in the
