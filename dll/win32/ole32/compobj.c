@@ -2492,39 +2492,6 @@ HRESULT COM_OpenKeyForAppIdFromCLSID(REFCLSID clsid, REGSAM access, HKEY *subkey
 }
 
 /******************************************************************************
- *		CLSIDFromProgID	[OLE32.@]
- *
- * Converts a program id into the respective GUID.
- *
- * PARAMS
- *  progid [I] Unicode program ID, as found in registry.
- *  clsid  [O] Associated CLSID.
- *
- * RETURNS
- *	Success: S_OK
- *  Failure: CO_E_CLASSSTRING - the given ProgID cannot be found.
- */
-HRESULT WINAPI DECLSPEC_HOTPATCH CLSIDFromProgID(LPCOLESTR progid, LPCLSID clsid)
-{
-    ACTCTX_SECTION_KEYED_DATA data;
-
-    if (!progid || !clsid)
-        return E_INVALIDARG;
-
-    data.cbSize = sizeof(data);
-    if (FindActCtxSectionStringW(0, NULL, ACTIVATION_CONTEXT_SECTION_COM_PROGID_REDIRECTION,
-                                 progid, &data))
-    {
-        struct progidredirect_data *progiddata = (struct progidredirect_data*)data.lpData;
-        CLSID *alias = (CLSID*)((BYTE*)data.lpSectionBase + progiddata->clsid_offset);
-        *clsid = *alias;
-        return S_OK;
-    }
-
-    return clsid_from_string_reg(progid, clsid);
-}
-
-/******************************************************************************
  *              CLSIDFromProgIDEx [OLE32.@]
  */
 HRESULT WINAPI CLSIDFromProgIDEx(LPCOLESTR progid, LPCLSID clsid)
