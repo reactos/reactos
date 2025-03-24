@@ -2781,45 +2781,45 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             break;
         case LVN_BEGINLABELEDITW:
         {
-            DWORD dwAttr = SFGAO_CANRENAME;
-            pidl = _PidlByItem(lpdi->item);
-
             TRACE("-- LVN_BEGINLABELEDITW %p\n", this);
-
-            m_pSFParent->GetAttributesOf(1, &pidl, &dwAttr);
-            if (SFGAO_CANRENAME & dwAttr)
+            HWND hEdit = ListView_GetEditControl(m_ListView);
+            pidl = _PidlByItem(lpdi->item);
+            DWORD fAttr = pidl ? GetItemAttributes(pidl, SFGAO_CANRENAME | SFGAO_FOLDER | SFGAO_FILESYSTEM) : 0;
+            if (!hEdit || !(fAttr & SFGAO_CANRENAME))
             {
-                HWND hEdit = reinterpret_cast<HWND>(m_ListView.SendMessage(LVM_GETEDITCONTROL));
-                SHLimitInputEdit(hEdit, m_pSFParent);
-
-                // smartass-renaming: See CORE-15242
-                if (!(dwAttr & SFGAO_FOLDER) && (dwAttr & SFGAO_FILESYSTEM) &&
-                    (lpdi->item.mask & LVIF_TEXT) && !SelectExtOnRename())
-                {
-                    WCHAR szFullPath[MAX_PATH];
-                    PIDLIST_ABSOLUTE pidlFull = ILCombine(m_pidlParent, pidl);
-                    SHGetPathFromIDListW(pidlFull, szFullPath);
-
-                    INT cchLimit = 0;
-                    _DoFolderViewCB(SFVM_GETNAMELENGTH, (WPARAM)pidlFull, (LPARAM)&cchLimit);
-                    if (cchLimit)
-                        ::SendMessageW(hEdit, EM_SETLIMITTEXT, cchLimit, 0);
-
-                    if (!SHELL_FS_HideExtension(szFullPath))
-                    {
-                        LPWSTR pszText = lpdi->item.pszText;
-                        LPWSTR pchDotExt = PathFindExtensionW(pszText);
-                        ::PostMessageW(hEdit, EM_SETSEL, 0, pchDotExt - pszText);
-                        ::PostMessageW(hEdit, EM_SCROLLCARET, 0, 0);
-                    }
-
-                    ILFree(pidlFull);
-                }
-
-                m_isEditing = TRUE;
-                return FALSE;
+                MessageBeep(0xffffffff);
+                return TRUE;
             }
-            return TRUE;
+
+            WCHAR szName[MAX_PATH], *pszText = lpdi->item.pszText;
+            if (SUCCEEDED(Shell_DisplayNameOf(m_pSFParent, pidl, SHGDN_FOREDITING | SHGDN_INFOLDER,
+                                              szName, _countof(szName))))
+            {
+                pszText = szName;
+                ::SetWindowText(hEdit, pszText);
+            }
+
+            // smartass-renaming: See CORE-15242
+            if (!(fAttr & SFGAO_FOLDER) && (fAttr & SFGAO_FILESYSTEM) &&
+                (lpdi->item.mask & LVIF_TEXT) && !SelectExtOnRename())
+            {
+                CComHeapPtr<ITEMIDLIST_RELATIVE> pidlFull(ILCombine(m_pidlParent, pidl));
+                WCHAR szFullPath[MAX_PATH];
+                if (SHGetPathFromIDListW(pidlFull, szFullPath) && !SHELL_FS_HideExtension(szFullPath))
+                {
+                    LPWSTR pchDotExt = PathFindExtensionW(pszText);
+                    ::PostMessageW(hEdit, EM_SETSEL, 0, pchDotExt - pszText);
+                    ::PostMessageW(hEdit, EM_SCROLLCARET, 0, 0);
+                }
+            }
+
+            INT cchLimit = 0;
+            _DoFolderViewCB(SFVM_GETNAMELENGTH, (WPARAM)pidl, (LPARAM)&cchLimit);
+            if (cchLimit)
+                ::SendMessageW(hEdit, EM_SETLIMITTEXT, cchLimit, 0);
+            SHLimitInputEdit(hEdit, m_pSFParent);
+            m_isEditing = TRUE;
+            return FALSE;
         }
         case LVN_ENDLABELEDITW:
         {

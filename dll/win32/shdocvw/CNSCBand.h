@@ -44,6 +44,7 @@ public:
     CItemData* _GetItemData(_In_ HTREEITEM hItem);
     CItemData* _GetItemData(_In_ UINT ItemSpec = TVGN_CARET);
     SFGAOF _GetAttributesOfItem(_In_ CItemData *pData, _In_ SFGAOF Query);
+    HRESULT _GetNameOfItem(IShellFolder *pSF, PCUITEMID_CHILD pidl, UINT Flags, PWSTR Name);
     HRESULT _GetNameOfItem(IShellFolder *pSF, PCUITEMID_CHILD pidl, PWSTR Name);
 
     // *** IOleWindow methods ***
@@ -147,6 +148,7 @@ protected:
     HTREEITEM m_oldSelected = NULL;
     DWORD m_adviseCookie = 0;
     ULONG m_shellRegID = 0;
+    PWSTR m_OriginalRename = NULL;
 
     // *** Drop target information ***
     CComPtr<IDropTarget> m_pDropTarget;

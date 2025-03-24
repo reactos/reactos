@@ -36,11 +36,14 @@ class CDrivesFolder :
         /* both paths are parsible from the desktop */
         LPITEMIDLIST pidlRoot;    /* absolute pidl */
         CComPtr<IShellFolder2> m_regFolder;
+        INT8 m_DriveDisplayMode;
 
     public:
         CDrivesFolder();
         ~CDrivesFolder();
         HRESULT WINAPI FinalConstruct();
+
+        static HRESULT SetDriveLabel(HWND hwndOwner, PCWSTR DrivePath, PCWSTR Label);
 
         // IShellFolder
         STDMETHOD(ParseDisplayName)(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes) override;

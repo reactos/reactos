@@ -573,11 +573,15 @@ CDrvDefExt::GeneralPageProc(
                 if (lppsn->hdr.code == PSN_APPLY)
                 {
                     CDrvDefExt *pDrvDefExt = reinterpret_cast<CDrvDefExt *>(GetWindowLongPtr(hwndDlg, DWLP_USER));
-                    WCHAR wszBuf[256];
 
-                    if (GetDlgItemTextW(hwndDlg, 14000, wszBuf, _countof(wszBuf)))
-                        SetVolumeLabelW(pDrvDefExt->m_wszDrive, wszBuf);
-                    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
+                    HRESULT hr = E_FAIL;
+                    HWND hLabel = GetDlgItem(hwndDlg, 14000);
+                    WCHAR wszBuf[256];
+                    *wszBuf = UNICODE_NULL;
+                    if (GetWindowTextW(hLabel, wszBuf, _countof(wszBuf)) || GetWindowTextLengthW(hLabel) == 0)
+                        hr = CDrivesFolder::SetDriveLabel(hwndDlg, pDrvDefExt->m_wszDrive, wszBuf);
+
+                    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, FAILED(hr) ? PSNRET_INVALID : PSNRET_NOERROR);
                     return TRUE;
                 }
             }
