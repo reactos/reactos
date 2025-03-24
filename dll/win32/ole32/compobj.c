@@ -3359,21 +3359,6 @@ BOOL WINAPI IsEqualGUID(
 }
 
 /***********************************************************************
- *           CoInitializeSecurity [OLE32.@]
- */
-HRESULT WINAPI CoInitializeSecurity(PSECURITY_DESCRIPTOR pSecDesc, LONG cAuthSvc,
-                                    SOLE_AUTHENTICATION_SERVICE* asAuthSvc,
-                                    void* pReserved1, DWORD dwAuthnLevel,
-                                    DWORD dwImpLevel, void* pReserved2,
-                                    DWORD dwCapabilities, void* pReserved3)
-{
-  FIXME("(%p,%d,%p,%p,%d,%d,%p,%d,%p) - stub!\n", pSecDesc, cAuthSvc,
-        asAuthSvc, pReserved1, dwAuthnLevel, dwImpLevel, pReserved2,
-        dwCapabilities, pReserved3);
-  return S_OK;
-}
-
-/***********************************************************************
  *           CoSuspendClassObjects [OLE32.@]
  *
  * Suspends all registered class objects to prevent further requests coming in
