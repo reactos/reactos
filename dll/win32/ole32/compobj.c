@@ -2192,34 +2192,6 @@ HRESULT WINAPI CoDisconnectObject( LPUNKNOWN lpUnk, DWORD reserved )
     return S_OK;
 }
 
-/******************************************************************************
- *		StringFromGUID2	[OLE32.@]
- *
- * Modified version of StringFromCLSID that allows you to specify max
- * buffer size.
- *
- * PARAMS
- *  id   [I] GUID to convert to string.
- *  str  [O] Buffer where the result will be stored.
- *  cmax [I] Size of the buffer in characters.
- *
- * RETURNS
- *	Success: The length of the resulting string in characters.
- *  Failure: 0.
- */
-INT WINAPI StringFromGUID2(REFGUID id, LPOLESTR str, INT cmax)
-{
-    static const WCHAR formatW[] = { '{','%','0','8','X','-','%','0','4','X','-',
-                                     '%','0','4','X','-','%','0','2','X','%','0','2','X','-',
-                                     '%','0','2','X','%','0','2','X','%','0','2','X','%','0','2','X',
-                                     '%','0','2','X','%','0','2','X','}',0 };
-    if (!id || cmax < CHARS_IN_GUID) return 0;
-    swprintf( str, formatW, id->Data1, id->Data2, id->Data3,
-              id->Data4[0], id->Data4[1], id->Data4[2], id->Data4[3],
-              id->Data4[4], id->Data4[5], id->Data4[6], id->Data4[7] );
-    return CHARS_IN_GUID;
-}
-
 /* open HKCR\\CLSID\\{string form of clsid}\\{keyname} key */
 HRESULT COM_OpenKeyForCLSID(REFCLSID clsid, LPCWSTR keyname, REGSAM access, HKEY *subkey)
 {
@@ -2287,16 +2259,6 @@ HRESULT COM_OpenKeyForAppIdFromCLSID(REFCLSID clsid, REGSAM access, HKEY *subkey
         return REGDB_E_READREGDB;
 
     return S_OK;
-}
-
-/******************************************************************************
- *              CLSIDFromProgIDEx [OLE32.@]
- */
-HRESULT WINAPI CLSIDFromProgIDEx(LPCOLESTR progid, LPCLSID clsid)
-{
-    FIXME("%s,%p: semi-stub\n", debugstr_w(progid), clsid);
-
-    return CLSIDFromProgID(progid, clsid);
 }
 
 static HRESULT get_ps_clsid_from_registry(const WCHAR* path, REGSAM access, CLSID *pclsid)
