@@ -25,7 +25,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#include "wine/list.h"
+#include <wine/list.h>
 #else
 #include <assert.h>
 #include <stdarg.h>
@@ -108,8 +108,8 @@ static BOOL process_detaching = FALSE;  /* set on process detach to avoid deadlo
 static int free_lib_count;   /* recursion depth of LdrUnloadDll calls */
 static LONG path_safe_mode;  /* path mode set by RtlSetSearchPathMode */
 #endif
-static LONG dll_safe_mode = 1;  /* dll search mode */
 
+static LONG dll_safe_mode = 1;  /* dll search mode */
 static UNICODE_STRING dll_directory;  /* extra path for LdrSetDllDirectory */
 #ifndef __REACTOS__
 static UNICODE_STRING system_dll_path; /* path to search for system dependency dlls */

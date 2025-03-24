@@ -16,6 +16,7 @@
 #include <ndk/ldrfuncs.h>
 #include <ndk/iotypes.h>
 #include <ndk/iofuncs.h>
+
 #define NDEBUG
 #include <debug.h>
 

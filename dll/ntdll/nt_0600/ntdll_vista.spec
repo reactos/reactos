@@ -20,9 +20,9 @@
 @ stdcall RtlSendMsgToSm(ptr ptr) SmSendMsgToSm
 
 @ stdcall LdrAddDllDirectory(ptr ptr)
-@ stdcall LdrSetDllDirectory(ptr)
 @ stdcall LdrGetDllDirectory(ptr)
+@ stdcall LdrGetDllPath(wstr long ptr ptr)
 @ stdcall LdrRemoveDllDirectory(ptr)
 @ stdcall LdrSetDefaultDllDirectories(long)
-@ stdcall LdrGetDllPath(wstr long ptr ptr)
+@ stdcall LdrSetDllDirectory(ptr)
 

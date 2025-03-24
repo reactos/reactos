@@ -157,7 +157,7 @@
 @ stdcall LdrGetDllHandle(wstr ptr ptr ptr)
 @ stdcall LdrGetDllHandleEx(long wstr ptr ptr ptr)
 @ stdcall -stub -version=0x600+ LdrGetFailureData()
-@ stdcall LdrGetDllPath(wstr long ptr ptr)
+@ stdcall -version=0x601+ LdrGetDllPath(wstr long ptr ptr)
 @ stdcall -stub -version=0x600+ LdrGetFileNameFromLoadAsDataTable(ptr ptr)
 @ stdcall -stub -version=0x600+ -arch=x86_64 LdrGetKnownDllSectionHandle(wstr long ptr)
 @ stdcall LdrGetProcedureAddress(ptr ptr long ptr)
