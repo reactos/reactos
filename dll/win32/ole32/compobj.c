@@ -2921,20 +2921,6 @@ DWORD WINAPI CoGetCurrentProcess(void)
 }
 
 /***********************************************************************
- *              CoGetCurrentLogicalThreadId        [OLE32.@]
- */
-HRESULT WINAPI CoGetCurrentLogicalThreadId(GUID *id)
-{
-    TRACE("(%p)\n", id);
-
-    if (!id)
-        return E_INVALIDARG;
-
-    *id = COM_CurrentCausalityId();
-    return S_OK;
-}
-
-/***********************************************************************
  *           CoIsOle1Class [OLE32.@]
  *
  * Determines whether the specified class an OLE v1 class.

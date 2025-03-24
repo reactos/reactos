@@ -659,7 +659,7 @@ static HRESULT WINAPI ClientRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface,
 
     message_state->channel_hook_info.iid = *riid;
     message_state->channel_hook_info.cbSize = sizeof(message_state->channel_hook_info);
-    message_state->channel_hook_info.uCausality = COM_CurrentCausalityId();
+    CoGetCurrentLogicalThreadId(&message_state->channel_hook_info.uCausality);
     message_state->channel_hook_info.dwServerPid = This->server_pid;
     message_state->channel_hook_info.iMethod = msg->ProcNum & ~RPC_FLAGS_VALID_BIT;
     message_state->channel_hook_info.pObject = NULL; /* only present on server-side */

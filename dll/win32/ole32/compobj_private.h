@@ -287,16 +287,6 @@ static inline APARTMENT* COM_CurrentApt(void)
     return COM_CurrentInfo()->apt;
 }
 
-static inline GUID COM_CurrentCausalityId(void)
-{
-    struct oletls *info = COM_CurrentInfo();
-    if (!info)
-        return GUID_NULL;
-    if (IsEqualGUID(&info->causality_id, &GUID_NULL))
-        CoCreateGuid(&info->causality_id);
-    return info->causality_id;
-}
-
 /* helpers for debugging */
 # define DEBUG_SET_CRITSEC_NAME(cs, name) (cs)->DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": " name)
 # define DEBUG_CLEAR_CRITSEC_NAME(cs) (cs)->DebugInfo->Spare[0] = 0
