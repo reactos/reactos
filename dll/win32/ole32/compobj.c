@@ -4256,39 +4256,6 @@ HRESULT WINAPI CoSwitchCallContext(IUnknown *pObject, IUnknown **ppOldObject)
     return S_OK;
 }
 
-/***********************************************************************
- *           CoRevertToSelf [OLE32.@]
- *
- * Ends the impersonation of the client of the currently executing server
- * call in the current thread.
- *
- * PARAMS
- *  None.
- *
- * RETURNS
- *  Success: S_OK.
- *  Failure: HRESULT code.
- *
- * SEE ALSO
- *  CoImpersonateClient, CoQueryClientBlanket, CoGetCallContext.
- */
-HRESULT WINAPI CoRevertToSelf(void)
-{
-    IServerSecurity *pSrvSec;
-    HRESULT hr;
-
-    TRACE("\n");
-
-    hr = CoGetCallContext(&IID_IServerSecurity, (void **)&pSrvSec);
-    if (SUCCEEDED(hr))
-    {
-        hr = IServerSecurity_RevertToSelf(pSrvSec);
-        IServerSecurity_Release(pSrvSec);
-    }
-
-    return hr;
-}
-
 static BOOL COM_PeekMessage(struct apartment *apt, MSG *msg)
 {
     /* first try to retrieve messages for incoming COM calls to the apartment window */
