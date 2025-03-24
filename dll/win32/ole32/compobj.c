@@ -4796,34 +4796,6 @@ static const IObjContextVtbl Context_Object_Vtbl =
 };
 
 /***********************************************************************
- *           CoGetObjectContext [OLE32.@]
- *
- * Retrieves an object associated with the current context (i.e. apartment).
- *
- * PARAMS
- *  riid [I] ID of the interface of the object to retrieve.
- *  ppv  [O] Address where object will be stored on return.
- *
- * RETURNS
- *  Success: S_OK.
- *  Failure: HRESULT code.
- */
-HRESULT WINAPI CoGetObjectContext(REFIID riid, void **ppv)
-{
-    IObjContext *context;
-    HRESULT hr;
-
-    TRACE("(%s, %p)\n", debugstr_guid(riid), ppv);
-
-    *ppv = NULL;
-    hr = CoGetContextToken((ULONG_PTR*)&context);
-    if (FAILED(hr))
-        return hr;
-
-    return IObjContext_QueryInterface(context, riid, ppv);
-}
-
-/***********************************************************************
  *           CoGetContextToken [OLE32.@]
  */
 HRESULT WINAPI CoGetContextToken( ULONG_PTR *token )
