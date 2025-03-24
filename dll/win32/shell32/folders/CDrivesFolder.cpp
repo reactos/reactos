@@ -82,8 +82,9 @@ static INT8 GetDriveNumber(PCUITEMID_CHILD pidl)
 {
     if (!_ILIsDrive(pidl))
         return -1;
-    BYTE letter = ((PIDLDATA*)pidl->mkid.abID)->u.drive.szDriveName[0], num = (letter | 32) - 'a';
-    return num < 26 ? num : -1;
+    BYTE letter = ((PIDLDATA*)pidl->mkid.abID)->u.drive.szDriveName[0];
+    BYTE number = (letter | 32) - 'a';
+    return number < 26 ? number : -1;
 }
 
 template<class T> static T* GetDrivePath(PCUITEMID_CHILD pidl, T *Path)
@@ -429,7 +430,7 @@ getIconLocationForDrive(IShellFolder *psf, PCITEMID_CHILD pidl, UINT uFlags,
 }
 
 static HRESULT
-getLabelForDriveFromInf(PCWSTR wszPath, LPWSTR szLabel, UINT cchMax)
+getLabelForDriveFromAutoRun(PCWSTR wszPath, LPWSTR szLabel, UINT cchMax)
 {
     WCHAR wszAutoRunInfPath[MAX_PATH];
     WCHAR wszTemp[MAX_PATH];
@@ -459,7 +460,7 @@ static inline HRESULT GetRawDriveLabel(PCWSTR DrivePath, LPWSTR szLabel, UINT cc
 
 static HRESULT GetDriveLabel(PCWSTR DrivePath, LPWSTR szLabel, UINT cchMax)
 {
-    HRESULT hr = getLabelForDriveFromInf(DrivePath, szLabel, cchMax);
+    HRESULT hr = getLabelForDriveFromAutoRun(DrivePath, szLabel, cchMax);
     return hr == S_OK ? S_OK : GetRawDriveLabel(DrivePath, szLabel, cchMax);
 }
 
@@ -1018,7 +1019,7 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
             DWORD err, type, data, cb = sizeof(data);
             err = SHRegGetUSValueW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
                                    L"ShowDriveLettersFirst", &type, &data, &cb, FALSE, NULL, 0);
-            m_DriveDisplayMode = !err && type == REG_DWORD && cb == sizeof(data) ? data : 0;
+            m_DriveDisplayMode = (!err && type == REG_DWORD && cb == sizeof(data)) ? (BYTE)data : 0;
         }
         BOOL bRemoteFirst = m_DriveDisplayMode == 1;
         BOOL bNoLetter = m_DriveDisplayMode == 2;
@@ -1027,7 +1028,7 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
 
         if (!bNoLetter && (bAllFirst || (bRemoteFirst && GetDriveTypeW(szDrive) == DRIVE_REMOTE)))
         {
-            bNoLetter = TRUE;
+            bNoLetter = TRUE; // Handling the letter now, don't append it again later
             if (!bEditLabel)
                 pszLabel += wsprintfW(pszPath, L"(%c:) ", szDrive[0]);
         }
@@ -1044,9 +1045,9 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
             }
             if (ResourceId)
             {
-                UINT len = LoadStringW(shell32_hInstance, ResourceId, pszLabel, MAX_PATH);
+                UINT len = LoadStringW(shell32_hInstance, ResourceId, pszLabel, MAX_PATH - 7);
                 if (len > MAX_PATH - 7)
-                    pszLabel[MAX_PATH-7] = L'\0';
+                    pszLabel[MAX_PATH-7] = UNICODE_NULL;
             }
         }
 
@@ -1059,7 +1060,7 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
     if (!*pszPath && !bEditLabel) // SHGDN_FORPARSING or failure above (except editing empty label)
     {
         if (GET_SHGDN_RELATION(dwFlags) == SHGDN_INFOLDER)
-            szDrive[2] = L'\0'; // Remove backslash
+            szDrive[2] = UNICODE_NULL; // Remove backslash
         wcscpy(pszPath, szDrive);
     }
     strRet->uType = STRRET_WSTR;

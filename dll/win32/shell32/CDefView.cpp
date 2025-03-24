@@ -2794,7 +2794,10 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             WCHAR szName[MAX_PATH], *pszText = lpdi->item.pszText;
             if (SUCCEEDED(Shell_DisplayNameOf(m_pSFParent, pidl, SHGDN_FOREDITING | SHGDN_INFOLDER,
                                               szName, _countof(szName))))
-                ::SetWindowText(hEdit, pszText = szName);
+            {
+                pszText = szName;
+                ::SetWindowText(hEdit, pszText);
+            }
 
             // smartass-renaming: See CORE-15242
             if (!(fAttr & SFGAO_FOLDER) && (fAttr & SFGAO_FILESYSTEM) &&

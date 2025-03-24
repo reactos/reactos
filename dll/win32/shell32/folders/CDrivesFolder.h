@@ -36,7 +36,7 @@ class CDrivesFolder :
         /* both paths are parsible from the desktop */
         LPITEMIDLIST pidlRoot;    /* absolute pidl */
         CComPtr<IShellFolder2> m_regFolder;
-        int m_DriveDisplayMode;
+        INT8 m_DriveDisplayMode;
 
     public:
         CDrivesFolder();

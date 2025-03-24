@@ -133,7 +133,6 @@ SFGAOF CNSCBand::_GetAttributesOfItem(_In_ CItemData *pData, _In_ SFGAOF Query)
     return Attributes & Query;
 }
 
-
 HRESULT CNSCBand::_GetNameOfItem(IShellFolder *pSF, PCUITEMID_CHILD pidl, UINT Flags, PWSTR Name)
 {
     STRRET strret;
