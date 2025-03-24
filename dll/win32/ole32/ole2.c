@@ -2853,20 +2853,6 @@ HRESULT WINAPI OleNoteObjectVisible(LPUNKNOWN pUnknown, BOOL bVisible)
     return CoLockObjectExternal(pUnknown, bVisible, TRUE);
 }
 
-
-/***********************************************************************
- *           OLE_FreeClipDataArray   [internal]
- *
- * NOTES:
- *  frees the data associated with an array of CLIPDATAs
- */
-static void OLE_FreeClipDataArray(ULONG count, CLIPDATA * pClipDataArray)
-{
-    ULONG i;
-    for (i = 0; i < count; i++)
-        CoTaskMemFree(pClipDataArray[i].pClipData);
-}
-
 /***********************************************************************
  *           PropSysAllocString			    [OLE32.@]
  * NOTES
@@ -2971,124 +2957,6 @@ static inline HRESULT PROPVARIANT_ValidateType(VARTYPE vt)
     }
     WARN("Bad type %d\n", vt);
     return STG_E_INVALIDPARAMETER;
-}
-
-/***********************************************************************
- *           PropVariantClear			    [OLE32.@]
- */
-HRESULT WINAPI PropVariantClear(PROPVARIANT * pvar) /* [in/out] */
-{
-    HRESULT hr;
-
-    TRACE("(%p)\n", pvar);
-
-    if (!pvar)
-        return S_OK;
-
-    hr = PROPVARIANT_ValidateType(pvar->vt);
-    if (FAILED(hr))
-    {
-        memset(pvar, 0, sizeof(*pvar));
-        return hr;
-    }
-
-    switch(pvar->vt)
-    {
-    case VT_EMPTY:
-    case VT_NULL:
-    case VT_I1:
-    case VT_I2:
-    case VT_I4:
-    case VT_I8:
-    case VT_R4:
-    case VT_R8:
-    case VT_CY:
-    case VT_DATE:
-    case VT_ERROR:
-    case VT_BOOL:
-    case VT_DECIMAL:
-    case VT_UI1:
-    case VT_UI2:
-    case VT_UI4:
-    case VT_UI8:
-    case VT_INT:
-    case VT_UINT:
-    case VT_FILETIME:
-        break;
-    case VT_DISPATCH:
-    case VT_UNKNOWN:
-    case VT_STREAM:
-    case VT_STREAMED_OBJECT:
-    case VT_STORAGE:
-    case VT_STORED_OBJECT:
-        if (pvar->u.pStream)
-            IStream_Release(pvar->u.pStream);
-        break;
-    case VT_CLSID:
-    case VT_LPSTR:
-    case VT_LPWSTR:
-        /* pick an arbitrary typed pointer - we don't care about the type
-         * as we are just freeing it */
-        CoTaskMemFree(pvar->u.puuid);
-        break;
-    case VT_BLOB:
-    case VT_BLOB_OBJECT:
-        CoTaskMemFree(pvar->u.blob.pBlobData);
-        break;
-    case VT_BSTR:
-        PropSysFreeString(pvar->u.bstrVal);
-        break;
-    case VT_CF:
-        if (pvar->u.pclipdata)
-        {
-            OLE_FreeClipDataArray(1, pvar->u.pclipdata);
-            CoTaskMemFree(pvar->u.pclipdata);
-        }
-        break;
-    default:
-        if (pvar->vt & VT_VECTOR)
-        {
-            ULONG i;
-
-            switch (pvar->vt & ~VT_VECTOR)
-            {
-            case VT_VARIANT:
-                FreePropVariantArray(pvar->u.capropvar.cElems, pvar->u.capropvar.pElems);
-                break;
-            case VT_CF:
-                OLE_FreeClipDataArray(pvar->u.caclipdata.cElems, pvar->u.caclipdata.pElems);
-                break;
-            case VT_BSTR:
-                for (i = 0; i < pvar->u.cabstr.cElems; i++)
-                    PropSysFreeString(pvar->u.cabstr.pElems[i]);
-                break;
-            case VT_LPSTR:
-                for (i = 0; i < pvar->u.calpstr.cElems; i++)
-                    CoTaskMemFree(pvar->u.calpstr.pElems[i]);
-                break;
-            case VT_LPWSTR:
-                for (i = 0; i < pvar->u.calpwstr.cElems; i++)
-                    CoTaskMemFree(pvar->u.calpwstr.pElems[i]);
-                break;
-            }
-            if (pvar->vt & ~VT_VECTOR)
-            {
-                /* pick an arbitrary VT_VECTOR structure - they all have the same
-                 * memory layout */
-                CoTaskMemFree(pvar->u.capropvar.pElems);
-            }
-        }
-        else if (pvar->vt & VT_ARRAY)
-            hr = SafeArrayDestroy(pvar->u.parray);
-        else
-        {
-            WARN("Invalid/unsupported type %d\n", pvar->vt);
-            hr = STG_E_INVALIDPARAMETER;
-        }
-    }
-
-    memset(pvar, 0, sizeof(*pvar));
-    return hr;
 }
 
 /***********************************************************************
@@ -3268,25 +3136,6 @@ HRESULT WINAPI PropVariantCopy(PROPVARIANT *pvarDest,      /* [out] */
         else
             WARN("Invalid/unsupported type %d\n", pvarSrc->vt);
     }
-
-    return S_OK;
-}
-
-/***********************************************************************
- *           FreePropVariantArray			    [OLE32.@]
- */
-HRESULT WINAPI FreePropVariantArray(ULONG cVariants, /* [in] */
-                                    PROPVARIANT *rgvars)    /* [in/out] */
-{
-    ULONG i;
-
-    TRACE("(%u, %p)\n", cVariants, rgvars);
-
-    if (!rgvars)
-        return E_INVALIDARG;
-
-    for(i = 0; i < cVariants; i++)
-        PropVariantClear(&rgvars[i]);
 
     return S_OK;
 }

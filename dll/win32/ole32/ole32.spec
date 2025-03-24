@@ -142,7 +142,7 @@
 @ stdcall DoDragDrop(ptr ptr long ptr)
 @ stub EnableHookObject
 @ stdcall FmtIdToPropStgName(ptr wstr)
-@ stdcall FreePropVariantArray(long ptr)
+@ stdcall FreePropVariantArray(long ptr) combase.FreePropVariantArray
 @ stdcall GetClassFile(wstr ptr)
 @ stdcall GetConvertStg(ptr)
 @ stub GetDocumentBitStg
@@ -269,7 +269,7 @@
 @ stdcall PropStgNameToFmtId(wstr ptr)
 @ stdcall PropSysAllocString(wstr)
 @ stdcall PropSysFreeString(wstr)
-@ stdcall PropVariantClear(ptr)
+@ stdcall PropVariantClear(ptr) combase.PropVariantClear
 @ stdcall PropVariantCopy(ptr ptr)
 @ stdcall ReadClassStg(ptr ptr)
 @ stdcall ReadClassStm(ptr ptr)
