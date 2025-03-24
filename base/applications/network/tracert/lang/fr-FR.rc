@@ -8,7 +8,7 @@ Usage: tracert [-d] [-h sauts_max] [-j liste_dhôtes] [-w délai] nom_de_la_cibl
 Options :\n\
     -d                 Ne pas résoudre les adresses en noms d'hôtes.\n\
     -h sauts_max       Nombre de sauts maximum pour atteindre la cible.\n\
-    -j liste_dhôtes    Intinéraire source imprécis dans la liste d'hôtes.\n\
+    -j liste_dhôtes    Itinéraire source imprécis dans la liste d'hôtes.\n\
     -w délai           Délai d'expiration en millisecondes pour chaque réponse.\n\
     -4                 Force l'utilisation d'IPv4.\n\
     -6                 Force l'utilisation d'IPv6.\n\

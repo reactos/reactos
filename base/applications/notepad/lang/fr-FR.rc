@@ -25,7 +25,7 @@ BEGIN
     POPUP "&Fichier"
     BEGIN
         MENUITEM "&Nouveau\tCtrl+N", CMD_NEW
-        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "Nouvelle &fenêtre\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Ouvrir\tCtrl+O", CMD_OPEN
         MENUITEM "&Enregistrer\tCtrl+S", CMD_SAVE
         MENUITEM "Enregistrer &sous...", CMD_SAVE_AS
@@ -75,35 +75,35 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
 FONT 8, "MS Shell Dlg"
 CAPTION "Page Setup"
 BEGIN
-    GROUPBOX "Preview", 0, 240, 6, 120, 153, BS_GROUPBOX
+    GROUPBOX "Aperçu", 0, 240, 6, 120, 153, BS_GROUPBOX
     CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
     CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
     CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
-    GROUPBOX "Paper", grp2, 8, 6, 224, 56, BS_GROUPBOX
-    LTEXT "&Size:", stc2, 16, 22, 36, 8
+    GROUPBOX "Papier", grp2, 8, 6, 224, 56, BS_GROUPBOX
+    LTEXT "&Taille :", stc2, 16, 22, 36, 8
     COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Tray:", stc3, 16, 42, 36, 8
+    LTEXT "&Source :", stc3, 16, 42, 36, 8
     COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
     GROUPBOX "Orientation", grp1, 8, 66, 64, 56, BS_GROUPBOX
-    AUTORADIOBUTTON "&Portrait", rad1, 16, 80, 52, 12, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "&Landscape", rad2, 16, 100, 52, 12
-    GROUPBOX "Borders", grp4, 80, 66, 152, 56, BS_GROUPBOX
-    LTEXT "L&eft:", stc15, 88, 82, 30, 8
+    AUTORADIOBUTTON "P&ortrait", rad1, 16, 80, 52, 12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Pa&ysage", rad2, 16, 100, 52, 12
+    GROUPBOX "Marges", grp4, 80, 66, 152, 56, BS_GROUPBOX
+    LTEXT "&Gauche :", stc15, 88, 82, 30, 8
     EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "&Right:", stc16, 159, 82, 30, 8
+    LTEXT "&Droite :", stc16, 159, 82, 30, 8
     EDITTEXT edt6, 190, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "T&op:", stc17, 88, 102, 30, 8
+    LTEXT "&Haut :", stc17, 88, 102, 30, 8
     EDITTEXT edt5, 119, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "&Bottom:", stc18, 159, 102, 30, 8
+    LTEXT "&Bas :", stc18, 159, 102, 30, 8
     EDITTEXT edt7, 190, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "&Header:", 0x140, 8, 132, 40, 15
+    LTEXT "&En-tête :", 0x140, 8, 132, 40, 15
     EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Footer:", 0x142, 8, 149, 40, 15
+    LTEXT "&Pied de page :", 0x142, 8, 149, 40, 15
     EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
-    PUSHBUTTON "Help", IDHELP, 8, 170, 50, 14
+    PUSHBUTTON "Aide", IDHELP, 8, 170, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
-    PUSHBUTTON "Cancel", IDCANCEL, 254, 170, 50, 14
-    PUSHBUTTON "P&rinter...", psh3, 310, 170, 50, 14
+    PUSHBUTTON "Annuler", IDCANCEL, 254, 170, 50, 14
+    PUSHBUTTON "&Imprimante...", psh3, 310, 170, 50, 14
 END
 
 /* Dialog 'Encoding' */
@@ -135,8 +135,8 @@ CAPTION "Now printing"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CTEXT "Print job is starting...", IDC_PRINTING_STATUS, 5, 10, 150, 15
-    CTEXT "(Filename)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
+    CTEXT "Le travail d'impression démarre...", IDC_PRINTING_STATUS, 5, 10, 150, 15
+    CTEXT "(Nom de fichier)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
     CTEXT "Page %u", IDC_PRINTING_PAGE, 5, 55, 150, 15
     PUSHBUTTON "Annuler", IDCANCEL, 50, 75, 60, 20
 END
@@ -176,12 +176,12 @@ de la mémoire."
     STRING_LINE_COLUMN "Ligne %d, colonne %d"
     STRING_PRINTERROR "Impossible d'imprimer le fichier '%s'.\n\nVérifiez que l'imprimante est allumée et correctement configurée."
     STRING_DEFAULTFONT "Lucida Console"
-    STRING_LINE_NUMBER_OUT_OF_RANGE "The specified line number is out of range."
-    STRING_NOWPRINTING "Now printing page..."
-    STRING_PRINTCANCELING "The print job is being canceled..."
-    STRING_PRINTCOMPLETE "Printing is successfully done."
-    STRING_PRINTCANCELED "Printing has been canceled."
-    STRING_PRINTFAILED "Printing failed."
+    STRING_LINE_NUMBER_OUT_OF_RANGE "Le numéro de ligne spécifié est hors limite."
+    STRING_NOWPRINTING "Impression de la page en cours..."
+    STRING_PRINTCANCELING "Le travail d'impression est en train d'être annulé..."
+    STRING_PRINTCOMPLETE "L'impression a été effectuée avec succès."
+    STRING_PRINTCANCELED "L'impression a été annulée."
+    STRING_PRINTFAILED "L'impression a échoué."
 
     STRING_TEXT_DOCUMENT "Document Texte"
     STRING_NOTEPAD_AUTHORS "Copyright 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"

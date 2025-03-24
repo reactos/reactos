@@ -18,12 +18,12 @@ BEGIN
     IDS_ERROR_NOMEM "Mémoire insuffisante pour terminer l'opération."
     IDS_ERROR_NOFONT "Le fichier %1 n'est pas un fichier de polices valide."
     IDS_ERROR_NOCLASS "Impossible d'initialiser la classe de fenêtre."
-    IDS_ERROR_ISINSTALLED "This font is already installed!" 
-    IDS_ERROR_FONTCPY "Failed to copy the font file!"
-    IDS_ERROR_OPENKEY "Failed to open the fonts registry key!"
-    IDS_ERROR_REGISTER "Failed to register the new font!"
-    IDS_SUCCESS "Success"
-    IDS_COMPLETED "Font installation completed."
+    IDS_ERROR_ISINSTALLED "Cette police est déjà installée !"
+    IDS_ERROR_FONTCPY "Échec lors de la copie du fichier police !"
+    IDS_ERROR_OPENKEY "Échec lors de l'ouverture de la clé de registre de la police !"
+    IDS_ERROR_REGISTER "Échec lors de l'enregistrement de la nouvelle police !"
+    IDS_SUCCESS "Succès"
+    IDS_COMPLETED "Installation de la police effectuée."
     IDS_FILTER_LIST "Toutes polices supportées (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 Fichier de polices (*.fon;*.fnt)\0*.fon;*.fnt\0\
 Fichier de polices TrueType (*.ttf)\0*.ttf\0\

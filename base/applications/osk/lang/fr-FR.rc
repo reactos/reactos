@@ -10,40 +10,40 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDR_OSK_MENU MENU
 BEGIN
-    POPUP "File"
+    POPUP "Fichier"
     BEGIN
-        MENUITEM "&Exit", IDM_EXIT
+        MENUITEM "&Quitter", IDM_EXIT
     END
 
-    POPUP "Keyboard"
+    POPUP "Clavier"
     BEGIN
-        MENUITEM "Enhanced Keyboard", IDM_ENHANCED_KB, CHECKED
-        MENUITEM "Standard Keyboard", IDM_STANDARD_KB
+        MENUITEM "Clavier étendu", IDM_ENHANCED_KB, CHECKED
+        MENUITEM "Clavier standard", IDM_STANDARD_KB
         MENUITEM SEPARATOR
-        MENUITEM "Regular Layout", IDM_REG_LAYOUT, CHECKED, GRAYED
-        MENUITEM "Block Layout", IDM_BLOCK_LAYOUT, GRAYED
+        MENUITEM "Disposition régulière", IDM_REG_LAYOUT, CHECKED, GRAYED
+        MENUITEM "Disposition en blocs", IDM_BLOCK_LAYOUT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "101 keys", IDM_101_KEYS, CHECKED, GRAYED
-        MENUITEM "102 keys", IDM_102_KEYS, GRAYED
-        MENUITEM "106 keys", IDM_106_KEYS, GRAYED
+        MENUITEM "101 touches", IDM_101_KEYS, CHECKED, GRAYED
+        MENUITEM "102 touches", IDM_102_KEYS, GRAYED
+        MENUITEM "106 touches", IDM_106_KEYS, GRAYED
     END
 
     POPUP "Settings"
     BEGIN
-        MENUITEM "Always on Top", IDM_ON_TOP, CHECKED
+        MENUITEM "Toujours au premier plan", IDM_ON_TOP, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "&Use Click Sound", IDM_CLICK_SOUND
+        MENUITEM "&Son sur le clic", IDM_CLICK_SOUND
         MENUITEM SEPARATOR
-        MENUITEM "&Typing Mode...", IDM_TYPE_MODE, GRAYED
+        MENUITEM "&Mode de frappe...", IDM_TYPE_MODE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Font...", IDM_FONT
+        MENUITEM "&Police...", IDM_FONT
     END
 
     POPUP "Help"
     BEGIN
-        MENUITEM "&Help Topics", IDM_HELP_TOPICS, GRAYED
+        MENUITEM "&Aide", IDM_HELP_TOPICS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&About On-Screen Keyboard...", IDM_ABOUT
+        MENUITEM "À &propos du Clavier visuel...", IDM_ABOUT
     END
 END
 
@@ -61,7 +61,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_OSK "On-Screen Keyboard"
+    IDS_OSK "Clavier visuel"
     IDS_AUTHORS "Copyright Denis Robert"
     IDS_NUMLOCK "Num"
     IDS_CAPSLOCK "Caps"
