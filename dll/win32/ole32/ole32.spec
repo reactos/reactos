@@ -175,10 +175,10 @@
 @ stdcall HGLOBAL_UserMarshal(ptr ptr ptr)
 @ stdcall HGLOBAL_UserSize(ptr long ptr)
 @ stdcall HGLOBAL_UserUnmarshal(ptr ptr ptr)
-@ stdcall HICON_UserFree(ptr ptr)
-@ stdcall HICON_UserMarshal(ptr ptr ptr)
-@ stdcall HICON_UserSize(ptr long ptr)
-@ stdcall HICON_UserUnmarshal(ptr ptr ptr)
+@ stdcall HICON_UserFree(ptr ptr) combase.HICON_UserFree
+@ stdcall HICON_UserMarshal(ptr ptr ptr) combase.HICON_UserMarshal
+@ stdcall HICON_UserSize(ptr long ptr) combase.HICON_UserSize
+@ stdcall HICON_UserUnmarshal(ptr ptr ptr) combase.HICON_UserUnmarshal
 @ stdcall HMENU_UserFree(ptr ptr) combase.HMENU_UserFree
 @ stdcall HMENU_UserMarshal(ptr ptr ptr) combase.HMENU_UserMarshal
 @ stdcall HMENU_UserSize(ptr long ptr) combase.HMENU_UserSize
