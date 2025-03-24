@@ -351,12 +351,11 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::OnWinEvent(
     {
         case WM_COMMAND:
         {
-            if (HIWORD(wParam) == CBN_SELCHANGE)
+            if (HIWORD(wParam) == CBN_SELCHANGE && fCombobox == (HWND)lParam)
             {
-                HWND hwndCombo = (HWND)lParam;
-                INT iItem = (INT)SendMessageW(hwndCombo, CB_GETCURSEL, 0, 0);
+                INT iItem = (INT)fCombobox.SendMessage(CB_GETCURSEL);
                 PIDLIST_ABSOLUTE pidl =
-                    (PIDLIST_ABSOLUTE)SendMessageW(hwndCombo, CB_GETITEMDATA, iItem, 0);
+                    (PIDLIST_ABSOLUTE)fCombobox.SendMessage(CB_GETITEMDATA, iItem);
                 m_pidlLastParsed.Free();
                 if (pidl)
                     m_pidlLastParsed.Attach(ILClone(pidl));
