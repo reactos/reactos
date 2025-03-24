@@ -4199,41 +4199,6 @@ HRESULT WINAPI CoAllowSetForegroundWindow(IUnknown *pUnk, void *pvReserved)
 }
 
 /***********************************************************************
- *           CoCopyProxy [OLE32.@]
- *
- * Copies a proxy.
- *
- * PARAMS
- *  pProxy [I] Pointer to the proxy object.
- *  ppCopy [O] Copy of the proxy.
- *
- * RETURNS
- *  Success: S_OK.
- *  Failure: HRESULT code.
- *
- * SEE ALSO
- *  CoQueryProxyBlanket, CoSetProxyBlanket.
- */
-HRESULT WINAPI CoCopyProxy(IUnknown *pProxy, IUnknown **ppCopy)
-{
-    IClientSecurity *pCliSec;
-    HRESULT hr;
-
-    TRACE("%p\n", pProxy);
-
-    hr = IUnknown_QueryInterface(pProxy, &IID_IClientSecurity, (void **)&pCliSec);
-    if (SUCCEEDED(hr))
-    {
-        hr = IClientSecurity_CopyProxy(pCliSec, pProxy, ppCopy);
-        IClientSecurity_Release(pCliSec);
-    }
-
-    if (FAILED(hr)) ERR("-- failed with 0x%08x\n", hr);
-    return hr;
-}
-
-
-/***********************************************************************
  *           CoGetCallContext [OLE32.@]
  *
  * Gets the context of the currently executing server call in the current
