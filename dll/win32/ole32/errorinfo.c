@@ -41,49 +41,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 /***********************************************************************
- *		GetErrorInfo (OLE32.@)
- *
- * Retrieves the error information object for the current thread.
- *
- * PARAMS
- *  dwReserved [I]. Reserved. Must be zero.
- *  pperrinfo  [O]. Address where error information object will be stored on return.
- *
- * RETURNS
- *  Success: S_OK if an error information object was set for the current thread.
- *           S_FALSE if otherwise.
- *  Failure: E_INVALIDARG if dwReserved is not zero.
- *
- * NOTES
- *  This function causes the current error info object for the thread to be
- *  cleared if one was set beforehand.
- */
-HRESULT WINAPI GetErrorInfo(ULONG dwReserved, IErrorInfo **pperrinfo)
-{
-	TRACE("(%d, %p, %p)\n", dwReserved, pperrinfo, COM_CurrentInfo()->errorinfo);
-
-	if (dwReserved)
-	{
-		ERR("dwReserved (0x%x) != 0\n", dwReserved);
-		return E_INVALIDARG;
-	}
-
-	if(!pperrinfo) return E_INVALIDARG;
-
-	if (!COM_CurrentInfo()->errorinfo)
-	{
-	   *pperrinfo = NULL;
-	   return S_FALSE;
-	}
-
-	*pperrinfo = COM_CurrentInfo()->errorinfo;
-        
-	/* clear thread error state */
-	COM_CurrentInfo()->errorinfo = NULL;
-	return S_OK;
-}
-
-/***********************************************************************
  *		SetErrorInfo (OLE32.@)
  *
  * Sets the error information object for the current thread.

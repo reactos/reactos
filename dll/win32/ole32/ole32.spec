@@ -146,7 +146,7 @@
 @ stdcall GetClassFile(wstr ptr)
 @ stdcall GetConvertStg(ptr)
 @ stub GetDocumentBitStg
-@ stdcall GetErrorInfo(long ptr)
+@ stdcall GetErrorInfo(long ptr) combase.GetErrorInfo
 @ stdcall GetHGlobalFromILockBytes(ptr ptr)
 @ stdcall GetHGlobalFromStream(ptr ptr)
 @ stub GetHookInterface
