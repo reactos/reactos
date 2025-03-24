@@ -211,8 +211,8 @@ BOOL CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     // Clean up hdcMem0
     ::SelectObject(hdcMem0, hbm0Old);
     ::DeleteDC(hdcMem0);
-    ::DeleteObject(hbmCache1);
     ::DeleteObject(hbmCache2);
+    ::DeleteObject(hbmCache1);
 
     return TRUE;
 }
