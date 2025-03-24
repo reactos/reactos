@@ -25,6 +25,7 @@ list(APPEND SOURCE
     PathIsEqualOrSubFolder.cpp
     PathIsTemporary.cpp
     PathMakeUniqueName.cpp
+    PathProcessCommand.cpp
     PathResolve.cpp
     RealShellExecuteEx.cpp
     SHAppBarMessage.cpp
