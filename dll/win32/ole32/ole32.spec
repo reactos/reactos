@@ -87,7 +87,7 @@
 @ stdcall CoRegisterChannelHook(ptr ptr)
 @ stdcall CoRegisterClassObject(ptr ptr long long ptr)
 @ stdcall CoRegisterInitializeSpy(ptr ptr)
-@ stdcall CoRegisterMallocSpy (ptr)
+@ stdcall CoRegisterMallocSpy(ptr) combase.CoRegisterMallocSpy
 @ stdcall CoRegisterMessageFilter(ptr ptr)
 @ stdcall CoRegisterPSClsid(ptr ptr)
 @ stdcall CoRegisterSurrogate(ptr)
