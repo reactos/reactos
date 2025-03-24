@@ -73,28 +73,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
  * This section defines variables internal to the COM module.
  */
 
-static struct apartment *MTA; /* protected by csApartment */
-static struct apartment *MainApartment; /* the first STA apartment */
-static struct list apts = LIST_INIT( apts ); /* protected by csApartment */
-
-static CRITICAL_SECTION csApartment;
-static CRITICAL_SECTION_DEBUG critsect_debug =
-{
-    0, 0, &csApartment,
-    { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
-      0, 0, { (DWORD_PTR)(__FILE__ ": csApartment") }
-};
-static CRITICAL_SECTION csApartment = { &critsect_debug, -1, 0, 0, 0, 0 };
-
-enum comclass_threadingmodel
-{
-    ThreadingModel_Apartment = 1,
-    ThreadingModel_Free      = 2,
-    ThreadingModel_No        = 3,
-    ThreadingModel_Both      = 4,
-    ThreadingModel_Neutral   = 5
-};
-
 enum comclass_miscfields
 {
     MiscStatus          = 1,
@@ -164,20 +142,6 @@ struct class_reg_data
         } actctx;
         HKEY hkey;
     } u;
-};
-
-/*
- * This is a marshallable object exposing registered local servers.
- * IServiceProvider is used only because it happens meet requirements
- * and already has proxy/stub code. If more functionality is needed,
- * a custom interface may be used instead.
- */
-struct LocalServer
-{
-    IServiceProvider IServiceProvider_iface;
-    LONG ref;
-    struct apartment *apt;
-    IStream *marshal_stream;
 };
 
 /*
@@ -424,322 +388,6 @@ LSTATUS open_classes_key( HKEY hkey, const WCHAR *name, REGSAM access, HKEY *ret
     return RtlNtStatusToDosError( NtOpenKey( (HANDLE *)retkey, access, &attr ) );
 }
 
-/*****************************************************************************
- * This section contains OpenDllList definitions
- *
- * The OpenDllList contains only handles of dll loaded by CoGetClassObject or
- * other functions that do LoadLibrary _without_ giving back a HMODULE.
- * Without this list these handles would never be freed.
- *
- * FIXME: a DLL that says OK when asked for unloading is unloaded in the
- * next unload-call but not before 600 sec.
- */
-
-typedef HRESULT (CALLBACK *DllGetClassObjectFunc)(REFCLSID clsid, REFIID iid, LPVOID *ppv);
-typedef HRESULT (WINAPI *DllCanUnloadNowFunc)(void);
-
-typedef struct tagOpenDll
-{
-  LONG refs;
-  LPWSTR library_name;
-  HANDLE library;
-  DllGetClassObjectFunc DllGetClassObject;
-  DllCanUnloadNowFunc DllCanUnloadNow;
-  struct list entry;
-} OpenDll;
-
-static struct list openDllList = LIST_INIT(openDllList);
-
-static CRITICAL_SECTION csOpenDllList;
-static CRITICAL_SECTION_DEBUG dll_cs_debug =
-{
-    0, 0, &csOpenDllList,
-    { &dll_cs_debug.ProcessLocksList, &dll_cs_debug.ProcessLocksList },
-      0, 0, { (DWORD_PTR)(__FILE__ ": csOpenDllList") }
-};
-static CRITICAL_SECTION csOpenDllList = { &dll_cs_debug, -1, 0, 0, 0, 0 };
-
-struct apartment_loaded_dll
-{
-    struct list entry;
-    OpenDll *dll;
-    DWORD unload_time;
-    BOOL multi_threaded;
-};
-
-static const WCHAR wszAptWinClass[] = {'O','l','e','M','a','i','n','T','h','r','e','a','d','W','n','d','C','l','a','s','s',0};
-
-static ATOM apt_win_class;
-
-/*****************************************************************************
- * This section contains OpenDllList implementation
- */
-
-static OpenDll *COMPOBJ_DllList_Get(LPCWSTR library_name)
-{
-    OpenDll *ptr;
-    OpenDll *ret = NULL;
-    EnterCriticalSection(&csOpenDllList);
-    LIST_FOR_EACH_ENTRY(ptr, &openDllList, OpenDll, entry)
-    {
-        if (!wcsicmp(library_name, ptr->library_name) &&
-            (InterlockedIncrement(&ptr->refs) != 1) /* entry is being destroy if == 1 */)
-        {
-            ret = ptr;
-            break;
-        }
-    }
-    LeaveCriticalSection(&csOpenDllList);
-    return ret;
-}
-
-/* caller must ensure that library_name is not already in the open dll list */
-static HRESULT COMPOBJ_DllList_Add(LPCWSTR library_name, OpenDll **ret)
-{
-    OpenDll *entry;
-    int len;
-    HRESULT hr = S_OK;
-    HANDLE hLibrary;
-    DllCanUnloadNowFunc DllCanUnloadNow;
-    DllGetClassObjectFunc DllGetClassObject;
-
-    TRACE("%s\n", debugstr_w(library_name));
-
-    *ret = COMPOBJ_DllList_Get(library_name);
-    if (*ret) return S_OK;
-
-    /* do this outside the csOpenDllList to avoid creating a lock dependency on
-     * the loader lock */
-    hLibrary = LoadLibraryExW(library_name, 0, LOAD_WITH_ALTERED_SEARCH_PATH);
-    if (!hLibrary)
-    {
-        ERR("couldn't load in-process dll %s\n", debugstr_w(library_name));
-        /* failure: DLL could not be loaded */
-        return E_ACCESSDENIED; /* FIXME: or should this be CO_E_DLLNOTFOUND? */
-    }
-
-    DllCanUnloadNow = (void *)GetProcAddress(hLibrary, "DllCanUnloadNow");
-    /* Note: failing to find DllCanUnloadNow is not a failure */
-    DllGetClassObject = (void *)GetProcAddress(hLibrary, "DllGetClassObject");
-    if (!DllGetClassObject)
-    {
-        /* failure: the dll did not export DllGetClassObject */
-        ERR("couldn't find function DllGetClassObject in %s\n", debugstr_w(library_name));
-        FreeLibrary(hLibrary);
-        return CO_E_DLLNOTFOUND;
-    }
-
-    EnterCriticalSection( &csOpenDllList );
-
-    *ret = COMPOBJ_DllList_Get(library_name);
-    if (*ret)
-    {
-        /* another caller to this function already added the dll while we
-         * weren't in the critical section */
-        FreeLibrary(hLibrary);
-    }
-    else
-    {
-        len = lstrlenW(library_name);
-        entry = HeapAlloc(GetProcessHeap(),0, sizeof(OpenDll));
-        if (entry)
-            entry->library_name = HeapAlloc(GetProcessHeap(), 0, (len + 1)*sizeof(WCHAR));
-        if (entry && entry->library_name)
-        {
-            memcpy(entry->library_name, library_name, (len + 1)*sizeof(WCHAR));
-            entry->library = hLibrary;
-            entry->refs = 1;
-            entry->DllCanUnloadNow = DllCanUnloadNow;
-            entry->DllGetClassObject = DllGetClassObject;
-            list_add_tail(&openDllList, &entry->entry);
-            *ret = entry;
-        }
-        else
-        {
-            HeapFree(GetProcessHeap(), 0, entry);
-            hr = E_OUTOFMEMORY;
-            FreeLibrary(hLibrary);
-        }
-    }
-
-    LeaveCriticalSection( &csOpenDllList );
-
-    return hr;
-}
-
-/* pass FALSE for free_entry to release a reference without destroying the
- * entry if it reaches zero or TRUE otherwise */
-static void COMPOBJ_DllList_ReleaseRef(OpenDll *entry, BOOL free_entry)
-{
-    if (!InterlockedDecrement(&entry->refs) && free_entry)
-    {
-        EnterCriticalSection(&csOpenDllList);
-        list_remove(&entry->entry);
-        LeaveCriticalSection(&csOpenDllList);
-
-        TRACE("freeing %p\n", entry->library);
-        FreeLibrary(entry->library);
-
-        HeapFree(GetProcessHeap(), 0, entry->library_name);
-        HeapFree(GetProcessHeap(), 0, entry);
-    }
-}
-
-/* frees memory associated with active dll list */
-static void COMPOBJ_DllList_Free(void)
-{
-    OpenDll *entry, *cursor2;
-    EnterCriticalSection(&csOpenDllList);
-    LIST_FOR_EACH_ENTRY_SAFE(entry, cursor2, &openDllList, OpenDll, entry)
-    {
-        list_remove(&entry->entry);
-
-        HeapFree(GetProcessHeap(), 0, entry->library_name);
-        HeapFree(GetProcessHeap(), 0, entry);
-    }
-    LeaveCriticalSection(&csOpenDllList);
-    DeleteCriticalSection(&csOpenDllList);
-}
-
-/******************************************************************************
- * Manage apartments.
- */
-
-static DWORD apartment_addref(struct apartment *apt)
-{
-    DWORD refs = InterlockedIncrement(&apt->refs);
-    TRACE("%s: before = %d\n", wine_dbgstr_longlong(apt->oxid), refs - 1);
-    return refs;
-}
-
-/* allocates memory and fills in the necessary fields for a new apartment
- * object. must be called inside apartment cs */
-static struct apartment *apartment_construct(DWORD model)
-{
-    struct apartment *apt;
-
-    TRACE("creating new apartment, model=%d\n", model);
-
-    apt = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*apt));
-    apt->tid = GetCurrentThreadId();
-
-    list_init(&apt->proxies);
-    list_init(&apt->stubmgrs);
-    list_init(&apt->loaded_dlls);
-    list_init(&apt->usage_cookies);
-    apt->ipidc = 0;
-    apt->refs = 1;
-    apt->remunk_exported = FALSE;
-    apt->oidc = 1;
-    InitializeCriticalSection(&apt->cs);
-    DEBUG_SET_CRITSEC_NAME(&apt->cs, "apartment");
-
-    apt->multi_threaded = !(model & COINIT_APARTMENTTHREADED);
-
-    if (apt->multi_threaded)
-    {
-        /* FIXME: should be randomly generated by in an RPC call to rpcss */
-        apt->oxid = ((OXID)GetCurrentProcessId() << 32) | 0xcafe;
-    }
-    else
-    {
-        /* FIXME: should be randomly generated by in an RPC call to rpcss */
-        apt->oxid = ((OXID)GetCurrentProcessId() << 32) | GetCurrentThreadId();
-    }
-
-    TRACE("Created apartment on OXID %s\n", wine_dbgstr_longlong(apt->oxid));
-
-    list_add_head(&apts, &apt->entry);
-
-    return apt;
-}
-
-/* gets and existing apartment if one exists or otherwise creates an apartment
- * structure which stores OLE apartment-local information and stores a pointer
- * to it in the thread-local storage */
-static struct apartment *apartment_get_or_create(DWORD model)
-{
-    struct apartment *apt = COM_CurrentApt();
-
-    if (!apt)
-    {
-        if (model & COINIT_APARTMENTTHREADED)
-        {
-            EnterCriticalSection(&csApartment);
-
-            apt = apartment_construct(model);
-            if (!MainApartment)
-            {
-                MainApartment = apt;
-                apt->main = TRUE;
-                TRACE("Created main-threaded apartment with OXID %s\n", wine_dbgstr_longlong(apt->oxid));
-            }
-
-            LeaveCriticalSection(&csApartment);
-
-            if (apt->main)
-                apartment_createwindowifneeded(apt);
-        }
-        else
-        {
-            EnterCriticalSection(&csApartment);
-
-            /* The multi-threaded apartment (MTA) contains zero or more threads interacting
-             * with free threaded (ie thread safe) COM objects. There is only ever one MTA
-             * in a process */
-            if (MTA)
-            {
-                TRACE("entering the multithreaded apartment %s\n", wine_dbgstr_longlong(MTA->oxid));
-                apartment_addref(MTA);
-            }
-            else
-                MTA = apartment_construct(model);
-
-            apt = MTA;
-
-            LeaveCriticalSection(&csApartment);
-        }
-        COM_CurrentInfo()->apt = apt;
-    }
-
-    return apt;
-}
-
-static inline BOOL apartment_is_model(const struct apartment *apt, DWORD model)
-{
-    return (apt->multi_threaded == !(model & COINIT_APARTMENTTHREADED));
-}
-
-/* gets the multi-threaded apartment if it exists. The caller must
- * release the reference from the apartment as soon as the apartment pointer
- * is no longer required. */
-static struct apartment *apartment_find_mta(void)
-{
-    struct apartment *apt;
-
-    EnterCriticalSection(&csApartment);
-
-    if ((apt = MTA))
-        apartment_addref(apt);
-
-    LeaveCriticalSection(&csApartment);
-
-    return apt;
-}
-
-/* Return the current apartment if it exists, or, failing that, the MTA. Caller
- * must free the returned apartment in either case. */
-struct apartment *apartment_get_current_or_mta(void)
-{
-    struct apartment *apt = COM_CurrentApt();
-    if (apt)
-    {
-        apartment_addref(apt);
-        return apt;
-    }
-    return apartment_find_mta();
-}
-
 static void COM_RevokeRegisteredClassObject(RegisteredClass *curClass)
 {
     list_remove(&curClass->entry);
@@ -751,7 +399,7 @@ static void COM_RevokeRegisteredClassObject(RegisteredClass *curClass)
     HeapFree(GetProcessHeap(), 0, curClass);
 }
 
-static void COM_RevokeAllClasses(const struct apartment *apt)
+void COM_RevokeAllClasses(const struct apartment *apt)
 {
   RegisteredClass *curClass, *cursor;
 
@@ -915,130 +563,6 @@ HRESULT WINAPI ManualResetEvent_CreateInstance(IClassFactory *iface, IUnknown *o
     return hr;
 }
 
-static inline LocalServer *impl_from_IServiceProvider(IServiceProvider *iface)
-{
-    return CONTAINING_RECORD(iface, LocalServer, IServiceProvider_iface);
-}
-
-static HRESULT WINAPI LocalServer_QueryInterface(IServiceProvider *iface, REFIID riid, void **ppv)
-{
-    LocalServer *This = impl_from_IServiceProvider(iface);
-
-    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
-
-    if(IsEqualGUID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_IServiceProvider)) {
-        *ppv = &This->IServiceProvider_iface;
-    }else {
-        *ppv = NULL;
-        return E_NOINTERFACE;
-    }
-
-    IUnknown_AddRef((IUnknown*)*ppv);
-    return S_OK;
-}
-
-static ULONG WINAPI LocalServer_AddRef(IServiceProvider *iface)
-{
-    LocalServer *This = impl_from_IServiceProvider(iface);
-    LONG ref = InterlockedIncrement(&This->ref);
-
-    TRACE("(%p) ref=%d\n", This, ref);
-
-    return ref;
-}
-
-static ULONG WINAPI LocalServer_Release(IServiceProvider *iface)
-{
-    LocalServer *This = impl_from_IServiceProvider(iface);
-    LONG ref = InterlockedDecrement(&This->ref);
-
-    TRACE("(%p) ref=%d\n", This, ref);
-
-    if(!ref) {
-        assert(!This->apt);
-        HeapFree(GetProcessHeap(), 0, This);
-    }
-
-    return ref;
-}
-
-static HRESULT WINAPI LocalServer_QueryService(IServiceProvider *iface, REFGUID guid, REFIID riid, void **ppv)
-{
-    LocalServer *This = impl_from_IServiceProvider(iface);
-    struct apartment *apt = COM_CurrentApt();
-    RegisteredClass *iter;
-    HRESULT hres = E_FAIL;
-
-    TRACE("(%p)->(%s %s %p)\n", This, debugstr_guid(guid), debugstr_guid(riid), ppv);
-
-    if(!This->apt)
-        return E_UNEXPECTED;
-
-    EnterCriticalSection(&csRegisteredClassList);
-
-    LIST_FOR_EACH_ENTRY(iter, &RegisteredClassList, RegisteredClass, entry) {
-        if(iter->apartment_id == apt->oxid
-           && (iter->runContext & CLSCTX_LOCAL_SERVER)
-           && IsEqualGUID(&iter->classIdentifier, guid)) {
-            hres = IUnknown_QueryInterface(iter->classObject, riid, ppv);
-            break;
-        }
-    }
-
-    LeaveCriticalSection( &csRegisteredClassList );
-
-    return hres;
-}
-
-static const IServiceProviderVtbl LocalServerVtbl = {
-    LocalServer_QueryInterface,
-    LocalServer_AddRef,
-    LocalServer_Release,
-    LocalServer_QueryService
-};
-
-static HRESULT get_local_server_stream(struct apartment *apt, IStream **ret)
-{
-    HRESULT hres = S_OK;
-
-    EnterCriticalSection(&apt->cs);
-
-    if(!apt->local_server) {
-        LocalServer *obj;
-
-        obj = heap_alloc(sizeof(*obj));
-        if(obj) {
-            obj->IServiceProvider_iface.lpVtbl = &LocalServerVtbl;
-            obj->ref = 1;
-            obj->apt = apt;
-
-            hres = CreateStreamOnHGlobal(0, TRUE, &obj->marshal_stream);
-            if(SUCCEEDED(hres)) {
-                hres = CoMarshalInterface(obj->marshal_stream, &IID_IServiceProvider, (IUnknown*)&obj->IServiceProvider_iface,
-                        MSHCTX_LOCAL, NULL, MSHLFLAGS_TABLESTRONG);
-                if(FAILED(hres))
-                    IStream_Release(obj->marshal_stream);
-            }
-
-            if(SUCCEEDED(hres))
-                apt->local_server = obj;
-            else
-                heap_free(obj);
-        }else {
-            hres = E_OUTOFMEMORY;
-        }
-    }
-
-    if(SUCCEEDED(hres))
-        hres = IStream_Clone(apt->local_server->marshal_stream, ret);
-
-    LeaveCriticalSection(&apt->cs);
-
-    if(FAILED(hres))
-        ERR("Failed: %08x\n", hres);
-    return hres;
-}
-
 /***********************************************************************
  *           CoRevokeClassObject [OLE32.@]
  *
@@ -1102,609 +626,6 @@ HRESULT WINAPI DECLSPEC_HOTPATCH CoRevokeClassObject(
   return hr;
 }
 
-/* frees unused libraries loaded by apartment_getclassobject by calling the
- * DLL's DllCanUnloadNow entry point */
-static void apartment_freeunusedlibraries(struct apartment *apt, DWORD delay)
-{
-    struct apartment_loaded_dll *entry, *next;
-    EnterCriticalSection(&apt->cs);
-    LIST_FOR_EACH_ENTRY_SAFE(entry, next, &apt->loaded_dlls, struct apartment_loaded_dll, entry)
-    {
-	if (entry->dll->DllCanUnloadNow && (entry->dll->DllCanUnloadNow() == S_OK))
-        {
-            DWORD real_delay = delay;
-
-            if (real_delay == INFINITE)
-            {
-                /* DLLs that return multi-threaded objects aren't unloaded
-                 * straight away to cope for programs that have races between
-                 * last object destruction and threads in the DLLs that haven't
-                 * finished, despite DllCanUnloadNow returning S_OK */
-                if (entry->multi_threaded)
-                    real_delay = 10 * 60 * 1000; /* 10 minutes */
-                else
-                    real_delay = 0;
-            }
-
-            if (!real_delay || (entry->unload_time && ((int)(GetTickCount() - entry->unload_time) > 0)))
-            {
-                list_remove(&entry->entry);
-                COMPOBJ_DllList_ReleaseRef(entry->dll, TRUE);
-                HeapFree(GetProcessHeap(), 0, entry);
-            }
-            else
-            {
-                entry->unload_time = GetTickCount() + real_delay;
-                if (!entry->unload_time) entry->unload_time = 1;
-            }
-        }
-        else if (entry->unload_time)
-            entry->unload_time = 0;
-    }
-    LeaveCriticalSection(&apt->cs);
-}
-
-DWORD apartment_release(struct apartment *apt)
-{
-    DWORD ret;
-
-    EnterCriticalSection(&csApartment);
-
-    ret = InterlockedDecrement(&apt->refs);
-    TRACE("%s: after = %d\n", wine_dbgstr_longlong(apt->oxid), ret);
-
-    if (apt->being_destroyed)
-    {
-        LeaveCriticalSection(&csApartment);
-        return ret;
-    }
-
-    /* destruction stuff that needs to happen under csApartment CS */
-    if (ret == 0)
-    {
-        apt->being_destroyed = TRUE;
-        if (apt == MTA) MTA = NULL;
-        else if (apt == MainApartment) MainApartment = NULL;
-        list_remove(&apt->entry);
-    }
-
-    LeaveCriticalSection(&csApartment);
-
-    if (ret == 0)
-    {
-        struct list *cursor, *cursor2;
-
-        TRACE("destroying apartment %p, oxid %s\n", apt, wine_dbgstr_longlong(apt->oxid));
-
-        if(apt->local_server) {
-            LocalServer *local_server = apt->local_server;
-            LARGE_INTEGER zero;
-
-            memset(&zero, 0, sizeof(zero));
-            IStream_Seek(local_server->marshal_stream, zero, STREAM_SEEK_SET, NULL);
-            CoReleaseMarshalData(local_server->marshal_stream);
-            IStream_Release(local_server->marshal_stream);
-            local_server->marshal_stream = NULL;
-
-            apt->local_server = NULL;
-            local_server->apt = NULL;
-            IServiceProvider_Release(&local_server->IServiceProvider_iface);
-        }
-
-        /* Release the references to the registered class objects */
-        COM_RevokeAllClasses(apt);
-
-        /* no locking is needed for this apartment, because no other thread
-         * can access it at this point */
-
-        apartment_disconnectproxies(apt);
-
-        if (apt->win) DestroyWindow(apt->win);
-        if (apt->host_apt_tid) PostThreadMessageW(apt->host_apt_tid, WM_QUIT, 0, 0);
-
-        LIST_FOR_EACH_SAFE(cursor, cursor2, &apt->stubmgrs)
-        {
-            struct stub_manager *stubmgr = LIST_ENTRY(cursor, struct stub_manager, entry);
-            /* release the implicit reference given by the fact that the
-             * stub has external references (it must do since it is in the
-             * stub manager list in the apartment and all non-apartment users
-             * must have a ref on the apartment and so it cannot be destroyed).
-             */
-            stub_manager_int_release(stubmgr);
-        }
-
-        /* if this assert fires, then another thread took a reference to a
-         * stub manager without taking a reference to the containing
-         * apartment, which it must do. */
-        assert(list_empty(&apt->stubmgrs));
-
-        if (apt->filter) IMessageFilter_Release(apt->filter);
-
-        /* free as many unused libraries as possible... */
-        apartment_freeunusedlibraries(apt, 0);
-
-        /* ... and free the memory for the apartment loaded dll entry and
-         * release the dll list reference without freeing the library for the
-         * rest */
-        while ((cursor = list_head(&apt->loaded_dlls)))
-        {
-            struct apartment_loaded_dll *apartment_loaded_dll = LIST_ENTRY(cursor, struct apartment_loaded_dll, entry);
-            COMPOBJ_DllList_ReleaseRef(apartment_loaded_dll->dll, FALSE);
-            list_remove(cursor);
-            HeapFree(GetProcessHeap(), 0, apartment_loaded_dll);
-        }
-
-        DEBUG_CLEAR_CRITSEC_NAME(&apt->cs);
-        DeleteCriticalSection(&apt->cs);
-
-        HeapFree(GetProcessHeap(), 0, apt);
-    }
-
-    return ret;
-}
-
-/* The given OXID must be local to this process */
-struct apartment *apartment_findfromoxid(OXID oxid)
-{
-    struct apartment *result = NULL;
-    struct list *cursor;
-
-    EnterCriticalSection(&csApartment);
-    LIST_FOR_EACH( cursor, &apts )
-    {
-        struct apartment *apt = LIST_ENTRY( cursor, struct apartment, entry );
-        if (apt->oxid == oxid)
-        {
-            result = apt;
-            apartment_addref(result);
-            break;
-        }
-    }
-    LeaveCriticalSection(&csApartment);
-
-    return result;
-}
-
-/* gets the apartment which has a given creator thread ID. The caller must
- * release the reference from the apartment as soon as the apartment pointer
- * is no longer required. */
-struct apartment *apartment_findfromtid(DWORD tid)
-{
-    struct apartment *result = NULL;
-    struct list *cursor;
-
-    EnterCriticalSection(&csApartment);
-    LIST_FOR_EACH( cursor, &apts )
-    {
-        struct apartment *apt = LIST_ENTRY( cursor, struct apartment, entry );
-        if (apt->tid == tid)
-        {
-            result = apt;
-            apartment_addref(result);
-            break;
-        }
-    }
-    LeaveCriticalSection(&csApartment);
-
-    return result;
-}
-
-/* gets the main apartment if it exists. The caller must
- * release the reference from the apartment as soon as the apartment pointer
- * is no longer required. */
-static struct apartment *apartment_findmain(void)
-{
-    struct apartment *result;
-
-    EnterCriticalSection(&csApartment);
-
-    result = MainApartment;
-    if (result) apartment_addref(result);
-
-    LeaveCriticalSection(&csApartment);
-
-    return result;
-}
-
-/* gets the specified class object by loading the appropriate DLL, if
- * necessary and calls the DllGetClassObject function for the DLL */
-static HRESULT apartment_getclassobject(struct apartment *apt, LPCWSTR dllpath,
-                                        BOOL apartment_threaded,
-                                        REFCLSID rclsid, REFIID riid, void **ppv)
-{
-    static const WCHAR wszOle32[] = {'o','l','e','3','2','.','d','l','l',0};
-    HRESULT hr = S_OK;
-    BOOL found = FALSE;
-    struct apartment_loaded_dll *apartment_loaded_dll;
-
-    if (!wcsicmp(dllpath, wszOle32))
-    {
-        /* we don't need to control the lifetime of this dll, so use the local
-         * implementation of DllGetClassObject directly */
-        TRACE("calling ole32!DllGetClassObject\n");
-        hr = DllGetClassObject(rclsid, riid, ppv);
-
-        if (hr != S_OK)
-            ERR("DllGetClassObject returned error 0x%08x for dll %s\n", hr, debugstr_w(dllpath));
-
-        return hr;
-    }
-
-    EnterCriticalSection(&apt->cs);
-
-    LIST_FOR_EACH_ENTRY(apartment_loaded_dll, &apt->loaded_dlls, struct apartment_loaded_dll, entry)
-        if (!wcsicmp(dllpath, apartment_loaded_dll->dll->library_name))
-        {
-            TRACE("found %s already loaded\n", debugstr_w(dllpath));
-            found = TRUE;
-            break;
-        }
-
-    if (!found)
-    {
-        apartment_loaded_dll = HeapAlloc(GetProcessHeap(), 0, sizeof(*apartment_loaded_dll));
-        if (!apartment_loaded_dll)
-            hr = E_OUTOFMEMORY;
-        if (SUCCEEDED(hr))
-        {
-            apartment_loaded_dll->unload_time = 0;
-            apartment_loaded_dll->multi_threaded = FALSE;
-            hr = COMPOBJ_DllList_Add( dllpath, &apartment_loaded_dll->dll );
-            if (FAILED(hr))
-                HeapFree(GetProcessHeap(), 0, apartment_loaded_dll);
-        }
-        if (SUCCEEDED(hr))
-        {
-            TRACE("added new loaded dll %s\n", debugstr_w(dllpath));
-            list_add_tail(&apt->loaded_dlls, &apartment_loaded_dll->entry);
-        }
-    }
-
-    LeaveCriticalSection(&apt->cs);
-
-    if (SUCCEEDED(hr))
-    {
-        /* one component being multi-threaded overrides any number of
-         * apartment-threaded components */
-        if (!apartment_threaded)
-            apartment_loaded_dll->multi_threaded = TRUE;
-
-        TRACE("calling DllGetClassObject %p\n", apartment_loaded_dll->dll->DllGetClassObject);
-        /* OK: get the ClassObject */
-        hr = apartment_loaded_dll->dll->DllGetClassObject(rclsid, riid, ppv);
-
-        if (hr != S_OK)
-            ERR("DllGetClassObject returned error 0x%08x for dll %s\n", hr, debugstr_w(dllpath));
-    }
-
-    return hr;
-}
-
-/* Returns expanded dll path from the registry or activation context. */
-static BOOL get_object_dll_path(const struct class_reg_data *regdata, WCHAR *dst, DWORD dstlen)
-{
-    DWORD ret;
-
-    if (regdata->origin == CLASS_REG_REGISTRY)
-    {
-	DWORD keytype;
-	WCHAR src[MAX_PATH];
-	DWORD dwLength = dstlen * sizeof(WCHAR);
-
-        if( (ret = RegQueryValueExW(regdata->u.hkey, NULL, NULL, &keytype, (BYTE*)src, &dwLength)) == ERROR_SUCCESS ) {
-            if (keytype == REG_EXPAND_SZ) {
-              if (dstlen <= ExpandEnvironmentStringsW(src, dst, dstlen)) ret = ERROR_MORE_DATA;
-            } else {
-              const WCHAR *quote_start;
-              quote_start = wcschr(src, '\"');
-              if (quote_start) {
-                const WCHAR *quote_end = wcschr(quote_start + 1, '\"');
-                if (quote_end) {
-                  memmove(src, quote_start + 1,
-                          (quote_end - quote_start - 1) * sizeof(WCHAR));
-                  src[quote_end - quote_start - 1] = '\0';
-                }
-              }
-              lstrcpynW(dst, src, dstlen);
-            }
-        }
-        return !ret;
-    }
-    else
-    {
-        static const WCHAR dllW[] = {'.','d','l','l',0};
-        ULONG_PTR cookie;
-
-        *dst = 0;
-        ActivateActCtx(regdata->u.actctx.hactctx, &cookie);
-        ret = SearchPathW(NULL, regdata->u.actctx.module_name, dllW, dstlen, dst, NULL);
-        DeactivateActCtx(0, cookie);
-        return *dst != 0;
-    }
-}
-
-struct host_object_params
-{
-    struct class_reg_data regdata;
-    CLSID clsid; /* clsid of object to marshal */
-    IID iid; /* interface to marshal */
-    HANDLE event; /* event signalling when ready for multi-threaded case */
-    HRESULT hr; /* result for multi-threaded case */
-    IStream *stream; /* stream that the object will be marshaled into */
-    BOOL apartment_threaded; /* is the component purely apartment-threaded? */
-};
-
-static HRESULT apartment_hostobject(struct apartment *apt,
-                                    const struct host_object_params *params)
-{
-    IUnknown *object;
-    HRESULT hr;
-    static const LARGE_INTEGER llZero;
-    WCHAR dllpath[MAX_PATH+1];
-
-    TRACE("clsid %s, iid %s\n", debugstr_guid(&params->clsid), debugstr_guid(&params->iid));
-
-    if (!get_object_dll_path(&params->regdata, dllpath, ARRAY_SIZE(dllpath)))
-    {
-        /* failure: CLSID is not found in registry */
-        WARN("class %s not registered inproc\n", debugstr_guid(&params->clsid));
-        return REGDB_E_CLASSNOTREG;
-    }
-
-    hr = apartment_getclassobject(apt, dllpath, params->apartment_threaded,
-                                  &params->clsid, &params->iid, (void **)&object);
-    if (FAILED(hr))
-        return hr;
-
-    hr = CoMarshalInterface(params->stream, &params->iid, object, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
-    if (FAILED(hr))
-        IUnknown_Release(object);
-    IStream_Seek(params->stream, llZero, STREAM_SEEK_SET, NULL);
-
-    return hr;
-}
-
-static LRESULT CALLBACK apartment_wndproc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    switch (msg)
-    {
-    case DM_EXECUTERPC:
-        RPC_ExecuteCall((struct dispatch_params *)lParam);
-        return 0;
-    case DM_HOSTOBJECT:
-        return apartment_hostobject(COM_CurrentApt(), (const struct host_object_params *)lParam);
-    default:
-        return DefWindowProcW(hWnd, msg, wParam, lParam);
-    }
-}
-
-struct host_thread_params
-{
-    COINIT threading_model;
-    HANDLE ready_event;
-    HWND apartment_hwnd;
-};
-
-/* thread for hosting an object to allow an object to appear to be created in
- * an apartment with an incompatible threading model */
-static DWORD CALLBACK apartment_hostobject_thread(LPVOID p)
-{
-    struct host_thread_params *params = p;
-    MSG msg;
-    HRESULT hr;
-    struct apartment *apt;
-
-    TRACE("\n");
-
-    hr = CoInitializeEx(NULL, params->threading_model);
-    if (FAILED(hr)) return hr;
-
-    apt = COM_CurrentApt();
-    if (params->threading_model == COINIT_APARTMENTTHREADED)
-    {
-        apartment_createwindowifneeded(apt);
-        params->apartment_hwnd = apartment_getwindow(apt);
-    }
-    else
-        params->apartment_hwnd = NULL;
-
-    /* force the message queue to be created before signaling parent thread */
-    PeekMessageW(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
-
-    SetEvent(params->ready_event);
-    params = NULL; /* can't touch params after here as it may be invalid */
-
-    while (GetMessageW(&msg, NULL, 0, 0))
-    {
-        if (!msg.hwnd && (msg.message == DM_HOSTOBJECT))
-        {
-            struct host_object_params *obj_params = (struct host_object_params *)msg.lParam;
-            obj_params->hr = apartment_hostobject(apt, obj_params);
-            SetEvent(obj_params->event);
-        }
-        else
-        {
-            TranslateMessage(&msg);
-            DispatchMessageW(&msg);
-        }
-    }
-
-    TRACE("exiting\n");
-
-    CoUninitialize();
-
-    return S_OK;
-}
-
-/* finds or creates a host apartment, creates the object inside it and returns
- * a proxy to it so that the object can be used in the apartment of the
- * caller of this function */
-static HRESULT apartment_hostobject_in_hostapt(
-    struct apartment *apt, BOOL multi_threaded, BOOL main_apartment,
-    const struct class_reg_data *regdata, REFCLSID rclsid, REFIID riid, void **ppv)
-{
-    struct host_object_params params;
-    HWND apartment_hwnd = NULL;
-    DWORD apartment_tid = 0;
-    HRESULT hr;
-
-    if (!multi_threaded && main_apartment)
-    {
-        struct apartment *host_apt = apartment_findmain();
-        if (host_apt)
-        {
-            apartment_hwnd = apartment_getwindow(host_apt);
-            apartment_release(host_apt);
-        }
-    }
-
-    if (!apartment_hwnd)
-    {
-        EnterCriticalSection(&apt->cs);
-
-        if (!apt->host_apt_tid)
-        {
-            struct host_thread_params thread_params;
-            HANDLE handles[2];
-            DWORD wait_value;
-
-            thread_params.threading_model = multi_threaded ? COINIT_MULTITHREADED : COINIT_APARTMENTTHREADED;
-            handles[0] = thread_params.ready_event = CreateEventW(NULL, FALSE, FALSE, NULL);
-            thread_params.apartment_hwnd = NULL;
-            handles[1] = CreateThread(NULL, 0, apartment_hostobject_thread, &thread_params, 0, &apt->host_apt_tid);
-            if (!handles[1])
-            {
-                CloseHandle(handles[0]);
-                LeaveCriticalSection(&apt->cs);
-                return E_OUTOFMEMORY;
-            }
-            wait_value = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
-            CloseHandle(handles[0]);
-            CloseHandle(handles[1]);
-            if (wait_value == WAIT_OBJECT_0)
-                apt->host_apt_hwnd = thread_params.apartment_hwnd;
-            else
-            {
-                LeaveCriticalSection(&apt->cs);
-                return E_OUTOFMEMORY;
-            }
-        }
-
-        if (multi_threaded || !main_apartment)
-        {
-            apartment_hwnd = apt->host_apt_hwnd;
-            apartment_tid = apt->host_apt_tid;
-        }
-
-        LeaveCriticalSection(&apt->cs);
-    }
-
-    /* another thread may have become the main apartment in the time it took
-     * us to create the thread for the host apartment */
-    if (!apartment_hwnd && !multi_threaded && main_apartment)
-    {
-        struct apartment *host_apt = apartment_findmain();
-        if (host_apt)
-        {
-            apartment_hwnd = apartment_getwindow(host_apt);
-            apartment_release(host_apt);
-        }
-    }
-
-    params.regdata = *regdata;
-    params.clsid = *rclsid;
-    params.iid = *riid;
-    hr = CreateStreamOnHGlobal(NULL, TRUE, &params.stream);
-    if (FAILED(hr))
-        return hr;
-    params.apartment_threaded = !multi_threaded;
-    if (multi_threaded)
-    {
-        params.hr = S_OK;
-        params.event = CreateEventW(NULL, FALSE, FALSE, NULL);
-        if (!PostThreadMessageW(apartment_tid, DM_HOSTOBJECT, 0, (LPARAM)&params))
-            hr = E_OUTOFMEMORY;
-        else
-        {
-            WaitForSingleObject(params.event, INFINITE);
-            hr = params.hr;
-        }
-        CloseHandle(params.event);
-    }
-    else
-    {
-        if (!apartment_hwnd)
-        {
-            ERR("host apartment didn't create window\n");
-            hr = E_OUTOFMEMORY;
-        }
-        else
-            hr = SendMessageW(apartment_hwnd, DM_HOSTOBJECT, 0, (LPARAM)&params);
-    }
-    if (SUCCEEDED(hr))
-        hr = CoUnmarshalInterface(params.stream, riid, ppv);
-    IStream_Release(params.stream);
-    return hr;
-}
-
-static BOOL WINAPI register_class( INIT_ONCE *once, void *param, void **context )
-{
-    WNDCLASSW wclass;
-
-    /* Dispatching to the correct thread in an apartment is done through
-     * window messages rather than RPC transports. When an interface is
-     * marshalled into another apartment in the same process, a window of the
-     * following class is created. The *caller* of CoMarshalInterface (i.e., the
-     * application) is responsible for pumping the message loop in that thread.
-     * The WM_USER messages which point to the RPCs are then dispatched to
-     * apartment_wndproc by the user's code from the apartment in which the
-     * interface was unmarshalled.
-     */
-    memset(&wclass, 0, sizeof(wclass));
-    wclass.lpfnWndProc = apartment_wndproc;
-    wclass.hInstance = hProxyDll;
-    wclass.lpszClassName = wszAptWinClass;
-    apt_win_class = RegisterClassW(&wclass);
-    return TRUE;
-}
-
-/* create a window for the apartment or return the current one if one has
- * already been created */
-HRESULT apartment_createwindowifneeded(struct apartment *apt)
-{
-    static INIT_ONCE class_init_once = INIT_ONCE_STATIC_INIT;
-
-    if (apt->multi_threaded)
-        return S_OK;
-
-    if (!apt->win)
-    {
-        HWND hwnd;
-
-        InitOnceExecuteOnce( &class_init_once, register_class, NULL, NULL );
-
-        hwnd = CreateWindowW(wszAptWinClass, NULL, 0, 0, 0, 0, 0,
-                             HWND_MESSAGE, 0, hProxyDll, NULL);
-        if (!hwnd)
-        {
-            ERR("CreateWindow failed with error %d\n", GetLastError());
-            return HRESULT_FROM_WIN32(GetLastError());
-        }
-        if (InterlockedCompareExchangePointer((PVOID *)&apt->win, hwnd, NULL))
-            /* someone beat us to it */
-            DestroyWindow(hwnd);
-    }
-
-    return S_OK;
-}
-
-/* retrieves the window for the main- or apartment-threaded apartment */
-HWND apartment_getwindow(const struct apartment *apt)
-{
-    assert(!apt->multi_threaded);
-    return apt->win;
-}
-
 static void COM_TlsDestroy(void)
 {
     struct oletls *info = NtCurrentTeb()->ReservedForOle;
@@ -1766,41 +687,6 @@ static void unlock_init_spies(struct oletls *info)
         if (spy->spy) continue;
         list_remove(&spy->entry);
         heap_free(spy);
-    }
-}
-
-HRESULT enter_apartment( struct oletls *info, DWORD model )
-{
-    HRESULT hr = S_OK;
-
-    if (!info->apt)
-    {
-        if (!apartment_get_or_create( model ))
-            return E_OUTOFMEMORY;
-    }
-    else if (!apartment_is_model( info->apt, model ))
-    {
-        WARN( "Attempt to change threading model of this apartment from %s to %s\n",
-              info->apt->multi_threaded ? "multi-threaded" : "apartment threaded",
-              model & COINIT_APARTMENTTHREADED ? "apartment threaded" : "multi-threaded" );
-        return RPC_E_CHANGED_MODE;
-    }
-    else
-        hr = S_FALSE;
-
-    info->inits++;
-
-    return hr;
-}
-
-void leave_apartment( struct oletls *info )
-{
-    if (!--info->inits)
-    {
-        if (info->ole_inits)
-            WARN( "Uninitializing apartment while Ole is still initialized\n" );
-        apartment_release( info->apt );
-        info->apt = NULL;
     }
 }
 
@@ -2129,7 +1015,7 @@ HRESULT COM_OpenKeyForAppIdFromCLSID(REFCLSID clsid, REGSAM access, HKEY *subkey
  *                 to normal COM usage, this method will increase the
  *                 reference count on this object.
  */
-static HRESULT COM_GetRegisteredClassObject(const struct apartment *apt, REFCLSID rclsid,
+HRESULT COM_GetRegisteredClassObject(const struct apartment *apt, REFCLSID rclsid,
                                             DWORD dwClsContext, LPUNKNOWN* ppUnk)
 {
   HRESULT hr = S_FALSE;
@@ -2277,7 +1163,7 @@ HRESULT WINAPI CoRegisterClassObject(
   if (dwClsContext & CLSCTX_LOCAL_SERVER) {
       IStream *marshal_stream;
 
-      hr = get_local_server_stream(apt, &marshal_stream);
+      hr = apartment_get_local_server_stream(apt, &marshal_stream);
       if(FAILED(hr))
       {
           apartment_release(apt);
@@ -2292,86 +1178,6 @@ HRESULT WINAPI CoRegisterClassObject(
   }
   apartment_release(apt);
   return S_OK;
-}
-
-static enum comclass_threadingmodel get_threading_model(const struct class_reg_data *data)
-{
-    if (data->origin == CLASS_REG_REGISTRY)
-    {
-        static const WCHAR wszThreadingModel[] = {'T','h','r','e','a','d','i','n','g','M','o','d','e','l',0};
-        static const WCHAR wszApartment[] = {'A','p','a','r','t','m','e','n','t',0};
-        static const WCHAR wszFree[] = {'F','r','e','e',0};
-        static const WCHAR wszBoth[] = {'B','o','t','h',0};
-        WCHAR threading_model[10 /* lstrlenW(L"apartment")+1 */];
-        DWORD dwLength = sizeof(threading_model);
-        DWORD keytype;
-        DWORD ret;
-
-        ret = RegQueryValueExW(data->u.hkey, wszThreadingModel, NULL, &keytype, (BYTE*)threading_model, &dwLength);
-        if ((ret != ERROR_SUCCESS) || (keytype != REG_SZ))
-            threading_model[0] = '\0';
-
-        if (!wcsicmp(threading_model, wszApartment)) return ThreadingModel_Apartment;
-        if (!wcsicmp(threading_model, wszFree)) return ThreadingModel_Free;
-        if (!wcsicmp(threading_model, wszBoth)) return ThreadingModel_Both;
-
-        /* there's not specific handling for this case */
-        if (threading_model[0]) return ThreadingModel_Neutral;
-        return ThreadingModel_No;
-    }
-    else
-        return data->u.actctx.threading_model;
-}
-
-static HRESULT get_inproc_class_object(struct apartment *apt, const struct class_reg_data *regdata,
-                                       REFCLSID rclsid, REFIID riid,
-                                       BOOL hostifnecessary, void **ppv)
-{
-    WCHAR dllpath[MAX_PATH+1];
-    BOOL apartment_threaded;
-
-    if (hostifnecessary)
-    {
-        enum comclass_threadingmodel model = get_threading_model(regdata);
-
-        if (model == ThreadingModel_Apartment)
-        {
-            apartment_threaded = TRUE;
-            if (apt->multi_threaded)
-                return apartment_hostobject_in_hostapt(apt, FALSE, FALSE, regdata, rclsid, riid, ppv);
-        }
-        else if (model == ThreadingModel_Free)
-        {
-            apartment_threaded = FALSE;
-            if (!apt->multi_threaded)
-                return apartment_hostobject_in_hostapt(apt, TRUE, FALSE, regdata, rclsid, riid, ppv);
-        }
-        /* everything except "Apartment", "Free" and "Both" */
-        else if (model != ThreadingModel_Both)
-        {
-            apartment_threaded = TRUE;
-            /* everything else is main-threaded */
-            if (model != ThreadingModel_No)
-                FIXME("unrecognised threading model %d for object %s, should be main-threaded?\n", model, debugstr_guid(rclsid));
-
-            if (apt->multi_threaded || !apt->main)
-                return apartment_hostobject_in_hostapt(apt, FALSE, TRUE, regdata, rclsid, riid, ppv);
-        }
-        else
-            apartment_threaded = FALSE;
-    }
-    else
-        apartment_threaded = !apt->multi_threaded;
-
-    if (!get_object_dll_path(regdata, dllpath, ARRAY_SIZE(dllpath)))
-    {
-        /* failure: CLSID is not found in registry */
-        WARN("class %s not registered inproc\n", debugstr_guid(rclsid));
-        return REGDB_E_CLASSNOTREG;
-    }
-
-    return apartment_getclassobject(apt, dllpath, apartment_threaded,
-                                    rclsid, riid, ppv);
 }
 
 /***********************************************************************
@@ -2456,7 +1262,7 @@ HRESULT WINAPI DECLSPEC_HOTPATCH CoGetClassObject(
             clsreg.u.actctx.threading_model = comclass->model;
             clsreg.origin = CLASS_REG_ACTCTX;
 
-            hres = get_inproc_class_object(apt, &clsreg, &comclass->clsid, iid, !(dwClsContext & WINE_CLSCTX_DONT_HOST), ppv);
+            hres = apartment_get_inproc_class_object(apt, &clsreg, &comclass->clsid, iid, !(dwClsContext & WINE_CLSCTX_DONT_HOST), ppv);
             ReleaseActCtx(data.hActCtx);
             apartment_release(apt);
             return hres;
@@ -2506,7 +1312,7 @@ HRESULT WINAPI DECLSPEC_HOTPATCH CoGetClassObject(
             clsreg.u.hkey = hkey;
             clsreg.origin = CLASS_REG_REGISTRY;
 
-            hres = get_inproc_class_object(apt, &clsreg, rclsid, iid, !(dwClsContext & WINE_CLSCTX_DONT_HOST), ppv);
+            hres = apartment_get_inproc_class_object(apt, &clsreg, rclsid, iid, !(dwClsContext & WINE_CLSCTX_DONT_HOST), ppv);
             RegCloseKey(hkey);
         }
 
@@ -2542,7 +1348,7 @@ HRESULT WINAPI DECLSPEC_HOTPATCH CoGetClassObject(
             clsreg.u.hkey = hkey;
             clsreg.origin = CLASS_REG_REGISTRY;
 
-            hres = get_inproc_class_object(apt, &clsreg, rclsid, iid, !(dwClsContext & WINE_CLSCTX_DONT_HOST), ppv);
+            hres = apartment_get_inproc_class_object(apt, &clsreg, rclsid, iid, !(dwClsContext & WINE_CLSCTX_DONT_HOST), ppv);
             RegCloseKey(hkey);
         }
 
@@ -3114,6 +1920,49 @@ HRESULT WINAPI CoRegisterChannelHook(REFGUID guidExtension, IChannelHook *pChann
     return RPC_RegisterChannelHook(guidExtension, pChannelHook);
 }
 
+/* Returns expanded dll path from the registry or activation context. */
+static BOOL get_object_dll_path(const struct class_reg_data *regdata, WCHAR *dst, DWORD dstlen)
+{
+    DWORD ret;
+
+    if (regdata->origin == CLASS_REG_REGISTRY)
+    {
+	DWORD keytype;
+	WCHAR src[MAX_PATH];
+	DWORD dwLength = dstlen * sizeof(WCHAR);
+
+        if( (ret = RegQueryValueExW(regdata->u.hkey, NULL, NULL, &keytype, (BYTE*)src, &dwLength)) == ERROR_SUCCESS ) {
+            if (keytype == REG_EXPAND_SZ) {
+              if (dstlen <= ExpandEnvironmentStringsW(src, dst, dstlen)) ret = ERROR_MORE_DATA;
+            } else {
+              const WCHAR *quote_start;
+              quote_start = wcschr(src, '\"');
+              if (quote_start) {
+                const WCHAR *quote_end = wcschr(quote_start + 1, '\"');
+                if (quote_end) {
+                  memmove(src, quote_start + 1,
+                          (quote_end - quote_start - 1) * sizeof(WCHAR));
+                  src[quote_end - quote_start - 1] = '\0';
+                }
+              }
+              lstrcpynW(dst, src, dstlen);
+            }
+        }
+        return !ret;
+    }
+    else
+    {
+        static const WCHAR dllW[] = {'.','d','l','l',0};
+        ULONG_PTR cookie;
+
+        *dst = 0;
+        ActivateActCtx(regdata->u.actctx.hactctx, &cookie);
+        ret = SearchPathW(NULL, regdata->u.actctx.module_name, dllW, dstlen, dst, NULL);
+        DeactivateActCtx(0, cookie);
+        return *dst != 0;
+    }
+}
+
 HRESULT Handler_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     static const WCHAR wszInprocHandler32[] = {'I','n','p','r','o','c','H','a','n','d','l','e','r','3','2',0};
@@ -3173,7 +2022,7 @@ HRESULT WINAPI CoGetApartmentType(APTTYPE *type, APTTYPEQUALIFIER *qualifier)
 
     *qualifier = APTTYPEQUALIFIER_NONE;
 
-    if (!info->apt && (apt = apartment_find_mta()))
+    if (!info->apt && (apt = apartment_get_mta()))
     {
         apartment_release(apt);
         *type = APTTYPE_MTA;
@@ -3184,38 +2033,14 @@ HRESULT WINAPI CoGetApartmentType(APTTYPE *type, APTTYPEQUALIFIER *qualifier)
     return info->apt ? S_OK : CO_E_NOTINITIALIZED;
 }
 
-struct mta_cookie
-{
-    struct list entry;
-};
-
 /***********************************************************************
  *           CoIncrementMTAUsage [OLE32.@]
  */
 HRESULT WINAPI CoIncrementMTAUsage(CO_MTA_USAGE_COOKIE *cookie)
 {
-    struct mta_cookie *mta_cookie;
-
     TRACE("%p\n", cookie);
 
-    *cookie = NULL;
-
-    if (!(mta_cookie = heap_alloc(sizeof(*mta_cookie))))
-        return E_OUTOFMEMORY;
-
-    EnterCriticalSection(&csApartment);
-
-    if (MTA)
-        apartment_addref(MTA);
-    else
-        MTA = apartment_construct(COINIT_MULTITHREADED);
-    list_add_head(&MTA->usage_cookies, &mta_cookie->entry);
-
-    LeaveCriticalSection(&csApartment);
-
-    *cookie = (CO_MTA_USAGE_COOKIE)mta_cookie;
-
-    return S_OK;
+    return apartment_increment_mta_usage(cookie);
 }
 
 /***********************************************************************
@@ -3223,30 +2048,9 @@ HRESULT WINAPI CoIncrementMTAUsage(CO_MTA_USAGE_COOKIE *cookie)
  */
 HRESULT WINAPI CoDecrementMTAUsage(CO_MTA_USAGE_COOKIE cookie)
 {
-    struct mta_cookie *mta_cookie = (struct mta_cookie *)cookie;
-
     TRACE("%p\n", cookie);
 
-    EnterCriticalSection(&csApartment);
-
-    if (MTA)
-    {
-        struct mta_cookie *cur;
-
-        LIST_FOR_EACH_ENTRY(cur, &MTA->usage_cookies, struct mta_cookie, entry)
-        {
-            if (mta_cookie == cur)
-            {
-                list_remove(&cur->entry);
-                heap_free(cur);
-                apartment_release(MTA);
-                break;
-            }
-        }
-    }
-
-    LeaveCriticalSection(&csApartment);
-
+    apartment_decrement_mta_usage(cookie);
     return S_OK;
 }
 
@@ -3412,13 +2216,10 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID reserved)
     case DLL_PROCESS_DETACH:
         if (reserved) break;
         release_std_git();
-        if(apt_win_class)
-            UnregisterClassW( (const WCHAR*)MAKEINTATOM(apt_win_class), hProxyDll );
         RPC_UnregisterAllChannelHooks();
-        COMPOBJ_DllList_Free();
         DeleteCriticalSection(&csRegisteredClassList);
-        DeleteCriticalSection(&csApartment);
-	break;
+        apartment_global_cleanup();
+        break;
 
     case DLL_THREAD_DETACH:
         COM_TlsDestroy();

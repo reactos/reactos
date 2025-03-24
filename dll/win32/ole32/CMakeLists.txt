@@ -25,6 +25,7 @@ add_rpcproxy_files(
 
 list(APPEND SOURCE
     antimoniker.c
+    apartment.c
     bindctx.c
     classmoniker.c
     clipboard.c
@@ -41,7 +42,6 @@ list(APPEND SOURCE
     ftmarshal.c
     git.c
     hglobalstream.c
-    ifs.c
     itemmoniker.c
     marshal.c
     memlockbytes.c

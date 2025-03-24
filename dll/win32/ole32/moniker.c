@@ -96,37 +96,6 @@ static inline EnumMonikerImpl *impl_from_IEnumMoniker(IEnumMoniker *iface)
 static HRESULT EnumMonikerImpl_CreateEnumROTMoniker(InterfaceList *moniker_list,
     ULONG pos, IEnumMoniker **ppenumMoniker);
 
-static RPC_BINDING_HANDLE get_rpc_handle(unsigned short *protseq, unsigned short *endpoint)
-{
-    RPC_BINDING_HANDLE handle = NULL;
-    RPC_STATUS status;
-    RPC_WSTR binding;
-
-    status = RpcStringBindingComposeW(NULL, protseq, NULL, endpoint, NULL, &binding);
-    if (status == RPC_S_OK)
-    {
-        status = RpcBindingFromStringBindingW(binding, &handle);
-        RpcStringFreeW(&binding);
-    }
-
-    return handle;
-}
-
-static IrotHandle get_irot_handle(void)
-{
-    if (!irot_handle)
-    {
-        unsigned short protseq[] = IROT_PROTSEQ;
-        unsigned short endpoint[] = IROT_ENDPOINT;
-
-        IrotHandle new_handle = get_rpc_handle(protseq, endpoint);
-        if (InterlockedCompareExchangePointer(&irot_handle, new_handle, NULL))
-            /* another thread beat us to it */
-            RpcBindingFree(&new_handle);
-    }
-    return irot_handle;
-}
-
 static BOOL start_rpcss(void)
 {
     static const WCHAR rpcssW[] = {'R','p','c','S','s',0};
