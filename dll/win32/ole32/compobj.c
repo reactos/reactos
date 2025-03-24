@@ -3269,58 +3269,6 @@ HRESULT WINAPI CoResumeClassObjects(void)
 	return S_OK;
 }
 
-/***********************************************************************
- *           CoCreateInstance [OLE32.@]
- *
- * Creates an instance of the specified class.
- *
- * PARAMS
- *  rclsid       [I] Class ID to create an instance of.
- *  pUnkOuter    [I] Optional outer unknown to allow aggregation with another object.
- *  dwClsContext [I] Flags to restrict the location of the created instance.
- *  iid          [I] The ID of the interface of the instance to return.
- *  ppv          [O] On returns, contains a pointer to the specified interface of the instance.
- *
- * RETURNS
- *  Success: S_OK
- *  Failure: HRESULT code.
- *
- * NOTES
- *  The dwClsContext parameter can be one or more of the following:
- *| CLSCTX_INPROC_SERVER - Use an in-process server, such as from a DLL.
- *| CLSCTX_INPROC_HANDLER - Use an in-process object which handles certain functions for an object running in another process.
- *| CLSCTX_LOCAL_SERVER - Connect to an object running in another process.
- *| CLSCTX_REMOTE_SERVER - Connect to an object running on another machine.
- *
- * Aggregation is the concept of deferring the IUnknown of an object to another
- * object. This allows a separate object to behave as though it was part of
- * the object and to allow this the pUnkOuter parameter can be set. Note that
- * not all objects support having an outer of unknown.
- *
- * SEE ALSO
- *  CoGetClassObject()
- */
-HRESULT WINAPI DECLSPEC_HOTPATCH CoCreateInstance(
-    REFCLSID rclsid,
-    LPUNKNOWN pUnkOuter,
-    DWORD dwClsContext,
-    REFIID iid,
-    LPVOID *ppv)
-{
-    MULTI_QI multi_qi = { iid };
-    HRESULT hres;
-
-    TRACE("(rclsid=%s, pUnkOuter=%p, dwClsContext=%08x, riid=%s, ppv=%p)\n", debugstr_guid(rclsid),
-          pUnkOuter, dwClsContext, debugstr_guid(iid), ppv);
-
-    if (ppv==0)
-        return E_POINTER;
-
-    hres = CoCreateInstanceEx(rclsid, pUnkOuter, dwClsContext, NULL, 1, &multi_qi);
-    *ppv = multi_qi.pItf;
-    return hres;
-}
-
 static void init_multi_qi(DWORD count, MULTI_QI *mqi, HRESULT hr)
 {
   ULONG i;
