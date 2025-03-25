@@ -302,9 +302,13 @@ HRESULT CDesktopFolder::_GetSFFromPidl(LPCITEMIDLIST pidl, IShellFolder2** psf)
         return m_regFolder->QueryInterface(IID_PPV_ARG(IShellFolder2, psf));
 #if DBG
     if (_ILIsDesktop(pidl))
+    {
         FIXME("Desktop is unexpected here!\n");
+    }
     else
+    {
         ASSERT(!_ILIsSpecialFolder(pidl));
+    }
 #endif
     IShellFolder *pSF = IsCommonItem(pidl) ? m_SharedDesktopFSFolder : m_DesktopFSFolder;
     return pSF->QueryInterface(IID_PPV_ARG(IShellFolder2, psf));
