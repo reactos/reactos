@@ -957,9 +957,14 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 HBITMAP hbmCopy = selectionModel.GetSelectionContents();
                 HGLOBAL hGlobal = BitmapToClipboardDIB(hbmCopy);
                 if (hGlobal)
+                {
                     ::SetClipboardData(CF_DIB, hGlobal);
+                }
                 else
+                {
                     ShowOutOfMemory();
+                    imageModel.ClearHistory();
+                }
                 ::DeleteObject(hbmCopy);
             }
 
@@ -1093,6 +1098,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 if (!hbmSelection)
                 {
                     ShowOutOfMemory();
+                    imageModel.ClearHistory();
                     break;
                 }
                 SaveDIBToFile(hbmSelection, szFileName, FALSE);
