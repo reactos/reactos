@@ -112,6 +112,7 @@ extern "C" {
 #define PT_FS_FOLDER_FLAG       0x01
 #define PT_FS_FILE_FLAG         0x02
 #define PT_FS_UNICODE_FLAG      0x04
+#define PT_FS_COMMON_FLAG       0x08
 //      PT_NET_REGITEM          0x4? // => SHDID_NET_OTHER
 #define PT_CONTROLS_OLDREGITEM  0x70
 #define PT_CONTROLS_NEWREGITEM  0x71
