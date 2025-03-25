@@ -45,11 +45,13 @@ struct host
     unsigned int client_edge : 1;
     unsigned int use_set_rect : 1;
     unsigned int use_back_colour : 1;
+    unsigned int defer_release : 1;
     PARAFORMAT2 para_fmt;
     DWORD props, scrollbars, event_mask;
     RECT client_rect, set_rect;
     COLORREF back_colour;
     WCHAR password_char;
+    unsigned int notify_level;
 };
 
 static const ITextHost2Vtbl textHostVtbl;
@@ -119,6 +121,8 @@ struct host *host_create( HWND hwnd, CREATESTRUCTW *cs, BOOL emulate_10 )
     GetClientRect( hwnd, &texthost->client_rect );
     texthost->use_back_colour = 0;
     texthost->password_char = (texthost->props & TXTBIT_USEPASSWORD) ? '*' : 0;
+    texthost->defer_release = 0;
+    texthost->notify_level = 0;
 
     return texthost;
 }
@@ -1361,12 +1365,24 @@ static LRESULT RichEditWndProc_common( HWND hwnd, UINT msg, WPARAM wparam,
 
     if ((((host->event_mask & ENM_KEYEVENTS) && msg >= WM_KEYFIRST && msg <= WM_KEYLAST) ||
          ((host->event_mask & ENM_MOUSEEVENTS) && msg >= WM_MOUSEFIRST && msg <= WM_MOUSELAST) ||
-         ((host->event_mask & ENM_SCROLLEVENTS) && msg >= WM_HSCROLL && msg <= WM_VSCROLL)) &&
-        send_msg_filter( host, msg, &wparam, &lparam ))
+         ((host->event_mask & ENM_SCROLLEVENTS) && msg >= WM_HSCROLL && msg <= WM_VSCROLL)))
     {
-        TRACE( "exit (filtered) hwnd %p msg %04x (%s) %lx %lx -> %lu\n",
-               hwnd, msg, get_msg_name(msg), wparam, lparam, res );
-        return res;
+        host->notify_level++;
+        res = send_msg_filter( host, msg, &wparam, &lparam );
+        if (!--host->notify_level && host->defer_release)
+        {
+            TRACE( "exit (filtered deferred release) hwnd %p msg %04x (%s) %lx %lx -> 0\n",
+                   hwnd, msg, get_msg_name(msg), wparam, lparam );
+            ITextHost2_Release( &host->ITextHost_iface );
+            return 0;
+        }
+
+        if (res)
+        {
+            TRACE( "exit (filtered %lu) hwnd %p msg %04x (%s) %lx %lx -> 0\n",
+                   res, hwnd, msg, get_msg_name(msg), wparam, lparam );
+            return 0;
+        }
     }
 
     switch (msg)
@@ -1402,7 +1418,8 @@ static LRESULT RichEditWndProc_common( HWND hwnd, UINT msg, WPARAM wparam,
         break;
     }
     case WM_DESTROY:
-        ITextHost2_Release( &host->ITextHost_iface );
+        if (!host->notify_level) ITextHost2_Release( &host->ITextHost_iface );
+        else host->defer_release = 1;
         return 0;
 
     case WM_ERASEBKGND:
