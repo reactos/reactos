@@ -2086,7 +2086,7 @@ RemoveFontResourceExA(LPCSTR lpFileName,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        _SEH2_YIELD(return FALSE);
+        Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
 
