@@ -230,6 +230,7 @@ HBITMAP InitializeImage(LPCWSTR name, LPWIN32_FIND_DATAW pFound, BOOL isFile)
     if (hBitmap == NULL)
     {
         ShowOutOfMemory();
+        imageModel.ClearHistory();
         return NULL;
     }
 

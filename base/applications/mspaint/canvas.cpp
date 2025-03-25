@@ -16,16 +16,11 @@ CCanvasWindow::CCanvasWindow()
     , m_hitCanvasSizeBox(HIT_NONE)
     , m_ptOrig { -1, -1 }
 {
-    m_ahbmCached[0] = m_ahbmCached[1] = NULL;
     m_rcResizing.SetRectEmpty();
 }
 
 CCanvasWindow::~CCanvasWindow()
 {
-    if (m_ahbmCached[0])
-        ::DeleteObject(m_ahbmCached[0]);
-    if (m_ahbmCached[1])
-        ::DeleteObject(m_ahbmCached[1]);
 }
 
 RECT CCanvasWindow::GetBaseRect()
@@ -119,16 +114,30 @@ VOID CCanvasWindow::zoomTo(INT newZoom, LONG left, LONG top)
     Invalidate(TRUE);
 }
 
-VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
+BOOL CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
 {
     // This is the target area we have to draw on
     CRect rcCanvasDraw;
     rcCanvasDraw.IntersectRect(&rcClient, &rcPaint);
 
+    // Calculate image size
+    CRect rcImage;
+    GetImageRect(rcImage);
+    SIZE sizeImage = { imageModel.GetWidth(), imageModel.GetHeight() };
+
     // We use a memory bitmap to reduce flickering
+    HBITMAP hbmCache1 = CreateDIBWithProperties(rcClient.right, rcClient.bottom);
+    if (!hbmCache1)
+        return FALSE; // Out of memory
+    HBITMAP hbmCache2 = CreateDIBWithProperties(sizeImage.cx, sizeImage.cy);
+    if (!hbmCache2)
+    {
+        ::DeleteObject(hbmCache1);
+        return FALSE; // Out of memory
+    }
+
     HDC hdcMem0 = ::CreateCompatibleDC(hDC);
-    m_ahbmCached[0] = CachedBufferDIB(m_ahbmCached[0], rcClient.right, rcClient.bottom);
-    HGDIOBJ hbm0Old = ::SelectObject(hdcMem0, m_ahbmCached[0]);
+    HGDIOBJ hbm0Old = ::SelectObject(hdcMem0, hbmCache1);
 
     // Fill the background on hdcMem0
     ::FillRect(hdcMem0, &rcCanvasDraw, (HBRUSH)(COLOR_APPWORKSPACE + 1));
@@ -137,11 +146,6 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     RECT rcBase = GetBaseRect();
     if (!selectionModel.m_bShow && !::IsWindowVisible(textEditWindow))
         drawSizeBoxes(hdcMem0, &rcBase, FALSE, &rcCanvasDraw);
-
-    // Calculate image size
-    CRect rcImage;
-    GetImageRect(rcImage);
-    SIZE sizeImage = { imageModel.GetWidth(), imageModel.GetHeight() };
 
     // Calculate the target area on the image
     CRect rcImageDraw = rcCanvasDraw;
@@ -154,8 +158,7 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
 
     // hdcMem1 <-- imageModel
     HDC hdcMem1 = ::CreateCompatibleDC(hDC);
-    m_ahbmCached[1] = CachedBufferDIB(m_ahbmCached[1], sizeImage.cx, sizeImage.cy);
-    HGDIOBJ hbm1Old = ::SelectObject(hdcMem1, m_ahbmCached[1]);
+    HGDIOBJ hbm1Old = ::SelectObject(hdcMem1, hbmCache2);
     ::BitBlt(hdcMem1, rcImageDraw.left, rcImageDraw.top, rcImageDraw.Width(), rcImageDraw.Height(),
              imageModel.GetDC(), rcImageDraw.left, rcImageDraw.top, SRCCOPY);
 
@@ -208,6 +211,10 @@ VOID CCanvasWindow::DoDraw(HDC hDC, RECT& rcClient, RECT& rcPaint)
     // Clean up hdcMem0
     ::SelectObject(hdcMem0, hbm0Old);
     ::DeleteDC(hdcMem0);
+    ::DeleteObject(hbmCache2);
+    ::DeleteObject(hbmCache1);
+
+    return TRUE;
 }
 
 VOID CCanvasWindow::updateScrollRange()
@@ -691,9 +698,22 @@ LRESULT CCanvasWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
     RECT rcClient;
     GetClientRect(&rcClient);
 
+    static BOOL s_bShowedOutOfMemory = FALSE; // Don't show "Out Of Memory" message multiple time
+
     PAINTSTRUCT ps;
     HDC hDC = BeginPaint(&ps);
-    DoDraw(hDC, rcClient, ps.rcPaint);
+
+    if (DoDraw(hDC, rcClient, ps.rcPaint))
+    {
+        s_bShowedOutOfMemory = FALSE;
+    }
+    else if (!s_bShowedOutOfMemory)
+    {
+        ShowOutOfMemory();
+        s_bShowedOutOfMemory = TRUE;
+        imageModel.ClearHistory(); // Reduce memory usage
+    }
+
     EndPaint(&ps);
     return 0;
 }
