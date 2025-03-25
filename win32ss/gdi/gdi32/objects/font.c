@@ -2062,32 +2062,43 @@ RemoveFontResourceA(LPCSTR lpFileName)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 RemoveFontResourceExA(LPCSTR lpFileName,
                       DWORD fl,
-                      PVOID pdv
-                     )
+                      PVOID pdv)
 {
     NTSTATUS Status;
     LPWSTR lpFileNameW;
+    BOOL result;
 
-    /* FIXME the flags */
-    /* FIXME the pdv */
-    /* FIXME NtGdiRemoveFontResource handle flags and pdv */
-
-    Status = HEAP_strdupA2W ( &lpFileNameW, lpFileName );
-    if (!NT_SUCCESS (Status))
-        SetLastError (RtlNtStatusToDosError(Status));
-    else
+    if (fl & ~(FR_PRIVATE | FR_NOT_ENUM))
     {
-
-        HEAP_free ( lpFileNameW );
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
     }
 
-    return 0;
+    _SEH2_TRY
+    {
+        Status = HEAP_strdupA2W(&lpFileNameW, lpFileName);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    result = RemoveFontResourceExW(lpFileNameW, fl, pdv);
+    HEAP_free(lpFileNameW);
+    return result;
 }
 
 /*
