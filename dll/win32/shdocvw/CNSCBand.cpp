@@ -45,33 +45,6 @@ SHDOCVW_GetPathOfShortcut(
     return S_OK;
 }
 
-HRESULT
-SHDOCVW_CreateShortcut(
-    _In_ LPCWSTR pszLnkFileName, 
-    _In_ PCIDLIST_ABSOLUTE pidlTarget,
-    _In_opt_ LPCWSTR pszDescription)
-{
-    HRESULT hr;
-
-    CComPtr<IShellLink> psl;
-    hr = CoCreateInstance(CLSID_ShellLink, NULL,  CLSCTX_INPROC_SERVER,
-                          IID_PPV_ARG(IShellLink, &psl));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    psl->SetIDList(pidlTarget);
-
-    if (pszDescription)
-        psl->SetDescription(pszDescription);
-
-    CComPtr<IPersistFile> ppf;
-    hr = psl->QueryInterface(IID_PPV_ARG(IPersistFile, &ppf));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return ppf->Save(pszLnkFileName, TRUE);
-}
-
 CNSCBand::CNSCBand()
 {
     SHDOCVW_LockModule();
@@ -648,31 +621,23 @@ HRESULT CNSCBand::_AddFavorite()
     CComHeapPtr<ITEMIDLIST> pidlCurrent;
     _GetCurrentLocation(&pidlCurrent);
 
-    WCHAR szCurDir[MAX_PATH];
-    if (!ILGetDisplayName(pidlCurrent, szCurDir))
-    {
-        FIXME("\n");
-        return E_FAIL;
-    }
+    CComPtr<IShellFolder> pParent;
+    LPCITEMIDLIST pidlLast;
+    HRESULT hr = SHBindToParent(pidlCurrent, IID_PPV_ARG(IShellFolder, &pParent), &pidlLast);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    WCHAR szPath[MAX_PATH], szSuffix[32];
-    SHGetSpecialFolderPathW(m_hWnd, szPath, CSIDL_FAVORITES, TRUE);
-    PathAppendW(szPath, PathFindFileNameW(szCurDir));
+    STRRET strret;
+    hr = pParent->GetDisplayNameOf(pidlLast, SHGDN_FORPARSING, &strret);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    const INT ich = lstrlenW(szPath);
-    for (INT iTry = 2; iTry <= 9999; ++iTry)
-    {
-        PathAddExtensionW(szPath, L".lnk");
-        if (!PathFileExistsW(szPath))
-            break;
-        szPath[ich] = UNICODE_NULL;
-        wsprintfW(szSuffix, L" (%d)", iTry);
-        lstrcatW(szPath, szSuffix);
-    }
+    CComHeapPtr<WCHAR> pszURL;
+    hr = StrRetToStrW(&strret, NULL, &pszURL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    TRACE("%S, %S\n", szCurDir, szPath);
-
-    return SHDOCVW_CreateShortcut(szPath, pidlCurrent, NULL);
+    return AddUrlToFavorites(m_hWnd, pszURL, NULL, TRUE);
 }
 
 LRESULT CNSCBand::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)

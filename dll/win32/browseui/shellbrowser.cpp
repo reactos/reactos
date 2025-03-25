@@ -23,6 +23,7 @@
 #include <shellapi.h>
 #include <htiframe.h>
 #include <strsafe.h>
+#include <shdocvw_undoc.h>
 
 extern HRESULT IUnknown_ShowDW(IUnknown * punk, BOOL fShow);
 
@@ -3871,41 +3872,6 @@ LRESULT CShellBrowser::OnBackspace(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
     return 0;
 }
 
-static BOOL
-CreateShortcut(
-    IN LPCWSTR pszLnkFileName,
-    IN LPCITEMIDLIST pidl,
-    IN LPCWSTR pszDescription OPTIONAL)
-{
-    IPersistFile *pPF;
-    IShellLinkW *pSL;
-    HRESULT hr = CoInitialize(NULL);
-    if (FAILED(hr))
-        return hr;
-
-    hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
-                          IID_IShellLinkW, (LPVOID*)&pSL);
-    if (SUCCEEDED(hr))
-    {
-        pSL->SetIDList(pidl);
-
-        if (pszDescription)
-            pSL->SetDescription(pszDescription);
-
-        hr = pSL->QueryInterface(IID_IPersistFile, (LPVOID*)&pPF);
-        if (SUCCEEDED(hr))
-        {
-            hr = pPF->Save(pszLnkFileName, TRUE);
-            pPF->Release();
-        }
-        pSL->Release();
-    }
-
-    CoUninitialize();
-
-    return SUCCEEDED(hr);
-}
-
 HRESULT GetFavsLocation(HWND hWnd, LPITEMIDLIST *pPidl)
 {
     HRESULT hr = SHGetSpecialFolderLocation(hWnd, CSIDL_FAVORITES, pPidl);
@@ -3917,24 +3883,23 @@ HRESULT GetFavsLocation(HWND hWnd, LPITEMIDLIST *pPidl)
 
 LRESULT CShellBrowser::OnAddToFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    LPITEMIDLIST pidlFavs;
-    HRESULT hr = GetFavsLocation(m_hWnd, &pidlFavs);
+    CComPtr<IShellFolder> pParent;
+    LPCITEMIDLIST pidlLast;
+    HRESULT hr = SHBindToParent(fCurrentDirectoryPIDL, IID_PPV_ARG(IShellFolder, &pParent), &pidlLast);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    STRRET strret;
+    hr = pParent->GetDisplayNameOf(pidlLast, SHGDN_FORPARSING, &strret);
     if (FAILED_UNEXPECTEDLY(hr))
         return 0;
 
-    SHFILEINFOW fileInfo = { NULL };
-    if (!SHGetFileInfoW((LPCWSTR)fCurrentDirectoryPIDL, 0, &fileInfo, sizeof(fileInfo),
-                        SHGFI_PIDL | SHGFI_DISPLAYNAME))
-    {
+    CComHeapPtr<WCHAR> pszURL;
+    hr = StrRetToStrW(&strret, NULL, &pszURL);
+    if (FAILED_UNEXPECTEDLY(hr))
         return 0;
-    }
 
-    WCHAR szPath[MAX_PATH];
-    SHGetPathFromIDListW(pidlFavs, szPath);
-    PathAppendW(szPath, fileInfo.szDisplayName);
-    PathAddExtensionW(szPath, L".lnk");
-
-    CreateShortcut(szPath, fCurrentDirectoryPIDL, NULL);
+    AddUrlToFavorites(m_hWnd, pszURL, NULL, TRUE);
     return 0;
 }
 
