@@ -64,11 +64,27 @@ CWineTest::GetNextFile()
     WIN32_FIND_DATAW fd;
 
     /* Did we already begin searching for files? */
-    if(m_hFind)
+    if (m_hFind)
     {
         /* Then get the next file (if any) */
-        if(FindNextFileW(m_hFind, &fd))
-            FoundFile = true;
+        if (FindNextFileW(m_hFind, &fd))
+        {
+            // printf("cFileName is '%S'.\n", fd.cFileName);
+            /* if it was NOT rosautotest.exe then proceed as normal */
+            if (wcsicmp(fd.cFileName, TestName) != 0)
+            {
+                FoundFile = true;
+            }
+            else
+            {
+                /* It was rosautotest.exe so get the next file (if any) */
+                if (FindNextFileW(m_hFind, &fd))
+                {
+                    FoundFile = true;
+                }
+                // printf("cFileName is '%S'.\n", fd.cFileName);
+            }
+        }
     }
     else
     {
@@ -91,8 +107,25 @@ CWineTest::GetNextFile()
         /* Search for the first file and check whether we got one */
         m_hFind = FindFirstFileW(FindPath.c_str(), &fd);
 
-        if(m_hFind != INVALID_HANDLE_VALUE)
-            FoundFile = true;
+        /* If we returned a good handle */
+        if (m_hFind != INVALID_HANDLE_VALUE)
+        {
+            // printf("cFileName is '%S'.\n", fd.cFileName);
+            /* if it was NOT rosautotest.exe then proceed as normal */
+            if (wcsicmp(fd.cFileName, TestName) != 0)
+            {
+                FoundFile = true;
+            }
+            else
+            {
+                /* It was rosautotest.exe so get the next file (if any) */
+                if (FindNextFileW(m_hFind, &fd))
+                {
+                    FoundFile = true;
+                }
+                // printf("cFileName is '%S'.\n", fd.cFileName);
+            }
+        }
     }
 
     if(FoundFile)
