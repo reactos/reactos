@@ -40,7 +40,6 @@ static FolderViewColumns g_ColumnDefs[] =
     { IDS_COL_ATTR,      SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT,   12, LVCFMT_RIGHT },
 };
 
-
 // Helper functions to translate a guid to a readable name
 bool GetInterfaceName(const WCHAR* InterfaceString, WCHAR* buf, size_t size)
 {
@@ -77,7 +76,6 @@ WCHAR* g2s(REFCLSID iid)
 
     return buf[idx];
 }
-
 
 CFontExt::CFontExt()
 {
@@ -364,7 +362,6 @@ STDMETHODIMP CFontExt::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, D
     return S_OK;
 }
 
-
 STDMETHODIMP CFontExt::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
 {
     if (riid == IID_IContextMenu ||
@@ -454,7 +451,6 @@ STDMETHODIMP CFontExt::GetCurFolder(LPITEMIDLIST *ppidl)
 
     return E_POINTER;
 }
-
 
 // *** IPersistFolder methods ***
 STDMETHODIMP CFontExt::Initialize(LPCITEMIDLIST pidl)

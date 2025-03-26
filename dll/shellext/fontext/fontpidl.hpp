@@ -18,7 +18,5 @@ struct FontPidlEntry
 };
 #include <poppack.h>
 
-
 LPITEMIDLIST _ILCreate(LPCWSTR lpString, ULONG Index);
 const FontPidlEntry* _FontFromIL(LPCITEMIDLIST pidl);
-
