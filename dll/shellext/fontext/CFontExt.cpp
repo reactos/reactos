@@ -542,7 +542,11 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
         apidl.Add(pidlRelative);
     }
 
-    DoInstallFontFiles(pidlParent, cida->cidl, &apidl[0]);
+    if (DoInstallFontFiles(pidlParent, cida->cidl, &apidl[0]) != S_OK)
+    {
+        // TODO: Show message
+        return E_FAIL;
+    }
 
     // Invalidate our cache
     g_FontCache->Read();
@@ -573,8 +577,11 @@ DoInstallFontFiles(
             return E_OUTOFMEMORY;
 
         WCHAR szPath[MAX_PATH];
-        if (!SHGetPathFromIDListW(pidl, szPath) || !IsFontDotExt(PathFindExtensionW(szPath)))
+        if (!SHGetPathFromIDListW(pidl, szPath) || PathIsDirectoryW(szPath) ||
+            !IsFontDotExt(PathFindExtensionW(szPath)))
+        {
             return E_FAIL;
+        }
 
         FontPaths.Add(szPath);
     }
