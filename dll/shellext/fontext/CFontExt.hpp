@@ -93,13 +93,15 @@ public:
 };
 
 HRESULT
-DoInstallFontFiles(
+InstallFontFiles(
+    _Out_ CStringW& strMessage,
     _In_ PCUIDLIST_ABSOLUTE pidlParent,
     _In_ UINT cidl,
     _In_ PCUITEMID_CHILD_ARRAY apidl);
 
 HRESULT
-DoInstallSingleFontFile(
+DoInstallFontFile(
+    _Out_ CStringW& strMsg,
     _In_ PCWSTR pszFontPath,
     _In_ PCWSTR pszFontsDir,
     _In_ HKEY hkeyFonts);

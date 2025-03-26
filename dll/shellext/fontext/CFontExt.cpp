@@ -542,7 +542,8 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
         apidl.Add(pidlRelative);
     }
 
-    if (DoInstallFontFiles(pidlParent, cida->cidl, &apidl[0]) != S_OK)
+    CStringW strMessage;
+    if (InstallFontFiles(strMessage, pidlParent, cida->cidl, &apidl[0]) != S_OK)
     {
         // TODO: Show message
         return E_FAIL;
@@ -563,7 +564,8 @@ STDMETHODIMP CFontExt::Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt,
 }
 
 HRESULT
-DoInstallFontFiles(
+InstallFontFiles(
+    _Out_ CStringW& strMsg,
     _In_ PCUIDLIST_ABSOLUTE pidlParent,
     _In_ UINT cidl,
     _In_ PCUITEMID_CHILD_ARRAY apidl)
@@ -574,12 +576,16 @@ DoInstallFontFiles(
         CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl;
         pidl.Attach(ILCombine(pidlParent, apidl[n]));
         if (!pidl)
+        {
+            ERR("Out of memory\n");
             return E_OUTOFMEMORY;
+        }
 
         WCHAR szPath[MAX_PATH];
         if (!SHGetPathFromIDListW(pidl, szPath) || PathIsDirectoryW(szPath) ||
             !IsFontDotExt(PathFindExtensionW(szPath)))
         {
+            ERR("Not font file: %s\n", wine_dbgstr_w(szPath));
             return E_FAIL;
         }
 
@@ -589,13 +595,13 @@ DoInstallFontFiles(
     CRegKey keyFonts;
     if (keyFonts.Open(FONT_HIVE, FONT_KEY, KEY_WRITE) != ERROR_SUCCESS)
     {
-        ERR("keyFonts.Open failed\n");
+        ERR("CRegKey::Open failed\n");
         return E_FAIL;
     }
 
     for (SIZE_T iItem = 0; iItem < FontPaths.GetCount(); ++iItem)
     {
-        HRESULT hr = DoInstallSingleFontFile(FontPaths[iItem], g_FontCache->FontPath(), keyFonts);
+        HRESULT hr = DoInstallFontFile(strMsg, FontPaths[iItem], g_FontCache->FontPath(), keyFonts);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
     }
@@ -604,7 +610,8 @@ DoInstallFontFiles(
 }
 
 HRESULT
-DoInstallSingleFontFile(
+DoInstallFontFile(
+    _Out_ CStringW& strMsg,
     _In_ PCWSTR pszFontPath,
     _In_ PCWSTR pszFontsDir,
     _In_ HKEY hkeyFonts)
@@ -615,7 +622,6 @@ DoInstallSingleFontFile(
     if (!AddFontResourceW(pszFontPath))
     {
         ERR("AddFontResourceW('%S') failed\n", pszFontPath);
-        DeleteFileW(szDestFile);
         return E_FAIL;
     }
 
