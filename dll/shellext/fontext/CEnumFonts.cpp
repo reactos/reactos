@@ -19,12 +19,12 @@ private:
 
 public:
     CEnumFonts()
-        :m_dwFlags(0)
-        ,m_Index(0)
+        : m_dwFlags(0)
+        , m_Index(0)
     {
     }
 
-    STDMETHOD(Initialize)(CFontExt* folder, DWORD flags)
+    HRESULT Initialize(CFontExt* folder, DWORD flags)
     {
         m_dwFlags = flags;
         m_Index = 0;
